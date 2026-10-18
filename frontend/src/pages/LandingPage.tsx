@@ -1432,11 +1432,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Student Showcase Display */}
         <div className="mt-6 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
-            <h3 className="font-black text-lg text-slate-900 dark:text-white">
-              <div className="flex flex-col">
-                <span>Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
+            <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
+              <div className="flex flex-col min-w-0">
+                <span className="break-words">Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
                 {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-words [overflow-wrap:anywhere]">
                     Filtered by: {[
                       selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
                       yearLevel !== 'all' ? `${yearLevel} Year` : null,
@@ -1637,7 +1637,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               {displayCount < sortedList.length ? (
                 <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                  <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
+                  <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold text-center px-2 break-words">
                     Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-black text-slate-900 dark:text-white">{sortedList.length}</span> Students
                   </p>
                   <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:space-x-3 w-full sm:w-auto px-4 sm:px-0">
@@ -1661,7 +1661,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
               ) : sortedList.length > 32 ? (
                 <div className="flex flex-col items-center justify-center pt-6 space-y-3">
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold text-center px-2 break-words">
                     Showing all <span className="font-black text-brand-600 dark:text-brand-400">{sortedList.length}</span> students
                   </p>
                   <motion.button

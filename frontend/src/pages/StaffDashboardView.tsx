@@ -1106,27 +1106,27 @@ export const StaffDashboardView: React.FC = () => {
 
         {/* Active Filter Indicator Pill if any filter is applied */}
         {(selectedStudentFilter !== 'ALL' || filterStatus !== 'ALL' || search.trim() !== '') && (
-          <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 animate-fade-in">
-            <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 flex-wrap">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 animate-fade-in">
+            <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 flex-wrap min-w-0 flex-1">
               <Filter className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span>
+              <span className="min-w-0 break-words">
                 Active Filter:
                 {selectedStudentFilter !== 'ALL' && (
-                  <span className="ml-1 px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-black">
+                  <span className="ml-1 px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-black inline-block mt-0.5">
                     Student: {myStudents.find(s => String(s.id) === String(selectedStudentFilter))?.name || selectedStudentFilter}
                   </span>
                 )}
                 {filterStatus !== 'ALL' && (
-                  <span className="ml-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-black">
+                  <span className="ml-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-black inline-block mt-0.5">
                     Status: {filterStatus.replace('_', ' ')}
                   </span>
                 )}
                 {search.trim() !== '' && (
-                  <span className="ml-1 px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200 font-black">
+                  <span className="ml-1 px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200 font-black inline-block mt-0.5">
                     Search: "{search.trim()}"
                   </span>
                 )}
-                <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">
+                <span className="ml-1 font-normal text-slate-500 dark:text-slate-400 inline-block mt-0.5">
                   — Showing {filteredStudents.length} of {myStudents.length} students
                 </span>
               </span>

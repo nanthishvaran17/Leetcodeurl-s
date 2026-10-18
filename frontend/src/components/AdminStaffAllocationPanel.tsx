@@ -691,17 +691,17 @@ export const AdminStaffAllocationPanel: React.FC = () => {
           </div>
 
           {/* Active Filter Indicators & Result Summary Bar */}
-          <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-navy-800 text-[11px]">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-navy-300 font-medium">
-              <span>Showing <strong>{filteredStaffList.length}</strong> of <strong>{staffList.length}</strong> staff members</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-navy-800 text-[11px]">
+            <div className="flex flex-wrap items-center gap-2 text-slate-500 dark:text-navy-300 font-medium min-w-0">
+              <span className="min-w-0 break-words">Showing <strong>{filteredStaffList.length}</strong> of <strong>{staffList.length}</strong> staff members</span>
               {staffWorkloadFilter !== 'ALL' && (
-                <span className="px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold text-[10px]">
+                <span className="px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold text-[10px] shrink-0">
                   Filter: {staffWorkloadFilter}
                 </span>
               )}
             </div>
             {staffSearchQuery && (
-              <span className="text-slate-400 italic text-[10px]">
+              <span className="text-slate-400 italic text-[10px] shrink-0">
                 Matching "{staffSearchQuery}"
               </span>
             )}

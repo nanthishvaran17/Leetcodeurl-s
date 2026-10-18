@@ -1,7 +1,7 @@
 import React, { memo, useState } from 'react';
 import { useStudentEntity } from '../stores/studentLiveStore';
 import { Clock, AlertCircle, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink, ChevronRight, MoreHorizontal, Check } from 'lucide-react';
-import { formatStudentYearBadge } from '../utils/filterUtils';
+import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
 
 function getRankBadge(rank?: number) {
   if (!rank || rank <= 0) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700 shrink-0">Unranked</span>;
@@ -43,17 +43,13 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string) {
 
 function getDeptCode(st: any): string {
   if (!st) return '—';
-  if (typeof st.department === 'string' && st.department.trim()) return st.department.trim();
-  if (st.department && typeof st.department === 'object') {
-    if (st.department.code) return st.department.code;
-    if (st.department.name) return st.department.name;
+  const val = st.department || st.dept_code || st.department_code || st.dept || st.department_id;
+  const formatted = formatDepartmentCode(val);
+  if (formatted && formatted !== 'ALL' && formatted !== '—') return formatted;
+  if (st.reg_no) {
+    const derived = deriveDepartmentFromRegNo(st.reg_no);
+    if (derived) return derived;
   }
-  if (st.dept_code) return st.dept_code;
-  if (st.department_code) return st.department_code;
-  if (st.dept) return st.dept;
-  if (st.department_id === 1) return 'CSE(CS)';
-  if (st.department_id === 2) return 'CSE(IOT)';
-  if (st.department_id === 7) return 'IT';
   return '—';
 }
 
@@ -195,10 +191,10 @@ export const FastStudentRow = memo(({
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
-              <span className="font-bold text-slate-700 dark:text-slate-300">{student.reg_no}</span>
-              <span>•</span>
-              <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate min-w-0">
+              <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">{student.reg_no}</span>
+              <span className="shrink-0">•</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20 shrink-0 truncate max-w-[140px]">
                 {getDeptCode(student)} {formatStudentYearBadge(student)}
               </span>
             </div>

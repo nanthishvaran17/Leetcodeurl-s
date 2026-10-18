@@ -624,14 +624,16 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
-          {filters.isFilteringActive ? (
-            <span>
-              Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
-            </span>
-          ) : (
-            <span>Showing all {serverTotalCount} students</span>
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <div className="min-w-0 flex-1 break-words">
+            {filters.isFilteringActive ? (
+              <span>
+                Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
+              </span>
+            ) : (
+              <span>Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
+            )}
+          </div>
           {filters.isFilteringActive && (
             <button
               type="button"
@@ -639,7 +641,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 setLocalSearch('');
                 filters.resetFilters();
               }}
-              className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer"
+              className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer"
             >
               Reset Filters
             </button>
@@ -710,7 +712,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           
           {serverTotalCount > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white/50 dark:bg-navy-950/50 border border-slate-200 dark:border-navy-700">
-              <div className="text-sm font-semibold text-slate-500 dark:text-navy-300">
+              <div className="text-sm font-semibold text-slate-500 dark:text-navy-300 min-w-0 break-words text-center sm:text-left">
                 Showing <span className="text-slate-900 dark:text-white font-bold">{Math.min((serverPage - 1) * serverPageSize + 1, serverTotalCount)}</span> to <span className="text-slate-900 dark:text-white font-bold">{Math.min(serverPage * serverPageSize, serverTotalCount)}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
               </div>
               

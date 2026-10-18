@@ -740,7 +740,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
             {displayCount < totalStudents ? (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
+                <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold text-center px-2 break-words">
                   Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, totalStudents)}</span> of <span className="font-black text-slate-900 dark:text-white">{totalStudents}</span> Students
                 </p>
                 <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:space-x-3 w-full sm:w-auto px-4 sm:px-0">
@@ -760,7 +760,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               </div>
             ) : totalStudents > 32 ? (
               <div className="flex flex-col items-center justify-center pt-6 space-y-3">
-                <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold text-center px-2 break-words">
                   Showing all <span className="font-black text-brand-600 dark:text-brand-400">{totalStudents}</span> students
                 </p>
                 <button

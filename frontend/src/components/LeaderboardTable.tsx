@@ -704,8 +704,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       {/* Sleek Ultra-Fast Pagination Bar */}
       {effectiveStudents.length > 0 && (
         <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4 p-4 mt-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm w-full overflow-hidden">
-          <div className="flex items-center justify-center w-full sm:w-auto space-x-2 text-center sm:text-left">
-            <span>Showing <strong className="text-slate-900 dark:text-white font-extrabold">{(currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
+          <div className="flex items-center justify-center w-full sm:w-auto space-x-2 text-center sm:text-left min-w-0">
+            <span className="min-w-0 break-words">Showing <strong className="text-slate-900 dark:text-white font-extrabold">{(currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
           </div>
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4 w-full sm:w-auto">

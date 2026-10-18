@@ -792,14 +792,14 @@ export const ChatWindow: React.FC<Props> = ({
                     )}
 
                     {/* Message Body Content + Inline Options Chevron */}
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2 max-w-full min-w-0">
                       {msg.isDeletedEveryone ? (
-                        <div className="italic opacity-70 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                        <div className="italic opacity-70 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400 min-w-0 flex-1">
                           <Trash2 className="w-3.5 h-3.5 opacity-70 shrink-0" />
-                          <span>This message was deleted</span>
+                          <span className="truncate">This message was deleted</span>
                         </div>
                       ) : (
-                        <div className="leading-relaxed flex-1">
+                        <div className="leading-relaxed flex-1 min-w-0 break-words [word-break:break-word] [overflow-wrap:anywhere]">
                           {msg.content}
                         </div>
                       )}
@@ -840,7 +840,7 @@ export const ChatWindow: React.FC<Props> = ({
                     <div 
                       onClick={(e) => e.stopPropagation()}
                       className={clsx(
-                        "absolute top-8 z-40 w-56 bg-white dark:bg-[#151D2A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100",
+                        "absolute top-8 z-40 w-56 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-[#151D2A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100",
                         isMe ? "right-0" : "left-0"
                       )}
                     >

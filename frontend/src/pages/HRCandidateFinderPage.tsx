@@ -3042,7 +3042,7 @@ export const HRCandidateFinderPage: React.FC = () => {
               {/* Pagination Controls */}
               {displayCandidates.length > 0 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-900">
-                  <div className="text-xs font-semibold text-slate-500 dark:text-navy-300">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-navy-300 min-w-0 break-words text-center sm:text-left">
                     Showing <span className="text-slate-900 dark:text-white font-bold">{Math.min((currentPage - 1) * itemsPerPage + 1, displayCandidates.length)}</span> to <span className="text-slate-900 dark:text-white font-bold">{Math.min(currentPage * itemsPerPage, displayCandidates.length)}</span> of <span className="text-slate-900 dark:text-white font-bold">{displayCandidates.length}</span> candidates
                   </div>
                   <div className="flex items-center gap-1 bg-white dark:bg-navy-800 rounded-lg p-1 border border-slate-200 dark:border-navy-700">

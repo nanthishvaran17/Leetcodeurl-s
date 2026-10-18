@@ -404,8 +404,8 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-400 font-bold">
-          <span>Showing {total} {total === 1 ? 'student' : 'students'} {total !== students.length ? `(filtered from ${students.length} total)` : ''}</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-bold">
+          <span className="min-w-0 break-words">Showing {total} {total === 1 ? 'student' : 'students'} {total !== students.length ? `(filtered from ${students.length} total)` : ''}</span>
           {(effectiveDepartment !== 'ALL' || (filters.academicYear && filters.academicYear !== 'ALL') || filters.searchQuery) && (
             <button
               type="button"
@@ -414,7 +414,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                 filters.setAcademicYear('ALL');
                 filters.setSearchQuery('');
               }}
-              className="text-brand-500 hover:text-brand-600 dark:text-brand-400 text-xs font-bold hover:underline cursor-pointer flex items-center gap-1"
+              className="shrink-0 text-brand-500 hover:text-brand-600 dark:text-brand-400 text-xs font-bold hover:underline cursor-pointer flex items-center gap-1"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -429,7 +429,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       {/* SERVER PAGINATION */}
       {total > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-slate-200 dark:border-navy-700 shadow-xl">
-          <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 min-w-0 break-words text-center sm:text-left">
             Showing <span className="text-slate-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-slate-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-slate-900 dark:text-white font-black">{total}</span> students
           </div>
           

@@ -3996,11 +3996,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* ACTIVE KPI FILTER BAR */}
               {selectedAttendanceFilter !== 'ALL' && (
                 <div className="px-5 py-3.5 bg-brand-500/10 border-b border-brand-500/20 flex flex-wrap items-center justify-between gap-4 animate-fade-in">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 shrink-0">
                       <Filter className="w-4 h-4" />
                     </div>
-                    <p className="text-sm font-black text-brand-900 dark:text-brand-100">
+                    <p className="text-sm font-black text-brand-900 dark:text-brand-100 min-w-0 break-words">
                       Showing {filteredMatrixRows.length || totalRows} {
                         selectedAttendanceFilter === 'DATA_ERROR' ? 'Data Error' :
                         selectedAttendanceFilter === 'ALL_ATTENDED' ? 'Participating' :
@@ -4237,7 +4237,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {totalRows > 0 && (
                 <div className="px-5 py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
                   {/* Showing count */}
-                  <div className="text-slate-500 dark:text-slate-400 font-bold">
+                  <div className="text-slate-500 dark:text-slate-400 font-bold min-w-0 break-words">
                     {loading ? (
                       <span className="animate-pulse">Loading students...</span>
                     ) : (

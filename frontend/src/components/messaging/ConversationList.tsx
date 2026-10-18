@@ -443,14 +443,14 @@ export const ConversationList: React.FC<Props> = ({
                       </span>
                     </div>
                     
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
                       {conv.isTyping ? (
-                        <p className="text-xs text-emerald-500 font-extrabold italic animate-pulse">
+                        <p className="text-xs text-emerald-500 font-extrabold italic animate-pulse min-w-0 flex-1 truncate">
                           typing...
                         </p>
                       ) : (
                         <p className={clsx(
-                          "text-xs truncate leading-relaxed",
+                          "text-xs truncate leading-relaxed min-w-0 flex-1",
                           isUnread ? "text-slate-900 dark:text-slate-100 font-bold" : "text-slate-500 dark:text-slate-400 font-medium"
                         )}>
                           {conv.lastMessagePreview || "No messages yet"}
