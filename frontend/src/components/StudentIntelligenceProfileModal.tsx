@@ -517,7 +517,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
           }}
         >
           <div
-            className="w-full max-w-4xl lg:max-w-5xl my-0 sm:my-auto mx-auto bg-white text-slate-900 shadow-2xl border border-slate-200/80 rounded-t-[28px] sm:rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] transition-all duration-300 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none animate-slide-up sm:animate-scale-in"
+            className="w-full max-w-4xl lg:max-w-5xl my-0 sm:my-auto mx-auto bg-white dark:bg-[#070A14] text-slate-900 dark:text-slate-100 shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.9)] border border-slate-200/80 dark:border-white/15 rounded-t-[28px] sm:rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] transition-all duration-300 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none animate-slide-up sm:animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Native iOS-style Drag Pill Handle for Mobile */}
