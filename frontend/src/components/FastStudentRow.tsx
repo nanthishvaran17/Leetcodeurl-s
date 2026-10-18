@@ -224,7 +224,7 @@ export const FastStudentRow = memo(({
             </div>
           </div>
 
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
             {onRefresh && (
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh((student || initialStudent).id); }}
@@ -234,6 +234,17 @@ export const FastStudentRow = memo(({
                 aria-label="Refresh Stats"
               >
                 <RefreshCw size={15} className={isSyncing ? 'animate-spin text-brand-500' : ''} />
+              </button>
+            )}
+            {onEdit && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }}
+                className="min-h-[40px] px-2.5 sm:px-3 rounded-xl text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 dark:bg-amber-500/10 flex items-center justify-center gap-1 border border-amber-500/25 shadow-2xs active:scale-95 touch-manipulation cursor-pointer font-bold text-xs"
+                title="Edit Student Details"
+                aria-label="Edit Student Details"
+              >
+                <Edit3 size={14} />
+                <span className="text-[11px] font-black">Edit</span>
               </button>
             )}
             <button

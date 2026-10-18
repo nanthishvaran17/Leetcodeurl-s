@@ -173,7 +173,20 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     const interval = setInterval(() => {
       fetchOperationsCenterData(true);
     }, 15000);
-    return () => clearInterval(interval);
+
+    const handlePull = () => {
+      fetchOperationsCenterData(true);
+      fetchBackups();
+      fetchScheduleSettings();
+      fetchAvailableContests();
+      fetchStudentsCache();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('pull_to_refresh', handlePull);
+    };
   }, []);
 
   const fetchAuditLogsList = useCallback(async () => {

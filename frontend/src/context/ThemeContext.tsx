@@ -12,9 +12,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme') as Theme;
-    const userExplicitlyChose = localStorage.getItem('theme_user_set') === 'true';
-    if (!saved || !userExplicitlyChose) return 'light';
-    return saved || 'light';
+    if (saved === 'dark' || saved === 'light') return saved;
+    return 'dark'; // Default to stunning AI Dark theme
   });
 
   useEffect(() => {
@@ -30,6 +29,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', next);
       localStorage.setItem('theme_user_set', 'true');
       return next;
     });

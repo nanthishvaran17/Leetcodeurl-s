@@ -84,6 +84,12 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
 
   useEffect(() => {
     fetchPost930Solvers();
+
+    const handlePull = () => {
+      fetchPost930Solvers();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, [minSolves, sortBy, dept, yearLevel, section, search]);
 
   const fetchPost930Solvers = async () => {

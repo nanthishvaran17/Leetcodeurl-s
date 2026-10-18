@@ -857,6 +857,12 @@ export const HRCandidateFinderPage: React.FC = () => {
   // Fetch candidates once on component mount for instant zero-delay search
   useEffect(() => {
     handleFind();
+
+    const handlePull = () => {
+      handleFind();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, [handleFind]);
 
   // Filter & sort logic

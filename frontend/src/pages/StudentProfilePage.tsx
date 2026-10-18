@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, PieChart as LucidePieChart } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { DownloadState } from '../services/download/downloadTypes';
@@ -143,8 +143,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
     // Defer heavy chart rendering to prevent modal opening scroll lag
     const timer = setTimeout(() => setIsChartsReady(true), 150);
+
+    const handlePull = () => {
+      clearApiCache();
+      fetchStudentDetail();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+
     return () => {
       window.removeEventListener('student_updated', handleStudentUpdated);
+      window.removeEventListener('pull_to_refresh', handlePull);
       clearTimeout(timer);
     };
   }, [student]);
@@ -429,8 +437,23 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
 
         {/* Action Buttons Row — 2026 Sleek Luminous Glass Pills */}
-        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0 relative z-10">
-          {/* 1. SYNC */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0 relative z-10">
+          {/* 1. EDIT */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowEditOverlay(true);
+            }}
+            className="min-h-[42px] px-3.5 sm:px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/25 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 cursor-pointer touch-manipulation select-none"
+            title="Edit Student Record"
+          >
+            <Edit3 className="w-4 h-4 text-slate-950 shrink-0" />
+            <span className="truncate tracking-wide font-sans font-black">Edit</span>
+          </button>
+
+          {/* 2. SYNC */}
           <button
             type="button"
             onClick={(e) => {
@@ -458,7 +481,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             )}
           </button>
 
-          {/* 2. CERTIFICATE */}
+          {/* 3. CERTIFICATE */}
           <button
             type="button"
             onClick={(e) => {
@@ -467,13 +490,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               handleGenerateCert();
             }}
             disabled={downloadingCert}
-            className="min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white border border-amber-300/40 font-black text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/25 transition-all duration-200 active:scale-95 sm:hover:scale-105 disabled:opacity-50 min-w-0 cursor-pointer touch-manipulation select-none"
+            className="min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white border border-indigo-300/40 font-black text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-indigo-500/25 transition-all duration-200 active:scale-95 sm:hover:scale-105 disabled:opacity-50 min-w-0 cursor-pointer touch-manipulation select-none"
           >
             <Award className="w-4 h-4 text-white shrink-0" />
             <span className="truncate tracking-wide font-sans">{downloadingCert ? 'Generating...' : <><span className="sm:hidden">Cert</span><span className="hidden sm:inline">Certificate</span></>}</span>
           </button>
 
-          {/* 3. AUDIT */}
+          {/* 4. AUDIT */}
           <button
             type="button"
             onClick={(e) => {

@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Swords, Award, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
-import { getCachedStudents } from '../utils/rosterCache';
+import { getCachedStudents, clearAllStudentCaches } from '../utils/rosterCache';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { deriveYearLevelFromRegNo, normalizeAcademicYear } from '../utils/filterUtils';
 
@@ -93,6 +93,17 @@ export const ComparePage: React.FC = () => {
 
   useEffect(() => {
     fetchStudents();
+  }, [selectedDept, selectedYear]);
+
+  // Pull-to-refresh listener: clear caches and reload comparison datasets
+  useEffect(() => {
+    const handlePull = () => {
+      clearApiCache();
+      clearAllStudentCaches();
+      fetchStudents();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, [selectedDept, selectedYear]);
 
   const fetchStudents = async () => {

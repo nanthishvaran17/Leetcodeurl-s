@@ -7,15 +7,23 @@ interface PullToRefreshProps {
   disabled?: boolean;
 }
 
-const PULL_THRESHOLD = 52;
-const MAX_PULL_DISTANCE = 80;
+const PULL_THRESHOLD = 44;
+const MAX_PULL_DISTANCE = 85;
 
 // Helper to determine if target element or any scrollable parent is scrolled down
 function getTargetScrollTop(target: EventTarget | null): number {
   let el = target as HTMLElement | null;
   while (el && el !== document.body && el !== document.documentElement) {
     if (el.scrollTop > 2) {
-      return el.scrollTop;
+      try {
+        const style = window.getComputedStyle(el);
+        const ovY = style.overflowY;
+        if (ovY === 'auto' || ovY === 'scroll') {
+          return el.scrollTop;
+        }
+      } catch (_) {
+        return el.scrollTop;
+      }
     }
     el = el.parentElement;
   }
@@ -78,8 +86,9 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const deltaY = currentY - startYRef.current;
     const deltaX = currentX - startXRef.current;
 
-    // If horizontal scroll is dominant, cancel pull immediately
-    if (Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+    // Only cancel pull if user is clearly performing a horizontal swipe (e.g. table scroll or carousel)
+    // Avoid canceling on minor touch jitter during initial 1-15px finger travel
+    if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       isPullingRef.current = false;
       reachedThresholdRef.current = false;
       setPullDistance(0);
@@ -103,7 +112,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       }
 
       // Smooth elastic damping formula (feels snappy and responsive)
-      const damped = Math.min(deltaY * 0.48, MAX_PULL_DISTANCE);
+      const damped = Math.min(deltaY * 0.52, MAX_PULL_DISTANCE);
       setPullDistance(damped);
 
       if (damped >= PULL_THRESHOLD && !reachedThresholdRef.current) {

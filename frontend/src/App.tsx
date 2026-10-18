@@ -1051,7 +1051,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className={`overflow-x-hidden bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
+    <div className={`overflow-x-hidden bg-white dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
       activeTab === 'messages' ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'
     }`}>
       {/* Top Page Transition Progress Loader */}

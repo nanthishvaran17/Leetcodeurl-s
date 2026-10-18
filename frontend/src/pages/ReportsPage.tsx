@@ -127,6 +127,14 @@ export const ReportsPage: React.FC = () => {
     fetchEmailLogs();
     fetchHodSnapshots();
     fetchAvailableSundays();
+
+    const handlePull = () => {
+      fetchEmailLogs();
+      fetchHodSnapshots();
+      fetchAvailableSundays();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, []);
 
   const fetchAvailableSundays = async () => {

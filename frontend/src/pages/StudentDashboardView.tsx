@@ -3,7 +3,7 @@ import { Award, Star, ExternalLink, CheckCircle2, TrendingUp, AlertCircle, Shiel
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { StudentData } from '../components/LeaderboardTable';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 
 export const StudentDashboardView: React.FC = () => {
   const { user } = useAuth();
@@ -12,15 +12,23 @@ export const StudentDashboardView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchStudentProfile();
+    fetchStudentProfile(false);
+
+    const handlePull = () => {
+      clearApiCache();
+      fetchStudentProfile(true);
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, [user]);
 
-  const fetchStudentProfile = async () => {
+  const fetchStudentProfile = async (forceRefresh: boolean = false) => {
     setLoading(true);
     setError(null);
     try {
+      const tParam = forceRefresh ? `?_t=${Date.now()}` : '';
       if (user?.registerNo) {
-        const res = await api.get('/students');
+        const res = await api.get(`/students${tParam}`);
         const found = res.data.find((s: StudentData) => s.reg_no === user.registerNo);
         if (found) {
           setStudentData(found);
@@ -28,7 +36,7 @@ export const StudentDashboardView: React.FC = () => {
           setError(`No LeetCode records found for register number ${user.registerNo}.`);
         }
       } else if (user?.email) {
-        const res = await api.get('/students');
+        const res = await api.get(`/students${tParam}`);
         const found = res.data.find((s: StudentData) => s.email && s.email.toLowerCase() === user.email.toLowerCase());
         if (found) {
           setStudentData(found);

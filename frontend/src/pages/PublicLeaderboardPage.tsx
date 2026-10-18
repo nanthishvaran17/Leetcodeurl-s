@@ -12,6 +12,8 @@ import { useDepartments } from '../contexts/DepartmentContext';
 import { XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { clearAllStudentCaches } from '../utils/rosterCache';
+
 interface PublicLeaderboardPageProps {
   onSelectStudent?: (student: StudentData) => void;
 }
@@ -40,9 +42,21 @@ const getDeptBadgeStyle = (deptCode: string) => {
 };
 
 export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ onSelectStudent }) => {
-  const { data: initialStudents = [], isLoading: loading } = useStudentsQuery();
+  const { data: initialStudents = [], isLoading: loading, refetch: refetchStudents } = useStudentsQuery();
+  const { refreshAllData } = useGlobalData();
   // NOTE: useLiveLeaderboard() is NOT called here — the global singleton in GlobalWebSocketProvider
   // already handles all WebSocket events for the whole app.
+
+  // Pull-to-refresh listener: clear caches, refresh global data, and refetch students
+  useEffect(() => {
+    const handlePull = () => {
+      clearAllStudentCaches();
+      refreshAllData?.(true);
+      refetchStudents();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [refetchStudents, refreshAllData]);
 
   // Global Roster context + Local Filter States
   const globalStudents = initialStudents;

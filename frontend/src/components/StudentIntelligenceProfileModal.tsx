@@ -605,6 +605,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   )}
 
                   <button
+                    onClick={() => setShowEditOverlay(true)}
+                    className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 hover:scale-105 active:scale-95"
+                    title="Edit Student Record"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <button
                     onClick={handleRefreshStudent}
                     disabled={refreshing}
                     className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
@@ -1613,12 +1622,21 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 <span className="text-slate-400">•</span>
                 <span className="font-extrabold text-slate-700">Institutional Intelligence Ledger</span>
               </div>
-              <button
-                onClick={onClose}
-                className="px-5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition-all cursor-pointer shadow-sm hover:scale-105"
-              >
-                Close Profile
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowEditOverlay(true)}
+                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Details</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="px-5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                >
+                  Close Profile
+                </button>
+              </div>
             </div>
           </div>
 

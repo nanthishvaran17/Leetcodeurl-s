@@ -89,6 +89,13 @@ export const ContestIntegrityMonitor: React.FC = () => {
   useEffect(() => {
     fetchCases();
     fetchAuditLogs();
+
+    const handlePull = () => {
+      fetchCases();
+      fetchAuditLogs();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, []);
 
   useEffect(() => {

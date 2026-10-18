@@ -24,15 +24,15 @@
 }
 
 .dark {
-  --color-text-primary: #F8FAFC;
+  --color-text-primary: #FFFFFF;
   --color-text-secondary: #E2E8F0;
-  --color-text-muted: #CBD5E1;
-  --color-text-subtle: #94A3B8;
-  --color-border: #334155;
-  --color-background: #020617;
-  --color-surface: #0F172A;
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
+  --color-text-muted: #94A3B8;
+  --color-text-subtle: #64748B;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-background: #070A13;
+  --color-surface: #0B0F19;
+  --color-primary: #6366F1;
+  --color-primary-hover: #818CF8;
   --color-success: #10B981;
   --color-success-light: rgba(16, 185, 129, 0.15);
   --color-warning: #F59E0B;
@@ -41,7 +41,165 @@
   --color-error-light: rgba(239, 68, 68, 0.15);
   --color-info: #38BDF8;
   --color-info-light: rgba(56, 189, 248, 0.15);
-  --label-high-contrast: #F1F5F9;
+  --label-high-contrast: #FFFFFF;
+}
+
+.dark body {
+  background-color: #070A13 !important;
+  background-image: 
+    radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.14) 0px, transparent 55%),
+    radial-gradient(ellipse at 85% 5%, rgba(56, 189, 248, 0.10) 0px, transparent 50%),
+    radial-gradient(ellipse at 50% 95%, rgba(16, 185, 129, 0.06) 0px, transparent 55%) !important;
+  background-attachment: fixed !important;
+  color: #F8FAFC !important;
+}
+
+/* ==========================================================================
+   FUTURISTIC AI PLATFORM DARK MODE ENGINE (OpenAI / Cursor / Linear Aesthetic)
+   ========================================================================== */
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Glassmorphic Surfaces & Cards */
+.dark .bg-white:not([data-keep-light="true"]) {
+  background-color: rgba(11, 15, 25, 0.90) !important;
+  color: #F8FAFC !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #E2E8F0 !important;
+}
+
+.dark .bg-slate-200 {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+/* Subtle Glowing Cyber Borders */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/90,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/70,
+.dark .border-slate-200\/60,
+.dark .border-slate-300 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* High-Contrast Crystal Typography */
+.dark .text-slate-900 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-slate-800 {
+  color: #F1F5F9 !important;
+}
+
+.dark .text-slate-700 {
+  color: #E2E8F0 !important;
+}
+
+.dark .text-slate-600 {
+  color: #CBD5E1 !important;
+}
+
+.dark .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+/* AI Semantic Glowing Panels & Chips */
+.dark .bg-indigo-50,
+.dark .bg-indigo-50\/60,
+.dark .bg-blue-50,
+.dark .bg-blue-50\/60 {
+  background-color: rgba(99, 102, 241, 0.12) !important;
+  border-color: rgba(99, 102, 241, 0.28) !important;
+  color: #A5B4FC !important;
+}
+
+.dark .text-indigo-950,
+.dark .text-indigo-900,
+.dark .text-blue-950,
+.dark .text-blue-900 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-indigo-700,
+.dark .text-blue-700 {
+  color: #818CF8 !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/60 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.28) !important;
+  color: #6EE7B7 !important;
+}
+
+.dark .text-emerald-950,
+.dark .text-emerald-900 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-emerald-700 {
+  color: #34D399 !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/60 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+  color: #FCD34D !important;
+}
+
+.dark .text-amber-950,
+.dark .text-amber-900 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-amber-700 {
+  color: #FBBF24 !important;
+}
+
+.dark .bg-purple-50,
+.dark .bg-purple-50\/60 {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+  border-color: rgba(168, 85, 247, 0.28) !important;
+  color: #D8B4FE !important;
+}
+
+.dark .text-purple-950,
+.dark .text-purple-900 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-purple-700 {
+  color: #C084FC !important;
+}
+
+.dark .bg-rose-50,
+.dark .bg-rose-50\/60 {
+  background-color: rgba(244, 63, 94, 0.12) !important;
+  border-color: rgba(244, 63, 94, 0.28) !important;
+  color: #FDA4AF !important;
+}
+
+.dark .text-rose-950,
+.dark .text-rose-900 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-rose-700 {
+  color: #FB7185 !important;
+}
+
+/* Modals & Dialog Backdrop */
+.dark .modal-container,
+.dark [role="dialog"] {
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 @layer base {
@@ -1738,7 +1896,7 @@ body {
 
 @media (max-width: 768px) {
   html, body {
-    overscroll-behavior-y: auto;
+    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
   }
