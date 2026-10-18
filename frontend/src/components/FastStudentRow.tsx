@@ -4,11 +4,11 @@ import { Clock, AlertCircle, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, E
 import { formatStudentYearBadge } from '../utils/filterUtils';
 
 function getRankBadge(rank?: number) {
-  if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700">Unranked</span>;
-  if (rank === 1) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/30 border border-amber-300/60"><span>#1</span></span>;
-  if (rank === 2) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-md shadow-slate-500/20 border border-slate-300/60"><span>#2</span></span>;
-  if (rank === 3) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-md shadow-amber-700/20 border border-amber-600/60"><span>#3</span></span>;
-  return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700">#{rank}</span>;
+  if (!rank || rank <= 0) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700 shrink-0">Unranked</span>;
+  if (rank === 1) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/30 border border-amber-300/60 shrink-0">#1</span>;
+  if (rank === 2) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-md shadow-slate-500/20 border border-slate-300/60 shrink-0">#2</span>;
+  if (rank === 3) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-md shadow-amber-700/20 border border-amber-600/60 shrink-0">#3</span>;
+  return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 shrink-0">#{rank}</span>;
 }
 
 function parseUtcTime(ts?: string): number {
@@ -190,8 +190,8 @@ export const FastStudentRow = memo(({
               <span className="font-black text-sm text-slate-900 dark:text-white truncate uppercase">
                 {(student.name || '').toUpperCase()}
               </span>
-              <div className="shrink-0">
-                {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500">Unranked</span>}
+              <div className="shrink-0 flex items-center">
+                {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 shrink-0">Unranked</span>}
               </div>
             </div>
 
@@ -211,48 +211,53 @@ export const FastStudentRow = memo(({
           </div>
         </div>
 
-        {/* Card Metrics & Quick Action Bar */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 bg-slate-50/90 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06]">
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">SOLVED</span>
-              <span className="text-xs font-black font-mono">{totalSolved ?? '—'}</span>
+        {/* Card Metrics & Quick Action Bar (Pixel-Perfect Symmetrical Layout) */}
+        <div className="flex items-center justify-between px-3 py-2 bg-slate-50/85 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06] gap-1.5">
+          {/* Left: Balanced Stat Badges */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
+              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">SOLVED</span>
+              <span className="text-xs font-black font-mono shrink-0">{totalSolved ?? '—'}</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300">
-              <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">RATING</span>
-              <span className="text-xs font-black font-mono">{getContestRatingDisplay(student)}</span>
+            <div className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+              <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 shrink-0">RATING</span>
+              <span className="text-xs font-black font-mono shrink-0">{getContestRatingDisplay(student)}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
+          {/* Right: Symmetrical, Non-Collapsing Action Buttons */}
+          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
             {onRefresh && (
               <button
+                type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh((student || initialStudent).id); }}
                 disabled={isSyncing}
-                className="min-h-[40px] min-w-[40px] rounded-xl text-slate-500 hover:text-emerald-600 bg-white dark:bg-navy-800 flex items-center justify-center border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-95 touch-manipulation cursor-pointer"
+                className="h-7 w-7 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 bg-white dark:bg-navy-800 flex items-center justify-center border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-90 touch-manipulation cursor-pointer shrink-0"
                 title="Refresh Stats"
                 aria-label="Refresh Stats"
               >
-                <RefreshCw size={15} className={isSyncing ? 'animate-spin text-brand-500' : ''} />
+                <RefreshCw size={12} className={`shrink-0 ${isSyncing ? 'animate-spin text-brand-500' : ''}`} />
               </button>
             )}
             {onEdit && (
               <button
+                type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }}
-                className="min-h-[40px] px-2.5 sm:px-3 rounded-xl text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 dark:bg-amber-500/10 flex items-center justify-center gap-1 border border-amber-500/25 shadow-2xs active:scale-95 touch-manipulation cursor-pointer font-bold text-xs"
+                className="h-7 px-2.5 rounded-lg text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 shadow-2xs active:scale-95 touch-manipulation cursor-pointer flex items-center justify-center gap-1 shrink-0 font-bold"
                 title="Edit Student Details"
                 aria-label="Edit Student Details"
               >
-                <Edit3 size={14} />
-                <span className="text-[11px] font-black">Edit</span>
+                <Edit3 size={12} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                <span className="text-[11px] font-black shrink-0">Edit</span>
               </button>
             )}
             <button
+              type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:bg-brand-800 text-white font-black text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all touch-manipulation cursor-pointer"
+              className="h-7 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:bg-brand-800 text-white font-black text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all touch-manipulation cursor-pointer flex items-center justify-center gap-1 shrink-0"
             >
-              <span>Profile</span>
-              <ChevronRight size={14} strokeWidth={2.5} />
+              <span className="shrink-0 text-[11px]">Profile</span>
+              <ChevronRight size={12} strokeWidth={2.5} className="shrink-0" />
             </button>
           </div>
         </div>
