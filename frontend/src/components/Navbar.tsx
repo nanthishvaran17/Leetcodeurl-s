@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -27,7 +26,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setIsSidebarOpen
 }) => {
   const { user, logout, isAuthenticated } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   const [freshness, setFreshness] = useState<any>(null);
   const [menteesCount, setMenteesCount] = useState<number | null>(null);
@@ -153,20 +151,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </kbd>
               </button>
 
-              {/* 1-Tap AI Dark/Light Theme Switcher */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="flex items-center justify-center p-2 rounded-xl bg-slate-100/90 dark:bg-white/[0.06] text-slate-700 dark:text-amber-400 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-200/70 dark:border-white/10 transition-all cursor-pointer min-h-[38px] min-w-[38px] active:scale-90 shadow-2xs group"
-                title={`Switch to ${theme === 'dark' ? 'Light' : 'Futuristic AI Dark'} Theme`}
-                aria-label="Toggle Theme"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 group-hover:rotate-45" />
-                ) : (
-                  <Moon className="w-4 h-4 text-slate-700 transition-transform duration-300 group-hover:-rotate-12" />
-                )}
-              </button>
 
               {/* Sync Status Button */}
               <button
