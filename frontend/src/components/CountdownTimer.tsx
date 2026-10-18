@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Radio, ShieldCheck } from 'lucide-react';
+import { Clock, Radio, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CountdownTimerProps {
@@ -208,10 +208,10 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
               ) : null}
             </div>
 
-            <p className="text-xs sm:text-sm font-bold text-indigo-200/90 flex items-start gap-1.5 mt-1">
-              <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-indigo-500/15 border border-indigo-400/30 text-indigo-200 text-xs sm:text-[13px] font-bold backdrop-blur-md mt-1.5 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-300 shrink-0 animate-pulse" />
               <span className="line-clamp-2 break-words max-w-full">{timing.subTitle}</span>
-            </p>
+            </div>
           </div>
         </div>
 
@@ -236,8 +236,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
           {/* Hours Box */}
           <div className="flex flex-col items-center">
-            <div className="px-4 py-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-indigo-400/30 text-white shadow-lg shadow-slate-950/50 min-w-[60px] sm:min-w-[68px] text-center">
-              <span className="text-2xl sm:text-3xl font-mono font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(103,232,249,0.4)]">
+            <div className="px-4 py-3 rounded-2xl bg-indigo-950/80 backdrop-blur-md border border-indigo-400/40 text-white shadow-lg shadow-indigo-950/50 min-w-[60px] sm:min-w-[68px] text-center">
+              <span className="text-2xl sm:text-3xl font-mono font-black text-indigo-100 drop-shadow-[0_0_12px_rgba(199,210,254,0.45)]">
                 {time.hours}
               </span>
             </div>
@@ -250,8 +250,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
           {/* Minutes Box */}
           <div className="flex flex-col items-center">
-            <div className="px-4 py-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-indigo-400/30 text-white shadow-lg shadow-slate-950/50 min-w-[60px] sm:min-w-[68px] text-center">
-              <span className="text-2xl sm:text-3xl font-mono font-black text-blue-300 drop-shadow-[0_0_10px_rgba(147,197,253,0.4)]">
+            <div className="px-4 py-3 rounded-2xl bg-indigo-950/80 backdrop-blur-md border border-indigo-400/40 text-white shadow-lg shadow-indigo-950/50 min-w-[60px] sm:min-w-[68px] text-center">
+              <span className="text-2xl sm:text-3xl font-mono font-black text-indigo-200 drop-shadow-[0_0_12px_rgba(165,180,252,0.45)]">
                 {time.minutes}
               </span>
             </div>

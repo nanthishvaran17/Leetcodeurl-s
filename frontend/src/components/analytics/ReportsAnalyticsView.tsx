@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../../services/api';
 import { 
   FileText, Download, Loader2, CheckCircle2, AlertCircle, User, Grid,
-  ShieldCheck, Award, Lock, Check, Fingerprint
+  ShieldCheck, Award, Lock, Check, Fingerprint, X
 } from 'lucide-react';
 import { downloadManager } from '../../services/download/downloadManager';
 import { formatDepartmentCode, deriveDepartmentFromRegNo } from '../../utils/filterUtils';
@@ -218,35 +218,64 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
           </div>
         </div>
 
-        {/* Feedback Alerts — Ultra-Rich Glass Architecture */}
+        {/* Feedback Alerts — Crisp High-Contrast Theme-Adaptive Banner */}
         {(error || success) && (
           <div className="pt-1 animate-fade-in">
             {error && (
-              <div className="p-4 sm:p-5 bg-gradient-to-r from-rose-950/70 via-red-950/50 to-rose-900/30 border border-rose-500/40 text-rose-200 rounded-2xl sm:rounded-3xl flex items-center gap-3.5 shadow-xl shadow-rose-950/30 backdrop-blur-xl">
-                <div className="p-2.5 rounded-2xl bg-rose-500/20 text-rose-300 border border-rose-400/30 shrink-0">
-                  <AlertCircle className="w-5 h-5" />
+              <div className="p-4 sm:p-4.5 bg-rose-50/95 dark:bg-rose-950/40 border-2 border-rose-500/30 dark:border-rose-500/40 rounded-2xl sm:rounded-3xl flex items-center justify-between gap-3.5 shadow-lg shadow-rose-500/10 dark:shadow-rose-950/40 backdrop-blur-xl animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/30 border border-white/20">
+                    <AlertCircle className="w-5 h-5 text-white stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm sm:text-[15px] font-black text-slate-900 dark:text-white tracking-tight">
+                      Generation Alert
+                    </p>
+                    <p className="text-xs text-rose-700 dark:text-rose-300 font-medium mt-0.5 leading-relaxed">
+                      {error}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-black text-white">Generation Alert</p>
-                  <p className="text-xs text-rose-300/90 font-medium mt-0.5">{error}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setError(null)}
+                  className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 rounded-xl transition-colors cursor-pointer shrink-0"
+                  title="Dismiss"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             )}
 
             {success && (
-              <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-950/80 via-teal-950/60 to-emerald-900/40 border border-emerald-500/40 text-emerald-100 rounded-2xl sm:rounded-3xl flex items-center justify-between gap-3.5 shadow-xl shadow-emerald-950/40 backdrop-blur-xl">
+              <div className="p-4 sm:p-4.5 bg-emerald-50/95 dark:bg-emerald-950/40 border-2 border-emerald-500/40 dark:border-emerald-500/40 rounded-2xl sm:rounded-3xl flex items-center justify-between gap-3.5 shadow-lg shadow-emerald-500/10 dark:shadow-emerald-950/40 backdrop-blur-xl animate-in fade-in slide-in-from-top-1 duration-200">
                 <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                  <div className="p-2.5 rounded-2xl bg-emerald-500/25 text-emerald-300 border border-emerald-400/30 shrink-0 shadow-inner">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/30 border border-white/20">
+                    <CheckCircle2 className="w-5 h-5 text-white stroke-[2.5]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-black text-white">PDF Report Downloaded Successfully!</p>
-                    <p className="text-xs text-emerald-300/90 font-medium mt-0.5">Accredited Vector PDF compiled with embedded verification stamp &amp; watermark.</p>
+                    <p className="text-sm sm:text-[15px] font-black text-slate-900 dark:text-white tracking-tight">
+                      PDF Report Downloaded Successfully!
+                    </p>
+                    <p className="text-xs text-emerald-800 dark:text-emerald-300 font-semibold mt-0.5 leading-relaxed">
+                      Accredited Vector PDF compiled with embedded verification stamp &amp; watermark.
+                    </p>
                   </div>
                 </div>
-                <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 font-mono text-xs font-bold shrink-0">
-                  DONE
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-black text-xs tracking-wider uppercase shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    DONE
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSuccess(null)}
+                    className="p-1.5 text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-300 rounded-xl transition-colors cursor-pointer"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>

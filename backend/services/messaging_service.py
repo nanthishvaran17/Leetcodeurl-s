@@ -1,6 +1,7 @@
 import uuid
 import json
 import datetime
+import threading
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, desc, func, not_
 
@@ -23,12 +24,20 @@ class MessagingService:
 
     @staticmethod
     def _get_user_id(user_obj) -> str:
-        """Helper to extract a consistent ID for messaging. Uses email, reg_no, or STAFF_{id}."""
-        if hasattr(user_obj, "email") and user_obj.email:
-            return user_obj.email
+        """Helper to extract a consistent, collision-free ID for messaging. Prioritizes reg_no for students and STAFF_{id} for staff."""
         if hasattr(user_obj, "reg_no") and user_obj.reg_no:
-            return user_obj.reg_no
-        return f"STAFF_{user_obj.id}" if hasattr(user_obj, "role") else str(user_obj.id)
+            return str(user_obj.reg_no).strip().upper()
+        if hasattr(user_obj, "role") and hasattr(user_obj, "id"):
+            role_str = str(user_obj.role or "").lower()
+            if "student" in role_str:
+                if hasattr(user_obj, "username") and user_obj.username:
+                    return str(user_obj.username).strip().upper()
+            return f"STAFF_{user_obj.id}"
+        if hasattr(user_obj, "username") and user_obj.username:
+            return str(user_obj.username).strip()
+        if hasattr(user_obj, "email") and user_obj.email:
+            return str(user_obj.email).strip().lower()
+        return str(getattr(user_obj, "id", "UNKNOWN"))
 
     @staticmethod
     def _get_all_user_identifiers(user_obj) -> set:
@@ -68,8 +77,18 @@ class MessagingService:
     def _is_user_p1(conv: Conversation, user_obj) -> bool:
         if not conv:
             return False
-        user_ids = MessagingService._get_all_user_identifiers(user_obj)
+        canon_id = str(MessagingService._get_user_id(user_obj)).strip().lower()
         p1 = str(conv.participant_1_id or "").strip().lower()
+        if p1 == canon_id:
+            return True
+        p2 = str(conv.participant_2_id or "").strip().lower()
+        if p2 == canon_id:
+            return False
+        user_ids = MessagingService._get_all_user_identifiers(user_obj)
+        if p1 in user_ids and p2 not in user_ids:
+            return True
+        if p2 in user_ids and p1 not in user_ids:
+            return False
         return p1 in user_ids
 
     @staticmethod
@@ -138,7 +157,10 @@ class MessagingService:
                 "name": s.name,
                 "role": "Student",
                 "department": f"{dept}{year_info}".strip(),
-                "type": "STUDENT"
+                "type": "STUDENT",
+                "regNo": s.reg_no,
+                "email": s.email,
+                "username": s.username
             }
 
         # 2. Check Staff / User table
@@ -167,7 +189,10 @@ class MessagingService:
                         "name": s_linked.name,
                         "role": "Student",
                         "department": f"{dept}{year_info}".strip(),
-                        "type": "STUDENT"
+                        "type": "STUDENT",
+                        "regNo": s_linked.reg_no,
+                        "email": s_linked.email,
+                        "username": s_linked.username
                     }
 
             dept = u.department.name if u.department else "Administration"
@@ -176,7 +201,9 @@ class MessagingService:
                 "name": u.full_name or u.username,
                 "role": u.role or "Staff",
                 "department": dept,
-                "type": "STAFF"
+                "type": "STAFF",
+                "email": u.email,
+                "username": u.username
             }
         
         return {"id": user_id, "name": "Unknown User", "role": "Unknown", "department": "", "type": "UNKNOWN"}
@@ -475,7 +502,7 @@ class MessagingService:
             MessagingService.mark_as_read(db, current_user, conv_id_str)
             return msg
         
-        # 5. Emit Notification (Deep linked to exact conversation)
+        # 5. Emit Notification asynchronously in background thread (Deep linked to exact conversation)
         sender_name = (
             getattr(current_user, "full_name", None) or 
             getattr(current_user, "name", None) or 
@@ -488,35 +515,56 @@ class MessagingService:
         msg_preview = content[:80] + ("..." if len(content) > 80 else "")
         idempotency_event_id = f"MSG_{msg.message_id}_{receiver_id}"
 
-        NotificationService.emit_event(
-            event_type="DIRECT_MESSAGE",
-            title=f"Message from {sender_name}",
-            body=f"Dear {receiver_display_name}, you received a new message from {sender_name}: \"{msg_preview}\"",
-            actor_user_id=sender_id,
-            recipient_scope="INDIVIDUAL",
-            recipient_target=receiver_id,
-            route=f"/messages?conversationId={conv.conversation_id}&messageId={msg.message_id}",
-            priority="high",
-            event_id=idempotency_event_id,
-            metadata={
-                "conversation_id": conv.conversation_id,
-                "message_id": msg.message_id,
-                "sender_id": sender_id,
-                "sender_name": sender_name,
-                "receiver_name": receiver_display_name
-            },
-            send_email_notification=False
+        def _bg_notify(s_name, r_name, p_view, evt_id, meta, r_target, r_route):
+            try:
+                NotificationService.emit_event(
+                    event_type="DIRECT_MESSAGE",
+                    title=f"Message from {s_name}",
+                    body=f"Dear {r_name}, you received a new message from {s_name}: \"{p_view}\"",
+                    actor_user_id=sender_id,
+                    recipient_scope="INDIVIDUAL",
+                    recipient_target=r_target,
+                    route=r_route,
+                    priority="high",
+                    event_id=evt_id,
+                    metadata=meta,
+                    send_email_notification=False
+                )
+            except Exception as _notif_err:
+                logger.warning(f"[MESSAGING] Background notification emit error: {_notif_err}")
+
+        notif_thread = threading.Thread(
+            target=_bg_notify,
+            args=(
+                sender_name,
+                receiver_display_name,
+                msg_preview,
+                idempotency_event_id,
+                {
+                    "conversation_id": conv.conversation_id,
+                    "message_id": msg.message_id,
+                    "sender_id": sender_id,
+                    "sender_name": sender_name,
+                    "receiver_name": receiver_display_name
+                },
+                receiver_id,
+                f"/messages?conversationId={conv.conversation_id}&messageId={msg.message_id}"
+            ),
+            daemon=True
         )
+        notif_thread.start()
         
         return msg
 
     @staticmethod
     def edit_message(db: Session, current_user, message_id: str, new_content: str) -> dict:
         user_id = MessagingService._get_user_id(current_user)
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
         msg = db.query(Message).filter_by(message_id=message_id).first()
         if not msg:
             raise ValueError("Message not found")
-        if msg.sender_id != user_id:
+        msg_sender_clean = str(msg.sender_id or "").strip().lower()
+        if msg_sender_clean not in user_ids and msg.sender_id != user_id:
             raise ValueError("Unauthorized: You can only edit your own messages.")
         if msg.is_deleted_everyone:
             raise ValueError("Cannot edit a deleted message.")
@@ -542,6 +590,7 @@ class MessagingService:
         mode: 'FOR_ME' or 'FOR_EVERYONE'
         """
         user_id = MessagingService._get_user_id(current_user)
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
         msg = db.query(Message).filter_by(message_id=message_id).first()
         if not msg:
             raise ValueError("Message not found")
@@ -552,7 +601,8 @@ class MessagingService:
 
         if mode == "FOR_EVERYONE":
             role = str(getattr(current_user, "role", "")).upper()
-            if msg.sender_id != user_id and "ADMIN" not in role:
+            msg_sender_clean = str(msg.sender_id or "").strip().lower()
+            if msg_sender_clean not in user_ids and msg.sender_id != user_id and "ADMIN" not in role:
                 raise ValueError("Unauthorized: You can only delete your own messages for everyone.")
             
             msg.is_deleted_everyone = True  # type: ignore[assignment]

@@ -38,14 +38,21 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const [transparencyData, setTransparencyData] = useState<any>(null);
   const [loadingTransparency, setLoadingTransparency] = useState(false);
 
-  // Determine current user ID for chat alignment
+  // Determine current user ID for chat alignment (prioritizes unique institutional IDs over shared emails)
   useEffect(() => {
     try {
       const u = JSON.parse(localStorage.getItem('user') || '{}');
-      if (u.email) setCurrentUserStr(u.email);
-      else if (u.reg_no) setCurrentUserStr(u.reg_no);
-      else if (u.role) setCurrentUserStr(`STAFF_${u.id}`);
-      else setCurrentUserStr(String(u.id));
+      if (u.reg_no) {
+        setCurrentUserStr(String(u.reg_no).trim().toUpperCase());
+      } else if (u.role && String(u.role).toLowerCase() !== 'student') {
+        setCurrentUserStr(u.id ? `STAFF_${u.id}` : (u.username || u.email || 'STAFF'));
+      } else if (u.username) {
+        setCurrentUserStr(String(u.username).trim());
+      } else if (u.email) {
+        setCurrentUserStr(String(u.email).trim().toLowerCase());
+      } else if (u.id) {
+        setCurrentUserStr(String(u.id));
+      }
     } catch(e) {}
   }, []);
 
@@ -353,7 +360,27 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
             }
             return m;
           }));
-          fetchConversations();
+          // Optimistically update conversation preview instantly without heavy network fetch
+          setConversations(prev => {
+            let found = false;
+            const targetConvId = realMsg.conversationId || activeConversationId;
+            const updated = prev.map(c => {
+              if (c.conversationId === targetConvId) {
+                found = true;
+                return {
+                  ...c,
+                  lastMessagePreview: realMsg.content || (realMsg.attachmentFileId ? 'Sent an attachment' : c.lastMessagePreview),
+                  lastMessageAt: realMsg.createdAt || new Date().toISOString()
+                };
+              }
+              return c;
+            });
+            if (!found) {
+              fetchConversations();
+              return prev;
+            }
+            return updated.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+          });
         }
       } catch (err) {
         // If it fails (e.g. network drops during upload), fallback to filter

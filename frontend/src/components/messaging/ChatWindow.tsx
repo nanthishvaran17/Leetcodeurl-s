@@ -182,6 +182,7 @@ export const ChatWindow: React.FC<Props> = ({
 
   // Typing debounce timer
   const typingTimerRef = useRef<any>(null);
+  const touchTimerRef = useRef<any>(null);
 
   // Auto scroll behavior
   useEffect(() => {
@@ -611,9 +612,60 @@ export const ChatWindow: React.FC<Props> = ({
               return null;
             }
 
-            const isMe = msg.senderId === currentUserId;
+            // Robust multi-factor determination of outgoing (isMe) vs incoming message
+            const other = conversation?.otherUser;
+            const otherIds = new Set<string>();
+            if (other?.id) {
+              const rawId = String(other.id).trim().toLowerCase();
+              otherIds.add(rawId);
+              if (rawId.startsWith('staff_')) {
+                otherIds.add(rawId.substring(6).trim());
+              }
+            }
+            if ((other as any)?.regNo) otherIds.add(String((other as any).regNo).trim().toLowerCase());
+            if ((other as any)?.reg_no) otherIds.add(String((other as any).reg_no).trim().toLowerCase());
+            if ((other as any)?.email) otherIds.add(String((other as any).email).trim().toLowerCase());
+            if ((other as any)?.username) otherIds.add(String((other as any).username).trim().toLowerCase());
+
+            const msgSender = String(msg.senderId || '').trim().toLowerCase();
+            const msgReceiver = String(msg.receiverId || '').trim().toLowerCase();
+            const myId = String(currentUserId || '').trim().toLowerCase();
+
+            // Direct check: is message from the other user?
+            const isFromOther = otherIds.has(msgSender) || 
+              (msgSender.startsWith('staff_') && otherIds.has(msgSender.substring(6)));
+
+            // Direct check: was message sent to the other user?
+            const isToOther = otherIds.has(msgReceiver) || 
+              (msgReceiver.startsWith('staff_') && otherIds.has(msgReceiver.substring(6)));
+
+            let isMe = false;
+            if (isFromOther) {
+              isMe = false; // Strictly incoming from other participant
+            } else if (isToOther) {
+              isMe = true;  // Strictly outgoing from me to other participant
+            } else if (myId && msgSender === myId && !otherIds.has(myId)) {
+              isMe = true;
+            } else if (myId && msgReceiver === myId && !otherIds.has(myId)) {
+              isMe = false;
+            } else {
+              isMe = msg.senderId === currentUserId;
+            }
+
             const isMenuOpen = activeMenuMessageId === msg.messageId;
             const prevMsg = idx > 0 ? messages[idx - 1] : null;
+            let prevIsMe = false;
+            if (prevMsg) {
+              const prevSender = String(prevMsg.senderId || '').trim().toLowerCase();
+              const prevReceiver = String(prevMsg.receiverId || '').trim().toLowerCase();
+              if (otherIds.has(prevSender) || (prevSender.startsWith('staff_') && otherIds.has(prevSender.substring(6)))) {
+                prevIsMe = false;
+              } else if (otherIds.has(prevReceiver) || (prevReceiver.startsWith('staff_') && otherIds.has(prevReceiver.substring(6)))) {
+                prevIsMe = true;
+              } else {
+                prevIsMe = prevMsg.senderId === currentUserId;
+              }
+            }
 
             // Date separator check
             let showDateHeader = false;
@@ -625,7 +677,7 @@ export const ChatWindow: React.FC<Props> = ({
             }
 
             // Dynamic Margin for natural grouping
-            const isSameSenderAsPrev = prevMsg && prevMsg.senderId === msg.senderId && !showDateHeader;
+            const isSameSenderAsPrev = prevMsg && (prevIsMe === isMe) && !showDateHeader;
             const marginTopClass = showDateHeader ? 'mt-3 sm:mt-4' : (isSameSenderAsPrev ? 'mt-1' : 'mt-2.5 sm:mt-3');
 
             // Reactions count
@@ -634,6 +686,10 @@ export const ChatWindow: React.FC<Props> = ({
             Object.values(reactionsMap).forEach(emoji => {
               reactionCounts[emoji] = (reactionCounts[emoji] || 0) + 1;
             });
+
+            // Reply sender determination
+            const replySender = String(msg.replyToMessage?.senderId || '').trim().toLowerCase();
+            const isReplyFromOther = otherIds.has(replySender) || (replySender.startsWith('staff_') && otherIds.has(replySender.substring(6)));
 
             return (
               <React.Fragment key={msg.messageId}>
@@ -654,12 +710,29 @@ export const ChatWindow: React.FC<Props> = ({
                   )}
                 >
                   {/* Message Bubble Container */}
-                  <div className={clsx(
-                    "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed",
-                    isMe
-                      ? (activeWallpaper.bubbleMeClass || "bg-brand-600 text-white") + " rounded-br-xs"
-                      : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
-                  )}>
+                  <div
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                    }}
+                    onTouchStart={() => {
+                      touchTimerRef.current = setTimeout(() => {
+                        setActiveMenuMessageId(msg.messageId);
+                      }, 500);
+                    }}
+                    onTouchEnd={() => {
+                      if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+                    }}
+                    onTouchMove={() => {
+                      if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+                    }}
+                    className={clsx(
+                      "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed",
+                      isMe
+                        ? (activeWallpaper.bubbleMeClass || "bg-brand-600 text-white") + " rounded-br-xs"
+                        : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
+                    )}
+                  >
 
                     {/* Quoted Parent Reply Box */}
                     {msg.replyToMessage && (
@@ -675,7 +748,7 @@ export const ChatWindow: React.FC<Props> = ({
                         <CornerDownRight className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-75" />
                         <div className="min-w-0">
                           <p className="font-extrabold text-[11px] opacity-90">
-                            {msg.replyToMessage.senderId === currentUserId ? 'You' : conversation.otherUser.name}
+                            {isReplyFromOther ? (conversation?.otherUser?.name || 'Other') : 'You'}
                           </p>
                           <p className="truncate text-[11px] font-medium opacity-80">
                             {msg.replyToMessage.content}
@@ -721,91 +794,159 @@ export const ChatWindow: React.FC<Props> = ({
                       </div>
                     )}
 
-                    {/* Action Trigger Dots */}
+                    {/* Action Trigger Chevron / Dots */}
                     <button
-                      onClick={() => setActiveMenuMessageId(isMenuOpen ? null : msg.messageId)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                      }}
                       className={clsx(
-                        "absolute top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md cursor-pointer",
+                        "absolute top-2 p-1 rounded-md cursor-pointer transition-all z-10",
                         isMe
-                          ? "right-full mr-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white/80 dark:bg-navy-900/80"
-                          : "left-full ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white/80 dark:bg-navy-900/80"
+                          ? "right-full mr-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white/90 dark:bg-navy-900/90 shadow-xs"
+                          : "left-full ml-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-white/90 dark:bg-navy-900/90 shadow-xs",
+                        "opacity-75 sm:opacity-0 sm:group-hover:opacity-100"
                       )}
-                      title="Message options"
+                      title="Message options (Edit, Delete, Reply)"
                     >
                       <MoreVertical className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
+                  {/* Transparent Backdrop to close on click outside */}
+                  {isMenuOpen && (
+                    <div 
+                      className="fixed inset-0 z-20" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuMessageId(null);
+                      }} 
+                    />
+                  )}
+
                   {/* Context Menu Dropdown */}
                   {isMenuOpen && (
-                    <div className={clsx(
-                      "absolute top-8 z-30 w-48 bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100",
-                      isMe ? "right-0" : "left-0"
-                    )}>
+                    <div 
+                      onClick={(e) => e.stopPropagation()}
+                      className={clsx(
+                        "absolute top-8 z-30 w-52 bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-100",
+                        isMe ? "right-0" : "left-0"
+                      )}
+                    >
+                      {/* Quick Reactions Bar */}
+                      <div className="flex items-center justify-between px-2 py-1 mb-1 bg-slate-50 dark:bg-navy-950/60 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                        {['👍', '❤️', '😂', '😮', '🎉', '🔥'].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => {
+                              onToggleReaction(msg.messageId, emoji);
+                              setActiveMenuMessageId(null);
+                            }}
+                            className="hover:scale-125 transition-transform p-1 text-base cursor-pointer"
+                            title={`React ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
 
+                      {/* Reply */}
                       <button
+                        type="button"
                         onClick={() => {
                           setReplyingToMessage(msg);
+                          setEditingMessage(null);
                           setActiveMenuMessageId(null);
+                          setTimeout(() => textInputRef.current?.focus(), 50);
                         }}
-                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-lg flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
                       >
-                        <Reply className="w-3.5 h-3.5 text-brand-500" />
+                        <Reply className="w-4 h-4 text-brand-500" />
                         <span>Reply</span>
                       </button>
 
+                      {/* Edit (For my messages) */}
                       {isMe && !msg.isDeletedEveryone && (
                         <button
-                          onClick={() => handleStartEdit(msg)}
-                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-lg flex items-center gap-2 cursor-pointer"
+                          type="button"
+                          onClick={() => {
+                            handleStartEdit(msg);
+                            setActiveMenuMessageId(null);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl flex items-center justify-between cursor-pointer transition-colors"
                         >
-                          <Edit2 className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Edit</span>
+                          <div className="flex items-center gap-2.5">
+                            <Edit2 className="w-4 h-4 text-amber-500" />
+                            <span>Edit Message</span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded-md">
+                            Sender
+                          </span>
                         </button>
                       )}
 
-                      <button
-                        onClick={() => handleCopyText(msg.content)}
-                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-lg flex items-center gap-2 cursor-pointer"
-                      >
-                        <Copy className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Copy Text</span>
-                      </button>
+                      {/* Copy Text */}
+                      {msg.content && !msg.isDeletedEveryone && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleCopyText(msg.content);
+                            setActiveMenuMessageId(null);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
+                        >
+                          <Copy className="w-4 h-4 text-slate-500" />
+                          <span>Copy Text</span>
+                        </button>
+                      )}
 
+                      {/* Forward */}
                       <button
+                        type="button"
                         onClick={() => {
                           onForwardMessage(msg);
                           setActiveMenuMessageId(null);
                         }}
-                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-lg flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
                       >
-                        <Share2 className="w-3.5 h-3.5 text-indigo-500" />
+                        <Share2 className="w-4 h-4 text-indigo-500" />
                         <span>Forward</span>
                       </button>
 
                       <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
+                      {/* Delete for me */}
                       <button
+                        type="button"
                         onClick={() => {
                           onDeleteMessage(msg.messageId, 'FOR_ME');
                           setActiveMenuMessageId(null);
                         }}
-                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                         <span>Delete for me</span>
                       </button>
 
+                      {/* Delete for everyone */}
                       {isMe && !msg.isDeletedEveryone && (
                         <button
+                          type="button"
                           onClick={() => {
                             onDeleteMessage(msg.messageId, 'FOR_EVERYONE');
                             setActiveMenuMessageId(null);
                           }}
-                          className="w-full text-left px-3 py-1.5 text-xs font-black text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg flex items-center gap-2 cursor-pointer"
+                          className="w-full text-left px-3 py-1.5 text-xs font-black text-rose-600 hover:bg-rose-100/70 dark:hover:bg-rose-950/70 rounded-xl flex items-center justify-between cursor-pointer transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete for everyone</span>
+                          <div className="flex items-center gap-2.5">
+                            <Trash2 className="w-4 h-4 text-rose-600" />
+                            <span>Delete for everyone</span>
+                          </div>
+                          <span className="text-[10px] font-black uppercase text-rose-600 bg-rose-100 dark:bg-rose-950 px-1.5 py-0.5 rounded-md">
+                            Unsend
+                          </span>
                         </button>
                       )}
                     </div>
