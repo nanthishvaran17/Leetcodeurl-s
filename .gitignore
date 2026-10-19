@@ -91,6 +91,7 @@ output/*.mp4
 output/*.wav
 output/*.ttf
 output/auth_state.json
+tools/video_production/output_apple_60s/
 
 # Root-level DB files (SQLite) & locks — never commit
 *.db

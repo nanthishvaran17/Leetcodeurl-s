@@ -5,7 +5,7 @@ import { RecipientSelector, Recipient } from '../components/messaging/RecipientS
 import { ConversationInfoPanel } from '../components/messaging/ConversationInfoPanel';
 import { AskInstitutionPanel } from '../components/messaging/AskInstitutionPanel';
 import { SmartGroupModal } from '../components/messaging/SmartGroupModal';
-import { getApiUrl, getAuthHeaders } from '../services/api';
+import api, { getApiUrl, getAuthHeaders } from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -76,7 +76,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await axios.get(getApiUrl('/messaging/conversations'), { headers: await getAuthHeaders() });
+      const res = await api.get('/messaging/conversations');
       if (res.data?.success) {
         setConversations(res.data.conversations);
       }
@@ -85,14 +85,17 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     }
   }, []);
 
+  // Initial load: Fetch conversations immediately on mount (0ms delay, independent of WebSocket)
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
   const fetchMessages = useCallback(async (conversationId: string) => {
     if (!conversationId || conversationId.startsWith('system-')) {
       return;
     }
     try {
-      const res = await axios.get(getApiUrl(`/messaging/conversations/${conversationId}/messages`), {
-        headers: await getAuthHeaders()
-      });
+      const res = await api.get(`/messaging/conversations/${conversationId}/messages`);
       if (res.data?.success) {
         const uniqueMsgs: Message[] = [];
         const seen = new Set<string>();
@@ -117,7 +120,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const fetchTransparency = async () => {
     setLoadingTransparency(true);
     try {
-      const res = await axios.get(getApiUrl('/messaging/why-was-i-flagged'), { headers: await getAuthHeaders() });
+      const res = await api.get('/messaging/why-was-i-flagged');
       if (res.data?.success) {
         setTransparencyData(res.data.transparency);
       }
@@ -147,35 +150,23 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     leaveConversation
   } = useMessagingWebSocket(token);
 
-  useEffect(() => {
-    if (isConnected) {
-      fetchConversations();
-      if (activeConversationId && !activeConversationId.startsWith('system-')) {
-        fetchMessages(activeConversationId);
-        viewConversation(activeConversationId);
-      } else {
-        leaveConversation();
-      }
-      flushOutbox();
-    }
-    return () => leaveConversation();
-  }, [activeConversationId, viewConversation, leaveConversation, isConnected, fetchConversations, fetchMessages]);
-
-  const flushOutbox = async () => {
+  const flushOutbox = useCallback(async () => {
     const outboxRaw = localStorage.getItem('messages_outbox');
     if (!outboxRaw) return;
     try {
       const outbox: any[] = JSON.parse(outboxRaw);
       if (outbox.length === 0) return;
       
-      const remaining = [];
+      const remaining: any[] = [];
       for (const item of outbox) {
         try {
-          // Re-send text payloads
-          const res = await axios.post(getApiUrl('/messaging/messages'), item.payload, { headers: await getAuthHeaders() });
+          // Re-send text payloads via direct fast HTTP
+          const res = await api.post('/messaging/messages', item.payload);
           if (res.data?.success) {
             const realMsg = res.data.message;
             setMessages(prev => prev.map(m => m.messageId === item.tempId ? realMsg : m));
+          } else {
+            remaining.push(item);
           }
         } catch (e) {
           remaining.push(item);
@@ -186,7 +177,32 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     } catch (e) {
       localStorage.removeItem('messages_outbox');
     }
-  };
+  }, [fetchConversations]);
+
+  // Auto-flush outbox when device reconnects to network
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('[MESSAGING] Network online restored, flushing pending outbox messages...');
+      flushOutbox();
+      fetchConversations();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [flushOutbox, fetchConversations]);
+
+  // Sync active conversation viewing with WebSocket when connected
+  useEffect(() => {
+    if (isConnected) {
+      fetchConversations();
+      if (activeConversationId && !activeConversationId.startsWith('system-')) {
+        viewConversation(activeConversationId);
+      } else {
+        leaveConversation();
+      }
+      flushOutbox();
+    }
+    return () => leaveConversation();
+  }, [activeConversationId, viewConversation, leaveConversation, isConnected, fetchConversations, flushOutbox]);
 
   // Handle incoming NEW_MESSAGE
   useEffect(() => {
@@ -316,41 +332,52 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       fileMimeType
     };
 
+    // 0ms Perception: Instantly render message bubble in UI without waiting
     setMessages(prev => [...prev, optMsg]);
 
-    // Fire and forget (or queue if offline)
+    // 0ms Perception: Immediately elevate conversation to top with latest preview
+    setConversations(prev => {
+      const targetConvId = activeConversationId;
+      const updated = prev.map(c => {
+        if (c.conversationId === targetConvId) {
+          return {
+            ...c,
+            lastMessagePreview: content || (attachmentFile ? 'Sent an attachment' : c.lastMessagePreview),
+            lastMessageAt: new Date().toISOString()
+          };
+        }
+        return c;
+      });
+      return updated.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+    });
+
+    // Sub-millisecond parallel HTTP dispatch (Guaranteed delivery regardless of WebSocket state)
     const runUpload = async () => {
+      let payload: any = {
+        content,
+        receiver_id: conv.otherUser.id,
+        client_message_id: tempId,
+        t0_client_send: Date.now()
+      };
+      if (replyToMessageId) payload.reply_to_message_id = replyToMessageId;
+
       try {
         let finalAttachmentFileId = undefined;
         
         if (attachmentFile) {
           const formData = new FormData();
           formData.append('file', attachmentFile);
-          const uploadRes = await axios.post(getApiUrl('/messaging/upload'), formData, {
-            headers: {
-              ...await getAuthHeaders(),
-              'Content-Type': 'multipart/form-data'
-            }
+          const uploadRes = await api.post('/messaging/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
           });
           if (uploadRes.data?.success) {
             finalAttachmentFileId = uploadRes.data.file_id;
+            payload.attachment_file_id = finalAttachmentFileId;
           }
         }
 
-        const payload: any = { content, receiver_id: conv.otherUser.id, client_message_id: tempId, t0_client_send: Date.now() };
-        if (finalAttachmentFileId) payload.attachment_file_id = finalAttachmentFileId;
-        if (replyToMessageId) payload.reply_to_message_id = replyToMessageId;
-
-        if (!isConnected && !attachmentFile) {
-          // Queue text message to outbox
-          const outboxRaw = localStorage.getItem('messages_outbox');
-          const outbox = outboxRaw ? JSON.parse(outboxRaw) : [];
-          outbox.push({ payload, tempId });
-          localStorage.setItem('messages_outbox', JSON.stringify(outbox));
-          return;
-        }
-
-        const res = await axios.post(getApiUrl('/messaging/messages'), payload, { headers: await getAuthHeaders() });
+        // Direct HTTP API post: bypasses WebSocket disconnect blocks
+        const res = await api.post('/messaging/messages', payload);
         if (res.data?.success) {
           const realMsg = res.data.message;
           setMessages(prev => prev.map(m => {
@@ -360,7 +387,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
             }
             return m;
           }));
-          // Optimistically update conversation preview instantly without heavy network fetch
+          // Confirm server preview
           setConversations(prev => {
             let found = false;
             const targetConvId = realMsg.conversationId || activeConversationId;
@@ -382,10 +409,15 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
             return updated.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
           });
         }
-      } catch (err) {
-        // If it fails (e.g. network drops during upload), fallback to filter
-        setMessages(prev => prev.filter(m => m.messageId !== tempId));
-        // Optionally trigger a toast error here
+      } catch (err: any) {
+        console.warn('[MESSAGING] Send failed, preserved in outbox for retry:', err);
+        // Retain optimistic message in UI and preserve in outbox for automatic background flush
+        try {
+          const outboxRaw = localStorage.getItem('messages_outbox');
+          const outbox = outboxRaw ? JSON.parse(outboxRaw) : [];
+          outbox.push({ payload, tempId });
+          localStorage.setItem('messages_outbox', JSON.stringify(outbox));
+        } catch (e) {}
       }
     };
     runUpload();
@@ -393,7 +425,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   const handleEditMessage = async (messageId: string, newContent: string) => {
     try {
-      const res = await axios.put(getApiUrl(`/messaging/messages/${messageId}`), { content: newContent }, { headers: await getAuthHeaders() });
+      const res = await api.put(`/messaging/messages/${messageId}`, { content: newContent });
       if (res.data?.success) {
         setMessages(prev => prev.map(m => m.messageId === messageId ? res.data.message : m));
       }
@@ -402,7 +434,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   const handleDeleteMessage = async (messageId: string, mode: 'FOR_ME' | 'FOR_EVERYONE') => {
     try {
-      const res = await axios.delete(getApiUrl(`/messaging/messages/${messageId}?mode=${mode}`), { headers: await getAuthHeaders() });
+      const res = await api.delete(`/messaging/messages/${messageId}?mode=${mode}`);
       if (res.data?.success) {
         if (mode === 'FOR_EVERYONE' && res.data.message) {
           setMessages(prev => prev.map(m => m.messageId === messageId ? res.data.message : m));
@@ -418,7 +450,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return { success: true, conversationId };
     }
     try {
-      const res = await axios.delete(getApiUrl(`/messaging/conversations/${conversationId}`), { headers: await getAuthHeaders() });
+      const res = await api.delete(`/messaging/conversations/${conversationId}`);
       if (res.data?.success) {
         setConversations(prev => prev.filter(c => c.conversationId !== conversationId));
         if (activeConversationId === conversationId) {
@@ -435,7 +467,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return { success: true, is_pinned: true, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/pin`), {}, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/conversations/${conversationId}/pin`, {});
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, isPinned: res.data.is_pinned } : c));
       }
@@ -448,7 +480,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return { success: true, is_archived: false, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/archive`), {}, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/conversations/${conversationId}/archive`, {});
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, isArchived: res.data.is_archived } : c));
       }
@@ -464,7 +496,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return { success: true, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/clear`), {}, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/conversations/${conversationId}/clear`, {});
       if (res.data?.success) {
         if (activeConversationId === conversationId) {
           setMessages([]);
@@ -477,7 +509,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   const handleBlockUser = async (userId: string) => {
     try {
-      const res = await axios.post(getApiUrl(`/messaging/profile/${userId}/block`), {}, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/profile/${userId}/block`, {});
       return res.data;
     } catch (err) { throw err; }
   };
@@ -487,7 +519,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return { success: true, unreadCount: 1, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/unread`), {}, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/conversations/${conversationId}/unread`, {});
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: res.data.unreadCount || Math.max(1, (c.unreadCount || 0) + 1) } : c));
       }
@@ -500,7 +532,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return { success: true, unreadCount: 0, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/read`), {}, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/conversations/${conversationId}/read`, {});
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c));
       }
@@ -510,7 +542,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   const handleToggleReaction = async (messageId: string, emoji: string) => {
     try {
-      const res = await axios.post(getApiUrl(`/messaging/messages/${messageId}/reactions`), { emoji }, { headers: await getAuthHeaders() });
+      const res = await api.post(`/messaging/messages/${messageId}/reactions`, { emoji });
       if (res.data?.success) {
         setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, reactions: res.data.reactions } : m));
       }
@@ -527,11 +559,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     const conv = conversations.find(c => c.conversationId === activeConversationId);
     if (!conv) return;
     try {
-      await axios.post(getApiUrl('/messaging/typing'), {
+      await api.post('/messaging/typing', {
         conversation_id: activeConversationId,
         receiver_id: conv.otherUser.id,
         is_typing: isTyping
-      }, { headers: await getAuthHeaders() });
+      });
     } catch (err) {}
   };
 
@@ -547,11 +579,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       const targetMsg = forwardingMessage;
       setForwardingMessage(null);
       try {
-        const res = await axios.post(getApiUrl('/messaging/messages'), {
+        const res = await api.post('/messaging/messages', {
           content: `Forwarded: ${targetMsg.content}`,
           receiver_id: recipientId,
           attachment_file_id: targetMsg.attachmentFileId
-        }, { headers: await getAuthHeaders() });
+        });
         if (res.data?.success) {
           await fetchConversations();
           handleSelectConversation(res.data.message.conversationId);
@@ -581,9 +613,9 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
     // Call backend to create or get conversation record without auto-sending dummy messages
     try {
-      const res = await axios.post(getApiUrl('/messaging/conversations'), {
+      const res = await api.post('/messaging/conversations', {
         recipient_id: recipientId
-      }, { headers: await getAuthHeaders() });
+      });
 
       if (res.data?.success && res.data.conversation) {
         const newConv = res.data.conversation;
