@@ -2,7 +2,9 @@ import os
 import sys
 import psycopg2
 
-PG_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_W0ihJ1PKujEx@ep-fragrant-boat-b5bjd6aw.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require")
+PG_URL = os.getenv("DATABASE_URL", "")
+if not PG_URL:
+    raise ValueError("DATABASE_URL environment variable is required.")
 
 print("Connecting to Neon Postgres DB...")
 conn = psycopg2.connect(PG_URL)

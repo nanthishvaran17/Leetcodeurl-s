@@ -2,7 +2,9 @@ import os
 import sys
 from sqlalchemy import create_engine, text
 
-PG_URL = "postgresql://neondb_owner:npg_5oAmt0ICFKMT@ep-falling-pine-ae9dk8zu.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require"
+PG_URL = os.getenv("DATABASE_URL", "")
+if not PG_URL:
+    raise ValueError("DATABASE_URL environment variable is required.")
 
 def check():
     engine = create_engine(PG_URL, echo=False)

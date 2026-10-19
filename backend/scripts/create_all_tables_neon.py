@@ -7,7 +7,9 @@ sys.path.insert(0, ROOT_DIR)
 
 from backend.models import Base
 
-PG_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_W0ihJ1PKujEx@ep-fragrant-boat-b5bjd6aw-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require")
+PG_URL = os.getenv("DATABASE_URL", "")
+if not PG_URL:
+    raise ValueError("DATABASE_URL environment variable is required.")
 
 print(f"Connecting engine to Neon DB: {PG_URL.split('@')[-1]}")
 engine = create_engine(PG_URL, pool_pre_ping=True)

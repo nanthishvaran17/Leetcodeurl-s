@@ -11,7 +11,9 @@ sys.path.insert(0, ROOT_DIR)
 from backend.models import Base
 
 SQLITE_PATH = os.path.join(ROOT_DIR, "data", "leetcode_tracker.db")
-PG_URL = "postgresql://neondb_owner:npg_5oAmt0ICFKMT@ep-falling-pine-ae9dk8zu.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require"
+PG_URL = os.getenv("DATABASE_URL", "")
+if not PG_URL:
+    raise ValueError("DATABASE_URL environment variable is required.")
 
 def main():
     print("=" * 70, flush=True)
