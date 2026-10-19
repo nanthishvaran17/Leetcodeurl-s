@@ -11,7 +11,7 @@ import jwt
 import urllib.parse
 import re
 import pyotp
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks, Body
 from fastapi.responses import JSONResponse
@@ -1349,6 +1349,27 @@ class UpdateProfileRequest(BaseModel):
     is_2fa_enabled: Optional[bool] = None
     current_password: Optional[str] = None
     new_password: Optional[str] = None
+    profile_metadata: Optional[Dict[str, Any]] = None
+    blood_group: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    office_location: Optional[str] = None
+    specialization: Optional[str] = None
+    highest_degree: Optional[str] = None
+    experience_years: Optional[str] = None
+    courses_taught: Optional[str] = None
+    faculty_bio: Optional[str] = None
+    languages: Optional[List[str]] = None
+    consultation_days: Optional[str] = None
+    consultation_slot: Optional[str] = None
+    consultation_mode: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    scholar_url: Optional[str] = None
+    orcid_id: Optional[str] = None
+    scopus_id: Optional[str] = None
+    leetcode_handle: Optional[str] = None
+    card_theme: Optional[str] = None
 
 
 @router.get("/me")
@@ -1380,6 +1401,7 @@ def get_my_profile(
             "department_id": user.department_id,
             "section_id": user.section_id,
             "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            "profile_metadata": getattr(user, "profile_metadata", None) or {},
             "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else "",
             "last_login": user.last_login.isoformat() if getattr(user, "last_login", None) else "",
             **dept_scope
@@ -1468,6 +1490,34 @@ def update_user_profile(
         user.hashed_password = get_password_hash(payload.new_password)  # type: ignore
         user.require_password_change = False  # type: ignore
 
+    # Process extended profile metadata
+    existing_meta = getattr(user, "profile_metadata", None) or {}
+    if not isinstance(existing_meta, dict):
+        try:
+            existing_meta = json.loads(existing_meta) if isinstance(existing_meta, str) else {}
+        except Exception:
+            existing_meta = {}
+    else:
+        existing_meta = dict(existing_meta)
+
+    if payload.profile_metadata and isinstance(payload.profile_metadata, dict):
+        existing_meta.update(payload.profile_metadata)
+
+    # Direct extended fields mapping
+    meta_fields = [
+        "blood_group", "emergency_contact_name", "emergency_contact_phone",
+        "office_location", "specialization", "highest_degree", "experience_years",
+        "courses_taught", "faculty_bio", "languages", "consultation_days",
+        "consultation_slot", "consultation_mode", "linkedin_url", "github_url",
+        "scholar_url", "orcid_id", "scopus_id", "leetcode_handle", "card_theme"
+    ]
+    for field in meta_fields:
+        val = getattr(payload, field, None)
+        if val is not None:
+            existing_meta[field] = val
+
+    user.profile_metadata = existing_meta
+
     db.commit()
     db.refresh(user)
     dept_scope = _get_user_dept_scope(db, user)
@@ -1491,6 +1541,7 @@ def update_user_profile(
             "department_id": user.department_id,
             "section_id": user.section_id,
             "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            "profile_metadata": getattr(user, "profile_metadata", None) or {},
             "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else "",
             "last_login": user.last_login.isoformat() if getattr(user, "last_login", None) else "",
             **dept_scope

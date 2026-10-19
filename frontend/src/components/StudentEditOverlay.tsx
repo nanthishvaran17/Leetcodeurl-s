@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -208,6 +208,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [lcValidation, setLcValidation] = useState<LcValidationState>({ status: 'idle' });
 
   const initialRef = useRef<any>(null);
+  const hasUserEditedRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -318,18 +319,19 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   useEffect(() => {
     if (isOpen && student) {
+      hasUserEditedRef.current = false;
       populateFromStudentData(student);
       setErrorMessage(null);
       setShowUnsavedPrompt(false);
       setLcValidation({ status: 'idle' });
 
-      // Automatically refetch fresh student details from backend API to guarantee no empty or stale data
+      // Automatically refetch fresh student details from backend API only if user hasn't started typing
       const targetId = student?.id || student?.student_id || student?.reg_no || student?.register_number || student?.register_no;
       if (targetId) {
         let isMounted = true;
         api.get(`/students/${encodeURIComponent(targetId)}`)
           .then(res => {
-            if (isMounted && res.data) {
+            if (isMounted && res.data && !hasUserEditedRef.current) {
               populateFromStudentData(res.data);
             }
           })
@@ -339,7 +341,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         return () => { isMounted = false; };
       }
     }
-  }, [isOpen, student, populateFromStudentData]);
+  }, [isOpen, student?.id, student?.reg_no]);
 
   const hasUnsavedChanges = useCallback(() => {
     if (!initialRef.current) return false;

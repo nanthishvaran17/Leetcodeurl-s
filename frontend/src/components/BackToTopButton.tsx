@@ -1,16 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
 
 export const BackToTopButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const visibleRef = useRef(false);
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (window.scrollY > 350) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const shouldShow = window.scrollY > 350;
+          if (visibleRef.current !== shouldShow) {
+            visibleRef.current = shouldShow;
+            setIsVisible(shouldShow);
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 

@@ -843,6 +843,29 @@ export const AccountProfileSettings: React.FC = () => {
           setDateOfBirth(parseDOBToDisplay(u.date_of_birth));
           setProfilePhoto(u.profile_photo || null);
           if (u.is_2fa_enabled !== undefined) setIs2FAEnabled(Boolean(u.is_2fa_enabled));
+
+          // Load server-backed profile metadata
+          const m = u.profile_metadata || {};
+          if (m.blood_group) setBloodGroup(m.blood_group);
+          if (m.emergency_contact_name) setEmergencyContactName(m.emergency_contact_name);
+          if (m.emergency_contact_phone) setEmergencyContactPhone(m.emergency_contact_phone);
+          if (m.office_location) setOfficeLocation(m.office_location);
+          if (m.specialization) setSpecialization(m.specialization);
+          if (m.highest_degree) setHighestDegree(m.highest_degree);
+          if (m.experience_years) setExperienceYears(m.experience_years);
+          if (m.courses_taught) setCoursesTaught(m.courses_taught);
+          if (m.faculty_bio) setFacultyBio(m.faculty_bio);
+          if (Array.isArray(m.languages) && m.languages.length > 0) setSelectedLanguages(m.languages);
+          if (m.consultation_days) setConsultationDays(m.consultation_days);
+          if (m.consultation_slot) setConsultationSlot(m.consultation_slot);
+          if (m.consultation_mode) setConsultationMode(m.consultation_mode);
+          if (m.linkedin_url) setLinkedinUrl(m.linkedin_url);
+          if (m.github_url) setGithubUrl(m.github_url);
+          if (m.scholar_url) setScholarUrl(m.scholar_url);
+          if (m.orcid_id) setOrcidId(m.orcid_id);
+          if (m.scopus_id) setScopusId(m.scopus_id);
+          if (m.leetcode_handle) setLeetcodeHandle(m.leetcode_handle);
+          if (m.card_theme) setSelectedCardTheme(m.card_theme);
         }
       } catch {
         if (user) {
@@ -1249,7 +1272,27 @@ export const AccountProfileSettings: React.FC = () => {
         phone_number: (phoneNumber || '').trim(),
         date_of_birth: dobToSend,
         profile_photo: profilePhoto || null,
-        is_2fa_enabled: is2FAEnabled
+        is_2fa_enabled: is2FAEnabled,
+        blood_group: bloodGroup,
+        emergency_contact_name: emergencyContactName,
+        emergency_contact_phone: emergencyContactPhone,
+        office_location: officeLocation,
+        specialization: specialization,
+        highest_degree: highestDegree,
+        experience_years: experienceYears,
+        courses_taught: coursesTaught,
+        faculty_bio: facultyBio,
+        languages: selectedLanguages,
+        consultation_days: consultationDays,
+        consultation_slot: consultationSlot,
+        consultation_mode: consultationMode,
+        linkedin_url: linkedinUrl,
+        github_url: githubUrl,
+        scholar_url: scholarUrl,
+        orcid_id: orcidId,
+        scopus_id: scopusId,
+        leetcode_handle: leetcodeHandle,
+        card_theme: selectedCardTheme
       };
 
       if (newPassword && currentPassword) {

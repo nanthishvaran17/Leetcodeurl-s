@@ -2064,3 +2064,54 @@ body {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* ==========================================================================
+   MOBILE ULTRA-SMOOTH 60-120FPS HARDWARE-ACCELERATED SCROLLING OPTIMIZATION
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Disable expensive multi-layer GPU shader blur passes during mobile scrolling */
+  .backdrop-blur,
+  .backdrop-blur-xs,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .glass-panel,
+  .glass-panel-elevated,
+  .glass-card,
+  .modal-overlay-responsive {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Solid fast compositing colors for mobile modal overlays */
+  .modal-overlay-responsive {
+    background-color: rgba(6, 10, 20, 0.94) !important;
+  }
+
+  /* Prevent entrance animation stutter on page load/refetch */
+  .stagger-1,
+  .stagger-2,
+  .stagger-3,
+  .stagger-4,
+  .stagger-5,
+  .stagger-6,
+  .stagger-7,
+  .stagger-8 {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Native inertial momentum touch scrolling */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+  }
+}
+

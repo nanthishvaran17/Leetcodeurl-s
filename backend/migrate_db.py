@@ -68,6 +68,7 @@ def run_db_migrations():
             ("users", "webauthn_challenge", "ALTER TABLE users ADD COLUMN IF NOT EXISTS webauthn_challenge VARCHAR(255)"),
             ("users", "created_at", "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
             ("users", "reporting_manager_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER"),
+            ("users", "profile_metadata", "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_metadata JSONB"),
             # departments table
             ("departments", "is_active", "ALTER TABLE departments ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"),
             # report_jobs table

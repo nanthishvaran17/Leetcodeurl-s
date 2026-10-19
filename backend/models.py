@@ -711,6 +711,7 @@ class User(Base):
     face_id_enabled = Column(Boolean, default=False)
     face_descriptor = Column(Text, nullable=True)
     face_enrolled_at = Column(DateTime, nullable=True)
+    profile_metadata = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     passkeys = relationship("UserPasskey", back_populates="user", cascade="all, delete-orphan")

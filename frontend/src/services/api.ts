@@ -98,6 +98,29 @@ export const clearApiCache = () => {
   } catch (_e) {}
 };
 
+export const invalidateApiCache = (urlOrPattern?: string) => {
+  if (!urlOrPattern) {
+    clearApiCache();
+    return;
+  }
+  const cleanUrl = urlOrPattern.split('?')[0];
+  const segments = cleanUrl.split('/').filter(Boolean);
+  const resourceKey = segments.length > 0 ? segments[0] : '';
+
+  for (const key of Array.from(responseCache.keys())) {
+    if (key.includes(cleanUrl) || (resourceKey && key.includes(`/${resourceKey}`))) {
+      responseCache.delete(key);
+    }
+  }
+  try {
+    Object.keys(sessionStorage).forEach(k => {
+      if (k.startsWith('swr_') && (k.includes(cleanUrl) || (resourceKey && k.includes(`/${resourceKey}`)))) {
+        sessionStorage.removeItem(k);
+      }
+    });
+  } catch (_e) {}
+};
+
 export const getRequestKey = (url: string, config?: any): string => {
   const params = config?.params ? JSON.stringify(config.params) : '';
   let userScope = 'public';
@@ -228,6 +251,12 @@ export const globalLogout = () => {
 // Resilient Response Interceptor: Automatic Retry & Silent Token Refresh
 api.interceptors.response.use(
   (response) => {
+    // If a state-mutating request (POST, PUT, PATCH, DELETE) succeeds, automatically invalidate stale GET cache
+    const method = response.config?.method?.toLowerCase();
+    if (method && ['post', 'put', 'patch', 'delete'].includes(method)) {
+      const url = response.config?.url || '';
+      invalidateApiCache(url);
+    }
     return response;
   },
   async (error) => {
