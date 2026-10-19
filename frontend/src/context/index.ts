@@ -8,7 +8,10 @@ export * from './AuthProvider';
 export * from './DepartmentContext';
 export * from './FilterContext';
 export * from './GlobalDataContext';
-export * from './GlobalNotificationContext';
+export {
+  GlobalNotificationProvider,
+  useGlobalNotification
+} from './GlobalNotificationContext';
 export * from './GlobalWebSocketProvider';
 export * from './KeyboardContext';
 export * from './NotificationContext';
