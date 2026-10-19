@@ -3497,7 +3497,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </div>
  <div className="flex justify-end pt-2">
- <button onClick={() => setShowMethodologyModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200">
+ <button onClick={() => setShowMethodologyModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors">
  Close
  </button>
  </div>
@@ -3515,17 +3515,17 @@ export const HODCommandCenter: React.FC = () => {
  <CheckCircle2 size={16} className="text-brand-600" />
  <span>Ask Institution AI</span>
  </h3>
- <button onClick={() => setShowAIModal(false)} className="p-1 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100"><X size={16} /></button>
+ <button onClick={() => setShowAIModal(false)} className="p-1 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors"><X size={16} /></button>
  </div>
  <form onSubmit={handleAIQuery} className="space-y-3">
  <input
  value={aiQuery}
  onChange={e => setAiQuery(e.target.value)}
  placeholder="Ask about active cohort, department health, or contest ratings..."
- className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 text-xs outline-none focus:border-brand-500"
+ className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white text-xs outline-none focus:border-brand-500"
  />
  <div className="flex justify-end gap-2">
- <button type="button" onClick={() => setShowAIModal(false)} className="px-3.5 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-600">Cancel</button>
+ <button type="button" onClick={() => setShowAIModal(false)} className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">Cancel</button>
  <button type="submit" disabled={aiLoading || !aiQuery.trim()} className="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-50">
  {aiLoading && <RefreshCw size={12} className="animate-spin" />}
  <span>Query AI</span>
@@ -3533,7 +3533,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </form>
  {aiResponse && (
- <div className="p-4 rounded-xl bg-slate-50 text-xs leading-relaxed text-slate-800 whitespace-pre-wrap">
+ <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-900 text-xs leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap border border-slate-200 dark:border-navy-800">
  {aiResponse.answer || JSON.stringify(aiResponse, null, 2)}
  </div>
  )}
@@ -3564,13 +3564,13 @@ export const HODCommandCenter: React.FC = () => {
  max="100"
  value={whatIfTarget}
  onChange={e => handleWhatIf(Number(e.target.value))}
- className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
+ className="w-full h-2 bg-slate-200 dark:bg-navy-800 rounded-lg appearance-none cursor-pointer accent-brand-600"
  />
  </div>
 
- <div className="p-4 rounded-xl bg-slate-900 text-white flex items-center justify-around font-mono">
+ <div className="p-4 rounded-xl bg-slate-900 dark:bg-navy-900 text-white flex items-center justify-around font-mono border border-slate-800 dark:border-navy-800">
  <div className="text-center">
- <div className="text-xs text-slate-600 dark:text-slate-400">Current Health</div>
+ <div className="text-xs text-slate-400">Current Health</div>
  <div className="text-2xl font-bold">{health?.health_score}</div>
  </div>
  <ArrowRight size={18} className="text-brand-400" />
@@ -3583,7 +3583,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  </div>
  <div className="flex justify-end pt-2">
- <button onClick={() => setShowWhatIfModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+ <button onClick={() => setShowWhatIfModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors">
  Close Simulator
  </button>
  </div>

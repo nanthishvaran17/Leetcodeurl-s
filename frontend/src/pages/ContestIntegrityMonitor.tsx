@@ -350,22 +350,22 @@ export const ContestIntegrityMonitor: React.FC = () => {
             onClick={() => { setFilterStatus(filterStatus === 'PENDING' ? 'ALL' : 'PENDING'); setActiveTab('CASES'); }}
             className={`border rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] min-w-0 ${
               filterStatus === 'PENDING'
-                ? 'bg-rose-100/90 border-rose-400 ring-2 ring-rose-400/30 shadow-md'
-                : 'bg-rose-50/70 border-rose-200/80 hover:bg-rose-100/60'
+                ? 'bg-rose-100/90 dark:bg-rose-950/60 border-rose-400 ring-2 ring-rose-400/30 shadow-md'
+                : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-900/50 hover:bg-rose-100/60 dark:hover:bg-rose-950/50'
             }`}
           >
             <div className="space-y-1 min-w-0 flex-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-800 block truncate">
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300 block truncate">
                 Pending Review
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-rose-950">
+              <div className="text-2xl sm:text-3xl font-black text-rose-950 dark:text-rose-100">
                 {pendingCount}
               </div>
-              <p className="text-[11px] font-semibold text-rose-700/90 truncate">
+              <p className="text-[11px] font-semibold text-rose-700/90 dark:text-rose-400 truncate">
                 Action required
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-rose-200 text-rose-600 flex items-center justify-center shadow-xs shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-navy-900 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-xs shrink-0 ml-2">
               <Clock size={19} className="animate-pulse" />
             </div>
           </div>
@@ -375,22 +375,22 @@ export const ContestIntegrityMonitor: React.FC = () => {
             onClick={() => { setFilterStatus(filterStatus === 'IDENTITY_REVIEW_REQUIRED' ? 'ALL' : 'IDENTITY_REVIEW_REQUIRED'); setActiveTab('CASES'); }}
             className={`border rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] min-w-0 ${
               filterStatus === 'IDENTITY_REVIEW_REQUIRED'
-                ? 'bg-amber-100/90 border-amber-400 ring-2 ring-amber-400/30 shadow-md'
-                : 'bg-amber-50/70 border-amber-200/80 hover:bg-amber-100/60'
+                ? 'bg-amber-100/90 dark:bg-amber-950/60 border-amber-400 ring-2 ring-amber-400/30 shadow-md'
+                : 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-900/50 hover:bg-amber-100/60 dark:hover:bg-amber-950/50'
             }`}
           >
             <div className="space-y-1 min-w-0 flex-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-800 block truncate">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 block truncate">
                 Under Investigation
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-amber-950">
+              <div className="text-2xl sm:text-3xl font-black text-amber-950 dark:text-amber-100">
                 {identityReviewCount}
               </div>
-              <p className="text-[11px] font-semibold text-amber-700/90 truncate">
+              <p className="text-[11px] font-semibold text-amber-700/90 dark:text-amber-400 truncate">
                 Missing official ID link
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-amber-200 text-amber-600 flex items-center justify-center shadow-xs shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-navy-900 border border-amber-200 dark:border-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs shrink-0 ml-2">
               <User size={19} />
             </div>
           </div>
@@ -400,22 +400,22 @@ export const ContestIntegrityMonitor: React.FC = () => {
             onClick={() => { setFilterStatus(filterStatus === 'RESOLVED' ? 'ALL' : 'RESOLVED'); setActiveTab('CASES'); }}
             className={`border rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] min-w-0 ${
               filterStatus === 'RESOLVED' || filterStatus === 'CONFIRMED' || filterStatus === 'DISMISSED'
-                ? 'bg-emerald-100/90 border-emerald-400 ring-2 ring-emerald-400/30 shadow-md'
-                : 'bg-emerald-50/70 border-emerald-200/80 hover:bg-emerald-100/60'
+                ? 'bg-emerald-100/90 dark:bg-emerald-950/60 border-emerald-400 ring-2 ring-emerald-400/30 shadow-md'
+                : 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-900/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50'
             }`}
           >
             <div className="space-y-1 min-w-0 flex-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 block truncate">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 block truncate">
                 Resolved
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-950">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-950 dark:text-emerald-100">
                 {confirmedCount + dismissedCount}
               </div>
-              <p className="text-[11px] font-semibold text-emerald-700/90 truncate">
+              <p className="text-[11px] font-semibold text-emerald-700/90 dark:text-emerald-400 truncate">
                 Confirmed or Dismissed cases
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-xs shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-navy-900 border border-emerald-200 dark:border-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs shrink-0 ml-2">
               <CheckCircle size={19} />
             </div>
           </div>
@@ -425,37 +425,37 @@ export const ContestIntegrityMonitor: React.FC = () => {
             onClick={() => { setFilterStatus('ALL'); setActiveTab('CASES'); }}
             className={`border rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] min-w-0 ${
               filterStatus === 'ALL'
-                ? 'bg-blue-100/90 border-blue-400 ring-2 ring-blue-400/30 shadow-md'
-                : 'bg-blue-50/70 border-blue-200/80 hover:bg-blue-100/60'
+                ? 'bg-blue-100/90 dark:bg-blue-950/60 border-blue-400 ring-2 ring-blue-400/30 shadow-md'
+                : 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-200/80 dark:border-blue-900/50 hover:bg-blue-100/60 dark:hover:bg-blue-950/50'
             }`}
           >
             <div className="space-y-1 min-w-0 flex-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-800 block truncate">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-800 dark:text-blue-300 block truncate">
                 Total Flagged
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-blue-950">
+              <div className="text-2xl sm:text-3xl font-black text-blue-950 dark:text-blue-100">
                 {allCases.length}
               </div>
-              <p className="text-[11px] font-semibold text-blue-700/90 truncate">
+              <p className="text-[11px] font-semibold text-blue-700/90 dark:text-blue-400 truncate">
                 Cross-contest multi-account audit
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-blue-200 text-blue-600 flex items-center justify-center shadow-xs shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-navy-900 border border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs shrink-0 ml-2">
               <ShieldAlert size={19} />
             </div>
           </div>
         </div>
 
         {/* 7. UNIFIED FILTER TOOLBAR (100% FULL WIDTH RESPONSIVE FLEX/GRID) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col lg:flex-row items-center justify-between gap-4 w-full">
+        <div className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col lg:flex-row items-center justify-between gap-4 w-full">
           {/* Tab Switcher */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 w-full lg:w-auto shrink-0">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 w-full lg:w-auto shrink-0">
             <button
               onClick={() => setActiveTab('CASES')}
               className={`flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${
                 activeTab === 'CASES'
-                  ? 'bg-white text-purple-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-navy-800 text-purple-700 dark:text-purple-300 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Integrity Cases ({filteredCases.length}{filteredCases.length !== allCases.length ? ` / ${allCases.length}` : ''})
@@ -464,8 +464,8 @@ export const ContestIntegrityMonitor: React.FC = () => {
               onClick={() => setActiveTab('AUDIT_LOGS')}
               className={`flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${
                 activeTab === 'AUDIT_LOGS'
-                  ? 'bg-white text-purple-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-navy-800 text-purple-700 dark:text-purple-300 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Audit Trail ({auditLogs.length})

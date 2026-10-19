@@ -2062,8 +2062,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   placeholder="[ Select Session ]"
                   searchPlaceholder="Search contest session..."
                   showSearch={true}
-                  variant="default"
-                  className="w-full !rounded-xl border-0 !border-0 !shadow-sm !bg-white/95 !text-slate-900 text-xs font-bold"
+                  variant="dark"
+                  className="w-full !rounded-xl border border-white/15 !shadow-sm !bg-slate-900/80 hover:!bg-slate-800/90 !text-white text-xs font-bold"
                   dropdownWidth="w-[280px]"
                 />
               </div>

@@ -1667,47 +1667,47 @@ export const StudentDataIssuesPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.92, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 15 }}
-              className="max-w-md w-full p-6 rounded-3xl bg-white border border-slate-200 shadow-2xl space-y-4 text-slate-900"
+              className="max-w-md w-full p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 text-slate-900 dark:text-white"
             >
-              <div className="flex items-center space-x-2.5 border-b border-slate-200 pb-3">
-                <div className="p-2 rounded-xl bg-brand-50 text-brand-600 border border-brand-200">
+              <div className="flex items-center space-x-2.5 border-b border-slate-200 dark:border-navy-800 pb-3">
+                <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
                   <Bookmark className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">Save Custom Administrative View</h3>
-                  <p className="text-xs text-slate-500">Store current filter matrix for fast 1-click recall</p>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Save Custom Administrative View</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Store current filter matrix for fast 1-click recall</p>
                 </div>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div className="grid grid-cols-1 gap-2.5">
                   <label className="space-y-1">
-                    <span className="block font-bold text-slate-700">Primary Department Filter</span>
+                    <span className="block font-bold text-slate-700 dark:text-slate-300">Primary Department Filter</span>
                     <select
                       value={selectedDept}
                       onChange={(e) => setSelectedDept(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+                      className="w-full rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 px-3 py-2.5 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                     >
                       {deptFilterOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
                   </label>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-slate-500">Active Preset Configuration:</div>
-                  <div className="font-bold text-slate-900">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
+                  <div className="text-slate-500 dark:text-slate-400">Active Preset Configuration:</div>
+                  <div className="font-bold text-slate-900 dark:text-white">
                     Dept: {getPresetFilterLabel(selectedDept, deptFilterOptions, 'All Departments')} • Year: {getPresetFilterLabel(selectedYear, yearFilterOptions, 'All Academic Years')} • Issue: {getPresetFilterLabel(selectedIssue, issueFilterOptions, 'All Categories')}
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Preset View Name:</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Preset View Name:</label>
                   <input
                     type="text"
                     placeholder="e.g. III Year Cyber Security Sync Failures"
                     value={newViewName}
                     onChange={(e) => setNewViewName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold placeholder-slate-400 focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white font-bold placeholder-slate-400 focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -1715,7 +1715,7 @@ export const StudentDataIssuesPage: React.FC = () => {
               <div className="flex items-center space-x-3 pt-2">
                 <button
                   onClick={() => setShowSaveViewModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
