@@ -88,8 +88,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // Only allow vertical pull gesture: cancel if horizontal swipe is detected
-    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 0.8) {
+    // Only allow vertical pull gesture: instantly cancel and detach if horizontal swipe is detected
+    if (Math.abs(deltaX) > 6 && Math.abs(deltaX) >= Math.abs(deltaY) * 0.7) {
       isPullingRef.current = false;
       reachedThresholdRef.current = false;
       setPullDistance(0);

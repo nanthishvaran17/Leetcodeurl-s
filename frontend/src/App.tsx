@@ -621,6 +621,46 @@ export const App: React.FC = () => {
     isAuthenticated
   ]);
 
+  // Native Mobile Edge Swipe to Open Sidebar (Left-to-Right swipe)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isAuthenticated) return;
+
+    let startX = 0;
+    let startY = 0;
+    let isTracking = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (isSidebarOpen || e.touches.length !== 1) return;
+      const x = e.touches[0].clientX;
+      if (x <= 35) {
+        startX = x;
+        startY = e.touches[0].clientY;
+        isTracking = true;
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!isTracking) return;
+      isTracking = false;
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = Math.abs(touch.clientY - startY);
+
+      if (deltaX > 45 && deltaX > deltaY * 1.5) {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isAuthenticated, isSidebarOpen]);
+
 
 
 

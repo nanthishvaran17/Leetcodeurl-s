@@ -136,6 +136,7 @@ scratch_*.py
 audit_*.py
 generate_*.py
 fix_*.py
+!backend/scripts/fix_all_pg_sequences.py
 query_*.py
 scan_*.py
 inspect_*.py

@@ -225,13 +225,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             onClick={onClose}
           />
           
-          {/* Drawer */}
+          {/* Drawer with Native Butter-Smooth Drag-to-Close Gesture */}
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
-            transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-            className="relative w-[80vw] max-w-[290px] sm:max-w-[310px] h-full shadow-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/80 dark:border-white/[0.08]"
+            transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+            drag="x"
+            dragConstraints={{ left: -320, right: 0 }}
+            dragElastic={0.06}
+            onDragEnd={(_e, info) => {
+              if (info.offset.x < -50 || info.velocity.x < -200) {
+                onClose();
+              }
+            }}
+            className="relative w-[80vw] max-w-[290px] sm:max-w-[310px] h-full shadow-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/80 dark:border-white/[0.08] touch-pan-y"
           >
             {/* Region 1: Fixed Compact Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.06] shrink-0 mb-1 relative z-10">

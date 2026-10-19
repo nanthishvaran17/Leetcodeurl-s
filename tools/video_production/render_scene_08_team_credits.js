@@ -435,7 +435,8 @@ async function renderScene08() {
 </body>
 </html>`;
 
-  await page.setContent(html, { waitUntil: 'load' });
+  await page.setContent(html, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1000);
 
   const ffmpeg = spawn(FFMPEG, [
     '-y',
