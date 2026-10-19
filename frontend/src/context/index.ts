@@ -10,7 +10,7 @@ export * from './FilterContext';
 export * from './GlobalDataContext';
 export {
   GlobalNotificationProvider,
-  useGlobalNotification
+  useGlobalNotifications
 } from './GlobalNotificationContext';
 export * from './GlobalWebSocketProvider';
 export * from './KeyboardContext';
