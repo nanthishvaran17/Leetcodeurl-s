@@ -542,15 +542,15 @@ export const ContestIntegrityMonitor: React.FC = () => {
             {/* MOBILE RESPONSIVE CARDS VIEW (md:hidden - ALL INFO & ACTIONS ON SAME SCREEN WITHOUT HORIZONTAL SCROLL) */}
             <div className="block md:hidden space-y-3.5">
               {loading ? (
-                <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-3">
+                <div className="bg-white dark:bg-navy-950 rounded-2xl p-8 border border-slate-200 dark:border-navy-700 text-center space-y-3">
                   <RefreshCw className="w-7 h-7 text-purple-600 animate-spin mx-auto" />
-                  <span className="font-bold text-xs text-slate-600 block">Evaluating contest integrity cases...</span>
+                  <span className="font-bold text-xs text-slate-600 dark:text-slate-400 block">Evaluating contest integrity cases...</span>
                 </div>
               ) : filteredCases.length === 0 ? (
-                <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-2">
+                <div className="bg-white dark:bg-navy-950 rounded-2xl p-8 border border-slate-200 dark:border-navy-700 text-center space-y-2">
                   <CheckCircle className="w-10 h-10 text-emerald-500/80 mx-auto" />
-                  <span className="font-black text-base text-slate-900 block">No integrity cases found</span>
-                  <span className="text-xs font-semibold text-slate-600 block">All student accounts are verified clean for current filters.</span>
+                  <span className="font-black text-base text-slate-900 dark:text-white block">No integrity cases found</span>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block">All student accounts are verified clean for current filters.</span>
                 </div>
               ) : (
                 filteredCases.map((c) => {
@@ -567,13 +567,13 @@ export const ContestIntegrityMonitor: React.FC = () => {
                     <div
                       key={c.id}
                       onClick={() => setSelectedCase(c)}
-                      className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3 hover:border-purple-300 transition-all cursor-pointer active:scale-[0.995]"
+                      className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-700/80 p-4 shadow-xs space-y-3 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all cursor-pointer active:scale-[0.995]"
                     >
                       {/* Card Header: Case Ref & Status */}
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 gap-2">
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-2.5 gap-2">
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-xs font-black text-slate-900 truncate">
+                            <span className="font-mono text-xs font-black text-slate-900 dark:text-white truncate">
                               {cleanCaseShort}
                             </span>
                             <button

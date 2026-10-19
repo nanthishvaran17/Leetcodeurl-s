@@ -106,6 +106,16 @@ export const createAndroidChannels = async () => {
 export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: string) => {
   if (!deviceToken) return false;
   try {
+    if (!userEmailOrId) {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const u = JSON.parse(storedUser);
+          userEmailOrId = u.email || u.reg_no || u.username || (u.id ? `STAFF_${u.id}` : undefined);
+        }
+      } catch (_e) {}
+    }
+
     let platform = 'android';
     if (isNativeMobile()) {
       platform = Capacitor.getPlatform(); // 'android' | 'ios'

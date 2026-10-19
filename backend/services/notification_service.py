@@ -98,7 +98,8 @@ EVENT_CATEGORY_MAP = {
     "ANNOUNCEMENT_CREATED": "announcements", "ANNOUNCEMENT_UPDATED": "announcements",
     "URGENT_ANNOUNCEMENT": "announcements", "DEPARTMENT_ANNOUNCEMENT": "announcements",
     "APP_UPDATE_AVAILABLE": "announcements", "APP_UPDATE_REQUIRED": "announcements",
-    "MAINTENANCE_SCHEDULED": "announcements", "SYSTEM_ANNOUNCEMENT": "announcements", "SECURITY_ALERT": "announcements"
+    "MAINTENANCE_SCHEDULED": "announcements", "SYSTEM_ANNOUNCEMENT": "announcements", "SECURITY_ALERT": "announcements",
+    "DIRECT_MESSAGE": "messages"
 }
 
 EVENT_DESTINATION_MAP = {
@@ -160,18 +161,18 @@ class NotificationService:
             if recipient_target:
                 clean_target = str(recipient_target).strip()  # type: ignore
                 # Check user table safely without type casting error in Postgres
-                user_filters = [User.email == clean_target, User.username == clean_target]
+                user_filters = [User.email.ilike(clean_target), User.username.ilike(clean_target)]
                 if clean_target.isdigit():
                     user_filters.append(User.id == int(clean_target))
-                elif clean_target.startswith("STAFF_") and clean_target.replace("STAFF_", "").isdigit():
-                    user_filters.append(User.id == int(clean_target.replace("STAFF_", "")))
+                elif clean_target.upper().startswith("STAFF_") and clean_target[6:].isdigit():
+                    user_filters.append(User.id == int(clean_target[6:]))
                 
                 u = db.query(User).filter(or_(*user_filters)).first()
                 if u:
                     recipients.append({"user_id": u.email or f"STAFF_{u.id}", "email": u.email, "user_type": "STAFF", "name": u.full_name or u.username})
                 
                 # Check student table safely
-                student_filters = [Student.email == clean_target, Student.reg_no == clean_target, Student.username == clean_target]
+                student_filters = [Student.email.ilike(clean_target), Student.reg_no.ilike(clean_target), Student.username.ilike(clean_target)]
                 if clean_target.isdigit():
                     student_filters.append(Student.id == int(clean_target))
                     
@@ -545,7 +546,9 @@ class NotificationService:
                     "announcements": "academic_announcements",
                     "academic_announcements": "academic_announcements",
                     "system": "system_status",
-                    "app_updates": "system_status"
+                    "app_updates": "system_status",
+                    "messages": "academic_announcements",
+                    "direct_message": "academic_announcements"
                 }
                 eff_channel_id = CHANNEL_MAP.get(str(category).lower(), "academic_announcements")  # type: ignore
 
@@ -563,7 +566,7 @@ class NotificationService:
                         if user_pref.categories_json:
                             try:
                                 cat_map = json.loads(user_pref.categories_json)  # type: ignore
-                                if str(category).lower() not in ("account", "security"):  # type: ignore
+                                if str(category).lower() not in ("account", "security", "messages", "direct_message"):  # type: ignore
                                     if cat_map.get(str(category).lower()) is False:  # type: ignore
                                         continue
                             except Exception:

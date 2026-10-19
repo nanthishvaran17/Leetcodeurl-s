@@ -98,21 +98,21 @@ export const UrlImportModal: React.FC<UrlImportModalProps> = ({ isOpen, onClose,
       className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 sm:p-6 pt-20 sm:pt-24 pb-6 animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white border border-slate-200 max-w-2xl w-full max-h-[78vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden my-auto">
+      <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 max-w-2xl w-full max-h-[78vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 p-5 shrink-0 bg-slate-50/50">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 p-5 shrink-0 bg-slate-50/50 dark:bg-navy-900/60">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-purple-100 text-purple-700 border border-purple-200 rounded-xl shrink-0">
+            <div className="p-2.5 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-xl shrink-0">
               <Upload className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Bulk Import Contest URLs</h2>
-              <p className="text-xs text-slate-500 font-medium">Map student People IDs / Register Nos to LeetCode URLs (300+ batch support)</p>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">Bulk Import Contest URLs</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Map student People IDs / Register Nos to LeetCode URLs (300+ batch support)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -121,39 +121,39 @@ export const UrlImportModal: React.FC<UrlImportModalProps> = ({ isOpen, onClose,
         {/* Scrollable Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar min-h-0">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Paste Data (CSV / TSV / Lines: <code className="text-purple-700 font-mono bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">PEOPLE_ID, LEETCODE_URL</code>)
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Paste Data (CSV / TSV / Lines: <code className="text-purple-700 dark:text-purple-300 font-mono bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800">PEOPLE_ID, LEETCODE_URL</code>)
             </label>
             <textarea
               rows={8}
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               placeholder={`P00125, https://leetcode.com/u/ajay_dev/\nP00126, https://leetcode.com/u/ajay_alt/\nP00127, https://leetcode.com/u/rahul_code/`}
-              className="w-full bg-slate-50/70 border border-slate-200 rounded-2xl p-4 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition leading-relaxed"
+              className="w-full bg-slate-50/70 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-2xl p-4 text-xs font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-navy-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition leading-relaxed"
             />
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+            <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl text-rose-800 dark:text-rose-200 text-xs font-semibold">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
             </div>
           )}
 
           {result && (
-            <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl text-emerald-900 text-xs space-y-2">
-              <div className="flex items-center gap-2 font-bold text-emerald-800">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <div className="p-4 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl text-emerald-900 dark:text-emerald-200 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
+                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span>Import Complete</span>
               </div>
               <div className="grid grid-cols-3 gap-2 pt-1 text-xs">
-                <div className="bg-white/80 border border-emerald-200 p-2 rounded-xl text-slate-700 font-medium">Total Processed: <strong className="text-slate-900 font-bold">{result.total}</strong></div>
-                <div className="bg-white/80 border border-emerald-200 p-2 rounded-xl text-emerald-800 font-medium">Successfully Mapped: <strong className="text-emerald-700 font-bold">{result.success}</strong></div>
-                <div className="bg-white/80 border border-emerald-200 p-2 rounded-xl text-slate-600 font-medium">Skipped (Existing): <strong className="text-slate-700 font-bold">{result.skipped}</strong></div>
+                <div className="bg-white/80 dark:bg-navy-900 border border-emerald-200 dark:border-navy-700 p-2 rounded-xl text-slate-700 dark:text-slate-300 font-medium">Total Processed: <strong className="text-slate-900 dark:text-white font-bold">{result.total}</strong></div>
+                <div className="bg-white/80 dark:bg-navy-900 border border-emerald-200 dark:border-navy-700 p-2 rounded-xl text-emerald-800 dark:text-emerald-300 font-medium">Successfully Mapped: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{result.success}</strong></div>
+                <div className="bg-white/80 dark:bg-navy-900 border border-emerald-200 dark:border-navy-700 p-2 rounded-xl text-slate-600 dark:text-slate-400 font-medium">Skipped (Existing): <strong className="text-slate-700 dark:text-slate-300 font-bold">{result.skipped}</strong></div>
               </div>
               {result.errors && result.errors.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-emerald-200 text-xs text-rose-800 max-h-24 overflow-y-auto font-mono">
-                  <p className="font-bold text-rose-700 mb-1">Errors ({result.errors.length}):</p>
+                <div className="mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-900/50 text-xs text-rose-800 dark:text-rose-300 max-h-24 overflow-y-auto font-mono">
+                  <p className="font-bold text-rose-700 dark:text-rose-400 mb-1">Errors ({result.errors.length}):</p>
                   {result.errors.map((e: any, idx: number) => (
                     <div key={idx}>• {e.error}</div>
                   ))}
@@ -164,10 +164,10 @@ export const UrlImportModal: React.FC<UrlImportModalProps> = ({ isOpen, onClose,
         </div>
 
         {/* Pinned Footer */}
-        <div className="flex justify-end gap-2.5 p-4 border-t border-slate-200 bg-slate-50/80 shrink-0">
+        <div className="flex justify-end gap-2.5 p-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/60 shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition cursor-pointer"
+            className="px-4 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-navy-800 hover:bg-slate-100 dark:hover:bg-navy-700 border border-slate-200 dark:border-navy-700 rounded-xl transition cursor-pointer"
           >
             Cancel
           </button>

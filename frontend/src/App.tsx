@@ -16,17 +16,18 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
-import { InstallAppPrompt } from './components/InstallAppPrompt';
-import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 import { useScrollLock, forceUnlockScroll } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
-import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
 import { PullToRefresh } from './components/PullToRefresh';
 import { warmupPriorityRoutes } from './utils/pagePrefetch';
+
+const InstallAppPrompt = safeLazy(() => import('./components/InstallAppPrompt').then(m => ({ default: m.InstallAppPrompt })));
+const AppUpdateNotifier = safeLazy(() => import('./components/AppUpdateNotifier').then(m => ({ default: m.AppUpdateNotifier })));
+const StudentShareCardModal = safeLazy(() => import('./components/StudentShareCardModal').then(m => ({ default: m.StudentShareCardModal })));
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
@@ -253,7 +254,8 @@ export const App: React.FC = () => {
     if (isAuthenticated && user?.id) {
       import('./services/pushNotifications').then(({ listenForForegroundMessages, requestPushPermissionAndSync }) => {
         listenForForegroundMessages();
-        requestPushPermissionAndSync(String(user.id));
+        const primaryIdentifier = String(user.email || user.username || (user as any).reg_no || user.id);
+        requestPushPermissionAndSync(primaryIdentifier);
       }).catch(err => console.warn('[PUSH] Lazy load note:', err));
     }
   }, [isAuthenticated, user?.id]);
@@ -1411,31 +1413,31 @@ export const App: React.FC = () => {
           </div>
         )}
 
-      {/* PWA App Install Banner */}
-      <InstallAppPrompt />
-
-      {/* App Update Notification Banner for Active Users */}
-      <AppUpdateNotifier />
-
-      {/* Shareable Achievement Card Modal */}
-      <StudentShareCardModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        student={selectedStudent || summaryData?.top_student || (user ? {
-          id: (user as any).id,
-          reg_no: (user as any).reg_no || (user as any).username || '',
-          name: (user as any).full_name || user.name || '',
-          department: (user as any).department,
-          batch: (user as any).batch,
-          year_level: (user as any).year_level,
-          college_rank: (user as any).college_rank || (user as any).rank,
-          total_solved: (user as any).total_solved,
-          easy_solved: (user as any).easy_solved,
-          medium_solved: (user as any).medium_solved,
-          hard_solved: (user as any).hard_solved,
-          streak_count: (user as any).streak_count || (user as any).current_streak
-        } : null)}
-      />
+      {/* PWA App Install & Notification Banners */}
+      <Suspense fallback={null}>
+        <InstallAppPrompt />
+        <AppUpdateNotifier />
+        {showShareModal && (
+          <StudentShareCardModal
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            student={selectedStudent || summaryData?.top_student || (user ? {
+              id: (user as any).id,
+              reg_no: (user as any).reg_no || (user as any).username || '',
+              name: (user as any).full_name || user.name || '',
+              department: (user as any).department,
+              batch: (user as any).batch,
+              year_level: (user as any).year_level,
+              college_rank: (user as any).college_rank || (user as any).rank,
+              total_solved: (user as any).total_solved,
+              easy_solved: (user as any).easy_solved,
+              medium_solved: (user as any).medium_solved,
+              hard_solved: (user as any).hard_solved,
+              streak_count: (user as any).streak_count || (user as any).current_streak
+            } : null)}
+          />
+        )}
+      </Suspense>
 
       {/* Touch-Friendly Mobile Filter Drawer */}
       {showMobileFilterDrawer && (

@@ -131,9 +131,15 @@ export default defineConfig({
           if (id.includes('node_modules/@simplewebauthn')) {
             return 'vendor-authn';
           }
-          // ── App-level splits ───────────────────────────────────────────────
-          if (id.includes('/src/components/')) {
-            return 'app-components';
+          // ── Isolated Heavy Component Splits (Zero Circular Chunks) ──────────
+          if (id.includes('/src/components/reports/') || id.includes('/src/components/ReportPreview') || id.includes('/src/components/WeeklyIntelligenceReport') || id.includes('/src/components/TneaCutoffReport')) {
+            return 'app-components-reports';
+          }
+          if (id.includes('/src/components/AccountProfileSettings') || id.includes('/src/components/StaffVerificationSection') || id.includes('/src/components/SecurityActivitySection') || id.includes('/src/components/NotificationPreferencesSection')) {
+            return 'app-components-settings';
+          }
+          if (id.includes('/src/components/AIAssistantWidget')) {
+            return 'app-components-ai';
           }
           // Context providers and shared custom hooks (bundled together to avoid circular chunking)
           if (id.includes('/src/context/') || id.includes('/src/hooks/')) {

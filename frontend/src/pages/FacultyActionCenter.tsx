@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User, Check, Building2, GraduationCap,
-  Calendar, Target, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Award
+  Calendar, Target, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Award,
+  LayoutGrid, SlidersHorizontal
 } from 'lucide-react';
 import {
   getFacultyActionKPIs, getFacultyActionsList, updateFacultyAction,
@@ -210,7 +211,8 @@ const CustomSelect: React.FC<{
 const KPICard: React.FC<{
   label: string; value: number; colorTheme: string; icon: React.ReactNode;
   active: boolean; onClick: () => void; subtitle?: string;
-}> = ({ label, value, colorTheme, icon, active, onClick, subtitle }) => {
+  isGrid?: boolean;
+}> = ({ label, value, colorTheme, icon, active, onClick, subtitle, isGrid = true }) => {
   const themes: Record<string, {
     cardBg: string;
     cardBorder: string;
@@ -225,7 +227,7 @@ const KPICard: React.FC<{
     red: {
       cardBg: 'bg-red-50/70 dark:bg-red-950/30',
       cardBorder: 'border-red-200 dark:border-red-900/50',
-      activeRing: 'ring-2 ring-red-500 border-red-500 shadow-md shadow-red-500/15 bg-red-100/70 dark:bg-red-950/50',
+      activeRing: 'ring-2 ring-inset ring-red-500 border-red-500 shadow-md shadow-red-500/15 bg-red-100/70 dark:bg-red-950/50',
       iconBg: 'bg-red-100 dark:bg-red-900/60',
       iconText: 'text-red-600 dark:text-red-400',
       numText: 'text-red-700 dark:text-red-300',
@@ -236,7 +238,7 @@ const KPICard: React.FC<{
     orange: {
       cardBg: 'bg-orange-50/70 dark:bg-orange-950/30',
       cardBorder: 'border-orange-200 dark:border-orange-900/50',
-      activeRing: 'ring-2 ring-orange-500 border-orange-500 shadow-md shadow-orange-500/15 bg-orange-100/70 dark:bg-orange-950/50',
+      activeRing: 'ring-2 ring-inset ring-orange-500 border-orange-500 shadow-md shadow-orange-500/15 bg-orange-100/70 dark:bg-orange-950/50',
       iconBg: 'bg-orange-100 dark:bg-orange-900/60',
       iconText: 'text-orange-600 dark:text-orange-400',
       numText: 'text-orange-700 dark:text-orange-300',
@@ -247,7 +249,7 @@ const KPICard: React.FC<{
     amber: {
       cardBg: 'bg-amber-50/70 dark:bg-amber-950/30',
       cardBorder: 'border-amber-200 dark:border-amber-900/50',
-      activeRing: 'ring-2 ring-amber-500 border-amber-500 shadow-md shadow-amber-500/15 bg-amber-100/70 dark:bg-amber-950/50',
+      activeRing: 'ring-2 ring-inset ring-amber-500 border-amber-500 shadow-md shadow-amber-500/15 bg-amber-100/70 dark:bg-amber-950/50',
       iconBg: 'bg-amber-100 dark:bg-amber-900/60',
       iconText: 'text-amber-600 dark:text-amber-400',
       numText: 'text-amber-700 dark:text-amber-300',
@@ -258,7 +260,7 @@ const KPICard: React.FC<{
     blue: {
       cardBg: 'bg-blue-50/70 dark:bg-blue-950/30',
       cardBorder: 'border-blue-200 dark:border-blue-900/50',
-      activeRing: 'ring-2 ring-blue-500 border-blue-500 shadow-md shadow-blue-500/15 bg-blue-100/70 dark:bg-blue-950/50',
+      activeRing: 'ring-2 ring-inset ring-blue-500 border-blue-500 shadow-md shadow-blue-500/15 bg-blue-100/70 dark:bg-blue-950/50',
       iconBg: 'bg-blue-100 dark:bg-blue-900/60',
       iconText: 'text-blue-600 dark:text-blue-400',
       numText: 'text-blue-700 dark:text-blue-300',
@@ -269,7 +271,7 @@ const KPICard: React.FC<{
     cyan: {
       cardBg: 'bg-cyan-50/70 dark:bg-cyan-950/30',
       cardBorder: 'border-cyan-200 dark:border-cyan-900/50',
-      activeRing: 'ring-2 ring-cyan-500 border-cyan-500 shadow-md shadow-cyan-500/15 bg-cyan-100/70 dark:bg-cyan-950/50',
+      activeRing: 'ring-2 ring-inset ring-cyan-500 border-cyan-500 shadow-md shadow-cyan-500/15 bg-cyan-100/70 dark:bg-cyan-950/50',
       iconBg: 'bg-cyan-100 dark:bg-cyan-900/60',
       iconText: 'text-cyan-600 dark:text-cyan-400',
       numText: 'text-cyan-700 dark:text-cyan-300',
@@ -280,7 +282,7 @@ const KPICard: React.FC<{
     emerald: {
       cardBg: 'bg-emerald-50/70 dark:bg-emerald-950/30',
       cardBorder: 'border-emerald-200 dark:border-emerald-900/50',
-      activeRing: 'ring-2 ring-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/15 bg-emerald-100/70 dark:bg-emerald-950/50',
+      activeRing: 'ring-2 ring-inset ring-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/15 bg-emerald-100/70 dark:bg-emerald-950/50',
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/60',
       iconText: 'text-emerald-600 dark:text-emerald-400',
       numText: 'text-emerald-700 dark:text-emerald-300',
@@ -291,7 +293,7 @@ const KPICard: React.FC<{
     pink: {
       cardBg: 'bg-rose-50/70 dark:bg-rose-950/30',
       cardBorder: 'border-rose-200 dark:border-rose-900/50',
-      activeRing: 'ring-2 ring-rose-500 border-rose-500 shadow-glass-dark bg-rose-500/15',
+      activeRing: 'ring-2 ring-inset ring-rose-500 border-rose-500 shadow-glass-dark bg-rose-500/15',
       iconBg: 'bg-rose-500/15',
       iconText: 'text-rose-600 dark:text-rose-400',
       numText: 'text-rose-600 dark:text-rose-400',
@@ -302,7 +304,7 @@ const KPICard: React.FC<{
     violet: {
       cardBg: 'bg-purple-50/70 dark:bg-purple-950/30',
       cardBorder: 'border-purple-200 dark:border-purple-900/50',
-      activeRing: 'ring-2 ring-purple-500 border-purple-500 shadow-glass-dark bg-purple-500/15',
+      activeRing: 'ring-2 ring-inset ring-purple-500 border-purple-500 shadow-glass-dark bg-purple-500/15',
       iconBg: 'bg-purple-500/15',
       iconText: 'text-purple-600 dark:text-purple-400',
       numText: 'text-purple-600 dark:text-purple-400',
@@ -316,14 +318,18 @@ const KPICard: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`flex-none w-[136px] sm:w-[145px] md:flex-1 md:w-auto snap-start text-left rounded-2xl p-3 sm:p-4 glass-panel border transition-all duration-300 transform hover:-translate-y-1 hover:shadow-glass cursor-pointer relative overflow-hidden group active:scale-95 ${
+      className={`text-left rounded-2xl p-2.5 sm:p-3.5 md:p-4 glass-panel border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-glass cursor-pointer relative overflow-hidden group active:scale-95 ${
+        isGrid
+          ? 'w-full'
+          : 'flex-none w-[calc(50%-5px)] min-w-[136px] md:flex-1 md:w-auto snap-start'
+      } ${
         active
           ? `${theme.activeRing}`
           : `${theme.cardBorder} ${theme.hoverBorder}`
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span className={`p-1 rounded-lg sm:p-1.5 sm:rounded-xl ${theme.iconBg} ${theme.iconText} transition-transform group-hover:scale-110 shrink-0 shadow-xs`}>
             {React.cloneElement(icon as React.ReactElement, { size: 13 })}
           </span>
@@ -913,6 +919,7 @@ export const FacultyActionCenter: React.FC = () => {
   const [filterEscalated, setFilterEscalated] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 50);
+  const [kpiViewMode, setKpiViewMode] = useState<'grid' | 'carousel'>('grid');
 
   const deptOptions = React.useMemo(() => {
     const rawList = (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
@@ -1143,31 +1150,51 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards (2026 Bento Matrix / Mobile Horizontal Snap Carousel) */}
+      {/* KPI Cards (2026 Bento Matrix / Mobile Responsive Grid & Snap Carousel) */}
       {kpis && (
-        <div className="space-y-1.5 mb-5 sm:mb-6">
+        <div className="space-y-2 mb-5 sm:mb-6">
           <div className="flex md:hidden items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 select-none">
-            <span className="uppercase tracking-wider font-extrabold text-[10px] text-slate-700 dark:text-slate-300">Action Metric KPIs</span>
-            <span className="flex items-center gap-1 text-[10.5px] text-indigo-600 dark:text-indigo-400 font-extrabold">
-              Swipe across 8 metrics &rarr;
+            <span className="uppercase tracking-wider font-extrabold text-[10.5px] text-slate-700 dark:text-slate-300">
+              Action Metric KPIs (8)
             </span>
+            <button
+              type="button"
+              onClick={() => setKpiViewMode(prev => prev === 'grid' ? 'carousel' : 'grid')}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-navy-700 text-[10.5px] font-extrabold active:scale-95 transition-all shadow-2xs cursor-pointer"
+            >
+              {kpiViewMode === 'grid' ? (
+                <>
+                  <SlidersHorizontal className="w-3 h-3 text-indigo-500" />
+                  <span>Swipe View</span>
+                </>
+              ) : (
+                <>
+                  <LayoutGrid className="w-3 h-3 text-indigo-500" />
+                  <span>Grid View</span>
+                </>
+              )}
+            </button>
           </div>
-          <div className="flex md:grid overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 md:py-0 pb-2 md:pb-0 gap-2.5 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-8 scroll-smooth pr-4 md:pr-0">
-            <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
+          <div className={
+            kpiViewMode === 'grid'
+              ? "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-2.5 md:gap-3.5"
+              : "flex md:grid overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 md:py-0 pb-2 md:pb-0 gap-2.5 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-8 scroll-smooth pr-4 md:pr-0"
+          }>
+            <KPICard label="Critical" value={kpis.critical_count} colorTheme="red" isGrid={kpiViewMode === 'grid'}
               icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
-            <KPICard label="High" value={kpis.high_count} colorTheme="orange"
+            <KPICard label="High" value={kpis.high_count} colorTheme="orange" isGrid={kpiViewMode === 'grid'}
               icon={<AlertTriangle size={14} strokeWidth={2.5} />} active={kpiFilter === 'High'} onClick={() => applyKPIFilter('High', 'priority')} subtitle="Urgent review" />
-            <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber"
+            <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber" isGrid={kpiViewMode === 'grid'}
               icon={<Activity size={14} strokeWidth={2.5} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} subtitle="Track progress" />
-            <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue"
+            <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue" isGrid={kpiViewMode === 'grid'}
               icon={<Clock size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} subtitle="Active intervention" />
-            <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan"
+            <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan" isGrid={kpiViewMode === 'grid'}
               icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} subtitle="Task finished" />
-            <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald"
+            <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald" isGrid={kpiViewMode === 'grid'}
               icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} subtitle="Issue resolved" />
-            <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink"
+            <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink" isGrid={kpiViewMode === 'grid'}
               icon={<Bell size={14} strokeWidth={2.5} />} active={kpiFilter === 'Overdue'} onClick={() => applyKPIFilter('Overdue', 'overdue')} subtitle="Follow-up missed" />
-            <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet"
+            <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet" isGrid={kpiViewMode === 'grid'}
               icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={kpiFilter === 'Escalated'} onClick={() => applyKPIFilter('Escalated', 'escalated')} subtitle="Escalated to HOD" />
           </div>
         </div>
