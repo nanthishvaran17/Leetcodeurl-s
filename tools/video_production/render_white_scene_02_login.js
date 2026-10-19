@@ -149,10 +149,8 @@ async function renderScene02() {
     }
 
     window.updateFrame = function(sec) {
-      // 0.0 - 2.5s: Gentle push-in towards login form (scale 1.0 -> 1.15)
-      const zoomProgress = easeInOutCubic(Math.min(1, sec / 3.0));
-      const scale = lerp(1.0, 1.14, zoomProgress);
-      document.getElementById('viewport').style.transform = 'scale(' + scale + ')';
+      // Stable 1:1 framing without artificial zoom
+      document.getElementById('viewport').style.transform = 'scale(1.0)';
 
       // Caption reveal at 0.6s
       if (sec >= 0.6 && sec <= 5.2) {

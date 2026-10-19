@@ -205,6 +205,10 @@ frontend/release-builds/
 
 # Rendered Media Outputs
 output/
+tools/video_production/output*/
+tools/video_production/frames/
+tools/video_production/*.mp4
+tools/video_production/*.wav
 
 # Mobile APK Builds
 *.apk

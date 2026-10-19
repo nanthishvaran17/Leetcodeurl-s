@@ -16,11 +16,11 @@ function getBase64(filePath) {
   return `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${data}`;
 }
 
-const reportShot = getBase64('live_audit_snapshots/07_reports.png');
+const reportsShot = getBase64('live_audit_snapshots/07_reports.png');
 
 async function renderScene07() {
   const outFile = path.join(OUT_DIR, 'scene_07_reports.mp4');
-  console.log(`[SCENE 07] Rendering Reporting & Evidence (9.000s / 270 frames) -> ${outFile}...`);
+  console.log(`[SCENE 07] Rendering Reporting & Evidence (9.000s / 270 frames, Export Interaction & Feedback) -> ${outFile}...`);
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
@@ -40,137 +40,110 @@ async function renderScene07() {
       overflow: hidden;
       position: relative;
     }
-    .pan-container {
+    .page-container {
       position: absolute;
+      inset: 0;
       width: 1920px;
       height: 1080px;
-      transform-origin: 50% 50%;
-      will-change: transform;
     }
     .page-shot {
-      width: 100%;
-      height: 100%;
+      width: 1920px;
+      height: 1080px;
       object-fit: cover;
+      display: block;
     }
-    /* Simulated Live Report Preview Drawer */
-    .preview-drawer {
+    /* Report Card Selection Highlight */
+    .report-card-select {
       position: absolute;
-      bottom: 40px;
-      left: 20px;
-      width: 1880px;
-      height: 380px;
-      background: #FFFFFF;
-      border: 1px solid #E2E8F0;
-      border-radius: 20px;
-      box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(0,0,0,0.02);
-      display: flex;
-      flex-direction: column;
-      padding: 20px 28px;
+      top: 195px;
+      left: 285px;
+      width: 440px;
+      height: 190px;
+      border-radius: 14px;
+      border: 2px solid #2563EB;
+      background: rgba(37, 99, 235, 0.04);
+      box-shadow: 0 12px 32px -6px rgba(37, 99, 235, 0.16);
       opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 60;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
     }
-    .drawer-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #F1F5F9;
+    /* Export Button Hover Highlight */
+    .export-btn-glow {
+      position: absolute;
+      top: 326px;
+      left: 310px;
+      width: 160px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1.5px solid #10B981;
+      background: rgba(16, 185, 129, 0.1);
+      opacity: 0;
+      pointer-events: none;
     }
-    .drawer-title {
+    /* Success Confirmation Toast Pill */
+    .success-toast {
+      position: absolute;
+      top: 90px;
+      right: 320px;
+      background: #FFFFFF;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 16px 36px -6px rgba(16, 185, 129, 0.2);
+      padding: 12px 24px;
+      border-radius: 999px;
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 15px;
-      font-weight: 800;
-      color: #0F172A;
-    }
-    .drawer-badge {
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: #ECFDF5;
-      border: 1px solid #A7F3D0;
-      color: #059669;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
+      color: #065F46;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 120;
     }
-    .export-btns {
+    .check-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #10B981;
+      color: #FFFFFF;
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-    .exp-chip {
-      padding: 6px 14px;
-      border-radius: 8px;
+      justify-content: center;
       font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      font-weight: 900;
     }
-    .chip-excel { background: #ECFDF5; color: #047857; border: 1px solid #6EE7B7; }
-    .chip-pdf { background: #FEF2F2; color: #B91C1C; border: 1px solid #FCA5A5; }
-    .chip-docx { background: #EFF6FF; color: #1D4ED8; border: 1px solid #93C5FD; }
-
-    .preview-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      font-size: 12px;
-    }
-    .preview-table th {
-      text-align: left;
-      padding: 8px 12px;
-      background: #F8FAFC;
-      color: #64748B;
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      border-radius: 6px;
-    }
-    .preview-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #F1F5F9;
-      font-weight: 600;
-      color: #1E293B;
-    }
-    .preview-table tr:hover td {
-      background: #F8FAFC;
-    }
-    /* Cursor */
+    /* Authentic Cursor */
     .mouse-cursor {
       position: absolute;
-      width: 22px;
-      height: 22px;
-      z-index: 100;
+      width: 24px;
+      height: 24px;
+      z-index: 150;
       pointer-events: none;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
     }
+    /* Ripple Effect */
     .click-ripple {
       position: absolute;
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: rgba(124, 58, 237, 0.4);
+      background: rgba(37, 99, 235, 0.5);
       transform: translate(-50%, -50%) scale(0);
       opacity: 0;
       pointer-events: none;
-      z-index: 99;
+      z-index: 140;
     }
-    /* Lower-Third Caption Pill */
+    /* Lower-Third Caption */
     .caption-pill {
       position: absolute;
-      bottom: 45px;
+      bottom: 50px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.8);
+      box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.12);
       padding: 14px 34px;
       border-radius: 999px;
       display: flex;
@@ -183,8 +156,8 @@ async function renderScene07() {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #059669;
-      box-shadow: 0 0 8px rgba(5, 150, 105, 0.6);
+      background: #2563EB;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
     }
     .caption-text {
       font-size: 14px;
@@ -204,73 +177,13 @@ async function renderScene07() {
   </style>
 </head>
 <body>
-  <div class="pan-container" id="panBox">
-    <img src="${reportShot}" class="page-shot" alt="Reports Live" />
-    
-    <!-- Real Live Generated Report Drawer -->
-    <div class="preview-drawer" id="previewDrawer">
-      <div class="drawer-header">
-        <div class="drawer-title">
-          <span>Weekly Student Performance Export</span>
-          <span class="drawer-badge">Verified Roster &bull; 563 Records</span>
-        </div>
-        <div class="export-btns">
-          <div class="exp-chip chip-excel">&#128196; EXCEL (XLSX)</div>
-          <div class="exp-chip chip-pdf">&#128196; EXECUTIVE PDF</div>
-          <div class="exp-chip chip-docx">&#128196; WORD (DOCX)</div>
-        </div>
-      </div>
-      <table class="preview-table">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Roll / Reg No</th>
-            <th>Student Name</th>
-            <th>Department</th>
-            <th>Solved Total</th>
-            <th>Contest Rating</th>
-            <th>Audit Verification</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="font-weight:900; color:#F59E0B;">#1</td>
-            <td style="font-family:'JetBrains Mono';">732224CC031</td>
-            <td style="font-weight:800;">NANTHISH S</td>
-            <td>CSE(CS) - III Yr</td>
-            <td style="font-weight:900; color:#059669;">914 Solved</td>
-            <td>1,928</td>
-            <td style="color:#059669; font-weight:700;">&check; Live Synchronized</td>
-          </tr>
-          <tr>
-            <td style="font-weight:900; color:#64748B;">#2</td>
-            <td style="font-family:'JetBrains Mono';">732224CI044</td>
-            <td style="font-weight:800;">RITHANYA S</td>
-            <td>CSE(IOT) - III Yr</td>
-            <td style="font-weight:900; color:#059669;">897 Solved</td>
-            <td>1,923</td>
-            <td style="color:#059669; font-weight:700;">&check; Live Synchronized</td>
-          </tr>
-          <tr>
-            <td style="font-weight:900; color:#B45309;">#3</td>
-            <td style="font-family:'JetBrains Mono';">732224IT071</td>
-            <td style="font-weight:800;">POOZANA G</td>
-            <td>IT - III Yr</td>
-            <td style="font-weight:900; color:#059669;">820 Solved</td>
-            <td>1,609</td>
-            <td style="color:#059669; font-weight:700;">&check; Live Synchronized</td>
-          </tr>
-          <tr>
-            <td style="font-weight:800; color:#64748B;">#4</td>
-            <td style="font-family:'JetBrains Mono';">23CC021</td>
-            <td style="font-weight:800;">KANISKA N J</td>
-            <td>CSE(CS) - IV Yr</td>
-            <td style="font-weight:900; color:#059669;">652 Solved</td>
-            <td>1,474</td>
-            <td style="color:#059669; font-weight:700;">&check; Live Synchronized</td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="page-container" id="pageBox">
+    <img src="${reportsShot}" class="page-shot" alt="Reports & Intelligence" />
+    <div class="report-card-select" id="reportSelect"></div>
+    <div class="export-btn-glow" id="exportGlow"></div>
+    <div class="success-toast" id="toast">
+      <span class="check-icon">&#10003;</span>
+      <span>Report Generated &bull; 563 Records Ready (.XLSX)</span>
     </div>
   </div>
 
@@ -299,74 +212,77 @@ async function renderScene07() {
       if (sec < 0.5) {
         document.getElementById('whiteFade').style.opacity = lerp(0.8, 0, sec / 0.5);
       } else if (sec >= 8.2) {
-        // 8.2 - 9.0s: Outgoing white fade to sync modal
+        // 8.2 - 9.0s: Outgoing white transition to Synchronization
         document.getElementById('whiteFade').style.opacity = lerp(0, 1, (sec - 8.2) / 0.8);
       } else {
         document.getElementById('whiteFade').style.opacity = 0;
       }
 
-      // Camera orchestration:
-      // 0.0 - 3.0s: Overview of Reports & Export Center
-      // 3.0 - 6.0s: Focus on Generate Preview and preview reveal
-      let scale = 1.0;
-      let transY = 0;
+      // Cursor movement:
+      // 0.0 - 2.0s: Cursor enters from center, glides to "Universal Weekly Report" card (x: 480, y: 260)
+      // 2.0 - 4.5s: Glides down to "Export XLSX" button (x: 390, y: 346)
+      // 4.5s: Clicks "Export XLSX", ripple plays, toast notification pops in!
+      // 5.5 - 7.8s: Cursor glides up to header sync status icon (x: 1680, y: 44)
+      // 7.8s: Clicks sync button, triggering Scene 08!
+      let curX = 960;
+      let curY = 600;
 
-      if (sec < 3.2) {
-        const p = easeInOutCubic(sec / 3.2);
-        scale = lerp(1.0, 1.04, p);
-        transY = lerp(0, -10, p);
-      } else if (sec >= 3.2 && sec < 6.5) {
-        const p = easeInOutCubic((sec - 3.2) / 3.3);
-        scale = lerp(1.04, 1.08, p);
-        transY = lerp(-10, -25, p);
-      } else {
-        const p = easeInOutCubic((sec - 6.5) / 2.5);
-        scale = lerp(1.08, 1.02, p);
-        transY = lerp(-25, -10, p);
-      }
-
-      document.getElementById('panBox').style.transform = 'translateY(' + transY + 'px) scale(' + scale + ')';
-
-      // Cursor movement towards "Generate Preview" button (x ~ 1720, y ~ 610)
-      let curX = 1400;
-      let curY = 480;
-
-      if (sec < 2.5) {
-        const p = easeInOutCubic(sec / 2.5);
-        curX = lerp(1200, 1720, p);
-        curY = lerp(700, 610, p);
-      } else if (sec >= 2.5 && sec < 3.3) {
-        curX = 1720;
-        curY = 610;
-        // Click at 2.8s
-        if (sec >= 2.8 && sec < 3.2) {
-          const ripProg = (sec - 2.8) / 0.4;
+      if (sec < 2.0) {
+        const p = easeInOutCubic(sec / 2.0);
+        curX = lerp(850, 480, p);
+        curY = lerp(550, 260, p);
+        document.getElementById('reportSelect').style.opacity = p;
+      } else if (sec >= 2.0 && sec < 4.4) {
+        document.getElementById('reportSelect').style.opacity = 1;
+        const p = easeInOutCubic((sec - 2.0) / 2.4);
+        curX = lerp(480, 390, p);
+        curY = lerp(260, 346, p);
+        if (sec >= 3.6) {
+          document.getElementById('exportGlow').style.opacity = 1;
+        }
+      } else if (sec >= 4.4 && sec < 5.6) {
+        curX = 390;
+        curY = 346;
+        document.getElementById('reportSelect').style.opacity = 1;
+        document.getElementById('exportGlow').style.opacity = 1;
+        // Ripple click at 4.5s
+        if (sec >= 4.5 && sec < 5.0) {
+          const ripProg = (sec - 4.5) / 0.5;
           const ripple = document.getElementById('ripple');
-          ripple.style.left = '1720px';
-          ripple.style.top = '610px';
+          ripple.style.left = '390px';
+          ripple.style.top = '346px';
           ripple.style.opacity = lerp(0.8, 0, ripProg);
           ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
         }
-      } else if (sec >= 3.3 && sec < 5.0) {
-        // Move towards Excel chip
-        const p = easeInOutCubic((sec - 3.3) / 1.7);
-        curX = lerp(1720, 1600, p);
-        curY = lerp(610, 720, p);
+        // Toast enters
+        if (sec >= 4.7) {
+          const tProg = easeInOutCubic((sec - 4.7) / 0.6);
+          document.getElementById('toast').style.opacity = tProg;
+          document.getElementById('toast').style.transform = 'translateY(' + lerp(-10, 0, tProg) + 'px)';
+        }
+      } else if (sec >= 5.6 && sec < 7.8) {
+        document.getElementById('toast').style.opacity = 1;
+        document.getElementById('toast').style.transform = 'translateY(0px)';
+        const p = easeInOutCubic((sec - 5.6) / 2.2);
+        curX = lerp(390, 1680, p);
+        curY = lerp(346, 44, p);
       } else {
-        curX = 1600;
-        curY = 720;
+        curX = 1680;
+        curY = 44;
+        document.getElementById('toast').style.opacity = 1;
+        // Ripple click on sync status at 7.8s
+        if (sec >= 7.8 && sec < 8.3) {
+          const ripProg = (sec - 7.8) / 0.5;
+          const ripple = document.getElementById('ripple');
+          ripple.style.left = '1680px';
+          ripple.style.top = '44px';
+          ripple.style.opacity = lerp(0.8, 0, ripProg);
+          ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
+        }
       }
 
       document.getElementById('cursor').style.left = curX + 'px';
       document.getElementById('cursor').style.top = curY + 'px';
-
-      // Reveal preview drawer after click
-      if (sec >= 3.1) {
-        const dProg = easeInOutCubic(Math.min(1, (sec - 3.1) / 0.8));
-        const drawer = document.getElementById('previewDrawer');
-        drawer.style.opacity = dProg;
-        drawer.style.transform = 'translateY(' + lerp(30, 0, dProg) + 'px)';
-      }
 
       // Caption timing
       if (sec >= 0.8 && sec <= 8.0) {
@@ -374,7 +290,7 @@ async function renderScene07() {
         document.getElementById('caption').style.opacity = capProg;
         document.getElementById('caption').style.transform = 'translateX(-50%) translateY(' + lerp(20, 0, capProg) + 'px)';
       } else if (sec > 8.0) {
-        document.getElementById('caption').style.opacity = lerp(1, 0, (sec - 8.0) / 0.6);
+        document.getElementById('caption').style.opacity = lerp(1, 0, (sec - 8.0) / 0.5);
       }
     };
   </script>
@@ -420,7 +336,11 @@ async function renderScene07() {
   await browser.close();
 }
 
-renderScene07().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  renderScene07().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { renderScene07 };

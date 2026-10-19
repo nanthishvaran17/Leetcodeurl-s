@@ -795,7 +795,9 @@ def direct_download_latest_apk():
     """Direct alias endpoint to download the latest compiled Android APK package."""
     import glob
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    apk_files = glob.glob(os.path.join(root_dir, "Nandha_LeetCode_Intelligence_*.apk"))
+    apk_files = glob.glob(os.path.join(root_dir, "releases", "android", "Nandha_LeetCode_Intelligence_*.apk"))
+    if not apk_files:
+        apk_files = glob.glob(os.path.join(root_dir, "Nandha_LeetCode_Intelligence_*.apk"))
     if not apk_files:
         apk_files = glob.glob("Nandha_LeetCode_Intelligence_*.apk")
     if not apk_files:
@@ -1367,6 +1369,7 @@ def download_android_apk_endpoint():
     """Redirects to Vercel CDN for high-speed zero-load Android APK package downloads."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     for apk_path in [
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "android", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
         os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "nandha-leetcode-tracker-latest.apk")),
         os.path.abspath(os.path.join(base_dir, "..", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
     ]:

@@ -20,7 +20,7 @@ const dashShot = getBase64('live_audit_snapshots/04_dashboard.png');
 
 async function renderScene03() {
   const outFile = path.join(OUT_DIR, 'scene_03_dashboard.mp4');
-  console.log(`[SCENE 03] Rendering Dashboard Overview (8.000s / 240 frames) -> ${outFile}...`);
+  console.log(`[SCENE 03] Rendering Dashboard (8.000s / 240 frames, Vertical Scroll & Navbar Click) -> ${outFile}...`);
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
@@ -40,43 +40,80 @@ async function renderScene03() {
       overflow: hidden;
       position: relative;
     }
-    .pan-container {
+    /* Natural 1:1 view with smooth vertical scroll */
+    .scroll-container {
       position: absolute;
+      top: 0;
+      left: 0;
       width: 1920px;
-      height: 1080px;
-      transform-origin: 50% 35%;
+      height: 1200px;
       will-change: transform;
     }
     .page-shot {
-      width: 100%;
-      height: 100%;
+      width: 1920px;
+      height: 1080px;
       object-fit: cover;
+      display: block;
     }
-    /* Subtle highlight box over KPI cards */
-    .kpi-spotlight {
+    /* Hover elevation box on KPI card (Sunday Solvers) */
+    .kpi-hover-card {
       position: absolute;
-      top: 310px;
-      left: 18px;
-      width: 1884px;
-      height: 175px;
-      border-radius: 24px;
-      border: 1.5px solid rgba(37, 99, 235, 0.35);
-      background: rgba(37, 99, 235, 0.02);
-      box-shadow: 0 0 40px rgba(37, 99, 235, 0.08);
+      top: 215px;
+      left: 995px;
+      width: 440px;
+      height: 155px;
+      border-radius: 12px;
+      border: 2px solid rgba(37, 99, 235, 0.4);
+      background: rgba(37, 99, 235, 0.03);
+      box-shadow: 0 12px 28px -6px rgba(37, 99, 235, 0.15);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.3s ease;
     }
-    /* Lower-Third Caption Pill */
+    /* Authentic Cursor */
+    .mouse-cursor {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      z-index: 150;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    }
+    /* Ripple Effect on Navbar click */
+    .click-ripple {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.5);
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 140;
+    }
+    /* Nav Tab Active Indicator */
+    .nav-active-pill {
+      position: absolute;
+      top: 26px;
+      left: 450px;
+      width: 130px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Lower-Third Caption */
     .caption-pill {
       position: absolute;
-      bottom: 45px;
+      bottom: 50px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(226, 232, 240, 0.9);
-      box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.8);
+      box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.12);
       padding: 14px 34px;
       border-radius: 999px;
       display: flex;
@@ -89,8 +126,8 @@ async function renderScene03() {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #10B981;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+      background: #2563EB;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
     }
     .caption-text {
       font-size: 14px;
@@ -110,10 +147,16 @@ async function renderScene03() {
   </style>
 </head>
 <body>
-  <div class="pan-container" id="panBox">
+  <div class="scroll-container" id="scrollBox">
     <img src="${dashShot}" class="page-shot" alt="Dashboard Live" />
-    <div class="kpi-spotlight" id="kpiSpot"></div>
+    <div class="kpi-hover-card" id="kpiHover"></div>
+    <div class="nav-active-pill" id="navActive"></div>
   </div>
+
+  <svg class="mouse-cursor" id="cursor" viewBox="0 0 24 24" fill="none">
+    <path d="M5.5 3.5L18.5 11.5L12 13.5L9.5 20.5L5.5 3.5Z" fill="#0F172A" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  </svg>
+  <div class="click-ripple" id="ripple"></div>
 
   <div class="caption-pill" id="caption">
     <span class="caption-dot"></span>
@@ -131,44 +174,73 @@ async function renderScene03() {
     }
 
     window.updateFrame = function(sec) {
-      // 0.0 - 0.6s: Incoming transition from login
-      if (sec < 0.6) {
-        document.getElementById('whiteFade').style.opacity = lerp(0.8, 0, sec / 0.6);
+      // 0.0 - 0.5s: Ingoing white fade
+      if (sec < 0.5) {
+        document.getElementById('whiteFade').style.opacity = lerp(0.8, 0, sec / 0.5);
       } else if (sec >= 7.3) {
-        // Outgoing transition to Leaderboard
+        // 7.3 - 8.0s: Outgoing white transition to Leaderboard
         document.getElementById('whiteFade').style.opacity = lerp(0, 1, (sec - 7.3) / 0.7);
       } else {
         document.getElementById('whiteFade').style.opacity = 0;
       }
 
-      // Camera orchestration:
-      // 0.0 - 2.5s: Complete view, gentle zoom-in (1.0 -> 1.08, origin center-top)
-      // 2.5 - 5.5s: Glide slightly toward KPI cards (scale 1.08, translateY -20px)
-      // 5.5 - 7.5s: Pull back to reveal full trajectory chart
-      let scale = 1.0;
-      let transY = 0;
-      let transX = 0;
+      // Smooth vertical camera glide:
+      // 0.0 - 1.5s: Sits comfortably at top (0px)
+      // 1.5 - 3.8s: Gently scrolls down 60px to inspect KPI cards & velocity curve
+      // 3.8 - 5.5s: Holds at scroll position
+      // 5.5 - 7.0s: Smoothly glides back up to top (0px) as cursor clicks navbar
+      let scrollY = 0;
+      if (sec >= 1.5 && sec < 3.8) {
+        const p = easeInOutCubic((sec - 1.5) / 2.3);
+        scrollY = lerp(0, -60, p);
+      } else if (sec >= 3.8 && sec < 5.5) {
+        scrollY = -60;
+      } else if (sec >= 5.5 && sec < 7.0) {
+        const p = easeInOutCubic((sec - 5.5) / 1.5);
+        scrollY = lerp(-60, 0, p);
+      } else if (sec >= 7.0) {
+        scrollY = 0;
+      }
+      document.getElementById('scrollBox').style.transform = 'translateY(' + scrollY + 'px)';
 
-      if (sec < 2.5) {
-        const p = easeInOutCubic(sec / 2.5);
-        scale = lerp(1.0, 1.06, p);
-        transY = lerp(0, -15, p);
-      } else if (sec >= 2.5 && sec < 5.5) {
-        const p = (sec - 2.5) / 3.0;
-        scale = 1.06;
-        transY = lerp(-15, -45, p);
-        transX = lerp(0, -25, p);
-        // Highlight KPI cards
-        document.getElementById('kpiSpot').style.opacity = lerp(0, 0.9, Math.min(1, (sec - 2.6) / 0.6));
+      // Cursor movement:
+      // 0.0 - 2.0s: Cursor enters from bottom-left (500, 700) -> moves to Sunday Solvers card (1200, 280)
+      // 2.0 - 4.5s: Hovers over Sunday Solvers, KPI card glows
+      // 4.5 - 6.8s: Cursor moves smoothly up to "Leaderboard" tab in navbar (490, 44)
+      // 6.8s: Clicks "Leaderboard", ripple plays
+      let curX = 900;
+      let curY = 600;
+
+      if (sec < 2.2) {
+        const p = easeInOutCubic(sec / 2.2);
+        curX = lerp(700, 1180, p);
+        curY = lerp(580, 280 + scrollY, p);
+      } else if (sec >= 2.2 && sec < 4.5) {
+        curX = 1180 + Math.sin(sec * 1.5) * 8;
+        curY = 280 + scrollY;
+        document.getElementById('kpiHover').style.opacity = 1;
+      } else if (sec >= 4.5 && sec < 6.7) {
+        document.getElementById('kpiHover').style.opacity = lerp(1, 0, (sec - 4.5) / 0.5);
+        const p = easeInOutCubic((sec - 4.5) / 2.2);
+        curX = lerp(1180, 515, p);
+        curY = lerp(280 + scrollY, 44, p);
       } else {
-        const p = easeInOutCubic((sec - 5.5) / 2.0);
-        scale = lerp(1.06, 1.01, p);
-        transY = lerp(-45, 0, p);
-        transX = lerp(-25, 0, p);
-        document.getElementById('kpiSpot').style.opacity = lerp(0.9, 0, p);
+        curX = 515;
+        curY = 44;
+        document.getElementById('navActive').style.opacity = 1;
+        // Ripple at 6.7s
+        if (sec >= 6.7 && sec < 7.2) {
+          const ripProg = (sec - 6.7) / 0.5;
+          const ripple = document.getElementById('ripple');
+          ripple.style.left = '515px';
+          ripple.style.top = '44px';
+          ripple.style.opacity = lerp(0.8, 0, ripProg);
+          ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
+        }
       }
 
-      document.getElementById('panBox').style.transform = 'translate(' + transX + 'px, ' + transY + 'px) scale(' + scale + ')';
+      document.getElementById('cursor').style.left = curX + 'px';
+      document.getElementById('cursor').style.top = curY + 'px';
 
       // Caption timing
       if (sec >= 0.8 && sec <= 7.0) {
@@ -222,7 +294,11 @@ async function renderScene03() {
   await browser.close();
 }
 
-renderScene03().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  renderScene03().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { renderScene03 };

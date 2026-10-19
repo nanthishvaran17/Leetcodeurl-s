@@ -206,7 +206,9 @@ def download_latest_apk():
     """
     import glob
     root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    apk_files = glob.glob(os.path.join(root_dir, "Nandha_LeetCode_Intelligence_*.apk"))
+    apk_files = glob.glob(os.path.join(root_dir, "releases", "android", "Nandha_LeetCode_Intelligence_*.apk"))
+    if not apk_files:
+        apk_files = glob.glob(os.path.join(root_dir, "Nandha_LeetCode_Intelligence_*.apk"))
     if not apk_files:
         apk_files = glob.glob("Nandha_LeetCode_Intelligence_*.apk")
     if not apk_files:

@@ -95,10 +95,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     }
     try {
       const res = await api.get(`/messaging/conversations/${conversationId}/messages`);
-      if (res.data?.success) {
+      const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+      if (data?.success) {
         const uniqueMsgs: Message[] = [];
         const seen = new Set<string>();
-        (res.data.messages || []).forEach((m: Message) => {
+        (data.messages || []).forEach((m: Message) => {
           if (m?.messageId && !seen.has(m.messageId)) {
             seen.add(m.messageId);
             uniqueMsgs.push(m);
@@ -242,14 +243,25 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         return mapped.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
       });
 
-      if (activeConversationId === msg.conversationId) {
+      // Reconcile message with active conversation even if activeConversationId was a temporary or client ID
+      const conv = conversations.find(c => c.conversationId === activeConversationId);
+      const isCurrentChat = activeConversationId === msg.conversationId ||
+        (conv && (
+          ((msg.senderId === currentUserStr || msg.senderId === conv.otherUser?.id) &&
+           (msg.receiverId === currentUserStr || msg.receiverId === conv.otherUser?.id))
+        ));
+
+      if (isCurrentChat) {
+        if (activeConversationId !== msg.conversationId && !activeConversationId?.startsWith('system-')) {
+          setActiveConversationId(msg.conversationId);
+        }
         setMessages(prev => {
           if (prev.some(p => p.messageId === msg.messageId)) return prev;
           const tempIdx = prev.findIndex(p =>
             (p.messageId.startsWith('TEMP_') || p.status === 'SENDING') &&
             (msg.clientMessageId
               ? (p.messageId === msg.clientMessageId || (p as any).clientMessageId === msg.clientMessageId)
-              : (p.senderId === msg.senderId && p.content === msg.content))
+              : (p.content === msg.content))
           );
           if (tempIdx !== -1) {
             const updated = [...prev];
@@ -267,7 +279,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         });
       }
     }
-  }, [latestMessage, activeConversationId, currentUserStr, fetchConversations]);
+  }, [latestMessage, activeConversationId, currentUserStr, fetchConversations, conversations]);
 
   // Handle MESSAGE_EDITED, DELETED, REACTION, TYPING
   useEffect(() => {
@@ -396,24 +408,35 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
         // Direct HTTP API post: bypasses WebSocket disconnect blocks
         const res = await api.post('/messaging/messages', payload);
-        if (res.data?.success) {
-          const realMsg = res.data.message;
+        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+        if (data?.success) {
+          const realMsg = data.message;
           setMessages(prev => prev.map(m => {
-            if (m.messageId === tempId) {
+            const isMatch = m.messageId === tempId ||
+              (realMsg.clientMessageId && (m.messageId === realMsg.clientMessageId || (m as any).clientMessageId === realMsg.clientMessageId)) ||
+              (m.status === 'SENDING' && m.content === content);
+            if (isMatch) {
               if (m.localMediaUrl) URL.revokeObjectURL(m.localMediaUrl);
               return realMsg;
             }
             return m;
           }));
+
+          // If the backend assigned a canonical conversationId, sync it immediately
+          if (realMsg.conversationId && activeConversationId && activeConversationId !== realMsg.conversationId) {
+            setActiveConversationId(realMsg.conversationId);
+          }
+
           // Confirm server preview
           setConversations(prev => {
             let found = false;
             const targetConvId = realMsg.conversationId || activeConversationId;
             const updated = prev.map(c => {
-              if (c.conversationId === targetConvId) {
+              if (c.conversationId === targetConvId || (activeConversationId && c.conversationId === activeConversationId)) {
                 found = true;
                 return {
                   ...c,
+                  conversationId: targetConvId,
                   lastMessagePreview: realMsg.content || (realMsg.attachmentFileId ? 'Sent an attachment' : c.lastMessagePreview),
                   lastMessageAt: realMsg.createdAt || new Date().toISOString()
                 };
@@ -436,6 +459,13 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
           outbox.push({ payload, tempId });
           localStorage.setItem('messages_outbox', JSON.stringify(outbox));
         } catch (e) {}
+
+        // Immediate self-healing reconciliation if backend committed before mobile connection dropped
+        setTimeout(() => {
+          if (activeConversationId) {
+            fetchMessages(activeConversationId);
+          }
+        }, 1500);
       }
     };
     runUpload();
@@ -444,8 +474,9 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const handleEditMessage = async (messageId: string, newContent: string) => {
     try {
       const res = await api.put(`/messaging/messages/${messageId}`, { content: newContent });
-      if (res.data?.success) {
-        setMessages(prev => prev.map(m => m.messageId === messageId ? res.data.message : m));
+      const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+      if (data?.success) {
+        setMessages(prev => prev.map(m => m.messageId === messageId ? data.message : m));
       }
     } catch (err) {}
   };
@@ -453,9 +484,10 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const handleDeleteMessage = async (messageId: string, mode: 'FOR_ME' | 'FOR_EVERYONE') => {
     try {
       const res = await api.delete(`/messaging/messages/${messageId}?mode=${mode}`);
-      if (res.data?.success) {
-        if (mode === 'FOR_EVERYONE' && res.data.message) {
-          setMessages(prev => prev.map(m => m.messageId === messageId ? res.data.message : m));
+      const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+      if (data?.success) {
+        if (mode === 'FOR_EVERYONE' && data.message) {
+          setMessages(prev => prev.map(m => m.messageId === messageId ? data.message : m));
         } else {
           setMessages(prev => prev.filter(m => m.messageId !== messageId));
         }

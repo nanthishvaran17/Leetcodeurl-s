@@ -1,0 +1,267 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import api from '../services/api';
+
+export interface Department {
+  id?: number;
+  code: string;
+  name: string;
+  pillText?: string;
+  student_count?: number;
+}
+
+interface DepartmentContextType {
+  departments: Department[];
+  allDepartments: Department[];
+  isLoading: boolean;
+  error: string | null;
+  refreshDepartments: () => Promise<void>;
+  /** true when the current user is HOD-scoped (departments list is already restricted) */
+  isHodScope: boolean;
+  /** true when the current user has global (all-dept) access */
+  isGlobalAccess: boolean;
+}
+
+const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
+
+// Active institutional departments with enrolled students across Nandha Engineering College
+const ALL_DEPARTMENTS_FALLBACK: Department[] = [
+  { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)', student_count: 159 },
+  { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)', student_count: 148 },
+  { id: 4, code: 'IT', name: 'Information Technology', pillText: 'IT', student_count: 256 },
+];
+
+export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
+  const [allDepartments, setAllDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isHodScope, setIsHodScope] = useState(false);
+  const [isGlobalAccess, setIsGlobalAccess] = useState(false);
+
+  // Resolve user info from localStorage for reactivity (avoid circular provider dependency)
+  const getUserSnapshot = () => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchDepartments = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Fetch departments (and full list with all_depts=true)
+      const [resScoped, resAll] = await Promise.allSettled([
+        api.get('/departments'),
+        api.get('/departments?all_depts=true')
+      ]);
+
+      const parseDeptList = (rawData: any[]) => {
+        const uniqueMap = new Map<string, Department>();
+        rawData.forEach((d: any) => {
+          const code = (d.code || d.name || '').trim();
+          const rawName = (d.name || d.code || '').trim();
+          const upperCode = code.toUpperCase();
+          const upperName = rawName.toUpperCase();
+          
+          let finalCode = code;
+          let finalName = rawName;
+          
+          if (upperCode.includes('IOT') || upperName.includes('IOT') || upperName.includes('INTERNET')) {
+            finalCode = 'CSE(IOT)';
+            finalName = 'Computer Science and Engineering (IoT)';
+          } else if (upperCode === 'CSE(CS)' || upperCode === 'CSE-CS' || upperCode === 'CS' || upperName.includes('CYBER') || upperName.includes('SECURITY')) {
+            finalCode = 'CSE(CS)';
+            finalName = 'Computer Science and Engineering (Cyber Security)';
+          } else if (upperCode === 'IT' || upperName.includes('INFORMATION TECHNOLOGY') || upperName.includes('INFO TECH')) {
+            finalCode = 'IT';
+            finalName = 'Information Technology';
+          } else if (upperCode === 'AIDS' || upperName.includes('DATA SCIENCE') || upperName.includes('ARTIFICIAL')) {
+            finalCode = 'AIDS';
+            finalName = 'Artificial Intelligence and Data Science';
+          } else if (upperCode === 'ECE' || upperName.includes('ELECTRONICS AND COMM')) {
+            finalCode = 'ECE';
+            finalName = 'Electronics and Communication Engineering';
+          } else if (upperCode === 'EEE' || upperName.includes('ELECTRICAL AND ELEC')) {
+            finalCode = 'EEE';
+            finalName = 'Electrical and Electronics Engineering';
+          } else if (upperCode === 'AGRI' || upperName.includes('AGRICULTUR')) {
+            finalCode = 'AGRI';
+            finalName = 'Agricultural Engineering';
+          } else if (upperCode === 'CSE' || upperName === 'COMPUTER SCIENCE AND ENGINEERING') {
+            finalCode = 'CSE';
+            finalName = 'Computer Science and Engineering';
+          } else if (upperCode === 'MECH' || upperName.includes('MECHANICAL')) {
+            finalCode = 'MECH';
+            finalName = 'Mechanical Engineering';
+          } else if (upperCode === 'CIVIL' || upperName.includes('CIVIL')) {
+            finalCode = 'CIVIL';
+            finalName = 'Civil Engineering';
+          } else if (upperCode === 'AIML' || upperName.includes('MACHINE LEARNING')) {
+            finalCode = 'AIML';
+            finalName = 'Artificial Intelligence and Machine Learning';
+          }
+
+          const studentCount = d.student_count ?? d.students_count ?? 0;
+          if (!uniqueMap.has(finalCode)) {
+            uniqueMap.set(finalCode, {
+              id: d.id,
+              code: finalCode,
+              name: finalName,
+              pillText: finalCode,
+              student_count: studentCount
+            });
+          } else {
+            const existing = uniqueMap.get(finalCode)!;
+            if (studentCount > 0 && (!existing.student_count || existing.student_count === 0)) {
+              existing.student_count = studentCount;
+            }
+          }
+        });
+        return Array.from(uniqueMap.values());
+      };
+
+      const scopedData = (resScoped.status === 'fulfilled' && Array.isArray(resScoped.value.data)) ? resScoped.value.data : [];
+      const allData = (resAll.status === 'fulfilled' && Array.isArray(resAll.value.data)) ? resAll.value.data : [];
+
+      let allDeptsList: Department[] = ALL_DEPARTMENTS_FALLBACK;
+      if (allData.length > 0) {
+        const parsedAll = parseDeptList(allData);
+        const activeAll = parsedAll.filter(d => (d.student_count === undefined || d.student_count > 0));
+        allDeptsList = activeAll.length > 0 ? activeAll : ALL_DEPARTMENTS_FALLBACK;
+      }
+      setAllDepartments(allDeptsList);
+
+      let scopedDeptsList: Department[] = allDeptsList;
+      if (scopedData.length > 0) {
+        const parsedScoped = parseDeptList(scopedData);
+        const mappedDepts = parsedScoped.filter(d => (d.student_count === undefined || d.student_count > 0));
+        scopedDeptsList = mappedDepts.length > 0 ? mappedDepts : allDeptsList;
+      }
+      setDepartments(scopedDeptsList);
+
+      // Determine scope flags from user role
+      const u = getUserSnapshot();
+      const role = ((u?.role) || '').trim().toLowerCase();
+      const hodRoles = ['hod', 'department hod', 'department_hod', 'placement coordinator'];
+      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator'];
+      const isHod = hodRoles.includes(role);
+      const isGlobal = globalRoles.includes(role);
+      setIsHodScope(isHod);
+      setIsGlobalAccess(isGlobal);
+
+      if (isHod && !isGlobal) {
+        const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
+        const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
+        const uDeptId = u?.department_id ? Number(u.department_id) : null;
+        const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
+
+        const isAuthorizedDept = (d: Department) => {
+          if (authIds.length > 0 && d.id && authIds.includes(Number(d.id))) return true;
+          if (authCodes.length > 0 && d.code && authCodes.includes(d.code.toUpperCase())) return true;
+          if (uDeptId && d.id && Number(d.id) === uDeptId) return true;
+          if (uDeptCode && d.code && (d.code.toUpperCase() === uDeptCode || uDeptCode.includes(d.code.toUpperCase()))) return true;
+          return false;
+        };
+
+        const finalScoped = scopedDeptsList.filter(isAuthorizedDept);
+        const finalAll = allDeptsList.filter(isAuthorizedDept);
+        
+        let resolved = finalScoped.length > 0 ? finalScoped : finalAll;
+        if (resolved.length === 0 && (uDeptCode || uDeptId)) {
+          const fallbackDept = ALL_DEPARTMENTS_FALLBACK.find(isAuthorizedDept) || {
+            id: uDeptId || 1,
+            code: uDeptCode || 'DEPT',
+            name: u?.department_name || uDeptCode || 'Department',
+            pillText: uDeptCode || 'DEPT',
+            student_count: 0
+          };
+          resolved = [fallbackDept];
+        }
+
+        setDepartments(resolved);
+        setAllDepartments(resolved);
+      }
+    } catch (err: any) {
+      console.error('[DepartmentContext] Failed to fetch departments:', err);
+      setError(err.message || 'Failed to fetch departments');
+      const u = getUserSnapshot();
+      const role = ((u?.role) || '').trim().toLowerCase();
+      const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(role);
+      if (isHod) {
+        const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
+        const uDeptId = u?.department_id ? Number(u.department_id) : null;
+        const matched = ALL_DEPARTMENTS_FALLBACK.filter(d => (uDeptId && d.id === uDeptId) || (uDeptCode && d.code === uDeptCode));
+        const res = matched.length > 0 ? matched : [ALL_DEPARTMENTS_FALLBACK[0]];
+        setDepartments(res);
+        setAllDepartments(res);
+      } else {
+        setDepartments(ALL_DEPARTMENTS_FALLBACK);
+        setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  // Re-fetch when user identity, role, or department creation events fire
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' || e.key === 'department_update') {
+        fetchDepartments();
+      }
+    };
+    const handleCustomDeptUpdate = () => {
+      fetchDepartments();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('department_updated', handleCustomDeptUpdate);
+    window.addEventListener('departments_changed', handleCustomDeptUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('department_updated', handleCustomDeptUpdate);
+      window.removeEventListener('departments_changed', handleCustomDeptUpdate);
+    };
+  }, [fetchDepartments]);
+
+  return (
+    <DepartmentContext.Provider value={{
+      departments,
+      allDepartments,
+      isLoading,
+      error,
+      refreshDepartments: fetchDepartments,
+      isHodScope,
+      isGlobalAccess
+    }}>
+      {children}
+    </DepartmentContext.Provider>
+  );
+};
+
+export const useDepartments = () => {
+  const context = useContext(DepartmentContext);
+  if (context === undefined) {
+    console.warn('useDepartments must be used within a DepartmentProvider');
+    return {
+      departments: [],
+      allDepartments: [],
+      isLoading: false,
+      error: null,
+      refreshDepartments: async () => {},
+      isHodScope: false,
+      isGlobalAccess: false
+    };
+  }
+  return context;
+};
+
