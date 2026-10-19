@@ -6,9 +6,10 @@ import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Shield,
-  Cpu, Layers, CheckCircle, ChevronRight, Loader2
+  Cpu, Layers, CheckCircle, ChevronRight, Loader2, Sun, Moon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
 import api from '../services/api';
@@ -21,6 +22,7 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const { user, isAuthenticated, authState, login, authError, clearAuthError } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isAuthenticated || user) {
@@ -560,6 +562,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
   return (
     <div className={`login-page-container ${isCapacitorNative() ? 'is-capacitor' : ''}`}>
+      {/* Theme Toggle Button */}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label="Toggle dark/light theme"
+        className="fixed top-4 left-4 z-[99999] p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-amber-400 hover:text-amber-300 border border-slate-700/60 shadow-xl backdrop-blur-md cursor-pointer transition-all active:scale-95 flex items-center justify-center"
+        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
+        {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-300" />}
+      </button>
+
       {onClose && (
         <button
           type="button"

@@ -28,8 +28,51 @@ html, body, #root {
 
 
 .dark .login-page-container {
-  background-image: none;
+  background-color: #060813 !important;
+  background-image: none !important;
+  color: #F8FAFC !important;
 }
+
+.dark .panel-right {
+  background: #0B0F19 !important;
+  color: #F8FAFC !important;
+}
+
+.dark .field input[type="text"],
+.dark .field input[type="email"],
+.dark .field input[type="password"] {
+  background-color: #111827 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark .field label {
+  color: #E2E8F0 !important;
+}
+
+.dark .form-head h2 {
+  color: #FFFFFF !important;
+}
+
+.dark .form-head p {
+  color: #94A3B8 !important;
+}
+
+.dark .tabs {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .tabs button {
+  color: #94A3B8 !important;
+}
+
+.dark .tabs button.active {
+  background: #1E293B !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
 
 .login-frame {
   display: flex;
