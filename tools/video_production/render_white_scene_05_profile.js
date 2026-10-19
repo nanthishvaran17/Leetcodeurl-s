@@ -275,6 +275,7 @@ async function renderScene05() {
   await page.setContent(html, { waitUntil: 'load' });
 
   const ffmpeg = spawn(FFMPEG, [
+    '-loglevel', 'error',
     '-y',
     '-f', 'image2pipe',
     '-vcodec', 'png',
@@ -286,7 +287,7 @@ async function renderScene05() {
     '-pix_fmt', 'yuv420p',
     '-an',
     outFile
-  ]);
+  ], { stdio: ['pipe', 'ignore', 'inherit'] });
 
   const totalFrames = 270; // 9.0 seconds @ 30fps
   for (let i = 0; i < totalFrames; i++) {
