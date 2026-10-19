@@ -11,6 +11,7 @@ import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { downloadManager } from '../services/download/downloadManager';
 import { CustomDropdown, DropdownOption } from './CustomDropdown';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -134,6 +135,7 @@ const MAPPING_DROPDOWN_OPTIONS: DropdownOption[] = [
 ];
 
 export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  useScrollLock(isOpen);
   const { notify } = useNotification();
   const { refreshAllData } = useGlobalData();
   const [step, setStep] = useState<number>(1); // 1: Upload, 2: Mapping, 3: Preview, 4: Progress/Summary
@@ -209,11 +211,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       }
     };
     document.addEventListener('keydown', handleKeyDown);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = originalOverflow;
     };
   }, [isOpen, onClose]);
 

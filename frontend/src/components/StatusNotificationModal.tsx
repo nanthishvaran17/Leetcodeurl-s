@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -27,10 +28,10 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
   notification,
   onClose
 }) => {
+  useScrollLock(Boolean(notification?.isOpen));
+
   useEffect(() => {
     if (notification?.isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           if (notification.onClose) notification.onClose();
@@ -39,11 +40,10 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = originalOverflow;
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [notification?.isOpen, onClose, notification]);
+  }, [notification?.isOpen, onClose]);
 
   if (!notification || !notification.isOpen) return null;
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useScrollLock } from '../hooks/useScrollLock';
 import {
   Award,
   Download,
@@ -180,11 +181,10 @@ export const CertificateManagementModal: React.FC<{
   const [registryDeptFilter, setRegistryDeptFilter] = useState('all');
   const [registryStatusFilter, setRegistryStatusFilter] = useState('all');
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           if (showConfirmIssueModal) {
@@ -205,7 +205,6 @@ export const CertificateManagementModal: React.FC<{
       }
 
       return () => {
-        document.body.style.overflow = originalOverflow || 'unset';
         window.removeEventListener('keydown', handleKeyDown);
       };
     }

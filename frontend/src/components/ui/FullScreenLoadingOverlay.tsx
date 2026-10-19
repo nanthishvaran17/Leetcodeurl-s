@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { RefreshCw, AlertCircle } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface FullScreenLoadingOverlayProps {
   message?: string;
@@ -15,16 +16,7 @@ export const FullScreenLoadingOverlay: React.FC<FullScreenLoadingOverlayProps> =
   onRetry,
   onCancel
 }) => {
-
-  useEffect(() => {
-    // Scroll lock
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
+  useScrollLock(true);
 
   const overlayContent = (
     <div 

@@ -193,4 +193,8 @@ frontend/release-builds/
 # Rendered Media Outputs
 output/
 
+# Mobile APK Builds
+*.apk
+frontend/public/*.apk
+
 

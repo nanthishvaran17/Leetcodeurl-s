@@ -1052,7 +1052,7 @@ export const App: React.FC = () => {
 
   return (
     <div className={`overflow-x-hidden bg-white dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
-      activeTab === 'messages' ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'
+      activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
       {/* Top Page Transition Progress Loader */}
       {isNavigating && (
@@ -1108,7 +1108,20 @@ export const App: React.FC = () => {
         )}
 
         {/* Main Content View Container with Native Mobile Pull-to-Refresh */}
-        <PullToRefresh onRefresh={handleGlobalPullToRefresh}>
+        <PullToRefresh 
+          onRefresh={handleGlobalPullToRefresh}
+          disabled={
+            activeTab === 'messages' ||
+            isSidebarOpen ||
+            Boolean(selectedStudent) ||
+            showLoginModal ||
+            showImportModal ||
+            showAlertCenterModal ||
+            showCommandPalette ||
+            showShareModal ||
+            showMobileFilterDrawer
+          }
+        >
           <main
             id="main-content"
             key={activeTab}

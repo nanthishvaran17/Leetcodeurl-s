@@ -4,6 +4,7 @@ import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, 
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export interface StudentEditOverlayProps {
   isOpen: boolean;
@@ -422,16 +423,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleAttemptClose]);
 
-  // Lock body scroll while modal is open
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow || '';
-      };
-    }
-  }, [isOpen]);
+  // Lock body scroll reliably while modal is open via reference-counted hook
+  useScrollLock(isOpen);
 
   const triggerDebouncedValidation = useCallback((inputVal: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -566,15 +559,6 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
   if (typeof document === 'undefined') return null;

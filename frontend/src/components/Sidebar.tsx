@@ -8,6 +8,7 @@ import { CollegeLogo } from './CollegeLogo';
 import { SignOutConfirmModal } from './SignOutConfirmModal';
 import { getApiUrl } from '../services/api';
 import { isAdminOtpVerified } from '../utils/adminOtpAuth';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface SidebarProps {
   activeTab: string;
@@ -41,14 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
 
-  React.useEffect(() => {
-    if (isOpen && window.innerWidth < 1024) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
+  useScrollLock(isOpen && typeof window !== 'undefined' && window.innerWidth < 1024);
 
   // PRINCIPAL & MANAGEMENT: Institutional Command, All HODs oversight, Faculty actions, Master reports
   const executiveSections: NavSection[] = [

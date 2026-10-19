@@ -633,16 +633,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string | number>>(new Set());
   const [viewingProfileStudent, setViewingProfileStudent] = useState<any | null>(null);
 
+  useScrollLock(Boolean(viewingProfileStudent));
+
   useEffect(() => {
     if (viewingProfileStudent) {
-      const origOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
       const handleEsc = (e: KeyboardEvent) => {
         if (e.key === 'Escape') setViewingProfileStudent(null);
       };
       window.addEventListener('keydown', handleEsc);
       return () => {
-        document.body.style.overflow = origOverflow;
         window.removeEventListener('keydown', handleEsc);
       };
     }

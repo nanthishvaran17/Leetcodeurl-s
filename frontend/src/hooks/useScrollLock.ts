@@ -4,6 +4,23 @@ import { useLayoutEffect } from 'react';
 let scrollLockCount = 0;
 
 /**
+ * Completely clean all scroll lock classes and inline overflow styles from body and html
+ */
+function applyUnlock() {
+  if (typeof document === 'undefined') return;
+  document.body.classList.remove('global-scroll-lock');
+  document.documentElement.classList.remove('global-scroll-lock');
+  document.body.style.removeProperty('overflow');
+  document.body.style.removeProperty('overflow-y');
+  document.body.style.removeProperty('touch-action');
+  document.documentElement.style.removeProperty('overflow');
+  document.documentElement.style.removeProperty('overflow-y');
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  document.body.style.touchAction = '';
+}
+
+/**
  * A robust scroll lock hook that prevents "stale lock" states.
  * It counts the number of active locks globally.
  * When the first lock is requested, it hides the body overflow.
@@ -12,7 +29,6 @@ let scrollLockCount = 0;
  * @param lock {boolean} Whether the scroll should be locked.
  */
 export const useScrollLock = (lock: boolean = true) => {
-  // Use useLayoutEffect to ensure DOM manipulation happens synchronously before browser paint
   useLayoutEffect(() => {
     if (!lock) return;
     
@@ -25,15 +41,11 @@ export const useScrollLock = (lock: boolean = true) => {
     }
 
     return () => {
-      // Decrement active locks
+      // Decrement active locks safely
       scrollLockCount = Math.max(0, scrollLockCount - 1);
       
       if (scrollLockCount === 0) {
-        document.body.classList.remove('global-scroll-lock');
-        document.documentElement.classList.remove('global-scroll-lock');
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-        document.body.style.touchAction = '';
+        applyUnlock();
       }
     };
   }, [lock]);
@@ -44,11 +56,16 @@ export const useScrollLock = (lock: boolean = true) => {
  */
 export const forceUnlockScroll = () => {
   scrollLockCount = 0;
-  if (typeof document !== 'undefined') {
-    document.body.classList.remove('global-scroll-lock');
-    document.documentElement.classList.remove('global-scroll-lock');
-    document.body.style.overflow = '';
-    document.documentElement.style.overflow = '';
-    document.body.style.touchAction = '';
-  }
+  applyUnlock();
 };
+
+// Automatic route-navigation failsafe: whenever browser history changes, ensure scroll is not trapped
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    forceUnlockScroll();
+  });
+  window.addEventListener('hashchange', () => {
+    forceUnlockScroll();
+  });
+}
+

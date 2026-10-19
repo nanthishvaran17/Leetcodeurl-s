@@ -111,7 +111,9 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
     }
   };
 
-  // Keyboard ESC Key listener & Body Scroll Locking & Polling fallback (2s while running, 15s otherwise)
+  useScrollLock(isOpen);
+
+  // Keyboard ESC Key listener & Polling fallback (2s while running, 15s otherwise)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -120,9 +122,6 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
     const pollInterval = setInterval(() => {
       fetchStatus(false);
     }, syncStatus?.is_running ? 2000 : 15000);
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -133,7 +132,6 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
 
     return () => {
       clearInterval(pollInterval);
-      document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, syncStatus?.is_running]);

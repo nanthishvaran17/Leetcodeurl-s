@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export interface DeleteItemInfo {
   id: string;
@@ -32,9 +33,10 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 }) => {
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       // Focus cancel button for safe keyboard accessibility
       const timer = setTimeout(() => {
         cancelBtnRef.current?.focus();
@@ -48,7 +50,6 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
 
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = '';
         clearTimeout(timer);
         window.removeEventListener('keydown', handleKeyDown);
       };

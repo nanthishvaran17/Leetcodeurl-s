@@ -392,17 +392,16 @@ export const AuditLogPage: React.FC = () => {
     }
   };
 
-  // Lock body scroll when inspection modal is open
+  // Lock body scroll safely when inspection modal is open
+  useScrollLock(Boolean(selectedLog));
+
   useEffect(() => {
     if (selectedLog) {
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') setSelectedLog(null);
       };
       window.addEventListener('keydown', onKey);
       return () => {
-        document.body.style.overflow = prevOverflow || 'unset';
         window.removeEventListener('keydown', onKey);
       };
     }

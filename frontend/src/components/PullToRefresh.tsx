@@ -10,23 +10,29 @@ interface PullToRefreshProps {
 const PULL_THRESHOLD = 44;
 const MAX_PULL_DISTANCE = 85;
 
-// Helper to determine if target element or any scrollable parent is scrolled down
-function getTargetScrollTop(target: EventTarget | null): number {
+// Helper to check if touch is inside an active scrollable container (e.g. table, drawer, messages)
+function isInsideScrollableChild(target: EventTarget | null): boolean {
   let el = target as HTMLElement | null;
   while (el && el !== document.body && el !== document.documentElement) {
-    if (el.scrollTop > 2) {
-      try {
-        const style = window.getComputedStyle(el);
-        const ovY = style.overflowY;
-        if (ovY === 'auto' || ovY === 'scroll') {
-          return el.scrollTop;
-        }
-      } catch (_) {
-        return el.scrollTop;
+    try {
+      const style = window.getComputedStyle(el);
+      const ovY = style.overflowY;
+      const ovX = style.overflowX;
+      // If child is horizontally scrollable (table, tag list, carousel), do not hijack
+      if ((ovX === 'auto' || ovX === 'scroll') && el.scrollWidth > el.clientWidth + 8) {
+        return true;
       }
-    }
+      // If child is vertically scrollable and not at top, do not hijack
+      if ((ovY === 'auto' || ovY === 'scroll') && el.scrollHeight > el.clientHeight + 8) {
+        if (el.scrollTop > 2) return true;
+      }
+    } catch (_) {}
     el = el.parentElement;
   }
+  return false;
+}
+
+function getWindowScrollTop(): number {
   return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
 }
 
@@ -60,15 +66,21 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const target = e.target as HTMLElement | null;
     if (target) {
       const tag = target.tagName.toLowerCase();
-      if (['input', 'textarea', 'select'].includes(tag) || target.isContentEditable) {
+      if (['input', 'textarea', 'select', 'button', 'a'].includes(tag) || target.isContentEditable) {
         isPullingRef.current = false;
         return;
       }
     }
 
-    // Only allow pull to refresh when user is at the very top of the page and container
-    const scrollTop = getTargetScrollTop(e.target);
-    if (scrollTop <= 2) {
+    // Do not interfere if touch originated inside an inner scrollable element
+    if (isInsideScrollableChild(e.target)) {
+      isPullingRef.current = false;
+      return;
+    }
+
+    // Only allow pull to refresh when user is at the very top of the window
+    const winTop = getWindowScrollTop();
+    if (winTop <= 2) {
       startYRef.current = e.touches[0].clientY;
       startXRef.current = e.touches[0].clientX;
       isPullingRef.current = true;
@@ -86,9 +98,17 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const deltaY = currentY - startYRef.current;
     const deltaX = currentX - startXRef.current;
 
-    // Only cancel pull if user is clearly performing a horizontal swipe (e.g. table scroll or carousel)
-    // Avoid canceling on minor touch jitter during initial 1-15px finger travel
-    if (Math.abs(deltaX) > 20 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+    // If finger moves UP (scrolling down into the page), IMMEDIATELY disengage pull to refresh
+    if (deltaY <= 0) {
+      isPullingRef.current = false;
+      reachedThresholdRef.current = false;
+      setIsThresholdReached(false);
+      setPullDistance(0);
+      return;
+    }
+
+    // Only allow vertical pull gesture: cancel if horizontal swipe is detected
+    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY) * 0.8) {
       isPullingRef.current = false;
       reachedThresholdRef.current = false;
       setPullDistance(0);
@@ -96,23 +116,22 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // If scrolling up into the document, ignore
-    if (deltaY <= 0) {
-      setPullDistance(0);
-      reachedThresholdRef.current = false;
-      setIsThresholdReached(false);
+    // Deadzone: Do NOT prevent default or lock scroll during the first 14px of motion
+    // This allows the browser to distinguish natural micro-jitter from an intentional pull gesture
+    if (deltaY < 14) {
       return;
     }
 
-    const scrollTop = getTargetScrollTop(e.target);
-    if (scrollTop <= 2 && deltaY > 0) {
-      // Prevent browser native pull-to-refresh / overscroll collision
+    // Double check window scroll top
+    const winTop = getWindowScrollTop();
+    if (winTop <= 2 && deltaY > 14) {
+      // Intentional pull gesture confirmed: prevent browser native pull-to-refresh collision
       if (e.cancelable) {
         e.preventDefault();
       }
 
       // Smooth elastic damping formula (feels snappy and responsive)
-      const damped = Math.min(deltaY * 0.52, MAX_PULL_DISTANCE);
+      const damped = Math.min((deltaY - 14) * 0.52, MAX_PULL_DISTANCE);
       setPullDistance(damped);
 
       if (damped >= PULL_THRESHOLD && !reachedThresholdRef.current) {
@@ -124,6 +143,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
         setIsThresholdReached(false);
       }
     } else {
+      isPullingRef.current = false;
       setPullDistance(0);
       reachedThresholdRef.current = false;
       setIsThresholdReached(false);
@@ -205,7 +225,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const rotation = Math.min((pullDistance / PULL_THRESHOLD) * 360, 360);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full flex-1 min-h-0 flex flex-col">
       {/* Pull Indicator Capsule */}
       {(pullDistance > 4 || isRefreshing) && (
         <div
@@ -241,7 +261,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
 
       {/* Page Content */}
       <div
-        className="w-full transition-transform duration-100 ease-out"
+        className="w-full h-full flex-1 min-h-0 flex flex-col transition-transform duration-100 ease-out"
         style={{
           transform: pullDistance > 0 && !isRefreshing ? `translate3d(0, ${pullDistance * 0.35}px, 0)` : undefined
         }}

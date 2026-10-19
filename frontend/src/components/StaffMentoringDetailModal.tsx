@@ -8,6 +8,7 @@ import {
 import api from '../services/api';
 import { StudentEditOverlay } from './StudentEditOverlay';
 import { useNotification } from '../context/NotificationContext';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface StudentMentoringDetailProps {
   student: any;
@@ -205,9 +206,9 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   const displayYearRaw = currentStudent?.year_level || student?.year_level || 'II';
   const cleanDisplayYear = String(displayYearRaw || 'II').replace(/year/gi, '').trim() || 'II';
 
+  useScrollLock(true);
+
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (showEditOverlay) {
@@ -219,7 +220,6 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [onClose, showEditOverlay]);

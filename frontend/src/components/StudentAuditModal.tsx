@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, ShieldCheck, RefreshCw, FileText, AlertTriangle, CheckCircle, Clock, Database, UserCheck, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 export interface StudentAuditModalProps {
   isOpen: boolean;
@@ -66,17 +67,17 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
     }
   }, [isOpen, studentId, fetchAuditData]);
 
-  // Lock body scroll & Handle ESC
+  // Lock body scroll safely
+  useScrollLock(isOpen);
+
+  // Handle ESC
   useEffect(() => {
     if (isOpen) {
-      const orig = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = orig || '';
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
