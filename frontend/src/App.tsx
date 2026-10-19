@@ -26,6 +26,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
 import { PullToRefresh } from './components/PullToRefresh';
+import { warmupPriorityRoutes } from './utils/pagePrefetch';
 
 const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 import { LoginPage } from './pages/LoginPage';
@@ -257,59 +258,9 @@ export const App: React.FC = () => {
     }
   }, [isAuthenticated, user?.id]);
 
-  // Deferred background prewarm of secondary page modules after initial page load settles
+  // Instant 0ms Route Warmup Engine: Staggered preloading across all primary pages
   useEffect(() => {
-    const prewarmAllPages = () => {
-      try {
-        Promise.allSettled([
-          import('./pages/DashboardPage'),
-          import('./pages/WeeklyContestPage'),
-          import('./pages/StudentMasterPage'),
-          import('./pages/DepartmentDashboard'),
-          import('./pages/FacultyActionCenter'),
-          import('./pages/HODCommandCenter'),
-          import('./pages/StudentDashboardView'),
-          import('./pages/StaffDashboardView'),
-          import('./pages/GrowthIntelligencePage'),
-          import('./pages/ComparePage'),
-          import('./pages/DataQualityPage'),
-          import('./pages/ReportsPage'),
-          import('./pages/StudentProfilePage'),
-          import('./pages/AuditLogPage'),
-          import('./pages/MessagesPage'),
-          import('./pages/SystemHealthPage'),
-          import('./pages/AIControlCenterPage'),
-          import('./pages/PublicLeaderboardPage'),
-        ]);
-      } catch (_e) {}
-    };
-
-    // Defer prewarming until 25s after load or first user interaction so Lighthouse initial trace window completes with 0 bytes & 0ms TBT
-    const triggerPrewarm = () => {
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(prewarmAllPages, { timeout: 5000 });
-      } else {
-        prewarmAllPages();
-      }
-    };
-
-    const timer = setTimeout(triggerPrewarm, 25000);
-
-    const onUserInteract = () => {
-      clearTimeout(timer);
-      triggerPrewarm();
-      window.removeEventListener('mousemove', onUserInteract);
-      window.removeEventListener('touchstart', onUserInteract);
-    };
-
-    window.addEventListener('mousemove', onUserInteract, { once: true, passive: true });
-    window.addEventListener('touchstart', onUserInteract, { once: true, passive: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('mousemove', onUserInteract);
-      window.removeEventListener('touchstart', onUserInteract);
-    };
+    warmupPriorityRoutes();
   }, []);
   const queryClient = useQueryClient();
   const { refreshAllData } = useGlobalData();

@@ -8,6 +8,7 @@ import {
   UserCircle, 
   FileSpreadsheet 
 } from 'lucide-react';
+import { prefetchRoute } from '../utils/pagePrefetch';
 
 interface MobileBottomNavProps {
   activeTab?: string;
@@ -151,6 +152,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <button
               key={tab.id}
               type="button"
+              onMouseEnter={() => prefetchRoute(tab.id)}
+              onTouchStart={() => prefetchRoute(tab.id)}
               onClick={() => handleTabClick(tab.id)}
               className={`relative flex flex-col items-center justify-center flex-1 h-full py-1 px-1 rounded-full transition-all duration-200 active:scale-90 select-none cursor-pointer touch-manipulation ${
                 isActive 

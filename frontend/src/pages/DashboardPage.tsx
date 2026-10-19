@@ -755,7 +755,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* REAL-TIME GROWTH & DELTA ENGINE */}
-      <div className="stagger-4 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 mt-4 sm:mt-6">
+      <div className="stagger-4 content-auto relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 mt-4 sm:mt-6">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
           <div className="space-y-1.5 sm:space-y-2.5 min-w-0 flex-1">
             <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-[11px] font-black tracking-wider uppercase">
@@ -920,7 +920,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 7. DEPARTMENT PERFORMANCE MATRIX */}
-      <div className="stagger-6 glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
+      <div className="stagger-6 content-auto glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800 pb-3">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
@@ -1147,7 +1147,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 8. TOP COLLEGE LEADERBOARD (PREVIEW) */}
-      <div className="stagger-7 space-y-4 mt-6">
+      <div className="stagger-7 content-auto space-y-4 mt-6">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
             <Award className="w-4 h-4 text-amber-500" />
