@@ -55,9 +55,20 @@ frontend/.env
 frontend/.env.*
 !frontend/.env.example
 serviceAccountKey.json
+*.db
+*.db*
+*.db.gz
+*.sqlite
+*.sqlite3
+leetcode_tracker.db
 data/*.db
 data/*.db*
 data/*.backup*
+data/backups/
+data/backups/**
+data/*.tsv
+data/fresh_imported_students.tsv
+data/contest_*
 !data/.gitkeep
 
 # IDE & OS
