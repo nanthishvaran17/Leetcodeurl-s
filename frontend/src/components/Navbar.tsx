@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -27,7 +26,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setIsSidebarOpen
 }) => {
   const { user, logout, isAuthenticated } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   const [freshness, setFreshness] = useState<any>(null);
   const [menteesCount, setMenteesCount] = useState<number | null>(null);
@@ -148,20 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </kbd>
               </button>
 
-              {/* Instant Theme Toggle Button (Mobile & Desktop) */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="flex items-center justify-center p-2 rounded-xl bg-slate-100/90 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-200/70 dark:border-white/10 transition-all cursor-pointer min-h-[38px] min-w-[38px] active:scale-95 touch-manipulation shadow-2xs select-none"
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label="Toggle Theme"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
-                ) : (
-                  <Moon className="w-4 h-4 text-indigo-600 dark:text-slate-300 transition-transform hover:-rotate-12" />
-                )}
-              </button>
+
 
 
               {/* Sync Status Button */}
