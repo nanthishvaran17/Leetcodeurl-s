@@ -553,6 +553,14 @@ async def get_students(
         for st in students:
             st_out = StudentListOut.model_validate(st)
 
+            # Security Hardening: Redact confidential PII for unauthenticated callers
+            if not current_user:
+                st_out.email = None
+                st_out.institutional_email = None
+                st_out.accommodation = None
+                st_out.allocation = None
+                st_out.twelfth_cutoff = None
+
             # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
             is_verified = bool(
                 st.stats and 
@@ -865,7 +873,16 @@ def download_sample_student_excel():
     )
 
 @router.get("/by-email", response_model=Optional[StudentOut])
-def get_student_by_email(email: str = Query(..., description="Student email address"), db: Session = Depends(get_db)):
+def get_student_by_email(
+    request: Request,
+    email: str = Query(..., description="Student email address"),
+    db: Session = Depends(get_db)
+):
+    from backend.security import extract_current_user_optional
+    current_user = extract_current_user_optional(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required to query student records.")
+
     clean_email = email.strip().lower()
     def _compute():
         student = db.query(Student).filter(

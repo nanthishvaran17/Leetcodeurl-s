@@ -18,6 +18,8 @@ WEAK_SECRETS = {
 WEAK_PASSWORDS = {
     "admin",
     "admin123",
+    "adminpass123!",
+    "adminpass123",
     "password",
     "123456",
     "12345678",
