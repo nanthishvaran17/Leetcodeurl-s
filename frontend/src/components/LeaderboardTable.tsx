@@ -258,6 +258,30 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     return deferredSortedStudents.slice(start, start + size);
   }, [deferredSortedStudents, effectiveStudents, currentPage, pageSize, isServerPaginated]);
 
+  // Ultra-Fast 60/120 FPS Progressive Chunk Rendering
+  const [renderedCount, setRenderedCount] = useState<number>(25);
+
+  useEffect(() => {
+    const total = paginatedStudents.length;
+    setRenderedCount(Math.min(25, total));
+
+    if (total > 25) {
+      let current = 25;
+      let frameId: number;
+
+      const step = () => {
+        current = Math.min(current + 25, total);
+        setRenderedCount(current);
+        if (current < total) {
+          frameId = requestAnimationFrame(step);
+        }
+      };
+
+      frameId = requestAnimationFrame(step);
+      return () => cancelAnimationFrame(frameId);
+    }
+  }, [paginatedStudents, currentPage, pageSize]);
+
   const handlePageChange = (newPage: number) => {
     if (isServerPaginated && onServerPageChange) {
       onServerPageChange(newPage, Number(pageSize));
@@ -655,7 +679,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 itemSize={isMobile ? 148 : 68}
                 width="100%"
                 itemData={paginatedStudents}
-                style={{ overflowX: 'hidden' }}
+                style={{ overflowX: 'auto' }}
               >
                 {({ index, style, data }) => {
                   const student = data[index];
@@ -679,7 +703,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               </List>
             ) : (
               <div className="flex flex-col space-y-4 md:space-y-1">
-                {paginatedStudents.map((student, idx) => (
+                {paginatedStudents.slice(0, renderedCount).map((student, idx) => (
                   <FastStudentRow
                     key={student.id}
                     studentId={student.id.toString()}
