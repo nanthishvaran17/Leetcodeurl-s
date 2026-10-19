@@ -8,16 +8,22 @@ const OUT_DIR = path.resolve(__dirname, 'output_apple_60s');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 function getBase64(filePath) {
-  const fullPath = path.resolve(filePath);
+  let fullPath = path.resolve(filePath);
+  if (!fs.existsSync(fullPath)) fullPath = path.resolve(__dirname, filePath);
+  if (!fs.existsSync(fullPath)) fullPath = path.resolve(__dirname, '..', '..', filePath);
+  if (!fs.existsSync(fullPath)) {
+    const clean = filePath.replace(/^tools[\\\/]video_production[\\\/]/, '');
+    fullPath = path.resolve(__dirname, clean);
+  }
   if (!fs.existsSync(fullPath)) return '';
   const ext = path.extname(fullPath).slice(1);
   const data = fs.readFileSync(fullPath).toString('base64');
   return `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${data}`;
 }
 
-const radarImg = getBase64('tools/video_production/output/preview_snapshots_2min/snap_02_radar_profile.png') || 
-                 getBase64('reports/assets/screenshots/snap_02_radar_profile.png');
-const studentPhoto = getBase64('tools/video_production/team_photos/lead_dev_nanthish_s.jpg');
+const radarImg = getBase64('fresh_snapshots/03_profile.png') || 
+                 getBase64('output/preview_snapshots_2min/snap_02_radar_profile.png');
+const studentPhoto = getBase64('team_photos/lead_dev_nanthish_s.jpg');
 
 async function renderScene05() {
   const outFile = path.join(OUT_DIR, 'seg_05_radar.mp4');

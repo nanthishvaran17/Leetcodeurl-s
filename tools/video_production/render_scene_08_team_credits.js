@@ -8,19 +8,25 @@ const OUT_DIR = path.resolve(__dirname, 'output_apple_60s');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 function getBase64(filePath) {
-  const fullPath = path.resolve(filePath);
+  let fullPath = path.resolve(filePath);
+  if (!fs.existsSync(fullPath)) fullPath = path.resolve(__dirname, filePath);
+  if (!fs.existsSync(fullPath)) fullPath = path.resolve(__dirname, '..', '..', filePath);
+  if (!fs.existsSync(fullPath)) {
+    const clean = filePath.replace(/^tools[\\\/]video_production[\\\/]/, '');
+    fullPath = path.resolve(__dirname, clean);
+  }
   if (!fs.existsSync(fullPath)) return '';
   const ext = path.extname(fullPath).slice(1);
   const data = fs.readFileSync(fullPath).toString('base64');
   return `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${data}`;
 }
 
-const logoData = getBase64('tools/video_production/brand_assets/nec_25_years_logo.png') || 
-                 getBase64('tools/video_production/brand_assets/round_logo.png');
-const hodPhoto = getBase64('tools/video_production/team_photos/hod_dr_s_prabhu.png');
-const nanthishPhoto = getBase64('tools/video_production/team_photos/lead_dev_nanthish_s.jpg');
-const kavinPhoto = getBase64('tools/video_production/team_photos/testing_head_kavin_b.png');
-const affanPhoto = getBase64('tools/video_production/team_photos/security_head_affan.jpg');
+const logoData = getBase64('brand_assets/nec_25_years_logo.png') || 
+                 getBase64('brand_assets/round_logo.png');
+const hodPhoto = getBase64('team_photos/hod_dr_s_prabhu.png');
+const nanthishPhoto = getBase64('team_photos/lead_dev_nanthish_s.jpg');
+const kavinPhoto = getBase64('team_photos/testing_head_kavin_b.png');
+const affanPhoto = getBase64('team_photos/security_head_affan.jpg');
 
 async function renderScene08() {
   const outFile = path.join(OUT_DIR, 'seg_08_team.mp4');

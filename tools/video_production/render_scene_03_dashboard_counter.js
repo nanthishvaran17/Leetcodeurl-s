@@ -8,14 +8,20 @@ const OUT_DIR = path.resolve(__dirname, 'output_apple_60s');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
 function getBase64(filePath) {
-  const fullPath = path.resolve(filePath);
+  let fullPath = path.resolve(filePath);
+  if (!fs.existsSync(fullPath)) fullPath = path.resolve(__dirname, filePath);
+  if (!fs.existsSync(fullPath)) fullPath = path.resolve(__dirname, '..', '..', filePath);
+  if (!fs.existsSync(fullPath)) {
+    const clean = filePath.replace(/^tools[\\\/]video_production[\\\/]/, '');
+    fullPath = path.resolve(__dirname, clean);
+  }
   if (!fs.existsSync(fullPath)) return '';
   const ext = path.extname(fullPath).slice(1);
   const data = fs.readFileSync(fullPath).toString('base64');
   return `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${data}`;
 }
 
-const dashImg = getBase64('tools/video_production/fresh_snapshots/01_dashboard.png');
+const dashImg = getBase64('fresh_snapshots/01_dashboard.png');
 
 async function renderScene03() {
   const outFile = path.join(OUT_DIR, 'seg_03_dashboard.mp4');
