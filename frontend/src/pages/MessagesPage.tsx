@@ -161,9 +161,10 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         try {
           // Re-send text payloads via direct fast HTTP
           const res = await api.post('/messaging/messages', item.payload);
-          if (res.data?.success) {
-            const realMsg = res.data.message;
-            setMessages(prev => prev.map(m => m.messageId === item.tempId ? realMsg : m));
+          const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+          if (data?.success) {
+            const realMsg = data.message;
+            setMessages(prev => prev.map(m => (m.messageId === item.tempId || (m.status === 'SENDING' && m.content === item.payload?.content)) ? realMsg : m));
           } else {
             remaining.push(item);
           }
@@ -177,6 +178,17 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       localStorage.removeItem('messages_outbox');
     }
   }, [fetchConversations]);
+
+  // Auto-reconcile sending messages that stay stuck in 'SENDING' (e.g. mobile network response drops)
+  useEffect(() => {
+    const hasSending = messages.some(m => m.status === 'SENDING');
+    if (!hasSending || !activeConversationId || activeConversationId.startsWith('system-')) return;
+
+    const timer = setTimeout(() => {
+      fetchMessages(activeConversationId);
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [messages, activeConversationId, fetchMessages]);
 
   // Auto-flush outbox when device reconnects to network
   useEffect(() => {
@@ -234,14 +246,21 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         setMessages(prev => {
           if (prev.some(p => p.messageId === msg.messageId)) return prev;
           const tempIdx = prev.findIndex(p =>
-            p.messageId.startsWith('TEMP_') &&
+            (p.messageId.startsWith('TEMP_') || p.status === 'SENDING') &&
             (msg.clientMessageId
-              ? p.messageId === msg.clientMessageId
+              ? (p.messageId === msg.clientMessageId || (p as any).clientMessageId === msg.clientMessageId)
               : (p.senderId === msg.senderId && p.content === msg.content))
           );
           if (tempIdx !== -1) {
             const updated = [...prev];
             updated[tempIdx] = msg;
+            return updated;
+          }
+          // Fallback: match any message in SENDING state with same content
+          const sendingIdx = prev.findIndex(p => p.status === 'SENDING' && p.content === msg.content);
+          if (sendingIdx !== -1) {
+            const updated = [...prev];
+            updated[sendingIdx] = msg;
             return updated;
           }
           return [...prev, msg];
