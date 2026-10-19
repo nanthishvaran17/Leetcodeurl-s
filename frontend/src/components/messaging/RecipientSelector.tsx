@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Loader2, ArrowLeft } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { getApiUrl, getAuthHeaders, getCachedData, setCachedData, getRequestKey } from '../../services/api';
-import axios from 'axios';
+import api, { getCachedData, setCachedData, getRequestKey } from '../../services/api';
 
 export interface Recipient {
   id: string;
@@ -47,9 +46,8 @@ export const RecipientSelector: React.FC<Props> = ({ onClose, onSelect }) => {
           }
         }
 
-        // Always fetch authoritative fresh data
-        const headers = await getAuthHeaders();
-        const res = await axios.get(getApiUrl(url), { headers });
+        // Always fetch authoritative fresh data via unified api instance
+        const res = await api.get(url);
 
         if (res.data?.success && Array.isArray(res.data.recipients)) {
           if (isMounted) {

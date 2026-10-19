@@ -6,8 +6,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Conversation } from './ConversationList';
-import axios from 'axios';
-import { getApiUrl, getAuthHeaders } from '../../services/api';
+import { getApiUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 
 export type ChatWallpaper = 'default' | 'emerald' | 'stealth' | 'cyber' | 'indigo' | 'doodle';

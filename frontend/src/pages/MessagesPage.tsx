@@ -5,12 +5,11 @@ import { RecipientSelector, Recipient } from '../components/messaging/RecipientS
 import { ConversationInfoPanel } from '../components/messaging/ConversationInfoPanel';
 import { AskInstitutionPanel } from '../components/messaging/AskInstitutionPanel';
 import { SmartGroupModal } from '../components/messaging/SmartGroupModal';
-import api, { getApiUrl, getAuthHeaders } from '../services/api';
+import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
-import axios from 'axios';
 import { MessageSquare, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft, X } from 'lucide-react';
 
 interface MessagesPageProps {

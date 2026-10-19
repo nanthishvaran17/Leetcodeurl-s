@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getApiUrl, getAuthHeaders } from '../../services/api';
+import api from '../../services/api';
 import { X, Users, Filter, AlertCircle } from 'lucide-react';
 
 export const SmartGroupModal: React.FC<{
@@ -46,9 +45,7 @@ export const SmartGroupModal: React.FC<{
         rule_criteria: isDynamic ? { days } : {}
       };
 
-      const res = await axios.post(getApiUrl('/messaging/smart-groups'), payload, {
-        headers: await getAuthHeaders()
-      });
+      const res = await api.post('/messaging/smart-groups', payload);
 
       if (res.data?.success && res.data?.group) {
         onGroupCreated(res.data.group);
