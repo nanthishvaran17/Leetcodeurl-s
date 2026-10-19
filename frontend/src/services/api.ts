@@ -251,6 +251,16 @@ export const globalLogout = () => {
 // Resilient Response Interceptor: Automatic Retry & Silent Token Refresh
 api.interceptors.response.use(
   (response) => {
+    // Ensure response.data is parsed into an object if CapacitorHttp returned it as string
+    if (typeof response.data === 'string') {
+      try {
+        const trimmed = response.data.trim();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          response.data = JSON.parse(trimmed);
+        }
+      } catch (_e) {}
+    }
+
     // If a state-mutating request (POST, PUT, PATCH, DELETE) succeeds, automatically invalidate stale GET cache
     const method = response.config?.method?.toLowerCase();
     if (method && ['post', 'put', 'patch', 'delete'].includes(method)) {

@@ -406,6 +406,13 @@ class MessagingService:
         t1_server_receive = int(time.time() * 1000)
         sender_id = MessagingService._get_user_id(current_user)
         
+        # 0. Idempotency Check: If client_message_id already exists, return the existing message
+        if client_message_id:
+            existing_msg = db.query(Message).filter_by(client_message_id=client_message_id).first()
+            if existing_msg:
+                logger.info(f"[MESSAGING] Idempotent send duplicate prevented for client_message_id={client_message_id}")
+                return existing_msg
+
         # 1. Ensure receiver is valid or conversation already exists
         conv_exists = db.query(Conversation).filter(
             or_(
