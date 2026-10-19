@@ -27,6 +27,8 @@ android {
             storePassword 'NEC@2024secure'
             keyAlias 'nandha-key'
             keyPassword 'NEC@2024secure'
+            v1SigningEnabled true
+            v2SigningEnabled true
         }
     }
     buildTypes {
