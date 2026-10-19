@@ -14,7 +14,30 @@
 
   <!-- Theme Colors (system-adaptive) -->
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#090e1a" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060813" />
+
+  <!-- Immediate Mobile Pre-Hydration Dark Theme Synchronizer -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('theme');
+        var userSet = localStorage.getItem('theme_user_set');
+        var isDark = false;
+        if (userSet && (saved === 'dark' || saved === 'light')) {
+          isDark = (saved === 'dark');
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          isDark = true;
+        } else if (saved === 'dark' || !saved) {
+          isDark = true;
+        }
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Viewport — Standard accessible viewport allowing zoom for 100/100 accessibility -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />

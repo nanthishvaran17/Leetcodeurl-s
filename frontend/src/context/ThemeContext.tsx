@@ -9,16 +9,36 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark';
+  try {
     const saved = localStorage.getItem('theme') as Theme;
-    if (saved === 'dark' || saved === 'light') return saved;
-    return 'dark'; // Default to stunning AI Dark theme
-  });
+    const userSet = localStorage.getItem('theme_user_set');
+    if (userSet && (saved === 'dark' || saved === 'light')) {
+      return saved;
+    }
+    // If not manually locked by user, check device system dark mode preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return saved === 'light' ? 'light' : 'dark';
+  } catch (_) {
+    return 'dark';
+  }
+}
 
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+
+  // Sync DOM classes and Android system theme-color
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     const body = window.document.body;
+
     if (theme === 'dark') {
       root.classList.add('dark');
       if (body) body.classList.add('dark');
@@ -27,7 +47,40 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (body) body.classList.remove('dark');
     }
     localStorage.setItem('theme', theme);
+
+    // Update Android status bar & browser navigation theme-color
+    try {
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement('meta');
+        metaThemeColor.setAttribute('name', 'theme-color');
+        document.head.appendChild(metaThemeColor);
+      }
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#060813' : '#f8fafc');
+    } catch (_) {}
   }, [theme]);
+
+  // Listen to mobile system dark mode preference changes in real-time
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      // Automatically adapt to phone system settings if user hasn't locked theme
+      const isUserLocked = localStorage.getItem('theme_user_set');
+      if (!isUserLocked) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+      return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    } else if ((mediaQuery as any).addListener) {
+      (mediaQuery as any).addListener(handleSystemThemeChange);
+      return () => (mediaQuery as any).removeListener(handleSystemThemeChange);
+    }
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => {
