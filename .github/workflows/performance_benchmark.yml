@@ -63,9 +63,11 @@ jobs:
 
       - name: Upload Benchmark Results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: benchmark-results
           path: |
             api_benchmark_results.txt
             db_benchmark_results.txt
             lighthouse_results.txt
+          if-no-files-found: ignore
