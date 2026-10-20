@@ -38,22 +38,40 @@ jobs:
       - name: Run Database Migrations
         run: |
           python -c "
-          from backend.migrate_db import run_db_migrations
-          from backend.database import run_migrations
-          from backend.scripts.fix_all_pg_sequences import fix_all_sequences
-          run_db_migrations()
-          run_migrations()
-          fix_all_sequences()
-          print('✅ Database migrations and sequences successfully applied.')
+          import time, sys
+          for attempt in range(1, 4):
+              try:
+                  from backend.migrate_db import run_db_migrations
+                  from backend.database import run_migrations
+                  from backend.scripts.fix_all_pg_sequences import fix_all_sequences
+                  run_db_migrations()
+                  run_migrations()
+                  fix_all_sequences()
+                  print('✅ Database migrations and sequences successfully applied.')
+                  break
+              except Exception as e:
+                  print(f'Attempt {attempt}/3 migration error: {e}')
+                  if attempt == 3:
+                      sys.exit(1)
+                  time.sleep(5)
           "
 
       - name: Execute Sync Worker
         run: |
           python -c "
-          import asyncio
-          from backend.database import SessionLocal
-          from backend.sync_engine import run_full_sync
-          with SessionLocal() as db:
-              asyncio.run(run_full_sync(db))
+          import asyncio, time, sys
+          for attempt in range(1, 4):
+              try:
+                  from backend.database import SessionLocal
+                  from backend.sync_engine import run_full_sync
+                  with SessionLocal() as db:
+                      asyncio.run(run_full_sync(db))
+                  print('✅ Sync worker completed successfully.')
+                  break
+              except Exception as e:
+                  print(f'Attempt {attempt}/3 sync error: {e}')
+                  if attempt == 3:
+                      sys.exit(1)
+                  time.sleep(5)
           "
 
