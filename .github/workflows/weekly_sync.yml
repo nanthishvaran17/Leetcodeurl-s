@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 60
 
     env:
+      PYTHONPATH: .
       DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL }}
       ENVIRONMENT: production
       TIMEZONE: Asia/Kolkata
