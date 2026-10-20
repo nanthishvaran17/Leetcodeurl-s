@@ -12,6 +12,7 @@ from backend.insights import calculate_student_risk_profile
 from backend.routes.auth import get_current_user
 from backend.security import get_current_user_optional
 from backend.services.authorization_service import apply_role_based_student_filter
+from backend.constants import get_academic_year_filter_clause
 
 router = APIRouter(prefix="/api/risk", tags=["Risk & Intervention Intelligence"])
 
@@ -71,7 +72,9 @@ def get_at_risk_students(
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
     if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-        query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
+        yr_clause = get_academic_year_filter_clause(Student, year_level)
+        if yr_clause is not None:
+            query = query.filter(yr_clause)
 
     students = query.limit(limit).all()
 

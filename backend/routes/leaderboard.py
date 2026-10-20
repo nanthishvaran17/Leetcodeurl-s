@@ -9,6 +9,7 @@ from backend.schemas import StudentOut, LeaderboardPaginatedOut
 from backend.cache import cache
 from backend.security import get_current_user_optional
 from backend.services.authorization_service import apply_role_based_student_filter
+from backend.constants import get_academic_year_filter_clause
 from fastapi import Request
 
 router = APIRouter(prefix="/api/leaderboard", tags=["Leaderboard"])
@@ -53,8 +54,9 @@ async def get_leaderboard(
             if dept_id:
                 query = query.filter(Student.department_id == dept_id)
             if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-                clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
-                query = query.filter(func.upper(Student.year_level) == clean_yr)
+                yr_clause = get_academic_year_filter_clause(Student, year_level)
+                if yr_clause is not None:
+                    query = query.filter(yr_clause)
             if section_id:
                 query = query.filter(Student.section_id == section_id)
 

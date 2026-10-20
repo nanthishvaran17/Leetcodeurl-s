@@ -498,6 +498,12 @@ def generate_report_bytes(
             batch_filter=batch,
             session_id=flt.get("session_id")
         )
+        if fmt == "pdf":
+            from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
+            return export_weekly_performance_pdf(data)
+        elif fmt in ("word", "docx"):
+            from backend.word_generator import build_weekly_performance_docx
+            return build_weekly_performance_docx(data)
         return export_weekly_performance_excel(data, include_extra_sheets=False)
 
     # 2. College 2-Sheet OpenPyXL Format

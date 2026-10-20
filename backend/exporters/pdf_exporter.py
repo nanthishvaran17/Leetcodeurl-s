@@ -172,6 +172,16 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     Generates high-resolution, multi-page, evidence-based PDF using the master intelligence engine.
     Fully content-driven dynamic pagination with zero artificial blank areas.
     """
+    rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+    if (
+        rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+        or dataset.get("batch_summaries")
+        or dataset.get("college_summary")
+        or "COORDINATOR" in str(dataset.get("title") or "").upper()
+    ):
+        from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
+        return export_weekly_performance_pdf(dataset)
+
     if "metadata" in dataset and "summary" in dataset and "departments" in dataset:
         from backend.pdf_v2.engine import build_intelligence_pdf
         return build_intelligence_pdf(dataset)

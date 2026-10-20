@@ -457,24 +457,11 @@ def get_students(
 
     q = apply_role_based_student_filter(q, current_user, db)
 
-    if year_level and year_level != "ALL":
-        years_map_dict = {
-            "I": ["1", "I", "1st", "I Year", "1 Year"],
-            "1": ["1", "I", "1st", "I Year", "1 Year"],
-            "1ST": ["1", "I", "1st", "I Year", "1 Year"],
-            "II": ["2", "II", "2nd", "II Year", "2 Year"],
-            "2": ["2", "II", "2nd", "II Year", "2 Year"],
-            "2ND": ["2", "II", "2nd", "II Year", "2 Year"],
-            "III": ["3", "III", "3rd", "III Year", "3 Year"],
-            "3": ["3", "III", "3rd", "III Year", "3 Year"],
-            "3RD": ["3", "III", "3rd", "III Year", "3 Year"],
-            "IV": ["4", "IV", "4th", "IV Year", "4 Year"],
-            "4": ["4", "IV", "4th", "IV Year", "4 Year"],
-            "4TH": ["4", "IV", "4th", "IV Year", "4 Year"],
-        }
-        clean_yr_key = year_level.upper().replace("YEAR", "").strip()
-        y_matches = years_map_dict.get(clean_yr_key) or years_map_dict.get(year_level.upper()) or [year_level]
-        q = q.filter(Student.year_level.in_(y_matches))
+    if year_level and str(year_level).strip().upper() not in ("ALL", "ALL YEARS", "ALL_YEARS", ""):
+        from backend.constants import get_academic_year_filter_clause
+        yr_clause = get_academic_year_filter_clause(Student, year_level)
+        if yr_clause is not None:
+            q = q.filter(yr_clause)
     if section and section != "ALL":
         from backend.models import Section
         q = q.filter(Student.section.has(Section.name.ilike(section)))

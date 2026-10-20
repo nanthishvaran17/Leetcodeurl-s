@@ -1136,6 +1136,21 @@ def download_session_report_by_format(
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
             )
         elif fmt == "pdf":
+            rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+            if (
+                rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+                or dataset.get("batch_summaries")
+                or dataset.get("college_summary")
+                or "COORDINATOR" in str(dataset.get("title") or "").upper()
+            ):
+                from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
+                pdf_bytes = export_weekly_performance_pdf(dataset)
+                return Response(
+                    content=pdf_bytes,
+                    media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="{r_filename}.pdf"'}
+                )
+
             from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
             pdf_bytes = export_dynamic_pdf(dataset)
             return Response(
@@ -1144,6 +1159,21 @@ def download_session_report_by_format(
                 headers={"Content-Disposition": f'attachment; filename="{r_filename}.pdf"'}
             )
         elif fmt in ("word", "docx"):
+            rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+            if (
+                rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+                or dataset.get("batch_summaries")
+                or dataset.get("college_summary")
+                or "COORDINATOR" in str(dataset.get("title") or "").upper()
+            ):
+                from backend.word_generator import build_weekly_performance_docx
+                word_bytes = build_weekly_performance_docx(dataset)
+                return Response(
+                    content=word_bytes,
+                    media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    headers={"Content-Disposition": f'attachment; filename="{r_filename}.docx"'}
+                )
+
             from backend.exporters.dynamic_word_exporter import export_dynamic_word
             word_bytes = export_dynamic_word(dataset)
             return Response(
@@ -2658,6 +2688,21 @@ def download_universal_pdf(
             batch=batch,
             current_user=current_user
         )
+        rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+        if (
+            rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+            or dataset.get("batch_summaries")
+            or dataset.get("college_summary")
+            or "COORDINATOR" in str(dataset.get("title") or "").upper()
+        ):
+            from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
+            pdf_bytes = export_weekly_performance_pdf(dataset)
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.pdf"'}
+            )
+
         from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
         pdf_bytes = export_dynamic_pdf(dataset)
         return Response(
@@ -2699,6 +2744,21 @@ def download_universal_word(
         batch=batch,
         current_user=current_user
     )
+    rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
+    if (
+        rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+        or dataset.get("batch_summaries")
+        or dataset.get("college_summary")
+        or "COORDINATOR" in str(dataset.get("title") or "").upper()
+    ):
+        from backend.word_generator import build_weekly_performance_docx
+        word_bytes = build_weekly_performance_docx(dataset)
+        return Response(
+            content=word_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{r_filename}.docx"'}
+        )
+
     from backend.exporters.dynamic_word_exporter import export_dynamic_word
     word_bytes = export_dynamic_word(dataset)
     return Response(

@@ -160,6 +160,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const queryClient = useQueryClient();
   const { refreshAllData } = useGlobalData();
   const { data: globalDepts = [] } = useDepartmentsQuery();
+  const { departments: ctxDepts = [] } = useDepartments();
   const filters = useFilters();
   // Removed useFilteredStudents client-side filtering
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -221,12 +222,16 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       if (filters.searchQuery) params.search = filters.searchQuery;
       
       // Map department CODE to ID
-      if (filters.department !== 'ALL' && departments.length > 0) {
-        const found = departments.find(d => d.code === filters.department || d.name === filters.department);
-        if (found) params.dept_id = found.id;
+      const allDepts = departments.length > 0 ? departments : (ctxDepts.length > 0 ? ctxDepts : globalDepts);
+      if (filters.department !== 'ALL' && allDepts.length > 0) {
+        const found = allDepts.find((d: any) => 
+          (d.code || d.department_code) === filters.department || 
+          (d.name || d.department_name) === filters.department
+        );
+        if (found) params.dept_id = found.id || found.department_id;
       }
       
-      if (filters.academicYear !== 'ALL') params.year_level = filters.academicYear;
+      if (filters.academicYear && filters.academicYear !== 'ALL') params.year_level = filters.academicYear;
       
       const res = await api.get('/students', { params });
       return res.data;
@@ -257,7 +262,6 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   }, [queryClient, refetchStudents]);
 
 
-  const { departments: ctxDepts = [] } = useDepartments();
 
   // Load departments via context / global data
   useEffect(() => {

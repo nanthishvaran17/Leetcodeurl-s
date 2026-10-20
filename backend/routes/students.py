@@ -18,6 +18,7 @@ from backend.logger import logger
 from backend.websocket_manager import connection_manager
 
 router = APIRouter(prefix="/api/students", tags=["Students"])
+from backend.constants import get_academic_year_filter_clause
 
 from sqlalchemy import func
 
@@ -118,13 +119,9 @@ async def get_leaderboard_fast(
             if dept_id:
                 query = query.filter(Student.department_id == dept_id)
             if year_level and year_level.strip().upper() not in ('ALL', 'ALL YEARS', ''):
-                raw_yr = year_level.strip().upper().replace('YEAR', '').strip()
-                roman_map = {'1': 'I', '2': 'II', '3': 'III', '4': 'IV', 'I': '1', 'II': '2', 'III': '3', 'IV': '4'}
-                alt_yr = roman_map.get(raw_yr, raw_yr)
-                query = query.filter(
-                    func.upper(Student.year_level).like(f"%{raw_yr}%") |
-                    func.upper(Student.year_level).like(f"%{alt_yr}%")
-                )
+                yr_clause = get_academic_year_filter_clause(Student, year_level)
+                if yr_clause is not None:
+                    query = query.filter(yr_clause)
 
             # Sort by solved desc for leaderboard with limit
             query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
@@ -383,8 +380,9 @@ async def get_students(
         if dept_id:
             query = query.filter(Student.department_id == dept_id)
         if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-            clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
-            query = query.filter(func.upper(Student.year_level) == clean_yr)
+            yr_clause = get_academic_year_filter_clause(Student, year_level)
+            if yr_clause is not None:
+                query = query.filter(yr_clause)
 
         if section_id:
             query = query.filter(Student.section_id == section_id)

@@ -24,6 +24,15 @@ def generate_pdf_report(
     """
     # Accept pre-built dataset dict (e.g. from scheduled jobs)
     if isinstance(db, dict):
+        rpt_t = str(db.get("report_type") or db.get("reportType") or "").upper()
+        if (
+            rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
+            or db.get("batch_summaries")
+            or db.get("college_summary")
+            or "COORDINATOR" in str(db.get("title") or "").upper()
+        ):
+            from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
+            return export_weekly_performance_pdf(db)
         return build_intelligence_pdf(db)
 
     eff_user = current_user or kwargs.get('current_user')
