@@ -487,8 +487,8 @@ class NotificationService:
             fcm_dispatched = 0
             if FIREBASE_ADMIN_AVAILABLE and messaging and firebase_admin and firebase_admin._apps:
                 is_high_priority = eff_priority in ("high", "critical")
-                raw_route = str(eff_route or "/dashboard")  # type: ignore
-                fcm_link = raw_route if raw_route.startswith("http") else f"https://leetcodeurl-s-ipfr.onrender.com{raw_route}"
+                base_site_url = os.environ.get("BASE_SITE_URL", "http://13.53.231.6").rstrip("/")
+                fcm_link = raw_route if raw_route.startswith("http") else f"{base_site_url}{raw_route}"
                 
                 target_uids = set()
                 for r in recipients:
@@ -671,7 +671,8 @@ class NotificationService:
                             """
                             action_btn = None
                             if eff_route:
-                                full_url = f"https://leetcodeurl-s-ipfr.onrender.com{eff_route}" if not eff_route.startswith("http") else eff_route
+                                base_site_url = os.environ.get("BASE_SITE_URL", "http://13.53.231.6").rstrip("/")
+                                full_url = f"{base_site_url}{eff_route}" if not eff_route.startswith("http") else eff_route
                                 action_btn = f'<a href="{full_url}" class="btn" target="_blank" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold;">View in System</a>'
                             
                             html_email = generate_professional_template(

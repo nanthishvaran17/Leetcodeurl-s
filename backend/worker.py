@@ -33,11 +33,11 @@ async def heartbeat_loop():
         counter += 1
         if counter % 4 == 0:
             try:
-                web_url = os.environ.get("WEB_SERVICE_URL", "https://leetcodeurl-s-ipfr.onrender.com/health")
+                web_url = os.environ.get("WEB_SERVICE_URL", "http://13.53.231.6/health")
                 import urllib.request
-                req = urllib.request.Request(web_url, headers={"User-Agent": "RenderWorkerKeepAlive/1.0"})
+                req = urllib.request.Request(web_url, headers={"User-Agent": "BackendWorkerKeepAlive/1.0"})
                 with urllib.request.urlopen(req, timeout=10) as _resp:
-                    logger.info("[WORKER_KEEP_ALIVE] Render Web Service keep-alive ping success (200 OK).")
+                    logger.info("[WORKER_KEEP_ALIVE] Web service keep-alive ping success (200 OK).")
             except Exception as _ping_err:
                 logger.debug(f"[WORKER_KEEP_ALIVE] Ping note: {_ping_err}")
 

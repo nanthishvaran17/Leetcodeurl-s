@@ -22,13 +22,16 @@ jobs:
     steps:
       - name: Ping Backend Health Endpoint
         run: |
-          echo "Pinging backend to prevent cold start..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${{ secrets.BACKEND_URL }}/health" || echo "000")
+          echo "Pinging backend health endpoint..."
+          BACKEND="${{ secrets.BACKEND_URL }}"
+          BACKEND="${BACKEND:-http://13.53.231.6}"
+          BACKEND="${BACKEND%/}"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND/health" || echo "000")
           echo "Backend health status: $STATUS"
           if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
             echo "✅ Backend is alive and healthy."
           else
-            echo "⚠️ Backend returned status $STATUS — may be cold starting."
+            echo "⚠️ Backend returned status $STATUS."
           fi
 
   sunday_autopilot:
@@ -38,12 +41,12 @@ jobs:
     steps:
       - name: Wait for Backend Warm-up
         run: |
-          echo "Warming up backend before triggering Sunday automation..."
+          echo "Checking backend health before triggering Sunday automation..."
           BACKEND="${{ secrets.BACKEND_URL }}"
-          BACKEND="${BACKEND:-https://leetcodeurl-s-ipfr.onrender.com}"
+          BACKEND="${BACKEND:-http://13.53.231.6}"
           BACKEND="${BACKEND%/}"
           WARM=0
-          for i in 1 2 3 4 5 6 7 8; do
+          for i in 1 2 3 4; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND/health" || echo "000")
             if [ "$STATUS" != "200" ]; then
               STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$BACKEND/api/health" || echo "000")
@@ -54,17 +57,14 @@ jobs:
               WARM=1
               break
             fi
-            sleep 12
+            sleep 10
           done
-          if [ "$WARM" -eq 0 ]; then
-            echo "⚠️ Backend still warming up (status $STATUS), attempting dispatch with retries..."
-          fi
 
       - name: Trigger Sunday Session Pipeline
         run: |
           echo "Triggering Sunday automation pipeline..."
           BACKEND="${{ secrets.BACKEND_URL }}"
-          BACKEND="${BACKEND:-https://leetcodeurl-s-ipfr.onrender.com}"
+          BACKEND="${BACKEND:-http://13.53.231.6}"
           BACKEND="${BACKEND%/}"
           CRON_SECRET="${{ secrets.CRON_SECRET }}"
           RESPONSE="000"
