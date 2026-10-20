@@ -67,6 +67,19 @@ jobs:
 
       - name: Execute Sunday Automation Runner
         env:
-          AUTOPILOT_PHASE: ${{ github.event.inputs.phase || 'all' }}
+          SCHEDULE_CRON: ${{ github.event.schedule }}
+          INPUT_PHASE: ${{ github.event.inputs.phase }}
         run: |
-          python -m backend.sunday_runner --phase "${{ github.event.inputs.phase || 'all' }}"
+          PHASE="${INPUT_PHASE}"
+          if [ -z "$PHASE" ]; then
+            case "$SCHEDULE_CRON" in
+              "25 2 * * 0") PHASE="preflight_0755" ;;
+              "30 2 * * 0") PHASE="baseline_0800" ;;
+              "0 4 * * 0")  PHASE="finalization_0930" ;;
+              "30 16 * * 0") PHASE="virtual_sync_2200" ;;
+              "15 2 * * 1") PHASE="reports_0935" ;;
+              *)            PHASE="all" ;;
+            esac
+          fi
+          echo "🚀 Executing Sunday Autopilot Phase: $PHASE"
+          python -m backend.sunday_runner --phase "$PHASE"
