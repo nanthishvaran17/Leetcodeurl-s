@@ -52,26 +52,35 @@ async function renderScene04() {
       object-fit: cover;
       display: block;
     }
-    /* Simulated Live Search Bar Overlay at top-right of table */
+    
+    /* Pixel-Perfect Overlay directly covering the real "Search by name, reg no..." input box */
+    /* Exact verified bounding box: left: 38px, top: 555px, width: 605px, height: 42px */
     .search-input-box {
       position: absolute;
-      top: 156px;
-      right: 320px;
-      width: 260px;
-      height: 38px;
+      top: 555px;
+      left: 38px;
+      width: 605px;
+      height: 42px;
       background: #FFFFFF;
       border: 1.5px solid #2563EB;
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
       border-radius: 8px;
       display: flex;
       align-items: center;
-      padding: 0 12px;
-      font-size: 13px;
+      padding: 0 14px;
+      font-size: 14px;
       font-weight: 600;
       color: #0F172A;
       z-index: 100;
       opacity: 0;
       transition: opacity 0.2s ease;
+    }
+    .search-icon-svg {
+      width: 16px;
+      height: 16px;
+      color: #2563EB;
+      margin-right: 10px;
+      flex-shrink: 0;
     }
     .search-text {
       white-space: nowrap;
@@ -80,22 +89,25 @@ async function renderScene04() {
     .search-cursor {
       display: inline-block;
       width: 2px;
-      height: 16px;
+      height: 18px;
       background: #2563EB;
       margin-left: 2px;
+      vertical-align: middle;
       animation: blink 0.8s infinite;
     }
-    /* Rank 1 Student Highlight Box (Nanthish S) */
+
+    /* Pixel-Perfect Highlight Box over Rank 1 (Nanthish S) */
+    /* Exact verified row bounding box: top: 770px, left: 14px, width: 1890px, height: 60px */
     .rank1-highlight {
       position: absolute;
-      top: 310px;
-      left: 280px;
-      width: 1360px;
-      height: 64px;
-      border-radius: 10px;
+      top: 770px;
+      left: 14px;
+      width: 1890px;
+      height: 60px;
+      border-radius: 8px;
       border: 2px solid #2563EB;
-      background: rgba(37, 99, 235, 0.04);
-      box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.18);
+      background: rgba(37, 99, 235, 0.05);
+      box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
       opacity: 0;
       pointer-events: none;
       z-index: 90;
@@ -112,10 +124,11 @@ async function renderScene04() {
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 3px 10px;
+      padding: 3px 12px;
       border-radius: 999px;
       box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
     }
+
     /* Authentic Cursor */
     .mouse-cursor {
       position: absolute;
@@ -183,6 +196,10 @@ async function renderScene04() {
   <div class="page-container" id="pageBox">
     <img src="${rosterShot}" class="page-shot" alt="Leaderboard Roster" />
     <div class="search-input-box" id="searchBox">
+      <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
       <span class="search-text" id="searchText"></span>
       <span class="search-cursor"></span>
     </div>
@@ -224,29 +241,28 @@ async function renderScene04() {
         document.getElementById('whiteFade').style.opacity = 0;
       }
 
-      // Cursor choreography:
-      // 0.0 - 1.8s: Cursor glides from center-bottom to Search Input (right: 450, top: 175)
-      // 1.8 - 4.2s: Types "Nanthish S" into search box
-      // 4.2 - 5.5s: Rank 1 row highlights with blue container
-      // 5.5 - 8.2s: Cursor glides smoothly down to Rank 1 row action (x: 1540, y: 342)
-      // 8.2s: Clicks "View Profile", ripple plays, triggers profile open
+      // Exact verified element coordinates:
+      // Search input box center: (341, 576), typing start: (140, 576)
+      // Rank 1 row action (Eye icon / View Profile): (1746.5, 800.5)
       let curX = 960;
-      let curY = 540;
+      let curY = 640;
 
-      if (sec < 1.8) {
-        const p = easeInOutCubic(sec / 1.8);
-        curX = lerp(750, 1450, p);
-        curY = lerp(450, 175, p);
-      } else if (sec >= 1.8 && sec < 4.2) {
-        curX = 1450;
-        curY = 175;
+      if (sec < 1.6) {
+        // Cursor glides smoothly from center to inside the search input box
+        const p = easeInOutCubic(sec / 1.6);
+        curX = lerp(850, 140, p);
+        curY = lerp(680, 576, p);
+      } else if (sec >= 1.6 && sec < 4.2) {
+        // Clicks inside the real search input and types "Nanthish S"
+        curX = 140;
+        curY = 576;
         document.getElementById('searchBox').style.opacity = 1;
-        const typeProgress = (sec - 1.8) / 2.0;
+        const typeProgress = (sec - 1.6) / 2.0;
         const charCount = Math.floor(lerp(0, queryStr.length, Math.min(1, typeProgress)));
         document.getElementById('searchText').innerText = queryStr.slice(0, charCount);
       } else if (sec >= 4.2 && sec < 5.8) {
-        curX = 1450;
-        curY = 175;
+        curX = 140;
+        curY = 576;
         document.getElementById('searchBox').style.opacity = 1;
         document.getElementById('searchText').innerText = queryStr;
         document.getElementById('rank1Box').style.opacity = easeInOutCubic((sec - 4.2) / 0.8);
@@ -254,22 +270,22 @@ async function renderScene04() {
         document.getElementById('searchBox').style.opacity = 1;
         document.getElementById('searchText').innerText = queryStr;
         document.getElementById('rank1Box').style.opacity = 1;
-        // Cursor moves to click action on Rank 1 row
+        // Cursor glides smoothly across the row directly to the Eye icon (View Profile) at (1746.5, 800.5)
         const p = easeInOutCubic((sec - 5.8) / 2.2);
-        curX = lerp(1450, 1540, p);
-        curY = lerp(175, 342, p);
+        curX = lerp(140, 1746.5, p);
+        curY = lerp(576, 800.5, p);
       } else {
-        curX = 1540;
-        curY = 342;
+        curX = 1746.5;
+        curY = 800.5;
         document.getElementById('searchBox').style.opacity = 1;
         document.getElementById('searchText').innerText = queryStr;
         document.getElementById('rank1Box').style.opacity = 1;
-        // Ripple click at 8.3s
+        // Ripple click on Eye icon at 8.3s
         if (sec >= 8.3 && sec < 8.8) {
           const ripProg = (sec - 8.3) / 0.5;
           const ripple = document.getElementById('ripple');
-          ripple.style.left = '1540px';
-          ripple.style.top = '342px';
+          ripple.style.left = '1746.5px';
+          ripple.style.top = '800.5px';
           ripple.style.opacity = lerp(0.8, 0, ripProg);
           ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
         }

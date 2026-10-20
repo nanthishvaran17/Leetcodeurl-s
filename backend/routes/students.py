@@ -2091,13 +2091,19 @@ async def validate_leetcode_account(
     'Validating → Fetching → Verified ' / 'Username not found' feedback without
     waiting for a full background sync to complete.
     """
-    # student_id=0 is a sentinel for "validate a new account before creation" —
-    # no student lookup is needed in that case.  For any real student_id (>0),
-    # we confirm the student exists so we can log context.
-    if student_id > 0:  # type: ignore
-        student = db.query(Student).filter(Student.id == student_id).first()
+    # student_id=0 or "0" is a sentinel for "validate a new account before creation"
+    try:
+        sid_int = int(str(student_id).strip())
+    except (ValueError, TypeError):
+        sid_int = 0
+
+    if sid_int > 0:
+        student = db.query(Student).filter(Student.id == sid_int).first()
         if not student:
-            raise HTTPException(status_code=404, detail="Student record not found.")
+            # Check by register number as fallback
+            student = db.query(Student).filter(Student.reg_no == str(student_id).strip()).first()
+            if not student:
+                raise HTTPException(status_code=404, detail="Student record not found.")
 
     # Resolve input: explicit username takes precedence over URL
     raw_input = (payload.username or "").strip() or (payload.leetcode_url or "").strip()
@@ -2160,7 +2166,11 @@ async def validate_leetcode_account(
             "can_save": True,
             "profile_data": {
                 "total_solved": result.get("total_solved"),
+                "easy_solved": result.get("easy_solved"),
+                "medium_solved": result.get("medium_solved"),
+                "hard_solved": result.get("hard_solved"),
                 "contest_rating": result.get("contest_rating"),
+                "ranking": result.get("ranking"),
                 "recent_contest": result.get("recent_contest_name"),
             }
         }

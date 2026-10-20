@@ -55,17 +55,17 @@ async function renderScene03() {
       object-fit: cover;
       display: block;
     }
-    /* Hover elevation box on KPI card (Sunday Solvers) */
+    /* Hover elevation box on KPI card (Sunday Solvers: 313) */
     .kpi-hover-card {
       position: absolute;
-      top: 215px;
-      left: 995px;
-      width: 440px;
-      height: 155px;
-      border-radius: 12px;
-      border: 2px solid rgba(37, 99, 235, 0.4);
-      background: rgba(37, 99, 235, 0.03);
-      box-shadow: 0 12px 28px -6px rgba(37, 99, 235, 0.15);
+      top: 300px;
+      left: 968px;
+      width: 456px;
+      height: 168px;
+      border-radius: 16px;
+      border: 2px solid #2563EB;
+      background: rgba(37, 99, 235, 0.04);
+      box-shadow: 0 12px 28px -6px rgba(37, 99, 235, 0.18);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s ease;
@@ -79,7 +79,7 @@ async function renderScene03() {
       pointer-events: none;
       filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
     }
-    /* Ripple Effect on Navbar click */
+    /* Ripple Effect on Click */
     .click-ripple {
       position: absolute;
       width: 44px;
@@ -91,16 +91,16 @@ async function renderScene03() {
       pointer-events: none;
       z-index: 140;
     }
-    /* Nav Tab Active Indicator */
+    /* Launch Growth Engine Button Highlight */
     .nav-active-pill {
       position: absolute;
-      top: 26px;
-      left: 450px;
-      width: 130px;
-      height: 38px;
-      border-radius: 8px;
-      background: rgba(37, 99, 235, 0.1);
-      border: 1px solid rgba(37, 99, 235, 0.3);
+      top: 596px;
+      left: 1650px;
+      width: 229px;
+      height: 45px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
       opacity: 0;
       pointer-events: none;
     }
@@ -204,36 +204,35 @@ async function renderScene03() {
       document.getElementById('scrollBox').style.transform = 'translateY(' + scrollY + 'px)';
 
       // Cursor movement:
-      // 0.0 - 2.0s: Cursor enters from bottom-left (500, 700) -> moves to Sunday Solvers card (1200, 280)
-      // 2.0 - 4.5s: Hovers over Sunday Solvers, KPI card glows
-      // 4.5 - 6.8s: Cursor moves smoothly up to "Leaderboard" tab in navbar (490, 44)
-      // 6.8s: Clicks "Leaderboard", ripple plays
-      let curX = 900;
+      // Exact coordinates:
+      // Sunday Solvers KPI card: (1198, 384)
+      // Launch Growth Engine button: (1765, 618.5)
+      let curX = 960;
       let curY = 600;
 
-      if (sec < 2.2) {
-        const p = easeInOutCubic(sec / 2.2);
-        curX = lerp(700, 1180, p);
-        curY = lerp(580, 280 + scrollY, p);
-      } else if (sec >= 2.2 && sec < 4.5) {
-        curX = 1180 + Math.sin(sec * 1.5) * 8;
-        curY = 280 + scrollY;
+      if (sec < 2.0) {
+        const p = easeInOutCubic(sec / 2.0);
+        curX = lerp(750, 1198, p);
+        curY = lerp(580, 384 + scrollY, p);
+      } else if (sec >= 2.0 && sec < 4.5) {
+        curX = 1198 + Math.sin(sec * 1.5) * 8;
+        curY = 384 + scrollY;
         document.getElementById('kpiHover').style.opacity = 1;
       } else if (sec >= 4.5 && sec < 6.7) {
         document.getElementById('kpiHover').style.opacity = lerp(1, 0, (sec - 4.5) / 0.5);
         const p = easeInOutCubic((sec - 4.5) / 2.2);
-        curX = lerp(1180, 515, p);
-        curY = lerp(280 + scrollY, 44, p);
+        curX = lerp(1198, 1765, p);
+        curY = lerp(384 + scrollY, 618.5 + scrollY, p);
       } else {
-        curX = 515;
-        curY = 44;
+        curX = 1765;
+        curY = 618.5 + scrollY;
         document.getElementById('navActive').style.opacity = 1;
-        // Ripple at 6.7s
+        // Ripple on Launch Growth Engine button at 6.7s
         if (sec >= 6.7 && sec < 7.2) {
           const ripProg = (sec - 6.7) / 0.5;
           const ripple = document.getElementById('ripple');
-          ripple.style.left = '515px';
-          ripple.style.top = '44px';
+          ripple.style.left = '1765px';
+          ripple.style.top = (618.5 + scrollY) + 'px';
           ripple.style.opacity = lerp(0.8, 0, ripProg);
           ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
         }

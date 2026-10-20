@@ -1110,7 +1110,7 @@ export const FacultyActionCenter: React.FC = () => {
   const filterSelectCls = "rounded-xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-brand-500 transition cursor-pointer";
 
   return (
-    <div className="space-y-6 md:space-y-7 pb-12 animate-fade-in font-sans">
+    <div className="space-y-6 md:space-y-7 pb-32 sm:pb-16 animate-fade-in font-sans">
       {/* Executive Header Banner (Authoritative Dark OLED Gradient in all modes for crystal-clear readability) */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-2xl border border-indigo-500/30 mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -1200,12 +1200,12 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="relative z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
+      {/* Filters Container - Fully styled for clean dark theme */}
+      <div className="relative z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-md backdrop-blur-xl mb-6">
         {/* Search Bar Input */}
         <div className="relative group flex-1 min-w-[200px] w-full md:w-auto">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-2xl md:rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
-          <div className="relative flex items-center gap-2.5 bg-white dark:bg-navy-950 rounded-2xl md:rounded-full px-4 py-2 sm:py-2.5 border border-slate-300 dark:border-navy-700 focus-within:border-indigo-500 shadow-xs">
+          <div className="relative flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 rounded-2xl md:rounded-full px-4 py-2 sm:py-2.5 border border-slate-300 dark:border-navy-700/80 focus-within:border-indigo-500 shadow-xs">
             <Search size={16} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors shrink-0" />
             <input
               value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
@@ -1295,9 +1295,9 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
 
         {/* Count & Page Size Toggle */}
-        <div className="w-full flex items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-navy-800/80">
+        <div className="w-full flex items-center justify-between gap-3 pt-3 border-t border-slate-200/80 dark:border-navy-800">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs font-bold text-slate-600 dark:text-navy-300 truncate">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate">
               {filteredCount === totalCount ? (
                 `Showing ${totalCount} action items`
               ) : (
@@ -1306,13 +1306,13 @@ export const FacultyActionCenter: React.FC = () => {
             </span>
             {(hasFilters || kpiFilter) && (
                <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterDept(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
-                 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition flex items-center gap-0.5 ml-1 shrink-0">
+                 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition flex items-center gap-0.5 ml-1 shrink-0 cursor-pointer">
                  <X size={14} /> Clear
                </button>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700 shrink-0">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-navy-400 px-1 font-mono">Show:</span>
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1 font-mono">Show:</span>
             {(isMobile ? [10, 25, 50] : [20, 50, 100, 200]).map((sz) => (
               <button
                 key={sz}
@@ -1320,7 +1320,7 @@ export const FacultyActionCenter: React.FC = () => {
                 className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   pageSize === sz
                     ? 'bg-indigo-600 text-white shadow-xs font-black'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {sz}

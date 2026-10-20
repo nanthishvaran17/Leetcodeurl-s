@@ -360,7 +360,7 @@ export const GrowthIntelligencePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 py-2 pb-16 animate-slideUp">
+    <div className="space-y-8 py-2 pb-32 sm:pb-20 animate-slideUp">
 
       {/* Executive Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-7 md:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
@@ -564,53 +564,62 @@ export const GrowthIntelligencePage: React.FC = () => {
               )}
             </div>
 
-            {/* Controls Bar with Smooth Horizontal Overflow on Mobile */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-              {/* Rank By Sort Mode Toggle */}
-              <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-1.5 sm:px-2">Rank</span>
-                <button
-                  onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
-                  className={`px-2.5 sm:px-3 py-1.5 min-h-[32px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
-                    sortMode === 'growth'
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  Growth
-                </button>
-                <button
-                  onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
-                  className={`px-2.5 sm:px-3 py-1.5 min-h-[32px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
-                    sortMode === 'total'
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  Total
-                </button>
-              </div>
-
-              {/* Display Limit Selector Pills */}
-              <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-1.5 sm:px-2">Show</span>
-                {[10, 25, 50, 'ALL'].map((limitVal) => (
+            {/* Controls Bar - Perfectly Contained Inside Card Frame (No Cutoff / No Overflow) */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                {/* Rank By Sort Mode Toggle */}
+                <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shrink-0">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-1.5 sm:px-2">Rank</span>
                   <button
-                    key={String(limitVal)}
-                    onClick={() => setDisplayLimit(limitVal as any)}
-                    className={`px-2 sm:px-2.5 py-1.5 min-h-[32px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
-                      displayLimit === limitVal
-                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                    onClick={() => { setSortMode('growth'); setImprovers(prev => sortImprovers(prev, 'growth')); }}
+                    className={`px-2.5 sm:px-3 py-1.5 min-h-[30px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                      sortMode === 'growth'
+                        ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    {limitVal === 'ALL' ? 'All' : limitVal}
+                    Growth
                   </button>
-                ))}
+                  <button
+                    onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
+                    className={`px-2.5 sm:px-3 py-1.5 min-h-[30px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                      sortMode === 'total'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/25'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Total
+                  </button>
+                </div>
+
+                {/* Active Solvers Pill on Mobile - Aligned cleanly to the right */}
+                <div className="sm:hidden flex items-center justify-center shrink-0 min-h-[32px] px-3 bg-brand-500/10 border border-brand-500/25 rounded-xl text-brand-700 dark:text-brand-300 font-black text-xs uppercase tracking-wider shadow-xs whitespace-nowrap">
+                  {collegeDelta?.active_students ?? improvers.length} Solvers
+                </div>
               </div>
 
-              {/* Active Solvers Pill */}
-              <div className="flex items-center justify-center shrink-0 min-h-[36px] sm:min-h-[42px] px-3.5 bg-brand-500/10 border border-brand-500/25 rounded-xl text-brand-700 dark:text-brand-300 font-black text-xs uppercase tracking-wider shadow-xs whitespace-nowrap">
+              {/* Display Limit Selector Pills */}
+              <div className="flex items-center justify-between sm:justify-start gap-1 bg-slate-100/90 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200/80 dark:border-white/10 w-full sm:w-auto">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider px-1.5 sm:px-2">Show</span>
+                <div className="flex items-center gap-1 flex-1 sm:flex-initial justify-end sm:justify-start">
+                  {[10, 25, 50, 'ALL'].map((limitVal) => (
+                    <button
+                      key={String(limitVal)}
+                      onClick={() => setDisplayLimit(limitVal as any)}
+                      className={`flex-1 sm:flex-initial text-center px-2.5 sm:px-2.5 py-1.5 min-h-[30px] sm:min-h-[34px] rounded-lg text-xs font-black transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                        displayLimit === limitVal
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {limitVal === 'ALL' ? 'All' : limitVal}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Solvers Pill on Desktop/Tablet */}
+              <div className="hidden sm:flex items-center justify-center shrink-0 min-h-[36px] sm:min-h-[42px] px-3.5 bg-brand-500/10 border border-brand-500/25 rounded-xl text-brand-700 dark:text-brand-300 font-black text-xs uppercase tracking-wider shadow-xs whitespace-nowrap">
                 {collegeDelta?.active_students ?? improvers.length} Solvers
               </div>
             </div>

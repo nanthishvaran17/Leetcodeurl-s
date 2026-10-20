@@ -56,6 +56,7 @@
 
 - [📊 Automated Reporting & Brevo Email](#-automated-reporting--brevo-email)
 - [🏗️ System Architecture](#️-system-architecture)
+- [📘 Developer Architecture Guide (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)
 - [🛡️ Evidence-First Integrity Model](#️-evidence-first-integrity-model)
 - [💻 Technology Stack](#-technology-stack)
 - [🚀 Quick Start & Deployment Guide](#-quick-start--deployment-guide)

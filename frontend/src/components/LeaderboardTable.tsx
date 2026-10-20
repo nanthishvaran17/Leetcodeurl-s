@@ -702,7 +702,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 }}
               </List>
             ) : (
-              <div className="flex flex-col space-y-4 md:space-y-1">
+              <div className="flex flex-col space-y-4 md:space-y-1 pb-16 md:pb-0">
                 {paginatedStudents.slice(0, renderedCount).map((student, idx) => (
                   <FastStudentRow
                     key={student.id}

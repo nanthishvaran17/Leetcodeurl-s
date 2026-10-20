@@ -143,12 +143,12 @@ export const FastStudentRow = memo(({
         }
         onView(student, e);
       }}
-      className="w-full min-w-full md:min-w-[1100px] mb-3 md:mb-0"
+      className="w-full max-w-full min-w-0 md:min-w-[1100px] mb-3 md:mb-0"
     >
       {/* MOBILE LAYOUT (2026 SaaS LUXURY LEADERBOARD CARD) */}
       <div 
         onClick={(e) => onView(student, e)}
-        className={`!flex md:!hidden flex-col w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
+        className={`!flex md:!hidden flex-col w-full max-w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
           isSelected 
             ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-500/[0.04] dark:bg-brand-950/20' 
             : 'border-slate-200/90 dark:border-white/10 hover:border-brand-500/40'
@@ -208,21 +208,21 @@ export const FastStudentRow = memo(({
         </div>
 
         {/* Card Metrics & Quick Action Bar (Pixel-Perfect Symmetrical Layout) */}
-        <div className="flex items-center justify-between px-3 py-2 bg-slate-50/85 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06] gap-1.5">
+        <div className="flex items-center justify-between px-2.5 sm:px-3 py-2 bg-slate-50/85 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06] gap-1 sm:gap-1.5 min-w-0">
           {/* Left: Balanced Stat Badges */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink min-w-0">
+            <div className="inline-flex items-center gap-1 h-7 px-1.5 sm:px-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
               <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">SOLVED</span>
               <span className="text-xs font-black font-mono shrink-0">{totalSolved ?? '—'}</span>
             </div>
-            <div className="inline-flex items-center gap-1 h-7 px-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+            <div className="inline-flex items-center gap-1 h-7 px-1.5 sm:px-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
               <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 shrink-0">RATING</span>
               <span className="text-xs font-black font-mono shrink-0">{getContestRatingDisplay(student)}</span>
             </div>
           </div>
 
           {/* Right: Symmetrical, Non-Collapsing Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
             {onRefresh && (
               <button
                 type="button"
@@ -239,12 +239,12 @@ export const FastStudentRow = memo(({
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }}
-                className="h-7 px-2.5 rounded-lg text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 shadow-2xs active:scale-95 touch-manipulation cursor-pointer flex items-center justify-center gap-1 shrink-0 font-bold"
+                className="h-7 w-7 sm:w-auto px-0 sm:px-2.5 rounded-lg text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 shadow-2xs active:scale-95 touch-manipulation cursor-pointer flex items-center justify-center gap-1 shrink-0 font-bold"
                 title="Edit Student Details"
                 aria-label="Edit Student Details"
               >
                 <Edit3 size={12} className="shrink-0 text-amber-600 dark:text-amber-400" />
-                <span className="text-[11px] font-black shrink-0">Edit</span>
+                <span className="hidden sm:inline text-[11px] font-black shrink-0">Edit</span>
               </button>
             )}
             <button

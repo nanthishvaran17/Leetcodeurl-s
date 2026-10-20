@@ -318,13 +318,17 @@ def toggle_reaction_endpoint(
 @router.post("/typing")
 def report_typing_endpoint(
     req: TypingRequest,
+    db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
     """Sends a typing start/stop event over WebSockets to conversation participants."""
     try:
         sender_id = MessagingService._get_user_id(current_user)
         from backend.websocket_manager import manager
-        manager.send_to_users_sync([sender_id, req.receiver_id], {
+        sender_ids = MessagingService._resolve_all_participant_identifiers(db, sender_id)
+        receiver_ids = MessagingService._resolve_all_participant_identifiers(db, req.receiver_id)
+        all_targets = list(set(sender_ids + receiver_ids))
+        manager.send_to_users_sync(all_targets, {
             "type": "TYPING_STATUS",
             "conversationId": req.conversation_id,
             "senderId": sender_id,

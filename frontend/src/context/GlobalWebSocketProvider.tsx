@@ -158,10 +158,13 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
       let resumeDebounceTimer: any = null;
       const handleResume = () => {
         if (document.visibilityState !== 'visible' || !workerRef.current || authFailedRef.current) return;
+        // Instantly test or restore worker connection on wake/foreground
+        workerRef.current.postMessage({ type: 'CHECK_CONNECTION' });
+
         if (resumeDebounceTimer) clearTimeout(resumeDebounceTimer);
         resumeDebounceTimer = setTimeout(() => {
-          if (document.visibilityState === 'visible' && workerRef.current && !isConnected && !authFailedRef.current) {
-            workerRef.current.postMessage({ type: 'CONNECT', payload: { wsUrl } });
+          if (document.visibilityState === 'visible' && workerRef.current && !authFailedRef.current) {
+            workerRef.current.postMessage({ type: 'CHECK_CONNECTION' });
           }
         }, 150);
       };

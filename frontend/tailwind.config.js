@@ -31,6 +31,7 @@ const config = {
           600: '#475569',
           700: '#334155',
           800: '#1e293b',
+          850: '#111827', // Deep slate navy surface
           900: '#0b0f19', // 2026 Deep OLED Surface
           950: '#070a12', // 2026 True Dark Void Background
         },

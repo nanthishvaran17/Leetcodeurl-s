@@ -4,9 +4,9 @@ import {
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Building2, LayoutList, Calendar,
   Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User,
-  SlidersHorizontal, Filter
+  SlidersHorizontal, Filter, RotateCcw
 } from 'lucide-react';
-import { GlobalFilter } from '../components/GlobalFilter';
+import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 import api from '../services/api';
 import { clearAllStudentCaches } from '../utils/rosterCache';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -273,6 +273,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     }
   }, [ctxDepts, globalDepts, deptId]);
 
+  const deptFilterOptions = useMemo<GlobalFilterOption[]>(() => {
+    const opts: GlobalFilterOption[] = [{ value: 'ALL', label: 'All Departments' }];
+    departments.forEach((d: any) => {
+      opts.push({
+        value: d.code,
+        label: `${d.code} - ${d.name}`,
+        pillText: d.code
+      });
+    });
+    return opts;
+  }, [departments]);
+
+  const yearFilterOptions = useMemo<GlobalFilterOption[]>(() => [
+    { value: 'ALL', label: 'All Academic Years' },
+    { value: '1st Year', label: '1st Year (I)', pillText: 'Y1' },
+    { value: '2nd Year', label: '2nd Year (II)', pillText: 'Y2' },
+    { value: '3rd Year', label: '3rd Year (III)', pillText: 'Y3' },
+    { value: '4th Year', label: '4th Year (IV)', pillText: 'Y4' },
+  ], []);
+
   // LeetCode URL validation (debounced, 900ms) 
   const validateLcUrl = useCallback(async (url: string) => {
     const trimmed = url.trim();
@@ -479,7 +499,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     || lcValidation.status === 'validating';
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-0 animate-fade-in font-sans pb-12">
+    <div className="space-y-5 sm:space-y-6 pt-0 animate-fade-in font-sans pb-32 sm:pb-20">
 
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
@@ -553,17 +573,18 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
       </div>
 
-      {/* Search & Mobile Filter Bar */}
-      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-navy-700 space-y-3 sm:space-y-4 mb-6 sm:mb-10">
-        <div className="flex items-center gap-2">
+      {/* Search & Comprehensive Responsive Filter Bar */}
+      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-navy-700 space-y-3.5 mb-6 sm:mb-10 backdrop-blur-xl">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+          {/* Live Search Input */}
           <div className="relative flex-1 flex items-center min-w-0">
             <input
               type="text"
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
-              placeholder="Search students by name, reg no..."
+              placeholder="Search students by name, reg no, username..."
               autoComplete="off"
-              className="w-full pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
+              className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
             />
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-500 dark:text-slate-400">
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -583,49 +604,39 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             )}
           </div>
 
-          {/* Mobile Filter Button (< 768px) */}
-          <button
-            type="button"
-            onClick={() => setShowMobileFilters(true)}
-            className="md:hidden flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs cursor-pointer min-h-[46px]"
-            title="Filter by Department & Year"
-          >
-            <SlidersHorizontal className="w-4 h-4 text-brand-500 shrink-0" />
-            <span className="hidden xs:inline font-black">Filters</span>
-            {filters.isFilteringActive && (
-              <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />
-            )}
-          </button>
+          {/* Inline Filter Controls - Responsive: Side-by-Side on Mobile & Inline on Desktop */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+            {/* Department Filter */}
+            <div className="col-span-1 min-w-0 flex-1 sm:w-52 lg:w-56">
+              <GlobalFilter
+                options={deptFilterOptions}
+                value={filters.department}
+                onChange={(val) => filters.setDepartment(val)}
+                icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
+                dropdownWidth="w-64"
+                showSearch={false}
+                placeholder="All Departments"
+              />
+            </div>
+
+            {/* Academic Year Filter */}
+            <div className="col-span-1 min-w-0 flex-1 sm:w-44 lg:w-48">
+              <GlobalFilter
+                options={yearFilterOptions}
+                value={filters.academicYear}
+                onChange={(val) => filters.setAcademicYear(val)}
+                icon={<Calendar className="w-3.5 h-3.5 text-indigo-400" />}
+                dropdownWidth="w-52"
+                showSearch={false}
+                placeholder="All Years"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Quick Horizontal Department Scroll Chips (< 768px) */}
-        <div className="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 touch-pan-x">
-          <button
-            type="button"
-            onClick={() => filters.setDepartment(filters.hodDefaultDepartment)}
-            className={`px-3 py-1 rounded-lg text-[11px] font-black whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-              filters.department === filters.hodDefaultDepartment || filters.department === 'ALL'
-                ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
-            }`}
-          >
-            {filters.hodDefaultDepartment !== 'ALL' ? filters.hodDefaultDepartment : 'All Depts'}
-          </button>
-          {filters.department && filters.department !== filters.hodDefaultDepartment && (
-            <button
-              type="button"
-              onClick={() => filters.setDepartment(filters.hodDefaultDepartment)}
-              className="px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap bg-brand-600 text-white border border-brand-600 shadow-sm flex items-center gap-1 cursor-pointer"
-              title="Clear department filter"
-            >
-              <span>{filters.department}</span>
-              <span className="text-[10px] ml-0.5 opacity-80">✕</span>
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
-          <div className="min-w-0 flex-1 break-words">
+        {/* Results Counter & Active Filter Pills */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <div className="min-w-0 flex-1 break-words flex flex-wrap items-center gap-2">
             {filters.isFilteringActive ? (
               <span>
                 Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
@@ -633,7 +644,24 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             ) : (
               <span>Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
             )}
+
+            {/* Active Department Tag */}
+            {filters.department !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-[10.5px] font-bold">
+                Dept: {filters.department}
+                <button type="button" onClick={() => filters.setDepartment('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Year Tag */}
+            {filters.academicYear !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10.5px] font-bold">
+                Year: {filters.academicYear}
+                <button type="button" onClick={() => filters.setAcademicYear('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
           </div>
+
           {filters.isFilteringActive && (
             <button
               type="button"
@@ -641,8 +669,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 setLocalSearch('');
                 filters.resetFilters();
               }}
-              className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer"
+              className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
             >
+              <RotateCcw className="w-3 h-3" />
               Reset Filters
             </button>
           )}

@@ -89,7 +89,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     fetchConversations();
   }, [fetchConversations]);
 
-  const fetchMessages = useCallback(async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string, isSilent = false) => {
     if (!conversationId || conversationId.startsWith('system-')) {
       return;
     }
@@ -105,7 +105,14 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
             uniqueMsgs.push(m);
           }
         });
-        setMessages(uniqueMsgs);
+        // Preserve local optimistic messages currently in 'SENDING' state
+        setMessages(prev => {
+          const pendingLocals = prev.filter(m => m.status === 'SENDING' && !seen.has(m.messageId));
+          if (pendingLocals.length === 0) {
+            return uniqueMsgs;
+          }
+          return [...uniqueMsgs, ...pendingLocals];
+        });
         
         // Clear unread count for this conversation
         setConversations(prev => prev.map(c => 
@@ -113,7 +120,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         ));
       }
     } catch (err) {
-      console.error('Failed to fetch messages', err);
+      if (!isSilent) console.error('Failed to fetch messages', err);
     }
   }, []);
 
@@ -215,6 +222,49 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     }
     return () => leaveConversation();
   }, [activeConversationId, viewConversation, leaveConversation, isConnected, fetchConversations, flushOutbox]);
+
+  // Adaptive polling fallback for mobile devices (when tab is active or mobile OS throttles WebSockets)
+  useEffect(() => {
+    if (!activeConversationId || activeConversationId.startsWith('system-')) return;
+    
+    // Poll active chat every 2.5s silently so mobile users never wait for incoming messages
+    const chatPollTimer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchMessages(activeConversationId, true);
+      }
+    }, 2500);
+
+    return () => clearInterval(chatPollTimer);
+  }, [activeConversationId, fetchMessages]);
+
+  // Periodic inbox sync (every 6s) to keep previews and unread badges accurate
+  useEffect(() => {
+    const inboxTimer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchConversations();
+      }
+    }, 6000);
+    return () => clearInterval(inboxTimer);
+  }, [fetchConversations]);
+
+  // Mobile wake-up sync: When user unlocks phone or switches back to tab, sync immediately
+  useEffect(() => {
+    const handleWakeup = () => {
+      if (document.visibilityState === 'visible') {
+        flushOutbox();
+        fetchConversations();
+        if (activeConversationId && !activeConversationId.startsWith('system-')) {
+          fetchMessages(activeConversationId, true);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleWakeup);
+    window.addEventListener('focus', handleWakeup);
+    return () => {
+      document.removeEventListener('visibilitychange', handleWakeup);
+      window.removeEventListener('focus', handleWakeup);
+    };
+  }, [flushOutbox, fetchConversations, fetchMessages, activeConversationId]);
 
   // Handle incoming NEW_MESSAGE
   useEffect(() => {

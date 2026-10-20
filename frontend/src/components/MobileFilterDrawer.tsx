@@ -56,7 +56,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div 
         className="w-full max-w-md bg-white dark:bg-navy-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-navy-800 overflow-hidden flex flex-col max-h-[85vh] transition-transform duration-300"
         role="dialog"
@@ -200,11 +200,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           </div>
         </div>
 
-        {/* Apply Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-navy-800">
+        {/* Apply Footer - Safe bottom padding on mobile so button is not blocked by floating bottom nav */}
+        <div className="p-4 pb-28 sm:pb-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-navy-800">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-sm transition-all shadow-lg shadow-brand-500/25 active:scale-95 cursor-pointer"
           >
             Apply Filters
           </button>

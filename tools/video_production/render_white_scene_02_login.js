@@ -16,8 +16,8 @@ function getBase64(filePath) {
   return `data:image/${ext === 'jpg' ? 'jpeg' : ext};base64,${data}`;
 }
 
-const loginShot1 = getBase64('live_audit_snapshots/01_login_page.png');
-const loginShot2 = getBase64('live_audit_snapshots/02_login_filled.png');
+// Use the pristine, light-themed filled snapshot as our high-fidelity base
+const loginBaseShot = getBase64('live_audit_snapshots/02_login_filled.png');
 
 async function renderScene02() {
   const outFile = path.join(OUT_DIR, 'scene_02_login.mp4');
@@ -54,26 +54,93 @@ async function renderScene02() {
       height: 1080px;
       object-fit: cover;
     }
-    #shotFilled {
-      opacity: 0;
+    
+    /* Clean Pixel-Perfect White Input Overlays to ensure 100% natural typing */
+    .input-overlay {
+      position: absolute;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding-left: 48px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #0F172A;
+      z-index: 50;
     }
+    .input-overlay.active {
+      border: 1.5px solid #2563EB;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      background: #FFFFFF;
+    }
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: #94A3B8;
+    }
+    .placeholder-text {
+      color: #94A3B8;
+      font-size: 14px;
+    }
+    .typing-caret {
+      display: inline-block;
+      width: 2px;
+      height: 18px;
+      background: #2563EB;
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 0.8s infinite;
+    }
+
+    #userOverlay {
+      left: 1176px;
+      top: 429px;
+      width: 479px;
+      height: 51px;
+    }
+    #passOverlay {
+      left: 1176px;
+      top: 526px;
+      width: 479px;
+      height: 51px;
+    }
+
+    /* Sign In Button Active Pressed State */
+    .button-press-layer {
+      position: absolute;
+      left: 1176px;
+      top: 660px;
+      width: 466px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(30, 64, 175, 0.2);
+      opacity: 0;
+      z-index: 60;
+      pointer-events: none;
+      transition: opacity 0.1s ease;
+    }
+
     /* Simulated Authentic Cursor */
     .mouse-cursor {
       position: absolute;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       z-index: 100;
       pointer-events: none;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
-      transition: transform 0.08s ease;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
     }
     /* Button Click Ripple Effect */
     .click-ripple {
       position: absolute;
-      width: 40px;
-      height: 40px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
-      background: rgba(37, 99, 235, 0.4);
+      background: rgba(255, 255, 255, 0.6);
       transform: translate(-50%, -50%) scale(0);
       opacity: 0;
       pointer-events: none;
@@ -85,7 +152,7 @@ async function renderScene02() {
       bottom: 50px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(226, 232, 240, 0.9);
       box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(255,255,255,0.8);
@@ -123,8 +190,30 @@ async function renderScene02() {
 </head>
 <body>
   <div class="viewport-container" id="viewport">
-    <img src="${loginShot1}" class="page-shot" id="shotEmpty" alt="Login Empty" />
-    <img src="${loginShot2}" class="page-shot" id="shotFilled" alt="Login Filled" />
+    <img src="${loginBaseShot}" class="page-shot" id="shotBase" alt="Login Base" />
+    
+    <!-- User Input Overlay -->
+    <div class="input-overlay" id="userOverlay">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      <span id="userContent" class="placeholder-text">username or email</span>
+      <span id="userCaret" class="typing-caret" style="display:none;"></span>
+    </div>
+
+    <!-- Password Input Overlay -->
+    <div class="input-overlay" id="passOverlay">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span id="passContent" class="placeholder-text">••••••••</span>
+      <span id="passCaret" class="typing-caret" style="display:none;"></span>
+    </div>
+
+    <!-- Sign In Button Active Pressed Overlay -->
+    <div class="button-press-layer" id="btnPress"></div>
   </div>
 
   <!-- Cursor SVG -->
@@ -148,8 +237,10 @@ async function renderScene02() {
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
+    const userStr = "admin";
+    const passStr = "••••••••••••";
+
     window.updateFrame = function(sec) {
-      // Stable 1:1 framing without artificial zoom
       document.getElementById('viewport').style.transform = 'scale(1.0)';
 
       // Caption reveal at 0.6s
@@ -161,37 +252,89 @@ async function renderScene02() {
         document.getElementById('caption').style.opacity = lerp(1, 0, (sec - 5.2) / 0.6);
       }
 
-      // Cursor movement:
-      // Starts from center-right (1400, 380), moves to submit button (1410, 635)
-      let curX = 1420;
-      let curY = 420;
-      if (sec < 1.4) {
-        // Typing simulation
-        curX = lerp(1200, 1360, sec / 1.4);
-        curY = lerp(350, 420, sec / 1.4);
-      } else if (sec >= 1.4 && sec < 2.8) {
-        // Switch to filled state
-        const fillProg = (sec - 1.4) / 0.4;
-        document.getElementById('shotFilled').style.opacity = Math.min(1, fillProg);
-        // Move towards Sign In button (x ~ 1410, y ~ 635 on 1920x1080)
-        const moveProg = easeInOutCubic((sec - 1.8) / 1.0);
-        curX = lerp(1360, 1410, Math.max(0, moveProg));
-        curY = lerp(420, 635, Math.max(0, moveProg));
-      } else if (sec >= 2.8 && sec < 3.4) {
-        // Click action at 2.9s
-        curX = 1410;
-        curY = 635;
-        if (sec >= 2.9 && sec < 3.3) {
-          const ripProg = (sec - 2.9) / 0.4;
+      // Exact pixel coordinates:
+      // Username field text start: (1240, 455)
+      // Password field text start: (1240, 552)
+      // Sign In button center: (1409, 685)
+      let curX = 1350;
+      let curY = 380;
+
+      const userOverlay = document.getElementById('userOverlay');
+      const passOverlay = document.getElementById('passOverlay');
+      const userContent = document.getElementById('userContent');
+      const passContent = document.getElementById('passContent');
+      const userCaret = document.getElementById('userCaret');
+      const passCaret = document.getElementById('passCaret');
+      const btnPress = document.getElementById('btnPress');
+
+      if (sec < 0.8) {
+        // Glides from top to Username input
+        const p = easeInOutCubic(sec / 0.8);
+        curX = lerp(1380, 1240, p);
+        curY = lerp(350, 455, p);
+        userContent.innerText = "username or email";
+        userContent.className = "placeholder-text";
+        passContent.innerText = "••••••••";
+        passContent.className = "placeholder-text";
+      } else if (sec >= 0.8 && sec < 2.0) {
+        // Typing username "admin" character-by-character
+        curX = 1240;
+        curY = 455;
+        userOverlay.classList.add('active');
+        userCaret.style.display = 'inline-block';
+        const typeProg = (sec - 0.8) / 1.0;
+        const count = Math.min(userStr.length, Math.floor(typeProg * (userStr.length + 1)));
+        userContent.innerText = userStr.slice(0, count);
+        userContent.className = "";
+      } else if (sec >= 2.0 && sec < 2.5) {
+        // Finishes username, moves down to password input
+        userOverlay.classList.remove('active');
+        userCaret.style.display = 'none';
+        userContent.innerText = userStr;
+        const p = easeInOutCubic((sec - 2.0) / 0.5);
+        curX = 1240;
+        curY = lerp(455, 552, p);
+      } else if (sec >= 2.5 && sec < 3.7) {
+        // Typing password "••••••••••••" dot-by-dot
+        curX = 1240;
+        curY = 552;
+        passOverlay.classList.add('active');
+        passCaret.style.display = 'inline-block';
+        const typeProg = (sec - 2.5) / 1.0;
+        const count = Math.min(passStr.length, Math.floor(typeProg * (passStr.length + 1)));
+        passContent.innerText = passStr.slice(0, count);
+        passContent.className = "";
+      } else if (sec >= 3.7 && sec < 4.3) {
+        // Moves from password down to Sign In button at (1409, 685)
+        passOverlay.classList.remove('active');
+        passCaret.style.display = 'none';
+        passContent.innerText = passStr;
+        const p = easeInOutCubic((sec - 3.7) / 0.6);
+        curX = lerp(1240, 1409, p);
+        curY = lerp(552, 685, p);
+      } else if (sec >= 4.3 && sec < 5.2) {
+        // Direct click on Sign In button at (1409, 685)
+        curX = 1409;
+        curY = 685;
+        passOverlay.classList.remove('active');
+        passCaret.style.display = 'none';
+        
+        // Button press visual feedback
+        if (sec >= 4.35 && sec < 4.7) {
+          btnPress.style.opacity = 0.8;
+          const ripProg = (sec - 4.35) / 0.35;
           const ripple = document.getElementById('ripple');
-          ripple.style.left = '1410px';
-          ripple.style.top = '635px';
+          ripple.style.left = '1409px';
+          ripple.style.top = '685px';
           ripple.style.opacity = lerp(0.8, 0, ripProg);
-          ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
+          ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 3.0, ripProg) + ')';
+        } else {
+          btnPress.style.opacity = 0;
         }
       } else {
-        curX = 1410;
-        curY = 635;
+        curX = 1409;
+        curY = 685;
+        btnPress.style.opacity = 0;
       }
 
       document.getElementById('cursor').style.left = curX + 'px';
@@ -247,7 +390,11 @@ async function renderScene02() {
   await browser.close();
 }
 
-renderScene02().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  renderScene02().catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { renderScene02 };

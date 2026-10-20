@@ -92,34 +92,55 @@ class MessagingService:
         return p1 in user_ids
 
     @staticmethod
+    @staticmethod
+    def _resolve_all_participant_identifiers(db: Session, user_id_str: str) -> set:
+        """Robust helper resolving all possible identifiers (email, username, reg_no, id, STAFF_id) for any participant."""
+        if not user_id_str:
+            return set()
+
+        target_clean = str(user_id_str).strip()
+        targets = {target_clean, target_clean.lower(), target_clean.upper()}
+
+        if target_clean.lower().startswith("staff_"):
+            targets.add(target_clean.lower().replace("staff_", ""))
+
+        num_id = int(target_clean.lower().replace("staff_", "")) if (target_clean.isdigit() or ("staff_" in target_clean.lower() and target_clean.lower().replace("staff_", "").isdigit())) else -1
+        u = db.query(User).filter(
+            or_(User.email.ilike(user_id_str), User.username.ilike(user_id_str), User.id == num_id)
+        ).first()
+        if u:
+            if u.email:
+                targets.add(u.email.strip().lower())
+            if u.username:
+                targets.add(u.username.strip().lower())
+            if u.id:
+                targets.add(str(u.id).strip().lower())
+                targets.add(f"staff_{u.id}".lower())
+                targets.add(f"STAFF_{u.id}")
+
+        s = db.query(Student).filter(
+            or_(Student.email.ilike(user_id_str), Student.reg_no.ilike(user_id_str), Student.username.ilike(user_id_str))
+        ).first()
+        if s:
+            if s.email:
+                targets.add(s.email.strip().lower())
+            if s.username:
+                targets.add(s.username.strip().lower())
+            if s.reg_no:
+                targets.add(s.reg_no.strip().lower())
+                targets.add(s.reg_no.strip().upper())
+            if s.id:
+                targets.add(str(s.id).strip().lower())
+
+        return targets
+
+    @staticmethod
     def _is_user_online(db: Session, user_id_str: str) -> bool:
         """Robust helper checking if a user ID, email, username, or STAFF_ID has an active WebSocket connection."""
         if not user_id_str:
             return False
 
-        target_clean = user_id_str.strip().lower()
-        targets = {target_clean}
-
-        if target_clean.startswith("staff_"):
-            targets.add(target_clean.replace("staff_", ""))
-
-        num_id = int(target_clean.replace("staff_", "")) if (target_clean.isdigit() or ("staff_" in target_clean and target_clean.replace("staff_", "").isdigit())) else -1
-        u = db.query(User).filter(
-            or_(User.email == user_id_str, User.username == user_id_str, User.id == num_id)
-        ).first()
-        if u:
-            if u.email: targets.add(u.email.strip().lower())
-            if u.username: targets.add(u.username.strip().lower())
-            if u.id: targets.add(str(u.id).strip().lower())
-
-        s = db.query(Student).filter(
-            or_(Student.email == user_id_str, Student.reg_no == user_id_str, Student.username == user_id_str)
-        ).first()
-        if s:
-            if s.email: targets.add(s.email.strip().lower())
-            if s.username: targets.add(s.username.strip().lower())
-            if s.reg_no: targets.add(s.reg_no.strip().lower())
-            if s.id: targets.add(str(s.id).strip().lower())
+        targets = MessagingService._resolve_all_participant_identifiers(db, user_id_str)
 
         for ctx in manager._ws_user.values():
             if not ctx:
@@ -127,8 +148,9 @@ class MessagingService:
             ws_u = str(ctx.get("user_id") or "").strip().lower()
             ws_email = str(ctx.get("email") or "").strip().lower()
             ws_sub = str(ctx.get("sub") or "").strip().lower()
+            ws_reg_no = str(ctx.get("reg_no") or "").strip().lower()
 
-            if ws_u in targets or ws_email in targets or ws_sub in targets:
+            if ws_u in targets or ws_email in targets or ws_sub in targets or ws_reg_no in targets:
                 return True
 
         return False
@@ -496,8 +518,11 @@ class MessagingService:
             message_payload["t3_fanout"] = msg.t3_fanout
         db.commit()
 
-        # Secure WebSocket Dispatch: Only send to active participants
-        manager.send_to_users_sync([sender_id, receiver_id], {
+        # Secure WebSocket Dispatch: Broadcast to all active sessions/identifiers of both participants
+        target_ids = MessagingService._resolve_all_participant_identifiers(db, sender_id)
+        target_ids.update(MessagingService._resolve_all_participant_identifiers(db, receiver_id))
+        target_ids.update(MessagingService._get_all_user_identifiers(current_user))
+        manager.send_to_users_sync(list(target_ids), {
             "type": "NEW_MESSAGE",
             "message": message_payload
         })
@@ -585,7 +610,8 @@ class MessagingService:
         conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
         p1 = str(conv.participant_1_id) if conv else str(msg.sender_id)
         p2 = str(conv.participant_2_id) if conv else str(msg.receiver_id)
-        manager.send_to_users_sync([p1, p2], {
+        all_targets = MessagingService._resolve_all_participant_identifiers(db, p1) | MessagingService._resolve_all_participant_identifiers(db, p2)
+        manager.send_to_users_sync(list(all_targets), {
             "type": "MESSAGE_EDITED",
             "message": updated_payload
         })
@@ -605,6 +631,7 @@ class MessagingService:
         conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
         p1 = str(conv.participant_1_id) if conv else str(msg.sender_id)
         p2 = str(conv.participant_2_id) if conv else str(msg.receiver_id)
+        all_targets = MessagingService._resolve_all_participant_identifiers(db, p1) | MessagingService._resolve_all_participant_identifiers(db, p2)
 
         if mode == "FOR_EVERYONE":
             role = str(getattr(current_user, "role", "")).upper()
@@ -617,7 +644,7 @@ class MessagingService:
             db.commit()
 
             updated_payload = MessagingService._format_message_dict(db, msg, user_id)
-            manager.send_to_users_sync([p1, p2], {
+            manager.send_to_users_sync(list(all_targets), {
                 "type": "MESSAGE_DELETED",
                 "messageId": message_id,
                 "conversationId": msg.conversation_id,
@@ -911,7 +938,8 @@ class MessagingService:
         db.commit()
 
         if updated_ids:
-            manager.send_to_users_sync([str(conv.participant_1_id), str(conv.participant_2_id)], {
+            all_targets = MessagingService._resolve_all_participant_identifiers(db, str(conv.participant_1_id)) | MessagingService._resolve_all_participant_identifiers(db, str(conv.participant_2_id))
+            manager.send_to_users_sync(list(all_targets), {
                 "type": "MESSAGE_STATUS_UPDATE",
                 "conversationId": conversation_id,
                 "status": "READ",

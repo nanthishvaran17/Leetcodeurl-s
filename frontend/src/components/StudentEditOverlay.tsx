@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
+import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, Sparkles, ExternalLink, Trophy, RefreshCw } from 'lucide-react';
 import api, { clearApiCache } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
@@ -22,39 +22,135 @@ export interface SecondaryAccountItem {
 // LeetCode Validation State Machine 
 type LcValidationState =
   | { status: 'idle' }
-  | { status: 'validating' }
-  | { status: 'valid'; username: string; canonical_url: string; total_solved?: number; contest_rating?: number }
-  | { status: 'not_found'; message: string }
+  | { status: 'validating'; username?: string }
+  | {
+      status: 'valid';
+      username: string;
+      canonical_url: string;
+      total_solved?: number;
+      easy_solved?: number;
+      medium_solved?: number;
+      hard_solved?: number;
+      contest_rating?: number;
+      ranking?: number;
+    }
+  | { status: 'not_found'; message: string; username?: string }
   | { status: 'invalid_format'; message: string }
   | { status: 'identity_mismatch'; message: string }
   | { status: 'rate_limited'; message: string }
   | { status: 'network_error'; message: string }
   | { status: 'fetch_failed'; message: string };
 
-function LcValidationChip({ state }: { state: LcValidationState }) {
+function LcValidationChip({
+  state,
+  onApplyCanonical,
+  onRetry
+}: {
+  state: LcValidationState;
+  onApplyCanonical?: (url: string, username: string) => void;
+  onRetry?: () => void;
+}) {
   if (state.status === 'idle') return null;
 
   if (state.status === 'validating') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-brand-500 dark:text-brand-400 mt-1 animate-pulse">
-        <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-        <span className="font-semibold">Verifying account with LeetCode...</span>
+      <div className="mt-2.5 p-3 rounded-xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 flex items-center gap-2.5 text-xs text-amber-700 dark:text-amber-300 animate-pulse">
+        <Loader2 className="w-4 h-4 animate-spin text-amber-500 shrink-0" />
+        <div className="flex-1">
+          <p className="font-bold">Live Fetching LeetCode stats...</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">Querying LeetCode GraphQL API for verified problems solved & rank.</p>
+        </div>
       </div>
     );
   }
 
   if (state.status === 'valid') {
     return (
-      <div className="flex flex-col gap-0.5 mt-1">
-        <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-          <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-          <span className="font-bold">Account verified — <span className="font-black">{state.username}</span></span>
+      <div className="mt-2.5 p-3 sm:p-3.5 rounded-xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/5 dark:from-emerald-950/40 dark:via-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/30 dark:border-emerald-500/30 shadow-xs space-y-2.5 transition-all">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
+                  LeetCode Account Verified
+                </span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Verified
+                </span>
+              </div>
+              <a
+                href={state.canonical_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
+              >
+                <span>@{state.username}</span>
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {onApplyCanonical && (
+              <button
+                type="button"
+                onClick={() => onApplyCanonical(state.canonical_url, state.username)}
+                className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
+              >
+                <span>Use Canonical URL</span>
+              </button>
+            )}
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+              Safe to Save
+            </span>
+          </div>
         </div>
-        {(state.total_solved != null || state.contest_rating != null) && (
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-5">
-            {state.total_solved != null && <span>{state.total_solved} solved</span>}
-            {state.total_solved != null && state.contest_rating != null && <span> · </span>}
-            {state.contest_rating != null && <span>Rating {state.contest_rating}</span>}
+
+        {/* 4-Column Live Metric Breakdown Grid */}
+        <div className="grid grid-cols-4 gap-2 pt-1 border-t border-emerald-500/20">
+          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-emerald-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Solved</span>
+            <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">
+              {state.total_solved != null ? state.total_solved : '0'}
+            </span>
+          </div>
+          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-emerald-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Easy</span>
+            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+              {state.easy_solved != null ? state.easy_solved : '0'}
+            </span>
+          </div>
+          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-amber-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Medium</span>
+            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+              {state.medium_solved != null ? state.medium_solved : '0'}
+            </span>
+          </div>
+          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-rose-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Hard</span>
+            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+              {state.hard_solved != null ? state.hard_solved : '0'}
+            </span>
+          </div>
+        </div>
+
+        {(state.contest_rating != null || state.ranking != null) && (
+          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300 px-1 pt-0.5">
+            {state.contest_rating != null ? (
+              <span className="flex items-center gap-1 font-semibold">
+                <Trophy className="w-3 h-3 text-amber-500" />
+                Rating: <strong className="text-amber-600 dark:text-amber-400">{Math.round(state.contest_rating)}</strong>
+              </span>
+            ) : <span />}
+            {state.ranking != null && (
+              <span className="font-semibold text-slate-500 dark:text-slate-400">
+                Global Rank: #{state.ranking.toLocaleString()}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -63,45 +159,106 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'not_found') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-rose-500 dark:text-rose-400 mt-1">
-        <XCircle className="w-3.5 h-3.5 shrink-0" />
-        <span className="font-semibold">No LeetCode account found for this username</span>
+      <div className="mt-2.5 p-3 rounded-xl bg-rose-500/10 dark:bg-rose-950/30 border border-rose-500/30 flex items-start justify-between gap-2 text-xs text-rose-700 dark:text-rose-300">
+        <div className="flex items-start gap-2">
+          <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold">No LeetCode Account Found</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+              LeetCode did not find an active profile for this username. Please verify the URL or spelling before adding.
+            </p>
+          </div>
+        </div>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="p-1 rounded-md text-rose-600 hover:bg-rose-500/10 transition-colors shrink-0"
+            title="Retry"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     );
   }
 
   if (state.status === 'invalid_format') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-amber-500 dark:text-amber-400 mt-1">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-        <span className="font-semibold">Invalid format — use https://leetcode.com/u/username/</span>
+      <div className="mt-2.5 p-3 rounded-xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 flex items-start gap-2 text-xs text-amber-700 dark:text-amber-300">
+        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-bold">Invalid Profile URL Format</p>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+            Use standard format: <code className="font-mono bg-amber-500/20 px-1 py-0.5 rounded">https://leetcode.com/u/username/</code> or just the username handle.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (state.status === 'identity_mismatch') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-orange-500 dark:text-orange-400 mt-1">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-        <span className="font-semibold">LeetCode returned a different username — check link</span>
+      <div className="mt-2.5 p-3 rounded-xl bg-orange-500/10 dark:bg-orange-950/30 border border-orange-500/30 flex items-start gap-2 text-xs text-orange-700 dark:text-orange-300">
+        <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-bold">Identity Mismatch Warning</p>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+            LeetCode profile returned a different username. Check that this link belongs to this student.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (state.status === 'rate_limited') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-purple-500 dark:text-purple-400 mt-1">
-        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-        <span className="font-semibold">LeetCode rate-limited — try again in a moment</span>
+      <div className="mt-2.5 p-3 rounded-xl bg-purple-500/10 dark:bg-purple-950/30 border border-purple-500/30 flex items-start justify-between gap-2 text-xs text-purple-700 dark:text-purple-300">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold">LeetCode Rate-Limited</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+              Too many requests to LeetCode API. Please wait a moment and click verify again.
+            </p>
+          </div>
+        </div>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="p-1 rounded-md text-purple-600 hover:bg-purple-500/10 transition-colors shrink-0"
+            title="Retry"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     );
   }
 
-  if (state.status === 'network_error') {
+  if (state.status === 'network_error' || state.status === 'fetch_failed') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
-        <WifiOff className="w-3.5 h-3.5 shrink-0" />
-        <span className="font-semibold">Could not reach LeetCode — check connection</span>
+      <div className="mt-2.5 p-3 rounded-xl bg-slate-500/10 dark:bg-slate-800/40 border border-slate-500/30 flex items-start justify-between gap-2 text-xs text-slate-700 dark:text-slate-300">
+        <div className="flex items-start gap-2">
+          <WifiOff className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold">Could Not Reach LeetCode</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {state.message || 'Network timeout or LeetCode service is temporarily unreachable.'}
+            </p>
+          </div>
+        </div>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="p-1.5 rounded-lg bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 transition-colors shrink-0 flex items-center gap-1 font-bold text-[10px]"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Retry</span>
+          </button>
+        )}
       </div>
     );
   }
@@ -300,6 +457,27 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     setTwelfthCutoff(formattedCutoff);
     setSecondaryAccounts(initSecAccounts);
 
+    const initTotalSolved = stData.total_solved ?? stData.stats?.total_solved;
+    const initEasySolved = stData.easy_solved ?? stData.stats?.easy_solved;
+    const initMediumSolved = stData.medium_solved ?? stData.stats?.medium_solved;
+    const initHardSolved = stData.hard_solved ?? stData.stats?.hard_solved;
+    const initRating = stData.contest_rating ?? stData.stats?.contest_rating;
+    const initRanking = stData.ranking ?? stData.stats?.ranking;
+
+    if (initTotalSolved != null && (initUser || initUrl)) {
+      setLcValidation({
+        status: 'valid',
+        username: initUser || 'LeetCode User',
+        canonical_url: initUrl || (initUser ? `https://leetcode.com/u/${initUser}/` : ''),
+        total_solved: initTotalSolved,
+        easy_solved: initEasySolved,
+        medium_solved: initMediumSolved,
+        hard_solved: initHardSolved,
+        contest_rating: initRating,
+        ranking: initRanking
+      });
+    }
+
     initialRef.current = {
       name: initName,
       regNo: initRegNo,
@@ -323,7 +501,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       populateFromStudentData(student);
       setErrorMessage(null);
       setShowUnsavedPrompt(false);
-      setLcValidation({ status: 'idle' });
+
+      const initHandle = student.leetcode_url || student.username || student.profile_url || student.primary_leetcode_id;
+      if (initHandle && student.total_solved == null && student.stats?.total_solved == null) {
+        executeValidation(initHandle);
+      }
 
       // Automatically refetch fresh student details from backend API only if user hasn't started typing
       const targetId = student?.id || student?.student_id || student?.reg_no || student?.register_number || student?.register_no;
@@ -428,43 +610,80 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   // Lock body scroll reliably while modal is open via reference-counted hook
   useScrollLock(isOpen);
 
-  const triggerDebouncedValidation = useCallback((inputVal: string) => {
+  const executeValidation = useCallback(async (inputVal?: string) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     if (abortControllerRef.current) abortControllerRef.current.abort();
 
+    const raw = (inputVal !== undefined ? inputVal : (leetcodeUrl || username)).trim();
+    if (!raw) {
+      setLcValidation({ status: 'idle' });
+      return;
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    setLcValidation({ status: 'validating', username: raw });
+
+    try {
+      const studentIdParam = student?.id || student?.student_id || student?.reg_no || 0;
+      const res = await api.post(`/students/${encodeURIComponent(studentIdParam)}/validate-leetcode`, {
+        leetcode_url: raw.includes('leetcode.com') ? raw : undefined,
+        username: !raw.includes('leetcode.com') ? raw : undefined
+      }, { signal: controller.signal });
+
+      const vs = res.data?.validation_status;
+      if (vs === 'VALID') {
+        setLcValidation({
+          status: 'valid',
+          username: res.data.username,
+          canonical_url: res.data.canonical_url,
+          total_solved: res.data.profile_data?.total_solved,
+          easy_solved: res.data.profile_data?.easy_solved,
+          medium_solved: res.data.profile_data?.medium_solved,
+          hard_solved: res.data.profile_data?.hard_solved,
+          contest_rating: res.data.profile_data?.contest_rating,
+          ranking: res.data.profile_data?.ranking,
+        });
+      } else if (vs === 'ACCOUNT_NOT_FOUND') {
+        setLcValidation({ status: 'not_found', message: res.data?.message || 'No LeetCode profile found' });
+      } else if (vs === 'INVALID_FORMAT') {
+        setLcValidation({ status: 'invalid_format', message: res.data?.message || 'Invalid format' });
+      } else if (vs === 'IDENTITY_MISMATCH') {
+        setLcValidation({ status: 'identity_mismatch', message: res.data?.message || 'Identity mismatch' });
+      } else if (vs === 'RATE_LIMITED') {
+        setLcValidation({ status: 'rate_limited', message: res.data?.message || 'LeetCode rate-limited' });
+      } else if (vs === 'NETWORK_ERROR') {
+        setLcValidation({ status: 'network_error', message: res.data?.message || 'Network error reaching LeetCode' });
+      } else {
+        setLcValidation({ status: 'fetch_failed', message: res.data?.message || 'Validation failed' });
+      }
+    } catch (err: any) {
+      if (err.name !== 'CanceledError') {
+        setLcValidation({
+          status: 'network_error',
+          message: err?.response?.data?.message || err?.message || 'Could not verify LeetCode profile'
+        });
+      }
+    }
+  }, [leetcodeUrl, username, student?.id, student?.student_id, student?.reg_no]);
+
+  const triggerDebouncedValidation = useCallback((inputVal: string) => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     const trimmed = inputVal.trim();
     if (!trimmed) {
       setLcValidation({ status: 'idle' });
       return;
     }
-
-    debounceTimerRef.current = setTimeout(async () => {
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-      setLcValidation({ status: 'validating' });
-
-      try {
-        const res = await api.post(`/students/${student?.id || 0}/validate-leetcode`, {
-          leetcode_url: trimmed.includes('leetcode.com') ? trimmed : undefined,
-          username: !trimmed.includes('leetcode.com') ? trimmed : undefined
-        }, { signal: controller.signal });
-        const vs = res.data?.validation_status;
-        if (vs === 'VALID') {
-          setLcValidation({
-            status: 'valid',
-            username: res.data.username,
-            canonical_url: res.data.canonical_url,
-            total_solved: res.data.profile_data?.total_solved,
-            contest_rating: res.data.profile_data?.contest_rating
-          });
-        } else {
-          setLcValidation({ status: 'fetch_failed', message: res.data?.message || 'Validation failed' });
-        }
-      } catch (err: any) {
-        if (err.name !== 'CanceledError') setLcValidation({ status: 'idle' });
-      }
+    debounceTimerRef.current = setTimeout(() => {
+      executeValidation(trimmed);
     }, 450);
-  }, [student?.id]);
+  }, [executeValidation]);
+
+  const handleApplyCanonical = useCallback((canonicalUrl: string, canonicalUsername: string) => {
+    setLeetcodeUrl(canonicalUrl);
+    setUsername(canonicalUsername);
+    hasUserEditedRef.current = true;
+  }, []);
 
   const handleUrlChange = (urlVal: string) => {
     setLeetcodeUrl(urlVal);
@@ -828,15 +1047,40 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">LeetCode Profile URL</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">LeetCode Profile URL</label>
+                  <button
+                    type="button"
+                    onClick={() => executeValidation(leetcodeUrl || username)}
+                    disabled={lcValidation.status === 'validating'}
+                    className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-95 shadow-xs"
+                    title="Live fetch profile stats from LeetCode"
+                  >
+                    {lcValidation.status === 'validating' ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-amber-500" />
+                        <span>Verifying...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        <span>⚡ Verify & Fetch Live</span>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={leetcodeUrl}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   placeholder="https://leetcode.com/u/username/"
-                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs font-mono"
                 />
-                <LcValidationChip state={lcValidation} />
+                <LcValidationChip
+                  state={lcValidation}
+                  onApplyCanonical={handleApplyCanonical}
+                  onRetry={() => executeValidation(leetcodeUrl || username)}
+                />
               </div>
             </div>
 

@@ -189,11 +189,13 @@ class ConnectionManager:
                     role = payload.get("role", "authenticated")
                     dept_id = payload.get("department_id")
                     numeric_id = payload.get("user_id")  # raw DB integer id
-                    logger.info(f"[WS-AUTH] Successfully decoded JWT token via python-jose. sub={sub} email={email} role={role}")
+                    reg_no = payload.get("reg_no") or payload.get("register_number") or payload.get("register_no")
+                    logger.info(f"[WS-AUTH] Successfully decoded JWT token via python-jose. sub={sub} email={email} reg_no={reg_no} role={role}")
                     return {
                         "user_id": sub,
                         "email": email,
                         "numeric_id": numeric_id if numeric_id is not None else None,
+                        "reg_no": reg_no,
                         "role": role,
                         "department_id": dept_id,
                         "authenticated": True
@@ -456,17 +458,20 @@ class ConnectionManager:
         logger.info(f"[NOTIF-DEBUG] WEBSOCKET_SEND_STARTED target={target} active_total={len(self.active_connections)}")
 
         for ws, ctx in list(self._ws_user.items()):
-            ws_uid = ctx.get("user_id" or "").strip().lower()        # sub / username  # type: ignore
-            ws_email = ctx.get("email" or "").strip().lower()         # email claim  # type: ignore
+            ws_uid = str(ctx.get("user_id") or "").strip().lower()        # sub / username  # type: ignore
+            ws_email = str(ctx.get("email") or "").strip().lower()         # email claim  # type: ignore
             ws_num_id = str(ctx.get("numeric_id", "")).strip().lower()   # DB integer id  # type: ignore
+            ws_reg_no = str(ctx.get("reg_no", "")).strip().lower()       # Student register number  # type: ignore
 
-            # Match against: username/sub, email, numeric DB id, STAFF_{id} synthetic key
+            # Match against: username/sub, email, numeric DB id, reg_no, STAFF_{id} synthetic key
             is_match = (
                 ws_uid == target
                 or ws_email == target
                 or (ws_num_id and ws_num_id == target)
+                or (ws_reg_no and ws_reg_no == target)
                 or (ws_uid and target in ws_uid)
                 or (ws_email and target in ws_email)
+                or (ws_reg_no and target in ws_reg_no)
                 or (target.startswith("staff_") and target.replace("staff_", "") == ws_num_id)
                 or (target.startswith("staff_") and target.replace("staff_", "") == ws_uid)
             )

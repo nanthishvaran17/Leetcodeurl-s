@@ -44,7 +44,7 @@ const connect = (wsUrl?: string) => {
         reconnectTimeout = null;
       }
       
-      // Start 15s keepalive ping interval
+      // Start 8s keepalive ping interval (essential for mobile cellular carrier NAT timeout prevention)
       if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
         if (socket && socket.readyState === WebSocket.OPEN) {
@@ -52,7 +52,7 @@ const connect = (wsUrl?: string) => {
             socket.send('ping');
           } catch (_) {}
         }
-      }, 15000);
+      }, 8000);
       
       self.postMessage({ type: 'WS_STATUS', connected: true });
     };
@@ -64,7 +64,15 @@ const connect = (wsUrl?: string) => {
         const data = JSON.parse(event.data);
         
         // Real-time notifications & messaging bypass micro-batching for instant delivery (<1ms)
-        if (data.type === 'NEW_NOTIFICATION' || data.type === 'notification' || data.type === 'NEW_MESSAGE' || data.type === 'MESSAGE_STATUS_UPDATE') {
+        if (
+          data.type === 'NEW_NOTIFICATION' ||
+          data.type === 'notification' ||
+          data.type === 'NEW_MESSAGE' ||
+          data.type === 'MESSAGE_STATUS_UPDATE' ||
+          data.type === 'TYPING_STATUS' ||
+          data.type === 'MESSAGE_EDITED' ||
+          data.type === 'MESSAGE_DELETED'
+        ) {
           self.postMessage({ type: 'WS_MESSAGE', data });
           return;
         }
@@ -176,6 +184,15 @@ self.onmessage = (event: MessageEvent) => {
       socket.send(JSON.stringify(payload));
     } else {
       console.warn('Worker WS: Cannot send message, socket not open');
+    }
+  } else if (type === 'CHECK_CONNECTION') {
+    if (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+      connect();
+    } else if (socket.readyState === WebSocket.OPEN) {
+      try {
+        socket.send('ping');
+      } catch (_) {}
+      self.postMessage({ type: 'WS_STATUS', connected: true });
     }
   }
 };

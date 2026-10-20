@@ -67,16 +67,16 @@ async function renderScene07() {
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
-    /* Export Button Hover Highlight */
+    /* Generate Preview Button Hover Highlight */
     .export-btn-glow {
       position: absolute;
-      top: 326px;
-      left: 310px;
-      width: 160px;
-      height: 40px;
-      border-radius: 8px;
-      border: 1.5px solid #10B981;
-      background: rgba(16, 185, 129, 0.1);
+      top: 635px;
+      left: 1650px;
+      width: 232px;
+      height: 46px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
       opacity: 0;
       pointer-events: none;
     }
@@ -218,64 +218,61 @@ async function renderScene07() {
         document.getElementById('whiteFade').style.opacity = 0;
       }
 
-      // Cursor movement:
-      // 0.0 - 2.0s: Cursor enters from center, glides to "Universal Weekly Report" card (x: 480, y: 260)
-      // 2.0 - 4.5s: Glides down to "Export XLSX" button (x: 390, y: 346)
-      // 4.5s: Clicks "Export XLSX", ripple plays, toast notification pops in!
-      // 5.5 - 7.8s: Cursor glides up to header sync status icon (x: 1680, y: 44)
-      // 7.8s: Clicks sync button, triggering Scene 08!
+      // Exact verified element coordinates:
+      // "Generate Preview" purple action button: (1766, 657.5)
+      // "Sync Engine Status" header button: (1485, 32.5)
       let curX = 960;
       let curY = 600;
 
       if (sec < 2.0) {
+        // Enters and glides over Report selection
         const p = easeInOutCubic(sec / 2.0);
         curX = lerp(850, 480, p);
-        curY = lerp(550, 260, p);
-        document.getElementById('reportSelect').style.opacity = p;
-      } else if (sec >= 2.0 && sec < 4.4) {
-        document.getElementById('reportSelect').style.opacity = 1;
-        const p = easeInOutCubic((sec - 2.0) / 2.4);
-        curX = lerp(480, 390, p);
-        curY = lerp(260, 346, p);
+        curY = lerp(650, 508, p);
+      } else if (sec >= 2.0 && sec < 4.2) {
+        // Glides across to the "Generate Preview" button at (1766, 657.5)
+        const p = easeInOutCubic((sec - 2.0) / 2.2);
+        curX = lerp(480, 1766, p);
+        curY = lerp(508, 657.5, p);
         if (sec >= 3.6) {
           document.getElementById('exportGlow').style.opacity = 1;
         }
-      } else if (sec >= 4.4 && sec < 5.6) {
-        curX = 390;
-        curY = 346;
-        document.getElementById('reportSelect').style.opacity = 1;
+      } else if (sec >= 4.2 && sec < 5.5) {
+        curX = 1766;
+        curY = 657.5;
         document.getElementById('exportGlow').style.opacity = 1;
-        // Ripple click at 4.5s
-        if (sec >= 4.5 && sec < 5.0) {
-          const ripProg = (sec - 4.5) / 0.5;
+        // Ripple click on Generate Preview at 4.3s
+        if (sec >= 4.3 && sec < 4.8) {
+          const ripProg = (sec - 4.3) / 0.5;
           const ripple = document.getElementById('ripple');
-          ripple.style.left = '390px';
-          ripple.style.top = '346px';
+          ripple.style.left = '1766px';
+          ripple.style.top = '657.5px';
           ripple.style.opacity = lerp(0.8, 0, ripProg);
           ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
         }
-        // Toast enters
-        if (sec >= 4.7) {
-          const tProg = easeInOutCubic((sec - 4.7) / 0.6);
+        // Toast notification enters
+        if (sec >= 4.5) {
+          const tProg = easeInOutCubic((sec - 4.5) / 0.6);
           document.getElementById('toast').style.opacity = tProg;
           document.getElementById('toast').style.transform = 'translateY(' + lerp(-10, 0, tProg) + 'px)';
         }
-      } else if (sec >= 5.6 && sec < 7.8) {
+      } else if (sec >= 5.5 && sec < 7.8) {
         document.getElementById('toast').style.opacity = 1;
         document.getElementById('toast').style.transform = 'translateY(0px)';
-        const p = easeInOutCubic((sec - 5.6) / 2.2);
-        curX = lerp(390, 1680, p);
-        curY = lerp(346, 44, p);
+        // Cursor glides up to top bar "Sync Engine Status" button at (1485, 32.5)
+        const p = easeInOutCubic((sec - 5.5) / 2.3);
+        curX = lerp(1766, 1485, p);
+        curY = lerp(657.5, 32.5, p);
       } else {
-        curX = 1680;
-        curY = 44;
+        curX = 1485;
+        curY = 32.5;
         document.getElementById('toast').style.opacity = 1;
-        // Ripple click on sync status at 7.8s
+        // Ripple click on Sync Engine Status at 7.8s
         if (sec >= 7.8 && sec < 8.3) {
           const ripProg = (sec - 7.8) / 0.5;
           const ripple = document.getElementById('ripple');
-          ripple.style.left = '1680px';
-          ripple.style.top = '44px';
+          ripple.style.left = '1485px';
+          ripple.style.top = '32.5px';
           ripple.style.opacity = lerp(0.8, 0, ripProg);
           ripple.style.transform = 'translate(-50%, -50%) scale(' + lerp(0, 2.5, ripProg) + ')';
         }
