@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, Sparkles, ExternalLink, Trophy, RefreshCw } from 'lucide-react';
+import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, ExternalLink, Trophy, RefreshCw } from 'lucide-react';
 import api, { clearApiCache } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
@@ -43,10 +43,12 @@ type LcValidationState =
 
 function LcValidationChip({
   state,
+  currentUrl,
   onApplyCanonical,
   onRetry
 }: {
   state: LcValidationState;
+  currentUrl?: string;
   onApplyCanonical?: (url: string, username: string) => void;
   onRetry?: () => void;
 }) {
@@ -95,7 +97,12 @@ function LcValidationChip({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {onApplyCanonical && (
+            {state.canonical_url && currentUrl && currentUrl.trim().replace(/\/$/, '') === state.canonical_url.trim().replace(/\/$/, '') ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                URL Synced
+              </span>
+            ) : onApplyCanonical ? (
               <button
                 type="button"
                 onClick={() => onApplyCanonical(state.canonical_url, state.username)}
@@ -103,7 +110,7 @@ function LcValidationChip({
               >
                 <span>Use Canonical URL</span>
               </button>
-            )}
+            ) : null}
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
               Safe to Save
             </span>
@@ -409,7 +416,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     const initYear = resolveYearLevelFromRegNo(initRegNo, stData.year_level || stData.year);
     const initSec = stData.section?.name || stData.section || '';
     const initUser = stData.username || stData.primary_leetcode_id || stData.canonical_username || '';
-    const initUrl = stData.leetcode_url || stData.profile_url || (initUser ? `https://leetcode.com/u/${initUser}/` : '');
+    let initUrl = stData.leetcode_url || stData.profile_url || (initUser ? `https://leetcode.com/u/${initUser}/` : '');
+    // Automatically fix truncated/mismatched URLs if username is present
+    if (initUser && (!initUrl || (initUrl.includes('leetcode.com/u/') && !initUrl.toLowerCase().includes(initUser.toLowerCase())))) {
+      initUrl = `https://leetcode.com/u/${initUser}/`;
+    }
     const initEmail = stData.email || '';
     const initInstEmail = stData.institutional_email || (initRegNo ? generateEmailFromRegNo(initRegNo) : '');
     const initEmailStatus = stData.email_status || 'pending';
@@ -633,10 +644,21 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
       const vs = res.data?.validation_status;
       if (vs === 'VALID') {
+        const canonicalUrl = res.data.canonical_url;
+        const verifiedUsername = res.data.username;
+
+        // Automatically populate and show the verified URL and username
+        if (canonicalUrl) {
+          setLeetcodeUrl(canonicalUrl);
+        }
+        if (verifiedUsername) {
+          setUsername(verifiedUsername);
+        }
+
         setLcValidation({
           status: 'valid',
-          username: res.data.username,
-          canonical_url: res.data.canonical_url,
+          username: verifiedUsername,
+          canonical_url: canonicalUrl,
           total_solved: res.data.profile_data?.total_solved,
           easy_solved: res.data.profile_data?.easy_solved,
           medium_solved: res.data.profile_data?.medium_solved,
@@ -676,7 +698,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     }
     debounceTimerRef.current = setTimeout(() => {
       executeValidation(trimmed);
-    }, 450);
+    }, 100);
   }, [executeValidation]);
 
   const handleApplyCanonical = useCallback((canonicalUrl: string, canonicalUsername: string) => {
@@ -694,10 +716,22 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   };
 
   const handleUsernameChange = (userVal: string) => {
-    setUsername(userVal);
+    let cleanUser = userVal;
     const trimmed = userVal.trim();
-    if (trimmed && !trimmed.includes('leetcode.com')) setLeetcodeUrl(`https://leetcode.com/u/${trimmed}/`);
-    triggerDebouncedValidation(trimmed);
+    if (trimmed.includes('leetcode.com')) {
+      const match = trimmed.match(/leetcode\.com\/(?:u\/)?([a-zA-Z0-9_-]+)/i);
+      if (match && match[1]) {
+        cleanUser = match[1];
+      }
+    }
+    setUsername(cleanUser);
+    const cleanTrimmed = cleanUser.trim();
+    if (cleanTrimmed) {
+      setLeetcodeUrl(`https://leetcode.com/u/${cleanTrimmed}/`);
+    } else {
+      setLeetcodeUrl('');
+    }
+    triggerDebouncedValidation(cleanTrimmed);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -1062,10 +1096,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                         <span>Verifying...</span>
                       </>
                     ) : (
-                      <>
-                        <Sparkles className="w-3 h-3 text-amber-500" />
-                        <span>⚡ Verify & Fetch Live</span>
-                      </>
+                      <span>Verify & Fetch Live</span>
                     )}
                   </button>
                 </div>
@@ -1078,6 +1109,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 />
                 <LcValidationChip
                   state={lcValidation}
+                  currentUrl={leetcodeUrl}
                   onApplyCanonical={handleApplyCanonical}
                   onRetry={() => executeValidation(leetcodeUrl || username)}
                 />

@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
 import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, TrendingUp, Users, Award, Activity } from 'lucide-react';
@@ -63,6 +64,10 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
   const [swipeX, setSwipeX] = useState(0);
   const THRESHOLD = 70;
 
+  const handleDrag = (_e: any, info: any) => {
+    setSwipeX(info.offset.x);
+  };
+
   const handleDragEnd = (_e: any, info: any) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
@@ -81,20 +86,28 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-navy-800 shadow-xs hover:shadow-md transition-shadow">
-      {/* RIGHT bg: Delete (revealed on left-swipe - dragging right to left) */}
-      <div className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-end bg-rose-500 z-0 px-5 rounded-r-2xl">
+    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0a0f1d] border border-slate-200/90 dark:border-white/[0.08] shadow-xs hover:shadow-md transition-shadow">
+      {/* RIGHT bg: Delete (revealed ONLY on left-swipe - dragging right to left) */}
+      <div 
+        className={`absolute inset-y-0 right-0 w-1/2 flex items-center justify-end bg-rose-600 px-5 rounded-r-2xl transition-opacity duration-150 ${
+          swipeX < 0 ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+        }`}
+      >
         <div className="flex flex-col items-center gap-1 text-white">
           <Trash2 size={20} />
-          <span className="text-[10px] font-black">Delete</span>
+          <span className="text-[10px] font-black tracking-wide">Delete</span>
         </div>
       </div>
 
-      {/* LEFT bg: Archive (revealed on right-swipe - dragging left to right) */}
-      <div className="absolute inset-y-0 left-0 w-1/2 flex items-center justify-start bg-blue-500 z-0 px-5 rounded-l-2xl">
+      {/* LEFT bg: Archive (revealed ONLY on right-swipe - dragging left to right) */}
+      <div 
+        className={`absolute inset-y-0 left-0 w-1/2 flex items-center justify-start bg-blue-600 px-5 rounded-l-2xl transition-opacity duration-150 ${
+          swipeX > 0 ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+        }`}
+      >
         <div className="flex flex-col items-center gap-1 text-white">
           <Archive size={20} />
-          <span className="text-[10px] font-black">Archive</span>
+          <span className="text-[10px] font-black tracking-wide">Archive</span>
         </div>
       </div>
 
@@ -102,25 +115,26 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
         drag="x"
         dragConstraints={{ left: -120, right: 120 }}
         dragElastic={0.08}
+        onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         animate={{ x: swipeX }}
         transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-        className={`relative z-10 flex items-start gap-3 p-3.5 sm:p-4 cursor-pointer min-h-[64px] select-none
+        className={`relative z-10 flex items-start gap-3 p-3.5 sm:p-4 cursor-pointer min-h-[64px] select-none rounded-2xl transition-colors
           ${!n.isRead
-            ? 'bg-brand-50 dark:bg-brand-500/10'
-            : 'bg-white dark:bg-navy-950'
+            ? 'bg-indigo-50/80 dark:bg-[#111728] border-l-4 border-l-brand-500 shadow-sm'
+            : 'bg-white dark:bg-[#0a0f1d]'
           }`}
         onClick={() => {
           if (Math.abs(swipeX) > 5) { setSwipeX(0); return; }
           handleNotificationClick(n);
         }}
       >
-        {/* Unread indicator */}
+        {/* Unread indicator glow */}
         {!n.isRead && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-brand-500 rounded-r-full" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-10 bg-brand-500 rounded-r-full shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
         )}
 
-        <div className={`mt-0.5 shrink-0 p-2 rounded-xl bg-slate-100 dark:bg-navy-800 transition-shadow ${n.isRead ? 'opacity-60' : ''}`}>
+        <div className={`mt-0.5 shrink-0 p-2.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/50 dark:border-white/[0.06] transition-shadow ${n.isRead ? 'opacity-60' : ''}`}>
           {getIcon(n.type, n.priority)}
         </div>
 
@@ -163,7 +177,7 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
           </p>
 
           {(n.actionRoute || n.entityId) && (
-            <div className="mt-2 flex items-center gap-1 text-[11px] font-extrabold text-brand-600 dark:text-brand-400 hover:text-brand-700">
+            <div className="mt-2 flex items-center gap-1 text-[11px] font-extrabold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300">
               <span>View details & actions</span>
               <ChevronRight size={13} />
             </div>
@@ -203,7 +217,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   } = useGlobalNotifications();
 
   const { token, user } = useAuth();
-  const { confirmAction } = useNotification();
+  const { confirmAction, notify } = useNotification();
   const panelRef = useRef<HTMLDivElement>(null);
   const [activeFileModal, setActiveFileModal] = useState<{ fileId: string; title: string; filename?: string } | null>(null);
   const [pushPermState, setPushPermState] = useState<string>('default');
@@ -214,29 +228,28 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
 
   const confirmDeleteNotification = async (notification: Notification) => {
+    const shortTitle = notification.title && notification.title.length > 36
+      ? notification.title.substring(0, 34).trim() + '...'
+      : notification.title;
+
     const confirmed = await confirmAction({
-      title: 'Delete Notification?',
-      message: `Are you sure you want to permanently delete "${notification.title}"? This action cannot be undone.`,
-      confirmLabel: 'Delete Notification',
-      category: 'NOTIFICATIONS',
+      title: 'Delete notification?',
+      message: shortTitle ? `Delete "${shortTitle}"?` : 'Permanently remove this notification?',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      category: 'NOTIFICATION',
       variant: 'danger',
     });
     if (confirmed) {
       await deleteNotification(notification.id);
+      notify.success('Deleted', 'Notification removed', { duration: 2000 });
     }
   };
 
   const confirmArchiveNotification = async (notification: Notification) => {
-    const confirmed = await confirmAction({
-      title: 'Archive Notification?',
-      message: `Move "${notification.title}" to Archived? You can still find it in the Archived tab.`,
-      confirmLabel: 'Archive Notification',
-      category: 'NOTIFICATIONS',
-      variant: 'info',
-    });
-    if (confirmed) {
-      await archiveNotification(notification.id);
-    }
+    // Instant, smooth archive with toast notification
+    await archiveNotification(notification.id);
+    notify.info('Archived', 'Moved to Archived tab', { duration: 2200 });
   };
 
   const checkInitialPushPermission = async () => {
@@ -515,162 +528,179 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     });
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <>
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            ref={panelRef}
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Notifications"
-            className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 sm:top-12 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-950 sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-dvh sm:h-auto sm:max-h-[680px] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 shrink-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 rounded-xl transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
-                  title="Back to previous screen"
-                  aria-label="Back"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <h3 className="font-black text-base sm:text-sm text-slate-900 dark:text-white truncate">Notifications</h3>
-                {unreadCount > 0 && (
-                  <span className="bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
-                    {unreadCount} new
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => void handleRefreshNotifications()}
-                  disabled={isRefreshing}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/60 dark:hover:bg-navy-800 rounded-xl transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-wait"
-                  title="Refresh notifications"
-                  aria-label="Refresh notifications"
-                >
-                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-                </button>
-                {unreadCount > 0 && (
+          <div className="fixed inset-0 z-[100050] pointer-events-auto">
+            {/* Backdrop for desktop click outside */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/60 sm:bg-black/40 backdrop-blur-xs sm:backdrop-blur-sm"
+              aria-hidden="true"
+            />
+
+            {/* Notification Panel Modal */}
+            <motion.div
+              ref={panelRef}
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Notifications"
+              className="fixed inset-0 sm:inset-auto sm:right-6 sm:top-16 sm:w-[420px] max-w-[100vw] sm:max-w-[420px] bg-slate-50 dark:bg-[#070A12] sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-white/[0.1] z-[100051] overflow-hidden flex flex-col h-dvh sm:h-[680px] sm:max-h-[85vh] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0B0F19] shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                   <button
                     type="button"
-                    onClick={markAllAsRead}
-                    className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[36px] px-2 rounded-xl hover:bg-brand-50 dark:hover:bg-navy-800 shrink-0"
+                    onClick={onClose}
+                    className="p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+                    title="Back to previous screen"
+                    aria-label="Back"
                   >
-                    <Check size={15} />
-                    <span className="hidden xs:inline">Mark all</span>
+                    <ArrowLeft size={20} className="sm:hidden" />
+                    <X size={18} className="hidden sm:block" />
                   </button>
-                )}
-              </div>
-            </div>
-
-            {/* Category Filter Pills */}
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-navy-950 touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {CATEGORIES.map((cat) => {
-                const categoryCount = cat.id === 'all'
-                  ? allNotifications.filter(n => !n.isArchived).length
-                  : cat.id === 'archived'
-                    ? allNotifications.filter(n => n.isArchived).length
-                    : allNotifications.filter(n => !n.isArchived && normalizeCategory(n.category || n.type) === cat.id).length;
-                
-                const categoryUnread = cat.id === 'all'
-                  ? unreadCount
-                  : cat.id === 'archived'
-                    ? 0
-                    : allNotifications.filter(n => !n.isArchived && !n.isRead && normalizeCategory(n.category || n.type) === cat.id).length;
-
-                return (
+                  <h3 className="font-black text-base sm:text-sm text-slate-900 dark:text-white truncate">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span className="bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
                   <button
-                    key={cat.id}
                     type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`text-[11px] font-extrabold min-h-[44px] px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap snap-start flex items-center justify-center gap-1.5 ${
-                      selectedCategory === cat.id
-                        ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700'
-                    }`}
+                    onClick={() => void handleRefreshNotifications()}
+                    disabled={isRefreshing}
+                    className="p-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/60 dark:hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-wait"
+                    title="Refresh notifications"
+                    aria-label="Refresh notifications"
                   >
-                    <span>{cat.label}</span>
-                    {categoryUnread > 0 ? (
-                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                    <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                  </button>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={markAllAsRead}
+                      className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[36px] px-2 rounded-xl hover:bg-brand-50 dark:hover:bg-white/[0.08] shrink-0"
+                    >
+                      <Check size={15} />
+                      <span className="hidden xs:inline">Mark all</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 dark:border-white/[0.08] overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-[#070A12] touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {CATEGORIES.map((cat) => {
+                  const categoryCount = cat.id === 'all'
+                    ? allNotifications.filter(n => !n.isArchived).length
+                    : cat.id === 'archived'
+                      ? allNotifications.filter(n => n.isArchived).length
+                      : allNotifications.filter(n => !n.isArchived && normalizeCategory(n.category || n.type) === cat.id).length;
+                  
+                  const categoryUnread = cat.id === 'all'
+                    ? unreadCount
+                    : cat.id === 'archived'
+                      ? 0
+                      : allNotifications.filter(n => !n.isArchived && !n.isRead && normalizeCategory(n.category || n.type) === cat.id).length;
+
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`text-[11px] font-extrabold min-h-[44px] px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap snap-start flex items-center justify-center gap-1.5 ${
                         selectedCategory === cat.id
-                          ? 'bg-white/30 text-white'
-                          : 'bg-brand-500/15 text-brand-600 dark:text-brand-400'
-                      }`}>
-                        {categoryUnread}
-                      </span>
-                    ) : categoryCount > 0 && (
-                      <span className="text-[10px] font-semibold opacity-70">
-                        ({categoryCount})
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                          ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/[0.1] border border-transparent dark:border-white/[0.06]'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      {categoryUnread > 0 ? (
+                        <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                          selectedCategory === cat.id
+                            ? 'bg-white/30 text-white'
+                            : 'bg-brand-500/20 text-brand-600 dark:text-brand-400'
+                        }`}>
+                          {categoryUnread}
+                        </span>
+                      ) : categoryCount > 0 && (
+                        <span className="text-[10px] font-semibold opacity-70">
+                          ({categoryCount})
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
 
-            {/* Body List */}
-            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-navy-700 flex flex-col">
-              {isLoading ? (
-                <div className="p-4 space-y-3">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="flex items-start space-x-3 animate-pulse p-2 rounded-xl">
-                      <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-navy-800 shrink-0" />
-                      <div className="flex-1 space-y-1.5">
-                        <div className="h-3.5 bg-slate-200 dark:bg-navy-800 rounded w-3/4" />
-                        <div className="h-3 bg-slate-200 dark:bg-navy-800 rounded w-full" />
+              {/* Body List */}
+              <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-navy-700 flex flex-col bg-slate-50 dark:bg-[#070A12]">
+                {isLoading ? (
+                  <div className="p-4 space-y-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="flex items-start space-x-3 animate-pulse p-2 rounded-xl">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-navy-800 shrink-0" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3.5 bg-slate-200 dark:bg-navy-800 rounded w-3/4" />
+                          <div className="h-3 bg-slate-200 dark:bg-navy-800 rounded w-full" />
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                ) : error ? (
+                  <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 my-auto">
+                    <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                      <AlertCircle size={22} />
                     </div>
-                  ))}
-                </div>
-              ) : error ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 my-auto">
-                  <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
-                    <AlertCircle size={22} />
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Unable to load notifications</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{error}</p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Unable to load notifications</h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{error}</p>
+                ) : notifications.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center my-auto min-h-[260px] animate-fade-in">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] flex items-center justify-center mb-4 text-slate-400 dark:text-slate-400 shadow-sm">
+                      <Bell size={28} />
+                    </div>
+                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-white mb-1.5">No notifications</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed">
+                      Notifications for your selected category will appear here.
+                    </p>
                   </div>
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center my-auto min-h-[260px] animate-fade-in">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-navy-800/80 border border-slate-200/60 dark:border-navy-700/60 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500 shadow-sm">
-                    <Bell size={28} />
+                ) : (
+                  <div className="p-3 sm:p-4 space-y-3 bg-slate-50 dark:bg-[#070A12] pb-6">
+                    {notifications.map((n) => (
+                      <NotificationItem
+                        key={n.id}
+                        n={n}
+                        handleNotificationClick={handleNotificationClick}
+                        confirmDeleteNotification={confirmDeleteNotification}
+                        confirmArchiveNotification={confirmArchiveNotification}
+                        archiveNotification={archiveNotification}
+                        markAsRead={markAsRead}
+                        setActiveFileModal={setActiveFileModal}
+                        getIcon={getIcon}
+                      />
+                    ))}
                   </div>
-                  <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mb-1.5">No notifications</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed">
-                    Notifications for your selected category will appear here.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-3 sm:p-4 space-y-3 bg-slate-50/50 dark:bg-navy-950/40 pb-6">
-                  {notifications.map((n) => (
-                    <NotificationItem
-                      key={n.id}
-                      n={n}
-                      handleNotificationClick={handleNotificationClick}
-                      confirmDeleteNotification={confirmDeleteNotification}
-                      confirmArchiveNotification={confirmArchiveNotification}
-                      archiveNotification={archiveNotification}
-                      markAsRead={markAsRead}
-                      setActiveFileModal={setActiveFileModal}
-                      getIcon={getIcon}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -682,7 +712,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-navy-950 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-navy-800 space-y-4"
+              className="bg-white dark:bg-[#0B0F19] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-white/[0.1] space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-extrabold">
@@ -707,7 +737,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                 <button
                   type="button"
                   onClick={() => handleFilePreview(activeFileModal.fileId)}
-                  className="px-4 py-2 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 dark:bg-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.14] text-slate-800 dark:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Eye size={14} /> Preview
                 </button>
@@ -723,6 +753,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
           </div>
         )}
       </AnimatePresence>
-    </>
+    </>,
+    document.body
   );
 };

@@ -2129,11 +2129,30 @@ async def validate_leetcode_account(
 
     parsed_username = parsed_username.lower()
 
-    # Step 2 — Live LeetCode fetch (identity-checked inside fetch_leetcode_profile)
+    # Fast-Path: If student record already has verified stats matching this username, return immediately (< 0.05s)
+    if student and student.username and student.username.strip().lower() == parsed_username:
+        if student.stats and student.stats.total_solved is not None and student.stats.sync_status in ("success", "verified", "OK"):
+            return {
+                "validation_status": "VALID",
+                "message": f"LeetCode account '{student.username}' verified instantly via active record.",
+                "username": student.username,
+                "canonical_url": parsed_url or f"https://leetcode.com/u/{student.username}/",
+                "can_save": True,
+                "profile_data": {
+                    "total_solved": student.stats.total_solved,
+                    "easy_solved": student.stats.easy_solved,
+                    "medium_solved": student.stats.medium_solved,
+                    "hard_solved": student.stats.hard_solved,
+                    "contest_rating": student.stats.contest_rating,
+                    "ranking": student.stats.public_profile_ranking or student.stats.contest_global_ranking,
+                }
+            }
+
+    # Step 2 — LeetCode fetch (checks fast in-memory cache first for sub-0.1s response)
     try:
         result = await asyncio.wait_for(
-            fetch_leetcode_profile(parsed_username, force_refresh=True, timeout=20.0, max_retries=2),
-            timeout=25.0
+            fetch_leetcode_profile(parsed_username, force_refresh=False, timeout=8.0, max_retries=1),
+            timeout=10.0
         )
     except asyncio.TimeoutError:
         return {

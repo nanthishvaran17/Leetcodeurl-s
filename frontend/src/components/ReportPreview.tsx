@@ -846,38 +846,38 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:static print:w-full print:h-auto print:overflow-visible"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal-container-responsive report-preview-white-modal max-w-7xl bg-white text-slate-900 rounded-3xl shadow-2xl border border-slate-200/90 animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0 flex flex-col overflow-hidden">
+      <div className="modal-container-responsive max-w-7xl bg-white dark:bg-[#0c1427] text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-white/10 animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0 flex flex-col overflow-hidden">
         
         {/* Mobile bottom-sheet drag handle (Tap or swipe down to close) */}
         <SwipeHandle
           onClose={onClose}
-          className="bg-white border-b border-slate-100"
-          pillClassName="bg-slate-300 hover:bg-slate-400"
+          className="bg-white dark:bg-[#0c1427] border-b border-slate-100 dark:border-white/10"
+          pillClassName="bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500"
         />
 
-        {/* 1. HEADER BANNER - Crisp Executive White & Compact */}
-        <div className="relative overflow-hidden px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-white text-slate-900 flex items-center justify-between shrink-0 border-b border-slate-200/90 shadow-2xs print:bg-white print:text-black print:border-b-2 print:border-black">
+        {/* 1. HEADER BANNER - Crisp Executive White & Sleek Dark */}
+        <div className="relative overflow-hidden px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-white dark:bg-[#0c1427] text-slate-900 dark:text-white flex items-center justify-between shrink-0 border-b border-slate-200/90 dark:border-white/10 shadow-2xs print:bg-white print:text-black print:border-b-2 print:border-black">
           <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center shrink-0 text-indigo-600 shadow-xs">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/80 dark:border-indigo-500/30 flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 shadow-xs">
               <FileText className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <h2 className="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight print:text-black truncate print:whitespace-normal">
+                <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight print:text-black truncate print:whitespace-normal">
                   {headerTitle}
                 </h2>
-                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-extrabold tracking-wide shrink-0 shadow-2xs print:hidden">
+                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-extrabold tracking-wide shrink-0 shadow-2xs print:hidden">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   READY
                 </span>
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate print:whitespace-normal flex items-center gap-1.5 flex-wrap">
+              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate print:whitespace-normal flex items-center gap-1.5 flex-wrap">
                 {isContestReport && (
-                  <span className="font-bold text-amber-900 print:text-black px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] sm:text-[11px]">
+                  <span className="font-bold text-amber-900 dark:text-amber-200 print:text-black px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40 text-[10px] sm:text-[11px]">
                     {contestBadgeText}
                   </span>
                 )}
-                <span className="text-[10px] sm:text-[11px] text-slate-500">Report ID: <span className="font-mono font-bold text-slate-700 print:text-slate-600">{report.reportId || report.report_id}</span></span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">Report ID: <span className="font-mono font-bold text-slate-700 dark:text-slate-300 print:text-slate-600">{report.reportId || report.report_id}</span></span>
               </div>
             </div>
           </div>
@@ -886,41 +886,41 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             type="button"
             onClick={onClose}
             aria-label="Close report preview"
-            className="shrink-0 ml-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all font-bold text-xs flex items-center space-x-1 cursor-pointer shadow-2xs print:hidden touch-manipulation active:scale-95 group"
+            className="shrink-0 ml-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-white/10 dark:hover:bg-rose-500/20 dark:text-slate-200 dark:hover:text-rose-400 dark:border-white/10 transition-all font-bold text-xs flex items-center space-x-1 cursor-pointer shadow-2xs print:hidden touch-manipulation active:scale-95 group"
           >
-            <X className="w-3.5 h-3.5 text-slate-500 group-hover:text-rose-600 transition-colors" />
+            <X className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" />
             <span className="text-xs">Close</span>
           </button>
         </div>
 
-        {/* 2. DATASET QUALITY & RECONCILIATION BAR - Crisp Light & Compact */}
-        <div className="px-3 sm:px-5 py-2 bg-slate-50/90 border-b border-slate-200/90 flex flex-wrap items-center justify-between gap-2 text-xs font-bold shrink-0 shadow-2xs">
+        {/* 2. DATASET QUALITY & RECONCILIATION BAR */}
+        <div className="px-3 sm:px-5 py-2 bg-slate-50/90 dark:bg-[#080d19]/90 border-b border-slate-200/90 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold shrink-0 shadow-2xs">
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <span className="flex items-center space-x-1 text-slate-800 font-extrabold text-[11px] sm:text-xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="flex items-center space-x-1 text-slate-800 dark:text-slate-200 font-extrabold text-[11px] sm:text-xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>Dataset Reconciliation:</span>
             </span>
-            <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono text-[10px] sm:text-[11px] font-bold">
+            <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
               Roster: {totalRosterCount} Students
             </span>
             {isContestReport && (
-              <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[10px] sm:text-[11px] font-bold">
+              <span className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
                 Participants: {actualParticipantCount} ({turnoutPercentage})
               </span>
             )}
             {isContestReport && actualNotAttendedCount > 0 && (
-              <span className="px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-mono text-[10px] sm:text-[11px] font-bold">
+              <span className="px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
                 Absent: {actualNotAttendedCount} ({absentPercentage})
               </span>
             )}
             {activeFilter && (
-              <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[10px] sm:text-[11px] font-bold shadow-2xs">
-                <Filter className="w-3 h-3 text-amber-600" />
+              <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 text-[10px] sm:text-[11px] font-bold shadow-2xs">
+                <Filter className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 <span>Filtered: {displayedStudents.length}/{allRows.length}</span>
                 <button 
                   type="button" 
                   onClick={() => setActiveFilter(null)} 
-                  className="ml-1 p-0.5 hover:text-rose-600 font-bold touch-manipulation active:scale-90"
+                  className="ml-1 p-0.5 hover:text-rose-600 dark:hover:text-rose-400 font-bold touch-manipulation active:scale-90"
                   aria-label="Clear active filter"
                 >
                   <X className="w-3 h-3 inline" />
@@ -928,14 +928,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               </span>
             )}
           </div>
-          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-[10px] sm:text-[11px] border border-blue-200 shadow-2xs">
-            <Building2 className="w-3 h-3 text-blue-600 shrink-0" />
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 font-bold text-[10px] sm:text-[11px] border border-blue-200 dark:border-blue-500/30 shadow-2xs">
+            <Building2 className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>Nandha Engineering College (Autonomous)</span>
           </div>
         </div>
 
         {/* 3. SCROLLABLE REPORT CONTENT */}
-        <div className="p-3.5 sm:p-5 overflow-y-auto flex-1 min-h-0 space-y-5 bg-slate-50/50 text-slate-900 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
+        <div className="p-3.5 sm:p-5 overflow-y-auto flex-1 min-h-0 space-y-5 bg-slate-50/50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
 
           {/* CONTEST PERFORMANCE SPECIALIZED VIEW */}
           {isContestReport ? (

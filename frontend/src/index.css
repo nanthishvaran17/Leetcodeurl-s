@@ -439,10 +439,9 @@
   color: #FB7185 !important;
 }
 
-/* Modals, Dialogs, Drawers & Report Preview */
+/* Modals, Dialogs, Drawers & Responsive Containers */
 .dark .modal-container,
 .dark .modal-container-responsive,
-.dark .report-preview-white-modal,
 .dark [role="dialog"],
 .dark [data-modal="true"] {
   background: linear-gradient(180deg, #0E1424 0%, #070B14 100%) !important;
@@ -2182,55 +2181,6 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: 0 64px;
   touch-action: pan-x pan-y;
-}
-
-/* Executive Crisp White Theme for Report Preview Modal */
-.report-preview-white-modal {
-  color-scheme: light !important;
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-}
-
-.dark .report-preview-white-modal {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #e2e8f0 !important;
-}
-
-.dark .report-preview-white-modal * {
-  color-scheme: light !important;
-}
-
-.dark .report-preview-white-modal .dark\:bg-\[\#080d19\],
-.dark .report-preview-white-modal .dark\:bg-\[\#070D18\],
-.dark .report-preview-white-modal .dark\:bg-\[\#060b16\]\/95,
-.dark .report-preview-white-modal .dark\:bg-slate-900\/80,
-.dark .report-preview-white-modal .dark\:bg-slate-900\/95,
-.dark .report-preview-white-modal .dark\:bg-navy-900,
-.dark .report-preview-white-modal .dark\:bg-navy-950,
-.dark .report-preview-white-modal .dark\:bg-slate-900,
-.dark .report-preview-white-modal .dark\:bg-slate-800 {
-  background-color: #ffffff !important;
-}
-
-.dark .report-preview-white-modal .dark\:text-white {
-  color: #0f172a !important;
-}
-
-.dark .report-preview-white-modal .dark\:text-slate-100,
-.dark .report-preview-white-modal .dark\:text-slate-200,
-.dark .report-preview-white-modal .dark\:text-slate-300 {
-  color: #1e293b !important;
-}
-
-.dark .report-preview-white-modal .dark\:text-slate-400 {
-  color: #64748b !important;
-}
-
-.dark .report-preview-white-modal .dark\:border-white\/10,
-.dark .report-preview-white-modal .dark\:border-slate-800,
-.dark .report-preview-white-modal .dark\:border-slate-700 {
-  border-color: #e2e8f0 !important;
 }
 
 
