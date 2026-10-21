@@ -23,6 +23,7 @@ export interface ToastNotification extends ToastOptions {
 export interface ConfirmOptions {
   title: string;
   message: string;
+  detail?: string;
   category?: string;
   confirmLabel?: string;
   cancelLabel?: string;

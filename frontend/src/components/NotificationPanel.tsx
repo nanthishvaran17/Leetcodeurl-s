@@ -62,7 +62,7 @@ const CATEGORIES = [
 
 const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotification, confirmArchiveNotification, markAsRead, setActiveFileModal, getIcon }: any) => {
   const [swipeX, setSwipeX] = useState(0);
-  const THRESHOLD = 70;
+  const THRESHOLD = 90;
 
   const handleDrag = (_e: any, info: any) => {
     setSwipeX(info.offset.x);
@@ -72,14 +72,14 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
-    if (offset < -THRESHOLD || velocity < -400) {
+    if (offset < -THRESHOLD || velocity < -500) {
       // Swiped LEFT → Delete
-      setSwipeX(-120);
-      setTimeout(() => confirmDeleteNotification(n), 280);
-    } else if (offset > THRESHOLD || velocity > 400) {
+      setSwipeX(-100);
+      setTimeout(() => confirmDeleteNotification(n, () => setSwipeX(0)), 200);
+    } else if (offset > THRESHOLD || velocity > 500) {
       // Swiped RIGHT → Archive (hide)
-      setSwipeX(120);
-      setTimeout(() => confirmArchiveNotification(n), 280);
+      setSwipeX(100);
+      setTimeout(() => confirmArchiveNotification(n, () => setSwipeX(0)), 200);
     } else {
       setSwipeX(0);
     }
@@ -113,8 +113,9 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
 
       <motion.div
         drag="x"
-        dragConstraints={{ left: -120, right: 120 }}
-        dragElastic={0.08}
+        dragDirectionLock
+        dragConstraints={{ left: -100, right: 100 }}
+        dragElastic={0.06}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         animate={{ x: swipeX }}
@@ -138,14 +139,28 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
           {getIcon(n.type, n.priority)}
         </div>
 
-        <div className={`flex-1 min-w-0 pr-2 ${n.isRead ? 'opacity-75' : ''}`}>
-          <div className="flex items-center justify-between gap-2 mb-1 pr-4">
-            <h4 className={`text-xs sm:text-sm line-clamp-2 leading-snug ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-600 dark:text-slate-300 font-bold'}`}>
+        <div className={`flex-1 min-w-0 pr-1 ${n.isRead ? 'opacity-75' : ''}`}>
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <h4 className={`text-xs sm:text-sm line-clamp-2 leading-snug flex-1 ${!n.isRead ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-600 dark:text-slate-300 font-bold'}`}>
               {n.title}
             </h4>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-semibold">
-              {timeAgo(n.createdAt)}
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">
+                {timeAgo(n.createdAt)}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  confirmDeleteNotification(n);
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                title="Delete notification"
+                aria-label="Delete notification"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
           </div>
 
           {/* Badges for Surge, Milestone, Results, Attendance */}
@@ -227,14 +242,13 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
 
-  const confirmDeleteNotification = async (notification: Notification) => {
-    const shortTitle = notification.title && notification.title.length > 36
-      ? notification.title.substring(0, 34).trim() + '...'
-      : notification.title;
+  const confirmDeleteNotification = async (notification: Notification, onCancel?: () => void) => {
+    const rawTitle = (notification.title || '').trim();
 
     const confirmed = await confirmAction({
       title: 'Delete notification?',
-      message: shortTitle ? `Delete "${shortTitle}"?` : 'Permanently remove this notification?',
+      message: 'Are you sure you want to permanently delete this notification? This action cannot be undone.',
+      detail: rawTitle || undefined,
       confirmLabel: 'Delete',
       cancelLabel: 'Cancel',
       category: 'NOTIFICATION',
@@ -243,13 +257,16 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     if (confirmed) {
       await deleteNotification(notification.id);
       notify.success('Deleted', 'Notification removed', { duration: 2000 });
+    } else {
+      if (onCancel) onCancel();
     }
   };
 
-  const confirmArchiveNotification = async (notification: Notification) => {
+  const confirmArchiveNotification = async (notification: Notification, onFinish?: () => void) => {
     // Instant, smooth archive with toast notification
     await archiveNotification(notification.id);
     notify.info('Archived', 'Moved to Archived tab', { duration: 2200 });
+    if (onFinish) onFinish();
   };
 
   const checkInitialPushPermission = async () => {

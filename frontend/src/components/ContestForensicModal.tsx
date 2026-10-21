@@ -356,11 +356,11 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                   const h = Math.floor(estSec / 3600);
                   const m = Math.floor((estSec % 3600) / 60);
                   timeDisplay = h > 0 ? `~${h}h ${m}m` : `~${m}m`;
+                  timingSource = 'ESTIMATED_DIFFICULTY_WEIGHT';
                 } else {
-                  const defaultEstMap: Record<number, string> = { 1: '~14m', 2: '~28m', 3: '~48m', 4: '~1h 12m' };
-                  timeDisplay = defaultEstMap[qIdx] || '~15m';
+                  timeDisplay = null;
+                  timingSource = null;
                 }
-                timingSource = 'ESTIMATED_DIFFICULTY_WEIGHT';
               }
 
               const qTitleMap: Record<number, string> = {
@@ -641,7 +641,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                     <span className="text-xs sm:text-sm font-mono font-black text-indigo-600 dark:text-indigo-400 block">
                       {record.participation_type === 'NOT_PARTICIPATED'
                         ? '0 mins'
-                        : formatContestTime(record) || '14m'}
+                        : formatContestTime(record) || '—'}
                     </span>
                     <span className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 block truncate">
                       {record.problems_solved > 0

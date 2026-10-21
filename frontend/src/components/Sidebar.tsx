@@ -36,6 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const touchStartXRef = React.useRef(0);
+  const touchStartYRef = React.useRef(0);
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isPrincipalOrManagement = ['principal', 'management', 'director'].includes(roleClean);
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
@@ -225,21 +227,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             onClick={onClose}
           />
           
-          {/* Drawer with Native Butter-Smooth Drag-to-Close Gesture */}
+          {/* Drawer with Native Smooth Touch-Aware Navigation */}
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-            drag="x"
-            dragConstraints={{ left: -320, right: 0 }}
-            dragElastic={0.06}
-            onDragEnd={(_e, info) => {
-              if (info.offset.x < -50 || info.velocity.x < -200) {
+            onTouchStart={(e) => {
+              touchStartXRef.current = e.touches[0].clientX;
+              touchStartYRef.current = e.touches[0].clientY;
+            }}
+            onTouchEnd={(e) => {
+              const deltaX = touchStartXRef.current - e.changedTouches[0].clientX;
+              const deltaY = Math.abs(touchStartYRef.current - e.changedTouches[0].clientY);
+              if (deltaX > 70 && deltaX > deltaY * 1.5) {
                 onClose();
               }
             }}
-            className="relative w-[80vw] max-w-[290px] sm:max-w-[310px] h-full shadow-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/80 dark:border-white/[0.08] touch-pan-y"
+            className="relative w-[85vw] max-w-[295px] sm:max-w-[315px] h-full shadow-2xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/80 dark:border-white/[0.08]"
           >
             {/* Region 1: Fixed Compact Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.06] shrink-0 mb-1 relative z-10">
@@ -278,7 +283,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             </div>
 
             {/* Region 2: Independently Scrollable Menu (Compact & Crisp) */}
-            <div className="space-y-4 sm:space-y-5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-2 relative z-10">
+            <div
+              className="space-y-4 sm:space-y-5 overflow-y-auto pr-1 flex-1 min-h-0 py-2 relative z-10 touch-pan-y"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehaviorY: 'contain'
+              }}
+            >
               {sections.map((section, sIdx) => (
                 <div key={sIdx} className="space-y-1.5">
                   <div className="px-1.5 pb-1 flex items-center justify-between">
@@ -288,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                     <span className="w-6 h-px bg-slate-200 dark:bg-white/[0.08] shrink-0" />
                   </div>
 
-                  <nav className="space-y-1">
+                  <nav className="space-y-0.5">
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -307,23 +318,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             setActiveTab(item.id);
                             if (window.innerWidth < 1024) onClose();
                           }}
-                          className={`w-full min-h-[46px] sm:min-h-[50px] flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-left cursor-pointer select-none transition-all duration-200 group active:scale-[0.98] ${
+                          className={`w-full min-h-[38px] sm:min-h-[40px] flex items-center justify-between px-2.5 py-1.5 rounded-xl text-left cursor-pointer select-none transition-all duration-150 group active:scale-[0.98] ${
                             isActive
-                              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold shadow-md shadow-brand-500/25 border border-brand-400/30'
-                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/[0.05] hover:text-brand-600 dark:hover:text-brand-400 border border-transparent'
+                              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold shadow-md shadow-brand-500/20'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.06]'
                           }`}
                         >
                           {/* Left Icon + Label */}
-                          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 flex-1 pr-1.5 relative z-10">
-                            <div className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
+                          <div className="flex items-center space-x-2.5 min-w-0 flex-1 pr-1.5 relative z-10">
+                            <div className={`w-5 h-5 flex items-center justify-center shrink-0 transition-colors ${
                               isActive 
-                                ? 'bg-white/20 text-white shadow-inner scale-105' 
-                                : 'bg-slate-100/90 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 group-hover:bg-brand-500/10 dark:group-hover:bg-brand-500/20 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-xs'
+                                ? 'text-white' 
+                                : 'text-slate-400 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400'
                             }`}>
-                              <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 transition-transform duration-200" />
+                              <Icon className="w-4 h-4 shrink-0" />
                             </div>
                             <span className={`text-xs sm:text-[13px] tracking-tight leading-tight whitespace-nowrap truncate transition-colors ${
-                              isActive ? 'font-bold text-white' : 'font-semibold'
+                              isActive ? 'font-bold text-white' : 'font-medium'
                             }`}>
                               {item.label}
                             </span>
@@ -332,16 +343,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                           {/* Badges & Consistent Right-Aligned Arrow */}
                           <div className="flex items-center space-x-1.5 shrink-0 ml-auto relative z-10">
                             {item.badge && (
-                              <span className={`px-1.5 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider transition-all duration-200 shrink-0 inline-flex items-center gap-1 ${
+                              <span className={`px-1.5 py-0.5 text-[8.5px] font-black rounded uppercase tracking-wider transition-all duration-150 shrink-0 inline-flex items-center gap-1 ${
                                 isActive
-                                  ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
+                                  ? 'bg-white/20 text-white font-bold'
                                   : item.badgeColor === 'purple'
-                                  ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30'
+                                  ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400'
                                   : item.badgeColor === 'indigo'
-                                  ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30'
+                                  ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
                                   : item.badgeColor === 'rose'
-                                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                                  : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                  : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                               }`}>
                                 {item.pulse && (
                                   <span className="flex h-1.5 w-1.5 relative">
@@ -353,10 +364,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                               </span>
                             )}
 
-                            <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 ${
+                            <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-all duration-150 ${
                               isActive
-                                ? 'text-white/90 opacity-100 translate-x-0.5'
-                                : 'opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 text-slate-400 dark:text-slate-500'
+                                ? 'text-white/80 opacity-100 translate-x-0.5'
+                                : 'opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 text-slate-400 dark:text-slate-500'
                             }`} />
                           </div>
                         </button>
@@ -368,11 +379,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             </div>
 
             {/* Region 3: Fixed Mobile Action Bar (Theme & Auth) */}
-            <div className="pt-2 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10 flex items-center gap-1.5">
+            <div className="pt-2 border-t border-slate-100 dark:border-white/[0.06] shrink-0 relative z-10 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="h-[42px] min-h-[42px] sm:h-[46px] sm:min-h-[46px] px-2.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-900 border border-slate-200/80 dark:border-navy-800 transition-all duration-200 flex items-center justify-center flex-1 font-bold text-xs shadow-xs cursor-pointer active:scale-95"
+                className="h-[38px] px-2.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] transition-all duration-150 flex items-center justify-center flex-1 font-semibold text-xs cursor-pointer active:scale-95"
               >
                 {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400 mr-1.5 shrink-0" /> : <Moon className="w-3.5 h-3.5 text-navy-700 dark:text-slate-300 mr-1.5 shrink-0" />}
                 <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
@@ -381,7 +392,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 <button
                   type="button"
                   onClick={() => setShowLogoutConfirm(true)}
-                  className="h-[42px] min-h-[42px] sm:h-[46px] sm:min-h-[46px] px-2.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-bold text-xs shadow-xs cursor-pointer active:scale-95"
+                  className="h-[38px] px-2.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-semibold text-xs cursor-pointer active:scale-95"
                 >
                   <LogOut className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span>Sign Out</span>

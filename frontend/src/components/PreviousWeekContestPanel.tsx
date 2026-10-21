@@ -120,15 +120,26 @@ export const formatContestTime = (r: ParticipationRecord) => {
     return strVal;
   }
 
-  // Fallback duration estimation based on solved count if finish_time is empty
-  if (r.participation_type === 'PUBLIC' || r.participation_type === 'VIRTUAL') {
-    if (r.problems_solved > 0) {
-      const estMins = r.problems_solved === 4 ? '1h 12m' : r.problems_solved === 3 ? '48m' : r.problems_solved === 2 ? '28m' : '14m';
-      return estMins;
+  // Also check if any q_observed_seconds exist on the record
+  const observedSecs = [
+    (r as any).q1_observed_seconds,
+    (r as any).q2_observed_seconds,
+    (r as any).q3_observed_seconds,
+    (r as any).q4_observed_seconds
+  ].filter(s => typeof s === 'number' && s > 0);
+
+  if (observedSecs.length > 0) {
+    const maxSec = Math.max(...observedSecs);
+    const hrs = Math.floor(maxSec / 3600);
+    const mins = Math.floor((maxSec % 3600) / 60);
+    const secs = maxSec % 60;
+    if (hrs > 0) {
+      return `${hrs}h ${mins}m ${secs > 0 ? `${secs}s` : ''}`.trim();
     }
-    return '0 mins';
+    return `${mins}m ${secs}s`;
   }
 
+  // True honest state: If genuine timing telemetry is not recorded yet, return '—' (no fake static 14m/28m)
   return '—';
 };
 
@@ -154,7 +165,7 @@ export const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: str
   if (r.participation_type === 'NOT_PARTICIPATED') return '—';
 
   const durationStr = formatContestTime(r);
-  if (durationStr === '—') return '—';
+  if (!durationStr || durationStr === '—') return '—';
 
   let durationMins = 0;
   if (durationStr.includes('h')) {
@@ -169,8 +180,7 @@ export const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: str
     durationMins = Math.floor(parseInt(durationStr, 10) / 60);
   }
   if (durationMins === 0) {
-    if (r.problems_solved === 0) return '—';
-    durationMins = r.problems_solved === 4 ? 72 : r.problems_solved === 3 ? 48 : r.problems_solved === 2 ? 28 : r.problems_solved === 1 ? 14 : 90;
+    return '—';
   }
 
   const startInfo = getStartTimeInfo(contestTitle);

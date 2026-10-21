@@ -126,12 +126,26 @@ def sync_student_contest_sync(student: Student, db: Session, session_id: Optiona
             4: normalize_slug(official_problems[3].title_slug),
         }
 
+        from backend.services.contest_discovery import IST_TZ
+        c_start_ts = None
+        c_end_ts = None
+        s_date = getattr(session, "session_date", None)
+        if s_date and isinstance(s_date, datetime.date):
+            c_start_dt = datetime.datetime.combine(s_date, datetime.time(8, 0, 0), tzinfo=IST_TZ)
+            c_start_ts = int(c_start_dt.timestamp())
+            c_end_ts = c_start_ts + 5400
+
         ac_slugs = set()
+        q_secs = {1: None, 2: None, 3: None, 4: None}
         for sub in recent_ac:
-            ts = sub.get("timestamp") or 0
+            ts = int(sub.get("timestamp") or 0)
             ts_slug = normalize_slug(sub.get("titleSlug") or sub.get("title") or "")
             if ts_slug:
-                ac_slugs.add(ts_slug)
+                for qi in (1, 2, 3, 4):
+                    if slug_map[qi] == ts_slug:
+                        ac_slugs.add(ts_slug)
+                        if c_start_ts and (c_start_ts - 60 <= ts <= c_end_ts + 300):
+                            q_secs[qi] = max(0, ts - c_start_ts)
 
         q1 = 1 if slug_map[1] in ac_slugs else 0
         q2 = 1 if slug_map[2] in ac_slugs else 0
@@ -188,6 +202,14 @@ def sync_student_contest_sync(student: Student, db: Session, session_id: Optiona
                 q2=final_q2,
                 q3=final_q3,
                 q4=final_q4,
+                q1_observed_seconds=q_secs[1],
+                q2_observed_seconds=q_secs[2],
+                q3_observed_seconds=q_secs[3],
+                q4_observed_seconds=q_secs[4],
+                q1_time_source="OBSERVED_TELEMETRY" if q_secs[1] else None,
+                q2_time_source="OBSERVED_TELEMETRY" if q_secs[2] else None,
+                q3_time_source="OBSERVED_TELEMETRY" if q_secs[3] else None,
+                q4_time_source="OBSERVED_TELEMETRY" if q_secs[4] else None,
                 total_contest_solved=final_solved,
                 contest_score=final_score,
                 contest_rank=hist_rank,
@@ -201,6 +223,14 @@ def sync_student_contest_sync(student: Student, db: Session, session_id: Optiona
             setattr(wpr, "q2", final_q2)
             setattr(wpr, "q3", final_q3)
             setattr(wpr, "q4", final_q4)
+            setattr(wpr, "q1_observed_seconds", q_secs[1])
+            setattr(wpr, "q2_observed_seconds", q_secs[2])
+            setattr(wpr, "q3_observed_seconds", q_secs[3])
+            setattr(wpr, "q4_observed_seconds", q_secs[4])
+            if q_secs[1]: setattr(wpr, "q1_time_source", "OBSERVED_TELEMETRY")
+            if q_secs[2]: setattr(wpr, "q2_time_source", "OBSERVED_TELEMETRY")
+            if q_secs[3]: setattr(wpr, "q3_time_source", "OBSERVED_TELEMETRY")
+            if q_secs[4]: setattr(wpr, "q4_time_source", "OBSERVED_TELEMETRY")
             setattr(wpr, "total_contest_solved", final_solved)
             setattr(wpr, "contest_score", final_score)
             if hist_rank:
@@ -208,6 +238,57 @@ def sync_student_contest_sync(student: Student, db: Session, session_id: Optiona
             if hist_rating:
                 setattr(wpr, "contest_rating", hist_rating)
             setattr(wpr, "fetch_status", "SUCCESS")
+
+        from backend.models import PreviousWeekParticipationRecord
+        pw = db.query(PreviousWeekParticipationRecord).filter_by(session_id=session.id, student_id=student.id).first()
+        valid_secs = [s for s in q_secs.values() if s is not None and s > 0]
+        max_sec = max(valid_secs) if valid_secs else None
+        finish_str = None
+        if max_sec:
+            hrs = max_sec // 3600
+            mins = (max_sec % 3600) // 60
+            secs = max_sec % 60
+            finish_str = f"{hrs}h {mins}m {secs}s" if hrs > 0 else f"{mins}m {secs}s"
+
+        if pw:
+            pw.q1 = final_q1
+            pw.q2 = final_q2
+            pw.q3 = final_q3
+            pw.q4 = final_q4
+            pw.problems_solved = final_solved
+            pw.q1_observed_seconds = q_secs[1]
+            pw.q2_observed_seconds = q_secs[2]
+            pw.q3_observed_seconds = q_secs[3]
+            pw.q4_observed_seconds = q_secs[4]
+            if finish_str:
+                pw.finish_time = finish_str
+        elif final_solved > 0:
+            pw = PreviousWeekParticipationRecord(
+                session_id=session.id,
+                contest_id=session.contest_id or f"weekly-contest-{contest_number}",
+                contest_slug=(session.contest_id or f"weekly-contest-{contest_number}").lower(),
+                contest_title=session.contest_name or f"Weekly Contest {contest_number}",
+                student_id=student.id,
+                leetcode_username=student.username,
+                participation_type="PUBLIC",
+                q1=final_q1,
+                q2=final_q2,
+                q3=final_q3,
+                q4=final_q4,
+                q1_observed_seconds=q_secs[1],
+                q2_observed_seconds=q_secs[2],
+                q3_observed_seconds=q_secs[3],
+                q4_observed_seconds=q_secs[4],
+                problems_solved=final_solved,
+                official_score=final_score,
+                official_rank=hist_rank,
+                finish_time=finish_str,
+                source="auto_contest_sync_telemetry",
+                verification_status="VERIFIED",
+                dataset_version=1,
+                is_active_version=True
+            )
+            db.add(pw)
 
         db.commit()
 

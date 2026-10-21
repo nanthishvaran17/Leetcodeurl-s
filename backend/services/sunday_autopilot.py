@@ -598,6 +598,14 @@ class UniversalWeeklyContestAutopilot:
                     "gate": gate
                 }
 
+            # Run official contest ranking scan to populate exact question timings and finish times
+            try:
+                from backend.services.official_contest_ranking_service import OfficialContestRankingService
+                logger.info(f"[AUTOPILOT] Executing authoritative Official Contest Ranking sync for session {session.id}...")
+                OfficialContestRankingService.scan_and_sync_contest_sync(session.id, db)
+            except Exception as _sync_err:
+                logger.warning(f"[AUTOPILOT_FINALIZATION] Ranking scan note: {_sync_err}")
+
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="POST_CONTEST_SYNC"
             )

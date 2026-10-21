@@ -123,6 +123,24 @@ class OfficialContestRankingService:
                 db.close()
 
     @classmethod
+    def scan_and_sync_contest_sync(
+        cls,
+        session_id: int,
+        db: Optional[Session] = None
+    ) -> Dict[str, Any]:
+        """Synchronous wrapper for schedulers, autopilot, and background threads."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    return pool.submit(asyncio.run, cls.scan_and_sync_contest(session_id, db)).result()
+            else:
+                return loop.run_until_complete(cls.scan_and_sync_contest(session_id, db))
+        except RuntimeError:
+            return asyncio.run(cls.scan_and_sync_contest(session_id, db))
+
+    @classmethod
     async def scan_live_leetcode_ranking(
         cls,
         contest_slug: str,
@@ -176,12 +194,12 @@ class OfficialContestRankingService:
                     contest_start_ts = contest_meta.get("start_time", 0)
                     available_pages = (total_participants + 24) // 25
                     target_pages = min(max_pages, available_pages) if available_pages > 0 else max_pages
-                    logger.info(f"[CONTEST_SCAN] Contest {contest_slug}: Found {len(question_ids)} questions, {total_participants} participants, scanning {target_pages} pages.")
                 else:
-                    target_pages = max_pages
+                    logger.info(f"[CONTEST_SCAN] Page 1 returned status {p1_resp.status_code} (Cloudflare block). Skipping REST, activating fast GraphQL engine immediately.")
+                    return {}
             except Exception as e:
-                logger.warning(f"[CONTEST_SCAN] Metadata probe failed for {contest_slug}: {e}")
-                target_pages = max_pages
+                logger.warning(f"[CONTEST_SCAN] Metadata probe failed for {contest_slug}: {e}. Skipping REST.")
+                return {}
 
             sem = asyncio.Semaphore(concurrency)
 
@@ -330,6 +348,29 @@ class OfficialContestRankingService:
             except Exception as e:
                 logger.warning(f"[GRAPHQL_SCAN] Problem accuracy engine fallback: {e}")
 
+        # Resolve start timestamp dynamically from session or LeetCode schedule
+        if not contest_start_ts:
+            s_obj = db.query(WeeklySession).filter(
+                (WeeklySession.contest_id == contest_slug) | 
+                (WeeklySession.contest_name.ilike(f"%{c_num}%"))
+            ).order_by(WeeklySession.id.desc()).first()
+            if s_obj and s_obj.session_date:
+                try:
+                    s_date_str = str(s_obj.session_date).strip()
+                    from backend.services.contest_discovery import IST_TZ
+                    if "." in s_date_str:
+                        d, m, y = map(int, s_date_str.split("."))
+                    elif "-" in s_date_str:
+                        y, m, d = map(int, s_date_str.split("-"))
+                    else:
+                        d, m, y = map(int, re.findall(r'\d+', s_date_str)[:3])
+                    start_dt = datetime.datetime(y, m, d, 8, 0, 0, tzinfo=IST_TZ)
+                    contest_start_ts = int(start_dt.timestamp())
+                    contest_end_ts = contest_start_ts + 5400
+                    logger.info(f"[GRAPHQL_SCAN] Dynamically derived contest window for {contest_slug} from session date ({s_date_str}): {contest_start_ts} -> {contest_end_ts}")
+                except Exception as _e:
+                    logger.warning(f"[GRAPHQL_SCAN] Session date parse warning: {_e}")
+
         # Default start timestamp if not resolved: 08:00 AM IST of the upcoming Sunday
         if not contest_start_ts:
             from backend.services.contest_discovery import get_upcoming_sunday_date, get_current_ist_datetime, IST_TZ
@@ -425,7 +466,16 @@ class OfficialContestRankingService:
 
                                 total_solves = sum(q_solves)
                                 if is_attended or total_solves > 0:
-                                    finish_s = max([s for s in q_secs if s is not None], default=hist_finish)
+                                    valid_secs = [s for s in q_secs if s is not None and s > 0]
+                                    finish_s = max(valid_secs) if valid_secs else hist_finish
+
+                                    finish_str = None
+                                    if finish_s and finish_s > 0:
+                                        hrs = finish_s // 3600
+                                        mins = (finish_s % 3600) // 60
+                                        secs = finish_s % 60
+                                        finish_str = f"{hrs}h {mins}m {secs}s" if hrs > 0 else f"{mins}m {secs}s"
+
                                     score = (q_solves[0] * 3) + (q_solves[1] * 4) + (q_solves[2] * 5) + (q_solves[3] * 6)
                                     matched_results[student.reg_no] = {
                                         "student_id": student.id,
@@ -435,7 +485,8 @@ class OfficialContestRankingService:
                                         "username": student.username,
                                         "rank": hist_rank,
                                         "score": score,
-                                        "finish_time": finish_s,
+                                        "finish_time": finish_str or (str(finish_s) if finish_s else None),
+                                        "finish_s": finish_s,
                                         "q1": q_solves[0],
                                         "q2": q_solves[1],
                                         "q3": q_solves[2],
@@ -444,7 +495,11 @@ class OfficialContestRankingService:
                                         "q1_secs": q_secs[0],
                                         "q2_secs": q_secs[1],
                                         "q3_secs": q_secs[2],
-                                        "q4_secs": q_secs[3]
+                                        "q4_secs": q_secs[3],
+                                        "q1_observed_seconds": q_secs[0],
+                                        "q2_observed_seconds": q_secs[1],
+                                        "q3_observed_seconds": q_secs[2],
+                                        "q4_observed_seconds": q_secs[3]
                                     }
                                 return
                             elif resp.status_code in (429, 403):
@@ -536,9 +591,18 @@ class OfficialContestRankingService:
                 wpr.q2 = data.get("q2", 0)
                 wpr.q3 = data.get("q3", 0)
                 wpr.q4 = data.get("q4", 0)
+                wpr.q1_observed_seconds = data.get("q1_secs")
+                wpr.q2_observed_seconds = data.get("q2_secs")
+                wpr.q3_observed_seconds = data.get("q3_secs")
+                wpr.q4_observed_seconds = data.get("q4_secs")
+                wpr.q1_time_source = "OBSERVED_TELEMETRY" if data.get("q1_secs") else None
+                wpr.q2_time_source = "OBSERVED_TELEMETRY" if data.get("q2_secs") else None
+                wpr.q3_time_source = "OBSERVED_TELEMETRY" if data.get("q3_secs") else None
+                wpr.q4_time_source = "OBSERVED_TELEMETRY" if data.get("q4_secs") else None
                 wpr.total_contest_solved = data.get("total_solved", 0)
                 wpr.contest_score = data.get("score", 0)
                 wpr.contest_rank = data.get("rank")
+                wpr.finish_time = str(data.get("finish_time")) if data.get("finish_time") else None
                 public_count += 1
                 dept_code = str(wpr.dept or "OTHER").upper()
                 dept_counts[dept_code] = dept_counts.get(dept_code, 0) + 1
@@ -550,9 +614,14 @@ class OfficialContestRankingService:
                 wpr.q2 = 0
                 wpr.q3 = 0
                 wpr.q4 = 0
+                wpr.q1_observed_seconds = None
+                wpr.q2_observed_seconds = None
+                wpr.q3_observed_seconds = None
+                wpr.q4_observed_seconds = None
                 wpr.total_contest_solved = 0
                 wpr.contest_score = 0
                 wpr.contest_rank = None
+                wpr.finish_time = None
                 not_attended_count += 1
 
             pwpr = existing_pwpr.get(s.id)
@@ -572,11 +641,15 @@ class OfficialContestRankingService:
                     problems_solved=data.get("total_solved", 0) if (is_solver and data) else 0,
                     official_score=data.get("score", 0) if (is_solver and data) else 0,
                     official_rank=data.get("rank") if (is_solver and data) else None,
-                    finish_time=str(data.get("finish_time")) if (is_solver and data) else None,
+                    finish_time=str(data.get("finish_time")) if (is_solver and data and data.get("finish_time")) else None,
                     q1_observed_seconds=data.get("q1_secs") if (is_solver and data) else None,
                     q2_observed_seconds=data.get("q2_secs") if (is_solver and data) else None,
                     q3_observed_seconds=data.get("q3_secs") if (is_solver and data) else None,
                     q4_observed_seconds=data.get("q4_secs") if (is_solver and data) else None,
+                    q1_time_source="OBSERVED_TELEMETRY" if (is_solver and data and data.get("q1_secs")) else None,
+                    q2_time_source="OBSERVED_TELEMETRY" if (is_solver and data and data.get("q2_secs")) else None,
+                    q3_time_source="OBSERVED_TELEMETRY" if (is_solver and data and data.get("q3_secs")) else None,
+                    q4_time_source="OBSERVED_TELEMETRY" if (is_solver and data and data.get("q4_secs")) else None,
                     source="official_leetcode_contest_ranking_v2",
                     verification_status="VERIFIED",
                     dataset_version=1,
@@ -592,12 +665,16 @@ class OfficialContestRankingService:
                 pwpr.problems_solved = data.get("total_solved", 0) if (is_solver and data) else 0
                 pwpr.official_score = data.get("score", 0) if (is_solver and data) else 0
                 pwpr.official_rank = data.get("rank") if (is_solver and data) else None
-                pwpr.finish_time = str(data.get("finish_time")) if (is_solver and data) else None
+                pwpr.finish_time = str(data.get("finish_time")) if (is_solver and data and data.get("finish_time")) else None
                 if is_solver and data:
                     pwpr.q1_observed_seconds = data.get("q1_secs")
                     pwpr.q2_observed_seconds = data.get("q2_secs")
                     pwpr.q3_observed_seconds = data.get("q3_secs")
                     pwpr.q4_observed_seconds = data.get("q4_secs")
+                    pwpr.q1_time_source = "OBSERVED_TELEMETRY" if data.get("q1_secs") else None
+                    pwpr.q2_time_source = "OBSERVED_TELEMETRY" if data.get("q2_secs") else None
+                    pwpr.q3_time_source = "OBSERVED_TELEMETRY" if data.get("q3_secs") else None
+                    pwpr.q4_time_source = "OBSERVED_TELEMETRY" if data.get("q4_secs") else None
                 pwpr.source = "official_leetcode_contest_ranking_v2"
                 pwpr.verification_status = "VERIFIED"
 

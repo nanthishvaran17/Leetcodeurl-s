@@ -224,7 +224,7 @@ export const NotificationCenter: React.FC = () => {
       {/* Confirmation Dialog Centered Modal Overlay */}
       {confirmDialogState.isOpen && confirmOptions && (
         <div
-          className="modal-overlay-responsive animate-modal-backdrop z-[99999999] print:hidden no-print"
+          className="fixed inset-0 z-[99999999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 dark:bg-black/80 backdrop-blur-md print:hidden no-print animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget) dismissConfirm(false);
           }}
@@ -233,52 +233,57 @@ export const NotificationCenter: React.FC = () => {
           aria-labelledby="confirm-dialog-title"
         >
           <div
-            className="modal-container-responsive max-w-sm sm:max-w-md w-full mx-4 bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-white/[0.1] rounded-2xl sm:rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden p-5 sm:p-6 space-y-4 animate-modal-content"
+            className="relative max-w-md w-full mx-auto bg-white dark:bg-[#0B0F19] border border-slate-200/90 dark:border-white/[0.12] rounded-3xl shadow-2xl shadow-slate-950/40 overflow-hidden p-6 sm:p-7 space-y-5 sm:space-y-6 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header Icon */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pb-1">
               <div
-                className={`p-2.5 rounded-xl border ${
+                className={`p-3 rounded-2xl border ${
                   confirmOptions.variant === 'danger'
-                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                    ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25 shadow-sm shadow-rose-500/10'
                     : confirmOptions.variant === 'warning'
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                    : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25 shadow-sm shadow-amber-500/10'
+                    : 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/25 shadow-sm shadow-brand-500/10'
                 }`}
               >
                 {confirmOptions.variant === 'danger' ? (
-                  <ShieldAlert className="w-5 h-5" />
+                  <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : confirmOptions.variant === 'warning' ? (
-                  <AlertTriangle className="w-5 h-5" />
+                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <HelpCircle className="w-5 h-5" />
+                  <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </div>
 
               {confirmOptions.category && (
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-white/[0.06]">
                   {confirmOptions.category}
                 </span>
               )}
             </div>
 
             {/* Content Body */}
-            <div className="space-y-1.5">
-              <h3 id="confirm-dialog-title" className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug">
+            <div className="space-y-2.5">
+              <h3 id="confirm-dialog-title" className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
                 {confirmOptions.title}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed break-words">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                 {confirmOptions.message}
               </p>
+              {confirmOptions.detail && (
+                <div className="mt-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-200 leading-relaxed break-words max-h-28 overflow-y-auto">
+                  {confirmOptions.detail}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-white/[0.08]">
+            <div className="flex items-center justify-end gap-3 pt-4 sm:pt-5 border-t border-slate-100 dark:border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => dismissConfirm(false)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
+                className="px-4.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
               >
                 {confirmOptions.cancelLabel || 'Cancel'}
               </button>
@@ -287,12 +292,12 @@ export const NotificationCenter: React.FC = () => {
                 type="button"
                 onClick={() => dismissConfirm(true)}
                 autoFocus
-                className={`px-4.5 py-2 rounded-xl text-xs font-black text-white shadow-md transition-all active:scale-95 cursor-pointer ${
+                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-lg transition-all active:scale-95 cursor-pointer ${
                   confirmOptions.variant === 'danger'
-                    ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
                     : confirmOptions.variant === 'warning'
-                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
-                    : 'bg-brand-600 hover:bg-brand-700 shadow-brand-600/25'
+                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
+                    : 'bg-brand-600 hover:bg-brand-500 shadow-brand-600/30'
                 }`}
               >
                 {confirmOptions.confirmLabel || 'Confirm'}

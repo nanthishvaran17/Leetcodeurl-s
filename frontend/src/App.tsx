@@ -1337,7 +1337,7 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[999999] flex items-start justify-center p-2.5 sm:p-4 pt-[max(0.75rem,env(safe-area-inset-top,12px))] sm:pt-20 pb-[max(0.75rem,env(safe-area-inset-bottom,12px))] sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
@@ -1345,7 +1345,7 @@ export const App: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden my-0 sm:my-auto h-[calc(100dvh-1.5rem)] sm:h-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content isolate"
+            className="w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[94dvh] sm:h-[88vh] max-h-[94dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-white dark:bg-navy-950"
           >
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <StudentProfilePage

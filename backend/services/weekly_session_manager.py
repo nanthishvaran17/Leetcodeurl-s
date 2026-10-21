@@ -839,16 +839,7 @@ def sync_single_historical_session(db: Session, session_id: int):
     # Universal Official LeetCode Contest Ranking Scanner for ALL contests
     logger.info(f"[ROSTER_SYNC] Executing universal official LeetCode contest ranking sync for Session {session_id} (Contest #{c_num})")
     from backend.services.official_contest_ranking_service import OfficialContestRankingService
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                res = pool.submit(asyncio.run, OfficialContestRankingService.scan_and_sync_contest(session_id, db)).result()
-        else:
-            res = loop.run_until_complete(OfficialContestRankingService.scan_and_sync_contest(session_id, db))
-    except RuntimeError:
-        res = asyncio.run(OfficialContestRankingService.scan_and_sync_contest(session_id, db))
+    res = OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db)
 
     if res.get("success"):
         return {"success": True, "status": "COMPLETED", "message": f"Synced Session {session_id} with official LeetCode contest rankings", "data": res}
@@ -1832,6 +1823,22 @@ class SundayLiveContestEngine:
                             wpr.contest_score = new_score
                             wpr.contest_rank = new_rank
                             wpr.finish_time = finish_time
+                            q1_s = solver.get("q1_secs") or solver.get("q1_observed_seconds")
+                            q2_s = solver.get("q2_secs") or solver.get("q2_observed_seconds")
+                            q3_s = solver.get("q3_secs") or solver.get("q3_observed_seconds")
+                            q4_s = solver.get("q4_secs") or solver.get("q4_observed_seconds")
+                            if q1_s is not None:
+                                wpr.q1_observed_seconds = q1_s
+                                wpr.q1_time_source = "OBSERVED_TELEMETRY"
+                            if q2_s is not None:
+                                wpr.q2_observed_seconds = q2_s
+                                wpr.q2_time_source = "OBSERVED_TELEMETRY"
+                            if q3_s is not None:
+                                wpr.q3_observed_seconds = q3_s
+                                wpr.q3_time_source = "OBSERVED_TELEMETRY"
+                            if q4_s is not None:
+                                wpr.q4_observed_seconds = q4_s
+                                wpr.q4_time_source = "OBSERVED_TELEMETRY"
 
                             updates_count += 1
                             self.successful_count += 1

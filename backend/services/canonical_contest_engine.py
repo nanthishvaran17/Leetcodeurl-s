@@ -381,6 +381,10 @@ def _build_canonical_contest_dataset_internal(
     public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
     public_res_map = {r.student_id: r for r in public_results}
 
+    from backend.models import PreviousWeekParticipationRecord
+    pw_results = db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.session_id == session_id).all()
+    pw_res_map = {r.student_id: r for r in pw_results}
+
     virtual_results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
     virtual_res_map = {r.student_id: r for r in virtual_results}
 
@@ -853,6 +857,38 @@ def _build_canonical_contest_dataset_internal(
         stat = stats_map.get(s_id)
         last_sync_dt = getattr(p_res, "last_fetched_at", None) if p_res else None
         utc_sync_dt = ensure_utc(last_sync_dt) if isinstance(last_sync_dt, datetime.datetime) else None
+
+        pw_rec = pw_res_map.get(s_id)
+        q1_sec = (getattr(p_res, "q1_observed_seconds", None) if p_res else None) or (getattr(pw_rec, "q1_observed_seconds", None) if pw_rec else None)
+        q2_sec = (getattr(p_res, "q2_observed_seconds", None) if p_res else None) or (getattr(pw_rec, "q2_observed_seconds", None) if pw_rec else None)
+        q3_sec = (getattr(p_res, "q3_observed_seconds", None) if p_res else None) or (getattr(pw_rec, "q3_observed_seconds", None) if pw_rec else None)
+        q4_sec = (getattr(p_res, "q4_observed_seconds", None) if p_res else None) or (getattr(pw_rec, "q4_observed_seconds", None) if pw_rec else None)
+
+        observed_secs_list = [s for s in [q1_sec, q2_sec, q3_sec, q4_sec] if s is not None and isinstance(s, (int, float)) and s > 0]
+        calc_finish_s = max(observed_secs_list) if observed_secs_list else None
+        real_finish_time = (getattr(pw_rec, "finish_time", None) if pw_rec else None) or (str(calc_finish_s) if calc_finish_s is not None else None)
+
+        # Temporary timing object wrapper to pass actual observed seconds to _build_q_timing
+        class _TimingProxy:
+            pass
+        t_proxy = _TimingProxy()
+        t_proxy.q1 = q1_val
+        t_proxy.q2 = q2_val
+        t_proxy.q3 = q3_val
+        t_proxy.q4 = q4_val
+        t_proxy.q1_observed_seconds = q1_sec
+        t_proxy.q2_observed_seconds = q2_sec
+        t_proxy.q3_observed_seconds = q3_sec
+        t_proxy.q4_observed_seconds = q4_sec
+        t_proxy.q1_estimated_seconds = None
+        t_proxy.q2_estimated_seconds = None
+        t_proxy.q3_estimated_seconds = None
+        t_proxy.q4_estimated_seconds = None
+        t_proxy.q1_time_source = "OBSERVED_LIVE" if q1_sec else None
+        t_proxy.q2_time_source = "OBSERVED_LIVE" if q2_sec else None
+        t_proxy.q3_time_source = "OBSERVED_LIVE" if q3_sec else None
+        t_proxy.q4_time_source = "OBSERVED_LIVE" if q4_sec else None
+
         row_item = {
             "s_no": idx,
             "student_id": s_id,
@@ -884,7 +920,12 @@ def _build_canonical_contest_dataset_internal(
             "q2": q2_val,
             "q3": q3_val,
             "q4": q4_val,
-            "q_timing": __import__("backend.routes.weekly_contests", fromlist=["_build_q_timing"])._build_q_timing(p_res) if (p_res and canon_status == "PUBLIC") else None,
+            "finish_time": real_finish_time,
+            "q1_observed_seconds": q1_sec,
+            "q2_observed_seconds": q2_sec,
+            "q3_observed_seconds": q3_sec,
+            "q4_observed_seconds": q4_sec,
+            "q_timing": __import__("backend.routes.weekly_contests", fromlist=["_build_q_timing"])._build_q_timing(t_proxy) if (is_participant and canon_status == "PUBLIC") else None,
             "total_solved": solved_val,
             "solved": f"{solved_val}/4" if (is_participant and solved_val is not None) else ("0/4" if canon_status == "NOT_ATTENDED" else "—"),
             "total_contest_solved": solved_val,

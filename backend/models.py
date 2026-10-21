@@ -349,6 +349,7 @@ class WeeklyPublicResult(Base):
     contest_rank = Column(Integer, nullable=True)
     contest_rating = Column(Float, nullable=True)
     rating_change = Column(Float, default=0.0)
+    finish_time = Column(String(50), nullable=True)
 
     fetch_status = Column(String(30), default="PENDING") # SUCCESS, PARTIAL_SUCCESS, FETCH_ERROR, PENDING
     data_fetch_status = Column(String(30), default="DATA_UNAVAILABLE") # SUCCESS, FETCH_FAILED, USERNAME_NOT_FOUND, DATA_UNAVAILABLE

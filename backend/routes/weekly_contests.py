@@ -69,10 +69,7 @@ def _build_q_timing(r: Any) -> Dict[str, Any]:
             display = f"~{h}h {m}m" if h > 0 else f"~{m}m"
             result[f"q{q_idx}"] = {"status": status, "seconds": est_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "DYNAMIC_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True}
         elif q_bin == 1:
-            fallback_sec = default_est_seconds.get(q_idx, 900)
-            h = fallback_sec // 3600; m = (fallback_sec % 3600) // 60
-            display = f"~{h}h {m}m" if h > 0 else f"~{m}m"
-            result[f"q{q_idx}"] = {"status": "SOLVED", "seconds": fallback_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "DYNAMIC_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True}
+            result[f"q{q_idx}"] = {"status": "SOLVED", "seconds": None, "source": "TELEMETRY_PENDING", "method": None, "confidence": "NONE", "display": "—", "approximate": False}
         else:
             result[f"q{q_idx}"] = {"status": "NOT_SOLVED", "seconds": None, "source": SOURCE_UNAVAILABLE, "method": None, "confidence": "NONE", "display": None, "approximate": False}
 
@@ -1252,6 +1249,11 @@ def get_session_matrix(
                 "q2": r.get("q2") if is_att and r.get("q2") is not None else "—",
                 "q3": r.get("q3") if is_att and r.get("q3") is not None else "—",
                 "q4": r.get("q4") if is_att and r.get("q4") is not None else "—",
+                "finish_time": r.get("finish_time"),
+                "q1_observed_seconds": r.get("q1_observed_seconds"),
+                "q2_observed_seconds": r.get("q2_observed_seconds"),
+                "q3_observed_seconds": r.get("q3_observed_seconds"),
+                "q4_observed_seconds": r.get("q4_observed_seconds"),
                 "q_timing": r.get("q_timing"),
                 "total_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
                 "total_contest_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
@@ -1909,17 +1911,7 @@ def _run_sync_in_background(session_id: int):
         else:
             logger.info(f"Starting universal official LeetCode ranking sync for Contest {c_name} (Session {session_id})")
             from backend.services.official_contest_ranking_service import OfficialContestRankingService
-            import asyncio
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    import concurrent.futures
-                    with concurrent.futures.ThreadPoolExecutor() as pool:
-                        pool.submit(asyncio.run, OfficialContestRankingService.scan_and_sync_contest(session_id, db)).result()
-                else:
-                    loop.run_until_complete(OfficialContestRankingService.scan_and_sync_contest(session_id, db))
-            except RuntimeError:
-                asyncio.run(OfficialContestRankingService.scan_and_sync_contest(session_id, db))
+            OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db)
 
             _CONTEST_RAM_CACHE.clear()
             from backend.cache import cache
