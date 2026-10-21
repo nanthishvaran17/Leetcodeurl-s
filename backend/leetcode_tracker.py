@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import io
 import time
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, cast, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -566,7 +566,7 @@ async def get_or_force_sync_single_student(
 
 # DUAL-SYNC AUTOMATION PIPELINE (JOB 1 @ 10:00 AM & JOB 2 @ 10:00 PM IST) 
 @router.post("/run-dual-sync")
-async def execute_dual_sync_job(job_type: str = Query("morning", enum=["morning", "evening"]), db: Session = Depends(get_db)):
+async def execute_dual_sync_job(job_type: Literal["morning", "evening"] = Query("morning"), db: Session = Depends(get_db)):
     """
     Executes automated Dual-Sync Contest Processing:
     - morning: Sunday 10:00 AM IST (Post-Official Contest Scrape & Snapshot)

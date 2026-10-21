@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Literal
 from sqlalchemy import func, desc, nullslast
 
 from backend.database import get_db
@@ -21,7 +21,7 @@ async def get_leaderboard(
     year_level: Optional[str] = Query(None),
     section_id: Optional[int] = Query(None),
     search: Optional[str] = Query(None),
-    sort_by: str = Query("solved", enum=["solved", "progress", "rating", "streak", "easy", "medium", "hard"]),
+    sort_by: Literal["solved", "progress", "rating", "streak", "easy", "medium", "hard"] = Query("solved"),
     limit: int = Query(100, ge=1, le=500),
     page: Optional[int] = Query(None, ge=1),
     paginated: Optional[bool] = False,

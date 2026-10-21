@@ -71,6 +71,9 @@ export default defineConfig({
         '**/public/*.apk',
         '**/.git/**',
         '**/dist/**',
+        '**/dist-electron/**',
+        '**/release/**',
+        '**/releases/**',
       ]
     }
   },
