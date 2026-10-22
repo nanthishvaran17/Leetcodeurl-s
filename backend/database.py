@@ -73,11 +73,11 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     pg_connect_args = {
-        "connect_timeout": 3,   # 3s connect timeout for fast fallback in cloud environments
+        "connect_timeout": int(os.environ.get("DB_CONNECT_TIMEOUT", 15)),   # 15s connect timeout for cloud environments
         "keepalives": 1,
-        "keepalives_idle": 10,   # Probe after 10s idle to keep cloud proxies active
-        "keepalives_interval": 3, # Send probes every 3 seconds
-        "keepalives_count": 3,
+        "keepalives_idle": int(os.environ.get("DB_KEEPALIVES_IDLE", 30)),   # Probe after 30s idle to keep cloud proxies active
+        "keepalives_interval": int(os.environ.get("DB_KEEPALIVES_INTERVAL", 10)), # Send probes every 10 seconds
+        "keepalives_count": int(os.environ.get("DB_KEEPALIVES_COUNT", 5)),
         "sslmode": "require",
     }
 

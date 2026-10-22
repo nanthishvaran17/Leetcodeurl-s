@@ -10,15 +10,19 @@ jobs:
   leetcode_sync_worker:
     name: Run Full LeetCode Sync Pipeline
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     env:
       PYTHONPATH: .
+      PYTHONUNBUFFERED: "1"
       DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL }}
       ENVIRONMENT: production
       TIMEZONE: Asia/Kolkata
       CONCURRENCY_WORKERS: 15
       REQUEST_DELAY: 0.3
+      DB_CONNECT_TIMEOUT: 15
+      DB_POOL_TIMEOUT: 45
+      DB_POOL_RECYCLE: 120
 
     steps:
       - name: Checkout Code Repository
@@ -62,16 +66,16 @@ jobs:
           import asyncio, time, sys
           for attempt in range(1, 4):
               try:
-                  from backend.database import SessionLocal
+                  from backend.database import engine
+                  engine.dispose()
                   from backend.sync_engine import run_full_sync
-                  with SessionLocal() as db:
-                      asyncio.run(run_full_sync(db))
+                  asyncio.run(run_full_sync())
                   print('✅ Sync worker completed successfully.')
                   break
               except Exception as e:
                   print(f'Attempt {attempt}/3 sync error: {e}')
                   if attempt == 3:
                       sys.exit(1)
-                  time.sleep(5)
+                  time.sleep(10)
           "
 

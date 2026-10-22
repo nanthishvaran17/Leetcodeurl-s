@@ -734,165 +734,188 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 15, per
     except Exception as _mig_err:
         logger.warning(f"[SYNC_ENGINE] Pre-flight schema migration check note: {_mig_err}")
 
-    db = SessionLocal()
-    try:
-        query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    # Fetch active student metadata upfront with short-lived session
+    with SessionLocal() as init_db:
+        query = init_db.query(
+            Student.id,
+            Student.reg_no,
+            Student.username,
+            Student.leetcode_url
+        ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
         student_rows = query.order_by(Student.id.asc()).all()
-        student_ids = [row[0] for row in student_rows]
 
-        if limit and limit > 0:
-            student_ids = student_ids[:limit]
+    if limit and limit > 0:
+        student_rows = student_rows[:limit]
 
-        total_count = len(student_ids)
-        # Use pre_run_id if provided (so Firestore document matches what frontend subscribed to)
-        run_id = pre_run_id or f"sync_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        sync_tracker.reset(total_count, run_id=run_id)
+    total_count = len(student_rows)
+    # Use pre_run_id if provided (so Firestore document matches what frontend subscribed to)
+    run_id = pre_run_id or f"sync_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    sync_tracker.reset(total_count, run_id=run_id)
 
-        logger.info(f"[INFO] Starting batch LeetCode sync for {total_count} students (Concurrency: {max_workers}, RunID: {run_id})...")
-        sync_tracker.recent_logs.append(f"[INFO] Starting sync for {total_count} students, RunID: {run_id}...")
+    logger.info(f"[INFO] Starting batch LeetCode sync for {total_count} students (Concurrency: {max_workers}, RunID: {run_id})...")
+    sync_tracker.recent_logs.append(f"[INFO] Starting sync for {total_count} students, RunID: {run_id}...")
 
-        queue = asyncio.Queue()
-        for s_id in student_ids:
-            queue.put_nowait(s_id)
+    queue = asyncio.Queue()
+    for row in student_rows:
+        queue.put_nowait({
+            "id": row[0],
+            "reg_no": row[1],
+            "username": row[2],
+            "leetcode_url": row[3]
+        })
 
-        async def worker(worker_id: int):
-            while not queue.empty():
+    async def worker(worker_id: int):
+        while not queue.empty():
+            try:
+                item = queue.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+
+            student_id = item["id"]
+            reg_no = item["reg_no"]
+            username = item["username"]
+            leetcode_url = item["leetcode_url"]
+
+            max_retries = 3
+            base_delay = 0.1
+
+            for attempt in range(1, max_retries + 1):
+                url_or_username = str(leetcode_url or username or "")
+                logger.info(f"[INFO] Fetching Reg: {reg_no} | Username: {username or url_or_username} (Attempt {attempt}/{max_retries})")
+
+                # Perform network fetch WITHOUT holding any database session open!
+                # This prevents Postgres connection pool starvation and SSL timeout drops.
+                stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
+                is_ok = stats.get("status") in ["success", "OK"]
+                is_mismatch = stats.get("status") == "MISMATCH"
+
+                # Dedicated short-lived session strictly for persisting results
+                w_db = SessionLocal()
                 try:
-                    student_id = queue.get_nowait()
-                except asyncio.QueueEmpty:
-                    break
+                    updated_st = sync_single_student_db(student_id, stats, w_db, commit=False)
 
-                max_retries = 3
-                base_delay = 0.1
-
-                for attempt in range(1, max_retries + 1):
-                    w_db = SessionLocal()
-                    try:
-                        st = w_db.query(Student).filter(Student.id == student_id).first()
-                        if not st:
-                            break
-
-                        url_or_username = str(st.leetcode_url or st.username or "")
+                    if is_ok:
+                        w_db.commit() # Commit the successful sync
+                        w_db.refresh(updated_st)
                         
-                        logger.info(f"[INFO] Fetching Reg: {st.reg_no} | Username: {st.username or url_or_username} (Attempt {attempt}/{max_retries})")
-
-                        stats = await fetch_leetcode_profile(url_or_username, force_refresh=True)
-                        is_ok = stats.get("status") in ["success", "OK"]
-                        is_mismatch = stats.get("status") == "MISMATCH"
-
-                        # Update student DB with Old Data Fallback rule (Deferred commit)
-                        updated_st = sync_single_student_db(int(cast(Any, st).id), stats, w_db, commit=False)
-
-                        if is_ok:
-                            w_db.commit() # Commit the successful sync
-                            w_db.refresh(updated_st)
-                            
-                            log_msg = f"[INFO] Success - {st.username or st.reg_no} (Solved: {stats.get('total_solved')}, Time: {stats.get('fetch_duration')}s)"
-                            logger.info(log_msg)
-                            sync_tracker.record_completed(True, log_msg, is_mismatch=False)
-                            
-                            try:
-                                from backend.websocket_manager import manager
-                                stats_obj = updated_st.stats
-                                asyncio.create_task(manager.broadcast({
-                                    "type": "STUDENT_UPDATED",
-                                    "student_id": updated_st.id,
-                                    "version": updated_st.version if hasattr(updated_st, 'version') else 0,
-                                    "changes": {
-                                        "name": updated_st.name,
-                                        "stats": {
-                                            "sync_status": stats_obj.sync_status if stats_obj else "pending",
-                                            "total_solved": stats_obj.total_solved
-                                        }
-                                    }
-                                }))
-                            except Exception:
-                                pass
-                            
-                            break # Exit retry loop on success
-                        else:
-                            err_detail = stats.get("error") or stats.get("error_message") or "Unknown error"
-                            
-                            try:
-                                from backend.websocket_manager import manager
-                                asyncio.create_task(manager.broadcast({
-                                    "type": "STUDENT_UPDATED",
-                                    "student_id": st.id,
-                                    "version": st.version if hasattr(st, 'version') else 0,
-                                    "changes": {
-                                        "name": st.name,
-                                        "stats": {
-                                            "sync_status": "retrying" if attempt < max_retries else "failed"
-                                        }
-                                    }
-                                }))
-                            except Exception:
-                                pass
-                                
-                            if attempt < max_retries:
-                                delay = base_delay * (2 ** (attempt - 1))
-                                log_msg = f"[WARN] Failed - {st.username or st.reg_no} ({err_detail}). Retrying in {delay}s..."
-                                logger.warning(log_msg)
-                                await asyncio.sleep(delay)
-                            else:
-                                log_msg = f"[ERROR] Permanently Failed - {st.username or st.reg_no} after {max_retries} attempts ({err_detail})"
-                                logger.error(log_msg)
-                                try:
-                                    w_db.commit() # Commit the failed status
-                                except Exception:
-                                    w_db.rollback()
-                                sync_tracker.record_completed(False, log_msg, is_mismatch=is_mismatch)
-
-                    except Exception as ex:
+                        log_msg = f"[INFO] Success - {username or reg_no} (Solved: {stats.get('total_solved')}, Time: {stats.get('fetch_duration')}s)"
+                        logger.info(log_msg)
+                        sync_tracker.record_completed(True, log_msg, is_mismatch=False)
+                        
                         try:
-                            w_db.rollback()
+                            from backend.websocket_manager import manager
+                            stats_obj = updated_st.stats
+                            asyncio.create_task(manager.broadcast({
+                                "type": "STUDENT_UPDATED",
+                                "student_id": updated_st.id,
+                                "version": updated_st.version if hasattr(updated_st, 'version') else 0,
+                                "changes": {
+                                    "name": updated_st.name,
+                                    "stats": {
+                                        "sync_status": stats_obj.sync_status if stats_obj else "pending",
+                                        "total_solved": stats_obj.total_solved
+                                    }
+                                }
+                            }))
                         except Exception:
                             pass
+                        
+                        break # Exit retry loop on success
+                    else:
+                        err_detail = stats.get("error") or stats.get("error_message") or "Unknown error"
+                        
+                        try:
+                            from backend.websocket_manager import manager
+                            asyncio.create_task(manager.broadcast({
+                                "type": "STUDENT_UPDATED",
+                                "student_id": student_id,
+                                "changes": {
+                                    "stats": {
+                                        "sync_status": "retrying" if attempt < max_retries else "failed"
+                                    }
+                                }
+                            }))
+                        except Exception:
+                            pass
+                            
                         if attempt < max_retries:
                             delay = base_delay * (2 ** (attempt - 1))
-                            logger.error(f"[ERROR] Worker error for student {student_id}: {ex}. Retrying in {delay}s...")
+                            log_msg = f"[WARN] Failed - {username or reg_no} ({err_detail}). Retrying in {delay}s..."
+                            logger.warning(log_msg)
                             await asyncio.sleep(delay)
                         else:
-                            log_msg = f"[ERROR] Worker permanently failed for student {student_id}: {ex}"
+                            log_msg = f"[ERROR] Permanently Failed - {username or reg_no} after {max_retries} attempts ({err_detail})"
                             logger.error(log_msg)
-                            sync_tracker.record_completed(False, log_msg)
-                    finally:
-                        w_db.close()
-                
-                queue.task_done()
-                await asyncio.sleep(per_worker_delay)
+                            try:
+                                w_db.commit() # Commit the failed status
+                            except Exception:
+                                w_db.rollback()
+                            sync_tracker.record_completed(False, log_msg, is_mismatch=is_mismatch)
 
-        workers = [asyncio.create_task(worker(i)) for i in range(max_workers)]
-        await asyncio.gather(*workers)
+                except Exception as ex:
+                    try:
+                        w_db.rollback()
+                    except Exception:
+                        pass
+                    if attempt < max_retries:
+                        delay = base_delay * (2 ** (attempt - 1))
+                        logger.error(f"[ERROR] Worker error for student {student_id}: {ex}. Retrying in {delay}s...")
+                        await asyncio.sleep(delay)
+                    else:
+                        log_msg = f"[ERROR] Worker permanently failed for student {student_id}: {ex}"
+                        logger.error(log_msg)
+                        sync_tracker.record_completed(False, log_msg)
+                finally:
+                    w_db.close()
+            
+            queue.task_done()
+            await asyncio.sleep(per_worker_delay)
 
-        # Recalculate college & department rankings after batch complete
-        logger.info("[INFO] Recalculating rankings and badges...")
-        update_all_rankings_and_badges(db)
+    workers = [asyncio.create_task(worker(i)) for i in range(max_workers)]
+    await asyncio.gather(*workers)
 
-        # Sync 100% updated data directly to Cloud Firestore & trigger WebSocket update
+    # Dispose connection pool to clear any stale/closed sockets from the long run
+    try:
+        from backend.database import engine
+        engine.dispose()
+    except Exception:
+        pass
+
+    # Recalculate college & department rankings after batch complete using a fresh connection
+    logger.info("[INFO] Recalculating rankings and badges...")
+    for rank_attempt in range(1, 4):
         try:
-            from backend.assets.sync_firestore import sync_database_to_firestore
-            sync_database_to_firestore()
-        except Exception as _fs_err:
-            logger.warning(f"Firestore sync note: {_fs_err}")
+            with SessionLocal() as rank_db:
+                update_all_rankings_and_badges(rank_db)
+            break
+        except Exception as _rank_err:
+            logger.warning(f"Rankings recalculation attempt {rank_attempt}/3 note: {_rank_err}")
+            if rank_attempt == 3:
+                logger.error(f"Failed to update rankings after 3 attempts: {_rank_err}")
+            else:
+                await asyncio.sleep(2)
 
-        try:
-            from backend.websocket_manager import manager
-            asyncio.create_task(manager.broadcast({"type": "LEADERBOARD_UPDATED", "timestamp": time.time()}))
-        except Exception as _ws_err:
-            logger.warning(f"WebSocket broadcast note: {_ws_err}")
+    # Sync 100% updated data directly to Cloud Firestore & trigger WebSocket update
+    try:
+        from backend.assets.sync_firestore import sync_database_to_firestore
+        sync_database_to_firestore()
+    except Exception as _fs_err:
+        logger.warning(f"Firestore sync note: {_fs_err}")
 
-        sync_tracker.finish()
-        summary_log = f"[INFO] Sync completed! Total: {sync_tracker.total}, Success: {sync_tracker.success}, Failed: {sync_tracker.failed}"
-        logger.info(summary_log)
-        sync_tracker.recent_logs.append(summary_log)
+    try:
+        from backend.websocket_manager import manager
+        asyncio.create_task(manager.broadcast({"type": "LEADERBOARD_UPDATED", "timestamp": time.time()}))
+    except Exception as _ws_err:
+        logger.warning(f"WebSocket broadcast note: {_ws_err}")
 
-        result = sync_tracker.to_dict()
-        result["runId"] = run_id
-        return result
+    sync_tracker.finish()
+    summary_log = f"[INFO] Sync completed! Total: {sync_tracker.total}, Success: {sync_tracker.success}, Failed: {sync_tracker.failed}"
+    logger.info(summary_log)
+    sync_tracker.recent_logs.append(summary_log)
 
-    finally:
-        db.close()
+    result = sync_tracker.to_dict()
+    result["runId"] = run_id
+    return result
 
 
 async def run_full_sync(db: Optional[Session] = None, limit: Optional[int] = None, max_workers: int = 15) -> Dict[str, Any]:
