@@ -4670,67 +4670,34 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {/* Header — Clickable Accordion Trigger */}
                 <div
                   onClick={() => setIsAuditLogExpanded(!isAuditLogExpanded)}
-                  className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-3 cursor-pointer group select-none"
+                  className="border-b border-slate-100 dark:border-navy-800 pb-3 cursor-pointer group select-none space-y-2.5"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 group-hover:scale-105 transition-transform">
-                      <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
-                        <span className="group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  {/* Row 1: Icon + Full Title + View/Collapse Button */}
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 group-hover:scale-105 transition-transform">
+                        <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
                           Login Security Audit Log
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0">
-                          {getSecurityReportConfig().personRoleLabel} Audit
-                        </span>
-                        {loginHistory.length > 0 && (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border border-slate-200 dark:border-navy-700 shrink-0">
-                            {loginHistory.length} Sessions
-                          </span>
-                        )}
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
-                        {isAuditLogExpanded
-                          ? 'Click header to collapse access ledger'
-                          : 'Tamper-evident chronological access ledger • Tap to view all sessions'}
-                      </p>
+                        </h3>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+                          {isAuditLogExpanded
+                            ? 'Click header to collapse access ledger'
+                            : 'Tamper-evident chronological access ledger • Tap to view all sessions'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePrintSecurityAuditReport();
-                      }}
-                      className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 transition-colors border border-slate-300 dark:border-navy-700 cursor-pointer flex items-center gap-1.5 active:scale-95"
-                      title="Print or Save Official Institutional PDF Report"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                      <span className="hidden sm:inline">Print</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExportSecurityAuditExcel();
-                      }}
-                      className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors border border-emerald-300 dark:border-emerald-800 cursor-pointer flex items-center gap-1.5 active:scale-95"
-                      title="Export beautifully formatted Excel report"
-                    >
-                      <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span className="hidden sm:inline">Excel</span>
-                    </button>
-                    <div className="w-px h-5 bg-slate-200 dark:bg-navy-700 mx-0.5 hidden xs:block" />
+                    {/* View / Collapse Toggle Button */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsAuditLogExpanded(!isAuditLogExpanded);
                       }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 border ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 border shrink-0 ${
                         isAuditLogExpanded
                           ? 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/80 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-800'
                           : 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 shadow-sm shadow-purple-600/30'
@@ -4743,6 +4710,47 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         }`}
                       />
                     </button>
+                  </div>
+
+                  {/* Row 2: Badges (Left) & Print / Excel Actions (Right) */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0">
+                        {getSecurityReportConfig().personRoleLabel} Audit
+                      </span>
+                      {loginHistory.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-mono font-bold bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border border-slate-200 dark:border-navy-700 shrink-0">
+                          {loginHistory.length} Sessions
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePrintSecurityAuditReport();
+                        }}
+                        className="px-2.5 sm:px-3 py-1 rounded-xl text-[11px] font-black bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 transition-colors border border-slate-300 dark:border-navy-700 cursor-pointer flex items-center gap-1 active:scale-95"
+                        title="Print or Save Official Institutional PDF Report"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                        <span>Print</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExportSecurityAuditExcel();
+                        }}
+                        className="px-2.5 sm:px-3 py-1 rounded-xl text-[11px] font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors border border-emerald-300 dark:border-emerald-800 cursor-pointer flex items-center gap-1 active:scale-95"
+                        title="Export beautifully formatted Excel report"
+                      >
+                        <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Excel</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -5841,7 +5849,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* 4. MASTER SAVE & ACTIONS — STICKY BOTTOM BAR */}
-        <div className="fixed bottom-0 left-0 right-0 z-[500] bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_25px_rgba(0,0,0,0.1)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3">
+        <div className="fixed bottom-[80px] md:bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_25px_rgba(0,0,0,0.1)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
               <Info className="w-4 h-4 text-brand-600 shrink-0" />
@@ -5892,8 +5900,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </button>
           </div>
         </div>
-        {/* Bottom padding so form content not hidden behind sticky bar */}
-        <div className="h-28 sm:h-24" />
+        {/* Bottom padding so form content not hidden behind sticky bar & mobile nav */}
+        <div className="h-44 sm:h-28" />
 
       </form>
       {/* MODAL: MENTEE PROFILE */}
