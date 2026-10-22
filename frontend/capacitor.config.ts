@@ -28,8 +28,7 @@ const config: CapacitorConfig = {
   // NO server.url — app loads from bundled assets inside APK
   // API calls use VITE_API_URL baked into the build
   server: {
-    androidScheme: 'https',
-    cleartext: true
+    androidScheme: 'https'
   }
 };
 

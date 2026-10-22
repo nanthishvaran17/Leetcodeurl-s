@@ -158,7 +158,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
   };
 
   return (
-    <div className="space-y-8 py-2 animate-fade-in">
+    <div className="space-y-8 py-2 animate-fade-in pb-36 sm:pb-24">
 
       {/* Header Banner - Sleek Dark Indigo & Brand Gradient */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-950 via-indigo-950 to-navy-950 text-white p-5 sm:p-8 shadow-2xl border border-brand-500/30">

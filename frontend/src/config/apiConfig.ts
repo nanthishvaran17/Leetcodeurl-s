@@ -8,9 +8,9 @@ const RAW_ENV_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BA
 
 export const PRODUCTION_BACKEND_URL = RAW_ENV_URL 
   ? RAW_ENV_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
-  : 'http://13.53.231.6'; // Primary AWS production backend
+  : 'https://leetcodeurl-s-roan.vercel.app'; // Primary production backend (HTTPS)
 
-export const FALLBACK_BACKEND_URL = 'http://13.53.231.6';
+export const FALLBACK_BACKEND_URL = 'https://leetcodeurl-s-roan.vercel.app';
 
 
 /**

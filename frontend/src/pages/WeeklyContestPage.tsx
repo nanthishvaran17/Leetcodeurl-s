@@ -1947,7 +1947,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
   return (
-    <div className="space-y-8 sm:space-y-12 pt-0 animate-fade-in pb-24 md:pb-12">
+    <div className="space-y-6 sm:space-y-10 pt-0 animate-fade-in pb-40 sm:pb-32 md:pb-16">
 
       {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
@@ -2024,11 +2024,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           </div>
 
-          {/* Right Controls: Unified Session Selector & Inline Compact Live Monitor Toggle */}
-          <div className="w-full lg:w-auto flex items-center gap-1.5 sm:gap-2 bg-white/[0.06] dark:bg-slate-900/50 p-1.5 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-md shadow-md shrink-0">
+          {/* Right Controls: Unified Responsive Session Selector & Live Monitor Toggle */}
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/[0.06] dark:bg-slate-900/50 p-2 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-md shadow-md shrink-0">
 
             {/* Session Dropdown Selector with Delete Option */}
-            <div className="flex items-center gap-1 flex-1 min-w-0 sm:w-[260px]">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:min-w-[280px]">
               <div className="min-w-0 flex-1">
                 <GlobalFilter
                   options={displaySessions.map((s) => {
@@ -2064,7 +2064,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   showSearch={true}
                   variant="dark"
                   className="w-full !rounded-xl border border-white/15 !shadow-sm !bg-slate-900/80 hover:!bg-slate-800/90 !text-white text-xs font-bold"
-                  dropdownWidth="w-[280px]"
+                  dropdownWidth="w-full sm:w-[320px]"
                 />
               </div>
               
@@ -2072,15 +2072,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-1.5 sm:p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg sm:rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
+                  className="p-2 sm:p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Admin Live Monitor Toggle — Inline Sleek Pill Button */}
+            {/* Admin Live Monitor Toggle — Responsive Pill Button */}
             {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && (
               <button
                 onClick={() => {
@@ -2096,7 +2096,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg sm:rounded-xl transition-all cursor-pointer border active:scale-[0.98] whitespace-nowrap shadow-sm shrink-0 ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border active:scale-[0.98] whitespace-nowrap shadow-sm shrink-0 w-full sm:w-auto ${
                   showAdminMonitor
                     ? 'bg-rose-600/90 hover:bg-rose-600 text-white border-rose-500/50 shadow-rose-900/30'
                     : 'bg-slate-800/90 hover:bg-slate-800 text-emerald-400 hover:text-white border-emerald-500/30 hover:border-emerald-500/60'

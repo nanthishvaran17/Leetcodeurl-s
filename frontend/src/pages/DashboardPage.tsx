@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Users, Activity, AlertTriangle, FileSpreadsheet, RefreshCw, Plus, PieChart, ShieldCheck, FileText, CheckCircle2, Play, Clock, History, AlertOctagon, TrendingUp, Database, Brain, Building2, Award } from 'lucide-react';
+import { Users, Activity, AlertTriangle, FileSpreadsheet, RefreshCw, Plus, PieChart, ShieldCheck, FileText, CheckCircle2, Play, Clock, History, AlertOctagon, TrendingUp, Database, Brain, Building2, Award, Sparkles, Zap, ArrowRight, ChevronDown, X, Check } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
 const PerformanceChart = React.lazy(() => import('../components/PerformanceChart').then(m => ({ default: m.PerformanceChart })));
@@ -18,7 +18,10 @@ import {
   useDepartmentsQuery, 
   useDataQualityQuery, 
   useSystemHealthQuery, 
-  useSyncStatusQuery 
+  useSyncStatusQuery,
+  useCurrentContestSessionQuery,
+  useContestSessionsListQuery,
+  usePost930SolversQuery
 } from '../hooks/useDashboardQueries';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
@@ -44,7 +47,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const { data: dataQuality } = useDataQualityQuery();
   const { data: systemHealth } = useSystemHealthQuery();
   const { data: syncStatus } = useSyncStatusQuery();
+  const { data: currentContestSession } = useCurrentContestSessionQuery();
+  const { data: contestSessionsList = [] } = useContestSessionsListQuery();
+  const { data: post930Data } = usePost930SolversQuery();
   const { data: students = [], isLoading: studentsLoading, isError: studentsError, refetch: refetchStudents } = useStudentsQuery();
+
+  // Dynamic Weekly Contest Selection State (Allows switching between WC 525, 524, 523, 515, etc.)
+  const [selectedContestSessionId, setSelectedContestSessionId] = useState<number | null>(null);
+  const [showContestPicker, setShowContestPicker] = useState<boolean>(false);
 
   useEffect(() => {
     const handlePull = () => {
@@ -180,7 +190,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       const activeStudents = ds ? ds.active : (dept.active_students ?? dept.active_count ?? 0);
 
       // Weekly Contest Attended count for this department:
-      const contestAttendedCount = ds && ds.contestAttended > 0 ? ds.contestAttended : (dept.contest_attended ?? dept.post_930_solvers ?? activeStudents);
+      const contestAttendedCount = ds && ds.contestAttended > 0 ? ds.contestAttended : (dept.contest_attended ?? dept.post_930_solvers ?? 0);
 
       // Contest Participation Rate (Weekly Contest Attendance / Post-9:30 AM solvers)
       const partRate = totalStudents > 0 ? Math.round((contestAttendedCount / totalStudents) * 10000) / 100 : (dept.participation_rate || 0);
@@ -483,10 +493,47 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   });
 
-  // Fallback for attendedSolversCount if individual student contest status is pending initial load:
-  const actualContestSolvers = attendedSolversCount > 0 
+  // Resolve active weekly contest session with actual attendance
+  const latestCompletedContest = useMemo(() => {
+    if (!Array.isArray(contestSessionsList) || contestSessionsList.length === 0) return null;
+    const withParticipants = contestSessionsList.filter(
+      (s: any) => ((s.officialParticipants || 0) + (s.virtualParticipants || 0)) > 0
+    );
+    if (withParticipants.length > 0) return withParticipants[0];
+    const finalized = contestSessionsList.filter(
+      (s: any) => (s.status || '').toUpperCase() === 'FINALIZED'
+    );
+    return finalized[0] || null;
+  }, [contestSessionsList]);
+
+  // Active weekly contest session (prefers user-selected, then LIVE session on Sunday, then current session, then latest completed)
+  const isSundayLive = currentContestSession?.status === 'LIVE';
+  const currentSessionParticipants = (currentContestSession?.officialParticipants || 0) + (currentContestSession?.virtualParticipants || 0);
+
+  const activeContestSession = useMemo(() => {
+    if (selectedContestSessionId && Array.isArray(contestSessionsList)) {
+      const match = contestSessionsList.find((s: any) => s.sessionId === selectedContestSessionId);
+      if (match) return match;
+    }
+    if (isSundayLive) return currentContestSession;
+    if (currentSessionParticipants > 0) return currentContestSession;
+    return latestCompletedContest || currentContestSession;
+  }, [selectedContestSessionId, contestSessionsList, isSundayLive, currentContestSession, currentSessionParticipants, latestCompletedContest]);
+
+  const sessionParticipants = (activeContestSession?.officialParticipants || 0) + (activeContestSession?.virtualParticipants || 0);
+
+  // Real Weekly Contest Solvers:
+  // If user selected a specific contest, show that contest's participants.
+  // Otherwise if contest is Sunday LIVE, prioritize live roster attendance.
+  const actualContestSolvers = (isSundayLive && attendedSolversCount > 0 && (!selectedContestSessionId || selectedContestSessionId === currentContestSession?.sessionId))
     ? attendedSolversCount 
-    : ((summary as any)?.post_930_solvers_count ?? activeStudents);
+    : (sessionParticipants > 0 ? sessionParticipants : 0);
+
+  // Real Post-9:30 Solvers count from backend audit engine (never activeStudents!)
+  const actualPost930Count = Number(
+    post930Data?.summary?.students_detected ??
+    (Array.isArray(post930Data?.students) ? post930Data.students.length : 0)
+  );
 
   const notStartedStudents = Math.max(0, totalStudents - activeStudents);
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
@@ -630,128 +677,217 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
 
-      {/* 2. EXECUTIVE BENTO KPI METRICS — Modern Responsive Architecture */}
-      <div className="stagger-2 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Metric 1: Total Enrolled */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-brand-500/50 dark:hover:border-brand-500/40 transition-all duration-300 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-brand-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-brand-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-brand-500/15 to-indigo-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 flex items-center justify-center shadow-2xs">
-              <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+      {/* 2. EXECUTIVE BENTO KPI METRICS — Ultra-Modern Luminous Glass Architecture (2x2 on Mobile, 4 on Desktop) */}
+      <div className="stagger-2 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4.5">
+        
+        {/* Metric 1: Total Enrolled — Sapphire Executive */}
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-gradient-to-br from-white via-blue-50/40 to-indigo-50/30 dark:from-[#0c1424] dark:via-[#0f1b33] dark:to-[#08101e] backdrop-blur-2xl border-2 border-blue-200/80 dark:border-blue-500/25 shadow-sm hover:shadow-xl hover:shadow-blue-500/15 hover:border-blue-400 dark:hover:border-blue-400/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between select-none">
+          {/* Luminous aura behind card */}
+          <div className="absolute -top-10 -right-10 w-24 h-24 sm:w-28 sm:h-28 bg-blue-500/15 dark:bg-blue-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+
+          <div>
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/30 group-hover:scale-110 transition-transform">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-blue-100/90 dark:bg-blue-950/90 text-blue-700 dark:text-blue-300 border border-blue-300/80 dark:border-blue-800 shadow-2xs">
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500" />
+                <span>Roster</span>
+              </span>
             </div>
-            <span className="px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-200/60 dark:border-brand-500/20 shrink-0">
-              <span className="sm:hidden">Roster</span>
-              <span className="hidden sm:inline">Institutional</span>
-            </span>
-          </div>
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+
+            <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
               Enrolled Roster
             </div>
-            <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
+            
+            <div className="flex items-baseline gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+              <span className="text-xl sm:text-3.5xl font-display font-black text-slate-900 dark:text-white tracking-tight">
                 {fmtCount(canonicalTotal ?? totalStudents)}
               </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500">Students</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Students</span>
             </div>
-            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              {departments.length > 0 ? `${departments.length} Depts Covered` : 'Verified Roster Identity'}
-            </p>
+          </div>
+
+          <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-navy-800/80 flex items-center justify-between text-[9px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1 sm:gap-1.5 truncate">
+              <span className="hidden xs:flex -space-x-1 shrink-0">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500 ring-1 ring-white dark:ring-navy-900" />
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-indigo-500 ring-1 ring-white dark:ring-navy-900" />
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-cyan-500 ring-1 ring-white dark:ring-navy-900" />
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple-500 ring-1 ring-white dark:ring-navy-900" />
+              </span>
+              <span className="truncate">{departments.length > 0 ? `${departments.length} Depts Covered` : 'Verified Roster'}</span>
+            </span>
+            <span className="text-[8px] sm:text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/70 px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded border border-blue-200/60 dark:border-blue-900/60 shrink-0">NEC</span>
           </div>
         </div>
 
-        {/* Metric 2: Active Profiles */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-emerald-500/50 dark:hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-emerald-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+        {/* Metric 2: Active Profiles — Emerald Live Matrix */}
+        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/30 dark:from-[#0c1424] dark:via-[#09221c] dark:to-[#08101e] backdrop-blur-2xl border-2 border-emerald-200/80 dark:border-emerald-500/25 shadow-sm hover:shadow-xl hover:shadow-emerald-500/15 hover:border-emerald-400 dark:hover:border-emerald-400/60 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between select-none">
+          <div className="absolute -top-10 -right-10 w-24 h-24 sm:w-28 sm:h-28 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-green-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+
+          <div>
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-100/90 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800 shadow-2xs">
+                <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-emerald-500" />
+                </span>
+                <span>Live Sync</span>
+              </span>
             </div>
-            <div className="flex items-center px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20 shrink-0">
-              <span>Live Sync</span>
-            </div>
-          </div>
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+
+            <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Active Profiles
             </div>
-            <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
-              <span className="text-xl sm:text-3xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+            
+            <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap">
+              <span className="text-xl sm:text-3.5xl font-display font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                 {fmtCount(activeStudents)}
               </span>
               {totalStudents > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-[9px] sm:text-[11px] font-black font-mono text-emerald-600 dark:text-emerald-400">
+                <span className="px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/90 text-[9px] sm:text-xs font-black font-mono text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-700/80">
                   {`${Math.round((activeStudents / totalStudents) * 1000) / 10}%`}
                 </span>
               )}
             </div>
-            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              <span className="sm:hidden">Active Profiles</span>
-              <span className="hidden sm:inline">Synchronized LeetCode Handles</span>
-            </p>
+          </div>
+
+          <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-navy-800/80 space-y-1 sm:space-y-1.5">
+            <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-1.5 overflow-hidden border border-emerald-500/10">
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full transition-all duration-700" 
+                style={{ width: `${Math.min(100, Math.round((activeStudents / (totalStudents || 1)) * 100))}%` }} 
+              />
+            </div>
+            <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              <span className="truncate">Synchronized</span>
+              <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold shrink-0">{activeStudents}/{totalStudents}</span>
+            </div>
           </div>
         </div>
 
-        {/* Metric 3: Post-9:30 Solvers */}
+        {/* Metric 3: Contest Solvers — Amber Sunset Flame (Dynamic Contest Switcher up to WC 525) */}
         <div 
           onClick={() => onNavigateTab('weekly-contest')}
-          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-amber-500/50 dark:hover:border-amber-500/40 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between"
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-gradient-to-br from-white via-amber-50/40 to-orange-50/30 dark:from-[#0c1424] dark:via-[#201509] dark:to-[#08101e] backdrop-blur-2xl border-2 border-amber-200/80 dark:border-amber-500/25 shadow-sm hover:shadow-xl hover:shadow-amber-500/15 hover:border-amber-400 dark:hover:border-amber-400/60 hover:-translate-y-1 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none"
         >
-          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-amber-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-2xs">
-              <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+          <div className="absolute -top-10 -right-10 w-24 h-24 sm:w-28 sm:h-28 bg-amber-500/15 dark:bg-amber-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 opacity-90 group-hover:opacity-100 transition-opacity" />
+
+          <div>
+            <div className="flex items-center justify-between mb-2 sm:mb-3 gap-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/30 group-hover:scale-110 transition-transform shrink-0">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+
+              {/* Mobile Native-Style Contest Switcher Trigger */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowContestPicker(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-100/90 dark:bg-amber-950/90 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800 shadow-2xs hover:bg-amber-200/90 dark:hover:bg-amber-900/60 transition-all active:scale-95 cursor-pointer"
+                title="Tap to select Weekly Contest session"
+              >
+                <span className="truncate max-w-[70px] sm:max-w-[105px]">
+                  {activeContestSession?.contestName ? activeContestSession.contestName.replace('Weekly Contest', 'WC') : 'WC 525'}
+                </span>
+                <ChevronDown className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              </button>
             </div>
-            <span className="px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20 shrink-0">
-              <span className="sm:hidden">Verified</span>
-              <span className="hidden sm:inline">Verified Solves</span>
-            </span>
-          </div>
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-              Post-9:30 Solvers
+
+            <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Contest Solvers
             </div>
-            <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-xl sm:text-3xl font-display font-black text-amber-600 dark:text-amber-400 tracking-tight">
+            
+            <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+              <span className="text-xl sm:text-3.5xl font-display font-black text-amber-600 dark:text-amber-400 tracking-tight">
                 {fmtCount(actualContestSolvers)}
               </span>
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-[9px] sm:text-[11px] font-bold text-amber-700 dark:text-amber-300">Sunday</span>
+              <span className="px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/90 text-[9px] sm:text-xs font-black text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/80 truncate max-w-[85px] sm:max-w-none">
+                {activeContestSession?.contestName ? activeContestSession.contestName.replace('Weekly Contest', 'WC') : 'Sunday'}
+              </span>
             </div>
-            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              <span className="sm:hidden text-amber-600 dark:text-amber-400 font-bold">View Solvers →</span>
-              <span className="hidden sm:inline">Timestamp Authenticated • View Solvers →</span>
-            </p>
+          </div>
+
+          <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-navy-800/80 flex items-center justify-between text-[9px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
+              {activeContestSession?.sessionDate ? `Sun ${activeContestSession.sessionDate}` : 'Sunday Contest'}
+            </span>
+            <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] font-black text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform shrink-0">
+              <span>View Solvers</span>
+              <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            </span>
           </div>
         </div>
 
-        {/* Metric 4: Contest Rate */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-lg hover:border-indigo-500/50 dark:hover:border-indigo-500/40 transition-all duration-300 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-bl from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-indigo-500/20 transition-all duration-300" />
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-indigo-500/15 to-purple-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shadow-2xs">
-              <Award className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+        {/* Metric 4: Contest Rate — Electric Violet */}
+        <div 
+          onClick={() => onNavigateTab('weekly-contest')}
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-5 bg-gradient-to-br from-white via-purple-50/40 to-indigo-50/30 dark:from-[#0c1424] dark:via-[#190f2b] dark:to-[#08101e] backdrop-blur-2xl border-2 border-purple-200/80 dark:border-purple-500/25 shadow-sm hover:shadow-xl hover:shadow-purple-500/15 hover:border-purple-400 dark:hover:border-purple-400/60 hover:-translate-y-1 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none"
+        >
+          <div className="absolute -top-10 -right-10 w-24 h-24 sm:w-28 sm:h-28 bg-purple-500/15 dark:bg-purple-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 opacity-90 group-hover:opacity-100 transition-opacity" />
+
+          <div>
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-500/30 group-hover:scale-110 transition-transform">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider ${
+                isSundayLive 
+                  ? 'bg-emerald-100 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700' 
+                  : 'bg-purple-100/90 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-300/80 dark:border-purple-800'
+              } shadow-2xs`}>
+                {isSundayLive ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Live Sunday</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-500" />
+                    <span>Contest</span>
+                  </>
+                )}
+              </span>
             </div>
-            <span className="px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20 shrink-0">
-              <span className="sm:hidden">Contest</span>
-              <span className="hidden sm:inline">Contest Pace</span>
-            </span>
-          </div>
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+
+            <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Contest Rate
             </div>
-            <div className="flex items-baseline gap-1.5 sm:gap-2">
-              <span className="text-xl sm:text-3xl font-display font-black text-indigo-600 dark:text-indigo-300 tracking-tight">
+            
+            <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5 sm:mt-1">
+              <span className="text-xl sm:text-3.5xl font-display font-black text-purple-600 dark:text-purple-300 tracking-tight">
                 {contestParticipationRate}%
               </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-500">Cohort</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate max-w-[85px] sm:max-w-none">
+                {actualContestSolvers} / {totalStudents}
+              </span>
             </div>
-            <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-0.5 truncate">
-              <span className="sm:hidden">Engagement Rate</span>
-              <span className="hidden sm:inline">Weekly Contest Engagement Index</span>
-            </p>
+          </div>
+
+          <div className="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-100 dark:border-navy-800/80 space-y-1 sm:space-y-1.5">
+            <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-1.5 overflow-hidden border border-purple-500/10">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500 rounded-full transition-all duration-700" 
+                style={{ width: `${Math.min(100, Number(contestParticipationRate) || 0)}%` }} 
+              />
+            </div>
+            <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              <span className="truncate">{activeContestSession?.contestName || 'Weekly Contest'}</span>
+              <span className="font-mono text-purple-600 dark:text-purple-400 font-bold shrink-0">{contestParticipationRate}% Rate</span>
+            </div>
           </div>
         </div>
+
       </div>
 
       {/* REAL-TIME GROWTH & DELTA ENGINE */}
@@ -1203,6 +1339,119 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         isOpen={showFailedModal}
         onClose={() => setShowFailedModal(false)}
       />
+
+      {/* 📱 MODERN MOBILE BOTTOM SHEET FOR CONTEST PICKER */}
+      {showContestPicker && (
+        <div 
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-md animate-fade-in p-0 sm:p-4"
+          onClick={() => setShowContestPicker(false)}
+        >
+          <div 
+            className="w-full sm:max-w-md bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-slate-800/80 overflow-hidden max-h-[85vh] sm:max-h-[75vh] flex flex-col animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* iOS style drag handle indicator */}
+            <div className="pt-3 pb-1 flex justify-center sm:hidden">
+              <div className="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full" />
+            </div>
+
+            {/* Bottom Sheet Header */}
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+              <div>
+                <h3 className="text-base sm:text-lg font-display font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <Award className="w-5 h-5 text-amber-500" />
+                  <span>Select Weekly Contest</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  Pick a session to see solvers & participation rates
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowContestPicker(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* List of Contests */}
+            <div className="overflow-y-auto p-3 space-y-2 flex-1 overscroll-contain">
+              {contestSessionsList.map((s: any) => {
+                const solversCount = (s.officialParticipants || 0) + (s.virtualParticipants || 0);
+                const isSelected = activeContestSession?.sessionId === s.sessionId;
+                const contestTitle = s.contestName || `Weekly Contest ${s.sessionCode}`;
+
+                return (
+                  <button
+                    key={s.sessionId}
+                    type="button"
+                    onClick={() => {
+                      setSelectedContestSessionId(s.sessionId);
+                      setShowContestPicker(false);
+                    }}
+                    className={`w-full p-3.5 rounded-2xl flex items-center justify-between transition-all text-left cursor-pointer active:scale-[0.98] ${
+                      isSelected
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-600/70 shadow-sm'
+                        : 'bg-slate-50 hover:bg-slate-100/80 dark:bg-slate-900/60 dark:hover:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800/70'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-display font-black text-xs shrink-0 ${
+                        isSelected
+                          ? 'bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {s.contestName ? s.contestName.replace(/[^0-9]/g, '') : '#'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                          {contestTitle}
+                        </div>
+                        <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                          {s.sessionDate ? `Sun ${s.sessionDate}` : 'Sunday Contest'}
+                          {s.status === 'LIVE' && <span className="ml-2 text-emerald-500 font-bold">• LIVE NOW</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-black font-mono ${
+                        solversCount > 0
+                          ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300/80 dark:border-emerald-700/80'
+                          : 'bg-slate-200/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      }`}>
+                        {solversCount} Solvers
+                      </span>
+
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Bottom Sheet Footer */}
+            <div className="p-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 flex items-center justify-between text-xs text-slate-500">
+              <span className="font-semibold">{contestSessionsList.length} Sessions Available</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedContestSessionId(null);
+                  setShowContestPicker(false);
+                }}
+                className="font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
+              >
+                Reset to Latest
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

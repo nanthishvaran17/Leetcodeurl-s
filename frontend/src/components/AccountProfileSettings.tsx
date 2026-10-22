@@ -10,12 +10,13 @@ import {
   AlertTriangle, Sliders, ShieldX, Copy, CheckCheck,
   RotateCw, RefreshCcw, Volume2, VolumeX, Sparkles, Search, UploadCloud,
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
-  Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft
+  Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft, HelpCircle
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
+import { SwipeHandle } from './SwipeHandle';
 import { DynamicQRCode } from './DynamicQRCode';
 import { QRCodeCanvas } from 'qrcode.react';
 import Cropper from 'react-easy-crop';
@@ -23,7 +24,6 @@ import 'react-easy-crop/react-easy-crop.css';
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { Capacitor } from '@capacitor/core';
 import { downloadManager } from '../services/download/downloadManager';
-import { FaceScanModal } from './FaceScanModal';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -344,6 +344,410 @@ const parseUserAgentDetails = (ua: string = ''): ParsedUA => {
   };
 };
 
+const DELETION_REASONS = [
+  {
+    id: 'Graduated / Course Completed',
+    title: 'Graduated / Course Completed',
+    subtitle: 'Completed academic program or graduated from college',
+    badge: 'Alumni',
+    badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+    icon: GraduationCap,
+    iconColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+  },
+  {
+    id: 'Privacy / Data concerns',
+    title: 'Privacy / Data concerns',
+    subtitle: 'I want my personal telemetry & account completely erased',
+    badge: 'Privacy',
+    badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+    icon: ShieldAlert,
+    iconColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+  },
+  {
+    id: 'Switching institution / accounts',
+    title: 'Switching institution / accounts',
+    subtitle: 'Transferring to another university, college, or new account',
+    badge: 'Transfer',
+    badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    icon: Building2,
+    iconColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+  },
+  {
+    id: 'Not using the app anymore',
+    title: 'Not using the app anymore',
+    subtitle: 'No longer practicing competitive programming or inactive',
+    badge: 'Inactive',
+    badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    icon: Clock,
+    iconColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+  },
+  {
+    id: 'Other',
+    title: 'Other',
+    subtitle: 'Different personal reason or institutional feedback',
+    badge: 'Feedback',
+    badgeColor: 'bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    icon: MessageSquare,
+    iconColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+  }
+];
+
+const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
+  const { logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [confirmationText, setConfirmationText] = useState('');
+  const [reason, setReason] = useState('');
+  const [otherNote, setOtherNote] = useState('');
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const selectedReasonObj = DELETION_REASONS.find(r => r.id === reason);
+
+  const handleDelete = async () => {
+    if (confirmationText.trim().toUpperCase() !== 'DELETE MY ACCOUNT') {
+      notify.error('Please type DELETE MY ACCOUNT to confirm deletion.');
+      return;
+    }
+
+    setIsDeleting(true);
+    const finalReason = reason === 'Other' && otherNote.trim()
+      ? `Other: ${otherNote.trim()}`
+      : reason.trim();
+
+    try {
+      await api.delete('/auth/account/delete-my-account', {
+        data: {
+          confirmation_text: confirmationText.trim(),
+          reason: finalReason || undefined
+        }
+      });
+      notify.success('Your account has been deleted permanently.');
+      localStorage.clear();
+      try {
+        await logout();
+      } catch {
+        // ignore logout errors
+      }
+      window.location.href = '/login';
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || 'Failed to delete account. Please try again.';
+      notify.error(msg);
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div id="delete-account-section" className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-rose-200/90 dark:border-rose-900/50 shadow-sm space-y-4">
+      <div className="flex items-center justify-between border-b border-rose-100 dark:border-rose-900/40 pb-3 flex-wrap gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/25">
+            <Trash2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </div>
+          <div>
+            <h3 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider">
+              Danger Zone
+            </h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Permanent account deletion</p>
+          </div>
+        </div>
+        <span className="text-[10px] font-black uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-800">
+          Play Store Compliance
+        </span>
+      </div>
+
+      <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+        In accordance with Google Play Store data safety and privacy regulations, you have the right to permanently delete your account and associated personal data at any time.
+      </p>
+
+      <div className="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-[11px] font-bold text-rose-800 dark:text-rose-300 space-y-1.5">
+        <div className="flex items-center gap-1.5 font-black uppercase tracking-wider text-[10px]">
+          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+          What happens when you delete:
+        </div>
+        <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300 text-[11px]">
+          <li>All active login sessions and biometric tokens are immediately revoked.</li>
+          <li>Your profile name, contact info, and device tokens are permanently wiped.</li>
+          <li>Aggregated institutional problem counts remain anonymized for academic records.</li>
+          <li>This action is immediate and cannot be undone.</li>
+        </ul>
+      </div>
+
+      {!isOpen ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="w-full py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete My Account Permanently
+        </button>
+      ) : (
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-rose-300 dark:border-rose-800/80 space-y-3.5 animate-fade-in">
+          {/* Mobile Reason Selector Field */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                Reason for leaving (Optional)
+              </label>
+              {reason && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReason('');
+                    setOtherNote('');
+                  }}
+                  className="text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 transition-colors cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsSheetOpen(true)}
+              className={`w-full py-2.5 px-3.5 rounded-2xl border-2 flex items-center justify-between gap-3 text-left transition-all duration-200 cursor-pointer group active:scale-[0.99] ${
+                selectedReasonObj
+                  ? 'bg-white dark:bg-navy-900 border-rose-300 dark:border-rose-800/80 shadow-xs'
+                  : 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                {selectedReasonObj ? (
+                  <>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${selectedReasonObj.iconColor}`}>
+                      <selectedReasonObj.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">
+                          {selectedReasonObj.title}
+                        </span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md border ${selectedReasonObj.badgeColor}`}>
+                          {selectedReasonObj.badge}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        {reason === 'Other' && otherNote ? otherNote : selectedReasonObj.subtitle}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
+                      <HelpCircle className="w-4 h-4" />
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                        Tap to choose a reason...
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                        Optional feedback for why you are leaving
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-lg border border-rose-200/80 dark:border-rose-900/60 group-hover:bg-rose-100 transition-colors">
+                  {selectedReasonObj ? 'Change' : 'Choose'}
+                </span>
+                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+              </div>
+            </button>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
+              Type <span className="font-mono bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded text-rose-800 dark:text-rose-200">DELETE MY ACCOUNT</span> to confirm
+            </label>
+            <input
+              type="text"
+              value={confirmationText}
+              onChange={(e) => setConfirmationText(e.target.value)}
+              placeholder="DELETE MY ACCOUNT"
+              className="w-full text-xs font-black font-mono tracking-wider px-3 py-2.5 rounded-xl bg-white dark:bg-navy-900 border-2 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 placeholder:text-slate-400 focus:outline-hidden focus:border-rose-600"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={() => {
+                setIsOpen(false);
+                setConfirmationText('');
+                setReason('');
+                setOtherNote('');
+              }}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isDeleting || confirmationText.trim().toUpperCase() !== 'DELETE MY ACCOUNT'}
+              onClick={handleDelete}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 dark:disabled:bg-rose-900/50 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-rose-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Confirm Delete</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Sheet Drawer for Reason Selection */}
+      <GlobalModalBackdrop
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        className="flex items-end sm:items-center justify-center sm:p-4 z-[100000]"
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full sm:max-w-md bg-white dark:bg-navy-900 rounded-t-[28px] sm:rounded-3xl border-t-2 sm:border-2 border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col max-h-[88vh] sm:max-h-[85vh] animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 overflow-hidden"
+        >
+          {/* Mobile Swipe Handle */}
+          <SwipeHandle onClose={() => setIsSheetOpen(false)} />
+
+          {/* Sheet Header */}
+          <div className="px-5 pb-3 pt-1 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20">
+                <ShieldAlert className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  Reason for Leaving
+                </h3>
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  Select why you are closing your account (optional)
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsSheetOpen(false)}
+              className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Options List */}
+          <div className="p-4 space-y-2 overflow-y-auto max-h-[55vh] custom-scrollbar">
+            {DELETION_REASONS.map((opt) => {
+              const isSelected = reason === opt.id;
+              const OptIcon = opt.icon;
+
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    setReason(opt.id);
+                  }}
+                  className={`w-full p-3.5 rounded-2xl flex items-center justify-between gap-3 text-left transition-all duration-150 cursor-pointer active:scale-[0.98] border-2 ${
+                    isSelected
+                      ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-500 text-rose-950 dark:text-rose-100 shadow-sm'
+                      : 'bg-slate-50/70 dark:bg-navy-950/50 border-slate-200/80 dark:border-navy-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-navy-800/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      isSelected
+                        ? 'bg-rose-500 text-white border-rose-600 shadow-xs'
+                        : opt.iconColor
+                    }`}>
+                      <OptIcon className="w-4.5 h-4.5" />
+                    </div>
+
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-black truncate ${isSelected ? 'text-rose-900 dark:text-rose-100' : 'text-slate-900 dark:text-white'}`}>
+                          {opt.title}
+                        </span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md border shrink-0 ${opt.badgeColor}`}>
+                          {opt.badge}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-bold line-clamp-1 mt-0.5 ${
+                        isSelected ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-500 dark:text-slate-400'
+                      }`}>
+                        {opt.subtitle}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Radio Indicator */}
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${
+                    isSelected
+                      ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
+                      : 'border-slate-300 dark:border-navy-600'
+                  }`}>
+                    {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* Custom note when 'Other' is chosen */}
+            {reason === 'Other' && (
+              <div className="pt-2 animate-in fade-in duration-150">
+                <label className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 block mb-1">
+                  Tell us more (Optional)
+                </label>
+                <textarea
+                  value={otherNote}
+                  onChange={(e) => setOtherNote(e.target.value)}
+                  placeholder="Share any additional details or feedback..."
+                  rows={2}
+                  className="w-full text-xs font-semibold px-3 py-2 rounded-xl bg-white dark:bg-navy-950 border border-purple-300 dark:border-purple-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-hidden focus:border-purple-500"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Sheet Footer Action */}
+          <div className="p-4 border-t border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSheetOpen(false)}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-rose-600/25 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Check className="w-4 h-4 stroke-[2.5]" />
+              Confirm Reason
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setReason('');
+                setOtherNote('');
+                setIsSheetOpen(false);
+              }}
+              className="w-full py-1.5 text-center text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            >
+              Skip / Leave blank
+            </button>
+          </div>
+        </div>
+      </GlobalModalBackdrop>
+    </div>
+  );
+};
+
 export const AccountProfileSettings: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotification();
@@ -573,13 +977,6 @@ export const AccountProfileSettings: React.FC = () => {
     );
   };
 
-  // Camera Face ID Biometrics State
-  const [faceIdEnabled, setFaceIdEnabled] = useState<boolean>(false);
-  const [faceEnrolledAt, setFaceEnrolledAt] = useState<string | null>(null);
-  const [isFaceModalOpen, setIsFaceModalOpen] = useState<boolean>(false);
-  const [faceModalMode, setFaceModalMode] = useState<'enroll' | 'test'>('enroll');
-  const [isRemovingFace, setIsRemovingFace] = useState<boolean>(false);
-  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState<boolean>(false);
   const [showClearNotesConfirm, setShowClearNotesConfirm] = useState<boolean>(false);
   const [showIdCardModal, setShowIdCardModal] = useState<boolean>(false);
   const [isSavingCard, setIsSavingCard] = useState<boolean>(false);
@@ -602,39 +999,6 @@ export const AccountProfileSettings: React.FC = () => {
       if (listenerHandle?.remove) listenerHandle.remove();
     };
   }, [showIdCardModal]);
-
-  const fetchFaceStatus = async () => {
-    try {
-      const res = await api.get('/auth/face/status');
-      if (res.data?.success) {
-        setFaceIdEnabled(Boolean(res.data.face_id_enabled));
-        setFaceEnrolledAt(res.data.face_enrolled_at || null);
-      }
-    } catch {
-      // ignore
-    }
-  };
-
-  useEffect(() => {
-    fetchFaceStatus();
-  }, []);
-
-  const handleRemoveFace = async () => {
-    setIsRemovingFace(true);
-    try {
-      const res = await api.delete('/auth/face/remove');
-      if (res.data?.success) {
-        setFaceIdEnabled(false);
-        setFaceEnrolledAt(null);
-        setShowDeactivateConfirm(false);
-        notify.success('Face ID has been deactivated.', '', { category: 'ADMIN' });
-      }
-    } catch (err: any) {
-      notify.error(err?.message || 'Failed to remove Face ID.', '', { category: 'ADMIN' });
-    } finally {
-      setIsRemovingFace(false);
-    }
-  };
 
   const [totpCodeInput, setTotpCodeInput] = useState<string>('');
   const [totpSecret, setTotpSecret] = useState<string>('');
@@ -668,6 +1032,7 @@ export const AccountProfileSettings: React.FC = () => {
 
   // Security Login History Audit
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
+  const [isAuditLogExpanded, setIsAuditLogExpanded] = useState<boolean>(false);
 
   // Advanced Mobile & Desktop Device Detection
   const [clientInfo, setClientInfo] = useState(() => {
@@ -4059,73 +4424,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <div className="divide-y divide-slate-100 dark:divide-navy-800/80">
 
-                  {/* VAULT ROW 1: Camera Face ID Recognition */}
-                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
-                    <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
-                        <Camera className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white">Camera Face ID Recognition</h4>
-                          {faceIdEnabled ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
-                              <CheckCircle className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" /> Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300">
-                              Optional
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">
-                          {faceIdEnabled
-                            ? `Face login active. Enrolled: ${faceEnrolledAt ? new Date(faceEnrolledAt).toLocaleDateString() : 'Active session'}.`
-                            : 'Sign in hands-free using your webcam facial geometry.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
-                      {faceIdEnabled ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFaceModalMode('test');
-                              setIsFaceModalOpen(true);
-                            }}
-                            className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
-                          >
-                            <Camera className="w-3.5 h-3.5" />
-                            <span>Test Scan</span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isRemovingFace}
-                            onClick={() => setShowDeactivateConfirm(true)}
-                            className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 text-[11px] font-black transition-all cursor-pointer inline-flex items-center gap-1"
-                          >
-                            {isRemovingFace ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                            <span>Deactivate</span>
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFaceModalMode('enroll');
-                            setIsFaceModalOpen(true);
-                          }}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
-                        >
-                          <Camera className="w-3.5 h-3.5" />
-                          <span>Activate Face ID</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
                   {/* VAULT ROW 2: Passkeys & Hardware Biometrics */}
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
                     <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
@@ -4369,101 +4667,208 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
               {/* Login Security Audit Log — Modern Banking / Google Security Event Feed */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20">
+                {/* Header — Clickable Accordion Trigger */}
+                <div
+                  onClick={() => setIsAuditLogExpanded(!isAuditLogExpanded)}
+                  className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-3 cursor-pointer group select-none"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 group-hover:scale-105 transition-transform">
                       <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                     </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                        <span>Login Security Audit Log</span>
-                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    <div className="min-w-0">
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
+                        <span className="group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          Login Security Audit Log
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0">
                           {getSecurityReportConfig().personRoleLabel} Audit
                         </span>
+                        {loginHistory.length > 0 && (
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-300 border border-slate-200 dark:border-navy-700 shrink-0">
+                            {loginHistory.length} Sessions
+                          </span>
+                        )}
                       </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Tamper-evident chronological access ledger</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+                        {isAuditLogExpanded
+                          ? 'Click header to collapse access ledger'
+                          : 'Tamper-evident chronological access ledger • Tap to view all sessions'}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={handlePrintSecurityAuditReport}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePrintSecurityAuditReport();
+                      }}
                       className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 transition-colors border border-slate-300 dark:border-navy-700 cursor-pointer flex items-center gap-1.5 active:scale-95"
                       title="Print or Save Official Institutional PDF Report"
                     >
                       <Printer className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                      <span className="hidden sm:inline">Print Report</span>
+                      <span className="hidden sm:inline">Print</span>
                     </button>
                     <button
                       type="button"
-                      onClick={handleExportSecurityAuditExcel}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExportSecurityAuditExcel();
+                      }}
                       className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors border border-emerald-300 dark:border-emerald-800 cursor-pointer flex items-center gap-1.5 active:scale-95"
                       title="Export beautifully formatted Excel report"
                     >
                       <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span className="hidden sm:inline">Excel Report</span>
+                      <span className="hidden sm:inline">Excel</span>
+                    </button>
+                    <div className="w-px h-5 bg-slate-200 dark:bg-navy-700 mx-0.5 hidden xs:block" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsAuditLogExpanded(!isAuditLogExpanded);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 border ${
+                        isAuditLogExpanded
+                          ? 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/80 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-200 border-purple-300 dark:border-purple-800'
+                          : 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 shadow-sm shadow-purple-600/30'
+                      }`}
+                    >
+                      <span>{isAuditLogExpanded ? 'Collapse' : `View (${loginHistory.length})`}</span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                          isAuditLogExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  {loginHistory.length === 0 ? (
-                    <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-950/50 border border-dashed border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
-                      <Clock className="w-8 h-8 text-slate-400 dark:text-navy-600 mb-2 opacity-50" />
-                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No login security events recorded yet.</p>
-                      <p className="text-[10px] text-slate-400 dark:text-navy-500 mt-1">Authentic original logs will appear here upon next sign-in.</p>
-                    </div>
-                  ) : (
-                    loginHistory.map(lh => {
-                      const parsed = parseUserAgentDetails(lh.network || '');
-                      const isSuccess = lh.status === 'SUCCESS' || lh.status === 'VERIFIED';
-                      return (
-                        <button
-                          key={lh.id}
-                          type="button"
-                          onClick={() => setSelectedLoginEvent(lh)}
-                          className="w-full text-left p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-brand-400 dark:hover:border-brand-700 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 active:scale-[0.99]"
-                          aria-label={`View security event ${lh.id}`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isSuccess
-                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                              : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                              }`}>
-                              {isSuccess ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
-                            </div>
-                            <div className="space-y-0.5 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
-                                  {lh.method ? `Sign-in via ${lh.method}` : 'Sign-in Session'}
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate">
-                                {parsed.deviceName}
-                              </p>
-                              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 flex-wrap">
-                                <span>{lh.date} at {lh.time}</span>
-                                <span>•</span>
-                                <span className="font-mono">{lh.ip === '127.0.0.1' ? 'Localhost (127.0.0.1)' : lh.ip}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider ${isSuccess
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
-                              : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
-                              }`}>
-                              {lh.status}
+                {/* Collapsed State: Single Clean Summary Tile */}
+                {!isAuditLogExpanded && (
+                  <div
+                    onClick={() => setIsAuditLogExpanded(true)}
+                    className="p-3.5 rounded-2xl bg-slate-50/70 hover:bg-slate-100/80 dark:bg-navy-950/50 dark:hover:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800/80 transition-all cursor-pointer group flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1 text-xs">
+                        {loginHistory.length > 0 ? (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                              Latest Sign-in:
                             </span>
-                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+                            <span className="font-semibold text-slate-600 dark:text-slate-400">
+                              {loginHistory[0]?.date} at {loginHistory[0]?.time}
+                            </span>
+                            <span className="text-slate-400">•</span>
+                            <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">
+                              {loginHistory[0]?.ip === '127.0.0.1' ? 'Localhost (127.0.0.1)' : loginHistory[0]?.ip}
+                            </span>
                           </div>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
+                        ) : (
+                          <span className="text-slate-500 dark:text-slate-400 font-bold">
+                            No login security events recorded yet.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1 shrink-0">
+                      <span>Click to open</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                )}
+
+                {/* Expanded State: Scrollable Event Feed */}
+                {isAuditLogExpanded && (
+                  <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      <span>Showing {loginHistory.length} recorded authentication events</span>
+                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-black uppercase">
+                        Scroll to inspect
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 max-h-[460px] overflow-y-auto custom-scrollbar pr-1">
+                      {loginHistory.length === 0 ? (
+                        <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-950/50 border border-dashed border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
+                          <Clock className="w-8 h-8 text-slate-400 dark:text-navy-600 mb-2 opacity-50" />
+                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No login security events recorded yet.</p>
+                          <p className="text-[10px] text-slate-400 dark:text-navy-500 mt-1">Authentic original logs will appear here upon next sign-in.</p>
+                        </div>
+                      ) : (
+                        loginHistory.map(lh => {
+                          const parsed = parseUserAgentDetails(lh.network || '');
+                          const isSuccess = lh.status === 'SUCCESS' || lh.status === 'VERIFIED';
+                          return (
+                            <button
+                              key={lh.id}
+                              type="button"
+                              onClick={() => setSelectedLoginEvent(lh)}
+                              className="w-full text-left p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400 dark:hover:border-purple-700 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3 active:scale-[0.99]"
+                              aria-label={`View security event ${lh.id}`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${isSuccess
+                                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                                  : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                                  }`}>
+                                  {isSuccess ? <ShieldCheck className="w-4.5 h-4.5" /> : <ShieldAlert className="w-4.5 h-4.5" />}
+                                </div>
+                                <div className="space-y-0.5 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                                      {lh.method ? `Sign-in via ${lh.method}` : 'Sign-in Session'}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate">
+                                    {parsed.deviceName}
+                                  </p>
+                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 flex-wrap">
+                                    <span>{lh.date} at {lh.time}</span>
+                                    <span>•</span>
+                                    <span className="font-mono">{lh.ip === '127.0.0.1' ? 'Localhost (127.0.0.1)' : lh.ip}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider ${isSuccess
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                                  }`}>
+                                  {lh.status}
+                                </span>
+                                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" />
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Collapse Button at bottom of expanded list */}
+                    <div className="pt-2 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setIsAuditLogExpanded(false)}
+                        className="py-1.5 px-4 rounded-xl text-xs font-black text-purple-700 dark:text-purple-300 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5 rotate-180" />
+                        <span>Collapse Audit Log</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Danger Zone: Permanent Account Deletion (Google Play Compliance) */}
+              <DeleteAccountPanel notify={notify} />
 
             </div>
           </div>
@@ -5891,60 +6296,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         </GlobalModalBackdrop>
       )}
 
-      {/* Centered Deactivate Face ID Confirmation Modal */}
-      {showDeactivateConfirm && (
-        <GlobalModalBackdrop
-          isOpen={showDeactivateConfirm}
-          onClose={() => !isRemovingFace && setShowDeactivateConfirm(false)}
-          className="flex items-center justify-center p-4 z-[9999]"
-        >
-          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center animate-in fade-in zoom-in-95 duration-200">
-            {/* Trash / Red Alert Icon */}
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm">
-              <Trash2 className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                Deactivate Face ID?
-              </h3>
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
-                Are you sure you want to remove Face ID from your account? You will need to re-scan your face if you wish to use it again.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                type="button"
-                disabled={isRemovingFace}
-                onClick={() => setShowDeactivateConfirm(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isRemovingFace}
-                onClick={handleRemoveFace}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md shadow-rose-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
-              >
-                {isRemovingFace ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Removing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Deactivate</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </GlobalModalBackdrop>
-      )}
-
       {/* Centered Clear Scratchpad Notes Confirmation Modal */}
       {showClearNotesConfirm && (
         <GlobalModalBackdrop
@@ -6326,23 +6677,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         </GlobalModalBackdrop>
       )}
-
-      {/* Face Scan Modal */}
-      <FaceScanModal
-        isOpen={isFaceModalOpen}
-        mode={faceModalMode}
-        onClose={() => setIsFaceModalOpen(false)}
-        onSuccess={() => {
-          fetchFaceStatus();
-          notify.success(
-            faceModalMode === 'enroll'
-              ? 'Face ID enrolled and activated successfully!'
-              : 'Face verification passed!',
-            '',
-            { category: 'ADMIN' }
-          );
-        }}
-      />
 
       {/* Hidden QR Code Canvas for High-Resolution PVC Print & PNG Generation */}
       <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
