@@ -50,28 +50,40 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err: any) => {
             // Silently absorb transient disconnects / socket resets
+            if (['ECONNRESET', 'ECONNABORTED', 'EPIPE'].includes(err?.code)) return;
           });
           proxy.on('proxyReqWs', (proxyReq, _req, socket) => {
-            if (proxyReq) {
-              proxyReq.on('error', () => {});
-            }
-            if (socket) {
-              socket.on('error', () => {});
-            }
+            if (proxyReq) proxyReq.on('error', () => {});
+            if (socket) socket.on('error', () => {});
+          });
+          (proxy as any).on('open', (proxySocket: any) => {
+            if (proxySocket) proxySocket.on('error', () => {});
           });
         },
       },
     },
     watch: {
       ignored: [
+        /dist-electron/,
+        /win-unpacked/,
+        /\.pak$/,
+        /\.tmp/,
+        /android/,
+        /\.apk$/,
+        /\.git/,
+        /dist\//,
+        /release/,
         '**/android/**',
         '**/*.apk',
         '**/public/*.apk',
         '**/.git/**',
         '**/dist/**',
         '**/dist-electron/**',
+        '**/dist-electron*/**',
+        '**/win-unpacked/**',
+        '**/win-unpacked*/**',
         '**/release/**',
         '**/releases/**',
       ]
