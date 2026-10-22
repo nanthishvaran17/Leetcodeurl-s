@@ -629,7 +629,7 @@ def assign_students_batch(
         db=db,
         faculty_id=req.faculty_id,
         student_ids=req.student_ids,
-        assigned_by_id=1
+        assigned_by_id=int(current_user.id) if current_user and getattr(current_user, "id", None) else None
     )
     connection_manager.broadcast_sync({
         "type": "STAFF_ALLOCATION_UPDATED",
@@ -677,7 +677,7 @@ def auto_distribute_department(
         db=db,
         department_id=req.department_id,
         student_ids=req.student_ids,
-        assigned_by_id=1
+        assigned_by_id=int(current_user.id) if current_user and getattr(current_user, "id", None) else None
     )
     connection_manager.broadcast_sync({
         "type": "STAFF_ALLOCATION_UPDATED",

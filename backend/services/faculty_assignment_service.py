@@ -95,6 +95,9 @@ class FacultyAssignmentService:
             new_ids = [sid for sid in unique_student_ids if sid not in existing_ids]
 
             assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
+            if assigned_by_id and not assigner:
+                logger.warning(f"[FACULTY_ASSIGNMENT] assigned_by_id {assigned_by_id} does not exist in User table; resetting to None.")
+                assigned_by_id = None
             is_assigner_admin = bool(assigner and getattr(assigner, "role", "").lower() in ["admin", "super admin"])
 
             # 1. Validate that all students exist and belong to the same department
@@ -442,6 +445,11 @@ class FacultyAssignmentService:
                 "message": "All students in this department are already assigned to a mentor.",
                 "allocated_count": 0
             }
+
+        assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
+        if assigned_by_id and not assigner:
+            logger.warning(f"[AUTO_DISTRIBUTE] assigned_by_id {assigned_by_id} does not exist in User table; resetting to None.")
+            assigned_by_id = None
 
         total_allocated = 0
         now = datetime.datetime.now(datetime.timezone.utc)
