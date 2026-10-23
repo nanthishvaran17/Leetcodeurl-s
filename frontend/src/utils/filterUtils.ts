@@ -206,6 +206,15 @@ export function formatDepartmentCode(dept: any): string {
  * - 26 (e.g. 732226..., 26CC...) -> I Year (1st Year)
  */
 export function deriveYearLevelFromRegNo(regNoStr?: string, currentYearVal?: any): 'I' | 'II' | 'III' | 'IV' {
+  if (currentYearVal != null && currentYearVal !== '') {
+    const valStr = String(currentYearVal).trim().toUpperCase();
+    const clean = valStr.replace(/\b(YEAR|YR|BATCH|ST|ND|RD|TH)\b/gi, '').replace(/[\s\-\_]+/g, '').trim();
+    if (valStr === '1' || valStr === 'I' || clean === '1' || clean === 'I' || valStr.includes('1ST') || valStr.includes('FIRST') || valStr.includes('2030') || valStr.includes('2026-2030')) return 'I';
+    if (valStr === '2' || valStr === 'II' || clean === '2' || clean === 'II' || valStr.includes('2ND') || valStr.includes('SECOND') || valStr.includes('2029') || valStr.includes('2025-2029')) return 'II';
+    if (valStr === '3' || valStr === 'III' || clean === '3' || clean === 'III' || valStr.includes('3RD') || valStr.includes('THIRD') || valStr.includes('2028') || valStr.includes('2024-2028')) return 'III';
+    if (valStr === '4' || valStr === 'IV' || clean === '4' || clean === 'IV' || valStr.includes('4TH') || valStr.includes('FOURTH') || valStr.includes('FINAL') || valStr.includes('2027') || valStr.includes('2023-2027')) return 'IV';
+  }
+
   const norm = (regNoStr || '').trim().toUpperCase();
   if (norm) {
     if (norm.includes('732223') || norm.startsWith('23') || norm.includes('23CC') || norm.includes('23CI') || norm.includes('23CS') || norm.includes('23IT') || norm.includes('23AI') || norm.includes('23EC') || norm.includes('23EE') || norm.includes('23ME') || norm.includes('23AG')) {
@@ -220,18 +229,6 @@ export function deriveYearLevelFromRegNo(regNoStr?: string, currentYearVal?: any
     if (norm.includes('732226') || norm.startsWith('26') || norm.includes('26CC') || norm.includes('26CI') || norm.includes('26CS') || norm.includes('26IT') || norm.includes('26AI') || norm.includes('26EC') || norm.includes('26EE') || norm.includes('26ME') || norm.includes('26AG')) {
       return 'I';
     }
-  }
-
-  if (currentYearVal != null && currentYearVal !== '') {
-    const valStr = String(currentYearVal).trim().toUpperCase();
-    if (valStr === '1' || valStr === 'I' || valStr === '1ST' || valStr.includes('1ST') || valStr === '1 YEAR') return 'I';
-    if (valStr === '2' || valStr === 'II' || valStr === '2ND' || valStr.includes('2ND') || valStr === '2 YEAR') return 'II';
-    if (valStr === '3' || valStr === 'III' || valStr === '3RD' || valStr.includes('3RD') || valStr === '3 YEAR') return 'III';
-    if (valStr === '4' || valStr === 'IV' || valStr === '4TH' || valStr.includes('4TH') || valStr.includes('FINAL') || valStr === '4 YEAR') return 'IV';
-    if (valStr.includes('2030') || valStr.includes('2026-2030')) return 'I';
-    if (valStr.includes('2029') || valStr.includes('2025-2029')) return 'II';
-    if (valStr.includes('2028') || valStr.includes('2024-2028')) return 'III';
-    if (valStr.includes('2027') || valStr.includes('2023-2027')) return 'IV';
   }
 
   return 'III';
@@ -257,10 +254,10 @@ export function normalizeAcademicYear(yr: any): NormalizedAcademicYear {
   const raw = String(yr).trim().toUpperCase();
   const clean = raw.replace(/\b(YEAR|YR|BATCH|ST|ND|RD|TH)\b/gi, '').replace(/[\s\-\_]+/g, '').trim();
 
-  if (['I', '1', '1ST', '2030'].includes(raw) || ['I', '1'].includes(clean)) return '1';
-  if (['II', '2', '2ND', '2029'].includes(raw) || ['II', '2'].includes(clean)) return '2';
-  if (['III', '3', '3RD', '2028'].includes(raw) || ['III', '3'].includes(clean)) return '3';
-  if (['IV', '4', '4TH', '2027', '2026'].includes(raw) || ['IV', '4'].includes(clean)) return '4';
+  if (['I', '1', '1ST', 'FIRST', '2030'].includes(raw) || ['I', '1'].includes(clean)) return '1';
+  if (['II', '2', '2ND', 'SECOND', '2029'].includes(raw) || ['II', '2'].includes(clean)) return '2';
+  if (['III', '3', '3RD', 'THIRD', '2028'].includes(raw) || ['III', '3'].includes(clean)) return '3';
+  if (['IV', '4', '4TH', 'FOURTH', 'FINAL', '2027', '2026'].includes(raw) || ['IV', '4'].includes(clean)) return '4';
 
   return clean || raw;
 }

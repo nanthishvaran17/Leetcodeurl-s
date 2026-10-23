@@ -216,22 +216,44 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
   // Use backend paginated API instead of client-side filtering
   const { data: paginatedData, isLoading: isTableLoading, refetch: refetchStudents } = useQuery({
-    queryKey: ['students-master', serverPage, serverPageSize, filters.department, filters.academicYear, filters.searchQuery],
+    queryKey: ['students-master', serverPage, serverPageSize, filters.department, filters.academicYear, filters.searchQuery, departments.length],
     queryFn: async () => {
       const params: any = { paginated: 'true', page: serverPage, limit: serverPageSize };
       if (filters.searchQuery) params.search = filters.searchQuery;
       
       // Map department CODE to ID
       const allDepts = departments.length > 0 ? departments : (ctxDepts.length > 0 ? ctxDepts : globalDepts);
-      if (filters.department !== 'ALL' && allDepts.length > 0) {
-        const found = allDepts.find((d: any) => 
-          (d.code || d.department_code) === filters.department || 
-          (d.name || d.department_name) === filters.department
-        );
-        if (found) params.dept_id = found.id || found.department_id;
+      if (filters.department && filters.department !== 'ALL') {
+        let deptIdToUse: number | undefined;
+        if (allDepts.length > 0) {
+          const found = allDepts.find((d: any) => 
+            (d.code || d.department_code || '').toUpperCase() === filters.department.toUpperCase() || 
+            (d.name || d.department_name || '').toUpperCase() === filters.department.toUpperCase()
+          );
+          if (found) deptIdToUse = found.id || found.department_id;
+        }
+        if (!deptIdToUse) {
+          const deptMap: Record<string, number> = {
+            'CSE(CS)': 1, 'CS': 1, 'CYBER': 1,
+            'CSE(IOT)': 2, 'IOT': 2,
+            'IT': 4,
+            'CSE': 5,
+            'AIDS': 10,
+            'ECE': 12,
+            'AGRI': 17,
+            'MECH': 18,
+            'CIVIL': 19,
+            'EEE': 20
+          };
+          deptIdToUse = deptMap[filters.department.toUpperCase()];
+        }
+        if (deptIdToUse) params.dept_id = deptIdToUse;
+        params.department = filters.department;
       }
       
-      if (filters.academicYear && filters.academicYear !== 'ALL') params.year_level = filters.academicYear;
+      if (filters.academicYear && filters.academicYear !== 'ALL') {
+        params.year_level = filters.academicYear;
+      }
       
       const res = await api.get('/students', { params });
       return res.data;

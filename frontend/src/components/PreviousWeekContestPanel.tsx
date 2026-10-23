@@ -166,14 +166,22 @@ export const getStartTimeInfo = (contestTitle?: string) => {
   };
 };
 
-export const normalizeYear = (val: string | null | undefined): string => {
-  if (!val) return '';
-  const s = String(val).toUpperCase().replace(/YEAR/gi, '').trim();
-  if (s === '1' || s === 'I' || s === '1ST') return 'I';
-  if (s === '2' || s === 'II' || s === '2ND') return 'II';
-  if (s === '3' || s === 'III' || s === '3RD') return 'III';
-  if (s === '4' || s === 'IV' || s === '4TH') return 'IV';
-  return s;
+export const normalizeYear = (val: string | null | undefined, regNo?: string | null): string => {
+  if (val) {
+    const s = String(val).toUpperCase().replace(/YEAR/gi, '').trim();
+    if (s === '1' || s === 'I' || s === '1ST' || s === 'FIRST') return 'I';
+    if (s === '2' || s === 'II' || s === '2ND' || s === 'SECOND') return 'II';
+    if (s === '3' || s === 'III' || s === '3RD' || s === 'THIRD') return 'III';
+    if (s === '4' || s === 'IV' || s === '4TH' || s === 'FOURTH' || s === 'FINAL') return 'IV';
+  }
+  if (regNo) {
+    const r = String(regNo).toUpperCase().trim();
+    if (r.includes('732225') || r.includes('73225') || r.startsWith('25') || r.includes('25CC') || r.includes('25CI') || r.includes('25CS') || r.includes('25IT')) return 'II';
+    if (r.includes('732224') || r.startsWith('24') || r.includes('24CC') || r.includes('24CI') || r.includes('24CS') || r.includes('24IT')) return 'III';
+    if (r.includes('732223') || r.startsWith('23') || r.includes('23CC') || r.includes('23CI') || r.includes('23CS') || r.includes('23IT')) return 'IV';
+    if (r.includes('732226') || r.startsWith('26') || r.includes('26CC') || r.includes('26CI') || r.includes('26CS') || r.includes('26IT')) return 'I';
+  }
+  return '';
 };
 
 export const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: string): string => {
@@ -973,7 +981,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         }
       }
       if (!isYearAll) {
-        const studentYear = normalizeYear(r.year_level);
+        const studentYear = normalizeYear(r.year_level, r.reg_no);
         if (studentYear !== targetYear && !r.year_level?.toUpperCase().includes(targetYear)) {
           return false;
         }
@@ -1014,7 +1022,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         }
       }
       if (selectedYearFilter !== 'ALL') {
-        const studentYear = normalizeYear(r.year_level);
+        const studentYear = normalizeYear(r.year_level, r.reg_no);
         const targetYear = selectedYearFilter.toUpperCase().trim();
         if (studentYear !== targetYear && !r.year_level?.toUpperCase().includes(targetYear)) {
           return;

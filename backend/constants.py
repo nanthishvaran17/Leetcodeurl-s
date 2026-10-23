@@ -37,20 +37,20 @@ def get_academic_year_variants(year_input: Optional[str]) -> List[str]:
         return []
 
     target_year = None
-    if any(k in raw for k in ["IV", "4", "FINAL", "2023", "2027"]):
+    if any(k in raw for k in ["IV", "4", "FINAL", "FOURTH", "2023", "2027"]):
         target_year = 4
-    elif any(k in raw for k in ["III", "3", "2024", "2028"]):
+    elif any(k in raw for k in ["III", "3", "THIRD", "2024", "2028"]):
         target_year = 3
-    elif any(k in raw for k in ["II", "2", "2025", "2029"]):
+    elif any(k in raw for k in ["II", "2", "SECOND", "2025", "2029"]):
         target_year = 2
-    elif any(k in raw for k in ["I", "1", "2026", "2030"]):
+    elif any(k in raw for k in ["I", "1", "FIRST", "2026", "2030"]):
         target_year = 1
 
     variants_map = {
-        1: ["1", "I", "1ST", "1 YEAR", "I YEAR", "1ST YEAR", "1 YR", "I YR", "YEAR 1", "YEAR I"],
-        2: ["2", "II", "2ND", "2 YEAR", "II YEAR", "2ND YEAR", "2 YR", "II YR", "YEAR 2", "YEAR II"],
-        3: ["3", "III", "3RD", "3 YEAR", "III YEAR", "3RD YEAR", "3 YR", "III YR", "YEAR 3", "YEAR III"],
-        4: ["4", "IV", "4TH", "4 YEAR", "IV YEAR", "4TH YEAR", "4 YR", "IV YR", "YEAR 4", "YEAR IV"],
+        1: ["1", "I", "1ST", "1 YEAR", "I YEAR", "1ST YEAR", "FIRST YEAR", "FIRST", "1 YR", "I YR", "YEAR 1", "YEAR I"],
+        2: ["2", "II", "2ND", "2 YEAR", "II YEAR", "2ND YEAR", "SECOND YEAR", "SECOND", "2 YR", "II YR", "YEAR 2", "YEAR II"],
+        3: ["3", "III", "3RD", "3 YEAR", "III YEAR", "3RD YEAR", "THIRD YEAR", "THIRD", "3 YR", "III YR", "YEAR 3", "YEAR III"],
+        4: ["4", "IV", "4TH", "4 YEAR", "IV YEAR", "4TH YEAR", "FOURTH YEAR", "FOURTH", "FINAL YEAR", "4 YR", "IV YR", "YEAR 4", "YEAR IV"],
     }
 
     if target_year and target_year in variants_map:
@@ -71,20 +71,20 @@ def get_academic_year_filter_clause(student_model: Any, year_input: Optional[str
         return None
 
     target_year = None
-    if any(k in raw for k in ["IV", "4", "FINAL", "2023", "2027"]):
+    if any(k in raw for k in ["IV", "4", "FINAL", "FOURTH", "2023", "2027"]):
         target_year = 4
-    elif any(k in raw for k in ["III", "3", "2024", "2028"]):
+    elif any(k in raw for k in ["III", "3", "THIRD", "2024", "2028"]):
         target_year = 3
-    elif any(k in raw for k in ["II", "2", "2025", "2029"]):
+    elif any(k in raw for k in ["II", "2", "SECOND", "2025", "2029"]):
         target_year = 2
-    elif any(k in raw for k in ["I", "1", "2026", "2030"]):
+    elif any(k in raw for k in ["I", "1", "FIRST", "2026", "2030"]):
         target_year = 1
 
     variants_map = {
-        1: ["1", "I", "1ST", "1 YEAR", "I YEAR", "1ST YEAR", "1 YR", "I YR", "YEAR 1", "YEAR I"],
-        2: ["2", "II", "2ND", "2 YEAR", "II YEAR", "2ND YEAR", "2 YR", "II YR", "YEAR 2", "YEAR II"],
-        3: ["3", "III", "3RD", "3 YEAR", "III YEAR", "3RD YEAR", "3 YR", "III YR", "YEAR 3", "YEAR III"],
-        4: ["4", "IV", "4TH", "4 YEAR", "IV YEAR", "4TH YEAR", "4 YR", "IV YR", "YEAR 4", "YEAR IV"],
+        1: ["1", "I", "1ST", "1 YEAR", "I YEAR", "1ST YEAR", "FIRST YEAR", "FIRST", "1 YR", "I YR", "YEAR 1", "YEAR I"],
+        2: ["2", "II", "2ND", "2 YEAR", "II YEAR", "2ND YEAR", "SECOND YEAR", "SECOND", "2 YR", "II YR", "YEAR 2", "YEAR II"],
+        3: ["3", "III", "3RD", "3 YEAR", "III YEAR", "3RD YEAR", "THIRD YEAR", "THIRD", "3 YR", "III YR", "YEAR 3", "YEAR III"],
+        4: ["4", "IV", "4TH", "4 YEAR", "IV YEAR", "4TH YEAR", "FOURTH YEAR", "FOURTH", "FINAL YEAR", "4 YR", "IV YR", "YEAR 4", "YEAR IV"],
     }
 
     batch_prefix_map = {

@@ -93,13 +93,13 @@ def normalize_year_param(year: Optional[str]) -> str:
     y = year.strip().upper()
     if y in ("ALL", "ALL ACADEMIC YEARS", "ALL YEARS", "", "NONE", "NULL", "*"):
         return "ALL"
-    if y in ("3", "III", "3RD", "3RD YEAR", "YEAR 3", "YEAR III", "2024–2028", "2024-2028", "2024", "3 YEAR"):
+    if y in ("3", "III", "3RD", "3RD YEAR", "THIRD YEAR", "THIRD", "YEAR 3", "YEAR III", "III YEAR", "2024–2028", "2024-2028", "2024", "3 YEAR"):
         return "III"
-    if y in ("2", "II", "2ND", "2ND YEAR", "YEAR 2", "YEAR II", "2025–2029", "2025-2029", "2025", "2 YEAR"):
+    if y in ("2", "II", "2ND", "2ND YEAR", "SECOND YEAR", "SECOND", "YEAR 2", "YEAR II", "II YEAR", "2025–2029", "2025-2029", "2025", "2 YEAR"):
         return "II"
-    if y in ("4", "IV", "4TH", "4TH YEAR", "YEAR 4", "YEAR IV", "2023–2027", "2023-2027", "2023", "4 YEAR"):
+    if y in ("4", "IV", "4TH", "4TH YEAR", "FOURTH YEAR", "FOURTH", "YEAR 4", "YEAR IV", "IV YEAR", "FINAL", "FINAL YEAR", "2023–2027", "2023-2027", "2023", "4 YEAR"):
         return "IV"
-    if y in ("1", "I", "1ST", "1ST YEAR", "YEAR 1", "YEAR I", "2026–2030", "2026-2030", "2026", "1 YEAR"):
+    if y in ("1", "I", "1ST", "1ST YEAR", "FIRST YEAR", "FIRST", "YEAR 1", "YEAR I", "I YEAR", "2026–2030", "2026-2030", "2026", "1 YEAR"):
         return "I"
     if y.startswith("YEAR ") or y.endswith(" YEAR"):
         clean_y = y.replace("YEAR", "").strip()
@@ -213,13 +213,15 @@ def _filter_canonical_dataset_in_memory(
             rows = [r for r in rows if str(r.get("dept","")).upper() == d_upper]
 
     if year and year != "ALL":
-        y_upper = year.upper()
-        if y_upper in ("2", "II"):
-            rows = [r for r in rows if str(r.get("year","")).upper() in ("2", "II", "2ND")]
-        elif y_upper in ("3", "III"):
-            rows = [r for r in rows if str(r.get("year","")).upper() in ("3", "III", "3RD")]
-        elif y_upper in ("4", "IV"):
-            rows = [r for r in rows if str(r.get("year","")).upper() in ("4", "IV", "4TH", "FINAL")]
+        y_upper = normalize_year_param(year)
+        if y_upper == "II":
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("2", "II", "2ND", "SECOND", "II YEAR", "2ND YEAR", "YEAR 2", "YEAR II")]
+        elif y_upper == "III":
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("3", "III", "3RD", "THIRD", "III YEAR", "3RD YEAR", "YEAR 3", "YEAR III")]
+        elif y_upper == "IV":
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("4", "IV", "4TH", "FOURTH", "IV YEAR", "4TH YEAR", "FINAL", "FINAL YEAR", "YEAR 4", "YEAR IV")]
+        elif y_upper == "I":
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("1", "I", "1ST", "FIRST", "I YEAR", "1ST YEAR", "YEAR 1", "YEAR I")]
         else:
             rows = [r for r in rows if str(r.get("year","")).upper() == y_upper]
         

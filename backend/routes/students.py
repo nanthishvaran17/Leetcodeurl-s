@@ -343,6 +343,8 @@ from backend.schemas import StudentPaginatedOut
 async def get_students(
     request: Request,
     dept_id: Optional[int] = None,
+    department: Optional[str] = Query(None),
+    dept: Optional[str] = Query(None),
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
     search: Optional[str] = None,
@@ -362,9 +364,10 @@ async def get_students(
     user_id = current_user.id if current_user else 0
     role_clean = (current_user.role or "").strip().lower() if current_user else ""
 
-    cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
+    cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{department}:{dept}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
     def _execute_query(db):
         import re
+        from backend.models import Department
         query = db.query(Student).outerjoin(Student.stats).options(
             joinedload(Student.department),
             joinedload(Student.section),
@@ -377,8 +380,30 @@ async def get_students(
         if current_user:
             query = apply_role_based_student_filter(query, current_user, db)
 
-        if dept_id:
-            query = query.filter(Student.department_id == dept_id)
+        # Resolve effective department ID if passed as string code or name
+        effective_dept_id = dept_id
+        if effective_dept_id is None and (department or dept):
+            raw_d = (department or dept or "").strip().upper()
+            if raw_d not in ("ALL", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", ""):
+                dept_lookup = {
+                    "CSE(CS)": 1, "CS": 1, "CYBER": 1, "CYBER SECURITY": 1,
+                    "CSE(IOT)": 2, "IOT": 2, "INTERNET OF THINGS": 2,
+                    "IT": 4, "INFORMATION TECHNOLOGY": 4,
+                    "CSE": 5, "AIDS": 10, "ECE": 12, "AGRI": 17, "MECH": 18, "CIVIL": 19, "EEE": 20
+                }
+                if raw_d in dept_lookup:
+                    effective_dept_id = dept_lookup[raw_d]
+                else:
+                    d_obj = db.query(Department).filter(
+                        (func.upper(Department.code) == raw_d) |
+                        (Department.code.ilike(f"%{raw_d}%")) |
+                        (Department.name.ilike(f"%{raw_d}%"))
+                    ).first()
+                    if d_obj:
+                        effective_dept_id = d_obj.id
+
+        if effective_dept_id:
+            query = query.filter(Student.department_id == effective_dept_id)
         if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
             yr_clause = get_academic_year_filter_clause(Student, year_level)
             if yr_clause is not None:
