@@ -927,10 +927,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
   const yearOptions = useMemo(() => [
     { value: 'ALL', label: 'All Academic Years', shortLabel: 'All Years', code: 'ALL', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800', desc: 'All batches and cohorts' },
-    { value: 'I',   label: 'I Year (First Year)',  shortLabel: 'I Year',    code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800', desc: 'Batch 2026 – 2030' },
-    { value: 'II',  label: 'II Year (Second Year)', shortLabel: 'II Year',   code: 'II',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', desc: 'Batch 2025 – 2029' },
-    { value: 'III', label: 'III Year (Third Year)', shortLabel: 'III Year',  code: 'III', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', desc: 'Batch 2024 – 2028' },
-    { value: 'IV',  label: 'IV Year (Final Year)', shortLabel: 'IV Year',   code: 'IV',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800', desc: 'Batch 2023 – 2027' },
+    { value: 'I',   label: 'I Year (First Year)',  shortLabel: '1st Year',   code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800', desc: 'Batch 2026 – 2030' },
+    { value: 'II',  label: 'II Year (Second Year)', shortLabel: '2nd Year',  code: 'II',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', desc: 'Batch 2025 – 2029' },
+    { value: 'III', label: 'III Year (Third Year)', shortLabel: '3rd Year',  code: 'III', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', desc: 'Batch 2024 – 2028' },
+    { value: 'IV',  label: 'IV Year (Final Year)', shortLabel: 'Final Year', code: 'IV',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800', desc: 'Batch 2023 – 2027' },
   ], []);
 
   const filteredDeptOptions = useMemo(() => {
@@ -982,7 +982,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
       if (!isYearAll) {
         const studentYear = normalizeYear(r.year_level, r.reg_no);
-        if (studentYear !== targetYear && !r.year_level?.toUpperCase().includes(targetYear)) {
+        if (studentYear !== targetYear) {
           return false;
         }
       }
@@ -1024,7 +1024,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       if (selectedYearFilter !== 'ALL') {
         const studentYear = normalizeYear(r.year_level, r.reg_no);
         const targetYear = selectedYearFilter.toUpperCase().trim();
-        if (studentYear !== targetYear && !r.year_level?.toUpperCase().includes(targetYear)) {
+        if (studentYear !== targetYear) {
           return;
         }
       }
@@ -1842,7 +1842,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             const isPending = cat === 'NOT_VERIFIED';
             const isPublic = cat === 'PUBLIC';
             const isVirtual = cat === 'VIRTUAL';
-            const cleanYear = r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
+            const normY = normalizeYear(r.year_level, r.reg_no);
+            const cleanYear = normY ? `${normY} Year` : (r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '');
             const rankIndex = (page - 1) * pageSize + idx + 1;
 
             return (
@@ -2015,7 +2016,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 const isPending = cat === 'NOT_VERIFIED';
                 const isPublic = cat === 'PUBLIC';
                 const isVirtual = cat === 'VIRTUAL';
-                const cleanYear = r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
+                const normY = normalizeYear(r.year_level, r.reg_no);
+                const cleanYear = normY ? `${normY} Year` : (r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '');
                 const rankIndex = (page - 1) * pageSize + idx + 1;
 
                 return (

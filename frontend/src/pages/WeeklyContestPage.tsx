@@ -12,7 +12,7 @@ import { Post930SolversView } from './Post930SolversView';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
-import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
+import { PreviousWeekContestPanel, normalizeYear } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
 import { triggerDownload } from '../utils/mobileDownload';
@@ -1878,8 +1878,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         if (filterNorm !== studentNorm && !(r.dept || r.department || '').toString().toUpperCase().includes(selectedDeptFilter.toUpperCase())) return false;
       }
       if (selectedYearFilter !== 'ALL') {
-        const y = (r.year || r.year_level || '').toString().toUpperCase();
-        if (!y.includes(selectedYearFilter.toUpperCase())) return false;
+        const studentYear = normalizeYear(r.year || r.year_level, r.reg_no || r.register_number);
+        const targetYear = normalizeYear(selectedYearFilter);
+        if (studentYear !== targetYear) return false;
       }
       if (selectedAttendanceFilter === 'PUBLIC_ATTENDED') return isPublicAttended;
       if (selectedAttendanceFilter === 'VIRTUAL_ATTENDED') return isVirtualAttended;
