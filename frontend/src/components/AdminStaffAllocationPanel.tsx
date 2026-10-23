@@ -14,6 +14,7 @@ import { useNotification } from '../context/NotificationContext';
 import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
 import { CustomDropdown, DropdownOption } from './CustomDropdown';
 import { normalizeAcademicYear, matchesAcademicYear, matchesDepartment } from '../utils/filterUtils';
+import { isRoleEligibleForMentees } from '../utils/staffRoleUtils';
 
 export const AdminStaffAllocationPanel: React.FC = () => {
   const { user } = useAuth();
@@ -162,6 +163,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   // Client-side filtering for Staff List (NOT affected by student dept filter)
   const filteredStaffList = useMemo(() => {
     return staffList.filter((st: any) => {
+      // Exclude administrative/executive roles from mentee allocation
+      if (!isRoleEligibleForMentees(st.role, st.mentoring_role)) {
+        return false;
+      }
+
       if (staffSearchQuery.trim()) {
         const q = staffSearchQuery.toLowerCase().trim();
         const matchFullName = (st.full_name || '').toLowerCase().includes(q);
@@ -184,7 +190,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     });
   }, [staffList, staffSearchQuery, staffWorkloadFilter, capacityCap]);
 
-  const activeStaffCount = useMemo(() => staffList.filter(s => s.is_active).length, [staffList]);
+  const activeStaffCount = useMemo(() => staffList.filter(s => s.is_active && isRoleEligibleForMentees(s.role, s.mentoring_role)).length, [staffList]);
 
   // Staff Assigned Roster Modal Handler 
   const handleOpenStaffRoster = async (st: any) => {
@@ -561,7 +567,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
   const staffOptions: DropdownOption[] = [
     { value: '', label: 'Select Target Staff...' },
-    ...staffList.filter(s => s.is_active).map((st: any) => ({
+    ...staffList.filter(s => s.is_active && isRoleEligibleForMentees(s.role, s.mentoring_role)).map((st: any) => ({
       value: String(st.id),
       label: st.username,
       sublabel: `${st.assigned_count || 0} ${(st.assigned_count || 0) === 1 ? 'mentee' : 'mentees'} assigned`,
@@ -1269,7 +1275,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                   label="Select Staff Member to Manage"
                   options={[
                     { value: '', label: '— Pick a Staff Member —' },
-                    ...staffList.filter(s => s.is_active).map((st: any) => ({
+                    ...staffList.filter(s => s.is_active && isRoleEligibleForMentees(s.role, s.mentoring_role)).map((st: any) => ({
                       value: String(st.id),
                       label: `${st.username} (${st.assigned_count || 0} ${(st.assigned_count || 0) === 1 ? 'mentee' : 'mentees'}) — ${st.department}`
                     }))

@@ -11,6 +11,7 @@ import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { CreateStaffModal } from './CreateStaffModal';
 import { EditStaffModal } from './EditStaffModal';
 import { StaffDetailDrawer } from './StaffDetailDrawer';
+import { isRoleEligibleForMentees } from '../../utils/staffRoleUtils';
 
 let cachedStaffList: any[] | null = null;
 
@@ -548,6 +549,7 @@ export const StaffManagement: React.FC = () => {
                 {/* MOBILE CARD VIEW (< 768px) - Sleek, Compact Modern Mobile UI */}
                 <div className="block md:hidden p-2.5 sm:p-3 space-y-2.5 bg-slate-100/60 dark:bg-navy-950/40">
                   {filteredStaff.map((staff) => {
+                    const isMenteeEligible = isRoleEligibleForMentees(staff.role, staff.mentoring_role);
                     const menteeCount = staff.assigned_count || 0;
                     const initials = (staff.full_name || staff.username || 'S')
                       .split(' ')
@@ -697,18 +699,32 @@ export const StaffManagement: React.FC = () => {
                             </span>
                           </div>
 
-                          {/* Assigned Mentees */}
-                          <div
-                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100/80 dark:border-indigo-900/40 text-center min-w-0"
-                            title={`Assigned Mentees: ${menteeCount}`}
-                          >
-                            <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                              <Users className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Mentees
-                            </span>
-                            <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-300">
-                              {menteeCount} {menteeCount === 1 ? 'Mentee' : 'Mentees'}
-                            </span>
-                          </div>
+                          {/* Assigned Mentees or Executive Scope */}
+                          {isMenteeEligible ? (
+                            <div
+                              className="flex flex-col items-center justify-center p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100/80 dark:border-indigo-900/40 text-center min-w-0"
+                              title={`Assigned Mentees: ${menteeCount}`}
+                            >
+                              <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                                <Users className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Mentees
+                              </span>
+                              <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-300">
+                                {menteeCount} {menteeCount === 1 ? 'Mentee' : 'Mentees'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div
+                              className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
+                              title={`Scope: ${roleName}`}
+                            >
+                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                                <Shield className="w-2.5 h-2.5 text-slate-400 shrink-0" /> Scope
+                              </span>
+                              <span className="text-[11px] font-black text-slate-600 dark:text-slate-300 truncate w-full uppercase">
+                                {roleName === 'Department HOD' ? 'HOD' : roleName === 'Administrator' ? 'Admin' : roleName}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* 3. Dedicated Touch-Friendly Action Bar */}
@@ -885,10 +901,16 @@ export const StaffManagement: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
-                              <Users className="w-3.5 h-3.5 text-indigo-500" />
-                              <span>{staff.assigned_count || 0} {(staff.assigned_count || 0) === 1 ? 'Mentee' : 'Mentees'}</span>
-                            </div>
+                            {isRoleEligibleForMentees(staff.role, staff.mentoring_role) ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                                <Users className="w-3.5 h-3.5 text-indigo-500" />
+                                <span>{staff.assigned_count || 0} {(staff.assigned_count || 0) === 1 ? 'Mentee' : 'Mentees'}</span>
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-navy-900/50 border border-slate-200/60 dark:border-navy-800 font-mono" title="Assigned mentees not applicable for leadership / executive roles">
+                                —
+                              </span>
+                            )}
                           </td>
                           <td className="px-6 py-4">
                             {staff.is_active ? (

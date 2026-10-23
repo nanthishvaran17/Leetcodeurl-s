@@ -62,7 +62,43 @@ export interface DeptBenchmark {
   health_status?: string;
 }
 
+export interface DepartmentStaffItem {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+  assigned_count: number;
+  active_students: number;
+  completed_students: number;
+  completion_rate: number;
+  total_solved: number;
+  avg_solved: number;
+  students?: Array<{
+    id: number;
+    reg_no: string;
+    name: string;
+    year_level: string;
+    total_solved: number;
+    contest_rating?: number;
+  }>;
+}
+
 export interface DepartmentIntelligenceDetails {
+  department?: {
+    id: number;
+    name: string;
+    code: string;
+    total_students: number;
+    total_staff: number;
+  };
+  hod?: {
+    id: number | null;
+    name: string;
+    username: string;
+    email: string;
+    role: string;
+  } | null;
+  staff_list?: DepartmentStaffItem[];
   top_performers: {
     rank: number;
     student_id: number;
@@ -116,6 +152,7 @@ export interface StaffRecord {
   sunday_contest_turnout_pct?: number;
   sunday_contest_session_name?: string;
   sunday_contest_session_date?: string;
+  institutional_id?: string;
 }
 
 export interface FacultyWorkloadItem {
@@ -262,6 +299,11 @@ export interface DepartmentRecord {
   name: string;
   code: string;
   student_count: number;
+  faculty_count?: number;
+  hod_name?: string;
+  hod_email?: string;
+  total_solved?: number;
+  completion_rate?: number;
 }
 
 // API Functions 

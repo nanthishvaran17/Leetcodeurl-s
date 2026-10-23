@@ -1527,6 +1527,40 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     
     dept_counts = {dept_id: count for dept_id, count in dept_counts_query}
 
+    # Pre-fetch HODs
+    from backend.models import HODDepartmentAllocation
+    hod_alloc_query = db.query(HODDepartmentAllocation.department_id, User).join(
+        User, HODDepartmentAllocation.user_id == User.id
+    ).filter(User.is_active == True).all()
+    hod_by_dept = {dept_id: user for dept_id, user in hod_alloc_query}
+    
+    # Also direct HOD users
+    direct_hods = db.query(User).filter(
+        User.role.ilike("%HOD%"), User.is_active == True, User.department_id.isnot(None)
+    ).all()
+    for h in direct_hods:
+        if h.department_id not in hod_by_dept:
+            hod_by_dept[h.department_id] = h
+
+    # Pre-fetch faculty counts per department
+    STAFF_ROLES = ["Faculty", "faculty", "Staff", "staff", "Professor", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]
+    faculty_counts_query = db.query(
+        User.department_id, func.count(User.id)
+    ).filter(
+        User.role.in_(STAFF_ROLES), User.is_active == True
+    ).group_by(User.department_id).all()
+    faculty_counts = {dept_id: count for dept_id, count in faculty_counts_query}
+
+    # Pre-fetch total solved per department
+    dept_solved_query = db.query(
+        Student.department_id,
+        func.coalesce(func.sum(LeetCodeProfileStats.total_solved), 0),
+        func.sum(case((LeetCodeProfileStats.total_solved > 0, 1), else_=0))
+    ).join(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(Student.is_active == True).group_by(Student.department_id).all()
+    dept_solved_map = {dept_id: (int(tot or 0), int(act or 0)) for dept_id, tot, act in dept_solved_query}
+
     result = []
     for d in depts:
         if d.code and "TEST" in d.code.upper():
@@ -1537,11 +1571,21 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             continue
         name = "Information Technology" if (d.code and d.code.upper() == "IT") else d.name
         
+        hod_user = hod_by_dept.get(d.id)
+        fac_count = faculty_counts.get(d.id, 0)
+        tot_solved, act_count = dept_solved_map.get(d.id, (0, 0))
+        comp_rate = round((act_count / count) * 100.0, 1) if count > 0 else 0.0
+
         result.append({
             "id": d.id,
             "name": name,
             "code": d.code,
             "student_count": count,
+            "faculty_count": fac_count,
+            "hod_name": (hod_user.full_name or hod_user.username) if hod_user else f"HOD ({d.code})",
+            "hod_email": hod_user.email if hod_user else None,
+            "total_solved": tot_solved,
+            "completion_rate": comp_rate
         })
     result.sort(key=lambda x: x["student_count"], reverse=True)
     return result
@@ -1558,9 +1602,102 @@ def post_ai_query(req: AIQueryRequest, db: Session = Depends(get_db)):
 
 @router.get("/department/{dept_id}/details")
 def get_department_details(dept_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    from backend.models import Student, LeetCodeProfileStats, StudentRiskProfile
+    from backend.models import Student, LeetCodeProfileStats, StudentRiskProfile, HODDepartmentAllocation
     
-    # 1. Top Performers (Top 10 by total_solved)
+    dept = db.query(Department).filter(Department.id == dept_id).first()
+    
+    # 1. HOD Details
+    hod_alloc = db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.department_id == dept_id).first()
+    hod_user = None
+    if hod_alloc:
+        hod_user = db.query(User).filter(User.id == hod_alloc.user_id, User.is_active == True).first()
+    if not hod_user:
+        hod_user = db.query(User).filter(
+            User.role.ilike("%HOD%"),
+            User.department_id == dept_id,
+            User.is_active == True
+        ).first()
+
+    hod_info = {
+        "id": hod_user.id if hod_user else None,
+        "name": (hod_user.full_name or hod_user.username) if hod_user else (f"HOD - {dept.code}" if dept else "Head of Department"),
+        "username": hod_user.username if hod_user else "HOD",
+        "email": hod_user.email if hod_user else "hod@nandha.edu.in",
+        "role": hod_user.role if hod_user else "Department HOD"
+    }
+
+    # 2. Staff List & Workload Completion
+    STAFF_ROLES = ["Faculty", "faculty", "Staff", "staff", "Professor", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]
+    staff_users = db.query(User).filter(
+        User.department_id == dept_id,
+        User.role.in_(STAFF_ROLES),
+        User.is_active == True
+    ).all()
+
+    # Pre-fetch all assignments for this department's students
+    assignments = db.query(FacultyStudentAssignment, Student, LeetCodeProfileStats).join(
+        Student, FacultyStudentAssignment.student_id == Student.id
+    ).outerjoin(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(
+        Student.department_id == dept_id,
+        FacultyStudentAssignment.is_active == True,
+        Student.is_active == True
+    ).all()
+
+    staff_student_map = {}
+    for assign, s, stats in assignments:
+        fid = assign.faculty_id
+        if fid not in staff_student_map:
+            staff_student_map[fid] = []
+        staff_student_map[fid].append((s, stats))
+
+    staff_list_out = []
+    all_faculty_ids = set(u.id for u in staff_users).union(set(staff_student_map.keys()))
+    all_fac_users = {u.id: u for u in staff_users}
+    missing_fids = [fid for fid in all_faculty_ids if fid not in all_fac_users]
+    if missing_fids:
+        extra_users = db.query(User).filter(User.id.in_(missing_fids), User.is_active == True).all()
+        for eu in extra_users:
+            all_fac_users[eu.id] = eu
+
+    for fid, u in all_fac_users.items():
+        pairs = staff_student_map.get(fid, [])
+        assigned_cnt = len(pairs)
+        active_cnt = sum(1 for s, st in pairs if (st and (st.total_solved or 0) > 0))
+        completed_cnt = sum(1 for s, st in pairs if (st and (st.total_solved or 0) >= 10))
+        tot_solved = sum((st.total_solved or 0) for s, st in pairs if st)
+        avg_solved = round(tot_solved / assigned_cnt, 1) if assigned_cnt > 0 else 0.0
+        comp_rate = round((active_cnt / assigned_cnt) * 100.0, 1) if assigned_cnt > 0 else 0.0
+
+        st_sample = []
+        for s, st in pairs[:25]:
+            st_sample.append({
+                "id": s.id,
+                "reg_no": s.reg_no,
+                "name": s.name,
+                "year_level": s.year_level,
+                "total_solved": st.total_solved if st else 0,
+                "contest_rating": round(float(st.contest_rating), 1) if (st and st.contest_rating) else 0.0
+            })
+
+        staff_list_out.append({
+            "id": u.id,
+            "name": u.full_name or u.username,
+            "username": u.username,
+            "email": u.email,
+            "assigned_count": assigned_cnt,
+            "active_students": active_cnt,
+            "completed_students": completed_cnt,
+            "completion_rate": comp_rate,
+            "total_solved": tot_solved,
+            "avg_solved": avg_solved,
+            "students": st_sample
+        })
+
+    staff_list_out.sort(key=lambda x: (x["assigned_count"], x["completion_rate"]), reverse=True)
+
+    # 3. Top Performers (Top 10 by total_solved)
     top_students = db.query(Student, LeetCodeProfileStats).outerjoin(
         LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
     ).filter(
@@ -1579,7 +1716,7 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
             "last_active": stats.last_updated.isoformat() if stats and stats.last_updated else None
         })
         
-    # 2. At-Risk Students
+    # 4. At-Risk Students
     risk_students = db.query(Student, StudentRiskProfile, LeetCodeProfileStats).join(
         StudentRiskProfile, Student.id == StudentRiskProfile.student_id
     ).outerjoin(
@@ -1603,6 +1740,15 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
         })
         
     return {
+        "department": {
+            "id": dept.id if dept else dept_id,
+            "name": dept.name if dept else "Department",
+            "code": dept.code if dept else "DEPT",
+            "total_students": len(performers),
+            "total_staff": len(staff_list_out)
+        },
+        "hod": hod_info,
+        "staff_list": staff_list_out,
         "top_performers": performers,
         "at_risk_students": at_risk
     }

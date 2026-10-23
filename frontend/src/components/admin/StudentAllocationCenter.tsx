@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { useDepartments } from '../../contexts/DepartmentContext';
 import { AllocationConfirmationModal } from './AllocationConfirmationModal';
+import { isRoleEligibleForMentees } from '../../utils/staffRoleUtils';
 
 export const StudentAllocationCenter: React.FC = () => {
   const [staffList, setStaffList] = useState<any[]>([]);
@@ -412,12 +413,12 @@ export const StudentAllocationCenter: React.FC = () => {
             </p>
             
             <div className="max-h-[380px] overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
-              {staffList.filter(s => s.is_active).length === 0 && !loading && (
+              {staffList.filter(s => s.is_active && isRoleEligibleForMentees(s.role, s.mentoring_role)).length === 0 && !loading && (
                 <div className="text-center py-12 text-slate-400 text-xs">
-                  No active staff members found. Add staff in Staff Management above.
+                  No active mentoring staff members found. Add faculty/mentors in Staff Management above.
                 </div>
               )}
-              {staffList.filter(s => s.is_active).map((staff) => {
+              {staffList.filter(s => s.is_active && isRoleEligibleForMentees(s.role, s.mentoring_role)).map((staff) => {
                 const isSelected = selectedStaff === String(staff.id);
                 return (
                   <div

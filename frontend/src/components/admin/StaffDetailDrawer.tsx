@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { SwipeHandle } from '../SwipeHandle';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
-import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Target, Eye } from 'lucide-react';
+import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Target, Eye, Shield, Building2 } from 'lucide-react';
+import { isRoleEligibleForMentees } from '../../utils/staffRoleUtils';
 
 interface StaffDetailDrawerProps {
   staff: StaffRecord | null;
@@ -23,14 +24,18 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 }) => {
   if (!staff) return null;
 
+  const isMenteeEligible = isRoleEligibleForMentees(staff.role, (staff as any).mentoring_role);
   const [mentees, setMentees] = useState<StudentRecord[]>([]);
-  const [loadingMentees, setLoadingMentees] = useState<boolean>(true);
+  const [loadingMentees, setLoadingMentees] = useState<boolean>(isMenteeEligible);
   const [showPhotoZoom, setShowPhotoZoom] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
     async function loadStaffMentees() {
-      if (!staff) return;
+      if (!staff || !isMenteeEligible) {
+        if (isMounted) setLoadingMentees(false);
+        return;
+      }
       setLoadingMentees(true);
       try {
         const res = await getCommandCenterStudents({
@@ -55,7 +60,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 
     loadStaffMentees();
     return () => { isMounted = false; };
-  }, [staff?.id, studentList]);
+  }, [staff?.id, studentList, isMenteeEligible]);
 
   const assignedCount = loadingMentees ? (staff.assigned_count || mentees.length) : mentees.length;
   const activeCount = loadingMentees ? (staff.active_count ?? mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length) : mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length;
@@ -170,18 +175,19 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         </div>
 
         <div className="p-3.5 sm:p-5 space-y-4 sm:space-y-5 flex-1 overflow-y-auto bg-slate-50 dark:bg-navy-950">
-          {/* Mentorship Workload & Solver Metrics */}
-          <div className="space-y-3">
-            <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300"><Users size={14} /></span>
-                Mentorship Performance Summary
-              </span>
-              <span className="text-[11px] text-slate-500 font-semibold">
-                Scope: {staff.department_code || 'Dept'}
-              </span>
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
+          {/* Mentorship Workload & Solver Metrics (Only for Mentoring Roles: Faculty, Mentors, Placement Coordinators) */}
+          {isMenteeEligible ? (
+            <div className="space-y-3">
+              <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-300"><Users size={14} /></span>
+                  Mentorship Performance Summary
+                </span>
+                <span className="text-[11px] text-slate-500 font-semibold">
+                  Scope: {staff.department_code || 'Dept'}
+                </span>
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
               {/* Assigned Mentees */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
                 <Gauge className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
@@ -255,7 +261,45 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 <div className="text-[10px] text-slate-700 dark:text-slate-300 mt-1 font-bold text-right">{contestAttendanceRate}% turnout</div>
               </div>
             </div>
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-300"><Shield size={14} /></span>
+                  Administrative Scope & Institutional Authority
+                </span>
+                <span className="text-[11px] text-slate-500 font-semibold font-mono">
+                  {(staff as any).institutional_id || 'EXECUTIVE'}
+                </span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Role Scope */}
+                <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm relative overflow-hidden">
+                  <Building2 className="absolute -right-2 -top-2 text-purple-50 dark:text-navy-800" size={58} />
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Role</div>
+                  <div className="text-lg font-black text-slate-900 dark:text-white truncate">
+                    {staff.role || 'Executive'}
+                  </div>
+                  <div className="mt-2 text-[10.5px] font-bold text-purple-700 dark:text-purple-300">
+                    {staff.role === 'Department HOD' ? 'Department-Level Academic Oversight' : staff.role === 'Principal' ? 'Head of Institution & Governance' : 'Institutional System Administration'}
+                  </div>
+                </div>
+
+                {/* Jurisdiction / Department */}
+                <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm relative overflow-hidden">
+                  <Shield className="absolute -right-2 -top-2 text-indigo-50 dark:text-navy-800" size={58} />
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Administrative Scope</div>
+                  <div className="text-lg font-black text-indigo-600 dark:text-indigo-400 truncate">
+                    {staff.department_code || 'INSTITUTIONAL'}
+                  </div>
+                  <div className="mt-2 text-[10.5px] font-bold text-slate-500">
+                    Executive / Leadership Portfolio
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mentee Activity Summary */}
           <div className="space-y-3">
@@ -284,13 +328,14 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             </div>
           </div>
 
-          {/* Assigned Students Detailed List */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <Briefcase size={15} className="text-brand-500" /> 
-                Assigned Mentees Directory ({mentees.length})
-              </h4>
+          {/* Assigned Students Detailed List (Only for Mentoring Roles) */}
+          {isMenteeEligible && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Briefcase size={15} className="text-brand-500" /> 
+                  Assigned Mentees Directory ({mentees.length})
+                </h4>
               <div className="flex items-center gap-2">
                 {loadingMentees ? (
                   <span className="text-[10px] text-brand-600 font-bold flex items-center gap-1 animate-pulse">
@@ -545,6 +590,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* Footer Actions */}
@@ -574,14 +620,16 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                   <span>Filter Dashboard</span>
                 </button>
               )}
-              <button 
-                type="button"
-                onClick={onManageAllocation}
-                className="w-full sm:w-auto px-5 py-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center justify-center gap-1.5 active:scale-98 touch-manipulation"
-              >
-                <Users size={14} />
-                <span>Manage Allocation</span>
-              </button>
+              {isMenteeEligible && (
+                <button 
+                  type="button"
+                  onClick={onManageAllocation}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-xs font-extrabold transition shadow-lg shadow-brand-600/25 cursor-pointer flex items-center justify-center gap-1.5 active:scale-98 touch-manipulation"
+                >
+                  <Users size={14} />
+                  <span>Manage Allocation</span>
+                </button>
+              )}
             </div>
 
             {/* Mobile Close button */}
