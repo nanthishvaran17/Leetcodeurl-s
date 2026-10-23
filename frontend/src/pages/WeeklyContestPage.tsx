@@ -4331,7 +4331,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span className="text-[11px] font-bold text-slate-400">Single-Source-of-Truth Aggregation</span>
               </div>
 
-              <div className="overflow-x-auto -mx-1 px-1 touch-pan-x overscroll-x-contain">
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto -mx-1 px-1 touch-pan-x overscroll-x-contain">
                 <table className="w-full min-w-[700px] text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider">
@@ -4483,6 +4484,162 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Native Card View (Zero Horizontal Scroll on mobile) */}
+              <div className="block md:hidden space-y-3">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 pb-1">
+                  Departments ({departments.length})
+                </div>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {departments.map((dept, index) => {
+                    const deptCode = dept.code;
+                    const deptNorm = normalizeDepartment(dept.code || dept.name);
+                    let dStats = { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+
+                    if (departmentStats && typeof departmentStats === 'object') {
+                      for (const [key, val] of Object.entries(departmentStats)) {
+                        if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                          const dVal: any = val;
+                          dStats = {
+                            total: Number(dVal?.total || 0),
+                            public: Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0),
+                            virtual: Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0),
+                            not_attended: Number(dVal?.not_attended ?? dVal?.notAttended ?? 0),
+                            errors: Number(dVal?.errors ?? dVal?.totalErrors ?? dVal?.dataErrors ?? 0)
+                          };
+                          break;
+                        }
+                      }
+                    }
+
+                    if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                      const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
+                      const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+                      if (deptStudents.length > 0) {
+                        const tot = deptStudents.length;
+                        const pub = deptStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        const virt = deptStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        const notAtt = deptStudents.filter((s: any) => ['PUBLIC_NOT_ATTENDED', 'NOT_ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        const errs = deptStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        dStats = { total: tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
+                      }
+                    }
+
+                    const tot = dStats.total || 0;
+                    const pub = dStats.public || 0;
+                    const virt = dStats.virtual || 0;
+                    const errs = dStats.errors || 0;
+                    const notAtt = dStats.not_attended || Math.max(0, tot - (pub + virt + errs));
+                    const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
+
+                    return (
+                      <div key={deptCode} className="p-3.5 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-900/60 shadow-xs space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-black text-slate-900 dark:text-white truncate">
+                            {dept.name}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                            {pct}% Attended
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5 text-center text-[10.5px] font-mono">
+                          <div className="p-1 rounded-lg bg-slate-100 dark:bg-navy-800">
+                            <span className="block text-[8px] font-bold text-slate-400 uppercase">Total</span>
+                            <span className="font-black text-slate-800 dark:text-slate-200">{tot}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                            <span className="block text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Live</span>
+                            <span className="font-black text-emerald-600 dark:text-emerald-400">{pub}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                            <span className="block text-[8px] font-bold text-purple-600 dark:text-purple-400 uppercase">Virt</span>
+                            <span className="font-black text-purple-600 dark:text-purple-400">{virt}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                            <span className="block text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Abs</span>
+                            <span className="font-black text-rose-600 dark:text-rose-400">{notAtt}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <span className="block text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Err</span>
+                            <span className="font-black text-amber-600 dark:text-amber-400">{errs}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 pt-2 pb-1">
+                  Academic Years
+                </div>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {['II', 'III', 'IV'].map((yr) => {
+                    const normY = (y: any): string => {
+                      if (!y) return '';
+                      const str = String(y).toUpperCase().trim();
+                      if (str.includes('2') || str.includes('II')) return 'II';
+                      if (str.includes('3') || str.includes('III')) return 'III';
+                      if (str.includes('4') || str.includes('IV')) return 'IV';
+                      return str;
+                    };
+                    let yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                    if (yStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0 || globalStudents?.length > 0)) {
+                      const pool = matrixRows.length > 0 ? matrixRows : (cachedStudents?.length > 0 ? cachedStudents : globalStudents);
+                      const yrNorm = normY(yr);
+                      const yrStudents = pool.filter((s: any) => normY(s.year || s.year_level || s.academic_year) === yrNorm);
+                      if (yrStudents.length > 0) {
+                        const t = yrStudents.length;
+                        const p = yrStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        const v = yrStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        const e = yrStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                        const n = Math.max(0, t - (p + v + e));
+                        yStats = { total: t, public: p, virtual: v, not_attended: n, errors: e };
+                      }
+                    }
+                    const tot = yStats.total || 0;
+                    const pub = yStats.public || 0;
+                    const virt = yStats.virtual || 0;
+                    const errs = yStats.errors || 0;
+                    const notAtt = yStats.not_attended || Math.max(0, tot - (pub + virt + errs));
+                    const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
+
+                    return (
+                      <div key={yr} className="p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-900/50 bg-purple-50/30 dark:bg-purple-950/20 shadow-xs space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-black text-purple-900 dark:text-purple-200 truncate">
+                            Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shrink-0">
+                            {pct}%
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5 text-center text-[10.5px] font-mono">
+                          <div className="p-1 rounded-lg bg-white/60 dark:bg-navy-900">
+                            <span className="block text-[8px] font-bold text-slate-400 uppercase">Total</span>
+                            <span className="font-black text-slate-800 dark:text-slate-200">{tot}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                            <span className="block text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Live</span>
+                            <span className="font-black text-emerald-600 dark:text-emerald-400">{pub}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                            <span className="block text-[8px] font-bold text-purple-600 dark:text-purple-400 uppercase">Virt</span>
+                            <span className="font-black text-purple-600 dark:text-purple-400">{virt}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                            <span className="block text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Abs</span>
+                            <span className="font-black text-rose-600 dark:text-rose-400">{notAtt}</span>
+                          </div>
+                          <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <span className="block text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Err</span>
+                            <span className="font-black text-amber-600 dark:text-amber-400">{errs}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

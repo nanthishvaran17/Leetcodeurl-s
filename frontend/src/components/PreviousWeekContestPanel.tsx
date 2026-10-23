@@ -1063,16 +1063,16 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       {/* Disconnection Notice if completely offline */}
       {wsStatus !== 'LIVE' && (
-        <div className="p-3.5 sm:p-4 my-2 sm:my-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 shrink-0 text-indigo-500" />
-            <span className="text-[11px] sm:text-xs">Realtime Auto-Sync active in background • Last sync: {lastSyncAt || 'Live'}</span>
+        <div className="p-2 sm:p-3.5 my-1.5 sm:my-2 rounded-xl sm:rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between shadow-2xs gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 animate-ping" />
+            <span className="text-[10px] sm:text-xs truncate">Auto-Sync active • {lastSyncAt || 'Live'}</span>
           </div>
           <button
             onClick={() => fetchPreviousWeekData(false, true)}
-            className="px-3 py-1 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 transition cursor-pointer shadow-xs active:scale-95 shrink-0"
+            className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[10.5px] sm:text-xs font-black hover:bg-indigo-500 transition cursor-pointer shadow-xs active:scale-95 shrink-0"
           >
-            Sync Now
+            Sync
           </button>
         </div>
       )}

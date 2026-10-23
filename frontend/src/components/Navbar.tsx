@@ -109,9 +109,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="flex items-center cursor-pointer group min-w-0 select-none pl-1"
               >
                 <div className="flex flex-col justify-center min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                    <span className="font-extrabold text-[12px] xs:text-[13.5px] leading-tight sm:text-[15.5px] sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate font-display">
-                      NANDHA INTELLIGENCE
+                  <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                    <span className="font-black text-[13px] leading-tight sm:text-[15.5px] sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate font-display">
+                      NANDHA <span className="text-brand-600 dark:text-brand-400">INTELLIGENCE</span>
                     </span>
                     {(freshness?.total_students || menteesCount !== null) ? (
                       <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/25 whitespace-nowrap flex-shrink-0 items-center tracking-wide shadow-xs">
@@ -121,8 +121,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-[9px] xs:text-[10.5px] leading-tight sm:text-[12px] sm:leading-snug text-slate-500 dark:text-slate-400 font-semibold tracking-wide truncate">
-                    Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>
+                  <span className="hidden sm:block text-[9px] xs:text-[10.5px] leading-tight sm:text-[12px] sm:leading-snug text-slate-500 dark:text-slate-400 font-semibold tracking-wide truncate">
+                    Nandha Engineering College • Erode
                   </span>
                 </div>
               </div>
