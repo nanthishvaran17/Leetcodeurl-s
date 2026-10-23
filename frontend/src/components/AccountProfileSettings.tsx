@@ -5862,85 +5862,50 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         )}
 
-        {/* 4A. MOBILE INLINE ACTION CARD — No awkward floating overlay! */}
-        <div className="md:hidden mt-8 mb-4 p-4.5 rounded-2xl bg-white/95 dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-bold">
-            <Info className="w-4 h-4 text-brand-600 shrink-0" />
-            <span>Updates will apply immediately across your portal session.</span>
-          </div>
+        {/* 4. STATIC / FIXED STICKY ACTION BAR (Always docked at bottom on Mobile & Desktop) */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
+                <Info className="w-4 h-4 text-brand-600 shrink-0" />
+                <span>Updates will apply immediately across your portal session.</span>
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={handleResetForm}
-              className="w-full py-3 px-3 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-              <span>Reset Form</span>
-            </button>
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
+                title="Reset Form"
+              >
+                <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                <span>Reset Form</span>
+              </button>
 
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 shrink-0" />
-                  <span>Save Details</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* 4B. DESKTOP STICKY BOTTOM BAR (Hidden on mobile) */}
-        <div className="hidden md:flex fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_25px_rgba(0,0,0,0.1)] px-6 py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
-              <Info className="w-4 h-4 text-brand-600 shrink-0" />
-              <span>Updates will apply immediately across your portal session.</span>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="flex-[1.4] sm:flex-initial px-5 sm:px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 shrink-0" />
+                    <span>Save Details</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
-
-          <div className="flex items-center gap-3 justify-end">
-            <button
-              type="button"
-              onClick={handleResetForm}
-              className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-              title="Reset Form"
-            >
-              <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-              <span>Reset</span>
-            </button>
-
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 shrink-0" />
-                  <span>Save Account Details</span>
-                </>
-              )}
-            </button>
-          </div>
         </div>
 
-        {/* Bottom padding for mobile navigation island */}
-        <div className="h-24 md:h-20" />
+        {/* Safe bottom spacer so page content can scroll completely above the fixed action bar */}
+        <div className="h-28 sm:h-24" />
 
       </form>
       {/* MODAL: MENTEE PROFILE */}

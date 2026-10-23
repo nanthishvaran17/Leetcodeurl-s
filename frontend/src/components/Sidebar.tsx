@@ -182,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
         ...(isAdmin
-          ? [{ id: 'dev-studio', label: 'Developer Studio', icon: Cpu, badge: 'LIVE' as const, badgeColor: 'amber' as const }]
+          ? [{ id: 'dev-studio', label: 'Developer Studio', icon: Cpu, badge: 'LIVE' as const, badgeColor: 'emerald' as const }]
           : []),
       ]
     }
@@ -282,9 +282,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               </button>
             </div>
 
-            {/* Region 2: Independently Scrollable Menu with proper padding & spacing */}
+            {/* Region 2: Independently Scrollable Menu with tight, harmonious spacing */}
             <div
-              className="space-y-4 sm:space-y-5 overflow-y-auto pr-1 flex-1 min-h-0 py-2.5 pb-6 relative z-10 touch-pan-y"
+              className="space-y-4 sm:space-y-5 overflow-y-auto pr-1 flex-1 min-h-0 pt-2 pb-1.5 relative z-10 touch-pan-y"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehaviorY: 'contain'
@@ -378,31 +378,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               ))}
             </div>
 
-            {/* Region 3: Fixed Mobile Action Bar (Theme & Auth) with comfortable gap */}
-            <div className="pt-3 pb-1 border-t border-slate-100 dark:border-white/[0.06] shrink-0 relative z-10 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="h-[40px] px-3 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] transition-all duration-150 flex items-center justify-center flex-1 font-semibold text-xs cursor-pointer active:scale-95"
-              >
-                {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400 mr-2 shrink-0" /> : <Moon className="w-3.5 h-3.5 text-navy-700 dark:text-slate-300 mr-2 shrink-0" />}
-                <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-              </button>
-              {user && (
+            {/* Region 3: Clean, Compact Fixed Footer Dock (Theme & Auth + Session Window) */}
+            <div className="shrink-0 relative z-10 border-t border-slate-200/80 dark:border-white/[0.08] pt-2.5 space-y-2 mt-auto">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowLogoutConfirm(true)}
-                  className="h-[40px] px-3 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-semibold text-xs cursor-pointer active:scale-95"
+                  onClick={toggleTheme}
+                  className="h-[38px] px-3 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] transition-all duration-150 flex items-center justify-center flex-1 font-semibold text-xs cursor-pointer active:scale-95"
                 >
-                  <LogOut className="w-3.5 h-3.5 mr-2 shrink-0" />
-                  <span>Sign Out</span>
+                  {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400 mr-2 shrink-0" /> : <Moon className="w-3.5 h-3.5 text-navy-700 dark:text-slate-300 mr-2 shrink-0" />}
+                  <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                 </button>
-              )}
-            </div>
+                {user && (
+                  <button
+                    type="button"
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="h-[38px] px-3 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-semibold text-xs cursor-pointer active:scale-95"
+                  >
+                    <LogOut className="w-3.5 h-3.5 mr-2 shrink-0" />
+                    <span>Sign Out</span>
+                  </button>
+                )}
+              </div>
 
-            {/* Region 4: Fixed Minimal Sunday Session Window Card */}
-            <div className="pt-2 shrink-0 relative z-10">
-              <div className="p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
+              {/* Sunday Session Window Card */}
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
                 <div className="flex items-center space-x-2 relative z-10">
                   <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />

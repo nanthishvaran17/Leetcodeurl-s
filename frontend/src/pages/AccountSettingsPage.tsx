@@ -1,8 +1,8 @@
 import React from 'react';
 import { AccountProfileSettings } from '../components/AccountProfileSettings';
-import { ShieldCheck, UserCheck, Lock, ChevronRight } from 'lucide-react';
+import { ShieldCheck, UserCheck, Lock, ChevronRight, ArrowLeft } from 'lucide-react';
 
-export const AccountSettingsPage: React.FC = () => {
+export const AccountSettingsPage: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   return (
     <div className="relative min-h-screen w-full pb-20 text-slate-900 dark:text-slate-100 animate-fade-in overflow-hidden">
       {/* Dynamic Ambient Background Glows */}
@@ -14,6 +14,17 @@ export const AccountSettingsPage: React.FC = () => {
         {/* Executive Breadcrumb & Section Header — Mobile Native Optimized */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-200/60 dark:border-navy-800/60">
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 min-w-0">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-black transition-all cursor-pointer mr-1 active:scale-95 shadow-2xs shrink-0"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Home</span>
+              </button>
+            )}
             <span className="text-slate-500 dark:text-slate-400 hidden xs:inline">Command Deck</span>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400 hidden xs:inline shrink-0" />
             <span className="text-slate-900 dark:text-white font-extrabold truncate text-xs sm:text-sm">Account Settings &amp; Security</span>

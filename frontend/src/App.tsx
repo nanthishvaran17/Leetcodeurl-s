@@ -1240,7 +1240,7 @@ export const App: React.FC = () => {
               )}
 
               {(activeTab === 'account-settings' || activeTab === 'account' || activeTab === 'profile-settings') && (
-                <AccountSettingsPage />
+                <AccountSettingsPage onBack={() => handleTabChange('dashboard')} />
               )}
 
               {activeTab === 'settings' && (
@@ -1451,7 +1451,7 @@ export const App: React.FC = () => {
       {activeTab !== 'messages' && <BackToTopButton />}
 
       {/* Sleek Floating Island Mobile Bottom Navigation */}
-      {isAuthenticated && activeTab !== 'messages' && (
+      {isAuthenticated && activeTab !== 'messages' && activeTab !== 'account-settings' && activeTab !== 'account' && activeTab !== 'profile-settings' && (
         <MobileBottomNav
           activeTab={activeTab}
           setActiveTab={handleTabChange}

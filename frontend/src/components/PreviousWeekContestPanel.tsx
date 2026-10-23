@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   Building2,
+  GraduationCap,
   ChevronDown,
   Check,
   Activity,
@@ -161,6 +162,16 @@ export const getStartTimeInfo = (contestTitle?: string) => {
   };
 };
 
+export const normalizeYear = (val: string | null | undefined): string => {
+  if (!val) return '';
+  const s = String(val).toUpperCase().replace(/YEAR/gi, '').trim();
+  if (s === '1' || s === 'I' || s === '1ST') return 'I';
+  if (s === '2' || s === 'II' || s === '2ND') return 'II';
+  if (s === '3' || s === 'III' || s === '3RD') return 'III';
+  if (s === '4' || s === 'IV' || s === '4TH') return 'IV';
+  return s;
+};
+
 export const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: string): string => {
   if (r.participation_type === 'NOT_PARTICIPATED') return '—';
 
@@ -241,6 +252,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
   const [deptDropdownOpen, setDeptDropdownOpen] = useState<boolean>(false);
+  const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
+  const [yearDropdownOpen, setYearDropdownOpen] = useState<boolean>(false);
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
@@ -248,7 +261,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedTypeFilter, selectedDeptFilter]);
+  }, [searchTerm, selectedTypeFilter, selectedDeptFilter, selectedYearFilter]);
 
   // Handle Escape key & body scroll lock/unlock for forensic modal
   useEffect(() => {
@@ -885,6 +898,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     return Array.from(optsMap.values());
   }, [records, isFacultyRole]);
 
+  const yearOptions = useMemo(() => [
+    { value: 'ALL', label: 'All Years', code: 'ALL', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
+    { value: 'I',   label: 'I Year',    code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800' },
+    { value: 'II',  label: 'II Year',   code: 'II',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
+    { value: 'III', label: 'III Year',  code: 'III', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+    { value: 'IV',  label: 'IV Year',   code: 'IV',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  ], []);
+
   const getParticipationCategory = (r: ParticipationRecord): 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME' => {
     const isMissing = r.participation_type === 'MISSING_LEETCODE_USERNAME' || !r.leetcode_username || r.leetcode_username.trim() === '' || r.leetcode_username === 'USERNAME_NOT_FOUND' || r.leetcode_username === 'UNLINKED' || r.leetcode_username === 'NO_HANDLE';
     if (isMissing) return 'MISSING_LEETCODE_USERNAME';
@@ -899,12 +920,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   // Reset page to 1 whenever active filters change
   useEffect(() => {
     setPage(1);
-  }, [selectedTypeFilter, selectedDeptFilter, searchTerm]);
+  }, [selectedTypeFilter, selectedDeptFilter, selectedYearFilter, searchTerm]);
 
   const filteredRecords = useMemo(() => {
     const isTypeAll = selectedTypeFilter === 'ALL';
     const isDeptAll = selectedDeptFilter === 'ALL';
+    const isYearAll = selectedYearFilter === 'ALL';
     const targetDept = selectedDeptFilter.toUpperCase().trim();
+    const targetYear = selectedYearFilter.toUpperCase().trim();
     const query = deferredSearchTerm.toLowerCase().trim();
     const cleanQuery = query ? query.replace(/[^a-z0-9]/g, '') : '';
     const hasSearch = query !== '';
@@ -917,6 +940,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         const info = getDeptInfo(r.department_name || '');
         const dName = (r.department_name || '').toUpperCase().trim();
         if (info.key.toUpperCase() !== targetDept && dName !== targetDept) {
+          return false;
+        }
+      }
+      if (!isYearAll) {
+        const studentYear = normalizeYear(r.year_level);
+        if (studentYear !== targetYear && !r.year_level?.toUpperCase().includes(targetYear)) {
           return false;
         }
       }
@@ -934,7 +963,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
       return true;
     });
-  }, [records, selectedTypeFilter, selectedDeptFilter, deferredSearchTerm, isFacultyRole]);
+  }, [records, selectedTypeFilter, selectedDeptFilter, selectedYearFilter, deferredSearchTerm, isFacultyRole]);
 
   // Dynamically calculate metrics directly from real-time records state
   const dynamicMetrics = useMemo(() => {
@@ -955,6 +984,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           return;
         }
       }
+      if (selectedYearFilter !== 'ALL') {
+        const studentYear = normalizeYear(r.year_level);
+        const targetYear = selectedYearFilter.toUpperCase().trim();
+        if (studentYear !== targetYear && !r.year_level?.toUpperCase().includes(targetYear)) {
+          return;
+        }
+      }
       const cat = getParticipationCategory(r);
       counts[cat]++;
     });
@@ -970,7 +1006,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       return summary.metrics;
     }
     return counts;
-  }, [records, summary?.metrics, selectedDeptFilter, isFacultyRole]);
+  }, [records, summary?.metrics, selectedDeptFilter, selectedYearFilter, isFacultyRole]);
 
   if (loading && !summary) {
     return (
@@ -1185,91 +1221,211 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0 flex items-center">
-          <input
-            type="text"
-            placeholder="Search student, reg no, or LeetCode username..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-            className="w-full pl-10 pr-9 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-navy-900 text-left transition-all shadow-inner"
-          />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-            <Search className="w-4 h-4 stroke-[2.5]" />
+      <div className="space-y-3 p-3.5 sm:p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        {/* Search Bar + Filters Row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0 flex items-center">
+            <input
+              type="text"
+              placeholder="Search student, reg no, or LeetCode username..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+              className="w-full pl-10 pr-9 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-navy-900 text-left transition-all shadow-inner"
+            />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
+              <Search className="w-4 h-4 stroke-[2.5]" />
+            </div>
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+                title="Clear search"
+              >
+                <X className="w-4 h-4 stroke-[2.5]" />
+              </button>
+            )}
           </div>
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm('')}
-              className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
-              title="Clear search"
-            >
-              <X className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          )}
+
+          {/* Department and Academic Year Selector Boxes */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+            {/* 1. Department Box */}
+            {(() => {
+              const currentObj = deptOptions.find(o => o.value === selectedDeptFilter) || deptOptions[0];
+
+              return (
+                <div
+                  className="relative flex-1 sm:flex-initial"
+                  onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptDropdownOpen(false); }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeptDropdownOpen(p => !p);
+                      setYearDropdownOpen(false);
+                    }}
+                    className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-slate-50 dark:bg-navy-950 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all hover:border-indigo-300 focus:outline-none ${deptDropdownOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-slate-200 dark:border-slate-700'}`}
+                    title={`Filter by Department: ${currentObj.label}`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentObj.color}`}>{currentObj.code}</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[85px] sm:max-w-[130px]">{currentObj.label}</span>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${deptDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {deptDropdownOpen && (
+                    <div className="absolute z-50 top-full left-0 mt-1.5 w-72 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
+                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800">
+                        Select Department
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {deptOptions.map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setSelectedDeptFilter(opt.value); setDeptDropdownOpen(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
+                          >
+                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
+                            <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-950 dark:text-indigo-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
+                            {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* 2. Academic Year Box (Requested by user) */}
+            {(() => {
+              const currentYearObj = yearOptions.find(o => o.value === selectedYearFilter) || yearOptions[0];
+
+              return (
+                <div
+                  className="relative flex-1 sm:flex-initial"
+                  onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setYearDropdownOpen(false); }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setYearDropdownOpen(p => !p);
+                      setDeptDropdownOpen(false);
+                    }}
+                    className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-slate-50 dark:bg-navy-950 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all hover:border-purple-300 focus:outline-none ${yearDropdownOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-slate-200 dark:border-slate-700'}`}
+                    title={`Filter by Academic Year: ${currentYearObj.label}`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <GraduationCap className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                      <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentYearObj.color}`}>{currentYearObj.code}</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[80px] sm:max-w-[110px]">{currentYearObj.label}</span>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {yearDropdownOpen && (
+                    <div className="absolute z-50 top-full right-0 sm:left-0 sm:right-auto mt-1.5 w-60 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
+                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800">
+                        Select Academic Year
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {yearOptions.map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setSelectedYearFilter(opt.value); setYearDropdownOpen(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedYearFilter === opt.value ? 'bg-purple-50/80 dark:bg-purple-950/60' : ''}`}
+                          >
+                            <GraduationCap className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
+                            <span className={`text-xs truncate flex-1 ${selectedYearFilter === opt.value ? 'text-purple-950 dark:text-purple-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
+                            {selectedYearFilter === opt.value && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap flex-1 w-full">
-          {/* Active Status Filter Chip */}
-          {selectedTypeFilter !== 'ALL' && (
-            <button
-              onClick={() => setSelectedTypeFilter('ALL')}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/20 transition cursor-pointer"
-              title="Click to reset status filter to ALL"
-            >
-              <span>Filter: {
-                selectedTypeFilter === 'PUBLIC' ? 'Public / Live' :
-                selectedTypeFilter === 'VIRTUAL' ? 'Virtual Practice' :
-                selectedTypeFilter === 'NOT_PARTICIPATED' ? 'Not Attended' :
-                selectedTypeFilter === 'NOT_VERIFIED' ? 'Pending Verification' :
-                'No LeetCode Handle'
-              }</span>
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+        {/* Sub-strip: Active Filter Tags & Count Display */}
+        <div className="flex items-center justify-between gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Active Status Filter Chip */}
+            {selectedTypeFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setSelectedTypeFilter('ALL')}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/20 transition cursor-pointer"
+                title="Clear status filter"
+              >
+                <span>Status: {
+                  selectedTypeFilter === 'PUBLIC' ? 'Public / Live' :
+                  selectedTypeFilter === 'VIRTUAL' ? 'Virtual Practice' :
+                  selectedTypeFilter === 'NOT_PARTICIPATED' ? 'Not Attended' :
+                  selectedTypeFilter === 'NOT_VERIFIED' ? 'Pending Verification' :
+                  'No Handle'
+                }</span>
+                <X className="w-3 h-3" />
+              </button>
+            )}
 
-          {/* Premium Custom Department Filter */}
-          {(() => {
-            const currentObj = deptOptions.find(o => o.value === selectedDeptFilter) || deptOptions[0];
+            {/* Active Dept Filter Chip */}
+            {selectedDeptFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setSelectedDeptFilter('ALL')}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/20 transition cursor-pointer"
+                title="Clear department filter"
+              >
+                <span>Dept: {selectedDeptFilter}</span>
+                <X className="w-3 h-3" />
+              </button>
+            )}
 
-            return (
-              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptDropdownOpen(false); }}>
-                <button
-                  type="button"
-                  onClick={() => setDeptDropdownOpen(p => !p)}
-                  className={`flex items-center gap-2 bg-slate-50 dark:bg-navy-950 px-3 py-2 rounded-xl border shadow-sm text-left transition-all hover:border-indigo-300 focus:outline-none ${deptDropdownOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-slate-200 dark:border-slate-700'}`}
-                >
-                  <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentObj.color}`}>{currentObj.code}</span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[160px]">{currentObj.label}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${deptDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
+            {/* Active Year Filter Chip */}
+            {selectedYearFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setSelectedYearFilter('ALL')}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 hover:bg-purple-500/20 transition cursor-pointer"
+                title="Clear year filter"
+              >
+                <span>Year: {selectedYearFilter} Year</span>
+                <X className="w-3 h-3" />
+              </button>
+            )}
 
-                {deptDropdownOpen && (
-                  <div className="absolute z-50 top-full right-0 mt-1.5 w-72 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
-                    {deptOptions.map(opt => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { setSelectedDeptFilter(opt.value); setDeptDropdownOpen(false); }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
-                      >
-                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
-                        <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-950 dark:text-indigo-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
-                        {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+            {/* Clear All Filters Button */}
+            {(selectedTypeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || searchTerm) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTypeFilter('ALL');
+                  setSelectedDeptFilter('ALL');
+                  setSelectedYearFilter('ALL');
+                  setSearchTerm('');
+                }}
+                className="text-[10.5px] font-black text-rose-500 hover:text-rose-600 dark:text-rose-400 underline decoration-dotted ml-1 cursor-pointer"
+              >
+                Reset All
+              </button>
+            )}
+          </div>
 
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 font-mono">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 font-mono ml-auto">
             Showing {filteredRecords.length} / {records.length} Students
           </span>
         </div>
