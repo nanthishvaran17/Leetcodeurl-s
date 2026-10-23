@@ -24,6 +24,7 @@ import 'react-easy-crop/react-easy-crop.css';
 import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { Capacitor } from '@capacitor/core';
 import { downloadManager } from '../services/download/downloadManager';
+import { triggerHaptic } from '../utils/haptics';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -5796,14 +5797,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
 
                 <div className="border border-slate-200 dark:border-navy-800 rounded-2xl overflow-hidden bg-white dark:bg-navy-950/60 shadow-xs">
-                  <div className="overflow-y-auto overflow-x-auto max-h-[300px] custom-scrollbar">
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block overflow-y-auto overflow-x-auto max-h-[300px] custom-scrollbar">
                     <table className="w-full text-left text-[11px] sm:text-xs whitespace-nowrap">
                       <thead className="bg-slate-50 dark:bg-navy-900/90 text-slate-700 dark:text-slate-300 font-black uppercase text-[9px] sm:text-[10px] border-b border-slate-200 dark:border-navy-800 sticky top-0 z-10 backdrop-blur-md">
                         <tr>
-                          <th className="px-3 sm:px-4 py-3"><span className="hidden sm:inline">Student Reg No</span><span className="sm:hidden">Reg No</span></th>
+                          <th className="px-3 sm:px-4 py-3">Student Reg No</th>
                           <th className="px-3 sm:px-4 py-3">Student Name</th>
-                          <th className="px-3 sm:px-4 py-3"><span className="hidden sm:inline">Attendance</span><span className="sm:hidden">Att%</span></th>
-                          <th className="px-3 sm:px-4 py-3"><span className="hidden sm:inline">LeetCode Solved</span><span className="sm:hidden">LC</span></th>
+                          <th className="px-3 sm:px-4 py-3">Attendance</th>
+                          <th className="px-3 sm:px-4 py-3">LeetCode Solved</th>
                           <th className="px-3 sm:px-4 py-3 text-center">Action</th>
                         </tr>
                       </thead>
@@ -5856,6 +5858,75 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Mobile Native Stacked Card View */}
+                  <div className="block sm:hidden p-3 space-y-2.5 max-h-[340px] overflow-y-auto custom-scrollbar">
+                    {menteesLoading ? (
+                      <div className="text-center py-8 text-slate-500">
+                        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-500" />
+                        <span className="text-xs font-bold">Loading assigned mentees...</span>
+                      </div>
+                    ) : mentees.length === 0 ? (
+                      <div className="text-center py-8 px-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-2">
+                          <GraduationCap className="w-5 h-5" />
+                        </div>
+                        <p className="text-xs font-black text-slate-900 dark:text-white">No Mentees Assigned</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Assigned by HOD for this cycle.</p>
+                      </div>
+                    ) : (
+                      mentees.map(m => {
+                        const isCritical = m.status_code === 'CRITICAL';
+                        const isWarning = m.status_code === 'WARNING';
+                        const actionType = isCritical ? 'Intervene' : isWarning ? 'Warn' : 'View';
+                        const att = isCritical ? '60%' : isWarning ? '74%' : '90%+';
+
+                        return (
+                          <div 
+                            key={m.id}
+                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-2.5 ${
+                              isCritical 
+                                ? 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50' 
+                                : isWarning 
+                                ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50' 
+                                : 'bg-slate-50/50 dark:bg-navy-900/50 border-slate-200 dark:border-navy-800'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-black text-slate-900 dark:text-white truncate uppercase">
+                                {m.name || m.username}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1 text-[11px] font-mono">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{m.reg_no}</span>
+                                <span>•</span>
+                                <span className={`font-black ${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                  Att: {att}
+                                </span>
+                                <span>•</span>
+                                <span className="font-bold text-brand-600 dark:text-brand-400">
+                                  {m.total_solved || 0} Solved
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedMentee({ name: m.name || m.username, regNo: m.reg_no, att, solved: m.total_solved || 0, actionType })}
+                              className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95 ${
+                                isCritical 
+                                  ? 'bg-rose-500 text-white shadow-xs' 
+                                  : isWarning 
+                                  ? 'bg-amber-500 text-white shadow-xs' 
+                                  : 'bg-brand-600 text-white shadow-xs'
+                              }`}
+                              title={actionType}
+                            >
+                              {isCritical ? <AlertTriangle className="w-4 h-4" /> : isWarning ? <Bell className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -5875,8 +5946,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
               <button
                 type="button"
-                onClick={handleResetForm}
-                className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
+                onClick={(e) => {
+                  triggerHaptic('warning');
+                  handleResetForm();
+                }}
+                className="flex-1 sm:flex-initial min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-xs touch-manipulation"
                 title="Reset Form"
               >
                 <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
@@ -5886,7 +5960,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex-[1.4] sm:flex-initial px-5 sm:px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => triggerHaptic('success')}
+                className="flex-[1.4] sm:flex-initial min-h-[44px] px-5 sm:px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
               >
                 {isSaving ? (
                   <>
