@@ -5,11 +5,11 @@ import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo
 import { triggerHaptic } from '../utils/haptics';
 
 function getRankBadge(rank?: number) {
-  if (!rank || rank <= 0) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700 shrink-0">Unranked</span>;
-  if (rank === 1) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/30 border border-amber-300/60 shrink-0">#1</span>;
-  if (rank === 2) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-md shadow-slate-500/20 border border-slate-300/60 shrink-0">#2</span>;
-  if (rank === 3) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-md shadow-amber-700/20 border border-amber-600/60 shrink-0">#3</span>;
-  return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 shrink-0">#{rank}</span>;
+  if (!rank || rank <= 0) return <span className="inline-flex items-center justify-center h-5 px-2 rounded-full text-[9.5px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700 shrink-0">Unranked</span>;
+  if (rank === 1) return <span className="inline-flex items-center justify-center h-5 px-2 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-sm shadow-amber-500/30 border border-amber-300/60 shrink-0">#1</span>;
+  if (rank === 2) return <span className="inline-flex items-center justify-center h-5 px-2 rounded-full text-[10px] font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-sm shadow-slate-500/20 border border-slate-300/60 shrink-0">#2</span>;
+  if (rank === 3) return <span className="inline-flex items-center justify-center h-5 px-2 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-sm shadow-amber-700/20 border border-amber-600/60 shrink-0">#3</span>;
+  return <span className="inline-flex items-center justify-center h-5 px-2 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 shrink-0">#{rank}</span>;
 }
 
 function parseUtcTime(ts?: string): number {
@@ -195,21 +195,21 @@ export const FastStudentRow = memo(({
         {/* Compact Card Header - Tap to Expand/Collapse */}
         <div 
           onClick={handleToggleExpand}
-          className="flex items-center gap-3 p-3 cursor-pointer select-none active:bg-slate-50 dark:active:bg-white/[0.03] transition-colors"
+          className="flex items-start gap-2.5 p-3 cursor-pointer select-none active:bg-slate-50 dark:active:bg-white/[0.03] transition-colors"
         >
-          {/* Avatar with Tap-to-Select Micro Toggle (44px target) */}
+          {/* Avatar with Tap-to-Select Micro Toggle */}
           <div 
             onClick={handleAvatarSelect}
-            className="relative shrink-0 cursor-pointer group/avatar p-0.5"
+            className="relative shrink-0 cursor-pointer group/avatar pt-0.5"
             title="Tap to select student"
           >
-            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs shadow-md transition-all ${
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xs shadow-md transition-all ${
               isSelected 
                 ? 'bg-brand-600 text-white ring-2 ring-brand-500 ring-offset-2' 
                 : 'bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 text-white shadow-brand-500/20'
             }`}>
               {isSelected ? (
-                <Check size={18} strokeWidth={3} />
+                <Check size={16} strokeWidth={3} />
               ) : (
                 (student.name || 'User')
                   .split(' ')
@@ -221,51 +221,53 @@ export const FastStudentRow = memo(({
             </div>
           </div>
 
-          {/* Student Identity */}
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-black text-sm text-slate-900 dark:text-white truncate uppercase">
-                {(student.name || '').toUpperCase()}
-              </span>
-              <div className="shrink-0 flex items-center">
-                {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 shrink-0">Unranked</span>}
+          {/* Student Identity & Stats */}
+          <div className="flex flex-col min-w-0 flex-1 space-y-1">
+            {/* Row 1: Student Name + Rank Badge + Expand Chevron */}
+            <div className="flex items-center justify-between gap-1.5 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1">
+                <span className="font-black text-sm text-slate-900 dark:text-white truncate uppercase tracking-tight">
+                  {(student.name || '').toUpperCase()}
+                </span>
+                <div className="shrink-0">
+                  {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center justify-center h-5 px-2 rounded-full text-[9.5px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 shrink-0">Unranked</span>}
+                </div>
+              </div>
+
+              <div className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                {isExpanded ? (
+                  <ChevronUp size={18} className="stroke-[2.5] text-brand-600 dark:text-brand-400" />
+                ) : (
+                  <ChevronDown size={18} className="stroke-[2.5]" />
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate min-w-0">
-              <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">{student.reg_no}</span>
-              <span className="shrink-0">•</span>
-              <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20 shrink-0 truncate max-w-[140px]">
-                {getDeptCode(student)} {formatStudentYearBadge(student)}
-              </span>
+            {/* Row 2: Reg No • Dept/Year Pill + Solved Count Pill */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono min-w-0 flex-1">
+                <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">{student.reg_no}</span>
+                <span className="shrink-0 text-slate-300 dark:text-slate-600">•</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20 shrink-0 truncate max-w-[130px]">
+                  {getDeptCode(student)} {formatStudentYearBadge(student)}
+                </span>
+              </div>
+
+              {/* Solved Pill */}
+              <div className={`shrink-0 px-2 py-0.5 rounded-lg inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 ${flashSolved ? 'scale-110 transition-transform' : ''}`}>
+                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">SOLVED</span>
+                <span className="text-xs font-black font-mono">{totalSolved ?? '—'}</span>
+              </div>
             </div>
 
+            {/* Row 3: LeetCode Username */}
             {student.username && (
-              <span className="text-[11px] font-bold text-brand-600 dark:text-brand-400 truncate mt-0.5">
-                @{student.username}
-              </span>
+              <div className="flex items-center min-w-0">
+                <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 truncate">
+                  @{student.username}
+                </span>
+              </div>
             )}
-          </div>
-
-          {/* Compact Right Corner: Solved pill & Expand Chevron Button (44px touch target) */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className={`px-2 py-1 rounded-lg inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 ${flashSolved ? 'scale-110 transition-transform' : ''}`}>
-              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">SOLVED</span>
-              <span className="text-xs font-black font-mono shrink-0">{totalSolved ?? '—'}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleToggleExpand}
-              className="min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-              aria-label={isExpanded ? 'Collapse student details' : 'Expand student details'}
-            >
-              {isExpanded ? (
-                <ChevronUp size={18} className="stroke-[2.5] text-brand-600 dark:text-brand-400" />
-              ) : (
-                <ChevronDown size={18} className="stroke-[2.5]" />
-              )}
-            </button>
           </div>
         </div>
 

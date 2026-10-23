@@ -278,7 +278,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   }, [ctxDepts, globalDepts, deptId]);
 
   const deptFilterOptions = useMemo<GlobalFilterOption[]>(() => {
-    const opts: GlobalFilterOption[] = [{ value: 'ALL', label: 'All Departments' }];
+    const opts: GlobalFilterOption[] = [{ value: 'ALL', label: 'All Depts', pillText: 'ALL' }];
     departments.forEach((d: any) => {
       opts.push({
         value: d.code,
@@ -290,7 +290,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   }, [departments]);
 
   const yearFilterOptions = useMemo<GlobalFilterOption[]>(() => [
-    { value: 'ALL', label: 'All Academic Years' },
+    { value: 'ALL', label: 'All Years', pillText: 'ALL' },
     { value: '1st Year', label: '1st Year (I)', pillText: 'Y1' },
     { value: '2nd Year', label: '2nd Year (II)', pillText: 'Y2' },
     { value: '3rd Year', label: '3rd Year (III)', pillText: 'Y3' },
@@ -619,7 +619,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
                 dropdownWidth="w-64"
                 showSearch={false}
-                placeholder="All Departments"
+                placeholder="All Depts"
               />
             </div>
 

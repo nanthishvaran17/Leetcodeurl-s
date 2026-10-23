@@ -24,8 +24,11 @@ import {
   ArrowRight,
   FileText,
   Calendar,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
@@ -255,6 +258,21 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [deptDropdownOpen, setDeptDropdownOpen] = useState<boolean>(false);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
   const [yearDropdownOpen, setYearDropdownOpen] = useState<boolean>(false);
+  const [deptSearchText, setDeptSearchText] = useState<string>('');
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useScrollLock(isMobile && (deptDropdownOpen || yearDropdownOpen));
+
+  useEffect(() => {
+    if (!deptDropdownOpen) setDeptSearchText('');
+  }, [deptDropdownOpen]);
+
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
@@ -900,12 +918,22 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   }, [records, isFacultyRole]);
 
   const yearOptions = useMemo(() => [
-    { value: 'ALL', label: 'All Years', code: 'ALL', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
-    { value: 'I',   label: 'I Year',    code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800' },
-    { value: 'II',  label: 'II Year',   code: 'II',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
-    { value: 'III', label: 'III Year',  code: 'III', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
-    { value: 'IV',  label: 'IV Year',   code: 'IV',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+    { value: 'ALL', label: 'All Academic Years', shortLabel: 'All Years', code: 'ALL', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800', desc: 'All batches and cohorts' },
+    { value: 'I',   label: 'I Year (First Year)',  shortLabel: 'I Year',    code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800', desc: 'Batch 2026 – 2030' },
+    { value: 'II',  label: 'II Year (Second Year)', shortLabel: 'II Year',   code: 'II',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', desc: 'Batch 2025 – 2029' },
+    { value: 'III', label: 'III Year (Third Year)', shortLabel: 'III Year',  code: 'III', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', desc: 'Batch 2024 – 2028' },
+    { value: 'IV',  label: 'IV Year (Final Year)', shortLabel: 'IV Year',   code: 'IV',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800', desc: 'Batch 2023 – 2027' },
   ], []);
+
+  const filteredDeptOptions = useMemo(() => {
+    if (!deptSearchText.trim()) return deptOptions;
+    const q = deptSearchText.toLowerCase().trim();
+    return deptOptions.filter(opt =>
+      opt.label.toLowerCase().includes(q) ||
+      opt.code.toLowerCase().includes(q) ||
+      opt.value.toLowerCase().includes(q)
+    );
+  }, [deptOptions, deptSearchText]);
 
   const getParticipationCategory = (r: ParticipationRecord): 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME' => {
     const isMissing = r.participation_type === 'MISSING_LEETCODE_USERNAME' || !r.leetcode_username || r.leetcode_username.trim() === '' || r.leetcode_username === 'USERNAME_NOT_FOUND' || r.leetcode_username === 'UNLINKED' || r.leetcode_username === 'NO_HANDLE';
@@ -1259,33 +1287,55 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             {/* 1. Department Box */}
             {(() => {
               const currentObj = deptOptions.find(o => o.value === selectedDeptFilter) || deptOptions[0];
+              const isDeptActive = selectedDeptFilter !== 'ALL';
 
               return (
                 <div
                   className="relative flex-1 sm:flex-initial"
-                  onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptDropdownOpen(false); }}
+                  onBlur={(e) => { 
+                    if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setDeptDropdownOpen(false); 
+                    }
+                  }}
                 >
                   <button
                     type="button"
                     onClick={() => {
+                      triggerHaptic('light');
                       setDeptDropdownOpen(p => !p);
                       setYearDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-slate-50 dark:bg-navy-950 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all hover:border-indigo-300 focus:outline-none ${deptDropdownOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-slate-200 dark:border-slate-700'}`}
+                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                      deptDropdownOpen
+                        ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/70 dark:bg-indigo-950/50'
+                        : isDeptActive
+                        ? 'border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-200 ring-1 ring-indigo-400/30'
+                        : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                    }`}
                     title={`Filter by Department: ${currentObj.label}`}
                   >
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <Building2 className={`w-3.5 h-3.5 shrink-0 ${isDeptActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500'}`} />
                       <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentObj.color}`}>{currentObj.code}</span>
                       <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[85px] sm:max-w-[130px]">{currentObj.label}</span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${deptDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {deptDropdownOpen && (
+                  {/* Desktop Dropdown Popover */}
+                  {!isMobile && deptDropdownOpen && (
                     <div className="absolute z-50 top-full left-0 mt-1.5 w-72 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
-                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800">
-                        Select Department
+                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+                        <span>Select Department</span>
+                        {isDeptActive && (
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedDeptFilter('ALL'); setDeptDropdownOpen(false); }}
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer lowercase font-medium"
+                          >
+                            clear
+                          </button>
+                        )}
                       </div>
                       <div className="max-h-60 overflow-y-auto">
                         {deptOptions.map(opt => (
@@ -1293,8 +1343,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                             key={opt.value}
                             type="button"
                             onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => { setSelectedDeptFilter(opt.value); setDeptDropdownOpen(false); }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
+                            onClick={() => { 
+                              triggerHaptic('light');
+                              setSelectedDeptFilter(opt.value); 
+                              setDeptDropdownOpen(false); 
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 cursor-pointer ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
                           >
                             <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
@@ -1309,36 +1363,58 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               );
             })()}
 
-            {/* 2. Academic Year Box (Requested by user) */}
+            {/* 2. Academic Year Box */}
             {(() => {
               const currentYearObj = yearOptions.find(o => o.value === selectedYearFilter) || yearOptions[0];
+              const isYearActive = selectedYearFilter !== 'ALL';
 
               return (
                 <div
                   className="relative flex-1 sm:flex-initial"
-                  onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setYearDropdownOpen(false); }}
+                  onBlur={(e) => { 
+                    if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setYearDropdownOpen(false); 
+                    }
+                  }}
                 >
                   <button
                     type="button"
                     onClick={() => {
+                      triggerHaptic('light');
                       setYearDropdownOpen(p => !p);
                       setDeptDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 bg-slate-50 dark:bg-navy-950 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all hover:border-purple-300 focus:outline-none ${yearDropdownOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-slate-200 dark:border-slate-700'}`}
+                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                      yearDropdownOpen
+                        ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/70 dark:bg-purple-950/50'
+                        : isYearActive
+                        ? 'border-purple-400 bg-purple-50/40 dark:bg-purple-950/30 text-purple-900 dark:text-purple-200 ring-1 ring-purple-400/30'
+                        : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-slate-700 hover:border-purple-300'
+                    }`}
                     title={`Filter by Academic Year: ${currentYearObj.label}`}
                   >
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <GraduationCap className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                      <GraduationCap className={`w-3.5 h-3.5 shrink-0 ${isYearActive ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500'}`} />
                       <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentYearObj.color}`}>{currentYearObj.code}</span>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[80px] sm:max-w-[110px]">{currentYearObj.label}</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[80px] sm:max-w-[110px]">{currentYearObj.shortLabel || currentYearObj.label}</span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {yearDropdownOpen && (
+                  {/* Desktop Dropdown Popover */}
+                  {!isMobile && yearDropdownOpen && (
                     <div className="absolute z-50 top-full right-0 sm:left-0 sm:right-auto mt-1.5 w-60 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
-                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800">
-                        Select Academic Year
+                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+                        <span>Select Academic Year</span>
+                        {isYearActive && (
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedYearFilter('ALL'); setYearDropdownOpen(false); }}
+                            className="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer lowercase font-medium"
+                          >
+                            clear
+                          </button>
+                        )}
                       </div>
                       <div className="max-h-60 overflow-y-auto">
                         {yearOptions.map(opt => (
@@ -1346,8 +1422,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                             key={opt.value}
                             type="button"
                             onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => { setSelectedYearFilter(opt.value); setYearDropdownOpen(false); }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedYearFilter === opt.value ? 'bg-purple-50/80 dark:bg-purple-950/60' : ''}`}
+                            onClick={() => { 
+                              triggerHaptic('light');
+                              setSelectedYearFilter(opt.value); 
+                              setYearDropdownOpen(false); 
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 cursor-pointer ${selectedYearFilter === opt.value ? 'bg-purple-50/80 dark:bg-purple-950/60' : ''}`}
                           >
                             <GraduationCap className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
@@ -1362,6 +1442,311 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               );
             })()}
           </div>
+
+          {/* ========================================================================= */}
+          {/* NATIVE MOBILE UI: Department Bottom Sheet Drawer (Portaled to document.body) */}
+          {/* ========================================================================= */}
+          {typeof document !== 'undefined' && createPortal(
+            <AnimatePresence>
+              {isMobile && deptDropdownOpen && (
+                <div className="fixed inset-0 z-[100050] flex flex-col justify-end">
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => setDeptDropdownOpen(false)}
+                    className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm"
+                  />
+
+                  {/* Bottom Sheet Drawer */}
+                  <motion.div
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    exit={{ y: '100%' }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                    className="relative z-10 w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))]"
+                  >
+                    {/* Pull Handle */}
+                    <div className="pt-2.5 pb-1 flex justify-center cursor-pointer" onClick={() => setDeptDropdownOpen(false)}>
+                      <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors" />
+                    </div>
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-white/[0.08]">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white font-display">
+                            Select Department
+                          </h3>
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {deptOptions.length} departments available
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {selectedDeptFilter !== 'ALL' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setSelectedDeptFilter('ALL');
+                              setDeptDropdownOpen(false);
+                            }}
+                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Reset</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setDeptDropdownOpen(false)}
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer active:scale-95"
+                          title="Close"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Search inside Department Sheet */}
+                    {deptOptions.length > 3 && (
+                      <div className="px-4 py-2 border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/50 dark:bg-navy-900/40">
+                        <div className="relative flex items-center">
+                          <input
+                            type="text"
+                            placeholder="Search department name or code..."
+                            value={deptSearchText}
+                            onChange={(e) => setDeptSearchText(e.target.value)}
+                            autoComplete="off"
+                            className="w-full pl-9 pr-8 py-2 text-xs font-bold rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all"
+                          />
+                          <div className="pointer-events-none absolute left-3 text-slate-400">
+                            <Search className="w-3.5 h-3.5" />
+                          </div>
+                          {deptSearchText && (
+                            <button
+                              type="button"
+                              onClick={() => setDeptSearchText('')}
+                              className="absolute right-2.5 text-slate-400 hover:text-rose-500 p-0.5"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Department Options List */}
+                    <div className="overflow-y-auto px-3.5 py-2.5 space-y-1.5 flex-1 min-h-0">
+                      {filteredDeptOptions.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                          No matching department found
+                        </div>
+                      ) : (
+                        filteredDeptOptions.map((opt) => {
+                          const isSelected = selectedDeptFilter === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('light');
+                                setSelectedDeptFilter(opt.value);
+                                setDeptDropdownOpen(false);
+                              }}
+                              className={`w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                                isSelected
+                                  ? 'bg-indigo-50/90 dark:bg-indigo-950/60 border-2 border-indigo-500 dark:border-indigo-500/80 shadow-xs'
+                                  : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                  isSelected 
+                                    ? 'bg-indigo-600 text-white' 
+                                    : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                                }`}>
+                                  <Building2 className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${opt.color}`}>
+                                      {opt.code}
+                                    </span>
+                                    {isSelected && (
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                                        Active
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className={`text-xs mt-0.5 font-bold leading-snug break-words ${
+                                    isSelected ? 'text-indigo-950 dark:text-indigo-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                  }`}>
+                                    {opt.label}
+                                  </span>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
+
+          {/* ========================================================================= */}
+          {/* NATIVE MOBILE UI: Academic Year Bottom Sheet Drawer (Portaled to document.body) */}
+          {/* ========================================================================= */}
+          {typeof document !== 'undefined' && createPortal(
+            <AnimatePresence>
+              {isMobile && yearDropdownOpen && (
+                <div className="fixed inset-0 z-[100050] flex flex-col justify-end">
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => setYearDropdownOpen(false)}
+                    className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm"
+                  />
+
+                  {/* Bottom Sheet Drawer */}
+                  <motion.div
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    exit={{ y: '100%' }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                    className="relative z-10 w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))]"
+                  >
+                    {/* Pull Handle */}
+                    <div className="pt-2.5 pb-1 flex justify-center cursor-pointer" onClick={() => setYearDropdownOpen(false)}>
+                      <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors" />
+                    </div>
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-white/[0.08]">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white font-display">
+                            Select Academic Year
+                          </h3>
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            Filter students by study year and cohort
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {selectedYearFilter !== 'ALL' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setSelectedYearFilter('ALL');
+                              setYearDropdownOpen(false);
+                            }}
+                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Reset</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setYearDropdownOpen(false)}
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer active:scale-95"
+                          title="Close"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Year Options List */}
+                    <div className="overflow-y-auto px-3.5 py-2.5 space-y-1.5 flex-1 min-h-0">
+                      {yearOptions.map((opt) => {
+                        const isSelected = selectedYearFilter === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setSelectedYearFilter(opt.value);
+                              setYearDropdownOpen(false);
+                            }}
+                            className={`w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                              isSelected
+                                ? 'bg-purple-50/90 dark:bg-purple-950/60 border-2 border-purple-500 dark:border-purple-500/80 shadow-xs'
+                                : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                isSelected 
+                                  ? 'bg-purple-600 text-white' 
+                                  : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                              }`}>
+                                <GraduationCap className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${opt.color}`}>
+                                    {opt.code}
+                                  </span>
+                                  {isSelected && (
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                      Active
+                                    </span>
+                                  )}
+                                </div>
+                                <span className={`text-xs mt-0.5 font-bold leading-snug ${
+                                  isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                }`}>
+                                  {opt.label}
+                                </span>
+                                {opt.desc && (
+                                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                                    {opt.desc}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
         </div>
 
         {/* Sub-strip: Active Filter Tags & Count Display */}
