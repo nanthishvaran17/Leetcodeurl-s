@@ -1,7 +1,8 @@
 // million-ignore
-import React, { useState, useEffect, useRef, useTransition } from 'react';
+import React, { useState, useEffect, useCallback, useTransition } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, MoreVertical, PieChart as LucidePieChart } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, MoreVertical, PieChart as LucidePieChart, Share2 } from 'lucide-react';
+import { triggerHaptic } from '../utils/haptics';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { clearApiCache } from '../services/api';
@@ -299,13 +300,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   // 3. SYNC BUTTON HANDLER
-  const handleLiveFetch = async () => {
+  const handleLiveFetch = useCallback(async () => {
     const targetId = resolveTargetId();
     if (!targetId || isLiveFetching) {
       if (!targetId) notify.error('Sync Error', 'No valid student record ID found.', { category: 'LIVE SYNC' });
       return;
     }
-    
+    triggerHaptic('medium');
     setIsLiveFetching(true);
     setSyncSuccess(false);
     setLiveFetchError(null);
@@ -315,6 +316,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       const refreshed = await api.get(`/students/${encodeURIComponent(targetId)}`);
       setDetail(refreshed.data);
       setSyncSuccess(true);
+      triggerHaptic('success');
       notify.success('Sync Complete', 'LeetCode data synced successfully.', { category: 'LIVE SYNC' });
       setTimeout(() => setSyncSuccess(false), 3000);
     } catch (err: any) {
@@ -327,13 +329,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       else if (status === 429) errMsg = "LeetCode rate-limit reached. Please try again in a few moments.";
       else if (err.response?.data?.detail) errMsg = err.response.data.detail;
       else if (err.message) errMsg = err.message;
-      
+      triggerHaptic('error');
       setLiveFetchError(errMsg);
       notify.error('Sync Failed', errMsg, { category: 'LIVE SYNC' });
     } finally {
       setIsLiveFetching(false);
     }
-  };
+  }, [isLiveFetching]);
 
   // 6. DELETE BUTTON HANDLER
   const handleDelete = async () => {
@@ -385,10 +387,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl isolate">
       
       {/* Header Bar with Close Button & Actions — Ultra-modern 2026 Glassmorphic Header */}
-      <div className="relative p-4 sm:p-5 bg-gradient-to-br from-[#0a0f1d] via-[#0f172a] to-[#070b14] text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/[0.08] shrink-0 shadow-2xl rounded-t-2xl sm:rounded-t-3xl overflow-hidden">
-        {/* Ambient Radial Mesh Glow */}
-        <div className="absolute top-0 right-1/4 -mt-16 w-80 h-80 rounded-full bg-brand-500/15 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 -mb-16 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+      <div className="relative p-4 sm:p-5 bg-gradient-to-br from-[#0a0f1d] via-[#0f172a] to-[#070b14] text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/[0.08] shrink-0 shadow-2xl rounded-t-2xl sm:rounded-t-3xl overflow-visible">
+        {/* Ambient Radial Mesh Glow — contained so overflow-visible on parent doesn't bleed */}
+        <div className="absolute inset-0 overflow-hidden rounded-t-2xl sm:rounded-t-3xl pointer-events-none">
+          <div className="absolute top-0 right-1/4 -mt-16 w-80 h-80 rounded-full bg-brand-500/15 blur-3xl" />
+          <div className="absolute bottom-0 right-0 -mb-16 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
+        </div>
 
         <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto justify-between md:justify-start relative z-10">
           <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
@@ -511,52 +515,100 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <span className="truncate tracking-wide font-sans">Audit</span>
           </button>
 
-          {/* MOBILE MORE ACTIONS (3-Dots Native Menu) */}
-          <div className="relative sm:hidden">
+          {/* MOBILE MORE ACTIONS (3-Dots → Portaled Bottom Sheet) */}
+          <div className="sm:hidden">
             <button
               type="button"
-              onClick={() => setShowMobileMenu(prev => !prev)}
-              className="p-2 min-w-[38px] min-h-[38px] rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-sm"
+              onClick={() => { triggerHaptic('light'); setShowMobileMenu(prev => !prev); }}
+              className="p-2 min-w-[38px] min-h-[38px] rounded-xl bg-white/[0.08] active:bg-white/[0.20] text-white border border-white/10 flex items-center justify-center cursor-pointer active:scale-90 transition-transform duration-100 touch-manipulation"
               title="More Actions"
             >
               <MoreVertical className="w-4 h-4 text-white" />
             </button>
-
-            {showMobileMenu && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs" 
-                  onClick={() => setShowMobileMenu(false)} 
-                />
-                <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-white/10 shadow-2xl p-1.5 z-50 animate-scale-in text-xs font-bold space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => { setShowMobileMenu(false); setShowEditOverlay(true); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer"
-                  >
-                    <Edit3 className="w-4 h-4 text-amber-500" />
-                    <span>Edit Profile</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowMobileMenu(false); handleGenerateCert(); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer"
-                  >
-                    <Award className="w-4 h-4 text-purple-500" />
-                    <span>Get Certificate</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowMobileMenu(false); setShowAuditModal(true); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer"
-                  >
-                    <FileText className="w-4 h-4 text-emerald-500" />
-                    <span>Audit Log</span>
-                  </button>
-                </div>
-              </>
-            )}
           </div>
+
+          {/* Portaled Bottom Sheet — renders outside clipping overflow-hidden header */}
+          {showMobileMenu && createPortal(
+            <AnimatePresence>
+              <motion.div
+                key="mobile-more-backdrop"
+                className="fixed inset-0 z-[1000000] flex flex-col justify-end"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); }}
+              >
+                <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
+                <motion.div
+                  key="mobile-more-sheet"
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 38, mass: 0.8 }}
+                  onClick={e => e.stopPropagation()}
+                  className="relative w-full bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-white/10 shadow-2xl px-4 pt-3 pb-8 space-y-1.5"
+                >
+                  {/* Drag Handle */}
+                  <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto mb-4" />
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 pb-1">More Actions</p>
+
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); setShowEditOverlay(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl active:bg-slate-100 dark:active:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer touch-manipulation min-h-[52px]"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                      <Edit3 className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">Edit Profile</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Modify student details</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); handleGenerateCert(); }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl active:bg-slate-100 dark:active:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer touch-manipulation min-h-[52px]"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center shrink-0">
+                      <Award className="w-4 h-4 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">Get Certificate</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Download performance PDF</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); setShowAuditModal(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl active:bg-slate-100 dark:active:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer touch-manipulation min-h-[52px]"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
+                      <FileText className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">Audit Log</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">View sync & activity history</p>
+                    </div>
+                  </button>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); }}
+                      className="w-full py-3.5 rounded-2xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 font-bold text-sm active:bg-slate-200 dark:active:bg-white/[0.1] transition-colors cursor-pointer touch-manipulation"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>,
+            document.body
+          )}
         </div>
       </div>
       
