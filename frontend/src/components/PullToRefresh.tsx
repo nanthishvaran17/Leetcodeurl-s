@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RefreshCw, ArrowDown, Sparkles } from 'lucide-react';
+import { RefreshCw, ArrowDown, Check } from 'lucide-react';
 
 interface PullToRefreshProps {
   onRefresh?: () => Promise<void> | void;
@@ -7,33 +7,30 @@ interface PullToRefreshProps {
   disabled?: boolean;
 }
 
-const PULL_THRESHOLD = 44;
-const MAX_PULL_DISTANCE = 85;
+const PULL_THRESHOLD = 48;
+const MAX_PULL_DISTANCE = 96;
 
-// Helper to check if touch is inside an active scrollable container (e.g. table, drawer, messages)
-function isInsideScrollableChild(target: EventTarget | null): boolean {
+/**
+ * Check if the touch target or any of its scroll parents is currently scrolled down.
+ * If any container has scrolled down (scrollTop > 4), pull-to-refresh must NOT trigger,
+ * allowing normal upward scrolling momentum.
+ */
+function isScrolledDown(target: EventTarget | null): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const winY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  if (winY > 4) return true;
+
   let el = target as HTMLElement | null;
   while (el && el !== document.body && el !== document.documentElement) {
     try {
-      const style = window.getComputedStyle(el);
-      const ovY = style.overflowY;
-      const ovX = style.overflowX;
-      // If child is horizontally scrollable (table, tag list, carousel), do not hijack
-      if ((ovX === 'auto' || ovX === 'scroll') && el.scrollWidth > el.clientWidth + 8) {
+      if (el.scrollTop > 4) {
         return true;
-      }
-      // If child is vertically scrollable and not at top, do not hijack
-      if ((ovY === 'auto' || ovY === 'scroll') && el.scrollHeight > el.clientHeight + 8) {
-        if (el.scrollTop > 2) return true;
       }
     } catch (_) {}
     el = el.parentElement;
   }
   return false;
-}
-
-function getWindowScrollTop(): number {
-  return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
 }
 
 export const PullToRefresh: React.FC<PullToRefreshProps> = ({
@@ -44,6 +41,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const [pullDistance, setPullDistance] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isThresholdReached, setIsThresholdReached] = useState<boolean>(false);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
   const startYRef = useRef<number>(0);
   const startXRef = useRef<number>(0);
@@ -52,7 +50,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const safetyTimeoutRef = useRef<any>(null);
   const touchMoveListenerRef = useRef<((e: TouchEvent) => void) | null>(null);
 
-  const triggerHaptic = (pattern: number | number[] = 12) => {
+  const triggerHaptic = (pattern: number | number[] = 14) => {
     if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
       try {
         navigator.vibrate(pattern);
@@ -78,7 +76,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const deltaY = currentY - startYRef.current;
     const deltaX = currentX - startXRef.current;
 
-    // If finger moves UP (scrolling down into the page), IMMEDIATELY disengage and detach
+    // Finger moving UP (user scrolling down into content) -> cancel pull immediately
     if (deltaY <= 0) {
       isPullingRef.current = false;
       reachedThresholdRef.current = false;
@@ -88,86 +86,131 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // Only allow vertical pull gesture: instantly cancel and detach if horizontal swipe is detected
-    if (Math.abs(deltaX) > 6 && Math.abs(deltaX) >= Math.abs(deltaY) * 0.7) {
+    // Horizontal swipe gesture (e.g. tabs, slider, carousel) -> cancel pull
+    if (Math.abs(deltaX) > 8 && Math.abs(deltaX) >= Math.abs(deltaY) * 0.75) {
       isPullingRef.current = false;
       reachedThresholdRef.current = false;
-      setPullDistance(0);
       setIsThresholdReached(false);
+      setPullDistance(0);
       detachTouchMove();
       return;
     }
 
-    // Deadzone: Do NOT prevent default or lock scroll during the first 14px of motion
-    if (deltaY < 14) {
+    // If target has scrolled down during gesture -> abort
+    if (isScrolledDown(e.target)) {
+      isPullingRef.current = false;
+      reachedThresholdRef.current = false;
+      setIsThresholdReached(false);
+      setPullDistance(0);
+      detachTouchMove();
       return;
     }
 
-    // Double check window scroll top
-    const winTop = getWindowScrollTop();
-    if (winTop <= 2 && deltaY > 14) {
+    // Deadzone: smooth start after 6px of intentional downward drag
+    if (deltaY > 6) {
       if (e.cancelable) {
         e.preventDefault();
       }
 
-      const damped = Math.min((deltaY - 14) * 0.52, MAX_PULL_DISTANCE);
+      // Smooth rubberband dampening curve
+      const damped = Math.min((deltaY - 6) * 0.48, MAX_PULL_DISTANCE);
       setPullDistance(damped);
 
       if (damped >= PULL_THRESHOLD && !reachedThresholdRef.current) {
         reachedThresholdRef.current = true;
         setIsThresholdReached(true);
-        triggerHaptic(16);
+        triggerHaptic(18);
       } else if (damped < PULL_THRESHOLD && reachedThresholdRef.current) {
         reachedThresholdRef.current = false;
         setIsThresholdReached(false);
       }
-    } else {
-      isPullingRef.current = false;
-      setPullDistance(0);
-      reachedThresholdRef.current = false;
-      setIsThresholdReached(false);
-      detachTouchMove();
     }
   }, [disabled, isRefreshing, detachTouchMove]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (disabled || isRefreshing) return;
 
-    // Do not interfere if user touches input, select, textarea or interactive buttons
+    // Do not interfere if user is interacting with text inputs or controls
     const target = e.target as HTMLElement | null;
     if (target) {
-      const tag = target.tagName.toLowerCase();
-      if (['input', 'textarea', 'select', 'button', 'a'].includes(tag) || target.isContentEditable) {
+      const tag = target.tagName?.toLowerCase();
+      if (['input', 'textarea', 'select'].includes(tag) || target.isContentEditable) {
         isPullingRef.current = false;
         detachTouchMove();
         return;
       }
     }
 
-    // Do not interfere if touch originated inside an inner scrollable element
-    if (isInsideScrollableChild(e.target)) {
+    // Only allow pull-to-refresh if the page and container are at the very top
+    if (isScrolledDown(e.target)) {
       isPullingRef.current = false;
       detachTouchMove();
       return;
     }
 
-    // Only allow pull to refresh when user is at the very top of the window AND touching the top header area
-    const winTop = getWindowScrollTop();
     const touchY = e.touches[0]?.clientY || 0;
-    if (winTop <= 2 && touchY <= 90) {
-      startYRef.current = touchY;
-      startXRef.current = e.touches[0].clientX;
-      isPullingRef.current = true;
-      reachedThresholdRef.current = false;
-      // DYNAMIC ATTACH: Only listen to touchmove when finger touches at the very top of page
-      detachTouchMove();
-      touchMoveListenerRef.current = handleTouchMove;
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    } else {
+    const touchX = e.touches[0]?.clientX || 0;
+
+    // Do not trigger if touch starts in the bottom 15% of viewport
+    if (touchY > (window.innerHeight || 800) * 0.85) {
       isPullingRef.current = false;
       detachTouchMove();
+      return;
     }
+
+    startYRef.current = touchY;
+    startXRef.current = touchX;
+    isPullingRef.current = true;
+    reachedThresholdRef.current = false;
+
+    detachTouchMove();
+    touchMoveListenerRef.current = handleTouchMove;
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
   }, [disabled, isRefreshing, handleTouchMove, detachTouchMove]);
+
+  const executeRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setPullDistance(50); // Keep capsule parked visibly
+    triggerHaptic([18, 32, 18]);
+
+    // Safety timeout: automatically release after 5s in case an endpoint hangs
+    if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+    safetyTimeoutRef.current = setTimeout(() => {
+      setIsRefreshing(false);
+      setIsThresholdReached(false);
+      setIsSuccess(false);
+      setPullDistance(0);
+    }, 5000);
+
+    try {
+      // 1. Dispatch custom events to refresh any active page
+      window.dispatchEvent(new CustomEvent('pull_to_refresh', { detail: { timestamp: Date.now() } }));
+      window.dispatchEvent(new CustomEvent('refresh_dashboard_summary'));
+      window.dispatchEvent(new CustomEvent('reload_active_tab_data'));
+
+      // 2. Execute onRefresh prop
+      if (onRefresh) {
+        await onRefresh();
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+
+      // Show brief success checkmark
+      setIsSuccess(true);
+      triggerHaptic(24);
+      await new Promise(resolve => setTimeout(resolve, 550));
+    } catch (err) {
+      console.warn('Pull-to-refresh warning:', err);
+    } finally {
+      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+      setTimeout(() => {
+        setIsRefreshing(false);
+        setIsThresholdReached(false);
+        setIsSuccess(false);
+        setPullDistance(0);
+      }, 150);
+    }
+  }, [onRefresh]);
 
   const handleTouchEnd = useCallback(async () => {
     detachTouchMove();
@@ -178,47 +221,79 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     reachedThresholdRef.current = false;
 
     if (shouldRefresh) {
-      setIsRefreshing(true);
-      setPullDistance(48); // Keep capsule visibly parked during fetch
-      triggerHaptic([15, 30, 15]);
-
-      // Safety timeout: automatically release after 4.5s in case an API hangs
-      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
-      safetyTimeoutRef.current = setTimeout(() => {
-        setIsRefreshing(false);
-        setIsThresholdReached(false);
-        setPullDistance(0);
-      }, 4500);
-
-      try {
-        // Dispatch global sync events
-        window.dispatchEvent(new CustomEvent('pull_to_refresh'));
-        window.dispatchEvent(new CustomEvent('refresh_dashboard_summary'));
-
-        if (onRefresh) {
-          await onRefresh();
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 800));
-        }
-      } catch (err) {
-        console.warn('Pull-to-refresh warning:', err);
-      } finally {
-        if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
-        // Smoothly close capsule
-        setTimeout(() => {
-          setIsRefreshing(false);
-          setIsThresholdReached(false);
-          setPullDistance(0);
-        }, 300);
-      }
+      await executeRefresh();
     } else {
       setPullDistance(0);
       setIsThresholdReached(false);
     }
-  }, [disabled, isRefreshing, onRefresh]);
+  }, [disabled, isRefreshing, detachTouchMove, executeRefresh]);
+
+  // Support Mouse Drag Down for Desktop / DevTools testing
+  useEffect(() => {
+    const handleMouseDown = (e: MouseEvent) => {
+      if (disabled || isRefreshing || e.button !== 0) return;
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName?.toLowerCase();
+        if (['input', 'textarea', 'select', 'button', 'a'].includes(tag) || target.isContentEditable) return;
+      }
+      if (isScrolledDown(e.target)) return;
+      if (e.clientY > (window.innerHeight || 800) * 0.8) return;
+
+      const startY = e.clientY;
+      const startX = e.clientX;
+      let pulling = true;
+      let reached = false;
+
+      const handleMouseMove = (me: MouseEvent) => {
+        if (!pulling || isRefreshing) return;
+        const deltaY = me.clientY - startY;
+        const deltaX = me.clientX - startX;
+
+        if (deltaY <= 0 || (Math.abs(deltaX) > 8 && Math.abs(deltaX) >= Math.abs(deltaY) * 0.75)) {
+          pulling = false;
+          setPullDistance(0);
+          setIsThresholdReached(false);
+          return;
+        }
+
+        if (deltaY > 6) {
+          const damped = Math.min((deltaY - 6) * 0.48, MAX_PULL_DISTANCE);
+          setPullDistance(damped);
+          if (damped >= PULL_THRESHOLD && !reached) {
+            reached = true;
+            setIsThresholdReached(true);
+          } else if (damped < PULL_THRESHOLD && reached) {
+            reached = false;
+            setIsThresholdReached(false);
+          }
+        }
+      };
+
+      const handleMouseUp = async () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        if (pulling && reached && !isRefreshing) {
+          pulling = false;
+          await executeRefresh();
+        } else {
+          pulling = false;
+          setPullDistance(0);
+          setIsThresholdReached(false);
+        }
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousedown', handleMouseDown);
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, [disabled, isRefreshing, executeRefresh]);
 
   useEffect(() => {
-    // Register passive touchstart/touchend; touchmove is attached strictly dynamically when pull gesture begins
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
@@ -228,7 +303,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       reachedThresholdRef.current = false;
       setIsThresholdReached(false);
       setPullDistance(0);
-      window.removeEventListener('touchmove', handleTouchMove);
+      detachTouchMove();
     };
     window.addEventListener('blur', handleBlur);
 
@@ -237,39 +312,49 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
       window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('touchmove', handleTouchMove);
+      detachTouchMove();
       if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
     };
-  }, [handleTouchStart, handleTouchEnd, handleTouchMove]);
+  }, [handleTouchStart, handleTouchEnd, detachTouchMove]);
 
   const rotation = Math.min((pullDistance / PULL_THRESHOLD) * 360, 360);
 
   return (
     <div className="relative w-full h-full flex-1 min-h-0 flex flex-col">
-      {/* Pull Indicator Capsule */}
+      {/* Floating Refresh Indicator Capsule (Smooth Spring Below Top Navbar) */}
       {(pullDistance > 4 || isRefreshing) && (
         <div
-          className="fixed left-0 right-0 top-12 sm:top-14 z-[99999] pointer-events-none flex justify-center transition-transform duration-100 ease-out"
+          className="fixed left-0 right-0 top-14 sm:top-16 z-[999999] pointer-events-none flex justify-center transition-transform duration-100 ease-out"
           style={{
             transform: `translate3d(0, ${pullDistance}px, 0)`,
-            opacity: Math.min(pullDistance / 18, 1)
+            opacity: Math.min(pullDistance / 14, 1)
           }}
         >
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-2xl border backdrop-blur-xl transition-all duration-200 ${
-            isRefreshing
-              ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/40 ring-2 ring-emerald-400/50 scale-105'
+          <div className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-2xl border backdrop-blur-2xl transition-all duration-200 ${
+            isSuccess
+              ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/50 ring-4 ring-emerald-400/30 scale-105'
+              : isRefreshing
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-indigo-300 shadow-indigo-500/50 ring-4 ring-brand-400/30 scale-105'
               : isThresholdReached
-              ? 'bg-brand-600 text-white border-brand-400 shadow-brand-500/40 scale-105 ring-2 ring-brand-400/40'
-              : 'bg-white/95 dark:bg-navy-900/95 text-slate-800 dark:text-slate-100 border-slate-300 dark:border-navy-700 shadow-slate-900/15'
+              ? 'bg-brand-600 text-white border-brand-400 shadow-brand-500/50 scale-105 ring-4 ring-brand-400/40'
+              : 'bg-white/95 dark:bg-navy-900/95 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-white/10 shadow-slate-900/20'
           }`}>
-            <RefreshCw
-              className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
-              style={{
-                transform: !isRefreshing ? `rotate(${rotation}deg)` : undefined
-              }}
-            />
-            <span className="text-xs font-black tracking-wide">
-              {isRefreshing
+            {isSuccess ? (
+              <Check className="w-4 h-4 text-white stroke-[3] animate-bounce" />
+            ) : isRefreshing ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+            ) : isThresholdReached ? (
+              <ArrowDown className="w-4 h-4 text-white stroke-[2.5] animate-bounce" />
+            ) : (
+              <RefreshCw
+                className="w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform"
+                style={{ transform: `rotate(${rotation}deg)` }}
+              />
+            )}
+            <span className="text-xs font-black tracking-wide font-sans">
+              {isSuccess
+                ? 'All Data Updated!'
+                : isRefreshing
                 ? 'Syncing Fresh Intelligence...'
                 : isThresholdReached
                 ? 'Release to Refresh'
@@ -279,11 +364,11 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
         </div>
       )}
 
-      {/* Page Content */}
+      {/* Page Content with Native Elastic Pull Feedback */}
       <div
         className="w-full h-full flex-1 min-h-0 flex flex-col transition-transform duration-100 ease-out"
         style={{
-          transform: pullDistance > 0 && !isRefreshing ? `translate3d(0, ${pullDistance * 0.35}px, 0)` : undefined
+          transform: pullDistance > 0 && !isRefreshing ? `translate3d(0, ${pullDistance * 0.32}px, 0)` : undefined
         }}
       >
         {children}
