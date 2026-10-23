@@ -151,10 +151,11 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // Only allow pull to refresh when user is at the very top of the window
+    // Only allow pull to refresh when user is at the very top of the window AND touching the top header area
     const winTop = getWindowScrollTop();
-    if (winTop <= 2) {
-      startYRef.current = e.touches[0].clientY;
+    const touchY = e.touches[0]?.clientY || 0;
+    if (winTop <= 2 && touchY <= 90) {
+      startYRef.current = touchY;
       startXRef.current = e.touches[0].clientX;
       isPullingRef.current = true;
       reachedThresholdRef.current = false;

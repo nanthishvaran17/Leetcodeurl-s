@@ -1044,7 +1044,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className={`overflow-x-hidden bg-white dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
+    <div className={`overflow-x-clip bg-white dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
       activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
       {/* Top Page Transition Progress Loader */}
@@ -1081,9 +1081,9 @@ export const App: React.FC = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className={`flex-1 min-h-0 w-full max-w-full overflow-x-hidden mx-auto relative flex flex-col ${
+      <div className={`w-full max-w-full mx-auto relative flex flex-col ${
         activeTab === 'messages'
-          ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
+          ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
           : 'pt-3.5 sm:pt-4 pb-20 sm:pb-6 px-2.5 sm:px-4 max-w-full'
       }`}>
         
@@ -1118,7 +1118,7 @@ export const App: React.FC = () => {
           <main
             id="main-content"
             key={activeTab}
-            className={`min-w-0 w-full max-w-full overflow-x-hidden animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
+            className={`min-w-0 w-full max-w-full animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
           >
 
             <ErrorBoundary>
