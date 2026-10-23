@@ -5,6 +5,8 @@ export type Theme = 'dark' | 'light';
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
+  setSystemTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -91,8 +93,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const handleSetTheme = (newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    localStorage.setItem('theme_user_set', 'true');
+  };
+
+  const handleSetSystemTheme = () => {
+    localStorage.removeItem('theme_user_set');
+    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const sysTheme = isDark ? 'dark' : 'light';
+    setTheme(sysTheme);
+    localStorage.setItem('theme', sysTheme);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme: handleSetTheme, setSystemTheme: handleSetSystemTheme }}>
       {children}
     </ThemeContext.Provider>
   );

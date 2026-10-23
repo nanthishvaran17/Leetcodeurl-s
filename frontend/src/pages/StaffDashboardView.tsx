@@ -390,7 +390,7 @@ export const StaffDashboardView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6 pb-36 sm:pb-20">
 
       <LiveContestPanel />
 

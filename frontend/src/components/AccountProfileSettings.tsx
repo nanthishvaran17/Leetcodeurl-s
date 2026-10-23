@@ -10,10 +10,12 @@ import {
   AlertTriangle, Sliders, ShieldX, Copy, CheckCheck,
   RotateCw, RefreshCcw, Volume2, VolumeX, Sparkles, Search, UploadCloud,
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
-  Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft, HelpCircle
+  Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft, HelpCircle,
+  Sun, Moon, Monitor, LogOut
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import { SwipeHandle } from './SwipeHandle';
@@ -750,7 +752,8 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
 };
 
 export const AccountProfileSettings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { theme, setTheme, setSystemTheme } = useTheme();
   const { notify } = useNotification();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportInputRef = useRef<HTMLInputElement>(null);
@@ -765,8 +768,11 @@ export const AccountProfileSettings: React.FC = () => {
     return ['faculty', 'staff', 'mentor', 'advisor'].some(r => rawRole.includes(r));
   }, [rawRole]);
 
-  // Master Tabs (Mentorship only available for staff)
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'id_card' | 'mentorship'>('profile');
+  // Master Tabs: 5 Primary Enterprise Categories + Specialized Modules
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship'>('profile');
+  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
+  const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
 
   // Mobile profile sub-section filter & accordion states for authentic app ergonomics
   const [profileSubSection, setProfileSubSection] = useState<'all' | 'contact' | 'academic' | 'institutional' | 'links'>('all');
@@ -3175,7 +3181,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
   }, [selectedCardTheme]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in w-full pb-12 text-slate-900 dark:text-slate-100">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in w-full pb-36 sm:pb-16 text-slate-900 dark:text-slate-100">
 
       {/* 1. TOP HERO IDENTITY BANNER — Clean, World-Class Mobile & Desktop Consumer Card (Apple / Meesho / Swiggy Grade) */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
@@ -3258,22 +3264,32 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
 
           {/* Right: Quick Action Controls (Export / Import / Manage) */}
-          <div className="flex items-center gap-2 self-end sm:self-center shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-navy-800 flex-wrap">
             <button
               type="button"
               onClick={handleExportProfileJson}
-              className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
               title="Export Profile JSON Backup"
             >
               <Download className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Backup</span>
+              <span className="hidden xs:inline">Backup</span>
             </button>
 
-            <label className="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 m-0">
+            <label className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 m-0">
               <UploadCloud className="w-3.5 h-3.5 text-purple-500" />
-              <span>Restore</span>
+              <span className="hidden xs:inline">Restore</span>
               <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
             </label>
+
+            <button
+              type="button"
+              onClick={() => setShowHelpModal(true)}
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Help & FAQ"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+              <span>Help</span>
+            </button>
 
             <button
               type="button"
@@ -3282,151 +3298,202 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 setProfileSubSection('contact');
                 setExpandedCards(prev => ({ ...prev, contact: true }));
               }}
-              className="px-3.5 py-1.5 rounded-xl font-black text-xs bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-3 sm:px-3.5 py-1.5 rounded-xl font-black text-xs bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Edit Profile</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowLogoutConfirmModal(true)}
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
 
         </div>
       </div>
 
-      {/* 2. AMAZON & MEESHO STYLE QUICK SETTINGS TILES */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-3.5 animate-fade-in">
-
-        {/* Hub Tile 1: Profile & Identity */}
-        <div
-          onClick={() => setActiveTab('profile')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'profile'
-            ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border-brand-500/50 shadow-md ring-2 ring-brand-500/20'
-            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-brand-400/50 hover:shadow-sm'
-            }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'profile' ? 'bg-brand-600 text-white' : 'bg-brand-500/15 text-brand-600 dark:text-brand-400'
-              }`}>
-              <User className="w-4.5 h-4.5" />
-            </div>
-            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'profile' ? 'text-brand-600' : 'text-slate-400'
-              }`} />
+      {/* 2. 5 PRIMARY ENTERPRISE SETTINGS CATEGORIES (WhatsApp / Telegram / Meesho card style) */}
+      <div className="space-y-3 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+              Settings &amp; Controls
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300">
+              5 Primary Areas
+            </span>
           </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Profile &amp; Info
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-              {fullName || user?.username || 'Staff'} • {phoneNumber || 'Contact details'}
-            </div>
+
+          {/* Secondary Modules Quick Switchers (Digital ID & Mentorship) */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('id_card')}
+              className={`px-3 py-1 rounded-xl text-xs font-black transition-all border flex items-center gap-1.5 cursor-pointer active:scale-95 ${activeTab === 'id_card'
+                  ? 'bg-sky-600 text-white border-sky-700 shadow-sm'
+                  : 'bg-white/80 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-sky-400/60'
+                }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-500" />
+              <span>Digital ID Card</span>
+            </button>
+
+            {isStaffMentor && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('mentorship')}
+                className={`px-3 py-1 rounded-xl text-xs font-black transition-all border flex items-center gap-1.5 cursor-pointer active:scale-95 ${activeTab === 'mentorship'
+                    ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
+                    : 'bg-white/80 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-amber-400/60'
+                  }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
+                <span>Mentorship Hub</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Hub Tile 2: Login & Security */}
-        <div
-          onClick={() => setActiveTab('security')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'security'
-            ? 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/50 shadow-md ring-2 ring-emerald-500/20'
-            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-emerald-400/50 hover:shadow-sm'
-            }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'security' ? 'bg-emerald-600 text-white' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-              }`}>
-              <KeyRound className="w-4.5 h-4.5" />
-            </div>
-            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'security' ? 'text-emerald-600' : 'text-slate-400'
-              }`} />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Login &amp; Security
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-              {is2FAEnabled ? '2FA Active' : 'Password &amp; Devices'}
-            </div>
-          </div>
-        </div>
+        {/* 5 Primary Category Tiles Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
 
-        {/* Hub Tile 3: Notifications & Privacy */}
-        <div
-          onClick={() => setActiveTab('preferences')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'preferences'
-            ? 'bg-gradient-to-br from-purple-500/10 via-pink-500/5 to-transparent border-purple-500/50 shadow-md ring-2 ring-purple-500/20'
-            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-purple-400/50 hover:shadow-sm'
-            }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'preferences' ? 'bg-purple-600 text-white' : 'bg-purple-500/15 text-purple-600 dark:text-purple-400'
-              }`}>
-              <Sliders className="w-4.5 h-4.5" />
-            </div>
-            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'preferences' ? 'text-purple-600' : 'text-slate-400'
-              }`} />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Privacy &amp; Alerts
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-              Email, WhatsApp &amp; Inactivity
-            </div>
-          </div>
-        </div>
-
-        {/* Hub Tile 4: Digital ID Card */}
-        <div
-          onClick={() => setActiveTab('id_card')}
-          className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'id_card'
-            ? 'bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-transparent border-sky-500/50 shadow-md ring-2 ring-sky-500/20'
-            : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-sky-400/50 hover:shadow-sm'
-            }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'id_card' ? 'bg-sky-600 text-white' : 'bg-sky-500/15 text-sky-600 dark:text-sky-400'
-              }`}>
-              <ShieldCheck className="w-4.5 h-4.5" />
-            </div>
-            <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'id_card' ? 'text-sky-600' : 'text-slate-400'
-              }`} />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-              Digital ID Card
-            </div>
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-              Official NFC QR Badge
-            </div>
-          </div>
-        </div>
-
-        {/* Hub Tile 5: Mentorship (Staff Only) */}
-        {isStaffMentor && (
+          {/* Category A: Account & Profile */}
           <div
-            onClick={() => setActiveTab('mentorship')}
-            className={`col-span-2 sm:col-span-1 p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'mentorship'
-              ? 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border-amber-500/50 shadow-md ring-2 ring-amber-500/20'
-              : 'bg-white/90 dark:bg-navy-900/90 border-slate-200/90 dark:border-navy-800 hover:border-amber-400/50 hover:shadow-sm'
+            onClick={() => setActiveTab('profile')}
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'profile'
+              ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
+              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-indigo-400/50 hover:shadow-xs'
               }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'mentorship' ? 'bg-amber-600 text-white' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'profile' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60'
                 }`}>
-                <GraduationCap className="w-4.5 h-4.5" />
+                <User className="w-4.5 h-4.5" />
               </div>
-              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'mentorship' ? 'text-amber-600' : 'text-slate-400'
+              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'profile' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'
                 }`} />
             </div>
             <div>
               <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Mentorship Hub
+                Profile &amp; Bio
               </div>
-              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                {totalMentees} Mentees • {avgAttendance}
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                Identity &amp; Credentials
               </div>
             </div>
           </div>
-        )}
 
+          {/* Category B: Security & Login */}
+          <div
+            onClick={() => setActiveTab('security')}
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'security'
+              ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
+              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-emerald-400/50 hover:shadow-xs'
+              }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'security' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60'
+                }`}>
+                <KeyRound className="w-4.5 h-4.5" />
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'security' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+                }`} />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Security &amp; 2FA
+              </div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                {is2FAEnabled ? '2FA Active' : 'Passkeys &amp; Password'}
+              </div>
+            </div>
+          </div>
+
+          {/* Category C: Privacy & Permissions */}
+          <div
+            onClick={() => setActiveTab('privacy')}
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'privacy'
+              ? 'bg-violet-50/70 dark:bg-violet-950/40 border-violet-500 shadow-md ring-2 ring-violet-500/20'
+              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-violet-400/50 hover:shadow-xs'
+              }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'privacy' ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-600 dark:bg-violet-950/70 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60'
+                }`}>
+                <Lock className="w-4.5 h-4.5" />
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'privacy' ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400'
+                }`} />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Privacy Control
+              </div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                Visibility &amp; Backups
+              </div>
+            </div>
+          </div>
+
+          {/* Category D: Notifications */}
+          <div
+            onClick={() => setActiveTab('notifications')}
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'notifications'
+              ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-500 shadow-md ring-2 ring-amber-500/20'
+              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-amber-400/50 hover:shadow-xs'
+              }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'notifications' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60'
+                }`}>
+                <Bell className="w-4.5 h-4.5" />
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'notifications' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'
+                }`} />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Notifications
+              </div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                Alerts, Chimes &amp; Roster
+              </div>
+            </div>
+          </div>
+
+          {/* Category E: App Preferences */}
+          <div
+            onClick={() => setActiveTab('preferences')}
+            className={`col-span-2 sm:col-span-1 p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'preferences'
+              ? 'bg-fuchsia-50/70 dark:bg-fuchsia-950/40 border-fuchsia-500 shadow-md ring-2 ring-fuchsia-500/20'
+              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-fuchsia-400/50 hover:shadow-xs'
+              }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'preferences' ? 'bg-fuchsia-600 text-white' : 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 border border-fuchsia-200/60 dark:border-fuchsia-800/60'
+                }`}>
+                <Palette className="w-4.5 h-4.5" />
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'preferences' ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-slate-400'
+                }`} />
+            </div>
+            <div>
+              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                App Preferences
+              </div>
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                Theme, Langs &amp; Notes
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* Success / Error Alerts */}
@@ -4898,18 +4965,196 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 3: NOTIFICATIONS & PRIVACY PREFERENCES — Live Mobile App Grade */}
+        {/* CATEGORY C: PRIVACY & PERMISSIONS — Enterprise Data Control */}
         {/* ========================================================================= */}
-        {activeTab === 'preferences' && (
+        {activeTab === 'privacy' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Automated Notifications & Alerts */}
+            {/* LEFT COLUMN: Directory Privacy & Visibility */}
+            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+
+              {/* 1. Directory Privacy Card */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/70 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-200/60 dark:border-violet-800/60">
+                      <Lock className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Directory Privacy &amp; Visibility
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Contact &amp; cabin discovery controls</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/80 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800">
+                    Scoped Access
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {/* Share Mobile with Mentees */}
+                  <div
+                    onClick={() => handleToggleShowPhone(!showPhoneToStudents)}
+                    role="switch"
+                    aria-checked={showPhoneToStudents}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-violet-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                          Share Contact with Assigned Mentees
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showPhoneToStudents
+                            ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/70 dark:text-violet-300 border border-violet-300 dark:border-violet-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {showPhoneToStudents ? 'Shared' : 'Private'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Allow students assigned to your mentoring cohort to view your contact for guidance.
+                      </div>
+                    </div>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showPhoneToStudents ? 'bg-violet-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showPhoneToStudents ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
+
+                  {/* Show Cabin in Directory */}
+                  <div
+                    onClick={() => handleToggleShowCabin(!showCabinInDirectory)}
+                    role="switch"
+                    aria-checked={showCabinInDirectory}
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-violet-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                          Show Office / Cabin in Directory
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showCabinInDirectory
+                            ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/70 dark:text-violet-300 border border-violet-300 dark:border-violet-800'
+                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
+                          }`}>
+                          {showCabinInDirectory ? 'Visible' : 'Hidden'}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        Display your room/cabin number on internal college directory and mentor searches.
+                      </div>
+                    </div>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showCabinInDirectory ? 'bg-violet-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showCabinInDirectory ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Platform Presence & Activity */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
+                      <Eye className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Platform Presence &amp; Activity
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Role verification and sync status</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    Live Verified
+                  </span>
+                </div>
+
+                <div className="space-y-3 text-xs font-bold text-slate-600 dark:text-slate-300">
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-black text-slate-900 dark:text-white">Institutional Authentication Scope</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Scoped to Nandha Engineering College credentials ({institutionalId})</div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono font-bold shrink-0">
+                      NEC-AUTH
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-black text-slate-900 dark:text-white">LeetCode Sync Telemetry</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Automated multi-threaded GraphQL tracking of solve metrics</div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold shrink-0">
+                      SYNC ACTIVE
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* RIGHT COLUMN: Data Protection & Danger Zone */}
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+
+              {/* Data Portability & Backup */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60">
+                      <Shield className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Data Safety &amp; Portability
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Google Play compliance &amp; backups</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                  You have full ownership of your account data. You can download an encrypted backup of your preferences, bio, and settings as a portable JSON file.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleExportProfileJson}
+                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    <Download className="w-4 h-4 text-emerald-600" />
+                    <span>Export Data (JSON)</span>
+                  </button>
+
+                  <label className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 m-0">
+                    <UploadCloud className="w-4 h-4 text-indigo-600" />
+                    <span>Restore Data</span>
+                    <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
+                  </label>
+                </div>
+              </div>
+
+              {/* Danger Zone: Account Deletion */}
+              <DeleteAccountPanel notify={notify} />
+
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* CATEGORY D: NOTIFICATIONS — Live Telemetry & Alerts */}
+        {/* ========================================================================= */}
+        {activeTab === 'notifications' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
+            {/* LEFT COLUMN: Automated Portal Alerts */}
             <div className="lg:col-span-7 space-y-4 sm:space-y-6">
 
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/25">
-                      <Volume2 className="w-4.5 h-4.5" />
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/70 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/60">
+                      <Bell className="w-4.5 h-4.5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -4921,7 +5166,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           Live Sync
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Real-time push, receipts &amp; contest notifications</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Push notifications, contest receipts &amp; audit alerts</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -4929,8 +5174,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       type="button"
                       onClick={handleTestAudioChime}
                       className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95 ${isPlayingAudioTest
-                          ? 'bg-purple-600 text-white border-purple-700 shadow-sm shadow-purple-500/30 scale-105'
-                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/30 scale-105'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                         }`}
                       title="Test Audio Chime"
                     >
@@ -4946,15 +5191,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     onClick={() => handleToggleContestAlerts(!emailContestAlerts)}
                     role="switch"
                     aria-checked={emailContestAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                           Contest Finalization Receipts
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${emailContestAlerts
-                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                             : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
                           }`}>
                           {emailContestAlerts ? 'Active' : 'Muted'}
@@ -4964,7 +5209,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         Receive instant email receipts when weekly LeetCode contests conclude.
                       </div>
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${emailContestAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${emailContestAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
                       <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${emailContestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </div>
@@ -4974,15 +5219,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     onClick={() => handleToggleWeeklyDigest(!weeklyDigestAlerts)}
                     role="switch"
                     aria-checked={weeklyDigestAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                           Weekly Mentee Progress Digest
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${weeklyDigestAlerts
-                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                             : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
                           }`}>
                           {weeklyDigestAlerts ? 'Active' : 'Muted'}
@@ -4992,7 +5237,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         Summary of assigned students solving milestones dispatched every Monday morning.
                       </div>
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${weeklyDigestAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${weeklyDigestAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
                       <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${weeklyDigestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </div>
@@ -5002,15 +5247,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     onClick={() => handleToggleSystemAuditAlerts(!systemAuditAlerts)}
                     role="switch"
                     aria-checked={systemAuditAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                           Security Audit &amp; Login Alerts
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${systemAuditAlerts
-                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                             : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
                           }`}>
                           {systemAuditAlerts ? 'Active' : 'Muted'}
@@ -5020,25 +5265,25 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         Receive instant alerts if password is modified or new unrecognized logins occur.
                       </div>
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${systemAuditAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${systemAuditAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
                       <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${systemAuditAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </div>
 
-                  {/* In-App Sound Chimes */}
+                  {/* In-App Audio Chimes */}
                   <div
                     onClick={() => handleToggleToastAudio(!toastAudioAlerts)}
                     role="switch"
                     aria-checked={toastAudioAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-purple-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                           In-App Audio Chimes
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${toastAudioAlerts
-                            ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                             : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
                           }`}>
                           {toastAudioAlerts ? 'Active (Sound ON)' : 'Silent'}
@@ -5048,19 +5293,24 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         Play subtle audio chimes when receiving toast alerts or milestone notifications.
                       </div>
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${toastAudioAlerts ? 'bg-purple-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
+                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${toastAudioAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
                       <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${toastAudioAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   </div>
                 </div>
               </div>
 
+            </div>
+
+            {/* RIGHT COLUMN: Mentee Inactivity Smart Alarm */}
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+
               {/* Mentee Inactivity Smart Alarm */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/25">
-                      <Sliders className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950/70 dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-200/60 dark:border-orange-800/60">
+                      <Sliders className="w-4.5 h-4.5" />
                     </div>
                     <div>
                       <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
@@ -5069,7 +5319,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Roster flag for inactive students</p>
                     </div>
                   </div>
-                  <span className="text-xs font-black font-mono text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-3 py-1 rounded-xl border border-amber-200 dark:border-amber-800 shadow-xs">
+                  <span className="text-xs font-black font-mono text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 px-3 py-1 rounded-xl border border-orange-200 dark:border-orange-800 shadow-xs">
                     {inactivityDaysThreshold} Days
                   </span>
                 </div>
@@ -5126,106 +5376,165 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
 
             </div>
+          </div>
+        )}
 
-            {/* RIGHT COLUMN: Directory Privacy & Faculty Scratchpad */}
-            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+        {/* ========================================================================= */}
+        {/* CATEGORY E: APP PREFERENCES — Appearance, Languages & Notes */}
+        {/* ========================================================================= */}
+        {activeTab === 'preferences' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
+            {/* LEFT COLUMN: Theme & Multilingual */}
+            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
 
-              {/* Directory Privacy */}
+              {/* 1. Theme Selection Card */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/25">
-                      <Lock className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
+                      <Palette className="w-4.5 h-4.5" />
                     </div>
                     <div>
                       <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Directory Privacy
+                        Appearance &amp; Theme
                       </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Contact visibility for students</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personalize your color aesthetic</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-800">
-                    Scoped
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
+                    Current: {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Light Mode Card */}
                   <div
-                    onClick={() => handleToggleShowPhone(!showPhoneToStudents)}
-                    role="switch"
-                    aria-checked={showPhoneToStudents}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-indigo-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                    onClick={() => { setTheme('light'); triggerHaptic('selection'); }}
+                    className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98] ${theme === 'light'
+                        ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/20 shadow-md ring-2 ring-brand-500/20'
+                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
+                      }`}
                   >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          Share Mobile with Mentees
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showPhoneToStudents
-                            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {showPhoneToStudents ? 'Shared' : 'Private'}
-                        </span>
+                    <div className="flex items-center justify-between">
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                        <Sun className="w-4 h-4" />
                       </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Allow your assigned student batch to view your WhatsApp contact.
-                      </div>
+                      {theme === 'light' && (
+                        <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </span>
+                      )}
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showPhoneToStudents ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showPhoneToStudents ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div>
+                      <div className="text-xs font-black text-slate-900 dark:text-white">Light Mode</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Crisp white enterprise design</div>
                     </div>
                   </div>
 
+                  {/* Dark Mode Card */}
                   <div
-                    onClick={() => handleToggleShowCabin(!showCabinInDirectory)}
-                    role="switch"
-                    aria-checked={showCabinInDirectory}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-indigo-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
+                    onClick={() => { setTheme('dark'); triggerHaptic('selection'); }}
+                    className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98] ${theme === 'dark'
+                        ? 'border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-md ring-2 ring-indigo-500/20'
+                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
+                      }`}
                   >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          Show Cabin in Directory
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showCabinInDirectory
-                            ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {showCabinInDirectory ? 'Visible' : 'Hidden'}
-                        </span>
+                    <div className="flex items-center justify-between">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800">
+                        <Moon className="w-4 h-4" />
                       </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Display room location on college internal directory search.
+                      {theme === 'dark' && (
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-slate-900 dark:text-white">Dark Mode</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Deep obsidian &amp; navy palette</div>
+                    </div>
+                  </div>
+
+                  {/* System Theme Card */}
+                  <div
+                    onClick={() => { setSystemTheme(); triggerHaptic('selection'); }}
+                    className="p-3.5 rounded-2xl border-2 border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-navy-700">
+                        <Monitor className="w-4 h-4" />
                       </div>
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showCabinInDirectory ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showCabinInDirectory ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div>
+                      <div className="text-xs font-black text-slate-900 dark:text-white">System Default</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Sync with device OS setting</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Faculty Scratchpad / Sticky Notes */}
+              {/* 2. Languages Selection */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/25">
-                      <Edit3 className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60">
+                      <Globe className="w-4.5 h-4.5" />
                     </div>
                     <div>
                       <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Private Faculty Notes
+                        Language Preferences
                       </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Local device scratchpad</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Multilingual communication skills</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      {notesSaveStatus === 'saving' ? 'Saving...' : 'Auto-Saved'}
-                    </span>
+                  <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                    {selectedLanguages.length} Selected
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_LANGUAGES.map(lang => {
+                    const isSelected = selectedLanguages.includes(lang);
+                    return (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => handleToggleLanguage(lang)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${isSelected
+                            ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20'
+                            : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
+                          }`}
+                      >
+                        <span>{lang}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* RIGHT COLUMN: Faculty Scratchpad / Sticky Notes */}
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
+                      <Edit3 className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Personal Notes &amp; Scratchpad
+                      </h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Secure local workspace</p>
+                    </div>
                   </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    {notesSaveStatus === 'saving' ? 'Saving...' : 'Auto-Saved'}
+                  </span>
                 </div>
 
                 <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
@@ -5259,13 +5568,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <div className="relative">
                   <textarea
-                    rows={5}
+                    rows={6}
                     value={facultyNotes}
                     onChange={e => handleFacultyNotesChange(e.target.value)}
                     placeholder="Type personal faculty notes here..."
                     className="w-full p-3.5 pb-10 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none font-mono transition-all"
                   />
-                  {/* Bottom Toolbar inside Textarea container */}
                   <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
                     <button
                       type="button"
@@ -6760,6 +7068,138 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <span>Save High-Res Image (PNG)</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* MODAL: HELP & SUPPORT / FAQ */}
+      {showHelpModal && (
+        <GlobalModalBackdrop isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} className="flex items-center justify-center p-3 sm:p-4">
+          <div className="relative max-w-lg w-full bg-white dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 animate-scale-up text-slate-900 dark:text-slate-100 max-h-[88vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/70 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                    Help &amp; Support Hub
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Frequently asked questions &amp; campus IT support</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHelpModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto space-y-2.5 pr-1 custom-scrollbar flex-1">
+              {[
+                {
+                  q: 'How does LeetCode automated metric sync work?',
+                  a: 'NANDHA INTELLIGENCE uses an asynchronous multi-threaded GraphQL crawler that checks your registered LeetCode handle every 30 minutes. It tracks total solves, weekly contest rating, and activity streaks automatically without requiring your LeetCode password.'
+                },
+                {
+                  q: 'Can students see my personal phone number?',
+                  a: 'By default, your mobile phone number is hidden. You can choose to share it exclusively with students assigned to your mentoring cohort under Settings > Privacy & Permissions. Principal, HOD, and campus administrators retain scoped contact visibility.'
+                },
+                {
+                  q: 'How do I enable 2-Factor Authentication (2FA) or Biometrics?',
+                  a: 'Navigate to Settings > Security & Login. You can enable Google Authenticator / TOTP by scanning a dynamic QR code, or register WebAuthn Passkeys (Face ID / Fingerprint) for single-tap biometric sign-ins.'
+                },
+                {
+                  q: 'How can I change my official designation or department?',
+                  a: 'Official institutional credentials (Designation, Department, and Faculty ID) are verified through the college registrar database. If corrections are needed, please submit a request to the campus IT Admin desk.'
+                },
+                {
+                  q: 'How do I download or print my Digital ID Card?',
+                  a: 'Switch to the Digital ID Card module from the top toolbar. You can flip between Front and Back sides, select your favorite card theme, and download a 300 DPI high-resolution PNG image suitable for PVC badge printers.'
+                }
+              ].map((faq, index) => {
+                const isExpanded = expandedFaqIndex === index;
+                return (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-slate-200/90 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-950/60 overflow-hidden transition-all"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setExpandedFaqIndex(isExpanded ? null : index)}
+                      className="w-full p-3.5 flex items-center justify-between text-left gap-3 cursor-pointer group select-none"
+                    >
+                      <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                        {faq.q}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-brand-600 dark:text-brand-400' : ''}`}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <div className="px-3.5 pb-3.5 pt-1 text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/50 dark:border-navy-800/60 animate-fade-in">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 dark:border-navy-800 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 text-center sm:text-left">
+                Campus IT Helpdesk: <span className="font-mono text-slate-800 dark:text-slate-200">it-support@nandhaengg.org</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHelpModal(false)}
+                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-black transition-all cursor-pointer active:scale-95"
+              >
+                Close FAQ
+              </button>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* MODAL: LOGOUT CONFIRMATION */}
+      {showLogoutConfirmModal && (
+        <GlobalModalBackdrop isOpen={showLogoutConfirmModal} onClose={() => setShowLogoutConfirmModal(false)} className="flex items-center justify-center p-4">
+          <div className="relative max-w-sm w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 animate-scale-up text-slate-900 dark:text-slate-100 text-center">
+            <div className="w-14 h-14 rounded-3xl bg-rose-50 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800 shadow-sm">
+              <LogOut className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-slate-950 dark:text-white">
+                Sign Out of Portal?
+              </h3>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed">
+                You will need to sign back in with your institutional credentials to access your dashboard.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirmModal(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 text-xs font-black transition-all cursor-pointer active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutConfirmModal(false);
+                  logout();
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-600/30 transition-all cursor-pointer active:scale-95"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </GlobalModalBackdrop>

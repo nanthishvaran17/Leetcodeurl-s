@@ -1761,7 +1761,7 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
  return (
- <div className="max-w-full w-full box-border space-y-5 sm:space-y-6 md:space-y-8 pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full w-full box-border space-y-5 sm:space-y-6 md:space-y-8 pb-36 sm:pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 

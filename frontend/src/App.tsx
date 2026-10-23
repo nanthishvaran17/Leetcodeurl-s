@@ -18,25 +18,12 @@ import { useKeyboardContext } from './context/KeyboardContext';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { useScrollLock, forceUnlockScroll } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
-import { MobileFilterDrawer } from './components/MobileFilterDrawer';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
 import { PullToRefresh } from './components/PullToRefresh';
+import { OfflineIndicatorBanner } from './components/OfflineIndicatorBanner';
 import { warmupPriorityRoutes } from './utils/pagePrefetch';
-
-const InstallAppPrompt = safeLazy(() => import('./components/InstallAppPrompt').then(m => ({ default: m.InstallAppPrompt })));
-const AppUpdateNotifier = safeLazy(() => import('./components/AppUpdateNotifier').then(m => ({ default: m.AppUpdateNotifier })));
-const StudentShareCardModal = safeLazy(() => import('./components/StudentShareCardModal').then(m => ({ default: m.StudentShareCardModal })));
-
-const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
-import { LoginPage } from './pages/LoginPage';
-import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
-const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
-const CommandPalette = safeLazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
-const KeyboardShortcutsModal = safeLazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })));
-
-const DashboardPage = safeLazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
@@ -59,6 +46,21 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
     })
   );
 }
+
+const InstallAppPrompt = safeLazy(() => import('./components/InstallAppPrompt').then(m => ({ default: m.InstallAppPrompt })));
+const AppUpdateNotifier = safeLazy(() => import('./components/AppUpdateNotifier').then(m => ({ default: m.AppUpdateNotifier })));
+const StudentShareCardModal = safeLazy(() => import('./components/StudentShareCardModal').then(m => ({ default: m.StudentShareCardModal })));
+const MobileFilterDrawer = safeLazy(() => import('./components/MobileFilterDrawer').then(m => ({ default: m.MobileFilterDrawer })));
+
+const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = safeLazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const CertificateVerificationPage = safeLazy(() => import('./pages/CertificateVerificationPage').then(m => ({ default: m.CertificateVerificationPage })));
+const AdminLoginPage = safeLazy(() => import('./pages/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
+const CommandPalette = safeLazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const KeyboardShortcutsModal = safeLazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })));
+
+const DashboardPage = safeLazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+
 
 const preloadStudentProfilePage = () => {
   import('./pages/StudentProfilePage');
@@ -1071,6 +1073,9 @@ export const App: React.FC = () => {
         onOpenShortcutsModal={handleOpenShortcutsModal}
       />
 
+      {/* Native Offline & Cached Roster Indicator Banner */}
+      <OfflineIndicatorBanner />
+
       {/* Top Navbar */}
       <Navbar
         currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
@@ -1441,10 +1446,12 @@ export const App: React.FC = () => {
 
       {/* Touch-Friendly Mobile Filter Drawer */}
       {showMobileFilterDrawer && (
-        <MobileFilterDrawer
-          isOpen={true}
-          onClose={() => setShowMobileFilterDrawer(false)}
-        />
+        <Suspense fallback={null}>
+          <MobileFilterDrawer
+            isOpen={true}
+            onClose={() => setShowMobileFilterDrawer(false)}
+          />
+        </Suspense>
       )}
 
       {/* Modern Floating Back to Top Button (hidden on messages tab to prevent overlapping chat composer) */}

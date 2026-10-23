@@ -577,7 +577,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   ];
 
   return (
-    <div className="w-full space-y-6 sm:space-y-8 pb-12">
+    <div className="w-full space-y-6 sm:space-y-8 pb-36 sm:pb-16">
 
 
       {/* 1. STAFF WORKLOAD MATRIX PANEL */}

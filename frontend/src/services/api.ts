@@ -58,17 +58,18 @@ const getEffectiveTtl = (url: string): number => {
   return CACHE_TTL_MS;
 };
 
-export const getCachedData = (key: string, url?: string) => {
+export const getCachedData = (key: string, url?: string, allowStaleIfOffline: boolean = false) => {
   const cached = responseCache.get(key);
   const ttl = url ? getEffectiveTtl(url) : CACHE_TTL_MS;
-  if (cached && Date.now() - cached.timestamp < ttl) {
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+  if (cached && (isOffline || allowStaleIfOffline || Date.now() - cached.timestamp < ttl)) {
     return cached.data;
   }
   try {
     const sessionItem = sessionStorage.getItem(`swr_${key}`);
     if (sessionItem) {
       const parsed = JSON.parse(sessionItem);
-      if (parsed && Date.now() - parsed.timestamp < ttl) {
+      if (parsed && (isOffline || allowStaleIfOffline || Date.now() - parsed.timestamp < ttl)) {
         responseCache.set(key, parsed);
         return parsed.data;
       }
@@ -437,6 +438,18 @@ api.get = async function (url: string, config?: any) {
   }).catch(err => {
       if (axios.isCancel(err)) {
         console.log(`[Request Cancelled] ${url}`);
+      }
+      // OFFLINE RESILIENCE: If offline or network error, serve last known cached data if available
+      const isNetworkErr = err?.code === 'ERR_NETWORK' || !err?.response || (typeof navigator !== 'undefined' && !navigator.onLine);
+      if (isNetworkErr) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('api_network_offline'));
+        }
+        const offlineData = getCachedData(key, url, true);
+        if (offlineData !== null) {
+          console.warn(`[OFFLINE_SERVE] Serving cached response for ${url}`);
+          return { data: offlineData, status: 200, statusText: 'OK (Offline Cache)', headers: { 'x-offline-cache': 'true' }, config: config || {} } as any;
+        }
       }
       throw err;
   }).finally(() => {

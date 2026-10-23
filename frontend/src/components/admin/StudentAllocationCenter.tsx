@@ -171,7 +171,7 @@ export const StudentAllocationCenter: React.FC = () => {
   const isAllVisibleSelected = filteredStudents.length > 0 && filteredStudents.every(s => selectedStudents.includes(String(s.id)));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-36 sm:pb-16">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
