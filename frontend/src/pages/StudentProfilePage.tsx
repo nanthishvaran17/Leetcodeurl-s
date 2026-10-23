@@ -1,7 +1,7 @@
 // million-ignore
 import React, { useState, useEffect, useRef, useTransition } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, PieChart as LucidePieChart } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, MoreVertical, PieChart as LucidePieChart } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { clearApiCache } from '../services/api';
@@ -44,6 +44,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
   const [showAuditModal, setShowAuditModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isChartsReady, setIsChartsReady] = useState(false);
 
   const [isPending, startTransition] = useTransition();
@@ -436,24 +437,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </button>
         </div>
 
-        {/* Action Buttons Row — 2026 Sleek Luminous Glass Pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0 relative z-10">
-          {/* 1. EDIT */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setShowEditOverlay(true);
-            }}
-            className="min-h-[42px] px-3.5 sm:px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-500/25 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 cursor-pointer touch-manipulation select-none"
-            title="Edit Student Record"
-          >
-            <Edit3 className="w-4 h-4 text-slate-950 shrink-0" />
-            <span className="truncate tracking-wide font-sans font-black">Edit</span>
-          </button>
-
-          {/* 2. SYNC */}
+        {/* Action Buttons Row — Responsive Native App Layout */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 w-full md:w-auto shrink-0 relative z-20 justify-end">
+          {/* SYNC LIVE (High-frequency primary action) */}
           <button
             type="button"
             onClick={(e) => {
@@ -462,15 +448,15 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               handleLiveFetch();
             }}
             disabled={isLiveFetching}
-            className={`min-h-[42px] px-4 py-2 rounded-2xl font-black text-xs flex items-center justify-center space-x-1.5 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer touch-manipulation select-none border backdrop-blur-xl ${
+            className={`min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl font-black text-xs flex items-center justify-center space-x-1.5 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer touch-manipulation select-none border backdrop-blur-xl ${
               syncSuccess
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white border-emerald-400/40 shadow-lg shadow-emerald-500/25'
-                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white border-blue-400/30 shadow-lg shadow-indigo-600/30'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white border-emerald-400/40 shadow-md shadow-emerald-500/20'
+                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white border-blue-400/30 shadow-md shadow-indigo-600/25'
             }`}
           >
             {syncSuccess ? (
               <>
-                <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
                 <span className="truncate tracking-wide font-sans">Synced</span>
               </>
             ) : (
@@ -481,7 +467,22 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             )}
           </button>
 
-          {/* 3. CERTIFICATE */}
+          {/* EDIT (Desktop direct button) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setShowEditOverlay(true);
+            }}
+            className="hidden sm:flex min-h-[42px] px-3.5 sm:px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 transition-all duration-200 active:scale-95 hover:scale-105 cursor-pointer touch-manipulation select-none"
+            title="Edit Student Record"
+          >
+            <Edit3 className="w-4 h-4 text-slate-950 shrink-0" />
+            <span className="truncate tracking-wide font-sans font-black">Edit</span>
+          </button>
+
+          {/* CERTIFICATE (Desktop direct button) */}
           <button
             type="button"
             onClick={(e) => {
@@ -490,13 +491,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               handleGenerateCert();
             }}
             disabled={downloadingCert}
-            className="min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white border border-indigo-300/40 font-black text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-indigo-500/25 transition-all duration-200 active:scale-95 sm:hover:scale-105 disabled:opacity-50 min-w-0 cursor-pointer touch-manipulation select-none"
+            className="hidden sm:flex min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white border border-indigo-300/40 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 hover:scale-105 disabled:opacity-50 cursor-pointer touch-manipulation select-none"
           >
             <Award className="w-4 h-4 text-white shrink-0" />
-            <span className="truncate tracking-wide font-sans">{downloadingCert ? 'Generating...' : <><span className="sm:hidden">Cert</span><span className="hidden sm:inline">Certificate</span></>}</span>
+            <span className="truncate tracking-wide font-sans">{downloadingCert ? 'Generating...' : 'Certificate'}</span>
           </button>
 
-          {/* 4. AUDIT */}
+          {/* AUDIT (Desktop direct button) */}
           <button
             type="button"
             onClick={(e) => {
@@ -504,11 +505,58 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               e.preventDefault();
               setShowAuditModal(true);
             }}
-            className="min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-emerald-700 hover:from-teal-400 hover:to-emerald-600 text-white border border-emerald-300/40 font-black text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-emerald-600/25 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 cursor-pointer touch-manipulation select-none"
+            className="hidden sm:flex min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-emerald-700 hover:from-teal-400 hover:to-emerald-600 text-white border border-emerald-300/40 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/20 transition-all duration-200 active:scale-95 hover:scale-105 cursor-pointer touch-manipulation select-none"
           >
             <FileText className="w-4 h-4 text-white shrink-0" />
             <span className="truncate tracking-wide font-sans">Audit</span>
           </button>
+
+          {/* MOBILE MORE ACTIONS (3-Dots Native Menu) */}
+          <div className="relative sm:hidden">
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(prev => !prev)}
+              className="p-2 min-w-[38px] min-h-[38px] rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-sm"
+              title="More Actions"
+            >
+              <MoreVertical className="w-4 h-4 text-white" />
+            </button>
+
+            {showMobileMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs" 
+                  onClick={() => setShowMobileMenu(false)} 
+                />
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-white/10 shadow-2xl p-1.5 z-50 animate-scale-in text-xs font-bold space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => { setShowMobileMenu(false); setShowEditOverlay(true); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="w-4 h-4 text-amber-500" />
+                    <span>Edit Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowMobileMenu(false); handleGenerateCert(); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer"
+                  >
+                    <Award className="w-4 h-4 text-purple-500" />
+                    <span>Get Certificate</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowMobileMenu(false); setShowAuditModal(true); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-emerald-500" />
+                    <span>Audit Log</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
       
