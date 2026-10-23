@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { triggerHaptic } from '../utils/haptics';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 import { normalizeDepartment } from '../utils/filterUtils';
@@ -371,6 +372,7 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
     <div
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).tagName.toLowerCase() === 'input') return;
+        triggerHaptic('light');
         onSelect(r);
       }}
       className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer w-full bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-2.5 active:scale-[0.98] touch-manipulation ${
@@ -382,8 +384,13 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
         <div className="flex items-center gap-2 min-w-0">
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCheckbox(r.reg_no, !isSelected); }}
-            className={`w-7 h-7 min-w-[28px] min-h-[28px] rounded-lg flex items-center justify-center transition-all touch-manipulation active:scale-90 border cursor-pointer ${
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              triggerHaptic('selection');
+              onCheckbox(r.reg_no, !isSelected);
+            }}
+            className={`min-w-[42px] min-h-[42px] rounded-xl flex items-center justify-center transition-all touch-manipulation active:scale-90 border cursor-pointer ${
               isSelected
                 ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-navy-800 border-slate-300 dark:border-navy-700 text-transparent hover:border-brand-500'
@@ -458,28 +465,46 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Action Buttons with 42px touch targets */}
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(r); }}
-            className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white dark:bg-indigo-950/60 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              triggerHaptic('light');
+              onEdit(r);
+            }}
+            className="w-10 h-10 min-w-[42px] min-h-[42px] rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white dark:bg-indigo-950/60 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
             title={`Edit ${r.name}`}
+            aria-label={`Edit ${r.name}`}
           >
             <Edit3 className="w-4 h-4 stroke-[2.2]" />
           </button>
           {onQuickSync && (
             <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickSync(r.reg_no); }}
-              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/60 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                triggerHaptic('medium');
+                onQuickSync(r.reg_no);
+              }}
+              className="w-10 h-10 min-w-[42px] min-h-[42px] rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/60 dark:hover:bg-emerald-600 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
               title={`Sync ${r.name}`}
+              aria-label={`Sync ${r.name}`}
             >
               <RefreshCw className="w-4 h-4 stroke-[2.2]" />
             </button>
           )}
           <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(r); }}
-            className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-600 text-rose-600 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              triggerHaptic('warning');
+              onDelete(r);
+            }}
+            className="w-10 h-10 min-w-[42px] min-h-[42px] rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-600 text-rose-600 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/80 flex items-center justify-center transition-all duration-150 active:scale-90 shadow-2xs cursor-pointer touch-manipulation"
             title={`Deactivate ${r.name}`}
+            aria-label={`Deactivate ${r.name}`}
           >
             <Trash2 className="w-4 h-4 stroke-[2.2]" />
           </button>
