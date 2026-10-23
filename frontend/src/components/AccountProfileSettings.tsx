@@ -751,7 +751,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
   );
 };
 
-export const AccountProfileSettings: React.FC = () => {
+export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { user, logout } = useAuth();
   const { theme, setTheme, setSystemTheme } = useTheme();
   const { notify } = useNotification();
@@ -768,8 +768,8 @@ export const AccountProfileSettings: React.FC = () => {
     return ['faculty', 'staff', 'mentor', 'advisor'].some(r => rawRole.includes(r));
   }, [rawRole]);
 
-  // Master Tabs: 5 Primary Enterprise Categories + Specialized Modules
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship'>('profile');
+  // Master Tabs: 'menu' (Default Native Hub matching mockup) + 5 Primary Categories + Specialized Modules
+  const [activeTab, setActiveTab] = useState<'menu' | 'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship'>('menu');
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
@@ -3183,335 +3183,378 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in w-full pb-36 sm:pb-16 text-slate-900 dark:text-slate-100">
 
-      {/* 1. TOP HERO IDENTITY BANNER — Clean, World-Class Mobile & Desktop Consumer Card (Apple / Meesho / Swiggy Grade) */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
-        {/* Subtle decorative ambient tint */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-brand-500/10 via-indigo-500/5 to-transparent rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
+      {/* ========================================================================= */}
+      {/* 1. MASTER SETTINGS HUB (Mockup "After: New Professional UI") */}
+      {/* ========================================================================= */}
+      {activeTab === 'menu' && (
+        <div className="space-y-4 max-w-2xl mx-auto animate-fade-in pb-12">
+          {/* Header Bar matching mockup: Left arrow, "Settings", Subtitle */}
+          <div className="flex items-center gap-3 pt-1 pb-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+                aria-label="Back"
+                title="Go Back"
+              >
+                <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            )}
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Settings
+              </h1>
+              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+                Manage your account and preferences
+              </p>
+            </div>
+          </div>
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-
-          {/* Left: Avatar + User Details */}
-          <div className="flex items-center gap-3.5 sm:gap-5 min-w-0 flex-1">
-
-            {/* Avatar with Camera Trigger & Zoom */}
+          {/* Profile Card matching mockup */}
+          <div className="bg-white dark:bg-navy-900 rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-xs flex items-center gap-4 transition-all">
+            {/* Circular Avatar with Green Checkmark Badge */}
             <div
               className="relative shrink-0 cursor-pointer group"
               onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
-              title={profilePhoto ? "Click to enlarge photo" : "Change profile avatar"}
+              title="Click to view photo"
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/40 shadow-sm bg-slate-100 dark:bg-navy-950 flex items-center justify-center relative">
+              <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-indigo-200 dark:border-indigo-800 bg-slate-100 dark:bg-navy-950 flex items-center justify-center relative shadow-sm">
                 {profilePhoto ? (
                   <img
                     src={profilePhoto}
-                    alt={fullName || user?.username}
+                    alt={fullName || user?.username || 'nanthishvaran17'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
-                    {(fullName || user?.username || 'U').charAt(0).toUpperCase()}
+                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center">
+                    {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-white" />
-                </div>
               </div>
-
               {/* Verified Badge */}
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-900 shadow-sm flex items-center justify-center" title="Verified Account">
-                <Check className="w-3 h-3 text-white stroke-[3]" />
+              <span className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-900 shadow-sm flex items-center justify-center text-white" title="Verified Account">
+                <Check className="w-3 h-3 stroke-[3]" />
               </span>
             </div>
 
-            {/* User Typography & Credentials */}
+            {/* Profile Credentials */}
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">
-                  {fullName || user?.username}
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-                  {roleName}
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
+                  {fullName || user?.username || 'nanthishvaran17'}
+                </h2>
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/70">
+                  {roleName?.toUpperCase() || 'ADMIN'}
                 </span>
-                {is2FAEnabled && (
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    2FA Protected
-                  </span>
-                )}
               </div>
 
-              {designation && (
-                <p className="text-xs text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5 truncate">
-                  <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span className="truncate">{designation}</span>
-                </p>
-              )}
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 truncate">
+                <User className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="truncate">{designation || roleName || 'Admin'} &bull; {institutionalId}</span>
+              </div>
 
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap font-bold pt-0.5">
-                <span className="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/80 text-[10px]">
-                  {institutionalId}
+              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+                {user?.email || 'nanthishvaran17@gmail.com'}
+              </div>
+
+              <div className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
+                {phoneNumber || '9042020879'}
+              </div>
+
+              {/* Verified Status & Edit Profile Button */}
+              <div className="flex items-center gap-2.5 pt-1 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                  <span>VERIFIED</span>
                 </span>
-                <span>•</span>
-                <span className="truncate max-w-[200px] sm:max-w-none">{user?.email}</span>
-                {phoneNumber && (
-                  <>
-                    <span>•</span>
-                    <span className="font-mono">{phoneNumber}</span>
-                  </>
-                )}
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('profile')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border border-purple-400 dark:border-purple-600 text-purple-600 dark:text-purple-300 bg-white dark:bg-navy-950 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit profile</span>
+                </button>
               </div>
             </div>
-
           </div>
 
-          {/* Right: Quick Action Controls (Export / Import / Manage) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center shrink-0 w-full sm:w-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-navy-800 flex-wrap">
+          {/* Primary 7-Item Settings List (WhatsApp / Telegram / Meesho card style) */}
+          <div className="bg-white dark:bg-navy-900 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-xs divide-y divide-slate-100 dark:divide-navy-800/80 overflow-hidden">
+            {/* 1. Account & Profile */}
             <button
               type="button"
-              onClick={handleExportProfileJson}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-              title="Export Profile JSON Backup"
+              onClick={() => setActiveTab('profile')}
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="hidden xs:inline">Backup</span>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-900/60 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    Account &amp; Profile
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Personal details, contact info, photo
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
 
-            <label className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 m-0">
-              <UploadCloud className="w-3.5 h-3.5 text-purple-500" />
-              <span className="hidden xs:inline">Restore</span>
-              <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
-            </label>
+            {/* 2. Security & Login */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('security')}
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    Security &amp; Login
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Password, two-step verification, devices
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </button>
 
+            {/* 3. Privacy & Permissions */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('privacy')}
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 border border-pink-200/60 dark:border-pink-900/60 flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                    Privacy &amp; Permissions
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Visibility, data access, blocked users
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </button>
+
+            {/* 4. Notifications */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('notifications')}
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 flex items-center justify-center shrink-0">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                    Notifications
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Push, email and WhatsApp alerts
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </button>
+
+            {/* 5. App Preferences */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('preferences')}
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200/60 dark:border-sky-900/60 flex items-center justify-center shrink-0">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                    App Preferences
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Language, theme, accessibility
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </button>
+
+            {/* 6. Help & Support */}
             <button
               type="button"
               onClick={() => setShowHelpModal(true)}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-              title="Help & FAQ"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
             >
-              <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-              <span>Help</span>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700/60 flex items-center justify-center shrink-0">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    Help &amp; Support
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    FAQs, contact support, send feedback
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('profile');
-                setProfileSubSection('contact');
-                setExpandedCards(prev => ({ ...prev, contact: true }));
-              }}
-              className="px-3 sm:px-3.5 py-1.5 rounded-xl font-black text-xs bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit Profile</span>
-            </button>
-
+            {/* 7. Log out */}
             <button
               type="button"
               onClick={() => setShowLogoutConfirmModal(true)}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-              title="Sign Out"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-rose-50/60 dark:hover:bg-rose-950/30 transition-colors text-left group cursor-pointer"
             >
-              <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-              <span className="hidden sm:inline">Sign Out</span>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/60 flex items-center justify-center shrink-0">
+                  <LogOut className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-rose-600 dark:text-rose-400">
+                    Log out
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Sign out from your account
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-rose-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
           </div>
 
-        </div>
-      </div>
-
-      {/* 2. 5 PRIMARY ENTERPRISE SETTINGS CATEGORIES (WhatsApp / Telegram / Meesho card style) */}
-      <div className="space-y-3 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-              Settings &amp; Controls
-            </h2>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300">
-              5 Primary Areas
-            </span>
-          </div>
-
-          {/* Secondary Modules Quick Switchers (Digital ID & Mentorship) */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setActiveTab('id_card')}
-              className={`px-3 py-1 rounded-xl text-xs font-black transition-all border flex items-center gap-1.5 cursor-pointer active:scale-95 ${activeTab === 'id_card'
-                  ? 'bg-sky-600 text-white border-sky-700 shadow-sm'
-                  : 'bg-white/80 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-sky-400/60'
-                }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-sky-500" />
-              <span>Digital ID Card</span>
-            </button>
-
-            {isStaffMentor && (
+          {/* Secondary Modules Strip: Digital ID Card, Mentorship, Backup & Restore */}
+          <div className="bg-white/80 dark:bg-navy-900/80 rounded-2xl p-3 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setActiveTab('mentorship')}
-                className={`px-3 py-1 rounded-xl text-xs font-black transition-all border flex items-center gap-1.5 cursor-pointer active:scale-95 ${activeTab === 'mentorship'
-                    ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
-                    : 'bg-white/80 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-amber-400/60'
-                  }`}
+                onClick={() => setActiveTab('id_card')}
+                className="px-3 py-1.5 rounded-xl text-xs font-black bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <GraduationCap className="w-3.5 h-3.5 text-amber-500" />
-                <span>Mentorship Hub</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-sky-600" />
+                <span>Digital ID Card</span>
               </button>
-            )}
-          </div>
-        </div>
 
-        {/* 5 Primary Category Tiles Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+              {isStaffMentor && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('mentorship')}
+                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Mentorship Hub</span>
+                </button>
+              )}
+            </div>
 
-          {/* Category A: Account & Profile */}
-          <div
-            onClick={() => setActiveTab('profile')}
-            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'profile'
-              ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
-              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-indigo-400/50 hover:shadow-xs'
-              }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'profile' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60'
-                }`}>
-                <User className="w-4.5 h-4.5" />
-              </div>
-              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'profile' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'
-                }`} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Profile &amp; Bio
-              </div>
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                Identity &amp; Credentials
-              </div>
-            </div>
-          </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleExportProfileJson}
+                className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Backup JSON"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Backup</span>
+              </button>
 
-          {/* Category B: Security & Login */}
-          <div
-            onClick={() => setActiveTab('security')}
-            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'security'
-              ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
-              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-emerald-400/50 hover:shadow-xs'
-              }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'security' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60'
-                }`}>
-                <KeyRound className="w-4.5 h-4.5" />
-              </div>
-              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'security' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
-                }`} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Security &amp; 2FA
-              </div>
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                {is2FAEnabled ? '2FA Active' : 'Passkeys &amp; Password'}
-              </div>
+              <label className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors flex items-center gap-1 cursor-pointer m-0">
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Restore</span>
+                <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
+              </label>
             </div>
           </div>
-
-          {/* Category C: Privacy & Permissions */}
-          <div
-            onClick={() => setActiveTab('privacy')}
-            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'privacy'
-              ? 'bg-violet-50/70 dark:bg-violet-950/40 border-violet-500 shadow-md ring-2 ring-violet-500/20'
-              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-violet-400/50 hover:shadow-xs'
-              }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'privacy' ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-600 dark:bg-violet-950/70 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60'
-                }`}>
-                <Lock className="w-4.5 h-4.5" />
-              </div>
-              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'privacy' ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400'
-                }`} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Privacy Control
-              </div>
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                Visibility &amp; Backups
-              </div>
-            </div>
-          </div>
-
-          {/* Category D: Notifications */}
-          <div
-            onClick={() => setActiveTab('notifications')}
-            className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'notifications'
-              ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-500 shadow-md ring-2 ring-amber-500/20'
-              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-amber-400/50 hover:shadow-xs'
-              }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'notifications' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60'
-                }`}>
-                <Bell className="w-4.5 h-4.5" />
-              </div>
-              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'notifications' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'
-                }`} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                Notifications
-              </div>
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                Alerts, Chimes &amp; Roster
-              </div>
-            </div>
-          </div>
-
-          {/* Category E: App Preferences */}
-          <div
-            onClick={() => setActiveTab('preferences')}
-            className={`col-span-2 sm:col-span-1 p-3.5 rounded-2xl border transition-all cursor-pointer select-none group flex flex-col justify-between ${activeTab === 'preferences'
-              ? 'bg-fuchsia-50/70 dark:bg-fuchsia-950/40 border-fuchsia-500 shadow-md ring-2 ring-fuchsia-500/20'
-              : 'bg-white/95 dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 hover:border-fuchsia-400/50 hover:shadow-xs'
-              }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'preferences' ? 'bg-fuchsia-600 text-white' : 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 border border-fuchsia-200/60 dark:border-fuchsia-800/60'
-                }`}>
-                <Palette className="w-4.5 h-4.5" />
-              </div>
-              <ChevronRight className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${activeTab === 'preferences' ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-slate-400'
-                }`} />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                App Preferences
-              </div>
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                Theme, Langs &amp; Notes
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Success / Error Alerts */}
-      {successMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-950 dark:text-emerald-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
-          <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>{successMessage}</span>
         </div>
       )}
 
-      {errorMessage && (
-        <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-950 dark:text-rose-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
-          <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      {/* ========================================================================= */}
+      {/* 2. SUBVIEW NAVIGATION HEADER (When viewing a specific section) */}
+      {/* ========================================================================= */}
+      {activeTab !== 'menu' && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Subview Top Navigation Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-navy-900 p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveTab('menu')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 transition-all cursor-pointer active:scale-95 border border-slate-200 dark:border-navy-700 shadow-2xs"
+              >
+                <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
+                <span>Back to Settings</span>
+              </button>
+              <span className="h-4 w-px bg-slate-200 dark:bg-navy-700 hidden sm:block" />
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white capitalize">
+                {activeTab === 'profile' ? 'Account & Profile' :
+                 activeTab === 'security' ? 'Security & Login' :
+                 activeTab === 'privacy' ? 'Privacy & Permissions' :
+                 activeTab === 'notifications' ? 'Notifications' :
+                 activeTab === 'preferences' ? 'App Preferences' :
+                 activeTab === 'id_card' ? 'Official Digital ID Card' :
+                 'Staff Mentorship Hub'}
+              </h2>
+            </div>
 
-      <form onSubmit={handleSaveProfile} className="space-y-6">
+            {/* Quick Category Pill Switcher */}
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+              {[
+                { id: 'profile', label: 'Profile', icon: User },
+                { id: 'security', label: 'Security', icon: ShieldCheck },
+                { id: 'privacy', label: 'Privacy', icon: Lock },
+                { id: 'notifications', label: 'Alerts', icon: Bell },
+                { id: 'preferences', label: 'Prefs', icon: Sliders },
+                { id: 'id_card', label: 'ID Card', icon: Award },
+                ...(isStaffMentor ? [{ id: 'mentorship', label: 'Mentorship', icon: GraduationCap }] : [])
+              ].map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                    activeTab === item.id
+                      ? 'bg-brand-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
+                  }`}
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Success / Error Alerts */}
+          {successMessage && (
+            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-950 dark:text-emerald-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
+              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-950 dark:text-rose-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
+              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSaveProfile} className="space-y-6">
 
 
         {/* ========================================================================= */}
@@ -6241,56 +6284,62 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         )}
 
-        {/* 4. STATIC / FIXED STICKY ACTION BAR (Always docked at bottom on Mobile & Desktop) */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
-                <Info className="w-4 h-4 text-brand-600 shrink-0" />
-                <span>Updates will apply immediately across your portal session.</span>
+        {/* 4. STATIC / FIXED STICKY ACTION BAR (Rendered exclusively when editing Profile Tab) */}
+        {activeTab === 'profile' && (
+          <>
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
+                <div className="hidden sm:flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
+                    <Info className="w-4 h-4 text-brand-600 shrink-0" />
+                    <span>Updates will apply immediately across your portal session.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      triggerHaptic('warning');
+                      handleResetForm();
+                    }}
+                    className="flex-1 sm:flex-initial min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-xs touch-manipulation"
+                    title="Reset Form"
+                  >
+                    <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                    <span>Reset Form</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    onClick={() => triggerHaptic('success')}
+                    className="flex-[1.4] sm:flex-initial min-h-[44px] px-5 sm:px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 shrink-0" />
+                        <span>Save Details</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
-              <button
-                type="button"
-                onClick={(e) => {
-                  triggerHaptic('warning');
-                  handleResetForm();
-                }}
-                className="flex-1 sm:flex-initial min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-xs touch-manipulation"
-                title="Reset Form"
-              >
-                <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-                <span>Reset Form</span>
-              </button>
-
-              <button
-                type="submit"
-                disabled={isSaving}
-                onClick={() => triggerHaptic('success')}
-                className="flex-[1.4] sm:flex-initial min-h-[44px] px-5 sm:px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 shrink-0" />
-                    <span>Save Details</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Safe bottom spacer so page content can scroll completely above the fixed action bar */}
-        <div className="h-28 sm:h-24" />
+            {/* Safe bottom spacer so page content can scroll completely above the fixed action bar */}
+            <div className="h-28 sm:h-24" />
+          </>
+        )}
 
       </form>
+    </div>
+  )}
       {/* MODAL: MENTEE PROFILE */}
       {selectedMentee && (
         <GlobalModalBackdrop isOpen={!!selectedMentee} onClose={() => setSelectedMentee(null)} className="flex items-center justify-center p-4">

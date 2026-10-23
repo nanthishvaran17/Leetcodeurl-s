@@ -230,7 +230,7 @@ export const App: React.FC = () => {
     // If loaded on Firebase Hosting (where there is no live Python backend or SQLite DB), redirect to authoritative production host
     if (typeof window !== 'undefined' && window.location.hostname.includes('web.app')) {
       const search = window.location.search || '';
-      window.location.replace(`http://13.53.231.6${effectivePath}${search}`);
+      window.location.replace(`https://leetcodeurl-s-roan.vercel.app${effectivePath}${search}`);
       return null;
     }
     const rawCode = effectivePath.replace(matchedPrefix, '');
@@ -1163,9 +1163,17 @@ export const App: React.FC = () => {
                   : renderAccessDenied('Growth Intelligence')
               )}
 
-              {activeTab === 'student-dashboard' && <StudentDashboardView />}
+              {activeTab === 'student-dashboard' && (
+                isTabAllowed('student-dashboard')
+                  ? <StudentDashboardView />
+                  : renderAccessDenied('Student Dashboard')
+              )}
 
-              {activeTab === 'staff-dashboard' && <StaffDashboardView />}
+              {activeTab === 'staff-dashboard' && (
+                isTabAllowed('staff-dashboard')
+                  ? <StaffDashboardView />
+                  : renderAccessDenied('Staff Dashboard')
+              )}
 
               {(activeTab === 'departments' || activeTab === 'department') && (
                 isTabAllowed('departments')

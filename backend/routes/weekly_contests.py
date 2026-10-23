@@ -788,7 +788,8 @@ def get_calendar_recent_session(db: Session = Depends(get_db)):
     Section 5: Current Date -> Look back maximum 7 days -> Find latest completed contest -> Show ONLY that contest.
     Section 28: If no completed contest within previous 7 days, returns empty list [].
     """
-    seed_institutional_historical_sessions(db)
+    if not db.query(WeeklySession.id).first():
+        seed_institutional_historical_sessions(db)
     now_ist = get_current_ist_datetime()
     current_date = now_ist.date()
     seven_days_ago = current_date - datetime.timedelta(days=7)

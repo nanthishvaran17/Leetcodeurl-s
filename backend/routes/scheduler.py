@@ -9,7 +9,7 @@ from backend.models import AuditLog
 router = APIRouter(prefix="/api/cron", tags=["Cloud Scheduler Automation"])
 
 # Configured in environment, defaults to a strong generated key for security
-CRON_SECRET = os.environ.get("CRON_SECRET", "super-secret-cron-key-for-cloud")
+CRON_SECRET = os.environ.get("CRON_SECRET")
 
 @router.post("/sunday-session")
 async def trigger_sunday_session(
@@ -20,7 +20,9 @@ async def trigger_sunday_session(
     Secure webhook intended for Cloud Schedulers (e.g. Google Cloud Scheduler, GitHub Actions, AWS EventBridge).
     Runs the Sunday automation pipeline without relying on a local Windows Task Scheduler.
     """
-    if not authorization or authorization.replace("Bearer ", "") != CRON_SECRET:
+    if not CRON_SECRET:
+        raise HTTPException(status_code=503, detail="Service Unavailable: CRON_SECRET environment variable is not configured on the server.")
+    if not authorization or authorization.replace("Bearer ", "").strip() != CRON_SECRET.strip():
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid or missing CRON_SECRET")
 
     logger.info("[CLOUD CRON] Sunday session automation triggered via external webhook.")

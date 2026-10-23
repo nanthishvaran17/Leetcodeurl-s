@@ -33,10 +33,16 @@ def _parse_dob(dob_str: Optional[str]) -> Optional[datetime.date]:
 def get_admin_user_or_default(request: Request, db: Session = Depends(get_db)) -> User:
     user = get_current_user_from_request(request, db)
     if not user:
-        admin_user = db.query(User).filter(User.role.in_(["admin", "super admin", "ADMIN"])).first()
-        if admin_user:
-            return admin_user
-        return User(id=1, username="admin", email="nanthishvaran17@gmail.com", role="admin")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please log in as an administrator."
+        )
+    user_role_clean = (user.role or "").strip().lower()
+    if user_role_clean not in ["admin", "administrator", "super admin", "super_admin", "principal"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Access restricted: Administrator privileges required."
+        )
     return user
 
 # Schema definitions
@@ -486,7 +492,10 @@ def retry_email_delivery(
 
 
 @router.get("/recipients")
-def get_recipients(db: Session = Depends(get_db)):
+def get_recipients(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
     """Retrieves all report email recipients directly from database."""
     recipients = db.query(ReportRecipient).order_by(ReportRecipient.id.asc()).all()
 

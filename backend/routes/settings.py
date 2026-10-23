@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, Query
+from fastapi import APIRouter, Depends, HTTPException, Body, Query, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -96,13 +96,28 @@ DEFAULT_SYSTEM_SETTINGS = {
 }
 
 
+PUBLIC_SAFE_KEYS = {
+    "COLLEGE_NAME", "SESSION_START", "SESSION_END", "TIMEZONE", "SHOW_CONTEST_BANNER",
+    "PROGRESS_THRESHOLD", "ENABLE_AUTO_SUNDAY_SESSION"
+}
+
 @router.get("")
-def get_admin_settings(db: Session = Depends(get_db)):
+def get_admin_settings(request: Request, db: Session = Depends(get_db)):
+    from backend.security import get_current_user_optional
+    current_user = get_current_user_optional(request, db)
+
     rows = db.query(AdminSettingsModel).all()
     settings_dict = {str(row.key): str(row.value) for row in rows if row.key is not None and row.value is not None}
     
     merged = dict(DEFAULT_SYSTEM_SETTINGS)
     merged.update(settings_dict)
+
+    user_role = (current_user.role or "").strip().lower() if current_user else ""
+    is_admin = user_role in ["admin", "administrator", "super admin", "super_admin", "principal"]
+
+    # If not an authenticated admin, return ONLY non-sensitive branding/session configs
+    if not is_admin:
+        return {k: v for k, v in merged.items() if k in PUBLIC_SAFE_KEYS}
     
     # Guarantee password masking for safety
     if "SMTP_PASSWORD" in merged:

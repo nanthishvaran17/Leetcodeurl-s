@@ -26,6 +26,8 @@ async def get_public_leaderboard(
     return await get_students(
         request=request,
         dept_id=dept_id,
+        department=None,
+        dept=None,
         year_level=year_level,
         section_id=None,
         search=search,

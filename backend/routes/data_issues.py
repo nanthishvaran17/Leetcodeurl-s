@@ -17,7 +17,7 @@ from backend.security import require_security_access
 router = APIRouter(prefix="/data-issues", tags=["Student Data Issues & Recovery"])
 
 # Helper: Classify a student's data issue using mutually exclusive strict priority
-def classify_student_issue(student: Student) -> dict:
+def classify_student_issue(student: Student, duplicate_usernames: Optional[set] = None) -> dict:
     stats = student.stats
     username = (student.username or "").strip()
     leetcode_url = (student.leetcode_url or "").strip()
@@ -48,6 +48,15 @@ def classify_student_issue(student: Student) -> dict:
         recommended_action = "Add valid LeetCode username in profile."
         url_status = "NO_USERNAME"
         canonical_url = None
+
+    # Check 1.5: Duplicate Username
+    elif username and duplicate_usernames and username.lower() in duplicate_usernames:
+        issue_category = "DUPLICATE_USERNAME"
+        issue_label = "Duplicate Username"
+        severity = "CRITICAL"
+        error_desc = f"LeetCode username '{username}' is assigned to multiple students in the roster."
+        recommended_action = "Update student profile with unique LeetCode username."
+        url_status = "NEEDS_CHECK"
 
     # Check 2: Invalid / Unverifiable URL
     elif not canonical_url:
@@ -208,7 +217,11 @@ def get_data_issues_summary(
         query = apply_role_based_student_filter(query, current_user, db)
     students = query.all()
 
-    classified = [classify_student_issue(s) for s in students]
+    from collections import Counter
+    all_usernames = [s.username.strip().lower() for s in students if s.username and s.username.strip()]
+    dup_usernames = {u for u, cnt in Counter(all_usernames).items() if cnt > 1}
+
+    classified = [classify_student_issue(s, dup_usernames) for s in students]
     all_classified = list(classified)
 
     counts = {
@@ -217,6 +230,7 @@ def get_data_issues_summary(
         "sync_failed": sum(1 for c in classified if c["issue_category"] == "SYNC_FAILED"),
         "never_synced": sum(1 for c in classified if c["issue_category"] == "NEVER_SYNCED"),
         "missing_username": sum(1 for c in classified if c["issue_category"] == "MISSING_USERNAME"),
+        "duplicate_username": sum(1 for c in classified if c["issue_category"] == "DUPLICATE_USERNAME"),
         "invalid_username": sum(1 for c in classified if c["issue_category"] == "INVALID_USERNAME"),
         "invalid_url": sum(1 for c in classified if c["issue_category"] == "INVALID_URL"),
         "stale_data": sum(1 for c in classified if c["issue_category"] == "STALE_DATA"),

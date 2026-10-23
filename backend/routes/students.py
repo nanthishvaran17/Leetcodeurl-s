@@ -382,8 +382,9 @@ async def get_students(
 
         # Resolve effective department ID if passed as string code or name
         effective_dept_id = dept_id
-        if effective_dept_id is None and (department or dept):
-            raw_d = (department or dept or "").strip().upper()
+        dept_val = department if isinstance(department, str) else (dept if isinstance(dept, str) else None)
+        if effective_dept_id is None and dept_val:
+            raw_d = dept_val.strip().upper()
             if raw_d not in ("ALL", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", ""):
                 dept_lookup = {
                     "CSE(CS)": 1, "CS": 1, "CYBER": 1, "CYBER SECURITY": 1,
