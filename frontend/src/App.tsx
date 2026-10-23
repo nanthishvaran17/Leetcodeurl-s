@@ -1081,7 +1081,7 @@ export const App: React.FC = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className={`flex-1 min-h-0 w-full mx-auto relative flex flex-col ${
+      <div className={`flex-1 min-h-0 w-full max-w-full overflow-x-hidden mx-auto relative flex flex-col ${
         activeTab === 'messages'
           ? 'pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
           : 'pt-3.5 sm:pt-4 pb-20 sm:pb-6 px-2.5 sm:px-4 max-w-full'
@@ -1118,7 +1118,7 @@ export const App: React.FC = () => {
           <main
             id="main-content"
             key={activeTab}
-            className={`min-w-0 w-full animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
+            className={`min-w-0 w-full max-w-full overflow-x-hidden animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
           >
 
             <ErrorBoundary>
@@ -1451,7 +1451,7 @@ export const App: React.FC = () => {
       {activeTab !== 'messages' && <BackToTopButton />}
 
       {/* Sleek Floating Island Mobile Bottom Navigation */}
-      {isAuthenticated && activeTab !== 'messages' && activeTab !== 'account-settings' && activeTab !== 'account' && activeTab !== 'profile-settings' && (
+      {isAuthenticated && activeTab !== 'messages' && (
         <MobileBottomNav
           activeTab={activeTab}
           setActiveTab={handleTabChange}

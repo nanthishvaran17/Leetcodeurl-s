@@ -1340,7 +1340,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         onClose={() => setShowFailedModal(false)}
       />
 
-      {/* 📱 MODERN MOBILE BOTTOM SHEET FOR CONTEST PICKER */}
+      {/* MODERN MOBILE BOTTOM SHEET FOR CONTEST PICKER */}
       {showContestPicker && (
         <div 
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-md animate-fade-in p-0 sm:p-4"

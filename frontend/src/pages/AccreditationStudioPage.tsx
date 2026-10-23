@@ -86,7 +86,7 @@ export const AccreditationStudioPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 md:p-10 pb-32 sm:pb-32 md:pb-10 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Top Back Navigation Strip */}
         <div className="flex items-center justify-between pb-1">

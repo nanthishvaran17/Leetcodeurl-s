@@ -602,7 +602,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       </div>
 
       {/* Scrollable Body Content */}
-      <div className="p-5 sm:p-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar pt-2">
+      <div className="px-4 sm:px-6 pt-2 pb-28 sm:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

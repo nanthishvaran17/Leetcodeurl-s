@@ -601,7 +601,7 @@ export const ReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6 sm:space-y-8 pt-0 pb-10 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 pt-0 pb-32 sm:pb-12 animate-fade-in">
 
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30">

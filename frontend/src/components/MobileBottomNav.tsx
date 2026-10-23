@@ -9,6 +9,7 @@ import {
   FileSpreadsheet 
 } from 'lucide-react';
 import { prefetchRoute } from '../utils/pagePrefetch';
+import { triggerHaptic } from '../utils/haptics';
 
 interface MobileBottomNavProps {
   activeTab?: string;
@@ -28,15 +29,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const [isVisible, setIsVisible] = useState(true);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const lastScrollY = useRef(0);
-
-  // Subtle native haptic feedback
-  const triggerHaptic = useCallback(() => {
-    try {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate(10);
-      }
-    } catch (_e) {}
-  }, []);
 
   // 1. Auto-hide on mobile software keyboard open
   useEffect(() => {
@@ -132,7 +124,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   return (
     <nav
       aria-label="Mobile Bottom Island Navigation"
-      className={`md:hidden fixed bottom-4 inset-x-3.5 z-40 max-w-[390px] mx-auto transition-all duration-300 transform ${
+      className={`md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom,1rem))] inset-x-3.5 z-40 max-w-[390px] mx-auto transition-all duration-300 transform ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >

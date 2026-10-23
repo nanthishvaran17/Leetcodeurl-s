@@ -1,7 +1,8 @@
 import React, { memo, useState } from 'react';
 import { useStudentEntity } from '../stores/studentLiveStore';
-import { Clock, AlertCircle, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink, ChevronRight, MoreHorizontal, Check } from 'lucide-react';
+import { Clock, AlertCircle, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink, ChevronRight, ChevronDown, ChevronUp, MoreHorizontal, Check } from 'lucide-react';
 import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
+import { triggerHaptic } from '../utils/haptics';
 
 function getRankBadge(rank?: number) {
   if (!rank || rank <= 0) return <span className="inline-flex items-center justify-center h-6 px-2.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700 shrink-0">Unranked</span>;
@@ -128,38 +129,78 @@ export const FastStudentRow = memo(({
     prevSolvedRef.current = totalSolved;
   }, [totalSolved]);
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleToggleExpand = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('selection');
+    setIsExpanded(prev => !prev);
+  };
+
+  const handleAvatarSelect = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('selection');
+    toggleStudent(student.id);
+  };
+
+  const handleMobileProfileView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('light');
+    onView(student, e);
+  };
+
+  const handleMobileRefresh = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('medium');
+    onRefresh?.((student || initialStudent).id);
+  };
+
+  const handleMobileEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('light');
+    onEdit?.(student, e);
+  };
+
+  const handleMobileDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('warning');
+    onDelete?.(student, e);
+  };
+
   if (!student) return null;
+
+  const easySolved = student.easy_solved ?? student.stats?.easy_solved ?? 0;
+  const mediumSolved = student.medium_solved ?? student.stats?.medium_solved ?? 0;
+  const hardSolved = student.hard_solved ?? student.stats?.hard_solved ?? 0;
 
   return (
     <div
       style={style}
-      onClick={(e) => {
-        if (
-          (e.target as HTMLElement).closest('button') ||
-          (e.target as HTMLElement).closest('input') ||
-          (e.target as HTMLElement).closest('a')
-        ) {
-          return;
-        }
-        onView(student, e);
-      }}
-      className="w-full max-w-full min-w-0 md:min-w-[1100px] mb-3 md:mb-0"
+      className="w-full max-w-full min-w-0 md:min-w-[1100px] mb-2.5 md:mb-0"
     >
-      {/* MOBILE LAYOUT (2026 SaaS LUXURY LEADERBOARD CARD) */}
+      {/* MOBILE LAYOUT (ULTRA-PREMIUM COMPACT ACCORDION CARD) */}
       <div 
-        onClick={(e) => onView(student, e)}
-        className={`!flex md:!hidden flex-col w-full max-w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md active:scale-[0.99] touch-manipulation cursor-pointer ${
+        className={`!flex md:!hidden flex-col w-full max-w-full bg-white dark:bg-[#0c1424] rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-xs hover:shadow-md touch-manipulation ${
           isSelected 
             ? 'border-brand-500 ring-2 ring-brand-500/30 bg-brand-500/[0.04] dark:bg-brand-950/20' 
-            : 'border-slate-200/90 dark:border-white/10 hover:border-brand-500/40'
+            : 'border-slate-200/90 dark:border-white/10'
         }`}
       >
-        {/* Main Card Body */}
-        <div className="flex items-center gap-3 p-3.5">
-          {/* Avatar with Tap-to-Select Micro Toggle */}
+        {/* Compact Card Header - Tap to Expand/Collapse */}
+        <div 
+          onClick={handleToggleExpand}
+          className="flex items-center gap-3 p-3 cursor-pointer select-none active:bg-slate-50 dark:active:bg-white/[0.03] transition-colors"
+        >
+          {/* Avatar with Tap-to-Select Micro Toggle (44px target) */}
           <div 
-            onClick={(e) => { e.stopPropagation(); toggleStudent(student.id); }}
-            className="relative shrink-0 cursor-pointer group/avatar"
+            onClick={handleAvatarSelect}
+            className="relative shrink-0 cursor-pointer group/avatar p-0.5"
             title="Tap to select student"
           >
             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs shadow-md transition-all ${
@@ -205,58 +246,111 @@ export const FastStudentRow = memo(({
               </span>
             )}
           </div>
-        </div>
 
-        {/* Card Metrics & Quick Action Bar (Pixel-Perfect Symmetrical Layout) */}
-        <div className="flex items-center justify-between px-2.5 sm:px-3 py-2 bg-slate-50/85 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.06] gap-1 sm:gap-1.5 min-w-0">
-          {/* Left: Balanced Stat Badges */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink min-w-0">
-            <div className="inline-flex items-center gap-1 h-7 px-1.5 sm:px-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
+          {/* Compact Right Corner: Solved pill & Expand Chevron Button (44px touch target) */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className={`px-2 py-1 rounded-lg inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 ${flashSolved ? 'scale-110 transition-transform' : ''}`}>
               <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">SOLVED</span>
               <span className="text-xs font-black font-mono shrink-0">{totalSolved ?? '—'}</span>
             </div>
-            <div className="inline-flex items-center gap-1 h-7 px-1.5 sm:px-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
-              <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 shrink-0">RATING</span>
-              <span className="text-xs font-black font-mono shrink-0">{getContestRatingDisplay(student)}</span>
-            </div>
-          </div>
 
-          {/* Right: Symmetrical, Non-Collapsing Action Buttons */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-            {onRefresh && (
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh((student || initialStudent).id); }}
-                disabled={isSyncing}
-                className="h-7 w-7 rounded-lg text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 bg-white dark:bg-navy-800 flex items-center justify-center border border-slate-200/80 dark:border-white/10 shadow-2xs active:scale-90 touch-manipulation cursor-pointer shrink-0"
-                title="Refresh Stats"
-                aria-label="Refresh Stats"
-              >
-                <RefreshCw size={12} className={`shrink-0 ${isSyncing ? 'animate-spin text-brand-500' : ''}`} />
-              </button>
-            )}
-            {onEdit && (
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }}
-                className="h-7 w-7 sm:w-auto px-0 sm:px-2.5 rounded-lg text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 shadow-2xs active:scale-95 touch-manipulation cursor-pointer flex items-center justify-center gap-1 shrink-0 font-bold"
-                title="Edit Student Details"
-                aria-label="Edit Student Details"
-              >
-                <Edit3 size={12} className="shrink-0 text-amber-600 dark:text-amber-400" />
-                <span className="hidden sm:inline text-[11px] font-black shrink-0">Edit</span>
-              </button>
-            )}
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }}
-              className="h-7 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:bg-brand-800 text-white font-black text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all touch-manipulation cursor-pointer flex items-center justify-center gap-1 shrink-0"
+              onClick={handleToggleExpand}
+              className="min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              aria-label={isExpanded ? 'Collapse student details' : 'Expand student details'}
             >
-              <span className="shrink-0 text-[11px]">Profile</span>
-              <ChevronRight size={12} strokeWidth={2.5} className="shrink-0" />
+              {isExpanded ? (
+                <ChevronUp size={18} className="stroke-[2.5] text-brand-600 dark:text-brand-400" />
+              ) : (
+                <ChevronDown size={18} className="stroke-[2.5]" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* EXPANDED ACCORDION DRAWER */}
+        {isExpanded && (
+          <div className="px-3.5 pb-3.5 pt-1 border-t border-slate-100 dark:border-white/[0.08] bg-slate-50/60 dark:bg-white/[0.01] space-y-3 animate-fade-in">
+            {/* 1. Problem Difficulty Breakdown Pills */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2 text-center">
+                <span className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Easy</span>
+                <span className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">{easySolved}</span>
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2 text-center">
+                <span className="text-[9.5px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">Medium</span>
+                <span className="text-sm font-black font-mono text-amber-700 dark:text-amber-300">{mediumSolved}</span>
+              </div>
+              <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-2 text-center">
+                <span className="text-[9.5px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">Hard</span>
+                <span className="text-sm font-black font-mono text-rose-700 dark:text-rose-300">{hardSolved}</span>
+              </div>
+            </div>
+
+            {/* 2. Contest Rating & Global Standing */}
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-[#070e1c] border border-slate-200/80 dark:border-white/10 text-xs">
+              <div className="flex items-center gap-2">
+                <Award size={15} className="text-amber-500 shrink-0" />
+                <span className="text-slate-500 dark:text-slate-400 font-bold">Contest Rating:</span>
+                <span className="font-black text-amber-600 dark:text-amber-400">{getContestRatingDisplay(student)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
+                <span className="text-slate-500 dark:text-slate-400">Rank:</span>
+                <span className="text-indigo-600 dark:text-indigo-400 font-mono font-black">{getContestRankDisplay(student)}</span>
+              </div>
+            </div>
+
+            {/* 3. Action Buttons with Full 44px Touch Targets */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleMobileProfileView}
+                className="flex-1 min-h-[44px] px-3 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs shadow-md shadow-brand-500/20 transition-all touch-manipulation cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Eye size={14} className="stroke-[2.2]" />
+                <span>Full Profile</span>
+              </button>
+
+              {onRefresh && (
+                <button
+                  type="button"
+                  onClick={handleMobileRefresh}
+                  disabled={isSyncing}
+                  className="min-h-[44px] min-w-[44px] rounded-xl text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 bg-white dark:bg-navy-800 flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xs active:scale-90 touch-manipulation cursor-pointer shrink-0"
+                  title="Refresh Stats"
+                  aria-label="Refresh Stats"
+                >
+                  <RefreshCw size={15} className={`shrink-0 ${isSyncing ? 'animate-spin text-brand-500' : ''}`} />
+                </button>
+              )}
+
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={handleMobileEdit}
+                  className="min-h-[44px] min-w-[44px] rounded-xl text-amber-700 dark:text-amber-300 hover:text-amber-800 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 shadow-xs active:scale-95 touch-manipulation cursor-pointer flex items-center justify-center shrink-0 font-bold"
+                  title="Edit Student Details"
+                  aria-label="Edit Student Details"
+                >
+                  <Edit3 size={15} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                </button>
+              )}
+
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={handleMobileDelete}
+                  className="min-h-[44px] min-w-[44px] rounded-xl text-rose-600 hover:text-rose-700 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 shadow-xs active:scale-95 touch-manipulation cursor-pointer flex items-center justify-center shrink-0"
+                  title="Deactivate Student"
+                  aria-label="Deactivate Student"
+                >
+                  <Trash2 size={15} className="shrink-0 text-rose-500" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* DESKTOP LAYOUT (BALANCED GRID - ZERO AWKWARD GAPS) */}

@@ -612,7 +612,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
+    <div className="space-y-6 pb-32 sm:pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
 
       {/* 1. TOP HERO BANNER (MATCHING INSTITUTIONAL GRADIENT) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-xl border border-brand-500/30">

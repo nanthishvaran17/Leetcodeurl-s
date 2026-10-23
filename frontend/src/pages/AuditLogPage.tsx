@@ -409,7 +409,7 @@ export const AuditLogPage: React.FC = () => {
 
 
   return (
-    <div className="space-y-6 pt-0 pb-16 animate-slideUp">
+    <div className="space-y-6 pt-0 pb-32 sm:pb-16 animate-slideUp">
       
       {/* HEADER - SLEEK MODERN MOBILE & DESKTOP HERO */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-6 md:p-8 shadow-2xl border border-indigo-500/20">

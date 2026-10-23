@@ -76,7 +76,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
   const regNo = student.reg_no || student.username || 'Student';
   const cleanReg = regNo.replace(/[^A-Za-z0-9_-]+/g, '_');
 
-  const shareText = `🔥 Nandha LeetCode Intelligence — Student Achievement Pass\n👤 ${student.name || 'Student'} (${deptName} • ${regNo})\n🏆 College Rank: ${rankDisplay} | Rating: ${contestRating}\n⭐ Total Solved: ${totalSolved} Problems (Easy: ${easy} | Medium: ${medium} | Hard: ${hard})\n⚡ Streak: ${streak} Days Active\n\nOfficial Verified Pass • Nandha Engineering College Autonomous (25 Years)`;
+  const shareText = `Nandha LeetCode Intelligence — Student Achievement Pass\nStudent: ${student.name || 'Student'} (${deptName} • ${regNo})\nCollege Rank: ${rankDisplay} | Rating: ${contestRating}\nTotal Solved: ${totalSolved} Problems (Easy: ${easy} | Medium: ${medium} | Hard: ${hard})\nActive Streak: ${streak} Days Active\n\nOfficial Verified Pass • Nandha Engineering College Autonomous (25 Years)`;
 
   // High-Resolution 2D Canvas Generator for Gallery Download
   const generateCardBlob = async (): Promise<Blob | null> => {
@@ -229,7 +229,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
     const streakX = width - 260;
     ctx.fillStyle = '#f59e0b';
     ctx.font = 'bold 36px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`⚡ ${streak} Days`, streakX, showcaseY + 95);
+    ctx.fillText(`${streak} Days`, streakX, showcaseY + 95);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '600 15px system-ui, -apple-system, sans-serif';

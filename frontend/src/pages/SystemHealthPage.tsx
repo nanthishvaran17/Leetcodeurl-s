@@ -708,7 +708,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     !forensicLoading;
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
+    <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
       {/* 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
 

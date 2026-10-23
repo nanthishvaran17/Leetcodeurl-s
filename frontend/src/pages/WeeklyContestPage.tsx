@@ -1972,7 +1972,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
   return (
-    <div className="space-y-6 sm:space-y-10 pt-0 animate-fade-in pb-40 sm:pb-32 md:pb-16">
+    <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-10 pt-0 animate-fade-in pb-40 sm:pb-32 md:pb-16">
 
       {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
@@ -4989,74 +4989,111 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             {/* C. SCROLLABLE PREVIEW TABLE */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm touch-pan-x overscroll-x-contain">
-                <table className="w-full min-w-[780px] text-left text-xs">
-                  <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
-                    <tr>
-                      <th className="px-3 py-2 text-center w-12">S.No</th>
-                      <th className="px-3 py-2">Reg No</th>
-                      <th className="px-3 py-2">Student Name</th>
-                      <th className="px-3 py-2 text-center">Dept</th>
-                      <th className="px-3 py-2 text-center">Year</th>
-                      <th className="px-3 py-2 text-center">Status</th>
-                      <th className="px-2 py-2 text-center w-10">Q1</th>
-                      <th className="px-2 py-2 text-center w-10">Q2</th>
-                      <th className="px-2 py-2 text-center w-10">Q3</th>
-                      <th className="px-2 py-2 text-center w-10">Q4</th>
-                      <th className="px-3 py-2 text-right">Contest Solved</th>
-                      <th className="px-2 py-2 text-right">Score</th>
-                      <th className="px-3 py-2 text-right">Contest Rank</th>
-                      <th className="px-3 py-2 text-right">Contest Rating</th>
-                      <th className="px-3 py-2 text-right">Global Rank</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
-                    {previewPaginatedRows.length === 0 ? (
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                {/* Desktop Preview Table */}
+                <div className="hidden md:block overflow-x-auto touch-pan-x overscroll-x-contain">
+                  <table className="w-full min-w-[780px] text-left text-xs">
+                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
                       <tr>
-                        <td colSpan={15} className="p-8 text-center text-slate-500 font-bold">
-                          No matching student records found for the active filter selection.
-                        </td>
+                        <th className="px-3 py-2 text-center w-12">S.No</th>
+                        <th className="px-3 py-2">Reg No</th>
+                        <th className="px-3 py-2">Student Name</th>
+                        <th className="px-3 py-2 text-center">Dept</th>
+                        <th className="px-3 py-2 text-center">Year</th>
+                        <th className="px-3 py-2 text-center">Status</th>
+                        <th className="px-2 py-2 text-center w-10">Q1</th>
+                        <th className="px-2 py-2 text-center w-10">Q2</th>
+                        <th className="px-2 py-2 text-center w-10">Q3</th>
+                        <th className="px-2 py-2 text-center w-10">Q4</th>
+                        <th className="px-3 py-2 text-right">Contest Solved</th>
+                        <th className="px-2 py-2 text-right">Score</th>
+                        <th className="px-3 py-2 text-right">Contest Rank</th>
+                        <th className="px-3 py-2 text-right">Contest Rating</th>
+                        <th className="px-3 py-2 text-right">Global Rank</th>
                       </tr>
-                    ) : (
-                      previewPaginatedRows.map((r, idx) => {
-                        const actualIdx = (previewPage - 1) * previewPageSize + idx;
-                        const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
-                        const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
-                        const isAttended = isPublicAttended || isVirtualAttended;
-                        return (
-                          <tr key={actualIdx} className="hover:bg-brand-50/40 dark:hover:bg-navy-800/40 transition-colors">
-                            <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
-                            <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
-                            <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200 uppercase">{(r.name || '').toUpperCase()}</td>
-                            <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
-                            <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
-                            <td className="px-3 py-1.5 text-center">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                : isVirtualAttended
-                                  ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
-                                  : r.status === 'USERNAME_NOT_FOUND'
-                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                    : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                                }`}>
-                                {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
-                              </span>
-                            </td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                            <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? 0) : 0}</td>
-                            <td className="px-2 py-1.5 text-right font-bold text-indigo-600 dark:text-indigo-400">{isAttended ? (r.score ?? 0) : 0}</td>
-                            <td className="px-3 py-1.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">{isAttended && (r.contest_rank || r.rank) && String(r.contest_rank || r.rank) !== '—' ? `#${Number(String(r.contest_rank || r.rank).replace(/[^0-9]/g, '')).toLocaleString()}` : '—'}</td>
-                            <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{r.contest_rating && String(r.contest_rating) !== 'Unrated' && String(r.contest_rating) !== '—' ? (typeof r.contest_rating === 'number' ? Math.round(r.contest_rating) : r.contest_rating) : (r.rating && String(r.rating) !== 'Unrated' && String(r.rating) !== '—' ? (typeof r.rating === 'number' ? Math.round(r.rating) : r.rating) : 'Unrated')}</td>
-                            <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-600 dark:text-slate-400">{r.contest_global_rank && String(r.contest_global_rank) !== 'Unrated' ? r.contest_global_rank : (r.global_rank && String(r.global_rank) !== 'Unrated' ? r.global_rank : 'Unrated')}</td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
+                      {previewPaginatedRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={15} className="p-8 text-center text-slate-500 font-bold">
+                            No matching student records found for the active filter selection.
+                          </td>
+                        </tr>
+                      ) : (
+                        previewPaginatedRows.map((r, idx) => {
+                          const actualIdx = (previewPage - 1) * previewPageSize + idx;
+                          const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
+                          const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
+                          const isAttended = isPublicAttended || isVirtualAttended;
+                          return (
+                            <tr key={actualIdx} className="hover:bg-brand-50/40 dark:hover:bg-navy-800/40 transition-colors">
+                              <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
+                              <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
+                              <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200 uppercase">{(r.name || '').toUpperCase()}</td>
+                              <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
+                              <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
+                              <td className="px-3 py-1.5 text-center">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : isVirtualAttended
+                                    ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
+                                    : r.status === 'USERNAME_NOT_FOUND'
+                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                                  }`}>
+                                  {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
+                                </span>
+                              </td>
+                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                              <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? 0) : 0}</td>
+                              <td className="px-2 py-1.5 text-right font-bold text-indigo-600 dark:text-indigo-400">{isAttended ? (r.score ?? 0) : 0}</td>
+                              <td className="px-3 py-1.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">{isAttended && (r.contest_rank || r.rank) && String(r.contest_rank || r.rank) !== '—' ? `#${Number(String(r.contest_rank || r.rank).replace(/[^0-9]/g, '')).toLocaleString()}` : '—'}</td>
+                              <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{r.contest_rating && String(r.contest_rating) !== 'Unrated' && String(r.contest_rating) !== '—' ? (typeof r.contest_rating === 'number' ? Math.round(r.contest_rating) : r.contest_rating) : (r.rating && String(r.rating) !== 'Unrated' && String(r.rating) !== '—' ? (typeof r.rating === 'number' ? Math.round(r.rating) : r.rating) : 'Unrated')}</td>
+                              <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-600 dark:text-slate-400">{r.contest_global_rank && String(r.contest_global_rank) !== 'Unrated' ? r.contest_global_rank : (r.global_rank && String(r.global_rank) !== 'Unrated' ? r.global_rank : 'Unrated')}</td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Preview Cards */}
+                <div className="block md:hidden p-2.5 space-y-2">
+                  {previewPaginatedRows.length === 0 ? (
+                    <div className="p-6 text-center text-slate-500 font-bold text-xs">
+                      No matching student records found.
+                    </div>
+                  ) : (
+                    previewPaginatedRows.map((r, idx) => {
+                      const actualIdx = (previewPage - 1) * previewPageSize + idx;
+                      const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
+                      const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
+                      return (
+                        <div key={actualIdx} className="p-3 rounded-xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 text-xs space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono font-bold text-slate-500 text-[11px]">#{actualIdx + 1} • {r.reg_no}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black ${
+                              isPublicAttended ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                              isVirtualAttended ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
+                              'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                            }`}>
+                              {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : 'NOT ATTENDED'}
+                            </span>
+                          </div>
+                          <p className="font-black text-slate-900 dark:text-white uppercase truncate">{r.name}</p>
+                          <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-200/60 dark:border-navy-800">
+                            <span className="text-slate-600 dark:text-slate-400">{r.dept} • {r.year} Year</span>
+                            <span className="font-black text-emerald-600 dark:text-emerald-400">{r.total_solved ?? 0}/4 Solved</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
 
               {/* Preview Pagination Toolbar */}

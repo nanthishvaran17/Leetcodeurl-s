@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
 } from 'recharts';
 import api from '../services/api';
+import { triggerHaptic } from '../utils/haptics';
 
 interface LiveStudentMonitorProps {
   /** Optional: pre-fill the search field and auto-trigger a sync */
@@ -83,8 +84,9 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
 
             <button
               type="submit"
+              onClick={() => triggerHaptic('medium')}
               disabled={loading || !identifier.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black rounded-2xl shadow-lg shadow-brand-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+              className="min-h-[44px] px-6 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black rounded-2xl shadow-lg shadow-brand-500/30 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 shrink-0 touch-manipulation active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Fetching GQL Data...' : 'Force Live Sync'}</span>

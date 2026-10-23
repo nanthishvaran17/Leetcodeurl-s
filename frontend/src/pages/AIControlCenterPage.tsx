@@ -131,7 +131,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
   ];
 
   return (
-    <div className="space-y-6 pb-12 animate-fade-in font-sans">
+    <div className="space-y-6 pb-32 sm:pb-12 animate-fade-in font-sans">
 
       {/* 1. HEADER TELEMETRY BAR (SOC / NOC OPERATIONS DESIGN) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">

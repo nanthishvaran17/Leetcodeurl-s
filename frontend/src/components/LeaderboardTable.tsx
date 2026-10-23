@@ -7,11 +7,13 @@ import { studentLiveStore } from '../stores/studentLiveStore';
 import { FastStudentRow, LEADERBOARD_TABLE_GRID_STYLE } from './FastStudentRow';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 
-import { ExternalLink, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Award, CheckCircle2, TrendingUp, BookOpen, Star, Activity } from 'lucide-react';
+import { ExternalLink, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Award, CheckCircle2, TrendingUp, BookOpen, Star, Activity, Search } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
 import { StudentEditOverlay } from './StudentEditOverlay';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { TableSkeleton, MobileCardListSkeleton } from './SkeletonLoaders';
+import { triggerHaptic } from '../utils/haptics';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -218,6 +220,23 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const [showFloatingSearch, setShowFloatingSearch] = useState(false);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowFloatingSearch(window.scrollY > 150);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const isServerPaginated = serverTotalCount !== undefined && !isFilteringActive;
 
   // Ultra-Fast Paginated Table Viewport Rendering
@@ -283,6 +302,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   }, [paginatedStudents, currentPage, pageSize]);
 
   const handlePageChange = (newPage: number) => {
+    triggerHaptic('selection');
     if (isServerPaginated && onServerPageChange) {
       onServerPageChange(newPage, Number(pageSize));
     } else {
@@ -291,6 +311,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
   const handlePageSizeChange = (newSize: '25' | '50' | '100' | '200') => {
+    triggerHaptic('selection');
     setPageSize(newSize);
     if (isServerPaginated && onServerPageChange) {
       onServerPageChange(1, Number(newSize));
@@ -662,9 +683,13 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         {/* Virtualized Body */}
         <div className="flex-1 w-full min-w-full md:min-w-[1100px]">
           {loading ? (
-            <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
-              <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
-              <span className="text-xs font-bold text-brand-600 dark:text-brand-400">Loading real institutional student records...</span>
+            <div className="w-full py-2">
+              <div className="hidden md:block">
+                <TableSkeleton rows={8} />
+              </div>
+              <div className="block md:hidden">
+                <MobileCardListSkeleton count={6} />
+              </div>
             </div>
           ) : deferredSortedStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
@@ -672,11 +697,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <span className="text-sm font-bold text-slate-800 dark:text-slate-200">No students match the selected filters.</span>
             </div>
           ) : (
-            (paginatedStudents.length > 50) ? (
+            (!isMobile && paginatedStudents.length > 50) ? (
               <List
-                height={isMobile ? 650 : 800}
+                height={800}
                 itemCount={paginatedStudents.length}
-                itemSize={isMobile ? 148 : 68}
+                itemSize={68}
                 width="100%"
                 itemData={paginatedStudents}
                 style={{ overflowX: 'auto' }}
@@ -702,7 +727,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 }}
               </List>
             ) : (
-              <div className="flex flex-col space-y-4 md:space-y-1 pb-16 md:pb-0">
+              <div className="flex flex-col space-y-3 pb-20 md:pb-0">
                 {paginatedStudents.slice(0, renderedCount).map((student, idx) => (
                   <FastStudentRow
                     key={student.id}
@@ -1113,6 +1138,28 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         document.body
       )}
 
+      {/* Sticky Floating Quick Search / Filter Pill on Mobile */}
+      <div 
+        className={`md:hidden fixed bottom-20 right-4 z-40 transition-all duration-300 transform ${
+          showFloatingSearch ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 pointer-events-none scale-90'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic('light');
+            window.dispatchEvent(new CustomEvent('open_mobile_filter_drawer'));
+          }}
+          className="min-h-[44px] px-4 py-2.5 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-black text-xs shadow-xl shadow-brand-500/35 border border-white/20 flex items-center gap-2 active:scale-95 touch-manipulation cursor-pointer"
+          aria-label="Search and filter students"
+        >
+          <Search className="w-4 h-4 stroke-[2.5]" />
+          <span>Search</span>
+          {isFilteringActive && (
+            <span className="w-2 h-2 rounded-full bg-amber-400 ring-2 ring-white animate-pulse" />
+          )}
+        </button>
+      </div>
 
     </div>
   );

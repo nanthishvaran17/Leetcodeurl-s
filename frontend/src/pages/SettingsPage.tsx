@@ -683,7 +683,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
   };
 
   return (
-    <div className="space-y-6 pb-16 text-xs text-slate-800 dark:text-slate-200">
+    <div className="space-y-6 pb-32 sm:pb-16 text-xs text-slate-800 dark:text-slate-200">
 
       {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-xl border border-brand-500/25">

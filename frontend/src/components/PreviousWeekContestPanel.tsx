@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react';
 import { createPortal } from 'react-dom';
 import { useDebounce } from '../hooks/useDebounce';
+import { triggerHaptic } from '../utils/haptics';
 import { 
   ShieldCheck, 
   RefreshCw, 
@@ -1050,9 +1051,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
           <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
             <button
-              onClick={() => fetchPreviousWeekData(true)}
+              onClick={() => {
+                triggerHaptic('medium');
+                fetchPreviousWeekData(true);
+              }}
               disabled={syncing}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
               <span>{syncing ? 'Re-Syncing Live...' : 'Force Live Re-Sync'}</span>

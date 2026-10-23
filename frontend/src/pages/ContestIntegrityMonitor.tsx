@@ -288,7 +288,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen py-2 sm:py-4 space-y-6 font-sans antialiased text-slate-900">
+    <div className="w-full min-h-screen pt-2 sm:pt-4 pb-32 sm:pb-16 space-y-6 font-sans antialiased text-slate-900">
       
       {/* FULL WIDTH MAIN CONTAINER */}
       <div className="w-full space-y-6">

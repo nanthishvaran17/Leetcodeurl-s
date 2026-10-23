@@ -1935,7 +1935,7 @@ export const HRCandidateFinderPage: React.FC = () => {
   ];
 
   return (
-    <div ref={pageContainerRef} className="space-y-6 pb-12 text-slate-900 dark:text-slate-100">
+    <div ref={pageContainerRef} className="space-y-6 pb-32 sm:pb-12 text-slate-900 dark:text-slate-100">
 
       {/* HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
