@@ -11,6 +11,7 @@ from backend.services.live_sync_service import (
     sync_tracker
 )
 from backend.logger import logger
+from backend.security import require_security_access
 
 router = APIRouter(tags=["Live Sync Engine"])
 
@@ -26,38 +27,53 @@ class TargetedSyncRequest(BaseModel):
 @router.post("/api/sync/trigger")
 @router.post("/api/fetch")
 @router.post("/fetch")
-async def trigger_full_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
+async def trigger_full_sync(
+    triggered_by: str = Query("admin"),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Full Sync", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
     """
     Triggers institutional full roster live sync.
     Enforces DB-level single-job lock and returns job_id immediately without blocking (<50ms).
     """
-    logger.info(f"[SYNC_REQUEST_RECEIVED] Triggered full sync request from: {triggered_by}")
-    result = start_full_sync_job(db, triggered_by=triggered_by)
+    caller_tag = getattr(current_user, "username", triggered_by) or triggered_by
+    logger.info(f"[SYNC_REQUEST_RECEIVED] Triggered full sync request from: {caller_tag}")
+    result = start_full_sync_job(db, triggered_by=caller_tag)
     logger.info(f"[SYNC_JOB_CREATED] Sync job status: {result.get('status')} | job_id: {result.get('job_id')}")
     return result
 
 
 @router.post("/stale")
 @router.post("/api/sync/stale")
-async def trigger_stale_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
+async def trigger_stale_sync(
+    triggered_by: str = Query("admin"),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Stale Sync", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
     """
     Triggers targeted background refresh only for students with stale data (> SYNC_FRESHNESS_HOURS) or never synced.
     """
+    caller_tag = getattr(current_user, "username", triggered_by) or triggered_by
     from backend.services.live_sync_service import start_stale_sync_job
-    logger.info(f"[SYNC_STALE_REQUEST] Triggered stale sync from: {triggered_by}")
-    result = start_stale_sync_job(db, triggered_by=triggered_by)
+    logger.info(f"[SYNC_STALE_REQUEST] Triggered stale sync from: {caller_tag}")
+    result = start_stale_sync_job(db, triggered_by=caller_tag)
     return result
 
 
 @router.post("/targeted")
 @router.post("/api/sync/targeted")
-async def trigger_targeted_sync(req: TargetedSyncRequest, db: Session = Depends(get_db)):
+async def trigger_targeted_sync(
+    req: TargetedSyncRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Targeted Sync", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
     """
     Triggers targeted live sync for a specified subset of student IDs.
     """
+    caller_tag = getattr(current_user, "username", req.triggered_by) or req.triggered_by or "admin"
     from backend.services.live_sync_service import start_targeted_sync_job
-    logger.info(f"[SYNC_TARGETED_REQUEST] Triggered sync for {len(req.student_ids)} students from: {req.triggered_by}")
-    result = start_targeted_sync_job(db, student_ids=req.student_ids, triggered_by=req.triggered_by or "admin")
+    logger.info(f"[SYNC_TARGETED_REQUEST] Triggered sync for {len(req.student_ids)} students from: {caller_tag}")
+    result = start_targeted_sync_job(db, student_ids=req.student_ids, triggered_by=caller_tag)
     return result
 
 
@@ -324,7 +340,11 @@ def get_sync_job_items(
 
 @router.post("/student/{student_identifier}")
 @router.post("/api/sync/student/{student_identifier}")
-def trigger_single_student_sync(student_identifier: str, db: Session = Depends(get_db)):
+def trigger_single_student_sync(
+    student_identifier: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Student Sync", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
     """
     Performs single-student instant live refresh.
     Refreshes student stats, logs audit item, recalculates ranks, and returns updated student data.
@@ -350,7 +370,11 @@ def trigger_single_student_sync(student_identifier: str, db: Session = Depends(g
 
 
 @router.post("/api/sync/contest/{session_id}")
-def trigger_contest_session_sync(session_id: int, db: Session = Depends(get_db)):
+def trigger_contest_session_sync(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Contest Sync", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
     """
     Triggers live synchronization for a specific weekly contest session.
     """
@@ -365,12 +389,17 @@ def trigger_contest_session_sync(session_id: int, db: Session = Depends(get_db))
 
 @router.post("/api/sync/start")
 @router.post("/start")
-async def start_background_sync(triggered_by: str = Query("admin"), db: Session = Depends(get_db)):
+async def start_background_sync(
+    triggered_by: str = Query("admin"),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Start Sync Job", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
     """
     Triggers asynchronous full roster live sync. Returns job_id immediately (<50ms).
     """
-    logger.info(f"[SYNC_START_REQUEST] Triggered background sync from: {triggered_by}")
-    return start_full_sync_job(db, triggered_by=triggered_by)
+    caller_tag = getattr(current_user, "username", triggered_by) or triggered_by
+    logger.info(f"[SYNC_START_REQUEST] Triggered background sync from: {caller_tag}")
+    return start_full_sync_job(db, triggered_by=caller_tag)
 
 
 @router.get("/history")

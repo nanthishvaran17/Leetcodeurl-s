@@ -327,7 +327,11 @@ def get_data_issues_students(
         query = apply_role_based_student_filter(query, current_user, db)
     students = query.all()
 
-    classified = [classify_student_issue(s) for s in students]
+    from collections import Counter
+    all_usernames = [s.username.strip().lower() for s in students if s.username and s.username.strip()]
+    dup_usernames = {u for u, cnt in Counter(all_usernames).items() if cnt > 1}
+
+    classified = [classify_student_issue(s, dup_usernames) for s in students]
     all_classified = list(classified)
 
     # 0. Filter by explicit student_ids if provided

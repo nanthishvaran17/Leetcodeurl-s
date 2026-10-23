@@ -22,7 +22,9 @@ const checkSessionExpired = (): boolean => {
     if (token && token.includes('.')) {
       const parts = token.split('.');
       if (parts.length === 3) {
-        const payloadStr = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+        let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        const payloadStr = atob(b64);
         const payload = JSON.parse(payloadStr);
         if (payload?.exp && payload.exp * 1000 <= Date.now()) {
           return true;

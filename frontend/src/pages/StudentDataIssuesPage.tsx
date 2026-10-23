@@ -78,6 +78,7 @@ interface IssueSummaryCounts {
   sync_failed: number;
   never_synced: number;
   missing_username: number;
+  duplicate_username?: number;
   invalid_username: number;
   invalid_url: number;
   stale_data: number;
@@ -98,6 +99,7 @@ interface SavedView {
 
 const DEFAULT_SAVED_VIEWS: SavedView[] = [
   { id: 'all_critical',    name: 'All Critical Issues',         dept: 'all',      year: 'all', issue: 'CRITICAL',        search: '' },
+  { id: 'duplicate_user',  name: 'Duplicate Username Conflicts',dept: 'all',      year: 'all', issue: 'DUPLICATE_USERNAME', search: '' },
   { id: 'sync_failures',  name: 'Sync Failures Only',          dept: 'all',      year: 'all', issue: 'SYNC_FAILED',     search: '' },
   { id: 'missing_user',   name: 'Missing Username Profiles',   dept: 'all',      year: 'all', issue: 'MISSING_USERNAME', search: '' },
   { id: 'never_synced',  name: 'Never Synced Roster',         dept: 'all',      year: 'all', issue: 'NEVER_SYNCED',    search: '' },
@@ -190,6 +192,7 @@ export const StudentDataIssuesPage: React.FC = () => {
     { value: 'NOT_STARTED', label: `Not Started — 0 Solved (${summary?.not_started ?? 0})`, pillText: 'NEW', pillColorClass: 'bg-orange-500 text-white' },
     { value: 'NEVER_SYNCED', label: `Never Synced (${summary?.never_synced ?? 0})`, pillText: 'NONE', pillColorClass: 'bg-amber-500 text-white' },
     { value: 'MISSING_USERNAME', label: `Missing Username (${summary?.missing_username ?? 0})`, pillText: 'MISS', pillColorClass: 'bg-yellow-500 text-slate-950' },
+    { value: 'DUPLICATE_USERNAME', label: `Duplicate Username (${summary?.duplicate_username ?? 0})`, pillText: 'DUP', pillColorClass: 'bg-rose-600 text-white' },
     { value: 'INVALID_USERNAME', label: `Profile Not Found (${summary?.invalid_username ?? 0})`, pillText: '404', pillColorClass: 'bg-pink-500 text-white' },
     { value: 'INVALID_URL', label: `Invalid URL (${summary?.invalid_url ?? 0})`, pillText: 'URL', pillColorClass: 'bg-fuchsia-500 text-white' },
     { value: 'STALE_DATA', label: `Stale Data >7 Days (${summary?.stale_data ?? 0})`, pillText: 'OLD', pillColorClass: 'bg-purple-500 text-white' },

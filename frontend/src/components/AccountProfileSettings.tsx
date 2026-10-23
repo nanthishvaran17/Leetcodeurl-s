@@ -769,10 +769,14 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   }, [rawRole]);
 
   // Master Tabs: 'menu' (Default Native Hub matching mockup) + 5 Primary Categories + Specialized Modules
-  const [activeTab, setActiveTab] = useState<'menu' | 'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship'>('menu');
+  const [activeTab, setActiveTab] = useState<'menu' | 'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship' | 'help'>('menu');
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
+  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('theme_user_set')) return 'system';
+    return theme;
+  });
 
   // Mobile profile sub-section filter & accordion states for authentic app ergonomics
   const [profileSubSection, setProfileSubSection] = useState<'all' | 'contact' | 'academic' | 'institutional' | 'links'>('all');
@@ -1020,6 +1024,10 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     }
   });
   const [showBackupCodesModal, setShowBackupCodesModal] = useState<boolean>(false);
+  const [showRestoreModal, setShowRestoreModal] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [pasteJsonInput, setPasteJsonInput] = useState<string>('');
+  const [parsedBackupPreview, setParsedBackupPreview] = useState<any | null>(null);
 
   // ID Card State
   const [idCardSide, setIdCardSide] = useState<'front' | 'back' | 'both'>('front');
@@ -1920,17 +1928,143 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
 
 
 
-  // Export profile summary JSON
-  const handleExportProfileJson = () => {
+  // Apply imported profile JSON and persist immediately to device & backend
+  const applyImportedProfileData = async (imported: any): Promise<boolean> => {
+    try {
+      if (imported.full_name) setFullName(imported.full_name);
+      if (imported.designation) setDesignation(imported.designation);
+      if (imported.phone_number) setPhoneNumber(imported.phone_number);
+      if (imported.date_of_birth) setDateOfBirth(parseDOBToDisplay(imported.date_of_birth));
+      if (imported.blood_group) {
+        setBloodGroup(imported.blood_group);
+        localStorage.setItem('nec_user_blood_group', imported.blood_group);
+      }
+      if (imported.highest_qualification) {
+        setHighestDegree(imported.highest_qualification);
+        localStorage.setItem('nec_user_degree', imported.highest_qualification);
+      }
+      if (imported.teaching_experience) {
+        setExperienceYears(imported.teaching_experience);
+        localStorage.setItem('nec_user_exp_years', imported.teaching_experience);
+      }
+      if (imported.courses_taught) {
+        setCoursesTaught(imported.courses_taught);
+        localStorage.setItem('nec_user_courses', imported.courses_taught);
+      }
+      if (imported.office_location) {
+        setOfficeLocation(imported.office_location);
+        localStorage.setItem('nec_user_office_loc', imported.office_location);
+      }
+      if (imported.specialization) {
+        setSpecialization(imported.specialization);
+        localStorage.setItem('nec_user_specialization', imported.specialization);
+      }
+      if (imported.faculty_bio) {
+        setFacultyBio(imported.faculty_bio);
+        localStorage.setItem('nec_user_bio', imported.faculty_bio);
+      }
+      if (Array.isArray(imported.languages)) {
+        setSelectedLanguages(imported.languages);
+        localStorage.setItem('nec_user_languages', JSON.stringify(imported.languages));
+      }
+      if (imported.consultation) {
+        if (imported.consultation.days) {
+          setConsultationDays(imported.consultation.days);
+          localStorage.setItem('nec_user_consult_days', imported.consultation.days);
+        }
+        if (imported.consultation.time) {
+          setConsultationSlot(imported.consultation.time);
+          localStorage.setItem('nec_user_consult_slot', imported.consultation.time);
+        }
+        if (imported.consultation.mode) {
+          setConsultationMode(imported.consultation.mode);
+          localStorage.setItem('nec_user_consult_mode', imported.consultation.mode);
+        }
+      }
+      if (imported.emergency_contact) {
+        if (imported.emergency_contact.name) {
+          setEmergencyContactName(imported.emergency_contact.name);
+          localStorage.setItem('nec_user_emergency_name', imported.emergency_contact.name);
+        }
+        if (imported.emergency_contact.phone) {
+          setEmergencyContactPhone(imported.emergency_contact.phone);
+          localStorage.setItem('nec_user_emergency_phone', imported.emergency_contact.phone);
+        }
+      }
+      if (imported.portfolio) {
+        if (imported.portfolio.linkedin) {
+          setLinkedinUrl(imported.portfolio.linkedin);
+          localStorage.setItem('nec_user_linkedin', imported.portfolio.linkedin);
+        }
+        if (imported.portfolio.github) {
+          setGithubUrl(imported.portfolio.github);
+          localStorage.setItem('nec_user_github', imported.portfolio.github);
+        }
+        if (imported.portfolio.scholar) {
+          setScholarUrl(imported.portfolio.scholar);
+          localStorage.setItem('nec_user_scholar', imported.portfolio.scholar);
+        }
+        if (imported.portfolio.orcid) {
+          setOrcidId(imported.portfolio.orcid);
+          localStorage.setItem('nec_user_orcid', imported.portfolio.orcid);
+        }
+        if (imported.portfolio.scopus) {
+          setScopusId(imported.portfolio.scopus);
+          localStorage.setItem('nec_user_scopus', imported.portfolio.scopus);
+        }
+        if (imported.portfolio.leetcode) {
+          setLeetcodeHandle(imported.portfolio.leetcode);
+          localStorage.setItem('nec_user_leetcode', imported.portfolio.leetcode);
+        }
+      }
+      if (imported.preferences?.notes) {
+        setFacultyNotes(imported.preferences.notes);
+        localStorage.setItem('nec_faculty_notes', imported.preferences.notes);
+      }
+      if (imported.preferences?.card_theme) {
+        setSelectedCardTheme(imported.preferences.card_theme);
+        localStorage.setItem('nec_card_theme', imported.preferences.card_theme);
+      }
+
+      // Sync updated fields to backend
+      try {
+        await api.put('/auth/profile', {
+          full_name: (imported.full_name || fullName || '').trim(),
+          designation: (imported.designation || designation || '').trim(),
+          phone_number: (imported.phone_number || phoneNumber || '').trim(),
+          blood_group: imported.blood_group || bloodGroup,
+          emergency_contact_name: imported.emergency_contact?.name || emergencyContactName,
+          emergency_contact_phone: imported.emergency_contact?.phone || emergencyContactPhone,
+          office_location: imported.office_location || officeLocation,
+          specialization: imported.specialization || specialization,
+          highest_degree: imported.highest_qualification || highestDegree,
+          experience_years: imported.teaching_experience || experienceYears,
+          courses_taught: imported.courses_taught || coursesTaught,
+          faculty_bio: imported.faculty_bio || facultyBio
+        });
+      } catch (syncErr) {
+        console.warn('Backend sync deferred, saved to device local storage:', syncErr);
+      }
+
+      notify.success('Backup Restored & Applied Successfully!', 'All account settings and preferences have been updated.', { category: 'ADMIN' });
+      return true;
+    } catch (err: any) {
+      notify.error('Failed to apply backup: ' + (err?.message || err), '', { category: 'ADMIN' });
+      return false;
+    }
+  };
+
+  // Export Profile Backup Data Generator
+  const getProfileBackupData = () => {
     const data = {
       institution: 'Nandha Engineering College (Autonomous)',
       accreditation: 'NBA & NAAC A+ Grade Accredited',
       institutional_id: institutionalId,
-      full_name: fullName,
+      full_name: fullName || user?.username,
       role: roleName,
       designation: designation || 'Staff Member',
       department: departmentName,
-      email: user?.email,
+      email: user?.email || 'nanthishvaran17@gmail.com',
       phone_number: phoneNumber,
       date_of_birth: dateOfBirth,
       blood_group: bloodGroup,
@@ -1957,66 +2091,141 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
         scopus: scopusId,
         leetcode: leetcodeHandle
       },
+      preferences: {
+        email_contest_alerts: emailContestAlerts,
+        weekly_digest_alerts: weeklyDigestAlerts,
+        system_audit_alerts: systemAuditAlerts,
+        toast_audio_alerts: toastAudioAlerts,
+        inactivity_days_threshold: inactivityDaysThreshold,
+        show_phone_to_students: showPhoneToStudents,
+        show_cabin_in_directory: showCabinInDirectory,
+        card_theme: selectedCardTheme,
+        notes: facultyNotes
+      },
       account_status: 'ACTIVE & VERIFIED',
       exported_at: new Date().toISOString()
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NEC_Faculty_Profile_${institutionalId}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    notify.success('Profile configuration exported as JSON', '', { category: 'ADMIN' });
+    const jsonStr = JSON.stringify(data, null, 2);
+    const filename = `NEC_Profile_Backup_${institutionalId}.json`;
+    return { data, jsonStr, filename };
   };
 
-  // Import profile JSON
+  // 1. Download Backup JSON (Native Mobile Documents & Web Downloads)
+  const handleDownloadProfileJson = async () => {
+    const { jsonStr, filename } = getProfileBackupData();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+
+    // On native mobile APK, write directly to Documents/Downloads folder via Capacitor Filesystem
+    if (isNativeMobile || Capacitor.isNativePlatform()) {
+      try {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        await Filesystem.writeFile({
+          path: filename,
+          data: jsonStr,
+          directory: Directory.Documents,
+          recursive: true
+        });
+        triggerHaptic('success');
+        notify.success('Backup Saved Successfully', `File saved to Documents: ${filename}`, { category: 'ADMIN' });
+        return;
+      } catch (fsErr) {
+        console.warn('Filesystem direct write failed, falling back to downloadManager:', fsErr);
+      }
+    }
+
+    try {
+      await downloadManager.downloadBlob(blob, filename, 'application/json');
+      triggerHaptic('success');
+      notify.success('Backup Saved Successfully', `Profile JSON saved: ${filename}`, { category: 'ADMIN' });
+    } catch {
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        triggerHaptic('success');
+        notify.success('Profile backup downloaded', '', { category: 'ADMIN' });
+      } catch (e: any) {
+        notify.error('Download failed: ' + (e?.message || e), '', { category: 'ADMIN' });
+      }
+    }
+  };
+
+  // 2. Share Backup JSON via Android Native Share Sheet or Web Share
+  const handleShareProfileJson = async () => {
+    const { jsonStr, filename } = getProfileBackupData();
+    triggerHaptic('selection');
+    try {
+      if (isNativeMobile || Capacitor.isNativePlatform()) {
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          title: `NEC Profile Backup - ${fullName || 'Staff'}`,
+          text: jsonStr,
+          dialogTitle: `Share ${filename} via...`,
+        });
+        triggerHaptic('success');
+        return;
+      }
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({
+          title: filename,
+          text: jsonStr,
+        });
+        triggerHaptic('success');
+        return;
+      }
+      await navigator.clipboard.writeText(jsonStr);
+      triggerHaptic('success');
+      notify.info('Sharing not supported on this browser. Backup copied to clipboard!', '', { category: 'ADMIN' });
+    } catch (shareErr: any) {
+      if (shareErr?.name !== 'AbortError') {
+        console.warn('Share error:', shareErr);
+      }
+    }
+  };
+
+  // 3. Copy Backup JSON directly to Clipboard
+  const handleCopyProfileJson = () => {
+    const { jsonStr } = getProfileBackupData();
+    triggerHaptic('selection');
+    try {
+      navigator.clipboard.writeText(jsonStr);
+      triggerHaptic('success');
+      notify.success('Backup JSON Copied!', 'JSON text copied to clipboard. You can paste and save it anywhere.', { category: 'ADMIN' });
+    } catch {
+      notify.error('Clipboard access denied. Please use the Download option.', '', { category: 'ADMIN' });
+    }
+  };
+
+  // Import profile JSON from file picker
   const handleImportProfileJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
-          const imported = JSON.parse(event.target?.result as string);
-          if (imported.full_name) setFullName(imported.full_name);
-          if (imported.designation) setDesignation(imported.designation);
-          if (imported.phone_number) setPhoneNumber(imported.phone_number);
-          if (imported.date_of_birth) setDateOfBirth(parseDOBToDisplay(imported.date_of_birth));
-          if (imported.blood_group) setBloodGroup(imported.blood_group);
-          if (imported.highest_qualification) setHighestDegree(imported.highest_qualification);
-          if (imported.teaching_experience) setExperienceYears(imported.teaching_experience);
-          if (imported.courses_taught) setCoursesTaught(imported.courses_taught);
-          if (imported.office_location) setOfficeLocation(imported.office_location);
-          if (imported.specialization) setSpecialization(imported.specialization);
-          if (Array.isArray(imported.languages)) setSelectedLanguages(imported.languages);
-          if (imported.consultation) {
-            if (imported.consultation.days) setConsultationDays(imported.consultation.days);
-            if (imported.consultation.time) setConsultationSlot(imported.consultation.time);
-            if (imported.consultation.mode) setConsultationMode(imported.consultation.mode);
-          }
-          if (imported.emergency_contact) {
-            if (imported.emergency_contact.name) setEmergencyContactName(imported.emergency_contact.name);
-            if (imported.emergency_contact.phone) setEmergencyContactPhone(imported.emergency_contact.phone);
-          }
-          if (imported.portfolio) {
-            if (imported.portfolio.linkedin) setLinkedinUrl(imported.portfolio.linkedin);
-            if (imported.portfolio.github) setGithubUrl(imported.portfolio.github);
-            if (imported.portfolio.scholar) setScholarUrl(imported.portfolio.scholar);
-            if (imported.portfolio.orcid) setOrcidId(imported.portfolio.orcid);
-            if (imported.portfolio.scopus) setScopusId(imported.portfolio.scopus);
-            if (imported.portfolio.leetcode) setLeetcodeHandle(imported.portfolio.leetcode);
-          }
-          notify.success('Imported settings successfully! Click Save to apply.', '', { category: 'ADMIN' });
+          const content = event.target?.result as string;
+          setPasteJsonInput(content);
+          const imported = JSON.parse(content);
+          setParsedBackupPreview(imported);
+          triggerHaptic('selection');
+          notify.success('Backup File Loaded', `Found profile for ${imported.full_name || 'Staff'}. Review & click Confirm Restore.`, { category: 'ADMIN' });
         } catch {
-          notify.error('Invalid JSON configuration file format', '', { category: 'ADMIN' });
+          setParsedBackupPreview(null);
+          notify.error('Invalid JSON file format. Please choose a valid NEC profile backup.', '', { category: 'ADMIN' });
         }
       };
       reader.readAsText(file);
+      e.target.value = '';
     }
   };
 
-  // Export vCard (.vcf)
-  const handleExportVCard = () => {
+  // Export vCard (.vcf) (Native Mobile APK & Web)
+  const handleExportVCard = async () => {
     const vcard = [
       'BEGIN:VCARD',
       'VERSION:3.0',
@@ -2032,13 +2241,22 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     ].join('\r\n');
 
     const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NEC_${institutionalId}_Contact.vcf`;
-    a.click();
-    URL.revokeObjectURL(url);
-    notify.success('vCard Contact downloaded! Open with Phonebook/Contacts.', '', { category: 'ADMIN' });
+    const filename = `NEC_${institutionalId}_Contact.vcf`;
+
+    try {
+      await downloadManager.downloadBlob(blob, filename, 'text/vcard');
+      notify.success('vCard Saved', 'Contact card saved to device Downloads.', { category: 'ADMIN' });
+    } catch {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notify.success('vCard Contact downloaded! Open with Phonebook/Contacts.', '', { category: 'ADMIN' });
+    }
   };
 
   // High-Resolution 300 DPI Canvas ID Card Image Exporter (Native Mobile & Web)
@@ -3215,11 +3433,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           <div className="bg-white dark:bg-navy-900 rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-xs flex items-center gap-4 transition-all">
             {/* Circular Avatar with Green Checkmark Badge */}
             <div
-              className="relative shrink-0 cursor-pointer group"
+              className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 cursor-pointer group select-none"
               onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
               title="Click to view photo"
             >
-              <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-indigo-200 dark:border-indigo-800 bg-slate-100 dark:bg-navy-950 flex items-center justify-center relative shadow-sm">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-indigo-200 dark:border-indigo-800 bg-slate-100 dark:bg-navy-950 flex items-center justify-center relative shadow-sm">
                 {profilePhoto ? (
                   <img
                     src={profilePhoto}
@@ -3227,13 +3445,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
                     {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               {/* Verified Badge */}
-              <span className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-900 shadow-sm flex items-center justify-center text-white" title="Verified Account">
+              <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-900 shadow-sm flex items-center justify-center text-white z-10" title="Verified Account">
                 <Check className="w-3 h-3 stroke-[3]" />
               </span>
             </div>
@@ -3262,7 +3480,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {phoneNumber || '9042020879'}
               </div>
 
-              {/* Verified Status & Edit Profile Button */}
+              {/* Verified Status & Quick Action Buttons */}
               <div className="flex items-center gap-2.5 pt-1 flex-wrap">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
                   <Check className="w-3 h-3 stroke-[3]" />
@@ -3272,9 +3490,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <button
                   type="button"
                   onClick={() => setActiveTab('profile')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border border-purple-400 dark:border-purple-600 text-purple-600 dark:text-purple-300 bg-white dark:bg-navy-950 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-purple-400 dark:border-purple-600 text-purple-700 dark:text-purple-300 bg-white dark:bg-navy-950 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer active:scale-95 shadow-2xs"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
+                  <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                   <span>Edit profile</span>
                 </button>
               </div>
@@ -3393,10 +3611,62 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
 
-            {/* 6. Help & Support */}
+            {/* 6. Digital ID Card */}
             <button
               type="button"
-              onClick={() => setShowHelpModal(true)}
+              onClick={() => setActiveTab('id_card')}
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200/60 dark:border-cyan-900/60 flex items-center justify-center shrink-0">
+                  <FileBadge className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors flex items-center gap-2">
+                    <span>Digital ID Card</span>
+                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                      PVC BADGE
+                    </span>
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                    Official PVC identity badge, QR code &amp; NFC
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </button>
+
+            {/* Optional: Staff Mentorship Hub (for faculty/mentors) */}
+            {isStaffMentor && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('mentorship')}
+                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 flex items-center justify-center shrink-0">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors flex items-center gap-2">
+                      <span>Mentorship Hub</span>
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        FACULTY
+                      </span>
+                    </div>
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                      Assigned students, reviews &amp; progress telemetry
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </button>
+            )}
+
+            {/* 7. Help & Support */}
+            <button
+              type="button"
+              onClick={() => { setActiveTab('help'); triggerHaptic('selection'); }}
               className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors text-left group cursor-pointer"
             >
               <div className="flex items-center gap-3.5 min-w-0">
@@ -3415,7 +3685,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
 
-            {/* 7. Log out */}
+            {/* 8. Log out */}
             <button
               type="button"
               onClick={() => setShowLogoutConfirmModal(true)}
@@ -3437,105 +3707,46 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <ChevronRight className="w-5 h-5 text-rose-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
           </div>
-
-          {/* Secondary Modules Strip: Digital ID Card, Mentorship, Backup & Restore */}
-          <div className="bg-white/80 dark:bg-navy-900/80 rounded-2xl p-3 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('id_card')}
-                className="px-3 py-1.5 rounded-xl text-xs font-black bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 transition-all cursor-pointer flex items-center gap-1.5"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-sky-600" />
-                <span>Digital ID Card</span>
-              </button>
-
-              {isStaffMentor && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('mentorship')}
-                  className="px-3 py-1.5 rounded-xl text-xs font-black bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-all cursor-pointer flex items-center gap-1.5"
-                >
-                  <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Mentorship Hub</span>
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleExportProfileJson}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Backup JSON"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Backup</span>
-              </button>
-
-              <label className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors flex items-center gap-1 cursor-pointer m-0">
-                <UploadCloud className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Restore</span>
-                <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
-              </label>
-            </div>
-          </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 2. SUBVIEW NAVIGATION HEADER (When viewing a specific section) */}
+      {/* 2. SUBVIEW NAVIGATION (Clean mobile header matching WhatsApp / Telegram) */}
       {/* ========================================================================= */}
       {activeTab !== 'menu' && (
-        <div className="space-y-4 animate-fade-in">
-          {/* Subview Top Navigation Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-navy-900 p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setActiveTab('menu')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-700 transition-all cursor-pointer active:scale-95 border border-slate-200 dark:border-navy-700 shadow-2xs"
-              >
-                <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
-                <span>Back to Settings</span>
-              </button>
-              <span className="h-4 w-px bg-slate-200 dark:bg-navy-700 hidden sm:block" />
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white capitalize">
+        <div className="space-y-4 max-w-2xl mx-auto animate-fade-in pb-48">
+          {/* Header Bar matching mockup: Left arrow, Title, Subtitle */}
+          <div className="flex items-center gap-3 pt-1 pb-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('menu')}
+              className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-95"
+              aria-label="Back to Settings"
+              title="Back to Settings"
+            >
+              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+            </button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight capitalize">
                 {activeTab === 'profile' ? 'Account & Profile' :
                  activeTab === 'security' ? 'Security & Login' :
                  activeTab === 'privacy' ? 'Privacy & Permissions' :
                  activeTab === 'notifications' ? 'Notifications' :
                  activeTab === 'preferences' ? 'App Preferences' :
                  activeTab === 'id_card' ? 'Official Digital ID Card' :
-                 'Staff Mentorship Hub'}
-              </h2>
-            </div>
-
-            {/* Quick Category Pill Switcher */}
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-              {[
-                { id: 'profile', label: 'Profile', icon: User },
-                { id: 'security', label: 'Security', icon: ShieldCheck },
-                { id: 'privacy', label: 'Privacy', icon: Lock },
-                { id: 'notifications', label: 'Alerts', icon: Bell },
-                { id: 'preferences', label: 'Prefs', icon: Sliders },
-                { id: 'id_card', label: 'ID Card', icon: Award },
-                ...(isStaffMentor ? [{ id: 'mentorship', label: 'Mentorship', icon: GraduationCap }] : [])
-              ].map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveTab(item.id as any)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
-                    activeTab === item.id
-                      ? 'bg-brand-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
-                  }`}
-                >
-                  <item.icon className="w-3.5 h-3.5" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
+                 activeTab === 'mentorship' ? 'Staff Mentorship Hub' :
+                 'Help & Support Hub'}
+              </h1>
+              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+                {activeTab === 'profile' ? 'Personal details, contact info, photo' :
+                 activeTab === 'security' ? 'Password, two-step verification, devices' :
+                 activeTab === 'privacy' ? 'Visibility, data access, blocked users' :
+                 activeTab === 'notifications' ? 'Push, email and WhatsApp alerts' :
+                 activeTab === 'preferences' ? 'Language, theme, accessibility' :
+                 activeTab === 'id_card' ? 'Official institutional CR80 PVC identity badge' :
+                 activeTab === 'mentorship' ? 'Assigned student progress telemetry and mentoring' :
+                 'Frequently asked questions, campus IT support, and contact desk'}
+              </p>
             </div>
           </div>
 
@@ -3606,10 +3817,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-
-              {/* LEFT COLUMN: Self-Editable Identity, Contact & Academic Profile */}
-              <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+            <div className="space-y-4 sm:space-y-5">
 
                 {/* 1. Photo & Avatar Customizer */}
                 {(profileSubSection === 'all' || profileSubSection === 'contact') && (
@@ -4069,10 +4277,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
                 )}
 
-              </div>
 
-              {/* RIGHT COLUMN: Official Institutional Scope, Portfolio & Languages */}
-              <div className="lg:col-span-5 space-y-4 sm:space-y-6">
 
                 {/* 4. Institutional Scope — Grouped iOS/Material Style */}
                 {(profileSubSection === 'all' || profileSubSection === 'institutional') && (
@@ -4369,8 +4574,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
                 )}
 
-              </div>
-
             </div>
           </div>
         )}
@@ -4382,9 +4585,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* TAB 2: SECURITY & PASSWORD VAULT — World-Class Mobile App UI (Swiggy / WhatsApp Grade) */}
         {/* ========================================================================= */}
         {activeTab === 'security' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Password Change, Biometrics, Face ID & 2FA */}
-            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-5 animate-fade-in">
 
               {/* 1. Password Management Card — Mobile App Styled with Direct Update Action */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
@@ -4695,11 +4896,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-            </div>
-
-            {/* RIGHT COLUMN: Active Sessions & Security Audit History */}
-            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-
               {/* Active Logged-in Devices — Modern WhatsApp/Swiggy Session List */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
@@ -4999,11 +5195,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
                 )}
               </div>
-
-              {/* Danger Zone: Permanent Account Deletion (Google Play Compliance) */}
-              <DeleteAccountPanel notify={notify} />
-
-            </div>
           </div>
         )}
 
@@ -5011,177 +5202,151 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* CATEGORY C: PRIVACY & PERMISSIONS — Enterprise Data Control */}
         {/* ========================================================================= */}
         {activeTab === 'privacy' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Directory Privacy & Visibility */}
-            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-5 animate-fade-in">
+            {/* 1. Directory Privacy Card */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+                Directory Privacy &amp; Visibility
+              </span>
 
-              {/* 1. Directory Privacy Card */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/70 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-200/60 dark:border-violet-800/60">
-                      <Lock className="w-4.5 h-4.5" />
+              <div className="bg-white dark:bg-navy-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-navy-800 shadow-sm divide-y divide-slate-100 dark:divide-navy-800/80 overflow-hidden">
+                {/* Share Mobile with Mentees */}
+                <div
+                  onClick={() => handleToggleShowPhone(!showPhoneToStudents)}
+                  role="switch"
+                  aria-checked={showPhoneToStudents}
+                  className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-navy-800/50 cursor-pointer transition-colors gap-3 select-none"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-2xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-900/60 flex items-center justify-center shrink-0">
+                      <Smartphone className="w-5 h-5" />
                     </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Directory Privacy &amp; Visibility
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Contact &amp; cabin discovery controls</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-black text-slate-900 dark:text-white">
+                        Share Contact with Mentees
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                        Allow students assigned to your mentoring cohort to view your contact.
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/80 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800">
-                    Scoped Access
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showPhoneToStudents ? 'bg-violet-600' : 'bg-slate-200 dark:bg-navy-700'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showPhoneToStudents ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </div>
+                </div>
+
+                {/* Show Cabin in Directory */}
+                <div
+                  onClick={() => handleToggleShowCabin(!showCabinInDirectory)}
+                  role="switch"
+                  aria-checked={showCabinInDirectory}
+                  className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-navy-800/50 cursor-pointer transition-colors gap-3 select-none"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-black text-slate-900 dark:text-white">
+                        Show Office / Cabin Number
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                        Display room/cabin on internal college directory and mentor search.
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showCabinInDirectory ? 'bg-violet-600' : 'bg-slate-200 dark:bg-navy-700'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showCabinInDirectory ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Platform Presence & Activity */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                      Platform Presence &amp; Activity
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Role verification and sync status</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  Live Verified
+                </span>
+              </div>
+
+              <div className="space-y-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-black text-slate-900 dark:text-white">Institutional Authentication Scope</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Scoped to Nandha Engineering College credentials ({institutionalId})</div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono font-bold shrink-0">
+                    NEC-AUTH
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
-                  {/* Share Mobile with Mentees */}
-                  <div
-                    onClick={() => handleToggleShowPhone(!showPhoneToStudents)}
-                    role="switch"
-                    aria-checked={showPhoneToStudents}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-violet-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                          Share Contact with Assigned Mentees
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showPhoneToStudents
-                            ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/70 dark:text-violet-300 border border-violet-300 dark:border-violet-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {showPhoneToStudents ? 'Shared' : 'Private'}
-                        </span>
-                      </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Allow students assigned to your mentoring cohort to view your contact for guidance.
-                      </div>
-                    </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showPhoneToStudents ? 'bg-violet-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showPhoneToStudents ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </div>
+                <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-black text-slate-900 dark:text-white">LeetCode Sync Telemetry</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Automated multi-threaded GraphQL tracking of solve metrics</div>
                   </div>
-
-                  {/* Show Cabin in Directory */}
-                  <div
-                    onClick={() => handleToggleShowCabin(!showCabinInDirectory)}
-                    role="switch"
-                    aria-checked={showCabinInDirectory}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-violet-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                          Show Office / Cabin in Directory
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${showCabinInDirectory
-                            ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/70 dark:text-violet-300 border border-violet-300 dark:border-violet-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {showCabinInDirectory ? 'Visible' : 'Hidden'}
-                        </span>
-                      </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Display your room/cabin number on internal college directory and mentor searches.
-                      </div>
-                    </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${showCabinInDirectory ? 'bg-violet-600' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${showCabinInDirectory ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. Platform Presence & Activity */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
-                      <Eye className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Platform Presence &amp; Activity
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Role verification and sync status</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    Live Verified
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold shrink-0">
+                    SYNC ACTIVE
                   </span>
                 </div>
+              </div>
+            </div>
 
-                <div className="space-y-3 text-xs font-bold text-slate-600 dark:text-slate-300">
-                  <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-black text-slate-900 dark:text-white">Institutional Authentication Scope</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Scoped to Nandha Engineering College credentials ({institutionalId})</div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono font-bold shrink-0">
-                      NEC-AUTH
-                    </span>
+            {/* 3. Data Safety & Portability */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60">
+                    <Shield className="w-5 h-5" />
                   </div>
-
-                  <div className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-black text-slate-900 dark:text-white">LeetCode Sync Telemetry</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Automated multi-threaded GraphQL tracking of solve metrics</div>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold shrink-0">
-                      SYNC ACTIVE
-                    </span>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                      Data Safety &amp; Portability
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Google Play compliance &amp; backups</p>
                   </div>
                 </div>
               </div>
 
-            </div>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                You have full ownership of your account data. Download an encrypted backup of your preferences, bio, and settings as a portable JSON file.
+              </p>
 
-            {/* RIGHT COLUMN: Data Protection & Danger Zone */}
-            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setShowExportModal(true); triggerHaptic('selection'); }}
+                  className="w-full px-4 py-3 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export Data (JSON)</span>
+                </button>
 
-              {/* Data Portability & Backup */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60">
-                      <Shield className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Data Safety &amp; Portability
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Google Play compliance &amp; backups</p>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
-                  You have full ownership of your account data. You can download an encrypted backup of your preferences, bio, and settings as a portable JSON file.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleExportProfileJson}
-                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                  >
-                    <Download className="w-4 h-4 text-emerald-600" />
-                    <span>Export Data (JSON)</span>
-                  </button>
-
-                  <label className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 m-0">
-                    <UploadCloud className="w-4 h-4 text-indigo-600" />
-                    <span>Restore Data</span>
-                    <input ref={jsonImportInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProfileJson} />
-                  </label>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowRestoreModal(true); triggerHaptic('selection'); }}
+                  className="w-full px-4 py-3 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <UploadCloud className="w-4 h-4 text-indigo-600" />
+                  <span>Restore Data</span>
+                </button>
               </div>
-
-              {/* Danger Zone: Account Deletion */}
-              <DeleteAccountPanel notify={notify} />
-
             </div>
+
+            {/* 4. Danger Zone: Permanent Account Deletion */}
+            <DeleteAccountPanel notify={notify} />
           </div>
         )}
 
@@ -5189,190 +5354,171 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* CATEGORY D: NOTIFICATIONS — Live Telemetry & Alerts */}
         {/* ========================================================================= */}
         {activeTab === 'notifications' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Automated Portal Alerts */}
-            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-5 animate-fade-in">
+            {/* Group 1: Automated Portal Alerts */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Automated Portal Alerts
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Sync
+                </span>
+              </div>
 
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/70 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/60">
-                      <Bell className="w-4.5 h-4.5" />
+              <div className="bg-white dark:bg-navy-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-navy-800 shadow-sm divide-y divide-slate-100 dark:divide-navy-800/80 overflow-hidden">
+                {/* 1. Contest Receipts */}
+                <div
+                  onClick={() => handleToggleContestAlerts(!emailContestAlerts)}
+                  role="switch"
+                  aria-checked={emailContestAlerts}
+                  className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-navy-800/50 cursor-pointer transition-colors gap-3 select-none"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/60 flex items-center justify-center shrink-0">
+                      <Trophy className="w-5 h-5" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                          Automated Portal Alerts
-                        </h3>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Live Sync
-                        </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-black text-slate-900 dark:text-white">
+                        Contest Finalization Receipts
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Push notifications, contest receipts &amp; audit alerts</p>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                        Instant email receipts when weekly LeetCode contests conclude.
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleTestAudioChime}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 shrink-0 active:scale-95 ${isPlayingAudioTest
-                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/30 scale-105'
-                          : 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
-                        }`}
-                      title="Test Audio Chime"
-                    >
-                      <Volume2 className={`w-3.5 h-3.5 ${isPlayingAudioTest ? 'animate-bounce' : ''}`} />
-                      <span>{isPlayingAudioTest ? 'Playing...' : 'Test Audio'}</span>
-                    </button>
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${emailContestAlerts ? 'bg-amber-500' : 'bg-slate-200 dark:bg-navy-700'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${emailContestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  {/* Contest Receipts Toggle */}
-                  <div
-                    onClick={() => handleToggleContestAlerts(!emailContestAlerts)}
-                    role="switch"
-                    aria-checked={emailContestAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          Contest Finalization Receipts
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${emailContestAlerts
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {emailContestAlerts ? 'Active' : 'Muted'}
-                        </span>
-                      </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Receive instant email receipts when weekly LeetCode contests conclude.
-                      </div>
+                {/* 2. Weekly Mentee Progress Digest */}
+                <div
+                  onClick={() => handleToggleWeeklyDigest(!weeklyDigestAlerts)}
+                  role="switch"
+                  aria-checked={weeklyDigestAlerts}
+                  className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-navy-800/50 cursor-pointer transition-colors gap-3 select-none"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
+                      <GraduationCap className="w-5 h-5" />
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${emailContestAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${emailContestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-black text-slate-900 dark:text-white">
+                        Weekly Mentee Progress Digest
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                        Summary of assigned students milestones every Monday morning.
+                      </div>
                     </div>
                   </div>
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${weeklyDigestAlerts ? 'bg-amber-500' : 'bg-slate-200 dark:bg-navy-700'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${weeklyDigestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </div>
+                </div>
 
-                  {/* Weekly Mentee Progress Digest */}
-                  <div
-                    onClick={() => handleToggleWeeklyDigest(!weeklyDigestAlerts)}
-                    role="switch"
-                    aria-checked={weeklyDigestAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          Weekly Mentee Progress Digest
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${weeklyDigestAlerts
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {weeklyDigestAlerts ? 'Active' : 'Muted'}
-                        </span>
-                      </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Summary of assigned students solving milestones dispatched every Monday morning.
-                      </div>
+                {/* 3. Security Audit & Login Alerts */}
+                <div
+                  onClick={() => handleToggleSystemAuditAlerts(!systemAuditAlerts)}
+                  role="switch"
+                  aria-checked={systemAuditAlerts}
+                  className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-navy-800/50 cursor-pointer transition-colors gap-3 select-none"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/60 flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-5 h-5" />
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${weeklyDigestAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${weeklyDigestAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-black text-slate-900 dark:text-white">
+                        Security Audit &amp; Login Alerts
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                        Instant alerts if password is changed or new logins occur.
+                      </div>
                     </div>
                   </div>
-
-                  {/* Security Audit Alerts */}
-                  <div
-                    onClick={() => handleToggleSystemAuditAlerts(!systemAuditAlerts)}
-                    role="switch"
-                    aria-checked={systemAuditAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          Security Audit &amp; Login Alerts
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${systemAuditAlerts
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {systemAuditAlerts ? 'Active' : 'Muted'}
-                        </span>
-                      </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Receive instant alerts if password is modified or new unrecognized logins occur.
-                      </div>
-                    </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${systemAuditAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${systemAuditAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </div>
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${systemAuditAlerts ? 'bg-amber-500' : 'bg-slate-200 dark:bg-navy-700'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${systemAuditAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
+                </div>
 
-                  {/* In-App Audio Chimes */}
-                  <div
-                    onClick={() => handleToggleToastAudio(!toastAudioAlerts)}
-                    role="switch"
-                    aria-checked={toastAudioAlerts}
-                    className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 hover:border-amber-400/50 cursor-pointer transition-all select-none group active:scale-[0.99]"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
+                {/* 4. In-App Audio Chimes */}
+                <div
+                  onClick={() => handleToggleToastAudio(!toastAudioAlerts)}
+                  role="switch"
+                  aria-checked={toastAudioAlerts}
+                  className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-navy-800/50 cursor-pointer transition-colors gap-3 select-none"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-2xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-900/60 flex items-center justify-center shrink-0">
+                      <Volume2 className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                        <span className="text-sm font-black text-slate-900 dark:text-white">
                           In-App Audio Chimes
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${toastAudioAlerts
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                            : 'bg-slate-200 text-slate-600 dark:bg-navy-800 dark:text-slate-400'
-                          }`}>
-                          {toastAudioAlerts ? 'Active (Sound ON)' : 'Silent'}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTestAudioChime();
+                          }}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer inline-flex items-center gap-1 active:scale-95 ${
+                            isPlayingAudioTest
+                              ? 'bg-amber-500 text-white border-amber-600'
+                              : 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                          }`}
+                        >
+                          <Volume2 className={`w-3 h-3 ${isPlayingAudioTest ? 'animate-bounce' : ''}`} />
+                          <span>{isPlayingAudioTest ? 'Playing...' : 'Test Sound'}</span>
+                        </button>
                       </div>
-                      <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        Play subtle audio chimes when receiving toast alerts or milestone notifications.
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                        Subtle audio chimes on milestone toasts and contest conclude.
                       </div>
                     </div>
-                    <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${toastAudioAlerts ? 'bg-amber-500' : 'bg-slate-300 dark:bg-navy-700'}`}>
-                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${toastAudioAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </div>
+                  </div>
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${toastAudioAlerts ? 'bg-amber-500' : 'bg-slate-200 dark:bg-navy-700'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${toastAudioAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
                 </div>
               </div>
-
             </div>
 
-            {/* RIGHT COLUMN: Mentee Inactivity Smart Alarm */}
-            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+            {/* Group 2: Mentee Inactivity Smart Alarm */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+                Student Inactivity Warning
+              </span>
 
-              {/* Mentee Inactivity Smart Alarm */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 dark:bg-orange-950/70 dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-200/60 dark:border-orange-800/60">
-                      <Sliders className="w-4.5 h-4.5" />
+              <div className="bg-white dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-navy-800 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 border border-orange-200/60 dark:border-orange-900/60 flex items-center justify-center shrink-0">
+                      <Sliders className="w-5 h-5" />
                     </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Inactivity Warning Threshold
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Roster flag for inactive students</p>
+                    <div className="min-w-0">
+                      <div className="text-sm font-black text-slate-900 dark:text-white truncate">
+                        Inactivity Threshold
+                      </div>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                        Flag inactive mentees on roster
+                      </div>
                     </div>
                   </div>
-                  <span className="text-xs font-black font-mono text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 px-3 py-1 rounded-xl border border-orange-200 dark:border-orange-800 shadow-xs">
+                  <span className="text-xs font-black font-mono text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 px-2.5 py-1 rounded-xl border border-orange-200 dark:border-orange-800 shrink-0">
                     {inactivityDaysThreshold} Days
                   </span>
                 </div>
 
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                  Automatically mark mentees with an inactivity badge on your roster if they have not submitted a LeetCode problem in {inactivityDaysThreshold} consecutive days.
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Mark mentees with an inactivity warning on your roster if they have not submitted a LeetCode problem in {inactivityDaysThreshold} consecutive days.
                 </p>
 
-                {/* Quick Selection Segmented Buttons */}
-                <div className="grid grid-cols-3 gap-2 pt-1">
+                {/* 3 Quick Segments */}
+                <div className="grid grid-cols-3 gap-2">
                   {[
                     { days: 3, label: '3 Days', mode: 'Strict' },
                     { days: 7, label: '7 Days', mode: 'Balanced' },
@@ -5382,24 +5528,25 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       key={option.days}
                       type="button"
                       onClick={() => handleInactivityThresholdChange(option.days)}
-                      className={`p-2.5 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 active:scale-95 ${inactivityDaysThreshold === option.days
-                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/25'
-                          : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-amber-400/60'
-                        }`}
+                      className={`py-2 px-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
+                        inactivityDaysThreshold === option.days
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/25 font-black'
+                          : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-amber-400/60 font-bold'
+                      }`}
                     >
-                      <span className="text-xs font-black">{option.label}</span>
-                      <span className={`text-[10px] font-bold ${inactivityDaysThreshold === option.days ? 'text-amber-100' : 'text-slate-400'}`}>
-                        ({option.mode})
+                      <span className="text-xs">{option.label}</span>
+                      <span className={`text-[10px] ${inactivityDaysThreshold === option.days ? 'text-amber-100' : 'text-slate-400'}`}>
+                        {option.mode}
                       </span>
                     </button>
                   ))}
                 </div>
 
-                {/* Fine-Tuning Slider */}
-                <div className="space-y-1.5 pt-2">
+                {/* Slider */}
+                <div className="space-y-1.5 pt-1">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                    <span>Custom threshold adjustment</span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200">{inactivityDaysThreshold} Days Selected</span>
+                    <span>Fine-tune threshold</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{inactivityDaysThreshold} Days</span>
                   </div>
                   <input
                     type="range"
@@ -5410,14 +5557,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     onChange={e => handleInactivityThresholdChange(Number(e.target.value))}
                     className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-200 dark:bg-navy-800 rounded-lg"
                   />
-                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5">
                     <span>3 Days (Strict)</span>
                     <span>7 Days (Balanced)</span>
                     <span>14 Days (Relaxed)</span>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         )}
@@ -5426,222 +5572,189 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* CATEGORY E: APP PREFERENCES — Appearance, Languages & Notes */}
         {/* ========================================================================= */}
         {activeTab === 'preferences' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 animate-fade-in">
-            {/* LEFT COLUMN: Theme & Multilingual */}
-            <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-
-              {/* 1. Theme Selection Card */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
-                      <Palette className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Appearance &amp; Theme
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personalize your color aesthetic</p>
-                    </div>
+          <div className="space-y-4 sm:space-y-5 animate-fade-in">
+            {/* 1. Theme Selection Card — Compact Native Mobile Segmented Control */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
+                    <Palette className="w-4.5 h-4.5" />
                   </div>
-                  <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
-                    Current: {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Light Mode Card */}
-                  <div
-                    onClick={() => { setTheme('light'); triggerHaptic('selection'); }}
-                    className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98] ${theme === 'light'
-                        ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/20 shadow-md ring-2 ring-brand-500/20'
-                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
-                      }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
-                        <Sun className="w-4 h-4" />
-                      </div>
-                      {theme === 'light' && (
-                        <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-slate-900 dark:text-white">Light Mode</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Crisp white enterprise design</div>
-                    </div>
-                  </div>
-
-                  {/* Dark Mode Card */}
-                  <div
-                    onClick={() => { setTheme('dark'); triggerHaptic('selection'); }}
-                    className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98] ${theme === 'dark'
-                        ? 'border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-md ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
-                      }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-800">
-                        <Moon className="w-4 h-4" />
-                      </div>
-                      {theme === 'dark' && (
-                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-slate-900 dark:text-white">Dark Mode</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Deep obsidian &amp; navy palette</div>
-                    </div>
-                  </div>
-
-                  {/* System Theme Card */}
-                  <div
-                    onClick={() => { setSystemTheme(); triggerHaptic('selection'); }}
-                    className="p-3.5 rounded-2xl border-2 border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.98]"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-navy-700">
-                        <Monitor className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-slate-900 dark:text-white">System Default</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Sync with device OS setting</div>
-                    </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Appearance &amp; Theme
+                    </h3>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personalize your color aesthetic</p>
                   </div>
                 </div>
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize">
+                  {themeMode === 'system' ? `System (${theme})` : theme}
+                </span>
               </div>
 
-              {/* 2. Languages Selection */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60">
-                      <Globe className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Language Preferences
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Multilingual communication skills</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                    {selectedLanguages.length} Selected
-                  </span>
-                </div>
+              {/* iOS / WhatsApp Style Compact 3-Segment Switcher */}
+              <div className="p-1 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 grid grid-cols-3 gap-1">
+                <button
+                  type="button"
+                  onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
+                  className={`py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                    themeMode === 'light'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`}
+                >
+                  <Sun className={`w-3.5 h-3.5 ${themeMode === 'light' ? 'text-amber-500 stroke-[2.5]' : ''}`} />
+                  <span>Light</span>
+                </button>
 
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_LANGUAGES.map(lang => {
-                    const isSelected = selectedLanguages.includes(lang);
-                    return (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => handleToggleLanguage(lang)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${isSelected
-                            ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20'
-                            : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
-                          }`}
-                      >
-                        <span>{lang}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => { setTheme('dark'); setThemeMode('dark'); triggerHaptic('selection'); }}
+                  className={`py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                    themeMode === 'dark'
+                      ? 'bg-navy-900 text-white shadow-xs border border-navy-700'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`}
+                >
+                  <Moon className={`w-3.5 h-3.5 ${themeMode === 'dark' ? 'text-indigo-400 stroke-[2.5]' : ''}`} />
+                  <span>Dark</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setSystemTheme(); setThemeMode('system'); triggerHaptic('selection'); }}
+                  className={`py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                    themeMode === 'system'
+                      ? 'bg-white dark:bg-navy-900 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-navy-700'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`}
+                >
+                  <Monitor className={`w-3.5 h-3.5 ${themeMode === 'system' ? 'text-blue-500 stroke-[2.5]' : ''}`} />
+                  <span>System</span>
+                </button>
               </div>
-
             </div>
 
-            {/* RIGHT COLUMN: Faculty Scratchpad / Sticky Notes */}
-            <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
-                      <Edit3 className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Personal Notes &amp; Scratchpad
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Secure local workspace</p>
-                    </div>
+            {/* 2. Languages Selection */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60">
+                    <Globe className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    {notesSaveStatus === 'saving' ? 'Saving...' : 'Auto-Saved'}
-                  </span>
-                </div>
-
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                  Quick personal notes, problem set ideas, or contest reminders (saved locally on your device).
-                </p>
-
-                {/* Quick Task Template Injectors */}
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleInsertNoteTemplate('• Review Weekly Contest solving roster')}
-                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
-                  >
-                    + Contest Roster
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertNoteTemplate('• Prepare Data Structures lab problem set')}
-                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
-                  >
-                    + Lab Problem Set
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertNoteTemplate('• Follow up on pending mentees submissions')}
-                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
-                  >
-                    + Mentee Submissions
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <textarea
-                    rows={6}
-                    value={facultyNotes}
-                    onChange={e => handleFacultyNotesChange(e.target.value)}
-                    placeholder="Type personal faculty notes here..."
-                    className="w-full p-3.5 pb-10 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none font-mono transition-all"
-                  />
-                  <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={handleCopyNotes}
-                      className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:text-brand-600 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
-                      title="Copy notes to clipboard"
-                    >
-                      <Copy className="w-3 h-3" />
-                      <span>Copy</span>
-                    </button>
-                    {facultyNotes && (
-                      <button
-                        type="button"
-                        onClick={handleClearNotes}
-                        className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
-                        title="Clear notes"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>Clear</span>
-                      </button>
-                    )}
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                      Language Preferences
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Multilingual communication skills</p>
                   </div>
                 </div>
+                <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                  {selectedLanguages.length} Selected
+                </span>
               </div>
 
+              <div className="flex flex-wrap gap-2">
+                {AVAILABLE_LANGUAGES.map(lang => {
+                  const isSelected = selectedLanguages.includes(lang);
+                  return (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => handleToggleLanguage(lang)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${isSelected
+                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20'
+                          : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
+                        }`}
+                    >
+                      <span>{lang}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Personal Notes & Scratchpad */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                      Personal Notes &amp; Scratchpad
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Secure local workspace</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  {notesSaveStatus === 'saving' ? 'Saving...' : 'Auto-Saved'}
+                </span>
+              </div>
+
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                Quick personal notes, problem set ideas, or contest reminders (saved locally on your device).
+              </p>
+
+              {/* Quick Task Template Injectors */}
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleInsertNoteTemplate('• Review Weekly Contest solving roster')}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                >
+                  + Contest Roster
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertNoteTemplate('• Prepare Data Structures lab problem set')}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                >
+                  + Lab Problem Set
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertNoteTemplate('• Follow up on pending mentees submissions')}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                >
+                  + Mentee Submissions
+                </button>
+              </div>
+
+              <div className="relative">
+                <textarea
+                  rows={4}
+                  value={facultyNotes}
+                  onChange={e => handleFacultyNotesChange(e.target.value)}
+                  placeholder="Type personal faculty notes here..."
+                  className="w-full p-3.5 pb-10 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none font-mono transition-all"
+                />
+                <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleCopyNotes}
+                    className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:text-brand-600 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
+                    title="Copy notes to clipboard"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>Copy</span>
+                  </button>
+                  {facultyNotes && (
+                    <button
+                      type="button"
+                      onClick={handleClearNotes}
+                      className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
+                      title="Clear notes"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -6279,6 +6392,305 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 8: HELP & SUPPORT HUB (FIRST-CLASS SUBVIEW PAGE) */}
+        {/* ========================================================================= */}
+        {activeTab === 'help' && (
+          <div className="space-y-4 sm:space-y-5 animate-fade-in">
+            {/* 1. Official Campus IT Helpdesk Card */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Campus IT Helpdesk
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Direct technical support &amp; administrative desk</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Desk Active
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Official IT Desk Email</div>
+                  <div className="text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white break-all">
+                    nanthishvaran17@gmail.com
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">Main Campus • Administrative Block A-102</div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('nanthishvaran17@gmail.com');
+                      triggerHaptic('success');
+                      notify.success('Email Copied to Clipboard!', 'nanthishvaran17@gmail.com', { category: 'ADMIN' });
+                    }}
+                    className="flex-1 sm:flex-none px-3 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-200 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Copy Email</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('selection');
+                      window.open('mailto:nanthishvaran17@gmail.com?subject=Campus%20IT%20Support%20Request', '_system');
+                    }}
+                    className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs shadow-indigo-600/30"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Open Email App</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Direct Topic Resolution Tiles */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/70 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/60">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Quick Resolution Topics
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Direct navigation to self-serve settings</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* 1. Designation Correction */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    window.open('mailto:nanthishvaran17@gmail.com?subject=Designation%20Correction%20Request', '_system');
+                  }}
+                  className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/60 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer active:scale-98"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                      <GraduationCap className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        Designation / Dept Correction
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                        Request update from IT Registrar
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </button>
+
+                {/* 2. LeetCode Metric Sync */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setActiveTab('profile');
+                    setProfileSubSection('links');
+                  }}
+                  className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/60 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer active:scale-98"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                      <Terminal className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                        LeetCode Handle Sync
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                        Configure crawler handle &amp; links
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </button>
+
+                {/* 3. Security & Biometrics */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setActiveTab('security');
+                  }}
+                  className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/60 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer active:scale-98"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                      <Fingerprint className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                        Face ID &amp; 2-Factor Auth
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                        Manage passkeys, devices &amp; OTP
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </button>
+
+                {/* 4. Digital ID Card */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setActiveTab('id_card');
+                  }}
+                  className="p-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-950/60 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all text-left flex items-center justify-between gap-3 group cursor-pointer active:scale-98"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+                      <FileBadge className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                        Digital ID Card &amp; PVC Print
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                        Download 300 DPI high-res badge
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Frequently Asked Questions Accordion */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/70 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-200/60 dark:border-cyan-800/60">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Frequently Asked Questions
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Quick solutions for common portal workflows</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  {
+                    q: 'How does LeetCode automated metric sync work?',
+                    a: 'NANDHA INTELLIGENCE uses an asynchronous multi-threaded GraphQL crawler that checks your registered LeetCode handle every 30 minutes. It tracks total solves, weekly contest rating, and activity streaks automatically without requiring your LeetCode password.',
+                    btnLabel: 'View LeetCode Handle',
+                    btnColor: 'bg-amber-600 hover:bg-amber-700 text-white',
+                    icon: Terminal,
+                    onAction: () => {
+                      setActiveTab('profile');
+                      setProfileSubSection('links');
+                    }
+                  },
+                  {
+                    q: 'Can students see my personal phone number?',
+                    a: 'By default, your mobile phone number is hidden. You can choose to share it exclusively with students assigned to your mentoring cohort under Settings > Privacy & Permissions. Principal, HOD, and campus administrators retain scoped contact visibility.',
+                    btnLabel: 'Open Privacy Settings',
+                    btnColor: 'bg-pink-600 hover:bg-pink-700 text-white',
+                    icon: Lock,
+                    onAction: () => {
+                      setActiveTab('privacy');
+                    }
+                  },
+                  {
+                    q: 'How do I enable 2-Factor Authentication (2FA) or Biometrics?',
+                    a: 'Navigate to Settings > Security & Login. You can register hardware passkeys with Face ID, Touch ID, device Fingerprint scanners, or Windows Hello for instant single-tap logins. You can also scan a dynamic QR code for Google Authenticator / TOTP.',
+                    btnLabel: 'Set Up Face ID & Biometrics',
+                    btnColor: 'bg-violet-600 hover:bg-violet-700 text-white',
+                    icon: Fingerprint,
+                    onAction: () => {
+                      setActiveTab('security');
+                    }
+                  },
+                  {
+                    q: 'How can I change my official designation or department?',
+                    a: 'Official institutional credentials (Designation, Department, and Faculty ID) are verified through the college registrar database. If corrections are needed, please submit a request to the campus IT Admin desk using the form above.',
+                    btnLabel: 'Copy IT Desk Email',
+                    btnColor: 'bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900',
+                    icon: Copy,
+                    onAction: () => {
+                      navigator.clipboard.writeText('nanthishvaran17@gmail.com');
+                      notify.success('Email Copied to Clipboard!', 'nanthishvaran17@gmail.com', { category: 'ADMIN' });
+                    }
+                  },
+                  {
+                    q: 'How do I download or print my Digital ID Card?',
+                    a: 'Switch to the Digital ID Card module from Settings. You can flip between Front and Back sides, select your favorite card theme, and download a 300 DPI high-resolution PNG image suitable for PVC badge printers.',
+                    btnLabel: 'Open Digital ID Card',
+                    btnColor: 'bg-cyan-600 hover:bg-cyan-700 text-white',
+                    icon: FileBadge,
+                    onAction: () => {
+                      setActiveTab('id_card');
+                    }
+                  }
+                ].map((faq, index) => {
+                  const isExpanded = expandedFaqIndex === index;
+                  const IconComponent = faq.icon;
+                  return (
+                    <div
+                      key={index}
+                      className="rounded-2xl border border-slate-200/90 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-950/60 overflow-hidden transition-all"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFaqIndex(isExpanded ? null : index)}
+                        className="w-full p-3.5 flex items-center justify-between text-left gap-3 cursor-pointer group select-none"
+                      >
+                        <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                          {faq.q}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-brand-600 dark:text-brand-400' : ''}`}
+                        />
+                      </button>
+                      {isExpanded && (
+                        <div className="px-3.5 pb-3.5 pt-1 space-y-3 border-t border-slate-200/50 dark:border-navy-800/60 animate-fade-in">
+                          <div className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {faq.a}
+                          </div>
+                          {faq.onAction && (
+                            <button
+                              type="button"
+                              onClick={faq.onAction}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95 ${faq.btnColor}`}
+                            >
+                              <IconComponent className="w-3.5 h-3.5" />
+                              <span>{faq.btnLabel}</span>
+                              <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -7126,6 +7538,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       {showHelpModal && (
         <GlobalModalBackdrop isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} className="flex items-center justify-center p-3 sm:p-4">
           <div className="relative max-w-lg w-full bg-white dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 animate-scale-up text-slate-900 dark:text-slate-100 max-h-[88vh] flex flex-col">
+            {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/70 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
@@ -7147,30 +7560,65 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </button>
             </div>
 
+            {/* Interactive FAQs */}
             <div className="overflow-y-auto space-y-2.5 pr-1 custom-scrollbar flex-1">
               {[
                 {
                   q: 'How does LeetCode automated metric sync work?',
-                  a: 'NANDHA INTELLIGENCE uses an asynchronous multi-threaded GraphQL crawler that checks your registered LeetCode handle every 30 minutes. It tracks total solves, weekly contest rating, and activity streaks automatically without requiring your LeetCode password.'
+                  a: 'NANDHA INTELLIGENCE uses an asynchronous multi-threaded GraphQL crawler that checks your registered LeetCode handle every 30 minutes. It tracks total solves, weekly contest rating, and activity streaks automatically without requiring your LeetCode password.',
+                  btnLabel: 'View LeetCode Handle',
+                  btnColor: 'bg-amber-600 hover:bg-amber-700 text-white',
+                  icon: Terminal,
+                  onAction: () => {
+                    setShowHelpModal(false);
+                    setActiveTab('profile');
+                    setProfileSubSection('links');
+                  }
                 },
                 {
                   q: 'Can students see my personal phone number?',
-                  a: 'By default, your mobile phone number is hidden. You can choose to share it exclusively with students assigned to your mentoring cohort under Settings > Privacy & Permissions. Principal, HOD, and campus administrators retain scoped contact visibility.'
+                  a: 'By default, your mobile phone number is hidden. You can choose to share it exclusively with students assigned to your mentoring cohort under Settings > Privacy & Permissions. Principal, HOD, and campus administrators retain scoped contact visibility.',
+                  btnLabel: 'Open Privacy Settings',
+                  btnColor: 'bg-pink-600 hover:bg-pink-700 text-white',
+                  icon: Lock,
+                  onAction: () => {
+                    setShowHelpModal(false);
+                    setActiveTab('privacy');
+                  }
                 },
                 {
                   q: 'How do I enable 2-Factor Authentication (2FA) or Biometrics?',
-                  a: 'Navigate to Settings > Security & Login. You can enable Google Authenticator / TOTP by scanning a dynamic QR code, or register WebAuthn Passkeys (Face ID / Fingerprint) for single-tap biometric sign-ins.'
+                  a: 'Navigate to Settings > Security & Login. You can register hardware passkeys with Face ID, Touch ID, device Fingerprint scanners, or Windows Hello for instant single-tap logins. You can also scan a dynamic QR code for Google Authenticator / TOTP.',
+                  btnLabel: 'Set Up Face ID & Biometrics',
+                  btnColor: 'bg-violet-600 hover:bg-violet-700 text-white',
+                  icon: Fingerprint,
+                  onAction: () => {
+                    setShowHelpModal(false);
+                    setActiveTab('security');
+                  }
                 },
                 {
                   q: 'How can I change my official designation or department?',
-                  a: 'Official institutional credentials (Designation, Department, and Faculty ID) are verified through the college registrar database. If corrections are needed, please submit a request to the campus IT Admin desk.'
+                  a: 'Official institutional credentials (Designation, Department, and Faculty ID) are verified through the college registrar database. If corrections are needed, please submit a request to the campus IT Admin desk.',
+                  btnLabel: 'Email IT Desk',
+                  btnColor: 'bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900',
+                  icon: Mail,
+                  href: 'mailto:nanthishvaran17@gmail.com?subject=IT%20Desk%20Designation%20Correction%20Request'
                 },
                 {
                   q: 'How do I download or print my Digital ID Card?',
-                  a: 'Switch to the Digital ID Card module from the top toolbar. You can flip between Front and Back sides, select your favorite card theme, and download a 300 DPI high-resolution PNG image suitable for PVC badge printers.'
+                  a: 'Switch to the Digital ID Card module from Settings. You can flip between Front and Back sides, select your favorite card theme, and download a 300 DPI high-resolution PNG image suitable for PVC badge printers.',
+                  btnLabel: 'Open Digital ID Card',
+                  btnColor: 'bg-cyan-600 hover:bg-cyan-700 text-white',
+                  icon: FileBadge,
+                  onAction: () => {
+                    setShowHelpModal(false);
+                    setActiveTab('id_card');
+                  }
                 }
               ].map((faq, index) => {
                 const isExpanded = expandedFaqIndex === index;
+                const IconComponent = faq.icon;
                 return (
                   <div
                     key={index}
@@ -7189,8 +7637,31 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       />
                     </button>
                     {isExpanded && (
-                      <div className="px-3.5 pb-3.5 pt-1 text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-200/50 dark:border-navy-800/60 animate-fade-in">
-                        {faq.a}
+                      <div className="px-3.5 pb-3.5 pt-1 space-y-3 border-t border-slate-200/50 dark:border-navy-800/60 animate-fade-in">
+                        <div className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {faq.a}
+                        </div>
+                        {faq.onAction && (
+                          <button
+                            type="button"
+                            onClick={faq.onAction}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95 ${faq.btnColor}`}
+                          >
+                            <IconComponent className="w-3.5 h-3.5" />
+                            <span>{faq.btnLabel}</span>
+                            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                          </button>
+                        )}
+                        {faq.href && (
+                          <a
+                            href={faq.href}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs active:scale-95 ${faq.btnColor}`}
+                          >
+                            <IconComponent className="w-3.5 h-3.5" />
+                            <span>{faq.btnLabel}</span>
+                            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                          </a>
+                        )}
                       </div>
                     )}
                   </div>
@@ -7198,17 +7669,55 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               })}
             </div>
 
-            <div className="pt-3 border-t border-slate-200 dark:border-navy-800 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 text-center sm:text-left">
-                Campus IT Helpdesk: <span className="font-mono text-slate-800 dark:text-slate-200">it-support@nandhaengg.org</span>
+            {/* Redesigned Clean Campus IT Support Card & Bottom Actions */}
+            <div className="pt-3 border-t border-slate-200 dark:border-navy-800 shrink-0 space-y-3">
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Campus IT Helpdesk</div>
+                    <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">nanthishvaran17@gmail.com</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('nanthishvaran17@gmail.com');
+                      notify.success('Email copied to clipboard!', 'nanthishvaran17@gmail.com', { category: 'ADMIN' });
+                    }}
+                    title="Copy Email"
+                    className="p-2 rounded-xl bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowHelpModal(false);
+                      setActiveTab('help');
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black transition-all shrink-0 cursor-pointer active:scale-95 shadow-xs"
+                  >
+                    Contact Desk
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowHelpModal(false)}
-                className="w-full sm:w-auto px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-black transition-all cursor-pointer active:scale-95"
-              >
-                Close FAQ
-              </button>
+
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[11px] font-semibold text-slate-400">
+                  Nandha Engineering College (Autonomous)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowHelpModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-black transition-all cursor-pointer active:scale-95 shadow-xs"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </GlobalModalBackdrop>
@@ -7222,13 +7731,17 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <LogOut className="w-7 h-7" />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <h3 className="text-base font-black text-slate-950 dark:text-white">
                 Sign Out of Portal?
               </h3>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed">
-                You will need to sign back in with your institutional credentials to access your dashboard.
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                Signed in as <span className="font-black text-slate-900 dark:text-white">{fullName || user?.username || 'Nanthishvaran S'}</span>
               </p>
+              <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800/90 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-navy-700 shadow-2xs">
+                <Mail className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                <span className="font-mono font-semibold tracking-tight">{user?.email || 'nanthishvaran17@gmail.com'}</span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
@@ -7248,6 +7761,258 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-600/30 transition-all cursor-pointer active:scale-95"
               >
                 Sign Out
+              </button>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* MODAL: EXPORT ACCOUNT BACKUP (Mobile APK & Desktop) */}
+      {showExportModal && (
+        <GlobalModalBackdrop isOpen={showExportModal} onClose={() => setShowExportModal(false)} className="flex items-center justify-center p-3 sm:p-4 z-[9999]">
+          <div className="relative max-w-md w-full bg-white dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 animate-scale-up text-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+                  <Download className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                    Export Account Data
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Google Play compliant portable JSON backup</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Your profile, academic records, consultation slots, portfolio links, and notification settings will be exported in a standardized JSON structure.
+            </p>
+
+            {/* Quick Actions Grid for Mobile */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleDownloadProfileJson();
+                  setShowExportModal(false);
+                }}
+                className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-between transition-all cursor-pointer active:scale-98 shadow-sm shadow-emerald-600/30"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Download className="w-4 h-4" />
+                  <div className="text-left">
+                    <p className="font-black">Save to Device Storage</p>
+                    <p className="text-[10px] text-emerald-100 font-medium">Downloads or Documents folder</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-70" />
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleShareProfileJson();
+                }}
+                className="w-full py-3 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-between transition-all cursor-pointer active:scale-98"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Share2 className="w-4 h-4 text-blue-600" />
+                  <div className="text-left">
+                    <p className="font-black">Share Backup via Apps</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">WhatsApp, Drive, Gmail, or Files</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-70" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleCopyProfileJson();
+                }}
+                className="w-full py-3 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-between transition-all cursor-pointer active:scale-98"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Copy className="w-4 h-4 text-amber-600" />
+                  <div className="text-left">
+                    <p className="font-black">Copy JSON to Clipboard</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Direct paste into Notes or chat</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-70" />
+              </button>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-navy-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="py-2 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* MODAL: RESTORE PROFILE BACKUP (File Picker or Paste JSON for Mobile APK) */}
+      {showRestoreModal && (
+        <GlobalModalBackdrop isOpen={showRestoreModal} onClose={() => { setShowRestoreModal(false); setParsedBackupPreview(null); }} className="flex items-center justify-center p-3 sm:p-4 z-[9999]">
+          <div className="relative max-w-md w-full bg-white dark:bg-navy-900 rounded-3xl p-5 sm:p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 animate-scale-up text-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                    Restore Account Data
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Import from file or paste backup JSON</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowRestoreModal(false); setParsedBackupPreview(null); }}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Option 1: Native Mobile File Upload via direct label */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Option 1: Select JSON Backup File
+              </span>
+              <label
+                htmlFor="mobile-json-restore-file"
+                className="w-full py-3.5 px-4 rounded-2xl border-2 border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-98 select-none"
+              >
+                <UploadCloud className="w-5 h-5 text-indigo-600 shrink-0" />
+                <span>Tap to Browse Device Files</span>
+                <input
+                  id="mobile-json-restore-file"
+                  type="file"
+                  accept="*/*"
+                  className="sr-only"
+                  onChange={handleImportProfileJson}
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="h-px bg-slate-200 dark:bg-navy-800 flex-1" />
+              <span className="text-[10px] font-black uppercase text-slate-400">OR</span>
+              <div className="h-px bg-slate-200 dark:bg-navy-800 flex-1" />
+            </div>
+
+            {/* Option 2: Paste Raw JSON */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Option 2: Paste Backup JSON
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text) {
+                        setPasteJsonInput(text);
+                        try {
+                          const parsed = JSON.parse(text);
+                          setParsedBackupPreview(parsed);
+                          triggerHaptic('success');
+                          notify.success('Pasted from clipboard!', `Profile: ${parsed.full_name || 'Staff'}`, { category: 'ADMIN' });
+                        } catch {
+                          notify.warning('Clipboard text is not valid JSON.', '', { category: 'ADMIN' });
+                          setParsedBackupPreview(null);
+                        }
+                      } else {
+                        notify.info('Clipboard is empty', '', { category: 'ADMIN' });
+                      }
+                    } catch {
+                      notify.error('Cannot access clipboard. Please paste directly into the box.', '', { category: 'ADMIN' });
+                    }
+                  }}
+                  className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Paste from Clipboard</span>
+                </button>
+              </div>
+
+              <textarea
+                rows={4}
+                value={pasteJsonInput}
+                onChange={e => {
+                  const val = e.target.value;
+                  setPasteJsonInput(val);
+                  try {
+                    const parsed = JSON.parse(val.trim());
+                    setParsedBackupPreview(parsed);
+                  } catch {
+                    setParsedBackupPreview(null);
+                  }
+                }}
+                placeholder='Paste your backup JSON here (e.g. { "full_name": "...", "preferences": { ... } })'
+                className="w-full p-3 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-mono font-medium text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 resize-none transition-all"
+              />
+            </div>
+
+            {/* Live Verified Backup Preview Card */}
+            {parsedBackupPreview && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 space-y-1.5 animate-fade-in">
+                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-xs font-black">Valid NEC Backup Verified</span>
+                </div>
+                <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium space-y-0.5 pl-6">
+                  <p><span className="font-bold text-slate-900 dark:text-white">Name:</span> {parsedBackupPreview.full_name || 'N/A'}</p>
+                  <p><span className="font-bold text-slate-900 dark:text-white">Role &amp; Dept:</span> {parsedBackupPreview.role || 'Staff'} • {parsedBackupPreview.department || 'N/A'}</p>
+                  {parsedBackupPreview.email && <p><span className="font-bold text-slate-900 dark:text-white">Email:</span> {parsedBackupPreview.email}</p>}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setPasteJsonInput('');
+                  setParsedBackupPreview(null);
+                  setShowRestoreModal(false);
+                }}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!parsedBackupPreview}
+                onClick={async () => {
+                  if (!parsedBackupPreview) return;
+                  const ok = await applyImportedProfileData(parsedBackupPreview);
+                  if (ok) {
+                    setPasteJsonInput('');
+                    setParsedBackupPreview(null);
+                    setShowRestoreModal(false);
+                  }
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-black transition-all cursor-pointer active:scale-95 shadow-sm shadow-indigo-600/30 flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4 stroke-[2.5]" />
+                <span>Confirm Restore</span>
               </button>
             </div>
           </div>

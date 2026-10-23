@@ -1060,12 +1060,14 @@ async def add_security_headers_and_performance_middleware(request, call_next):
     response = await call_next(request)
     path = request.url.path
     
-    # 1. Standard Production Security Headers (Defense-in-Depth)
+    # 1. Enterprise Banking-Grade Security Headers
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
     _add_cors_headers_to_response(request, response.headers)
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
@@ -1077,8 +1079,12 @@ async def add_security_headers_and_performance_middleware(request, call_next):
         "frame-ancestors 'self';"
     )
 
-    # 2. Performance Cache Control
-    if path.startswith("/assets/") or path.endswith((".js", ".css", ".png", ".jpg", ".ico", ".svg", ".woff2")):
+    # 2. Banking-Grade Cache Isolation (No-Store for sensitive auth & administrative data)
+    if path.startswith(("/api/admin", "/api/auth", "/api/settings", "/api/data-issues", "/api/faculty-assignments")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    elif path.startswith("/assets/") or path.endswith((".js", ".css", ".png", ".jpg", ".ico", ".svg", ".woff2")):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif path.startswith("/api/public/") or path.startswith("/api/stats"):
         response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"

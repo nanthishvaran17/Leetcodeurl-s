@@ -108,7 +108,9 @@ function encodeChatToShareUrl(chat: StoredChat): string {
 
 function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
   try {
-    const jsonStr = decodeURIComponent(atob(base64Payload));
+    let b64 = base64Payload.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const jsonStr = decodeURIComponent(atob(b64));
     const payload = JSON.parse(jsonStr);
     if (payload && payload.t && Array.isArray(payload.m)) {
       return {

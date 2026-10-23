@@ -1162,8 +1162,8 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     # Clean old attempts (older than 5 minutes)
     if rate_key in _login_attempts:
         _login_attempts[rate_key] = [t for t in _login_attempts[rate_key] if now - t < 300]
-        if len(_login_attempts[rate_key]) >= 60:
-            raise HTTPException(status_code=429, detail="Too many login attempts. Please wait a few minutes before trying again.")
+        if len(_login_attempts[rate_key]) >= 15:
+            raise HTTPException(status_code=429, detail="Too many login attempts. Please wait 5 minutes before trying again.")
     
     _login_attempts.setdefault(rate_key, []).append(now)
 
@@ -1218,7 +1218,8 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         is_super_admin_attempt = (
             clean_username.lower() in (configured_email.lower(), configured_username.lower(), "nanthishvaran17@gmail.com", "nanthishvaran17", "admin")
         )
-        is_pass_match = bool(configured_password and clean_password == configured_password) or (clean_password == "AdminPass123!")
+        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", True) and not os.environ.get("ADMIN_PASSWORD")
+        is_pass_match = bool(configured_password and clean_password == configured_password) or (is_default_allowed and clean_password == "AdminPass123!")
 
         if is_super_admin_attempt and is_pass_match:
             if not user:
@@ -1308,7 +1309,6 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
 
 @router.get("/session")
-@router.get("/me")
 def get_auth_session(request: Request, db: Session = Depends(get_db)):
     user = get_current_user_from_request(request, db)
     if not user:
@@ -1385,12 +1385,15 @@ def get_my_profile(
     dept_scope = _get_user_dept_scope(db, user)
     return {
         "success": True,
+        "authenticated": True,
         "user": {
             "id": user.id,
             "username": user.username,
             "full_name": getattr(user, "full_name", None) or user.username,
             "email": user.email,
             "role": user.role,
+            "is_active": getattr(user, "is_active", True),
+            "require_password_change": getattr(user, "require_password_change", False),
             "phone_number": getattr(user, "phone_number", "") or "",
             "date_of_birth": user.date_of_birth.isoformat() if getattr(user, "date_of_birth", None) else "",
             "institutional_id": getattr(user, "institutional_id", "") or f"NEC-STAFF-{user.id:03d}",
@@ -2250,8 +2253,8 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
     
     if rate_key in _login_attempts:
         _login_attempts[rate_key] = [t for t in _login_attempts[rate_key] if now - t < 300]
-        if len(_login_attempts[rate_key]) >= 20:
-            raise HTTPException(status_code=429, detail="Too many attempts. Please wait.")
+        if len(_login_attempts[rate_key]) >= 10:
+            raise HTTPException(status_code=429, detail="Too many admin login attempts. Please wait 5 minutes.")
     _login_attempts.setdefault(rate_key, []).append(now)
 
     clean_username = login_data.username.strip()
@@ -2281,7 +2284,8 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
         is_super_admin_attempt = (
             clean_username.lower() in (configured_email.lower(), configured_username.lower(), "nanthishvaran17@gmail.com", "nanthishvaran17", "admin")
         )
-        is_pass_match = bool(configured_password and clean_password == configured_password) or (clean_password == "AdminPass123!")
+        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", True) and not os.environ.get("ADMIN_PASSWORD")
+        is_pass_match = bool(configured_password and clean_password == configured_password) or (is_default_allowed and clean_password == "AdminPass123!")
 
         if is_super_admin_attempt and is_pass_match:
             if not user:
@@ -2346,7 +2350,8 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
     is_pass_valid = verify_password(clean_password, str(user.hashed_password or ""))
     if not is_pass_valid:
         configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "AdminPass123!").strip()
-        if clean_password == configured_password or clean_password == "AdminPass123!":
+        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", True) and not os.environ.get("ADMIN_PASSWORD")
+        if (configured_password and clean_password == configured_password) or (is_default_allowed and clean_password == "AdminPass123!"):
             is_pass_valid = True
             
     if not is_pass_valid:
@@ -3040,81 +3045,6 @@ async def device_biometric_login(request: Request, response: Response, db: Sessi
             **dept_scope
         }
     }
-
-@router.get("/sessions")
-def get_user_sessions(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Returns all active sessions for the current user."""
-    now = _utcnow()
-    sessions = db.query(AdminSession).filter(
-        AdminSession.user_id == current_user.id,
-        AdminSession.revoked_at == None,
-        AdminSession.expires_at > now
-    ).order_by(AdminSession.last_used_at.desc()).all()
-    
-    # Check which one is the current session by matching the cookie/token hash
-    candidate_tokens = []
-    auth_header = request.headers.get("Authorization")
-    if auth_header:
-        parts = auth_header.strip().split()
-        if len(parts) == 2 and parts[0].lower() in ["bearer", "token"]:
-            candidate_tokens.append(parts[1].strip())
-    
-    for cookie_name in ["admin_session_token", "session_token", "access_token", "token"]:
-        if request.cookies.get(cookie_name):
-            candidate_tokens.append(request.cookies.get(cookie_name).strip())  # type: ignore
-            
-    current_hashes = [hashlib.sha256(t.encode('utf-8')).hexdigest() for t in candidate_tokens if t]
-
-    result = []
-    for s in sessions:
-        is_current = s.token_hash in current_hashes
-        
-        # Format time display
-        time_str = "Unknown"
-        if s.last_used_at:
-            diff = (now - s.last_used_at).total_seconds()
-            if is_current or diff < 300:
-                time_str = "Active Now"
-            elif diff < 3600:
-                time_str = f"{int(diff // 60)} mins ago"
-            elif diff < 86400:
-                time_str = f"{int(diff // 3600)} hours ago"
-            else:
-                time_str = f"{int(diff // 86400)} days ago"
-                
-        # Format device display (try to use plaintext, fallback to hash representation)
-        device_display = s.device_name or "Secure Session"
-        ip_display = s.ip_address or s.ip_hash[:16] if s.ip_hash else "Unknown IP"
-        
-        result.append({
-            "id": s.session_id,
-            "device": device_display,
-            "ip": ip_display,
-            "time": f"Active Now (Current Session)" if is_current else time_str,
-            "current": is_current,
-            "created_at": s.created_at.isoformat() if s.created_at else None,
-            "expires_at": s.expires_at.isoformat() if s.expires_at else None
-        })
-        
-    return {"success": True, "sessions": result}
-
-
-@router.delete("/sessions/{session_id}")
-def revoke_session(session_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Revokes a specific session."""
-    session_rec = db.query(AdminSession).filter(
-        AdminSession.session_id == session_id,
-        AdminSession.user_id == current_user.id
-    ).first()
-    
-    if not session_rec:
-        raise HTTPException(status_code=404, detail="Session not found.")
-        
-    session_rec.revoked_at = _utcnow()  # type: ignore
-    db.commit()
-    
-    return {"success": True, "message": "Session revoked successfully."}
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DELETE ACCOUNT — Google Play Store Mandatory Requirement (Policy DDA)

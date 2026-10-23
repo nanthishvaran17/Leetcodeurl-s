@@ -27,7 +27,9 @@ export const isAdminOtpVerified = (): boolean => {
       try {
         const payloadBase64 = token.split('.')[1];
         if (payloadBase64) {
-          const payloadJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+          let b64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+          while (b64.length % 4) b64 += '=';
+          const payloadJson = atob(b64);
           const payload = JSON.parse(payloadJson);
           if (payload?.admin_otp_verified === true) {
             // Re-sync storage flags

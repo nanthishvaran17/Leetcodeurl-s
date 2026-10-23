@@ -18,7 +18,7 @@ from backend.certificate_generator import (
     resolve_department_name
 )
 from backend.logger import logger
-from backend.security import get_current_user_optional
+from backend.security import get_current_user_optional, require_security_access
 
 router = APIRouter(tags=["Certificates & Signatures"])
 
@@ -697,7 +697,7 @@ def list_certificates(
 def generate_certificate_endpoint(
     req: CertificateGenerateRequest,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional)
+    current_user: User = Depends(require_security_access(resource_name="Generate Certificate", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
     """
     Generates an authoritative Certificate of Excellence for the specified student.
@@ -927,7 +927,8 @@ def download_forensic_contest_pdf(
 def revoke_certificate_endpoint(
     verification_id: str,
     req: RevokeCertificateRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Revoke Certificate", required_roles=["admin", "super admin", "hod"]))
 ):
     """Revokes an issued certificate."""
     clean_id = (verification_id or "").strip().upper()
@@ -986,7 +987,8 @@ async def upload_signature(
     signatory_title: Optional[str] = Form(None),
     signatory_name: Optional[str] = Form(None),
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Upload Signature", required_roles=["admin", "super admin"]))
 ):
     """
     Uploads and activates an authorized signature image (PNG, JPG, WEBP, max 5MB).
@@ -1081,7 +1083,11 @@ async def upload_signature(
 
 
 @router.delete("/signatures/{signature_id}")
-def delete_signature(signature_id: int, db: Session = Depends(get_db)):
+def delete_signature(
+    signature_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Delete Signature", required_roles=["admin", "super admin"]))
+):
     """Deletes an authorized signature record and activates remaining version if any."""
     sig = db.query(AuthorizedSignature).filter(AuthorizedSignature.id == signature_id).first()
     if not sig:
@@ -1110,7 +1116,11 @@ def delete_signature(signature_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/signatures/type/{sig_type}")
-def delete_all_signatures_of_type(sig_type: str, db: Session = Depends(get_db)):
+def delete_all_signatures_of_type(
+    sig_type: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Delete Signatures By Type", required_roles=["admin", "super admin"]))
+):
     """Deletes ALL signature records (active and history) for a specific signature type."""
     sig_type_clean = sig_type.strip().upper()
     sigs = db.query(AuthorizedSignature).filter(AuthorizedSignature.signature_type == sig_type_clean).all()
