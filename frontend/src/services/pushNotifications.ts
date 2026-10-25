@@ -215,34 +215,8 @@ export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
 
 export const playNotificationChime = () => {
   try {
-    if (typeof window === 'undefined') return;
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-
-    const t = ctx.currentTime;
-    const notes = [
-      { freq: 523.25, start: t, duration: 0.12 },
-      { freq: 659.25, start: t + 0.10, duration: 0.14 },
-      { freq: 783.99, start: t + 0.22, duration: 0.28 }
-    ];
-
-    notes.forEach(({ freq, start, duration }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, start);
-      gain.gain.setValueAtTime(0.001, start);
-      gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(start);
-      osc.stop(start + duration);
-    });
+    const { playNotificationChime: playUnifiedChime } = require('../utils/audioChime');
+    playUnifiedChime();
   } catch {
     // Audio synthesis context safety
   }

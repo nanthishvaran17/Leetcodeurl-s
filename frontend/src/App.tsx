@@ -1431,6 +1431,7 @@ export const App: React.FC = () => {
       {/* App Update & Notification Banners */}
       <Suspense fallback={null}>
         <AppUpdateNotifier />
+        <InstallAppPrompt />
         {showShareModal && (
           <StudentShareCardModal
             isOpen={showShareModal}

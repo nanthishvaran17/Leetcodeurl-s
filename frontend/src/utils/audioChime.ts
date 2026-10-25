@@ -26,40 +26,59 @@ class AudioChimeEngine {
   }
 
   /**
-   * Crisp, elegant notification chime (Bell chime: D5 587Hz -> A5 880Hz)
+   * Ultra-Premium Acoustic Glass Chime (Soft Warm F5 -> Crystal C6 -> Shimmer F6)
+   * High-end studio harmonic timbre, zero harshness, accompanied by subtle tactile haptic.
    */
   public playNotificationChime(): void {
+    // 1. Gentle tactile haptic pulse on mobile devices
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate([15, 30, 20]);
+      } catch {
+        // Haptic safety
+      }
+    }
+
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
     try {
       const now = ctx.currentTime;
 
-      // Note 1: 587.33 Hz (D5) - soft warm bell
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(587.33, now);
-      gain1.gain.setValueAtTime(0.0001, now);
-      gain1.gain.exponentialRampToValueAtTime(0.2, now + 0.015);
-      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.22);
+      // Soft master lowpass filter to produce an organic, velvety acoustic timbre (eliminates synthetic sharpness)
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(3400, now);
+      filter.Q.setValueAtTime(1.2, now);
 
-      // Note 2: 880 Hz (A5) - bright chime
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(880, now + 0.09);
-      gain2.gain.setValueAtTime(0.0001, now + 0.09);
-      gain2.gain.exponentialRampToValueAtTime(0.25, now + 0.11);
-      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(now + 0.09);
-      osc2.stop(now + 0.45);
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.24, now);
+      filter.connect(masterGain);
+      masterGain.connect(ctx.destination);
+
+      // Acoustic Glass Tri-Tone Chord: Warm Foundation (F5: 698.46Hz) + Sweet Bell (C6: 1046.5Hz) + Shimmer (F6: 1396.9Hz)
+      const tones = [
+        { freq: 698.46, start: now, dur: 0.28, vol: 0.18, type: 'sine' as OscillatorType },
+        { freq: 1046.50, start: now + 0.05, dur: 0.36, vol: 0.24, type: 'sine' as OscillatorType },
+        { freq: 1396.91, start: now + 0.09, dur: 0.44, vol: 0.26, type: 'triangle' as OscillatorType }
+      ];
+
+      tones.forEach(({ freq, start, dur, vol, type }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, start);
+
+        // Smooth anti-click curved attack followed by gentle exponential bell decay
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(vol, start + 0.014);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+        osc.connect(gain);
+        gain.connect(filter);
+        osc.start(start);
+        osc.stop(start + dur);
+      });
     } catch {
       // Audio safety
     }

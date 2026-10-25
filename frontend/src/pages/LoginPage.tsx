@@ -6,7 +6,8 @@ import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Shield,
-  Cpu, Layers, CheckCircle, ChevronRight, Loader2
+  Cpu, Layers, CheckCircle, ChevronRight, Loader2,
+  Download, Smartphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -1323,6 +1324,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Quick Mobile App Direct Download Card */}
+            {!isCapacitorNative && (
+              <a
+                href="/nandha-leetcode.apk"
+                download="Nandha_LeetCode_Intelligence_v3.1.7_latest.apk"
+                className="w-full mt-4 p-3 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border border-indigo-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
+                title="Download Nandha LeetCode Android App (APK)"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">Get Android App (.APK)</span>
+                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v3.1.7</span>
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium truncate">Instant 1-Tap Direct Download • 17 MB</p>
+                  </div>
+                </div>
+                <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0">
+                  <Download className="w-4 h-4" />
+                </div>
+              </a>
+            )}
 
             {/* Security Message */}
             <div className="stamp" role="note" aria-label="Security verification notice">
