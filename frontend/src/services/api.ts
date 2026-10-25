@@ -276,18 +276,19 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // --- 0. BAILOUT FOR AUTH ROUTES (with Network Error Auto-Failover) ---
+    // --- 0. BAILOUT FOR AUTH ROUTES (with Network Error / 404 Auto-Failover) ---
     const isAuthRoute = config.url && (config.url.includes('auth/login') || config.url.includes('auth/refresh') || config.url.includes('auth/session'));
     if (isAuthRoute) {
-      if (error.response) {
+      // If error is 401 or 403 (invalid credentials), reject immediately
+      if (error.response && error.response.status !== 404 && error.response.status !== 502 && error.response.status !== 503) {
         return Promise.reject(error);
       }
-      // If a pure network error occurred (no response received), try alternate backend once
+      // If a pure network error OR 404/502/503 occurred, try alternate backend once
       if (!config._triedFallback && typeof window !== 'undefined') {
         config._triedFallback = true;
         const currentBase = config.baseURL || '';
-        const fallbackBase = currentBase.includes('vercel.app') ? 'https://nandha-leetcode.duckdns.org/api' : 'https://leetcodeurl-s-roan.vercel.app/api';
-        console.warn(`[AUTH_FAILOVER] Primary auth server unreachable. Retrying via ${fallbackBase}...`);
+        const fallbackBase = currentBase.includes('duckdns.org') ? 'https://leetcodeurl-s-roan.vercel.app/api' : 'https://nandha-leetcode.duckdns.org/api';
+        console.warn(`[AUTH_FAILOVER] Primary auth server returned ${error.response?.status || 'Network Error'}. Retrying via ${fallbackBase}...`);
         config.baseURL = fallbackBase;
         return api(config);
       }

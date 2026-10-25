@@ -736,7 +736,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   const credentialId = `NEC-PASS-2026-${regNo || '732225CC018'}`;
   const resolvedOrigin = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
     ? window.location.origin
-    : 'https://leetcodeurl-s-roan.vercel.app';
+    : 'https://nandha-leetcode.duckdns.org';
   const verificationUrl = `${resolvedOrigin}/verify/${encodeURIComponent(credentialId)}`;
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<'pass' | 'certificate'>('pass');

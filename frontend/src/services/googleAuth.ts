@@ -298,7 +298,7 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
   const { Browser } = await import('@capacitor/browser');
 
   const scheme = 'org.nandhaengg.leetcodesync';
-  let bridgeBase = 'https://leetcodeurl-s-roan.vercel.app';
+  let bridgeBase = 'https://nandha-leetcode.duckdns.org';
   if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')) {
     bridgeBase = window.location.origin;
   }

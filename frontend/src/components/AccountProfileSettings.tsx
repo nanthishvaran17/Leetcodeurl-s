@@ -1909,9 +1909,9 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
 
   // Authoritative Institutional ID Verification URL for instant camera scan
   const idVerificationUrl = useMemo(() => {
-    let origin = typeof window !== 'undefined' ? window.location.origin : 'https://leetcodeurl-s-roan.vercel.app';
+    let origin = typeof window !== 'undefined' ? window.location.origin : 'https://nandha-leetcode.duckdns.org';
     if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      origin = 'https://leetcodeurl-s-roan.vercel.app';
+      origin = 'https://nandha-leetcode.duckdns.org';
     }
     const params = new URLSearchParams({
       type: 'id_card',

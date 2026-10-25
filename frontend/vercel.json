@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "http://13.53.231.6/api/$1"
+      "destination": "https://nandha-leetcode.duckdns.org/api/$1"
     },
     {
       "source": "/__/auth/(.*)",
@@ -17,7 +17,7 @@
     },
     {
       "source": "/health",
-      "destination": "http://13.53.231.6/health"
+      "destination": "https://nandha-leetcode.duckdns.org/health"
     },
     {
       "source": "/((?!assets/|mobile-auth.html|firebase-messaging-sw.js|favicon.ico|google[a-z0-9]+\\.html|sitemap\\.xml|robots\\.txt).*)",
