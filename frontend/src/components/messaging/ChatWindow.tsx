@@ -482,9 +482,10 @@ export const ChatWindow: React.FC<Props> = ({
     const isApk = ext === 'apk' || msg.fileMimeType?.includes('vnd.android.package-archive');
     const isPdf = ext === 'pdf' || msg.fileMimeType?.includes('pdf');
     const isZip = ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext);
+    const isExcel = ['xlsx', 'xls', 'csv'].includes(ext);
 
     let IconComp = FileText;
-    let iconBg = isMe ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400";
+    let iconBg = isMe ? "bg-white/25 text-white" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400";
     let typeLabel = ext ? ext.toUpperCase() : 'FILE';
 
     if (isApk) {
@@ -498,6 +499,9 @@ export const ChatWindow: React.FC<Props> = ({
       IconComp = FileArchive;
       iconBg = isMe ? "bg-amber-400/30 text-amber-100" : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300";
       typeLabel = 'Archive Zip';
+    } else if (isExcel) {
+      iconBg = isMe ? "bg-emerald-400/30 text-emerald-100" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400";
+      typeLabel = 'Excel Sheet';
     }
 
     const sizeFormatted = formatFileSize(msg.fileSize);
@@ -506,44 +510,44 @@ export const ChatWindow: React.FC<Props> = ({
       <div
         onClick={() => !msg.isUploading && handleDownloadFileAttachment(msg.attachmentFileId, fname)}
         className={clsx(
-          "flex items-center gap-3 p-2.5 rounded-xl transition-all border group/file select-none",
+          "flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl transition-all border group/file select-none w-full max-w-full overflow-hidden",
           msg.isUploading ? "cursor-wait opacity-80" : "cursor-pointer hover:shadow-md active:scale-[0.99]",
           isMe
-            ? "bg-black/10 hover:bg-black/20 border-white/20 text-white shadow-sm"
-            : "bg-slate-50 dark:bg-[#1f2c34] hover:bg-slate-100 dark:hover:bg-[#253239] border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-sm"
+            ? "bg-black/15 hover:bg-black/25 border-white/20 text-white shadow-xs"
+            : "bg-slate-50 dark:bg-[#182229] hover:bg-slate-100 dark:hover:bg-[#202c33] border-slate-200/80 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 shadow-xs"
         )}
       >
-        <div className={clsx("p-2.5 rounded-xl shrink-0 transition-transform group-hover/file:scale-105", iconBg)}>
+        <div className={clsx("p-2 sm:p-2.5 rounded-xl shrink-0 transition-transform group-hover/file:scale-105", iconBg)}>
           {msg.isUploading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
           ) : (
-            <IconComp className="w-5 h-5 drop-shadow-sm" />
+            <IconComp className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-xs" />
           )}
         </div>
 
-        <div className="flex-1 min-w-0 pr-1">
-          <div className="text-[13px] font-bold truncate leading-snug tracking-tight">
+        <div className="flex-1 min-w-0 pr-1 overflow-hidden">
+          <div className="text-[12.5px] sm:text-[13px] font-bold truncate leading-snug tracking-tight">
             {msg.isUploading ? "Uploading file..." : fname}
           </div>
-          <div className={clsx("text-[11px] font-medium flex items-center gap-1.5 mt-0.5 opacity-80", isMe ? "text-white/80" : "text-slate-500 dark:text-slate-400")}>
-            <span className="uppercase font-bold tracking-wider px-1.5 py-0.5 rounded text-[9px] bg-black/10 dark:bg-white/10">
+          <div className={clsx("text-[10px] sm:text-[11px] font-medium flex items-center gap-1.5 mt-0.5 opacity-85", isMe ? "text-white/85" : "text-slate-500 dark:text-slate-400")}>
+            <span className="uppercase font-bold tracking-wider px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] bg-black/15 dark:bg-white/10 shrink-0">
               {typeLabel}
             </span>
-            {sizeFormatted && <span>• {sizeFormatted}</span>}
+            {sizeFormatted && <span className="truncate">• {sizeFormatted}</span>}
           </div>
         </div>
 
         {!msg.isUploading && (
           <div
             className={clsx(
-              "p-2 rounded-full shrink-0 transition-all border shadow-sm group-hover/file:scale-110",
+              "p-2 rounded-full shrink-0 transition-all border shadow-xs group-hover/file:scale-110 ml-auto",
               isMe
                 ? "bg-white/20 hover:bg-white/30 border-white/30 text-white"
                 : "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400"
             )}
             title="Download File"
           >
-            <Download className="w-4 h-4 stroke-[2.5]" />
+            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
           </div>
         )}
       </div>
