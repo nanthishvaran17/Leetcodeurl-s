@@ -28,6 +28,9 @@ export interface StudentEntity {
     sync_status?: string;
     last_verified_at?: string | null;
   };
+  contest_global_ranking?: number | null;
+  public_profile_ranking?: number | null;
+  global_rank?: number | null;
   college_rank?: number;
   dept_rank?: number;
   year_rank?: number;

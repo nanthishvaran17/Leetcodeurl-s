@@ -64,26 +64,78 @@ export function getContestRatingDisplay(st: any): string {
   return Math.round(Number(rawRating)).toLocaleString();
 }
 
-export function getContestRankDisplay(st: any): string {
-  if (!st) return '—';
-  const rawRating = st.stats?.contest_rating
-    ?? st.contest_rating
-    ?? st.public_contest_result?.contest_rating
-    ?? st.lc_contest_standing?.contest_rating;
-  if (rawRating != null && (Number(rawRating) === 1500 || Math.round(Number(rawRating)) === 1500)) return '—';
-  const rawRank = st.stats?.contest_global_ranking
+export interface StudentRankInfo {
+  label: string;
+  value: string;
+  numericRank?: number;
+}
+
+export function getRankBadgeInfo(st: any): StudentRankInfo {
+  if (!st) return { label: 'Contest Rank', value: '—' };
+
+  // 1. Contest Global Ranking (official Sunday contest rank)
+  const contestRank = st.stats?.contest_global_ranking
     ?? st.contest_global_ranking
     ?? st.stats?.contest_rank
     ?? st.contest_rank
     ?? st.public_contest_result?.contest_rank
     ?? st.lc_contest_standing?.contest_global_ranking;
-  if (rawRank == null || Number(rawRank) <= 0 || Number(rawRank) === 50000 || Number(rawRank) >= 1000000) return '—';
-  return `#${Number(rawRank).toLocaleString()}`;
+
+  if (contestRank != null) {
+    const num = Number(contestRank);
+    if (!isNaN(num) && num > 0 && num !== 50000 && num !== 5000001) {
+      return {
+        label: 'Contest Rank',
+        value: `#${num.toLocaleString()}`,
+        numericRank: num
+      };
+    }
+  }
+
+  // 2. Global Profile Ranking (LeetCode Public Profile overall rank, e.g. #543,034)
+  const globalProfileRank = st.stats?.public_profile_ranking
+    ?? st.public_profile_ranking
+    ?? st.stats?.profile_rank
+    ?? st.profile_rank
+    ?? st.global_rank
+    ?? st.stats?.global_rank
+    ?? st.global_ranking
+    ?? st.lc_problem_stats?.profile_global_ranking
+    ?? st.lc_profile?.ranking;
+
+  if (globalProfileRank != null) {
+    const num = Number(globalProfileRank);
+    if (!isNaN(num) && num > 0 && num !== 50000 && num !== 5000001) {
+      return {
+        label: 'Global Rank',
+        value: `#${num.toLocaleString()}`,
+        numericRank: num
+      };
+    }
+  }
+
+  // 3. Fallback to College / Institutional Rank
+  const collegeRank = st.college_rank ?? st.rank;
+  if (collegeRank != null) {
+    const num = Number(collegeRank);
+    if (!isNaN(num) && num > 0) {
+      return {
+        label: 'College Rank',
+        value: `#${num.toLocaleString()}`,
+        numericRank: num
+      };
+    }
+  }
+
+  return { label: 'Contest Rank', value: '—' };
+}
+
+export function getContestRankDisplay(st: any): string {
+  return getRankBadgeInfo(st).value;
 }
 
 export function getProfileRankDisplay(st: any): string {
-  // Profile ranking is deprecated; use official contest global ranking exclusively
-  return getContestRankDisplay(st);
+  return getRankBadgeInfo(st).value;
 }
 
 export const LEADERBOARD_TABLE_GRID_STYLE: React.CSSProperties = {

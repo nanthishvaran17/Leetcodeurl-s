@@ -487,8 +487,8 @@ class NotificationService:
             fcm_dispatched = 0
             if FIREBASE_ADMIN_AVAILABLE and messaging and firebase_admin and firebase_admin._apps:
                 is_high_priority = eff_priority in ("high", "critical")
-                base_site_url = os.environ.get("BASE_SITE_URL", "http://13.53.231.6").rstrip("/")
-                fcm_link = raw_route if raw_route.startswith("http") else f"{base_site_url}{raw_route}"
+                base_site_url = os.environ.get("BASE_SITE_URL", "https://nandha-leetcode.duckdns.org").rstrip("/")
+                fcm_link = eff_route if eff_route.startswith("http") else f"{base_site_url}{eff_route}"
                 
                 target_uids = set()
                 for r in recipients:
@@ -586,7 +586,7 @@ class NotificationService:
                                 "notificationId": eff_event_id,
                                 "type": str(event_type),  # type: ignore
                                 "category": str(category),  # type: ignore
-                                "actionRoute": raw_route,
+                                "actionRoute": eff_route,
                                 "entityType": str(entity_type or ""),  # type: ignore
                                 "entityId": str(entity_id or ""),  # type: ignore
                                 "fileId": str(file_id or ""),  # type: ignore

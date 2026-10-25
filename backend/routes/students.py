@@ -364,7 +364,7 @@ async def get_students(
     user_id = current_user.id if current_user else 0
     role_clean = (current_user.role or "").strip().lower() if current_user else ""
 
-    cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{department}:{dept}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
+    cache_key = f"students_list_v4:{user_id}:{role_clean}:{dept_id}:{department}:{dept}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
     def _execute_query(db):
         import re
         from backend.models import Department
@@ -689,6 +689,15 @@ async def get_students(
             else:
                 st_out.college_rank = dyn_college_ranks.get(st.id) if is_verified else None
                 st_out.dept_rank = dyn_dept_ranks.get(st.id) if is_verified else None
+
+            # Always populate official contest and public profile rankings on st_out
+            st_out.contest_global_ranking = getattr(st.stats, 'contest_global_ranking', None) if (st.stats and is_verified) else None
+            st_out.public_profile_ranking = getattr(st.stats, 'public_profile_ranking', None) if (st.stats and is_verified) else None
+            st_out.global_rank = (
+                getattr(st.stats, 'contest_global_ranking', None)
+                if (st.stats and getattr(st.stats, 'contest_global_ranking', None) and is_verified)
+                else (getattr(st.stats, 'public_profile_ranking', None) if (st.stats and is_verified) else None)
+            )
 
             pub_res = pub_map.get(st.id)
             vir_res = vir_map.get(st.id)

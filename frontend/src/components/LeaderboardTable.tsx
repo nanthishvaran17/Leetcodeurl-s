@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { FixedSizeList as List } from 'react-window';
 
 import { studentLiveStore } from '../stores/studentLiveStore';
-import { FastStudentRow, LEADERBOARD_TABLE_GRID_STYLE } from './FastStudentRow';
+import { FastStudentRow, LEADERBOARD_TABLE_GRID_STYLE, getRankBadgeInfo } from './FastStudentRow';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 
 import { ExternalLink, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Award, CheckCircle2, TrendingUp, BookOpen, Star, Activity } from 'lucide-react';
@@ -1042,15 +1042,17 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                       })()}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
-                    <span className="text-[10px] font-bold text-slate-500 block">Contest Rank</span>
-                    <p className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
-                      {(() => {
-                        const cr = viewingStudent.stats?.contest_global_ranking ?? viewingStudent.public_contest_result?.contest_rank;
-                        return cr && Number(cr) > 0 ? `#${Number(cr).toLocaleString('en-US')}` : '—';
-                      })()}
-                    </p>
-                  </div>
+                  {(() => {
+                    const rInfo = getRankBadgeInfo(viewingStudent);
+                    return (
+                      <div className="p-3 rounded-xl bg-white/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-slate-800 text-center">
+                        <span className="text-[10px] font-bold text-slate-500 block">{rInfo.label}</span>
+                        <p className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+                          {rInfo.value}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 

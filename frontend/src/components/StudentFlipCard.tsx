@@ -4,7 +4,7 @@ import { ExternalLink, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCirc
 import { StudentData } from './LeaderboardTable';
 import { useStudentEntity } from '../stores/studentLiveStore';
 import { formatStudentYearBadge, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
-import { getContestRatingDisplay, getContestRankDisplay } from './FastStudentRow';
+import { getContestRatingDisplay, getContestRankDisplay, getRankBadgeInfo } from './FastStudentRow';
 
 interface StudentFlipCardProps {
   student: StudentData;
@@ -359,12 +359,22 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                       {getContestRatingDisplay(student)}
                     </span>
                   </div>
-                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                    <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Contest Rank</span>
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full">
-                      {getContestRankDisplay(student)}
-                    </span>
-                  </div>
+                  {(() => {
+                    const rankInfo = getRankBadgeInfo(student);
+                    return (
+                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                        <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">
+                          {rankInfo.label}
+                        </span>
+                        <span
+                          className="text-xs font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full"
+                          title={`${rankInfo.label}: ${rankInfo.value}`}
+                        >
+                          {rankInfo.value}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
               </div>

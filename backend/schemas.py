@@ -210,6 +210,9 @@ class StudentOut(StudentBase):
     lc_contest_standing: Optional[CanonicalContestOut] = None
     lc_activity: Optional[CanonicalActivityOut] = None
     
+    contest_global_ranking: Optional[int] = None
+    public_profile_ranking: Optional[int] = None
+    global_rank: Optional[int] = None
     college_rank: Optional[int] = None
     dept_rank: Optional[int] = None
     year_rank: Optional[int] = None
@@ -253,6 +256,9 @@ class StudentListOut(StudentBase):
     section: Optional[SectionOut] = None
     stats: Optional[LeetCodeStatsOut] = None
     
+    contest_global_ranking: Optional[int] = None
+    public_profile_ranking: Optional[int] = None
+    global_rank: Optional[int] = None
     college_rank: Optional[int] = None
     dept_rank: Optional[int] = None
     year_rank: Optional[int] = None
