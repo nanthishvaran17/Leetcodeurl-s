@@ -517,7 +517,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     return allRows.filter((r: any) => {
       const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
+      const st = rawSt.replace(/\s+/g, '_');
       const { count: cSolved, isAttended } = getContestSolvedCount(r, isContestReport);
+      const isPart = isAttended;
       
       const tSolved = r.total_solved !== undefined && r.total_solved !== null 
         ? Number(r.total_solved) 
