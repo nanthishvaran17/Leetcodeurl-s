@@ -83,8 +83,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
       const targetHost = baseUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
       const protocol = baseUrl.startsWith('https') ? 'wss:' : 'ws:';
       wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;
-    } else if (typeof window !== 'undefined' &&
-               (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    } else if (typeof window !== 'undefined') {
       const loc = window.location;
       wsUrl = `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/leaderboard`;
     } else {

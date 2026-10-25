@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Send, ArrowLeft, Loader2, Info, Paperclip, Check, CheckCheck,
   MoreVertical, Reply, Edit2, Trash2, Copy, Share2, X, FileText, Download,
@@ -8,6 +8,7 @@ import { clsx } from 'clsx';
 import { Conversation } from './ConversationList';
 import { getApiUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
 export type ChatWallpaper = 'default' | 'emerald' | 'stealth' | 'cyber' | 'indigo' | 'doodle';
 
@@ -132,11 +133,142 @@ export const ChatWindow: React.FC<Props> = ({
   onReportTyping
 }) => {
   const { notify } = useNotification();
+  const { user: authUser } = useAuth();
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
+
+  // Build a comprehensive, normalized set of ALL identifiers representing "ME" (logged-in user)
+  const myIdentifiers = useMemo(() => {
+    const ids = new Set<string>();
+    const add = (val?: string | number | null) => {
+      if (!val) return;
+      const str = String(val).trim().toLowerCase();
+      if (!str) return;
+      ids.add(str);
+      if (str.startsWith('staff_')) {
+        ids.add(str.substring(6).trim());
+      } else if (/^\d+$/.test(str)) {
+        ids.add(`staff_${str}`);
+      }
+    };
+
+    add(currentUserId);
+    if (authUser) {
+      add(authUser.id);
+      add(authUser.username);
+      add(authUser.email);
+      add((authUser as any).reg_no);
+      add((authUser as any).regNo);
+      add(authUser.uid);
+    }
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        add(u.id);
+        add(u.username);
+        add(u.email);
+        add(u.reg_no);
+        add(u.regNo);
+        add(u.uid);
+      }
+    } catch {}
+
+    return ids;
+  }, [currentUserId, authUser]);
+
+  // Build a normalized set of ALL identifiers representing the other participant
+  const otherIdentifiers = useMemo(() => {
+    const ids = new Set<string>();
+    const add = (val?: string | number | null) => {
+      if (!val) return;
+      const str = String(val).trim().toLowerCase();
+      if (!str) return;
+      ids.add(str);
+      if (str.startsWith('staff_')) {
+        ids.add(str.substring(6).trim());
+      } else if (/^\d+$/.test(str)) {
+        ids.add(`staff_${str}`);
+      }
+    };
+
+    const other = conversation?.otherUser;
+    if (other) {
+      add(other.id);
+      add((other as any).regNo);
+      add((other as any).reg_no);
+      add((other as any).email);
+      add((other as any).username);
+    }
+    return ids;
+  }, [conversation?.otherUser]);
+
+  // Determine if this is a self-conversation (e.g. testing with own account or note-to-self)
+  const isSelfConversation = useMemo(() => {
+    if (!conversation?.otherUser) return false;
+    for (const id of otherIdentifiers) {
+      if (myIdentifiers.has(id)) return true;
+    }
+    return false;
+  }, [otherIdentifiers, myIdentifiers]);
+
+  // Authoritative, multi-factor determination of outgoing (isMe) vs incoming message
+  const checkIsMe = useCallback((msgObj: Message | null): boolean => {
+    if (!msgObj) return false;
+
+    // 1. Optimistic / local in-flight message is ALWAYS outgoing
+    if (msgObj.status === 'SENDING' || msgObj.messageId.startsWith('TEMP_')) {
+      return true;
+    }
+
+    const msgSender = String(msgObj.senderId || '').trim().toLowerCase();
+    const msgReceiver = String(msgObj.receiverId || '').trim().toLowerCase();
+
+    // 2. Direct check: Is sender matching ANY of current user's IDs?
+    const isSenderMe = myIdentifiers.has(msgSender) ||
+      (msgSender.startsWith('staff_') && myIdentifiers.has(msgSender.substring(6)));
+
+    // 3. Direct check: Is sender matching ANY of other user's IDs?
+    const isSenderOther = otherIdentifiers.has(msgSender) ||
+      (msgSender.startsWith('staff_') && otherIdentifiers.has(msgSender.substring(6)));
+
+    // 4. In a self-conversation (talking to myself / notes to self / self-test):
+    // All messages originated from this user's account and should be rendered as outgoing (right-aligned)
+    if (isSelfConversation) {
+      return true;
+    }
+
+    // 5. Standard 1-on-1 conversations:
+    if (isSenderMe && !isSenderOther) {
+      return true;
+    }
+    if (isSenderOther && !isSenderMe) {
+      return false;
+    }
+
+    // 6. Check receiver target: Was it sent TO the other participant?
+    const isReceiverOther = otherIdentifiers.has(msgReceiver) ||
+      (msgReceiver.startsWith('staff_') && otherIdentifiers.has(msgReceiver.substring(6)));
+    const isReceiverMe = myIdentifiers.has(msgReceiver) ||
+      (msgReceiver.startsWith('staff_') && myIdentifiers.has(msgReceiver.substring(6)));
+
+    if (isReceiverOther && !isReceiverMe) {
+      return true;
+    }
+    if (isReceiverMe && !isReceiverOther) {
+      return false;
+    }
+
+    // 7. Fallback: If sender matches current user
+    if (isSenderMe) {
+      return true;
+    }
+
+    return false;
+  }, [myIdentifiers, otherIdentifiers, isSelfConversation]);
 
   useEffect(() => {
     textInputRef.current?.focus();
@@ -611,61 +743,13 @@ export const ChatWindow: React.FC<Props> = ({
               return null;
             }
 
-            // Robust multi-factor determination of outgoing (isMe) vs incoming message
-            const other = conversation?.otherUser;
-            const otherIds = new Set<string>();
-            if (other?.id) {
-              const rawId = String(other.id).trim().toLowerCase();
-              otherIds.add(rawId);
-              if (rawId.startsWith('staff_')) {
-                otherIds.add(rawId.substring(6).trim());
-              }
-            }
-            if ((other as any)?.regNo) otherIds.add(String((other as any).regNo).trim().toLowerCase());
-            if ((other as any)?.reg_no) otherIds.add(String((other as any).reg_no).trim().toLowerCase());
-            if ((other as any)?.email) otherIds.add(String((other as any).email).trim().toLowerCase());
-            if ((other as any)?.username) otherIds.add(String((other as any).username).trim().toLowerCase());
-
+            // Authoritative determination of outgoing (isMe) vs incoming message
+            const isMe = checkIsMe(msg);
             const msgSender = String(msg.senderId || '').trim().toLowerCase();
-            const msgReceiver = String(msg.receiverId || '').trim().toLowerCase();
-            const myId = String(currentUserId || '').trim().toLowerCase();
-
-            // Direct check: is message from the other user?
-            const isFromOther = otherIds.has(msgSender) || 
-              (msgSender.startsWith('staff_') && otherIds.has(msgSender.substring(6)));
-
-            // Direct check: was message sent to the other user?
-            const isToOther = otherIds.has(msgReceiver) || 
-              (msgReceiver.startsWith('staff_') && otherIds.has(msgReceiver.substring(6)));
-
-            let isMe = false;
-            if (isFromOther) {
-              isMe = false; // Strictly incoming from other participant
-            } else if (isToOther) {
-              isMe = true;  // Strictly outgoing from me to other participant
-            } else if (myId && msgSender === myId && !otherIds.has(myId)) {
-              isMe = true;
-            } else if (myId && msgReceiver === myId && !otherIds.has(myId)) {
-              isMe = false;
-            } else {
-              isMe = msg.senderId === currentUserId;
-            }
-
-            const canEditOrDeleteEveryone = (isMe || msg.senderId === currentUserId || !isFromOther) && !msg.isDeletedEveryone;
+            const canEditOrDeleteEveryone = (isMe || myIdentifiers.has(msgSender)) && !msg.isDeletedEveryone;
             const isMenuOpen = activeMenuMessageId === msg.messageId;
             const prevMsg = idx > 0 ? messages[idx - 1] : null;
-            let prevIsMe = false;
-            if (prevMsg) {
-              const prevSender = String(prevMsg.senderId || '').trim().toLowerCase();
-              const prevReceiver = String(prevMsg.receiverId || '').trim().toLowerCase();
-              if (otherIds.has(prevSender) || (prevSender.startsWith('staff_') && otherIds.has(prevSender.substring(6)))) {
-                prevIsMe = false;
-              } else if (otherIds.has(prevReceiver) || (prevReceiver.startsWith('staff_') && otherIds.has(prevReceiver.substring(6)))) {
-                prevIsMe = true;
-              } else {
-                prevIsMe = prevMsg.senderId === currentUserId;
-              }
-            }
+            const prevIsMe = prevMsg ? checkIsMe(prevMsg) : false;
 
             // Date separator check
             let showDateHeader = false;
@@ -689,7 +773,7 @@ export const ChatWindow: React.FC<Props> = ({
 
             // Reply sender determination
             const replySender = String(msg.replyToMessage?.senderId || '').trim().toLowerCase();
-            const isReplyFromOther = otherIds.has(replySender) || (replySender.startsWith('staff_') && otherIds.has(replySender.substring(6)));
+            const isReplyFromOther = otherIdentifiers.has(replySender) || (replySender.startsWith('staff_') && otherIdentifiers.has(replySender.substring(6)));
 
             return (
               <React.Fragment key={msg.messageId}>
