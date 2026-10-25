@@ -878,11 +878,21 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
         return export_dynamic_excel(dataset)
 
-    if (
-        rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-        or dataset.get("college_summary")
-        or dataset.get("batch_summaries")
-        or "COORDINATOR" in str(dataset.get("title") or "").upper()
+    SPECIALIZED_REPORTS = {
+        "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
+        "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
+        "MANAGEMENT_EXECUTIVE_SUMMARY", "12TH_TNEA_CUTOFF_ANALYSIS",
+        "OFFICIAL_SUMMARY", "STUDENT_PERFORMANCE", "STUDENT_DETAIL",
+        "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
+        "PROBLEM_DIFFICULTY_INTELLIGENCE", "FIVE_WEEK_PERFORMANCE_TREND",
+        "FIVE_WEEK_TREND", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL",
+        "WEEK_ON_WEEK_INTELLIGENCE", "MASTER_10_SHEET", "MASTER_TRACKER",
+        "WEEKLY_CONTEST_MATRIX"
+    }
+
+    if rpt_t not in SPECIALIZED_REPORTS and (
+        rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+        or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and "COORDINATOR" in str(dataset.get("title") or "").upper())
     ):
         return export_weekly_performance_excel(dataset)
 

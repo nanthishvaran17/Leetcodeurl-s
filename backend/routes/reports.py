@@ -27,6 +27,18 @@ from backend.models import User
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
+SPECIALIZED_REPORTS = {
+    "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
+    "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
+    "MANAGEMENT_EXECUTIVE_SUMMARY", "12TH_TNEA_CUTOFF_ANALYSIS",
+    "OFFICIAL_SUMMARY", "STUDENT_PERFORMANCE", "STUDENT_DETAIL",
+    "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
+    "PROBLEM_DIFFICULTY_INTELLIGENCE", "FIVE_WEEK_PERFORMANCE_TREND",
+    "FIVE_WEEK_TREND", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL",
+    "WEEK_ON_WEEK_INTELLIGENCE", "MASTER_10_SHEET", "MASTER_TRACKER",
+    "WEEKLY_CONTEST_MATRIX"
+}
+
 @router.get("/available-sundays")
 def get_available_sundays(db: Session = Depends(get_db)):
     """
@@ -1120,12 +1132,14 @@ def download_session_report_by_format(
                 except Exception as e:
                     logger.warning(f"[MASTER WORKBOOK FALLBACK in session_report] {e}")
 
-            if (
-                rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-                or dataset.get("batch_summaries")
-                or dataset.get("college_summary")
-                or "COORDINATOR" in str(dataset.get("title") or "").upper()
-            ):
+            is_coord = (
+                rpt_t not in SPECIALIZED_REPORTS
+                and (
+                    rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+                    or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and "COORDINATOR" in str(dataset.get("title") or "").upper())
+                )
+            )
+            if is_coord:
                 from backend.exporters.excel_exporter import export_weekly_performance_excel
                 excel_bytes = export_weekly_performance_excel(dataset, include_extra_sheets=False)
                 return Response(
@@ -1143,12 +1157,14 @@ def download_session_report_by_format(
             )
         elif fmt == "pdf":
             rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
-            if (
-                rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-                or dataset.get("batch_summaries")
-                or dataset.get("college_summary")
-                or "COORDINATOR" in str(dataset.get("title") or "").upper()
-            ):
+            is_coord = (
+                rpt_t not in SPECIALIZED_REPORTS
+                and (
+                    rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+                    or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and "COORDINATOR" in str(dataset.get("title") or "").upper())
+                )
+            )
+            if is_coord:
                 from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
                 pdf_bytes = export_weekly_performance_pdf(dataset)
                 return Response(
@@ -1166,12 +1182,14 @@ def download_session_report_by_format(
             )
         elif fmt in ("word", "docx"):
             rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
-            if (
-                rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-                or dataset.get("batch_summaries")
-                or dataset.get("college_summary")
-                or "COORDINATOR" in str(dataset.get("title") or "").upper()
-            ):
+            is_coord = (
+                rpt_t not in SPECIALIZED_REPORTS
+                and (
+                    rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+                    or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and "COORDINATOR" in str(dataset.get("title") or "").upper())
+                )
+            )
+            if is_coord:
                 from backend.word_generator import build_weekly_performance_docx
                 word_bytes = build_weekly_performance_docx(dataset)
                 return Response(
@@ -2646,17 +2664,9 @@ def download_universal_excel(
         )
         rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
         
-        if report_id.startswith("RPT-TREND-") or "TREND" in report_id.upper() or rpt_t == "FIVE_WEEK_PERFORMANCE_TREND":
-            from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-            c_id = dataset.get("session_id") or dataset.get("contest_id")
-            excel_bytes = generate_master_10_sheet_workbook(
-                db, 
-                current_user=current_user, 
-                contest_id=c_id, 
-                department=eff_dept, 
-                year=eff_year, 
-                report_type="FIVE_WEEK_PERFORMANCE_TREND"
-            )
+        if report_id.startswith("RPT-TREND-") or "TREND" in report_id.upper() or rpt_t in ("FIVE_WEEK_PERFORMANCE_TREND", "FIVE_WEEK_TREND"):
+            from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+            excel_bytes = export_dynamic_excel(dataset)
             if not excel_bytes or len(excel_bytes) < 100:
                 raise ValueError("Generated Excel file is empty or corrupted.")
             return Response(
@@ -2669,12 +2679,14 @@ def download_universal_excel(
                 }
             )
 
-        if (
-            rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-            or dataset.get("batch_summaries")
-            or dataset.get("college_summary")
-            or "COORDINATOR" in str(dataset.get("title") or "").upper()
-        ):
+        is_coord = (
+            rpt_t not in SPECIALIZED_REPORTS
+            and (
+                rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+                or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and ("COORDINATOR" in str(dataset.get("title") or "").upper() or report_id.upper().startswith("REP-") or "COORD" in report_id.upper()))
+            )
+        )
+        if is_coord:
             from backend.exporters.excel_exporter import export_weekly_performance_excel
             excel_bytes = export_weekly_performance_excel(dataset, include_extra_sheets=False)
             
@@ -2715,16 +2727,7 @@ def download_universal_excel(
         if rpt_t in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL") or dataset.get("histSummary"):
             from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
             excel_bytes = export_dynamic_excel(dataset)
-        elif rpt_t in (
-            "MASTER_10_SHEET", "FRIDAY_OFFICIAL_CONTEST", "SUNDAY_LIVE_CONTEST",
-            "WEEKLY_CONTEST_INTELLIGENCE", "CONTEST_ATTENDANCE_PARTICIPATION",
-            "CONTEST_PERFORMANCE_RANKING", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_PERFORMANCE",
-            "PROBLEM_DIFFICULTY_INTELLIGENCE",
-            "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
-            "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
-            "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE",
-            "WEEK_ON_WEEK_INTELLIGENCE"
-        ):
+        elif rpt_t in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEKLY_CONTEST_MATRIX"):
             from backend.services.pregenerated_report_service import generate_report_bytes
             filters = {
                 "department": eff_dept,
@@ -2739,16 +2742,16 @@ def download_universal_excel(
                 excel_bytes = generate_report_bytes(db, report_type=rpt_t, format="xlsx", filters=filters, current_user=current_user)
             except Exception as e:
                 logger.warning(f"[MASTER WORKBOOK FALLBACK] {e}")
-                from backend.exporters.excel_exporter import export_excel_from_dataset
-                excel_bytes = export_excel_from_dataset(dataset)
-        else:
-            try:
-                from backend.exporters.excel_exporter import export_excel_from_dataset
-                excel_bytes = export_excel_from_dataset(dataset)
-            except Exception as ex_exp:
-                logger.warning(f"[UNIVERSAL EXCEL FALLBACK] Standard exporter failed: {ex_exp}, falling back to dynamic")
                 from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
                 excel_bytes = export_dynamic_excel(dataset)
+        else:
+            try:
+                from backend.exporters.dynamic_excel_exporter import export_dynamic_excel
+                excel_bytes = export_dynamic_excel(dataset)
+            except Exception as ex_exp:
+                logger.warning(f"[UNIVERSAL EXCEL FALLBACK] Dynamic exporter failed: {ex_exp}, falling back to standard")
+                from backend.exporters.excel_exporter import export_excel_from_dataset
+                excel_bytes = export_excel_from_dataset(dataset)
 
         if not excel_bytes or len(excel_bytes) < 100:
             raise ValueError("Generated Excel file is empty or corrupted.")
@@ -2800,12 +2803,14 @@ def download_universal_pdf(
             current_user=current_user
         )
         rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
-        if (
-            rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-            or dataset.get("batch_summaries")
-            or dataset.get("college_summary")
-            or "COORDINATOR" in str(dataset.get("title") or "").upper()
-        ):
+        is_coord = (
+            rpt_t not in SPECIALIZED_REPORTS
+            and (
+                rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+                or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and ("COORDINATOR" in str(dataset.get("title") or "").upper() or report_id.upper().startswith("REP-") or "COORD" in report_id.upper()))
+            )
+        )
+        if is_coord:
             from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf
             pdf_bytes = export_weekly_performance_pdf(dataset)
             return Response(
@@ -2856,12 +2861,14 @@ def download_universal_word(
         current_user=current_user
     )
     rpt_t = str(dataset.get("report_type") or dataset.get("reportType") or "").upper()
-    if (
-        rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_COORDINATOR", "COORDINATOR")
-        or dataset.get("batch_summaries")
-        or dataset.get("college_summary")
-        or "COORDINATOR" in str(dataset.get("title") or "").upper()
-    ):
+    is_coord = (
+        rpt_t not in SPECIALIZED_REPORTS
+        and (
+            rpt_t in ("WEEKLY_COORDINATOR", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE")
+            or (rpt_t in ("WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE") and ("COORDINATOR" in str(dataset.get("title") or "").upper() or report_id.upper().startswith("REP-") or "COORD" in report_id.upper()))
+        )
+    )
+    if is_coord:
         from backend.word_generator import build_weekly_performance_docx
         word_bytes = build_weekly_performance_docx(dataset)
         return Response(
@@ -3585,139 +3592,7 @@ def get_weekly_intelligence_download_info(
     }
 
 
-# ==========================================
-# MASTER INSTITUTIONAL INTELLIGENCE ENDPOINTS
-# ==========================================
 
-@router.get("/principal")
-def get_principal_report(
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="View Principal Executive Intelligence", dept_scoped=False))
-):
-    """
-    GET /api/reports/principal
-    Principal Executive Report — College-wide institutional intelligence summary.
-    """
-    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-    try:
-        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
-        filename = f"Weekly_LeetCode_Principal_Contest_518.xlsx"
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(f"[PRINCIPAL REPORT FAILED]: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Unable to generate Principal Executive Report.")
-
-
-@router.get("/hod")
-def get_hod_report(
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="View HOD Department Intelligence", dept_scoped=True))
-):
-    """
-    GET /api/reports/hod
-    HOD Department Report — Authorized department data ONLY.
-    """
-    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-    try:
-        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
-        dept_code = str(getattr(current_user, "department_id", "CSE") or "CSE").upper()
-        filename = f"Weekly_LeetCode_HOD_{dept_code}_Contest_518.xlsx"
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(f"[HOD REPORT FAILED]: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Unable to generate HOD Department Report.")
-
-
-@router.get("/hod/staff/{staff_id}")
-def get_hod_staff_drilldown_report(
-    staff_id: str,
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="View HOD Staff Drilldown Intelligence", dept_scoped=True))
-):
-    """
-    GET /api/reports/hod/staff/{staff_id}
-    HOD Staff Drilldown — Staff/Mentor assigned student report.
-    """
-    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-    try:
-        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
-        filename = f"Weekly_LeetCode_HOD_Staff_{staff_id}_Contest_518.xlsx"
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(f"[HOD STAFF DRILLDOWN FAILED]: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Unable to generate Staff Drilldown Report.")
-
-
-@router.get("/staff")
-def get_staff_report(
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="View Staff Mentor Student Intelligence", dept_scoped=True))
-):
-    """
-    GET /api/reports/staff
-    Staff / Mentor Report — Assigned students ONLY.
-    """
-    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-    try:
-        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
-        staff_name = str(getattr(current_user, "name", "Staff") or "Staff").replace(" ", "_")
-        filename = f"Weekly_LeetCode_Staff_{staff_name}_Contest_518.xlsx"
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(f"[STAFF REPORT FAILED]: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Unable to generate Staff Mentor Report.")
-
-
-@router.get("/download")
-def download_master_institutional_report(
-    contest_id: Optional[int] = Query(518),
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Download Master Institutional Report", dept_scoped=True))
-):
-    """
-    GET /api/reports/download
-    Server-side role-authorized 10-Sheet Master Excel Report download.
-    Contains ONLY authorized records for the authenticated user scope.
-    """
-    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-    try:
-        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user, contest_id=contest_id)
-        user_role = (getattr(current_user, "role", "") or "ROLE").upper()
-        filename = f"Weekly_LeetCode_{user_role}_Contest_{contest_id}.xlsx"
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.error(f"[MASTER REPORT DOWNLOAD FAILED]: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Unable to download Master Institutional Report.")
 
 
 

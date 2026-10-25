@@ -465,8 +465,8 @@ export const ReportsPage: React.FC = () => {
       iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       btnGradient: 'from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 shadow-indigo-600/30',
       onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/export-excel?report_type=FIVE_WEEK_PERFORMANCE_TREND${q}`, 'Five_Week_Performance_Trend_Report.xlsx');
+        const q = getActiveFilterQueryParams({ report_type: 'FIVE_WEEK_PERFORMANCE_TREND' });
+        downloadReportFile(`/reports/export-excel${q}`, 'Five_Week_Performance_Trend_Report.xlsx');
       }
     },
     {
@@ -525,8 +525,8 @@ export const ReportsPage: React.FC = () => {
       iconBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
       btnGradient: 'from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-cyan-600/30',
       onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/export-excel?report_type=WEEKLY_PERFORMANCE${q}`, 'LeetCode_Weekly_Report.xlsx');
+        const q = getActiveFilterQueryParams({ report_type: 'WEEKLY_PERFORMANCE' });
+        downloadReportFile(`/reports/export-excel${q}`, 'LeetCode_Weekly_Report.xlsx');
       }
     },
     {
@@ -555,8 +555,8 @@ export const ReportsPage: React.FC = () => {
       iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
       btnGradient: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-600/30',
       onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/export-excel?report_type=MANAGEMENT_EXECUTIVE_SUMMARY${q}`, 'Management_Executive_Summary_Report.xlsx');
+        const q = getActiveFilterQueryParams({ report_type: 'MANAGEMENT_EXECUTIVE_SUMMARY' });
+        downloadReportFile(`/reports/export-excel${q}`, 'Management_Executive_Summary_Report.xlsx');
       }
     },
     {
@@ -570,8 +570,8 @@ export const ReportsPage: React.FC = () => {
       iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       btnGradient: 'from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-sky-600/30',
       onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/export-excel?report_type=12TH_TNEA_CUTOFF_ANALYSIS${q}`, '12th_TNEA_Cutoff_Intelligence.xlsx');
+        const q = getActiveFilterQueryParams({ report_type: '12TH_TNEA_CUTOFF_ANALYSIS' });
+        downloadReportFile(`/reports/export-excel${q}`, '12th_TNEA_Cutoff_Intelligence.xlsx');
       }
     },
     {
