@@ -9,10 +9,10 @@
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
 <p align="center">
-  <a href="http://13.53.231.6"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-13.53.231.6-10B981?style=for-the-badge&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.1.7_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.2.2_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
   <a href="docs/ARCHITECTURE.md"><img alt="Architecture Guide" src="https://img.shields.io/badge/📘_Architecture-Docs-6366F1?style=for-the-badge&logo=gitbook&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.1.7_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.2.2_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Enterprise-black?style=flat-square">
-  <img alt="Release" src="https://img.shields.io/badge/Release-v3.1.7%20Production-059669?style=flat-square&logo=github">
+  <img alt="Release" src="https://img.shields.io/badge/Release-v3.2.2%20Production-059669?style=flat-square&logo=github">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square&logo=fastapi&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black">

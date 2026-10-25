@@ -78,14 +78,14 @@ We actively maintain and provide regular security patches for production release
 
 | Ecosystem Component | Supported Branch / Build | Current Production Version | Security Patch SLA | Status |
 | :--- | :--- | :--- | :--- | :---: |
-| **Web Application** | `main` | **v3.2.1** | Immediate (< 12h for Critical) | 🟢 **Active Support** |
-| **Android Native App (.APK)** | `releases/android` | **v3.2.1 (VersionCode 61)** | Same-Day Signed Re-release | 🟢 **Active Support** |
+| **Web Application** | `main` | **v3.2.2** | Immediate (< 12h for Critical) | 🟢 **Active Support** |
+| **Android Native App (.APK)** | `releases/android` | **v3.2.2 (VersionCode 62)** | Same-Day Signed Re-release | 🟢 **Active Support** |
 | **Desktop Client (.EXE)** | `releases/windows` | **v3.2.0** | Next Maintenance Window | 🟡 **Supported** |
-| **FastAPI Core Engine** | `backend/` | **v3.2.1** | Continuous Live Hotfix | 🟢 **Active Support** |
+| **FastAPI Core Engine** | `backend/` | **v3.2.2** | Continuous Live Hotfix | 🟢 **Active Support** |
 | **Historical Releases** | Tags `< v3.1.0` | Legacy Builds | End-of-Life | 🔴 **Unsupported** |
 
 > [!IMPORTANT]
-> Institutional staff, department coordinators, and student devices must keep their Android mobile application updated to **v3.2.1 or newer** to receive active cryptographic protection, authenticated report sharing, and passkey biometric enrollment.
+> Institutional staff, department coordinators, and student devices must keep their Android mobile application updated to **v3.2.2 or newer** to receive active cryptographic protection, authenticated report sharing, and passkey biometric enrollment.
 
 ---
 
@@ -169,4 +169,4 @@ Researchers who submit valid, actionable, and previously unknown vulnerabilities
 
 > [!NOTE]
 > *Nandha Engineering College (Autonomous) reserves the right to amend this Security Policy at any time. All updates are committed directly to this repository.*  
-> **Last Verified & Audited:** October 2026 • Platform Version 3.2.1
+> **Last Verified & Audited:** October 2026 • Platform Version 3.2.2
