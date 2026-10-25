@@ -77,6 +77,23 @@ def get_primary_user_id(current_user: Any) -> str:
         return f"STAFF_{current_user.id}"
     return "anonymous_user"
 
+def get_user_id_variants(current_user: Any) -> set:
+    variants = set()
+    if hasattr(current_user, "email") and current_user.email:
+        variants.add(str(current_user.email).strip().lower())
+        variants.add(str(current_user.email).strip())
+    if hasattr(current_user, "username") and current_user.username:
+        variants.add(str(current_user.username).strip())
+        variants.add(str(current_user.username).strip().lower())
+    if hasattr(current_user, "reg_no") and current_user.reg_no:
+        variants.add(str(current_user.reg_no).strip().upper())
+        variants.add(str(current_user.reg_no).strip().lower())
+    if hasattr(current_user, "id") and current_user.id is not None:
+        variants.add(str(current_user.id))
+        variants.add(f"STAFF_{current_user.id}")
+        variants.add(f"staff_{current_user.id}")
+    return variants
+
 # 1. FCM DEVICE TOKEN REGISTRATION 
 
 @router.post("/register-device")
