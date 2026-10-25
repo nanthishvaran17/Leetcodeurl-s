@@ -943,7 +943,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 leading-tight shadow-2xs">UNKNOWN</span>;
   };
 
-  const handleShareWhatsApp = async () => {
+  const handleShareWhatsApp = async (mode: 'message' | 'file' = 'message') => {
     if (isSharingWhatsApp) return;
     setIsSharingWhatsApp(true);
 
@@ -1025,11 +1025,34 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     fullShareText += `\n\n📥 *Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
     fullShareText += `\n🌐 *Live Student Portal:* ${origin}/#/dashboard`;
 
+    // Automatically copy the formatted summary text to clipboard for convenience
     try {
-      // 1. Native Mobile App (Capacitor Android APK):
-      // Fetch the actual .xlsx spreadsheet file, save it to device storage, and attach it directly to WhatsApp!
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(fullShareText);
+      }
+    } catch (_clipErr) {}
+
+    try {
+      // MODE 1: Direct WhatsApp Text Message (Pre-filled chat text with full stats and 1-tap download link)
+      if (mode === 'message') {
+        notify.success('Opening WhatsApp', 'Performance summary and download link copied to clipboard & opened in WhatsApp.', { category: 'SHARE' });
+        const encoded = encodeURIComponent(fullShareText);
+        if (isNativeMobile()) {
+          // Native Capacitor Android intent handler
+          window.location.href = `whatsapp://send?text=${encoded}`;
+        } else {
+          window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+        }
+        setIsSharingWhatsApp(false);
+        return;
+      }
+
+      // MODE 2: File Attachment (.xlsx document share)
+      // Note: Android WhatsApp strips text captions on non-media documents, so summary is saved to clipboard!
+      notify.info('Preparing Excel Attachment', 'Summary text copied to clipboard! Attaching Excel workbook...', { category: 'SHARE' });
+
+      // Native Mobile App (Capacitor Android APK):
       if (isNativeMobile()) {
-        notify.info('Preparing File for WhatsApp', 'Fetching Excel report document to attach...', { category: 'SHARE' });
         try {
           const res = await api.get(url, { responseType: 'blob' });
           if (res?.data) {
@@ -1041,7 +1064,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                 mimeType,
                 text: fullShareText,
               });
-              notify.success('Report Ready', `${filename} attached in WhatsApp share.`, { category: 'SHARE' });
+              notify.success('Excel Attached', `${filename} ready in WhatsApp. (Tip: Paste clipboard if you wish to include the summary text).`, { category: 'SHARE' });
               setIsSharingWhatsApp(false);
               return;
             }
@@ -1051,7 +1074,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         }
       }
 
-      // 2. Web Share API Level 2 (Browsers with file sharing support, e.g. Mobile Chrome)
+      // Web Share API Level 2 (Browsers with file sharing support)
       if (typeof navigator !== 'undefined' && (navigator as any).canShare && typeof File !== 'undefined') {
         try {
           const res = await api.get(url, { responseType: 'blob' });
@@ -1072,10 +1095,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         }
       }
 
-      // 3. Desktop browser fallback: Trigger Excel file download & open WhatsApp Web
+      // Desktop browser fallback: Trigger Excel file download & open WhatsApp Web
       try {
         await downloadFile('excel');
-        notify.success('Excel Report Downloaded', `${filename} saved to your device. You can attach it in WhatsApp or send the direct link.`, { category: 'SHARE' });
+        notify.success('Excel Report Downloaded', `${filename} saved. Opening WhatsApp Web with summary.`, { category: 'SHARE' });
       } catch (_e) {}
 
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
@@ -4184,28 +4207,53 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         </span>
                       </button>
 
-                      {/* WhatsApp Share */}
+                      {/* WhatsApp Summary & Link */}
                       <button
                         type="button"
                         disabled={isSharingWhatsApp}
-                        onClick={() => { handleShareWhatsApp(); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
+                        onClick={() => { handleShareWhatsApp('message'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-emerald-500/20 dark:border-emerald-500/30 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
                             <Share2 className="w-5 h-5" />
                           </div>
                           <div className="text-left min-w-0">
                             <div className="text-xs font-black text-slate-900 dark:text-white">
-                              {isSharingWhatsApp ? 'Attaching Report File...' : 'Share to WhatsApp'}
+                              Share to WhatsApp
                             </div>
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                              Attach Excel report (.xlsx) &amp; summary
+                              Full summary text + 1-tap Excel download
                             </div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
-                          WHATSAPP
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 shrink-0">
+                          TEXT + LINK
+                        </span>
+                      </button>
+
+                      {/* Attach Excel Workbook */}
+                      <button
+                        type="button"
+                        disabled={isSharingWhatsApp}
+                        onClick={() => { handleShareWhatsApp('file'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-teal-50 dark:hover:bg-teal-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <FileSpreadsheet className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">
+                              {isSharingWhatsApp ? 'Attaching Report File...' : 'Attach Excel Document'}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                              Direct .xlsx file &amp; copy text to clipboard
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-teal-100/70 text-teal-700 dark:bg-teal-950 dark:text-teal-300 shrink-0">
+                          .XLSX FILE
                         </span>
                       </button>
 
@@ -4240,7 +4288,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   </div>
 
                   {/* DESKTOP POPOVER MENU (>= sm) */}
-                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-60 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
+                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-64 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
                     <button
                       onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-colors cursor-pointer"
@@ -4269,15 +4317,29 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                     <button
                       disabled={isSharingWhatsApp}
-                      onClick={() => { handleShareWhatsApp(); setMoreMenuOpen(false); }}
+                      onClick={() => { handleShareWhatsApp('message'); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
                     >
                       <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
                         <Share2 className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="truncate">{isSharingWhatsApp ? 'Attaching File...' : 'Share to WhatsApp'}</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Attach Excel file &amp; summary</span>
+                        <span className="truncate">Share to WhatsApp</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Summary text + Excel link</span>
+                      </div>
+                    </button>
+
+                    <button
+                      disabled={isSharingWhatsApp}
+                      onClick={() => { handleShareWhatsApp('file'); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-950/40 hover:text-teal-600 dark:hover:text-teal-400 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 shrink-0">
+                        <FileSpreadsheet className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate">{isSharingWhatsApp ? 'Attaching File...' : 'Attach Excel Document'}</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Direct .xlsx file &amp; copy text</span>
                       </div>
                     </button>
 
