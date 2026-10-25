@@ -13,6 +13,12 @@ import os
 import json
 import argparse
 
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -126,14 +132,14 @@ def main():
         ).count()
 
         print("\n" + "=" * 60)
-        print("🎉 CONTEST 525 RE-SYNC COMPLETED SUCCESSFULLY!")
+        print("[SUCCESS] CONTEST 525 RE-SYNC COMPLETED SUCCESSFULLY!")
         print("=" * 60)
-        print(f"  • Total Students Processed: {total_students}")
-        print(f"  • Public / Live Attended:  {public_count}")
-        print(f"  • Not Attended:            {not_attended_count}")
-        print(f"  • Matched Solvers in JSON: {len(scanned_data)}")
+        print(f"  * Total Students Processed: {total_students}")
+        print(f"  * Public / Live Attended:  {public_count}")
+        print(f"  * Not Attended:            {not_attended_count}")
+        print(f"  * Matched Solvers in JSON: {len(scanned_data)}")
         print("=" * 60)
-        print("✅ Cache cleared. Dashboard on AWS will now immediately show full live solvers!\n")
+        print("[INFO] Cache cleared. Dashboard on AWS will now immediately show full live solvers!\n")
 
     except Exception as e:
         db.rollback()
