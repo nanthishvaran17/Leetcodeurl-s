@@ -314,6 +314,27 @@ export const ChatWindow: React.FC<Props> = ({
   // Typing debounce timer
   const typingTimerRef = useRef<any>(null);
   const touchTimerRef = useRef<any>(null);
+  const longPressedRef = useRef(false);
+  const [menuPlacement, setMenuPlacement] = useState<'top' | 'bottom'>('top');
+
+  const openMessageMenu = (msgId: string, targetEl?: HTMLElement | null) => {
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      // If limited space below (<280px) or more room above, open ABOVE ("mela vara")
+      if (spaceBelow < 280 && spaceAbove > 180) {
+        setMenuPlacement('top');
+      } else if (spaceBelow >= 260) {
+        setMenuPlacement('bottom');
+      } else {
+        setMenuPlacement('top');
+      }
+    } else {
+      setMenuPlacement('top');
+    }
+    setActiveMenuMessageId(msgId);
+  };
 
   // Auto scroll behavior
   useEffect(() => {
@@ -804,7 +825,8 @@ export const ChatWindow: React.FC<Props> = ({
                       ? "w-full max-w-[250px] sm:max-w-[270px]"
                       : "w-fit max-w-[85%] sm:max-w-[75%] md:max-w-[65%]",
                     isMe ? "ml-auto items-end" : "mr-auto items-start",
-                    marginTopClass
+                    marginTopClass,
+                    isMenuOpen ? "z-50" : "z-0"
                   )}
                 >
                   {/* Message Bubble Container */}
@@ -812,16 +834,27 @@ export const ChatWindow: React.FC<Props> = ({
                     onClick={(e) => {
                       const target = e.target as HTMLElement;
                       if (target.closest('a') || target.closest('video') || target.closest('audio') || target.closest('button')) return;
-                      setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                      if (longPressedRef.current) {
+                        longPressedRef.current = false;
+                        return;
+                      }
+                      if (isMenuOpen) {
+                        setActiveMenuMessageId(null);
+                      } else {
+                        openMessageMenu(msg.messageId, e.currentTarget);
+                      }
                     }}
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                      openMessageMenu(msg.messageId, e.currentTarget);
                     }}
-                    onTouchStart={() => {
+                    onTouchStart={(e) => {
+                      const currentTarget = e.currentTarget;
+                      longPressedRef.current = false;
                       touchTimerRef.current = setTimeout(() => {
-                        setActiveMenuMessageId(msg.messageId);
-                      }, 350);
+                        longPressedRef.current = true;
+                        openMessageMenu(msg.messageId, currentTarget);
+                      }, 400);
                     }}
                     onTouchEnd={() => {
                       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
@@ -961,7 +994,11 @@ export const ChatWindow: React.FC<Props> = ({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                        if (isMenuOpen) {
+                          setActiveMenuMessageId(null);
+                        } else {
+                          openMessageMenu(msg.messageId, e.currentTarget);
+                        }
                       }}
                       className={clsx(
                         "hidden sm:flex opacity-0 group-hover:opacity-100 absolute -top-2.5 p-1 rounded-full shadow-md cursor-pointer transition-all z-20 items-center justify-center",
@@ -975,10 +1012,10 @@ export const ChatWindow: React.FC<Props> = ({
                     </button>
                   </div>
 
-                  {/* Transparent Backdrop to close on click outside */}
+                  {/* Backdrop to focus message and close on click outside */}
                   {isMenuOpen && (
                     <div 
-                      className="fixed inset-0 z-30" 
+                      className="fixed inset-0 z-40 bg-black/25 dark:bg-black/45 backdrop-blur-[1px] transition-opacity animate-in fade-in duration-150" 
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveMenuMessageId(null);
@@ -986,18 +1023,19 @@ export const ChatWindow: React.FC<Props> = ({
                     />
                   )}
 
-                  {/* Context Menu Dropdown */}
+                  {/* Context Menu Dropdown - Smart Placement: opens ABOVE ("mela vara") by default or BELOW if space */}
                   {isMenuOpen && (
                     <div 
                       onClick={(e) => e.stopPropagation()}
                       className={clsx(
-                        "absolute top-8 z-40 w-56 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-[#151D2A] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-100",
+                        "absolute z-50 w-56 max-w-[calc(100vw-2.5rem)] bg-white/95 dark:bg-[#1a2329]/95 backdrop-blur-md border border-slate-200/90 dark:border-white/10 rounded-2xl shadow-2xl p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150 select-none",
+                        menuPlacement === 'top' ? "bottom-full mb-2" : "top-full mt-2",
                         isMe ? "right-0" : "left-0"
                       )}
                     >
                       {/* Quick Reactions Bar */}
                       {!msg.isDeletedEveryone && (
-                        <div className="flex items-center justify-between px-2 py-1 mb-1 bg-slate-50 dark:bg-navy-950/60 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                        <div className="flex items-center justify-between px-2.5 py-1 mb-1 bg-slate-100/90 dark:bg-black/35 rounded-xl border border-slate-200/60 dark:border-white/5">
                           {['👍', '❤️', '😂', '😮', '🎉', '🔥'].map((emoji) => (
                             <button
                               key={emoji}
@@ -1006,7 +1044,7 @@ export const ChatWindow: React.FC<Props> = ({
                                 onToggleReaction(msg.messageId, emoji);
                                 setActiveMenuMessageId(null);
                               }}
-                              className="hover:scale-125 transition-transform p-1 text-base cursor-pointer"
+                              className="hover:scale-130 active:scale-95 transition-transform p-1 text-base cursor-pointer"
                               title={`React ${emoji}`}
                             >
                               {emoji}
@@ -1025,9 +1063,9 @@ export const ChatWindow: React.FC<Props> = ({
                             setActiveMenuMessageId(null);
                             setTimeout(() => textInputRef.current?.focus(), 50);
                           }}
-                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
+                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
                         >
-                          <Reply className="w-4 h-4 text-brand-500" />
+                          <Reply className="w-4 h-4 text-emerald-500" />
                           <span>Reply</span>
                         </button>
                       )}
@@ -1060,7 +1098,7 @@ export const ChatWindow: React.FC<Props> = ({
                             handleCopyText(msg.content);
                             setActiveMenuMessageId(null);
                           }}
-                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
+                          className="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
                         >
                           <Copy className="w-4 h-4 text-slate-500" />
                           <span>Copy Text</span>
@@ -1083,7 +1121,7 @@ export const ChatWindow: React.FC<Props> = ({
                       )}
 
                       {!msg.isDeletedEveryone && (
-                        <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                        <div className="h-px bg-slate-100 dark:bg-white/10 my-1" />
                       )}
 
                       {/* Delete for me */}
@@ -1145,7 +1183,7 @@ export const ChatWindow: React.FC<Props> = ({
       </div>
 
       {/* Floating Scroll Bottom Button */}
-      {showScrollBottom && (
+      {showScrollBottom && !activeMenuMessageId && (
         <button
           onClick={() => {
             if (scrollContainerRef.current) {
