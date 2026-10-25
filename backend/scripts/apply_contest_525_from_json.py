@@ -39,8 +39,11 @@ if "sqlite" in str(engine.url):
 CANDIDATE_PATHS = [
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "contest_525_authentic_scanned_solvers.json"),
     os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "contest_525_authentic_scanned_solvers.json"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "contest_525_authentic_scanned_solvers.json"),
+    "/var/www/leetcode-tracker/data/contest_525_authentic_scanned_solvers.json",
     "/var/www/leetcode-tracker/contest_525_authentic_scanned_solvers.json",
     "/var/www/leetcode-tracker/backend/scripts/contest_525_authentic_scanned_solvers.json",
+    "data/contest_525_authentic_scanned_solvers.json",
     "contest_525_authentic_scanned_solvers.json"
 ]
 
