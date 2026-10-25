@@ -2,16 +2,16 @@
   "specVersion": "1.0",
   "host": {
     "displayName": "Nandha Engineering College (Autonomous)",
-    "identifier": "did:web:13.53.231.6",
-    "documentationUrl": "http://13.53.231.6/docs",
-    "logoUrl": "http://13.53.231.6/pwa-512x512.png"
+    "identifier": "did:web:nandha-leetcode.duckdns.org",
+    "documentationUrl": "https://nandha-leetcode.duckdns.org/docs",
+    "logoUrl": "https://nandha-leetcode.duckdns.org/pwa-512x512.png"
   },
   "entries": [
     {
       "identifier": "urn:air:nandhaengg.org:server:leetcode-tracker",
       "displayName": "Nandha LeetCode Tracker & Contest Intelligence Agent",
       "type": "application/agent-card+json",
-      "url": "http://13.53.231.6/api/public/stats",
+      "url": "https://nandha-leetcode.duckdns.org/api/public/stats",
       "description": "Provides real-time contest leaderboard, student analytics, and attendance telemetry.",
       "tags": ["education", "coding", "analytics", "leaderboard", "leetcode"],
       "representativeQueries": [
@@ -24,7 +24,7 @@
       "identifier": "urn:air:nandhaengg.org:skills:llms-txt",
       "displayName": "Nandha Platform Documentation for LLMs",
       "type": "text/markdown; profile=\"urn:air:agent-skills\"",
-      "url": "http://13.53.231.6/llms.txt",
+      "url": "https://nandha-leetcode.duckdns.org/llms.txt",
       "description": "Comprehensive institutional architecture and agent discovery manual.",
       "tags": ["documentation", "llms", "guide"],
       "representativeQueries": [
