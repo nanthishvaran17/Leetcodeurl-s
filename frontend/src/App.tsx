@@ -1426,9 +1426,8 @@ export const App: React.FC = () => {
           </div>
         )}
 
-      {/* PWA App Install & Notification Banners */}
+      {/* App Update & Notification Banners */}
       <Suspense fallback={null}>
-        <InstallAppPrompt />
         <AppUpdateNotifier />
         {showShareModal && (
           <StudentShareCardModal
