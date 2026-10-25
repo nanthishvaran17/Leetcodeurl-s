@@ -46,6 +46,10 @@ async def global_csrf_middleware(request: Request, call_next):
 
             allowed_origins = [
                 "https://leetcodeurl-s-roan.vercel.app",
+                "https://nandha-leetcode.duckdns.org",
+                "http://nandha-leetcode.duckdns.org",
+                "http://13.53.231.6",
+                "https://13.53.231.6",
                 "capacitor://localhost", "ionic://localhost",
                 "http://localhost", "https://localhost",
                 "http://127.0.0.1", "https://127.0.0.1"
@@ -70,7 +74,7 @@ async def global_csrf_middleware(request: Request, call_next):
                 is_valid = True
             elif any(clean_origin.startswith(s) for s in ("capacitor://", "ionic://", "app://", "file://")):
                 is_valid = True
-            elif re.match(r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt|onrender\.com|github\.io|ngrok-free\.app)$", clean_origin):
+            elif re.match(r"^https?://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt|onrender\.com|github\.io|ngrok-free\.app|duckdns\.org)$", clean_origin):
                 is_valid = True
                 
             if not is_valid:

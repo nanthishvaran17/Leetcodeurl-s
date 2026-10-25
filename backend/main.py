@@ -942,6 +942,10 @@ async def add_performance_monitoring_middleware(request, call_next):
 # CORS Configuration
 origins = [
     "https://leetcodeurl-s-roan.vercel.app",
+    "https://nandha-leetcode.duckdns.org",
+    "http://nandha-leetcode.duckdns.org",
+    "http://13.53.231.6",
+    "https://13.53.231.6",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
@@ -970,7 +974,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://(leetcodeurl-s|nandha-leetcode)[a-zA-Z0-9-]*\.(vercel\.app|web\.app|firebaseapp\.com)|https://.*\.nandhaengg\.org|http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?",
+    allow_origin_regex=r"https://(leetcodeurl-s|nandha-leetcode)[a-zA-Z0-9-]*\.(vercel\.app|web\.app|firebaseapp\.com|duckdns\.org)|https://.*\.nandhaengg\.org|http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

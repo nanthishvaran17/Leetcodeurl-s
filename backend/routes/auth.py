@@ -238,6 +238,10 @@ def validate_csrf_origin(request: Request):
     # Core Production & App origins
     allowed_origins = [
         "https://leetcodeurl-s-roan.vercel.app",
+        "https://nandha-leetcode.duckdns.org",
+        "http://nandha-leetcode.duckdns.org",
+        "http://13.53.231.6",
+        "https://13.53.231.6",
         "capacitor://localhost",
         "ionic://localhost",
         "http://localhost",
@@ -271,8 +275,8 @@ def validate_csrf_origin(request: Request):
     if any(clean_origin.startswith(scheme) for scheme in ("capacitor://", "ionic://", "app://", "file://")):
         return
 
-    # 4. Standard hosted deployments (*.vercel.app, *.netlify.app, *.web.app, *.firebaseapp.com, *.pages.dev, *.loca.lt, *.onrender.com, *.github.io)
-    deployment_pattern = r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt|onrender\.com|github\.io|ngrok-free\.app)$"
+    # 4. Standard hosted deployments (*.vercel.app, *.netlify.app, *.web.app, *.firebaseapp.com, *.pages.dev, *.loca.lt, *.onrender.com, *.github.io, *.duckdns.org)
+    deployment_pattern = r"^https?://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt|onrender\.com|github\.io|ngrok-free\.app|duckdns\.org)$"
     if re.match(deployment_pattern, clean_origin):
         return
 
