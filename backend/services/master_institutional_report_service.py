@@ -486,7 +486,8 @@ def generate_master_10_sheet_workbook(
     data_ver = get_current_data_version(db)
     u_role = (getattr(current_user, "role", "") or "").lower()
     u_dept = str(getattr(current_user, "department_id", "") or "")
-    cache_key = f"excel:{data_ver}:{u_role}:{u_dept}:{contest_id}:{department}:{year}:{report_type}"
+    u_id = str(getattr(current_user, "id", "0"))
+    cache_key = f"excel:{data_ver}:{u_role}:{u_dept}:user_{u_id}:{contest_id}:{department}:{year}:{report_type}"
 
     with _EXCEL_CACHE_LOCK:
         pass

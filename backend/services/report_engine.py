@@ -93,6 +93,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
                 config.filters["dept"] = auth_codes[0]
     data_ver = get_current_data_version(db)
 
+    u_id = getattr(current_user, "id", None)
     raw_key = json.dumps({
         "type": canon_report_code,
         "dept": (config.department or "").upper(),
@@ -101,6 +102,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "filters": config.filters or {},
         "role": user_role,
         "u_dept": user_dept,
+        "u_id": u_id,
         "ver": data_ver
     }, sort_keys=True)
     cache_key = hashlib.md5(raw_key.encode("utf-8")).hexdigest()

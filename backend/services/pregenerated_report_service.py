@@ -132,20 +132,30 @@ def get_or_create_report(
 
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
     user_dept = str(getattr(current_user, "department_id", "ALL"))
-    from backend.services.authorization_service import _STAFF_ROLES
-    if user_role in ("hod", "department hod", "department_hod"):
-        from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
-        h_ids = get_hod_authorized_department_ids(db, current_user)
-        user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
-        auth_codes = get_hod_authorized_department_codes(db, current_user)
-        if auth_codes and (clean_filters.get("department") in (None, "ALL", "") or clean_filters.get("dept") in (None, "ALL", "")):
-            clean_filters["department"] = auth_codes[0]
-            clean_filters["dept"] = auth_codes[0]
-        user_scope = f"hod:{user_dept}"
-    elif user_role in _STAFF_ROLES or user_role in ("faculty", "staff", "faculty coordinator", "staff coordinator", "mentor"):
-        user_scope = f"{user_role}:user_{getattr(current_user, 'id', '0')}"
-    else:
-        user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
+    u_id = getattr(current_user, "id", None)
+    has_assigned_mentees = False
+    if u_id and user_role not in ("admin", "administrator", "super admin", "super_admin", "principal", "management"):
+        from backend.services.faculty_assignment_service import FacultyAssignmentService
+        mentee_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(u_id))
+        if mentee_ids:
+            has_assigned_mentees = True
+            user_scope = f"faculty_mentees:user_{u_id}"
+
+    if not has_assigned_mentees:
+        from backend.services.authorization_service import _STAFF_ROLES
+        if user_role in ("hod", "department hod", "department_hod"):
+            from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
+            h_ids = get_hod_authorized_department_ids(db, current_user)
+            user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
+            auth_codes = get_hod_authorized_department_codes(db, current_user)
+            if auth_codes and (clean_filters.get("department") in (None, "ALL", "") or clean_filters.get("dept") in (None, "ALL", "")):
+                clean_filters["department"] = auth_codes[0]
+                clean_filters["dept"] = auth_codes[0]
+            user_scope = f"hod:{user_dept}"
+        elif user_role in _STAFF_ROLES or user_role in ("faculty", "staff", "faculty coordinator", "staff coordinator", "mentor"):
+            user_scope = f"{user_role}:user_{getattr(current_user, 'id', '0')}"
+        else:
+            user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
 
     ext_info = EXT_MEDIA_TYPES.get(format.lower().strip(), ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
     ext, mime_type = ext_info
@@ -168,12 +178,12 @@ def get_or_create_report(
             ReportCache.data_version == curr_version
         ).order_by(ReportCache.id.desc()).first()
 
-        # Fallback to legacy lookup by institution_id + week_id + file_type ONLY if no active filters are requested
+        # Fallback to legacy lookup by institution_id + week_id + file_type ONLY if no active filters are requested and not a mentee-scoped user
         has_specific_filters = any(
             str(clean_filters.get(k) or "").upper() not in ("ALL", "", "NONE")
             for k in ("department", "dept", "year", "year_level", "attendance", "status", "search")
         )
-        if not cached and not has_specific_filters:
+        if not cached and not has_specific_filters and not has_assigned_mentees:
             clean_week_id = str(clean_filters.get("week_id") or clean_filters.get("session_id") or "latest").lower().strip()
             cached = db.query(ReportCache).filter(
                 ReportCache.institution_id == institution_id,
@@ -545,7 +555,7 @@ def generate_report_bytes(
             year=year,
             filters=flt
         )
-        ds = build_hist_intel_report(db, config)
+        ds = build_hist_intel_report(db, config, current_user=current_user)
         if fmt in ("excel", "xlsx"):
             return export_dynamic_excel(ds)
         elif fmt == "pdf":

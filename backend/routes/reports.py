@@ -2088,31 +2088,29 @@ def _get_dataset_for_id(
             from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
             from backend.services.faculty_assignment_service import FacultyAssignmentService
             role_clean = _normalize_role(current_user)
-            if role_clean in _STAFF_ROLES:
-                assigned_ids = set(FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id)))
-                if assigned_ids:
-                    assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
-                    assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
-                    assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
-                    assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
+            u_id = getattr(current_user, "id", None)
+            assigned_ids = set(FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(u_id))) if u_id else set()
+            if assigned_ids and role_clean not in ("admin", "administrator", "super admin", "super_admin", "principal", "management"):
+                assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
+                assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
+                assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
+                assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
 
-                    filtered_report_rows = []
-                    for r in rows:
-                        r_id = str(r.get("student_id") or r.get("id") or "").strip()
-                        r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
-                        r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
-                        if r_reg:
-                            if r_reg in assigned_reg_nos:
-                                filtered_report_rows.append(r)
-                        elif r_id:
-                            if r_id in assigned_ids_str:
-                                filtered_report_rows.append(r)
-                        elif r_uname:
-                            if r_uname in assigned_usernames:
-                                filtered_report_rows.append(r)
-                    rows = filtered_report_rows
-                else:
-                    rows = []
+                filtered_report_rows = []
+                for r in rows:
+                    r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                    r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                    r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                    if r_reg:
+                        if r_reg in assigned_reg_nos:
+                            filtered_report_rows.append(r)
+                    elif r_id:
+                        if r_id in assigned_ids_str:
+                            filtered_report_rows.append(r)
+                    elif r_uname:
+                        if r_uname in assigned_usernames:
+                            filtered_report_rows.append(r)
+                rows = filtered_report_rows
 
                 # Reconcile dataset aggregates (metrics, batch_summaries, totalStudents) to match the scoped rows
                 batch_map = {}
@@ -2293,34 +2291,29 @@ def _get_dataset_for_id(
                 from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
                 from backend.services.faculty_assignment_service import FacultyAssignmentService
                 role_clean = _normalize_role(current_user)
-                if role_clean in _STAFF_ROLES:
-                    # Staff: filter by assigned student IDs
-                    assigned_ids = set(
-                        FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id))
-                    )
-                    if assigned_ids:
-                        assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
-                        assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
-                        assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
-                        assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
+                u_id = getattr(current_user, "id", None)
+                assigned_ids = set(FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(u_id))) if u_id else set()
+                if assigned_ids and role_clean not in ("admin", "administrator", "super admin", "super_admin", "principal", "management"):
+                    assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
+                    assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
+                    assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
+                    assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
 
-                        filtered_raw_rows = []
-                        for r in all_raw_rows:
-                            r_id = str(r.get("student_id") or r.get("id") or "").strip()
-                            r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
-                            r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
-                            if r_reg:
-                                if r_reg in assigned_reg_nos:
-                                    filtered_raw_rows.append(r)
-                            elif r_id:
-                                if r_id in assigned_ids_str:
-                                    filtered_raw_rows.append(r)
-                            elif r_uname:
-                                if r_uname in assigned_usernames:
-                                    filtered_raw_rows.append(r)
-                        all_raw_rows = filtered_raw_rows
-                    else:
-                        all_raw_rows = []
+                    filtered_raw_rows = []
+                    for r in all_raw_rows:
+                        r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                        r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                        r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                        if r_reg:
+                            if r_reg in assigned_reg_nos:
+                                filtered_raw_rows.append(r)
+                        elif r_id:
+                            if r_id in assigned_ids_str:
+                                filtered_raw_rows.append(r)
+                        elif r_uname:
+                            if r_uname in assigned_usernames:
+                                filtered_raw_rows.append(r)
+                    all_raw_rows = filtered_raw_rows
                 elif role_clean in _HOD_ROLES:
                     # HOD: filter by department (matches both department_id and department code)
                     from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
