@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.2.2_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.2.3_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
   <a href="docs/ARCHITECTURE.md"><img alt="Architecture Guide" src="https://img.shields.io/badge/📘_Architecture-Docs-6366F1?style=for-the-badge&logo=gitbook&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.2.2_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.2.3_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Enterprise-black?style=flat-square">
-  <img alt="Release" src="https://img.shields.io/badge/Release-v3.2.2%20Production-059669?style=flat-square&logo=github">
+  <img alt="Release" src="https://img.shields.io/badge/Release-v3.2.3%20Production-059669?style=flat-square&logo=github">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square&logo=fastapi&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black">
@@ -182,6 +182,7 @@ The platform provides dedicated, isolated administrative tools tailored for acad
 * **Departmental Isolation:** Clean boundary isolation for Computer Science (CSE), Information Technology (IT), Electronics & Communication (ECE), Electrical & Electronics (EEE), Artificial Intelligence & Data Science (AI&DS), and Computer Science & Business Systems (CSBS).
 * **Workload Optimization Matrix:** Eliminates the classic "30-mentee bottleneck" by dynamically distributing students among faculty mentors with automated performance tracking.
 * **Faculty Action Queue:** Automated flagging for students showing sudden contest drops, inactive streaks, or rating plateaus, with action logs for compliance and internal audits.
+* **Dynamic Faculty Mentee Allocation & Zero-Leakage Scoping:** Strict server-side and client-side boundary isolation for faculty, mentors, and advisors. When any faculty member views live contest reviews or downloads Excel reports, all student rosters, solve cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended), and turnout analytics strictly scope to their allocated mentees (`FacultyStudentAssignment`), with zero department-wide or college-wide count leakage.
 
 ---
 
@@ -218,8 +219,10 @@ Reporting is a fully automated, hands-free core workflow:
 * **Multi-Tab Executive Excel Workbooks:** Built with custom OpenPyXL generators containing:
   * Master college summary with embedded official emblems
   * Department-by-department score breakdown
-  * Faculty mentor distribution reports
+  * Faculty mentor distribution reports (strictly scoped to assigned mentees with zero cross-faculty leakage)
   * Question-wise (Q1-Q4) solver matrices with conditional styling
+  * **Sheet 14 (Week-on-Week Intelligence)** & **Sheet 15 (Historical Contest Intel)** dynamically synchronized to role-based mentee boundaries
+* **Isolated User-Hashed Report Cache (`user_{id}`):** Sub-500ms downloads powered by deterministic filter hashes and user-isolated cache partitions, guaranteeing that faculty downloads never collide with college-wide caches.
 * **Official Executive PDF Reports:** Generated using ReportLab with exact institutional typography, watermark seals, and statistical summaries.
 * **Brevo API Automated Dispatch:** Delivers Sunday reports directly to Principal and HOD inboxes with idempotent delivery logs and retry backoff.
 * **Meta WhatsApp Cloud API:** Sends personalized performance and rank updates to students upon contest finalization.
