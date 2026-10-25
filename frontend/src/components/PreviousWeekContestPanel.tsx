@@ -1165,35 +1165,6 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
 
           <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
-            {/* Celebrate Solvers with Confetti & Fanfare */}
-            <button
-              onClick={() => {
-                triggerHaptic('success');
-                triggerCelebration();
-              }}
-              title="Trigger Confetti Celebration & Fanfare"
-              className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-white text-xs font-black shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation border border-amber-300/30"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Celebrate Solvers</span>
-            </button>
-
-            {/* HOD / Admin Broadcast Studio to Alert Absent Students */}
-            {isAdminOrHod && (
-              <button
-                onClick={() => {
-                  triggerHaptic('medium');
-                  setBroadcastResult(null);
-                  setBroadcastModalOpen(true);
-                }}
-                title="Open Broadcast Studio to Alert Absent Students"
-                className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation border border-rose-400/40"
-              >
-                <Megaphone className="w-3.5 h-3.5" />
-                <span>Alert Absent Students</span>
-              </button>
-            )}
-
             <button
               onClick={() => {
                 triggerHaptic('medium');
