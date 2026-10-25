@@ -167,19 +167,21 @@ export const getStartTimeInfo = (contestTitle?: string) => {
 };
 
 export const normalizeYear = (val: string | null | undefined, regNo?: string | null): string => {
+  // 1. Authoritative check: Register Number always determines admission year
+  if (regNo) {
+    const r = String(regNo).toUpperCase().trim();
+    if (r.includes('732225') || r.includes('73225') || r.includes('25IT') || r.includes('25CC') || r.includes('25CI') || r.includes('25CS')) return 'II';
+    if (r.includes('732224') || r.includes('24IT') || r.includes('24CC') || r.includes('24CI') || r.includes('24CS')) return 'III';
+    if (r.includes('732223') || r.includes('23IT') || r.includes('23CC') || r.includes('23CI') || r.includes('23CS')) return 'IV';
+    if (r.includes('732226') || r.includes('26IT') || r.includes('26CC') || r.includes('26CI') || r.includes('26CS')) return 'I';
+  }
+  // 2. Fallback to explicit stored value
   if (val) {
     const s = String(val).toUpperCase().replace(/YEAR/gi, '').trim();
     if (s === '1' || s === 'I' || s === '1ST' || s === 'FIRST') return 'I';
     if (s === '2' || s === 'II' || s === '2ND' || s === 'SECOND') return 'II';
     if (s === '3' || s === 'III' || s === '3RD' || s === 'THIRD') return 'III';
     if (s === '4' || s === 'IV' || s === '4TH' || s === 'FOURTH' || s === 'FINAL') return 'IV';
-  }
-  if (regNo) {
-    const r = String(regNo).toUpperCase().trim();
-    if (r.includes('732225') || r.includes('73225') || r.startsWith('25') || r.includes('25CC') || r.includes('25CI') || r.includes('25CS') || r.includes('25IT')) return 'II';
-    if (r.includes('732224') || r.startsWith('24') || r.includes('24CC') || r.includes('24CI') || r.includes('24CS') || r.includes('24IT')) return 'III';
-    if (r.includes('732223') || r.startsWith('23') || r.includes('23CC') || r.includes('23CI') || r.includes('23CS') || r.includes('23IT')) return 'IV';
-    if (r.includes('732226') || r.startsWith('26') || r.includes('26CC') || r.includes('26CI') || r.includes('26CS') || r.includes('26IT')) return 'I';
   }
   return '';
 };
