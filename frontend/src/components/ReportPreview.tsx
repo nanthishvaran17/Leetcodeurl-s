@@ -12,6 +12,7 @@ interface ReportPreviewProps {
 }
 
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/authContextDef';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -72,6 +73,7 @@ const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean 
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
   const { notify } = useNotification();
+  const { user: currentUser } = useAuth();
   useScrollLock(true);
   const [report, setReport] = useState<any>(initialData || null);
   const [loading, setLoading] = useState(!initialData);
@@ -879,23 +881,51 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (isSharingWhatsApp) return;
     setIsSharingWhatsApp(true);
 
-    const deptName = report?.department_name || report?.department || 'Nandha Engineering College';
+    const deptName = report?.department_name || report?.department || 'CSE (Cyber Security)';
     const contestTitle = report?.contestName || report?.title || 'Weekly Contest Performance Report';
-    const total = conditionStats?.totalStudents || allRows.length || 0;
-    const s4 = conditionStats?.s4 ?? 0;
-    const s3 = conditionStats?.s3 ?? 0;
-    const s2 = conditionStats?.s2 ?? 0;
-    const s1 = conditionStats?.s1 ?? 0;
-    const absent = (conditionStats as any)?.absent ?? conditionStats?.notAttendedCount ?? 0;
 
-    let text = `📊 *${deptName} — LeetCode Performance Summary*\n` +
-      `🗓 *Contest:* ${contestTitle}\n` +
-      `👥 *In Scope Students:* ${total}\n` +
-      `🏆 *4/4 Solved:* ${s4}\n` +
-      `🥇 *3/4 Solved:* ${s3}\n` +
-      `🥈 *2/4 Solved:* ${s2}\n` +
-      `🥉 *1/4 Solved:* ${s1}\n` +
-      `⚠️ *Absent / Not Attended:* ${absent}\n`;
+    // Authoritative dynamic metrics without hardcoded static counts
+    const total = totalRosterCount || conditionStats?.totalStudents || displayedStudents?.length || allRows.length || 0;
+    const attended = actualParticipantCount;
+    const absent = notAttendedCount;
+    const s4 = s4Count;
+    const s3 = s3Count;
+    const s2 = s2Count;
+    const s1 = s1Count;
+    const s0 = s0Count;
+
+    // Logged in User Attribution (Admin / HOD / Staff Coordinator)
+    const rawName = currentUser?.full_name || currentUser?.displayName || currentUser?.name || 'Academic Coordinator';
+    const senderName = rawName.trim();
+    const rawRole = (currentUser?.role || '').toLowerCase();
+
+    let senderRoleTitle = 'Faculty Coordinator';
+    if (rawRole.includes('admin') || rawRole.includes('super')) {
+      senderRoleTitle = 'System Administrator';
+    } else if (rawRole.includes('hod') || rawRole.includes('head')) {
+      senderRoleTitle = `Head of Department • ${currentUser?.department || deptName}`;
+    } else if (currentUser?.designation) {
+      senderRoleTitle = `${currentUser.designation}`;
+    } else if (rawRole.includes('faculty') || rawRole.includes('staff')) {
+      senderRoleTitle = 'Faculty Coordinator';
+    }
+
+    let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
+      `*Department of ${deptName}*\n\n` +
+      `📊 *LEETCODE PERFORMANCE REPORT*\n` +
+      `• *Contest:* ${contestTitle}\n` +
+      `• *Total Students:* ${total}\n` +
+      `• *Attended:* ${attended} (${turnoutPercentage})\n` +
+      `• *Absent / Not Attended:* ${absent} (${absentPercentage})\n\n` +
+      `*Solve Breakdown:*\n` +
+      `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+      `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+      `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+      `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
+
+    if (s0 > 0) {
+      text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
+    }
 
     if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
       text += `\n*Batch Breakdown:*\n`;
@@ -907,6 +937,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       });
     }
 
+    text += `\n*Shared by:* *${senderName}* (${senderRoleTitle})`;
+
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nandha-leetcode.duckdns.org';
     const { url, filename, mimeType } = getReportDownloadMeta('excel');
     const shareTokenParam = report?.share_token ? `&share_token=${report.share_token}` : '';
@@ -915,7 +947,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     let fullShareText = text;
     fullShareText += `\n\n📥 *Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
     fullShareText += `\n🌐 *Live Student Portal:* ${origin}/#/dashboard`;
-    fullShareText += `\n\n🚀 *Nandha Engineering College (Autonomous)*`;
 
     try {
       // 1. Native Mobile App (Capacitor Android APK):
