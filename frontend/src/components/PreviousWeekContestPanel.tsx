@@ -779,13 +779,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Silent automatic background polling every 8 seconds so UI updates seamlessly without manual reloads
+  // Silent automatic background polling every 10 seconds so UI updates seamlessly without manual reloads (ideal for TV displays)
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchPreviousWeekData(false, true);
       }
-    }, 120000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [sessionId]);

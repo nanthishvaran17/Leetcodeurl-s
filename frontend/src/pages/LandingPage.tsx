@@ -975,12 +975,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-1">
           <div className="flex items-center space-x-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse shrink-0" />
+            <div className={`w-2.5 h-2.5 rounded-full ${summaryData?.is_session_live ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-brand-500'} animate-pulse shrink-0`} />
             <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
               {summaryData?.is_session_live ? 'Live Sunday Monitoring Session' : 'Next Sunday Session Timer'}
             </span>
           </div>
-          <span className="text-xs font-extrabold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 px-3.5 py-1.5 rounded-full border border-brand-200/80 dark:border-brand-500/40 shadow-xs whitespace-nowrap self-start sm:self-auto">
+          <span className={`text-xs font-extrabold px-3.5 py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors ${
+            summaryData?.is_session_live
+              ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/90 dark:border-emerald-500/40 shadow-xs'
+              : 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 border-brand-200/80 dark:border-brand-500/40 shadow-xs'
+          }`}>
             Official Window: 08:00 AM – 09:30 AM IST
           </span>
         </div>

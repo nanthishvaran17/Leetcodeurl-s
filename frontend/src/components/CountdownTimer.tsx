@@ -124,34 +124,27 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
   return (
     <motion.div
-      whileHover={{ scale: 1.003 }}
+      whileHover={{ scale: 1.002 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 shadow-2xl relative overflow-hidden backdrop-blur-2xl ${
+      className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 relative overflow-hidden backdrop-blur-xl ${
         isSessionLive
-          ? 'bg-gradient-to-r from-[#061e16]/95 via-[#061814]/90 to-[#040d0f]/95 border-emerald-500/30 shadow-emerald-950/40 text-white'
-          : 'bg-gradient-to-r from-[#0b0f19]/95 via-[#0d1326]/90 to-[#070a12]/95 border-white/[0.08] shadow-glass-dark text-white'
+          ? 'bg-white border-emerald-200/90 shadow-[0_10px_35px_-8px_rgba(16,185,129,0.15),0_4px_12px_rgba(0,0,0,0.02)]'
+          : 'bg-white border-slate-200/90 shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12),0_4px_12px_rgba(0,0,0,0.02)]'
       }`}
     >
-      {/* Dynamic Ambient Background Glow Elements */}
+      {/* Soft Pastel Ambient Glow Halos (Clean White Atmosphere) */}
       <div 
-        className={`absolute -top-20 -right-20 w-72 h-72 rounded-full blur-[90px] pointer-events-none transition-all duration-700 ${
+        className={`absolute -top-24 -right-24 w-80 h-80 rounded-full blur-[90px] pointer-events-none transition-all duration-700 ${
           isSessionLive 
-            ? 'bg-emerald-500/30 animate-pulse' 
-            : 'bg-indigo-500/25'
+            ? 'bg-emerald-100/70' 
+            : 'bg-indigo-100/60'
         }`} 
       />
       <div 
-        className={`absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-[90px] pointer-events-none transition-all duration-700 ${
+        className={`absolute -bottom-24 -left-24 w-80 h-80 rounded-full blur-[90px] pointer-events-none transition-all duration-700 ${
           isSessionLive 
-            ? 'bg-teal-400/25' 
-            : 'bg-blue-500/20'
-        }`} 
-      />
-      <div 
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 rounded-full blur-[110px] pointer-events-none transition-all duration-700 ${
-          isSessionLive 
-            ? 'bg-emerald-400/10' 
-            : 'bg-violet-500/15'
+            ? 'bg-teal-100/60' 
+            : 'bg-blue-100/60'
         }`} 
       />
 
@@ -160,32 +153,35 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
         {/* Left Section: Live Beacon & Title */}
         <div className="flex items-center space-x-4">
           
-          {/* Glowing Animated Icon Badge */}
+          {/* Animated Icon Badge */}
           <div className="relative flex items-center justify-center shrink-0">
             {isSessionLive ? (
               <>
-                <span className="absolute -inset-1.5 rounded-2xl bg-emerald-400/40 blur-md animate-ping opacity-75" />
-                <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 border border-emerald-300/40 text-white shadow-lg shadow-emerald-500/30">
+                <span className="absolute -inset-1 rounded-2xl bg-emerald-400/30 blur-sm animate-ping opacity-60" />
+                <div className="relative p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25 border border-emerald-400/40 flex items-center justify-center">
                   <Radio className="w-6 h-6 text-white animate-pulse stroke-[2.5]" />
                 </div>
               </>
             ) : (
-              <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-600 border border-indigo-300/40 text-white shadow-lg shadow-indigo-500/30">
+              <div className="relative p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25 border border-indigo-400/30 flex items-center justify-center">
                 <Clock className="w-6 h-6 text-white stroke-[2.5]" />
               </div>
             )}
           </div>
 
           {/* Titles and Badges */}
-          <div className="space-y-1 flex-1 min-w-0">
+          <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h4 className="font-black text-xl sm:text-2xl tracking-tight flex items-center gap-2 w-full">
+              <h4 className="font-black text-xl sm:text-2xl tracking-tight flex items-center gap-2 w-full text-slate-900">
                 {isSessionLive ? (
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 truncate block w-full">
-                    SUNDAY SESSION LIVE NOW
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-slate-900 font-black">SUNDAY SESSION</span>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 font-black">
+                      LIVE NOW
+                    </span>
                   </span>
                 ) : (
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-blue-200 drop-shadow-sm line-clamp-2 break-words max-w-full">
+                  <span className="text-slate-900 font-black line-clamp-2 break-words max-w-full">
                     {timing.headerTitle}
                   </span>
                 )}
@@ -193,100 +189,107 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
               {/* Status Pill Badge */}
               {isSessionLive ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-400/40 shadow-sm backdrop-blur-md">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-200/90 shadow-xs">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-80"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-400"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
                   </span>
                   <span>LIVE WINDOW ACTIVE</span>
                 </span>
               ) : timing.phase === 'COUNTDOWN_TODAY' ? (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-sm backdrop-blur-md">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Starting Today</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 shadow-xs">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  <span>STARTING TODAY</span>
                 </span>
-              ) : null}
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-black uppercase tracking-wider bg-brand-50 text-brand-700 border border-brand-200 shadow-xs">
+                  <Clock className="w-3.5 h-3.5 text-brand-600" />
+                  <span>COUNTDOWN ACTIVE</span>
+                </span>
+              )}
             </div>
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-indigo-500/15 border border-indigo-400/30 text-indigo-200 text-xs sm:text-[13px] font-bold backdrop-blur-md mt-1.5 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-300 shrink-0 animate-pulse" />
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-[13px] font-bold shadow-xs ${
+              isSessionLive
+                ? 'bg-emerald-50/80 border border-emerald-200 text-emerald-800'
+                : 'bg-slate-50 border border-slate-200 text-slate-700'
+            }`}>
+              <Sparkles className={`w-3.5 h-3.5 shrink-0 ${
+                isSessionLive ? 'text-emerald-600 animate-pulse' : 'text-brand-600'
+              }`} />
               <span className="line-clamp-2 break-words max-w-full">{timing.subTitle}</span>
             </div>
           </div>
         </div>
 
-        {/* Right Section: Time Counter Digit Cards */}
+        {/* Right Section: Time Counter Digit Cards (Clean White Elevated Cards) */}
         <div className="flex items-center space-x-2 sm:space-x-3 self-center sm:self-auto font-mono">
           {!isSessionLive && (
             <>
               {/* Days Box */}
               <div className="flex flex-col items-center">
-                <div className="px-4 py-3 rounded-2xl bg-indigo-950/80 backdrop-blur-md border border-indigo-400/40 text-white shadow-lg shadow-indigo-950/50 min-w-[60px] sm:min-w-[68px] text-center">
-                  <span className="text-2xl sm:text-3xl font-mono font-black text-indigo-300 drop-shadow-[0_0_10px_rgba(165,180,252,0.4)]">
+                <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
+                  <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
                     {time.days}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono font-extrabold mt-1.5 uppercase tracking-widest text-indigo-200/80">
+                <span className="text-[10px] font-mono font-black mt-1.5 uppercase tracking-widest text-slate-500">
                   DAYS
                 </span>
               </div>
-              <span className="text-xl sm:text-2xl font-mono font-black text-indigo-300/60 mb-4">:</span>
+              <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 mb-4 animate-pulse">:</span>
             </>
           )}
 
           {/* Hours Box */}
           <div className="flex flex-col items-center">
-            <div className="px-4 py-3 rounded-2xl bg-indigo-950/80 backdrop-blur-md border border-indigo-400/40 text-white shadow-lg shadow-indigo-950/50 min-w-[60px] sm:min-w-[68px] text-center">
-              <span className="text-2xl sm:text-3xl font-mono font-black text-indigo-100 drop-shadow-[0_0_12px_rgba(199,210,254,0.45)]">
+            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
+              <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
                 {time.hours}
               </span>
             </div>
-            <span className="text-[10px] font-mono font-extrabold mt-1.5 uppercase tracking-widest text-indigo-200/80">
+            <span className="text-[10px] font-mono font-black mt-1.5 uppercase tracking-widest text-slate-500">
               HOURS
             </span>
           </div>
 
-          <span className="text-xl sm:text-2xl font-mono font-black text-indigo-300/60 mb-4 animate-pulse">:</span>
+          <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 mb-4 animate-pulse">:</span>
 
           {/* Minutes Box */}
           <div className="flex flex-col items-center">
-            <div className="px-4 py-3 rounded-2xl bg-indigo-950/80 backdrop-blur-md border border-indigo-400/40 text-white shadow-lg shadow-indigo-950/50 min-w-[60px] sm:min-w-[68px] text-center">
-              <span className="text-2xl sm:text-3xl font-mono font-black text-indigo-200 drop-shadow-[0_0_12px_rgba(165,180,252,0.45)]">
+            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
+              <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
                 {time.minutes}
               </span>
             </div>
-            <span className="text-[10px] font-mono font-extrabold mt-1.5 uppercase tracking-widest text-indigo-200/80">
+            <span className="text-[10px] font-mono font-black mt-1.5 uppercase tracking-widest text-slate-500">
               MINS
             </span>
           </div>
 
-          <span className="text-xl sm:text-2xl font-mono font-black text-indigo-300/60 mb-4 animate-pulse">:</span>
+          <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 mb-4 animate-pulse">:</span>
 
-          {/* Seconds Box - Neon Live Pill */}
+          {/* Seconds Box - Hero Accent Card on White */}
           <div className="flex flex-col items-center">
-            <div className={`px-4 py-3 rounded-2xl min-w-[60px] sm:min-w-[68px] text-center shadow-lg transition-all ${
+            <div className={`relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl min-w-[58px] sm:min-w-[66px] text-center shadow-sm transition-all ${
               isSessionLive 
-                ? 'bg-gradient-to-b from-emerald-500 to-teal-600 border border-emerald-300/50 text-white shadow-emerald-500/30 animate-pulse' 
-                : 'bg-gradient-to-b from-indigo-500 via-indigo-600 to-blue-600 border border-indigo-300/50 text-white shadow-indigo-500/30'
+                ? 'bg-gradient-to-b from-emerald-50 to-emerald-100/60 border border-emerald-300 shadow-emerald-500/10' 
+                : 'bg-gradient-to-b from-brand-50 to-indigo-100/60 border border-brand-300 shadow-brand-500/10'
             }`}>
-              <span className="text-2xl sm:text-3xl font-mono font-black drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]">
+              <span className={`text-2xl sm:text-3xl font-mono font-black ${
+                isSessionLive 
+                  ? 'text-emerald-600' 
+                  : 'text-brand-600'
+              }`}>
                 {time.seconds}
               </span>
             </div>
-            <span className="text-[10px] font-mono font-extrabold mt-1.5 uppercase tracking-widest text-indigo-200/80">
+            <span className={`text-[10px] font-mono font-black mt-1.5 uppercase tracking-widest ${
+              isSessionLive ? 'text-emerald-700' : 'text-brand-700'
+            }`}>
               SECS
             </span>
           </div>
-
-          {/* Live Activity Pulse Visualizer */}
-          {isSessionLive && (
-            <div className="hidden sm:flex items-end space-x-1 h-8 pl-3 pb-4">
-              <span className="w-1 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite_100ms] h-full" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite_300ms] h-3/4" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite_200ms] h-5/6" />
-              <span className="w-1 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite_400ms] h-1/2" />
-            </div>
-          )}
         </div>
 
       </div>
