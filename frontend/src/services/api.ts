@@ -286,7 +286,7 @@ api.interceptors.response.use(
       if (!config._triedFallback && typeof window !== 'undefined') {
         config._triedFallback = true;
         const currentBase = config.baseURL || '';
-        const fallbackBase = currentBase.includes('vercel.app') ? 'http://13.53.231.6/api' : 'https://leetcodeurl-s-roan.vercel.app/api';
+        const fallbackBase = currentBase.includes('vercel.app') ? 'https://nandha-leetcode.duckdns.org/api' : 'https://leetcodeurl-s-roan.vercel.app/api';
         console.warn(`[AUTH_FAILOVER] Primary auth server unreachable. Retrying via ${fallbackBase}...`);
         config.baseURL = fallbackBase;
         return api(config);
