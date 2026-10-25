@@ -9,19 +9,29 @@
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
 <p align="center">
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Scale" src="https://img.shields.io/badge/Scale-1%2C500%2B%20Students-059669?style=for-the-badge&logo=googleclassroom&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Architecture" src="https://img.shields.io/badge/Stack-FastAPI%20%7C%20React%2018%20%7C%20PostgreSQL-2563EB?style=for-the-badge&logo=react&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Autopilot" src="https://img.shields.io/badge/Autopilot-Sunday%20Contest%20Engine-7C3AED?style=for-the-badge&logo=temporal&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Evidence" src="https://img.shields.io/badge/Data-Evidence--First%20Forensics-DC2626?style=for-the-badge&logo=shield&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Mobile" src="https://img.shields.io/badge/PWA%20%26%20Android-Native%20APK%20Ready-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="http://13.53.231.6"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-13.53.231.6-10B981?style=for-the-badge&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.1.7_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="docs/ARCHITECTURE.md"><img alt="Architecture Guide" src="https://img.shields.io/badge/📘_Architecture-Docs-6366F1?style=for-the-badge&logo=gitbook&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.1.7_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Scale" src="https://img.shields.io/badge/Scale-1%2C500%2B%20Students-059669?style=flat-square&logo=googleclassroom&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Architecture" src="https://img.shields.io/badge/Stack-FastAPI%20%7C%20React%2018%20%7C%20PostgreSQL-2563EB?style=flat-square&logo=react&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Autopilot" src="https://img.shields.io/badge/Autopilot-Sunday%20Contest%20Engine-7C3AED?style=flat-square&logo=temporal&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Evidence" src="https://img.shields.io/badge/Data-Evidence--First%20Forensics-DC2626?style=flat-square&logo=shield&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s"><img alt="Mobile" src="https://img.shields.io/badge/PWA%20%26%20Android-Native%20APK%20Ready-F59E0B?style=flat-square&logo=android&logoColor=white"></a>
 </p>
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Enterprise-black?style=flat-square">
-  <img alt="Status" src="https://img.shields.io/badge/Release-v3.1.7%20Production-success?style=flat-square">
-  <img alt="Status" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-blue?style=flat-square&logo=python">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.2%2B-blue?style=flat-square&logo=typescript">
-  <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA%20%26%20NAAC%20Ready-teal?style=flat-square">
+  <img alt="Release" src="https://img.shields.io/badge/Release-v3.1.7%20Production-059669?style=flat-square&logo=github">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.2%2B-3178C6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white">
+  <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA%20%26%20NAAC%20'A%2B'-teal?style=flat-square">
 </p>
 
 ### *Track every contest. Forensically verify every record. Empower 1,500+ student careers.*
@@ -30,41 +40,31 @@
 
 ---
 
-## 📑 Table of Contents
+## 🧭 Navigation & Architecture Directory
 
-<table>
-<tr>
-<td valign="top" width="33%">
+<div align="center">
 
-- [🌟 Executive Overview](#-executive-overview)
-- [📸 Live Production Showcase](#-live-production-showcase)
-- [⚡ Autonomous Sunday Contest Engine](#-autonomous-sunday-contest-engine)
-- [🔬 Level 4 Forensic Verification](#-level-4-forensic-verification)
-- [🏛️ HOD Command Center & Governance](#️-hod-command-center--governance)
+| Section | Description | Status |
+|:---|:---|:---:|
+| [🌟 Executive Overview](#-executive-overview) | Institutional analytics paradigm & collegiate scale | `Enterprise Ready` |
+| [📸 Live Production Showcase](#-live-production-showcase) | 4K Dashboard, 360° Radar, Compare Arena & HR Studio | `Interactive UI` |
+| [⚡ Sunday Contest Autopilot](#-autonomous-sunday-contest-engine) | 4-phase hands-free contest telemetry pipeline | `100% Autonomous` |
+| [🔬 Level 4 Forensic Verification](#-level-4-forensic-verification) | Strict Q1-Q4 binary solve timestamps & tamper audit | `Forensic Proof` |
+| [🏛️ HOD Command Center](#️-hod-command-center--governance) | Department isolation & faculty mentoring matrix | `Governance` |
+| [🎯 360° DSA Competency Radar](#-360-radar--student-analytics) | Skill radar, progression curves, submission heatmaps | `Analytics` |
+| [⚔️ Head-to-Head Compare Arena](#-head-to-head-compare-arena) | Direct peer-to-peer benchmarking & solve differentials | `Live Arena` |
+| [💼 HR Placement Intelligence](#-hr-placement-intelligence-finder) | Placement recruitment filters & candidate spotlight | `Talent Discovery` |
+| [💎 Emerald Vault & Smart ID Pass](#-emerald-vault--smart-id-pass) | 25-Year Celebration PVC Smart ID & Hall of Fame | `Physical + Digital` |
+| [🎓 NAAC & NBA Accreditation Studio](#-naac--nba-accreditation-studio) | Criteria 2 & 5 automated quantitative dossiers | `NBA / NAAC Ready` |
+| [📊 Multi-Channel Automated Dispatch](#-automated-reporting--brevo-email) | Excel Workbooks, Cryptographic PDFs, Brevo & WhatsApp | `Automated` |
+| [🏗️ System Architecture](#️-system-architecture) | End-to-end telemetry flowchart & pipeline model | `Microservices` |
+| [📘 Developer Architecture Guide](docs/ARCHITECTURE.md) | Deep technical architecture documentation | `Technical Docs` |
+| [🛡️ Evidence-First Integrity Model](#️-evidence-first-integrity-model) | Strict "never guess missing data" philosophy | `Zero Falsehood` |
+| [💻 Production Technology Stack](#-technology-stack) | FastAPI, React 18, PostgreSQL, Capacitor 7, Vite | `Modern Stack` |
+| [🚀 Quick Start & Deployment Guide](#-quick-start--deployment-guide) | Local development, Docker & AWS production deploy | `One-Click Run` |
+| [👥 Institutional Leadership](#-institutional-leadership) | Engineering faculty, college administration & contributors | `Nandha Engg` |
 
-</td>
-<td valign="top" width="33%">
-
-- [🎯 360° Radar & Student Analytics](#-360-radar--student-analytics)
-- [⚔️ Head-to-Head Compare Arena](#️-head-to-head-compare-arena)
-- [💼 HR Placement Intelligence Finder](#-hr-placement-intelligence-finder)
-- [💎 Emerald Vault & Smart ID Pass](#-emerald-vault--smart-id-pass)
-- [🎓 NAAC & NBA Accreditation Studio](#-naac--nba-accreditation-studio)
-
-</td>
-<td valign="top" width="33%">
-
-- [📊 Automated Reporting & Brevo Email](#-automated-reporting--brevo-email)
-- [🏗️ System Architecture](#️-system-architecture)
-- [📘 Developer Architecture Guide (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)
-- [🛡️ Evidence-First Integrity Model](#️-evidence-first-integrity-model)
-- [💻 Technology Stack](#-technology-stack)
-- [🚀 Quick Start & Deployment Guide](#-quick-start--deployment-guide)
-- [👥 Institutional Leadership](#-institutional-leadership)
-
-</td>
-</tr>
-</table>
+</div>
 
 ---
 
@@ -299,47 +299,48 @@ In enterprise academic systems, an erroneous mark can damage a student's career.
 
 ---
 
-## 💻 Technology Stack
+## 💻 Production Technology Stack
 
 <table>
 <tr>
-<th width="33%">Frontend & Client</th>
-<th width="33%">Backend & Core</th>
-<th width="33%">Data & Infrastructure</th>
+<th width="33%" align="center">🎨 Frontend & Client</th>
+<th width="33%" align="center">⚙️ Backend & Core Engine</th>
+<th width="33%" align="center">☁️ Data & Cloud Infrastructure</th>
 </tr>
 <tr>
 <td valign="top">
 
-* **Core:** React 18, TypeScript 5.2+
-* **Build:** Vite 5 (Ultra-fast HMR)
-* **Styling:** Tailwind CSS, Custom Design System
-* **State Management:** TanStack React Query v5
-* **Data Visualization:** Recharts, Lucide Icons
-* **Mobile / PWA:** Vite PWA Plugin, Workbox
-* **Native Android:** Capacitor 7 Native Android Wrapper
-* **UI Interactions:** Native Bottom Sheet Drawers, Pull-To-Refresh, Skeleton Grids
+- ![React](https://img.shields.io/badge/React_18.3-20232A?style=flat-square&logo=react&logoColor=61DAFB) **React 18 & TypeScript 5.2+**
+- ![Vite](https://img.shields.io/badge/Vite_5.4-646CFF?style=flat-square&logo=vite&logoColor=white) **Vite 5** (Ultra-fast HMR)
+- ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) **Tailwind CSS & Design Tokens**
+- ![TanStack](https://img.shields.io/badge/React_Query_v5-FF4154?style=flat-square&logo=react-query&logoColor=white) **TanStack React Query v5**
+- ![Capacitor](https://img.shields.io/badge/Capacitor_7-119EFF?style=flat-square&logo=capacitor&logoColor=white) **Capacitor 7 Native Android App**
+- ![Recharts](https://img.shields.io/badge/Recharts-22C55E?style=flat-square&logo=chartdotjs&logoColor=white) **Recharts & Lucide Icons**
+- ![PWA](https://img.shields.io/badge/PWA_Ready-5A0FC8?style=flat-square&logo=pwa&logoColor=white) **PWA & Offline Service Workers**
+- 📱 **Native Drawers & Tactile Haptic Chimes**
 
 </td>
 <td valign="top">
 
-* **Framework:** Python 3.10+ / FastAPI
-* **Server:** Uvicorn ASGI with Multi-Worker Pool
-* **ORM:** SQLAlchemy 2.0 with Thread Pool Isolation
-* **Scheduler:** APScheduler (Background automation)
-* **Real-Time:** WebSockets with Connection Heartbeats
-* **Email:** Brevo HTTP REST API (Transaction service)
-* **Messaging:** Meta WhatsApp Cloud API Agent
-* **Exporters:** OpenPyXL (Excel), ReportLab (PDF)
+- ![FastAPI](https://img.shields.io/badge/FastAPI_0.115-009688?style=flat-square&logo=fastapi&logoColor=white) **FastAPI High-Speed Async Core**
+- ![Python](https://img.shields.io/badge/Python_3.10+-3776AB?style=flat-square&logo=python&logoColor=white) **Python 3.10+ ASGI Engine**
+- ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy_2.0-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white) **SQLAlchemy 2.0 ORM**
+- ![WebSocket](https://img.shields.io/badge/WebSockets-010101?style=flat-square&logo=socketdotio&logoColor=white) **Real-Time WebSocket Mesh**
+- ![APScheduler](https://img.shields.io/badge/APScheduler-4285F4?style=flat-square&logo=google-cloud&logoColor=white) **Multi-Job Cron Daemons**
+- ![Brevo](https://img.shields.io/badge/Brevo_Email_API-0B996F?style=flat-square&logo=maildotru&logoColor=white) **Brevo Transactional Dispatch**
+- ![WhatsApp](https://img.shields.io/badge/WhatsApp_Cloud_API-25D366?style=flat-square&logo=whatsapp&logoColor=white) **Meta WhatsApp Cloud API Agent**
+- 📄 **OpenPyXL (Excel) & ReportLab (PDF)**
 
 </td>
 <td valign="top">
 
-* **Primary Database:** PostgreSQL 16
-* **Local Fallback:** SQLite with WAL Mode (Write-Ahead Logging) & 60s Busy Timeout
-* **Containerization:** Docker Multi-Stage Build, Docker Compose
-* **Web Server:** Nginx Reverse Proxy (SSL, WebSocket Upgrades)
-* **CI / CD:** GitHub Actions (Sunday Autopilot, Tests, Lint, Android Build)
-* **Process Manager:** Systemd Linux Service / NSSM Windows Daemon
+- ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=flat-square&logo=postgresql&logoColor=white) **PostgreSQL 16 Primary Database**
+- ![SQLite](https://img.shields.io/badge/SQLite_WAL-003B57?style=flat-square&logo=sqlite&logoColor=white) **SQLite WAL Resilience Engine**
+- ![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?style=flat-square&logo=docker&logoColor=white) **Multi-Stage Docker Containers**
+- ![Nginx](https://img.shields.io/badge/Nginx_Reverse_Proxy-009639?style=flat-square&logo=nginx&logoColor=white) **Nginx SSL & WSS Proxy**
+- ![AWS](https://img.shields.io/badge/AWS_EC2_Ubuntu-FF9900?style=flat-square&logo=amazon-aws&logoColor=white) **AWS EC2 Ubuntu 24.04 LTS**
+- ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white) **Automated CI/CD Workflows**
+- 🛡️ **Level-4 Cryptographic Audit Trail**
 
 </td>
 </tr>
