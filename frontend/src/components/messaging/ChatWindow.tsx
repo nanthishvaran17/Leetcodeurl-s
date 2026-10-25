@@ -510,27 +510,27 @@ export const ChatWindow: React.FC<Props> = ({
       <div
         onClick={() => !msg.isUploading && handleDownloadFileAttachment(msg.attachmentFileId, fname)}
         className={clsx(
-          "flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl transition-all border group/file select-none w-full max-w-full overflow-hidden",
-          msg.isUploading ? "cursor-wait opacity-80" : "cursor-pointer hover:shadow-md active:scale-[0.99]",
+          "flex items-center gap-2 p-1.5 rounded-xl transition-all cursor-pointer select-none w-full border",
+          msg.isUploading ? "cursor-wait opacity-80" : "hover:opacity-90 active:scale-[0.99]",
           isMe
-            ? "bg-black/15 hover:bg-black/25 border-white/20 text-white shadow-xs"
-            : "bg-slate-50 dark:bg-[#182229] hover:bg-slate-100 dark:hover:bg-[#202c33] border-slate-200/80 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 shadow-xs"
+            ? "bg-black/15 border-white/20 text-white"
+            : "bg-slate-50 dark:bg-[#1a2329] border-slate-200/80 dark:border-slate-700/80 text-slate-900 dark:text-slate-100"
         )}
       >
-        <div className={clsx("p-2 sm:p-2.5 rounded-xl shrink-0 transition-transform group-hover/file:scale-105", iconBg)}>
+        <div className={clsx("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-xs", iconBg)}>
           {msg.isUploading ? (
-            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <IconComp className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-xs" />
+            <IconComp className="w-4 h-4" />
           )}
         </div>
 
         <div className="flex-1 min-w-0 pr-1 overflow-hidden">
-          <div className="text-[12.5px] sm:text-[13px] font-bold truncate leading-snug tracking-tight">
-            {msg.isUploading ? "Uploading file..." : fname}
+          <div className="text-[12px] font-bold truncate leading-tight tracking-tight">
+            {msg.isUploading ? "Uploading..." : fname}
           </div>
-          <div className={clsx("text-[10px] sm:text-[11px] font-medium flex items-center gap-1.5 mt-0.5 opacity-85", isMe ? "text-white/85" : "text-slate-500 dark:text-slate-400")}>
-            <span className="uppercase font-bold tracking-wider px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] bg-black/15 dark:bg-white/10 shrink-0">
+          <div className={clsx("text-[9.5px] font-medium flex items-center gap-1.5 mt-0.5 opacity-85", isMe ? "text-white/80" : "text-slate-500 dark:text-slate-400")}>
+            <span className="uppercase font-bold tracking-wider px-1 py-0.2 rounded text-[8px] bg-black/15 dark:bg-white/10 shrink-0">
               {typeLabel}
             </span>
             {sizeFormatted && <span className="truncate">• {sizeFormatted}</span>}
@@ -540,14 +540,14 @@ export const ChatWindow: React.FC<Props> = ({
         {!msg.isUploading && (
           <div
             className={clsx(
-              "p-2 rounded-full shrink-0 transition-all border shadow-xs group-hover/file:scale-110 ml-auto",
+              "w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all border shadow-xs ml-auto",
               isMe
                 ? "bg-white/20 hover:bg-white/30 border-white/30 text-white"
                 : "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400"
             )}
             title="Download File"
           >
-            <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+            <Download className="w-3.5 h-3.5 stroke-[2.5]" />
           </div>
         )}
       </div>
@@ -779,6 +779,13 @@ export const ChatWindow: React.FC<Props> = ({
             const replySender = String(msg.replyToMessage?.senderId || '').trim().toLowerCase();
             const isReplyFromOther = otherIdentifiers.has(replySender) || (replySender.startsWith('staff_') && otherIdentifiers.has(replySender.substring(6)));
 
+            const hasAttachment = Boolean(msg.attachmentFileId || msg.localMediaUrl);
+            const isMediaAttachment = Boolean(
+              msg.localMediaUrl ||
+              (msg.fileMimeType && (msg.fileMimeType.startsWith('image/') || msg.fileMimeType.startsWith('video/')))
+            );
+            const isDocAttachment = hasAttachment && !isMediaAttachment;
+
             return (
               <React.Fragment key={msg.messageId}>
                 {showDateHeader && (
@@ -792,7 +799,10 @@ export const ChatWindow: React.FC<Props> = ({
                 <div
                   id={`msg-${msg.messageId}`}
                   className={clsx(
-                    "flex flex-col w-fit max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative",
+                    "flex flex-col group relative",
+                    isDocAttachment
+                      ? "w-full max-w-[250px] sm:max-w-[270px]"
+                      : "w-fit max-w-[85%] sm:max-w-[75%] md:max-w-[65%]",
                     isMe ? "ml-auto items-end" : "mr-auto items-start",
                     marginTopClass
                   )}
@@ -820,7 +830,10 @@ export const ChatWindow: React.FC<Props> = ({
                       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
                     }}
                     className={clsx(
-                      "px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed cursor-pointer select-text transition-all",
+                      "rounded-2xl text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed cursor-pointer select-text transition-all",
+                      isDocAttachment
+                        ? "p-1.5 w-full"
+                        : "px-3 py-1.5 sm:px-3.5 sm:py-2",
                       msg.isDeletedEveryone
                         ? clsx(
                             "border italic select-none shadow-none",
@@ -861,9 +874,9 @@ export const ChatWindow: React.FC<Props> = ({
                     )}
 
                     {/* Attachment / Media Render */}
-                    {(msg.attachmentFileId || msg.localMediaUrl) && !msg.isDeletedEveryone && (
-                      <div className={clsx("min-w-[200px]", msg.content ? "mb-1.5" : "")}>
-                        {msg.localMediaUrl || (msg.fileMimeType && (msg.fileMimeType.startsWith('image/') || msg.fileMimeType.startsWith('video/'))) ? (
+                    {hasAttachment && !msg.isDeletedEveryone && (
+                      <div className={clsx("w-full", msg.content ? "mb-1.5" : "")}>
+                        {isMediaAttachment ? (
                           <div className="relative group/media overflow-hidden rounded-xl border border-slate-200/50 bg-black/5 dark:bg-white/5">
                             {msg.fileMimeType?.startsWith('video/') ? (
                               <video src={msg.localMediaUrl || `${getApiUrl(`/messaging/attachments/${msg.attachmentFileId}`)}?token=${localStorage.getItem('token')}`} controls className="w-full max-h-64 object-contain rounded-xl" />
@@ -893,11 +906,9 @@ export const ChatWindow: React.FC<Props> = ({
                           {isMe ? "You deleted this message" : "This message was deleted"}
                         </span>
                       </div>
-                    ) : (
-                      <div className="relative text-[13.5px] sm:text-[14px] leading-relaxed break-words [word-break:break-word] [overflow-wrap:anywhere]">
-                        {msg.content && (
-                          <span className="inline whitespace-pre-wrap">{msg.content}</span>
-                        )}
+                    ) : msg.content ? (
+                      <div className="relative text-[13.5px] sm:text-[14px] leading-relaxed break-words [word-break:break-word] [overflow-wrap:anywhere] mt-1 px-1">
+                        <span className="inline whitespace-pre-wrap">{msg.content}</span>
                         {/* Inline Floating Timestamp & Delivery Ticks */}
                         <span className={clsx(
                           "inline-flex items-center gap-1 float-right translate-y-1 ml-2.5 pl-1 select-none text-[10px] font-medium leading-none whitespace-nowrap",
@@ -920,12 +931,12 @@ export const ChatWindow: React.FC<Props> = ({
                           )}
                         </span>
                       </div>
-                    )}
+                    ) : null}
 
-                    {/* If Attachment only without text content, show timestamp nestled inside */}
-                    {!msg.content && (msg.attachmentFileId || msg.localMediaUrl) && !msg.isDeletedEveryone && (
+                    {/* If Attachment only without text content, show timestamp nestled inside bottom right */}
+                    {!msg.content && hasAttachment && !msg.isDeletedEveryone && (
                       <div className={clsx(
-                        "flex items-center justify-end gap-1 mt-1 select-none text-[10px] font-medium leading-none",
+                        "flex items-center justify-end gap-1 mt-1 pr-1 select-none text-[10px] font-medium leading-none",
                         isMe ? "text-white/75" : "text-slate-400 dark:text-slate-400"
                       )}>
                         <span>{formatTime(msg.createdAt)}</span>
