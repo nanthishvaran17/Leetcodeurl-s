@@ -40,9 +40,9 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   // Determine current user ID for chat alignment (prioritizes unique institutional IDs over shared emails)
   useEffect(() => {
     try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      if (u.reg_no) {
-        setCurrentUserStr(String(u.reg_no).trim().toUpperCase());
+      const u = user || JSON.parse(localStorage.getItem('user') || '{}');
+      if (u.reg_no || (u as any).regNo) {
+        setCurrentUserStr(String(u.reg_no || (u as any).regNo).trim().toUpperCase());
       } else if (u.role && String(u.role).toLowerCase() !== 'student') {
         setCurrentUserStr(u.id ? `STAFF_${u.id}` : (u.username || u.email || 'STAFF'));
       } else if (u.username) {
@@ -53,7 +53,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         setCurrentUserStr(String(u.id));
       }
     } catch(e) {}
-  }, []);
+  }, [user]);
 
   // Deep Link Auto-Navigation from Notification tap or AI Chat share links
   useEffect(() => {

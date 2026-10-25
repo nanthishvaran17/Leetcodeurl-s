@@ -12,6 +12,10 @@ export interface Conversation {
     type?: 'STAFF' | 'STUDENT' | 'UNKNOWN';
     isOnline?: boolean;
     profileUrl?: string;
+    email?: string;
+    username?: string;
+    regNo?: string;
+    reg_no?: string;
   };
   lastMessagePreview: string | null;
   lastMessageAt: string | null;
