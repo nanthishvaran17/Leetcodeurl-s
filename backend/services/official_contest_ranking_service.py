@@ -345,7 +345,8 @@ class OfficialContestRankingService:
                 prob_set = ContestProblemAccuracyEngine.resolve_official_problem_set(c_num)
                 for p in prob_set.problems[:4]:
                     q_slugs.append(normalize_slug(p.title_slug))
-                    q_keys.append(str(p.question_id))
+                    p_qid = getattr(p, 'problem_id', None) or getattr(p, 'question_id', None) or ''
+                    q_keys.append(str(p_qid))
             except Exception as e:
                 logger.warning(f"[GRAPHQL_SCAN] Problem accuracy engine fallback: {e}")
 

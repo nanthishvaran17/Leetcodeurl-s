@@ -692,7 +692,10 @@ def seed_institutional_historical_sessions(db: Session):
         target_cnt = AUTHENTIC_COUNTS.get(c_num, 0)
         # Re-seed if count or roster size is mismatched
         if (c_num <= 515 and curr_pub_cnt != target_cnt) or len(existing_results) != len(students):
+            for r in existing_results:
+                db.expunge(r)
             db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess.id).delete(synchronize_session=False)
+            db.flush()
 
             # Determine designated participant reg_nos for this contest
             participant_reg_nos = set()

@@ -1112,8 +1112,9 @@ class UniversalWeeklyContestAutopilot:
             now_ist = get_current_ist_datetime()
             is_sunday = (now_ist.weekday() == 6)
 
-            session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-            if not session:
+            today_dates = [now_ist.strftime('%d.%m.%Y'), now_ist.strftime('%Y-%m-%d'), now_ist.strftime('%d-%m-%Y')]
+            session = db.query(WeeklySession).filter(WeeklySession.session_date.in_(today_dates)).first()
+            if not session or session.status in ("FINALIZED", "LOCKED", "ARCHIVED"):
                 return
 
             current_time = now_ist.time()
@@ -1128,7 +1129,7 @@ class UniversalWeeklyContestAutopilot:
                 db.commit()
                 self.current_phase = "LIVE"
             elif is_sunday and current_time >= time_0930 and session.status in ("LIVE", "RUNNING", "SCHEDULED"):
-                logger.info(f"[AUTOPILOT_RECOVERY] Detected unfinalized contest past 09:30 AM IST. Running auto finalization...")
+                logger.info(f"[AUTOPILOT_RECOVERY] Detected unfinalized contest past 09:30 AM IST for today ({session.session_date}). Running auto finalization...")
                 self.phase_4_finalization_and_reconciliation(session.id, db)
                 self.phase_5_report_generation(session.id, db)
         except Exception as e:

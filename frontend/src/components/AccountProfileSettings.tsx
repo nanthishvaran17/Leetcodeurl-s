@@ -4125,9 +4125,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         <Camera className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
                         <span>Profile Picture &amp; Avatar</span>
                       </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 sm:px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/60">Self Editable</span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.photo ? 'rotate-180 text-brand-600' : ''}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/60 whitespace-nowrap inline-flex items-center justify-center">
+                          Self Editable
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.photo ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
@@ -4258,9 +4260,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personal details &amp; primary contact record</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 sm:px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/60">Self Editable</span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.contact ? 'rotate-180 text-brand-600' : ''}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/60 whitespace-nowrap inline-flex items-center justify-center">
+                          Self Editable
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.contact ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
@@ -4468,9 +4472,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Degrees, research domains &amp; guidance philosophy</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 sm:px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60">Curriculum</span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.academic ? 'rotate-180 text-brand-600' : ''}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60 whitespace-nowrap inline-flex items-center justify-center">
+                          Curriculum
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.academic ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
@@ -4592,11 +4598,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Verified academic record &amp; department allocation</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs text-indigo-700 dark:text-indigo-300 font-black bg-indigo-50 dark:bg-indigo-950/80 px-2 sm:px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60">
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-xs text-indigo-700 dark:text-indigo-300 font-black bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/60 whitespace-nowrap inline-flex items-center justify-center">
                           Managed by Admin
                         </span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.institutional ? 'rotate-180 text-brand-600' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.institutional ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
@@ -4687,9 +4693,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Coding profiles, publications &amp; handles</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">Web Visibility</span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.links ? 'rotate-180 text-brand-600' : ''}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Web Visibility</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.links ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
@@ -4821,9 +4827,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Multi-lingual communication skills</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">{selectedLanguages.length} Selected</span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${expandedCards.languages ? 'rotate-180 text-brand-600' : ''}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{selectedLanguages.length} Selected</span>
+                        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.languages ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
 
@@ -5870,21 +5876,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
             {/* 1. Theme Selection Card */}
             <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60 shadow-2xs">
                     <Palette className="w-5 h-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                       Appearance &amp; Color Theme
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Personalize your portal contrast and visual atmosphere</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize border border-slate-200/80 dark:border-navy-700">
-                  {themeMode === 'system' ? `Auto (${theme})` : `${theme} Mode`}
-                </span>
+                <div className="shrink-0 flex items-center">
+                  <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize border border-slate-200/80 dark:border-navy-700 whitespace-nowrap inline-flex items-center justify-center">
+                    {themeMode === 'system' ? `Auto (${theme})` : `${theme} Mode`}
+                  </span>
+                </div>
               </div>
 
               {/* Desktop 3-Card Interactive Theme Visualizer */}
