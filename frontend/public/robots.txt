@@ -3,4 +3,4 @@ Allow: /
 
 Sitemap: http://13.53.231.6/sitemap.xml
 Sitemap: https://leetcodeurl-s-roan.vercel.app/sitemap.xml
-Agentmap: http://13.53.231.6/.well-known/ai-catalog.json
+# Agentmap: http://13.53.231.6/.well-known/ai-catalog.json

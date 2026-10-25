@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/ards-project/ard-spec/main/spec/schemas/ai-catalog.schema.json",
   "specVersion": "1.0",
   "host": {
     "displayName": "Nandha Engineering College (Autonomous)",
@@ -9,9 +8,9 @@
   },
   "entries": [
     {
-      "identifier": "urn:air:nandhaengg.org:api:leetcode-tracker",
-      "displayName": "Nandha LeetCode Tracker & Contest Intelligence API",
-      "type": "application/json",
+      "identifier": "urn:air:nandhaengg.org:server:leetcode-tracker",
+      "displayName": "Nandha LeetCode Tracker & Contest Intelligence Agent",
+      "type": "application/agent-card+json",
       "url": "http://13.53.231.6/api/public/stats",
       "description": "Provides real-time contest leaderboard, student analytics, and attendance telemetry.",
       "tags": ["education", "coding", "analytics", "leaderboard", "leetcode"],
@@ -22,9 +21,9 @@
       ]
     },
     {
-      "identifier": "urn:air:nandhaengg.org:doc:llms-txt",
+      "identifier": "urn:air:nandhaengg.org:skills:llms-txt",
       "displayName": "Nandha Platform Documentation for LLMs",
-      "type": "text/markdown",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
       "url": "http://13.53.231.6/llms.txt",
       "description": "Comprehensive institutional architecture and agent discovery manual.",
       "tags": ["documentation", "llms", "guide"],

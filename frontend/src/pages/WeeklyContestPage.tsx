@@ -2037,7 +2037,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             <div className="flex items-center flex-wrap gap-2 text-[11px] text-slate-300 font-bold tracking-wide pt-1.5 border-t border-white/10">
               <span className="text-indigo-300">
-                {isLive ? <>Last Updated: {liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in <NextUpdateTicker initialSec={nextUpdateTicker} />)</> : 'Filter students by Department, Academic Year, Name & Status'}
+                {isLive ? (
+                  <>Last Updated: {liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in <NextUpdateTicker initialSec={nextUpdateTicker} />)</>
+                ) : (
+                  <>
+                    <span className="sm:hidden">Filter students by Dept, Year, Status</span>
+                    <span className="hidden sm:inline">Filter students by Department, Academic Year, Name &amp; Status</span>
+                  </>
+                )}
               </span>
               {!isLive && activeSessionObj?.status && (
                 <>

@@ -1294,7 +1294,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           }`}
         >
           <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider truncate">Pending Verification</span>
+            <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider leading-tight">
+              <span className="sm:hidden">Pending Verify</span>
+              <span className="hidden sm:inline">Pending Verification</span>
+            </span>
             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <HelpCircle className="w-3.5 h-3.5" />
             </div>
@@ -1347,7 +1350,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0 flex items-center">
             <input
               type="text"
-              placeholder="Search student, reg no, or LeetCode username..."
+              placeholder={isMobile ? "Search student, reg no, handle..." : "Search student, reg no, or LeetCode username..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               autoComplete="off"
@@ -1375,10 +1378,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             {(() => {
               const currentObj = deptOptions.find(o => o.value === selectedDeptFilter) || deptOptions[0];
               const isDeptActive = selectedDeptFilter !== 'ALL';
+              const deptLabel = isMobile && currentObj.value === 'ALL' ? 'All Depts' : currentObj.label;
 
               return (
                 <div
-                  className="relative flex-1 sm:flex-initial"
+                  className="relative flex-1 min-w-0 sm:flex-initial"
                   onBlur={(e) => { 
                     if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
                       setDeptDropdownOpen(false); 
@@ -1392,7 +1396,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       setDeptDropdownOpen(p => !p);
                       setYearDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       deptDropdownOpen
                         ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/70 dark:bg-indigo-950/50'
                         : isDeptActive
@@ -1401,10 +1405,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     }`}
                     title={`Filter by Department: ${currentObj.label}`}
                   >
-                    <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                       <Building2 className={`w-3.5 h-3.5 shrink-0 ${isDeptActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500'}`} />
                       <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentObj.color}`}>{currentObj.code}</span>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[85px] sm:max-w-[130px]">{currentObj.label}</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate flex-1">{deptLabel}</span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${deptDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -1435,9 +1439,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                               setSelectedDeptFilter(opt.value); 
                               setDeptDropdownOpen(false); 
                             }}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 cursor-pointer ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 cursor-pointer ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
                           >
-                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
                             <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-950 dark:text-indigo-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
                             {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
@@ -1454,10 +1458,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             {(() => {
               const currentYearObj = yearOptions.find(o => o.value === selectedYearFilter) || yearOptions[0];
               const isYearActive = selectedYearFilter !== 'ALL';
+              const yearLabel = isMobile && currentYearObj.value === 'ALL' ? 'All Years' : (currentYearObj.shortLabel || currentYearObj.label);
 
               return (
                 <div
-                  className="relative flex-1 sm:flex-initial"
+                  className="relative flex-1 min-w-0 sm:flex-initial"
                   onBlur={(e) => { 
                     if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
                       setYearDropdownOpen(false); 
@@ -1471,7 +1476,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       setYearDropdownOpen(p => !p);
                       setDeptDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       yearDropdownOpen
                         ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/70 dark:bg-purple-950/50'
                         : isYearActive
@@ -1480,10 +1485,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     }`}
                     title={`Filter by Academic Year: ${currentYearObj.label}`}
                   >
-                    <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                       <GraduationCap className={`w-3.5 h-3.5 shrink-0 ${isYearActive ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500'}`} />
                       <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentYearObj.color}`}>{currentYearObj.code}</span>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[80px] sm:max-w-[110px]">{currentYearObj.shortLabel || currentYearObj.label}</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate flex-1">{yearLabel}</span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
