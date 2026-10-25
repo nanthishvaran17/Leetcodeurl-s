@@ -111,7 +111,7 @@ If you discover a potential vulnerability within the Nandha LeetCode Intelligenc
    Navigate to the repository's **[Security Tab > Report a Vulnerability](https://github.com/nanthishvaran17/Leetcodeurl-s/security/advisories/new)** to submit a private, encrypted advisory directly to the core developers.
 2. **Direct Security Contact:**  
    Send an encrypted email directly to the Institutional Platform Maintainer:  
-   📧 **`nanthishvaran17@gmail.com`** or **`security@nandhaengg.org`**  
+   📧 **`nanthishvaran17@gmail.com`** 
    *Subject line:* `[SECURITY REPORT] Potential Vulnerability in Nandha LeetCode Tracker`
 
 ### 📝 What to Include in Your Report:
