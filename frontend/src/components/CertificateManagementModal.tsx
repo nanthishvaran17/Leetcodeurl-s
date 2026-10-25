@@ -141,6 +141,7 @@ export const CertificateManagementModal: React.FC<{
   // Stepper State: 1 = Recipient, 2 = Design, 3 = Signatures, 4 = Issue, 5 = Verify & Registry
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [activeMainTab, setActiveMainTab] = useState<'studio' | 'signatures' | 'registry'>('studio');
+  const [mobileStudioView, setMobileStudioView] = useState<'form' | 'preview'>('form');
   const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
   useEffect(() => {
@@ -620,22 +621,25 @@ export const CertificateManagementModal: React.FC<{
             <div className="flex-1 flex flex-col min-h-0">
 
               {/* 5-Step Workflow Stepper Bar */}
-              <div className="px-3 sm:px-6 py-2 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 flex flex-row items-center justify-between overflow-x-auto shrink-0 no-scrollbar">
-                <div className="flex flex-row items-center gap-2 shrink-0 min-w-max">
+              <div className="px-2 sm:px-6 py-2 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 flex flex-row items-center justify-between overflow-x-auto shrink-0 no-scrollbar scroll-smooth">
+                <div className="flex flex-row items-center gap-1.5 sm:gap-2 shrink-0 min-w-max">
                   {[
-                    { step: 1, label: 'RECIPIENT', desc: 'Select Student' },
-                    { step: 2, label: 'DESIGN & TYPE', desc: 'Recognition Text' },
-                    { step: 3, label: 'SIGNATURES', desc: 'Dual Authority' },
-                    { step: 4, label: 'ISSUE', desc: 'Controlled Review' },
-                    { step: 5, label: 'VERIFY & AUDIT', desc: 'QR & Document Center' }
+                    { step: 1, label: 'RECIPIENT', shortLabel: 'Recipient', desc: 'Select Student' },
+                    { step: 2, label: 'DESIGN & TYPE', shortLabel: 'Design', desc: 'Recognition Text' },
+                    { step: 3, label: 'SIGNATURES', shortLabel: 'Signatures', desc: 'Dual Authority' },
+                    { step: 4, label: 'ISSUE', shortLabel: 'Issue', desc: 'Controlled Review' },
+                    { step: 5, label: 'VERIFY & AUDIT', shortLabel: 'Verify', desc: 'QR & Document Center' }
                   ].map((s) => {
                     const isCompleted = currentStep > s.step;
                     const isActive = currentStep === s.step;
                     return (
                       <button
                         key={s.step}
-                        onClick={() => setCurrentStep(s.step)}
-                        className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                        onClick={() => {
+                          setCurrentStep(s.step);
+                          setMobileStudioView('form');
+                        }}
+                        className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
                           isActive
                             ? 'bg-amber-500/20 text-amber-900 dark:text-amber-300 border-2 border-amber-500 dark:border-amber-400 shadow-sm'
                             : isCompleted
@@ -643,32 +647,61 @@ export const CertificateManagementModal: React.FC<{
                             : 'text-slate-950 dark:text-white hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300/80 dark:border-navy-700/80'
                         }`}
                       >
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-all ${
+                        <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-black shrink-0 transition-all ${
                           isActive
                             ? 'bg-amber-400 text-slate-950 shadow-md ring-2 ring-amber-400/30 border border-amber-300'
                             : isCompleted
                             ? 'bg-emerald-600 dark:bg-emerald-500 text-white shadow-md'
                             : 'bg-slate-900 dark:bg-navy-800 text-white dark:text-amber-400 border border-slate-700 dark:border-navy-600 shadow-xs'
                         }`}>
-                          {isCompleted ? <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" /> : s.step}
+                          {isCompleted ? <Check className="w-3 h-3 text-white stroke-[3.5]" /> : s.step}
                         </span>
                         <div className="text-left">
-                          <span className="block text-xs font-black tracking-tight">{s.label}</span>
+                          <span className="hidden sm:block text-xs font-black tracking-tight">{s.label}</span>
+                          <span className="sm:hidden text-[11px] font-black tracking-tight">{s.shortLabel}</span>
                           <span className="hidden sm:block text-[10px] text-slate-700 dark:text-slate-300 font-bold -mt-0.5">{s.desc}</span>
                         </div>
                       </button>
                     );
                   })}
                 </div>
+              </div>
 
-
+              {/* Mobile Segmented Switcher (Workflow Controls vs Live Certificate Canvas) */}
+              <div className="lg:hidden px-3 py-2 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0">
+                <div className="flex-1 grid grid-cols-2 p-1 bg-slate-900 rounded-2xl border border-slate-800 text-xs font-bold shadow-inner gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setMobileStudioView('form')}
+                    className={`py-2 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 text-xs font-black ${
+                      mobileStudioView === 'form'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md border border-amber-400/40'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Step {currentStep}: Controls</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileStudioView('preview')}
+                    className={`py-2 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 text-xs font-black ${
+                      mobileStudioView === 'preview'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md border border-amber-400/40'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Live Certificate</span>
+                  </button>
+                </div>
               </div>
 
               {/* Two-Column Studio Layout */}
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 p-5 overflow-y-auto min-h-0">
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 p-3 sm:p-5 overflow-y-auto min-h-0">
 
                 {/* LEFT COLUMN: WORKFLOW CONTROL PANEL (5 COLS) */}
-                <div className="lg:col-span-5 space-y-4 flex flex-col">
+                <div className={`lg:col-span-5 space-y-4 flex flex-col ${mobileStudioView === 'preview' ? 'hidden lg:flex' : 'flex'}`}>
 
                   {/* STEP 1: RECIPIENT SELECTION */}
                   {currentStep === 1 && (
@@ -886,7 +919,10 @@ export const CertificateManagementModal: React.FC<{
                             </button>
                             <button
                               type="button"
-                              onClick={() => setCurrentStep(2)}
+                              onClick={() => {
+                                setCurrentStep(2);
+                                setMobileStudioView('preview');
+                              }}
                               className="w-full sm:w-auto px-4 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/40 font-black text-xs flex items-center justify-center space-x-1 cursor-pointer transition-all whitespace-nowrap"
                               title="Customize certificate type, date override, or verify signatures"
                             >
@@ -1243,62 +1279,80 @@ export const CertificateManagementModal: React.FC<{
                 </div>
 
                 {/* RIGHT COLUMN: HIGH-FIDELITY A4 LANDSCAPE LIVE PREVIEW (7 COLS) */}
-                <div className="lg:col-span-7 space-y-3 flex flex-col justify-start">
+                <div className={`lg:col-span-7 space-y-3 flex flex-col justify-start ${mobileStudioView === 'form' ? 'hidden lg:flex' : 'flex'}`}>
+                  {/* On Mobile preview, show quick return banner */}
+                  <div className="lg:hidden flex items-center justify-between p-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs font-black shadow-md">
+                    <button
+                      type="button"
+                      onClick={() => setMobileStudioView('form')}
+                      className="text-amber-400 hover:text-amber-300 flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 cursor-pointer transition-colors"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+                      <span>Back to Step {currentStep} Controls</span>
+                    </button>
+                    <span className="text-slate-300 font-mono text-[11px] truncate max-w-[140px]">
+                      {studentName}
+                    </span>
+                  </div>
+
                   <div className="flex items-center justify-between text-xs px-1">
                     <span className="font-extrabold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-xs flex items-center space-x-1.5">
                       <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       <span>Live Official Certificate Preview Canvas</span>
                     </span>
-
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">
+                      A4 Official Landscape Architecture
+                    </span>
                   </div>
 
                   {/* THE A4 CERTIFICATE CANVAS (PRINT TARGET) */}
-                  <div className="print-certificate-target relative w-full aspect-[297/210] bg-[#FCFCFA] text-slate-950 rounded-3xl p-4 sm:p-6 flex flex-col justify-between shadow-xl border-[5px] border-[#0B192C] overflow-hidden select-none font-sans">
+                  <div
+                    data-keep-light="true"
+                    style={{ color: '#090D16', backgroundColor: '#FCFCFA' }}
+                    className="print-certificate-target relative w-full min-h-[380px] sm:min-h-0 sm:aspect-[297/210] bg-[#FCFCFA] text-[#090D16] rounded-2xl sm:rounded-3xl p-3 sm:p-6 flex flex-col justify-between shadow-2xl border-[4px] sm:border-[5px] border-[#0B192C] overflow-hidden select-none font-sans"
+                  >
 
                     {/* Outer & Inner Gold Filigree Borders */}
-                    <div className="absolute inset-2 border-[1.5px] border-[#C5A059] pointer-events-none"></div>
-                    <div className="absolute inset-3 border-[0.5px] border-[#C5A059]/50 pointer-events-none"></div>
+                    <div className="absolute inset-1.5 sm:inset-2 border-[1.5px] border-[#C5A059] pointer-events-none"></div>
+                    <div className="absolute inset-2.5 sm:inset-3 border-[0.5px] border-[#C5A059]/50 pointer-events-none"></div>
 
                     {/* Corner Ornaments */}
-                    <div className="absolute top-2 left-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                    <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 w-3 sm:w-3.5 h-3 sm:h-3.5 bg-[#C5A059] flex items-center justify-center">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
-                    <div className="absolute top-2 right-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-3 sm:w-3.5 h-3 sm:h-3.5 bg-[#C5A059] flex items-center justify-center">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
-                    <div className="absolute bottom-2 left-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                    <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 w-3 sm:w-3.5 h-3 sm:h-3.5 bg-[#C5A059] flex items-center justify-center">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
-                    <div className="absolute bottom-2 right-2 w-3.5 h-3.5 bg-[#C5A059] flex items-center justify-center">
+                    <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-3 sm:w-3.5 h-3 sm:h-3.5 bg-[#C5A059] flex items-center justify-center">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#0B192C]"></div>
                     </div>
 
                     {/* Top Header */}
-                    <div className="text-center space-y-0.5 relative z-10">
+                    <div className="text-center space-y-0.5 relative z-10 pt-0.5 sm:pt-0">
                       <img
                         src="/nandha_emblem.png"
                         alt="Nandha College Emblem"
-                        className="w-10 h-10 object-contain mx-auto drop-shadow-sm mb-0.5"
+                        className="w-7 h-7 sm:w-10 sm:h-10 object-contain mx-auto drop-shadow-sm mb-0.5"
                         onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                       />
-                      <h2 className="text-lg sm:text-xl font-black text-slate-950 tracking-wide uppercase font-sans">
+                      <h2 className="text-xs sm:text-lg md:text-xl font-black text-slate-950 tracking-wide uppercase font-sans leading-tight">
                         NANDHA ENGINEERING COLLEGE
                       </h2>
-                      <p className="text-xs font-black text-slate-900 tracking-widest">(AUTONOMOUS)</p>
-                      <p className="text-[10.5px] sm:text-[11.5px] text-slate-800 font-extrabold leading-tight">
+                      <p className="text-[8px] sm:text-xs font-black text-slate-900 tracking-widest">(AUTONOMOUS)</p>
+                      <p className="text-[7px] sm:text-[10.5px] md:text-[11.5px] text-slate-800 font-extrabold leading-tight px-1">
                         Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade
                       </p>
-                      <div className="text-[#C5A059] text-xs font-black tracking-widest pt-0.5">
-                          
-                      </div>
                     </div>
 
                     {/* Certificate Title & Student (Animated Replacement) */}
-                    <div className="text-center space-y-1.5 relative z-10 my-auto py-0.5">
-                      <h3 className="text-xl sm:text-2xl font-black text-amber-700 tracking-wider uppercase drop-shadow-xs">
+                    <div className="text-center space-y-1 relative z-10 my-auto py-1">
+                      <h3 className="text-xs sm:text-xl md:text-2xl font-black text-amber-700 tracking-wider uppercase drop-shadow-xs">
                         {currentTypeMeta.title}
                       </h3>
-                      <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest">
+                      <p className="text-[8px] sm:text-xs md:text-sm font-black text-slate-800 uppercase tracking-widest">
                         THIS CERTIFICATE IS PROUDLY PRESENTED TO
                       </p>
                       <AnimatePresence mode="wait">
@@ -1308,66 +1362,97 @@ export const CertificateManagementModal: React.FC<{
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -5 }}
                           transition={{ duration: 0.25 }}
-                          className="text-2xl sm:text-3xl font-black text-slate-950 tracking-wide underline decoration-[#C5A059] decoration-2 underline-offset-4 uppercase"
+                          className="text-sm sm:text-2xl md:text-3xl font-black text-slate-950 tracking-wide underline decoration-[#C5A059] decoration-1 sm:decoration-2 underline-offset-2 sm:underline-offset-4 uppercase py-0.5"
                         >
                           {studentName}
                         </motion.h4>
                       </AnimatePresence>
-                      <p className="text-xs sm:text-sm text-slate-900 font-black">
+                      <p className="text-[8px] sm:text-xs md:text-sm text-slate-900 font-black leading-tight">
                         Register No: <strong className="font-mono text-slate-950">{studentReg}</strong> &nbsp;|&nbsp; <strong className="text-slate-950">{currentDeptTitle}</strong>
                       </p>
-                      <p className="text-xs sm:text-sm text-slate-900 font-bold max-w-xl mx-auto leading-normal pt-0.5">
+                      <p className="text-[7.5px] sm:text-xs md:text-sm text-slate-900 font-bold max-w-xl mx-auto leading-tight sm:leading-normal pt-0.5 line-clamp-2 sm:line-clamp-none">
                         {currentTypeMeta.desc}
                       </p>
-                      <div className="inline-block px-3.5 py-1 rounded-full bg-emerald-900/10 text-emerald-900 border border-emerald-800/30 text-xs font-black uppercase tracking-wider">
+                      <div className="inline-block px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-emerald-900/10 text-emerald-900 border border-emerald-800/30 text-[8px] sm:text-xs font-black uppercase tracking-wider">
                         {currentTypeMeta.badge}
                       </div>
                     </div>
 
                     {/* Bottom Signatures & QR Section */}
-                    <div className="grid grid-cols-3 gap-2 items-end text-center relative z-10 pt-1 text-slate-950">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 items-end text-center relative z-10 pt-1 text-slate-950">
 
                       {/* Left: Principal */}
                       <div className="space-y-0.5 flex flex-col justify-end">
                         {principalSig?.image_preview ? (
-                          <img src={principalSig.image_preview} alt="Principal Signature" className="h-9 max-w-[130px] object-contain mx-auto mb-0.5" />
+                          <img src={principalSig.image_preview} alt="Principal Signature" className="h-6 sm:h-9 max-w-[90px] sm:max-w-[130px] object-contain mx-auto mb-0.5" />
                         ) : (
-                          <div className="h-9 flex items-center justify-center text-[10px] text-amber-800 font-mono italic">
+                          <div className="h-6 sm:h-9 flex items-center justify-center text-[8px] sm:text-[10px] text-amber-800 font-mono italic">
                             [Authorized Signatory]
                           </div>
                         )}
-                        <div className="w-32 border-b-2 border-slate-900 mx-auto"></div>
-                        <p className="text-xs sm:text-sm font-black leading-tight mt-1 text-slate-950">PRINCIPAL</p>
-                        <p className="text-[10px] sm:text-xs text-slate-800 font-bold">Nandha Engineering College</p>
+                        <div className="w-16 sm:w-32 border-b-2 border-slate-900 mx-auto"></div>
+                        <p className="text-[8px] sm:text-xs md:text-sm font-black leading-tight mt-0.5 sm:mt-1 text-slate-950">PRINCIPAL</p>
+                        <p className="text-[6.5px] sm:text-[10px] md:text-xs text-slate-800 font-bold truncate">Nandha Engineering College</p>
                       </div>
 
                       {/* Center: Verification */}
                       <div className="space-y-0.5">
-                        <div className="w-11 h-11 bg-white border border-slate-400 rounded-lg p-1 mx-auto flex items-center justify-center shadow-xs">
-                          <QrCode className="w-9 h-9 text-slate-950" />
+                        <div className="w-8 h-8 sm:w-11 sm:h-11 bg-white border border-slate-400 rounded-md sm:rounded-lg p-0.5 sm:p-1 mx-auto flex items-center justify-center shadow-xs">
+                          <QrCode className="w-6 h-6 sm:w-9 sm:h-9 text-slate-950" />
                         </div>
-                        <p className="text-[10px] sm:text-xs font-black text-slate-900 leading-tight">
+                        <p className="text-[7px] sm:text-[10px] md:text-xs font-black text-slate-900 leading-tight">
                           Verification ID: <strong className="font-mono text-slate-950">{activeVerificationId}</strong>
                         </p>
-                        <p className="text-[9px] text-slate-700 font-bold">Scan QR for official verification</p>
+                        <p className="hidden sm:block text-[9px] text-slate-700 font-bold">Scan QR for official verification</p>
                       </div>
 
                       {/* Right: HOD */}
                       <div className="space-y-0.5 flex flex-col justify-end">
                         {currentHodSig?.image_preview ? (
-                          <img src={currentHodSig.image_preview} alt="HOD Signature" className="h-9 max-w-[130px] object-contain mx-auto mb-0.5" />
+                          <img src={currentHodSig.image_preview} alt="HOD Signature" className="h-6 sm:h-9 max-w-[90px] sm:max-w-[130px] object-contain mx-auto mb-0.5" />
                         ) : (
-                          <div className="h-9 flex items-center justify-center text-[10px] text-amber-800 font-mono italic">
+                          <div className="h-6 sm:h-9 flex items-center justify-center text-[8px] sm:text-[10px] text-amber-800 font-mono italic">
                             [Authorized Signatory]
                           </div>
                         )}
-                        <div className="w-32 border-b-2 border-slate-900 mx-auto"></div>
-                        <p className="text-xs sm:text-sm font-black leading-tight mt-1 text-slate-950">HOD / COORDINATOR</p>
-                        <p className="text-[10px] sm:text-xs text-slate-800 truncate max-w-[160px] mx-auto font-bold" title={currentDeptTitle}>{currentDeptTitle}</p>
+                        <div className="w-16 sm:w-32 border-b-2 border-slate-900 mx-auto"></div>
+                        <p className="text-[8px] sm:text-xs md:text-sm font-black leading-tight mt-0.5 sm:mt-1 text-slate-950">HOD / COORDINATOR</p>
+                        <p className="text-[6.5px] sm:text-[10px] md:text-xs text-slate-800 truncate max-w-[100px] sm:max-w-[160px] mx-auto font-bold" title={currentDeptTitle}>{currentDeptTitle}</p>
                       </div>
 
                     </div>
 
+                  </div>
+
+                  {/* Mobile Quick Actions Floating Strip */}
+                  <div className="lg:hidden flex flex-col gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmIssueModal(true)}
+                      disabled={isGenerating || !selectedStudent}
+                      className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-xl shadow-emerald-500/20 cursor-pointer"
+                    >
+                      <Award className="w-4.5 h-4.5 text-slate-950" />
+                      <span>Issue & Register Credential Now</span>
+                    </button>
+                    <div className="grid grid-cols-2 gap-2 w-full">
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPdf(activeVerificationId)}
+                        className="py-2.5 rounded-xl bg-slate-900 text-slate-200 border border-slate-700 font-black text-xs flex items-center justify-center space-x-1.5 cursor-pointer hover:bg-slate-800"
+                      >
+                        <Download className="w-4 h-4 text-emerald-400" />
+                        <span>Download PDF</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMobileStudioView('form')}
+                        className="py-2.5 rounded-xl bg-slate-900 text-amber-400 border border-slate-700 font-black text-xs flex items-center justify-center space-x-1.5 cursor-pointer hover:bg-slate-800"
+                      >
+                        <Sliders className="w-4 h-4 text-amber-400" />
+                        <span>Edit Options</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

@@ -312,6 +312,56 @@ body {
   color: #94A3B8 !important;
 }
 
+/* ─── Universal High-Contrast Exemption for Official Certificate Paper & Light Previews ─── */
+.dark .print-certificate-target,
+.dark [data-keep-light="true"],
+.dark .print-certificate-target *,
+.dark [data-keep-light="true"] * {
+  color-scheme: light !important;
+}
+
+.dark .print-certificate-target,
+.dark [data-keep-light="true"] {
+  background-color: #FCFCFA !important;
+  color: #020617 !important;
+}
+
+.dark .print-certificate-target .text-slate-950,
+.dark .print-certificate-target .text-slate-900,
+.dark .print-certificate-target .text-black,
+.dark [data-keep-light="true"] .text-slate-950,
+.dark [data-keep-light="true"] .text-slate-900,
+.dark [data-keep-light="true"] .text-black {
+  color: #020617 !important;
+}
+
+.dark .print-certificate-target .text-slate-800,
+.dark [data-keep-light="true"] .text-slate-800 {
+  color: #1E293B !important;
+}
+
+.dark .print-certificate-target .text-slate-700,
+.dark [data-keep-light="true"] .text-slate-700 {
+  color: #334155 !important;
+}
+
+.dark .print-certificate-target .text-slate-600,
+.dark [data-keep-light="true"] .text-slate-600 {
+  color: #475569 !important;
+}
+
+.dark .print-certificate-target .text-amber-700,
+.dark .print-certificate-target .text-amber-800,
+.dark [data-keep-light="true"] .text-amber-700,
+.dark [data-keep-light="true"] .text-amber-800 {
+  color: #B45309 !important;
+}
+
+.dark .print-certificate-target .text-emerald-900,
+.dark [data-keep-light="true"] .text-emerald-900 {
+  color: #064E3B !important;
+}
+
 /* AI Semantic Status Glowing Panels, Chips & Badges */
 
 /* Indigo / Blue / Sky / Cyan */
