@@ -75,22 +75,23 @@ class OfficialContestRankingService:
                 except Exception as e:
                     logger.warning(f"[CONTEST_SCAN] Failed reading {cached_path}: {e}")
 
-            # 2. If no pre-scanned artifact or forced refresh, fetch live from official LeetCode contest rankings
+            # 2. 100% Cloudflare-Proof GraphQL Contest Engine: Directly checks all college students via GraphQL
             if not scanned_data:
+                logger.info(f"[CONTEST_SCAN] Running 100% Cloudflare-Proof Direct GraphQL Contest Engine for {contest_slug}...")
+                scanned_data = await cls.scan_via_graphql_contest_engine(
+                    contest_slug=contest_slug,
+                    db=db,
+                    concurrency=25
+                )
+
+            # 3. Fallback to REST only if GraphQL returned empty
+            if not scanned_data:
+                logger.info(f"[CONTEST_SCAN] GraphQL returned 0 solvers, attempting REST ranking fallback for {contest_slug}...")
                 scanned_data = await cls._scan_live_leetcode_ranking(
                     contest_slug=contest_slug,
                     db=db,
                     max_pages=max_pages,
                     concurrency=concurrency
-                )
-
-            # 3. Cloudflare-Proof GraphQL Fallback: If REST was blocked (403/empty), use fast parallel GraphQL
-            if not scanned_data:
-                logger.info(f"[CONTEST_SCAN] REST API returned 0 solvers (Cloudflare block). Activating 100% Automatic GraphQL Contest Engine for {contest_slug}...")
-                scanned_data = await cls.scan_via_graphql_contest_engine(
-                    contest_slug=contest_slug,
-                    db=db,
-                    concurrency=20
                 )
 
             # 4. Auto-save authentic scan artifact for instant cache hits
