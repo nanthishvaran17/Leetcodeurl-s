@@ -1036,13 +1036,17 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       // MODE 1: Direct WhatsApp Text Message (Pre-filled chat text with full stats and 1-tap download link)
       if (mode === 'message') {
         notify.success('Opening WhatsApp', 'Performance summary and download link copied to clipboard & opened in WhatsApp.', { category: 'SHARE' });
-        const encoded = encodeURIComponent(fullShareText);
         if (isNativeMobile()) {
-          // Native Capacitor Android intent handler
-          window.location.href = `whatsapp://send?text=${encoded}`;
-        } else {
-          window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+          try {
+            await DocumentOpener.shareToWhatsApp({ text: fullShareText });
+            setIsSharingWhatsApp(false);
+            return;
+          } catch (_nativeErr) {
+            console.warn('[ReportPreview] Native DocumentOpener.shareToWhatsApp failed, trying URL fallback:', _nativeErr);
+          }
         }
+        const encoded = encodeURIComponent(fullShareText);
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
         setIsSharingWhatsApp(false);
         return;
       }

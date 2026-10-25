@@ -324,6 +324,54 @@ public class DocumentOpenerPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void shareToWhatsApp(PluginCall call) {
+        String text = call.getString("text", "");
+        if (text == null || text.trim().isEmpty()) {
+            call.reject("TEXT_REQUIRED", "No text provided to share");
+            return;
+        }
+
+        Context context = getActivity() != null ? getActivity() : getContext();
+        try {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.setPackage("com.whatsapp");
+            intent.putExtra(Intent.EXTRA_TEXT, text);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            context.startActivity(intent);
+            call.resolve();
+        } catch (android.content.ActivityNotFoundException e1) {
+            // Try WhatsApp Business (com.whatsapp.w4b)
+            try {
+                Intent bIntent = new Intent(Intent.ACTION_SEND);
+                bIntent.setType("text/plain");
+                bIntent.setPackage("com.whatsapp.w4b");
+                bIntent.putExtra(Intent.EXTRA_TEXT, text);
+                bIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                context.startActivity(bIntent);
+                call.resolve();
+            } catch (Exception e2) {
+                // If neither WhatsApp is installed, launch general share chooser
+                try {
+                    Intent genIntent = new Intent(Intent.ACTION_SEND);
+                    genIntent.setType("text/plain");
+                    genIntent.putExtra(Intent.EXTRA_TEXT, text);
+                    Intent chooser = Intent.createChooser(genIntent, "Share Performance Report");
+                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(chooser);
+                    call.resolve();
+                } catch (Exception e3) {
+                    call.reject("SHARE_FAILED", e3.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            call.reject("SHARE_FAILED", e.getMessage());
+        }
+    }
+
+    @PluginMethod
     public void saveToDownloads(PluginCall call) {
         String base64Data = call.getString("data");
         String filename = call.getString("filename", "report.xlsx");

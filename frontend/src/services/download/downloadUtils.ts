@@ -126,6 +126,7 @@ import { registerPlugin } from '@capacitor/core';
 export interface DocumentOpenerPluginType {
   openDocument(options: { path: string; filename: string; mimeType?: string }): Promise<void>;
   shareDocument(options: { path: string; filename: string; mimeType?: string; text?: string }): Promise<void>;
+  shareToWhatsApp(options: { text: string }): Promise<void>;
   fileExists(options: { path: string; filename: string }): Promise<{ exists: boolean; size?: number }>;
   saveToDownloads(options: { data: string; filename: string; mimeType?: string }): Promise<{ success: boolean; path: string; fileUri: string; publicUri: string }>;
   openAppSettings(): Promise<{ success: boolean }>;
