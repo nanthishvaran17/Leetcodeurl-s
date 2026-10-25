@@ -93,7 +93,7 @@ export const InstallAppPrompt: React.FC = () => {
     setDownloadStarted(true);
     const link = document.createElement('a');
     link.href = '/nandha-leetcode.apk';
-    link.download = 'Nandha_LeetCode_Intelligence_v3.2.4_latest.apk';
+    link.download = 'Nandha_LeetCode_Intelligence_v3.2.5_latest.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
