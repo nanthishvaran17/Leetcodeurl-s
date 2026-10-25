@@ -128,9 +128,59 @@ class AudioChimeEngine {
       // Audio safety
     }
   }
+
+  /**
+   * Smooth, satisfying download completed chime (G5 784Hz -> C6 1046.5Hz) with mobile haptic
+   */
+  public playDownloadSuccessChime(): void {
+    // 1. Mobile tactile haptic vibration (Android & supporting devices)
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try {
+        navigator.vibrate([35, 50, 45]);
+      } catch {
+        // Haptic safety
+      }
+    }
+
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+
+      // Note 1: 783.99 Hz (G5)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(783.99, now);
+      gain1.gain.setValueAtTime(0.0001, now);
+      gain1.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+
+      // Note 2: 1046.50 Hz (C6) bright affirmative chime
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'triangle'; // Crisp harmonic
+      osc2.frequency.setValueAtTime(1046.50, now + 0.1);
+      gain2.gain.setValueAtTime(0.0001, now + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.28, now + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.1);
+      osc2.stop(now + 0.55);
+    } catch {
+      // Audio safety
+    }
+  }
 }
 
 export const audioChime = new AudioChimeEngine();
 export const playNotificationChime = () => audioChime.playNotificationChime();
 export const playCelebrationChime = () => audioChime.playCelebrationChime();
 export const playContestAlertChime = () => audioChime.playContestAlertChime();
+export const playDownloadSuccessChime = () => audioChime.playDownloadSuccessChime();

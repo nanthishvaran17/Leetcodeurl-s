@@ -28,17 +28,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  const [isSubViewOpen, setIsSubViewOpen] = useState(false);
   const lastScrollY = useRef(0);
-
-  // Auto-hide when subviews, full-page forms, or modals request nav bar hiding
-  useEffect(() => {
-    const handleNavToggle = (e: any) => {
-      setIsSubViewOpen(Boolean(e.detail?.hidden));
-    };
-    window.addEventListener('nec_toggle_mobile_bottom_nav', handleNavToggle);
-    return () => window.removeEventListener('nec_toggle_mobile_bottom_nav', handleNavToggle);
-  }, []);
 
   // 1. Auto-hide on mobile software keyboard open
   useEffect(() => {
@@ -127,7 +117,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     }
   };
 
-  if (!isAuthenticated || isKeyboardOpen || isSubViewOpen) {
+  if (!isAuthenticated || isKeyboardOpen) {
     return null;
   }
 

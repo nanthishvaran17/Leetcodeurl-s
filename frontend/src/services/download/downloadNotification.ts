@@ -12,6 +12,7 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { isNativeMobile, getMimeTypeFromFilename, openDownloadedDocument, shareDownloadedDocument } from './downloadUtils';
+import { playDownloadSuccessChime } from '../../utils/audioChime';
 
 export interface DownloadCompletionPayload {
   filename: string;
@@ -258,6 +259,9 @@ class DownloadNotificationService {
     const body = filename;
     const { actionTypeId, openTitle } = getReportActionConfig(filename);
 
+    // Instant acoustic notification chime & mobile haptic feedback
+    playDownloadSuccessChime();
+
     // Show immediate in-app toast popup (zero millisecond latency)
     if (typeof window !== 'undefined' && (window as any).__nec_notify__) {
       (window as any).__nec_notify__.success('Report downloaded', filename, {
@@ -276,6 +280,7 @@ class DownloadNotificationService {
               title,
               body,
               channelId: 'leetcode_intelligence_channel',
+              sound: 'default',
               smallIcon: 'ic_stat_notification',
               iconColor: '#3b82f6',
               actionTypeId: actionTypeId,

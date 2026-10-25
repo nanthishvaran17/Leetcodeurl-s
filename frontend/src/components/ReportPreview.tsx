@@ -3922,20 +3922,128 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                 <ChevronUp className={`w-3.5 h-3.5 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Upward Popover Menu */}
+              {/* Responsive Export Action Sheet: Mobile Native Bottom Drawer & Desktop Luxury Popover */}
               {moreMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-40 bg-transparent"
+                    className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity sm:bg-transparent sm:backdrop-blur-none"
                     onClick={() => setMoreMenuOpen(false)}
                   />
-                  <div className="absolute bottom-full right-0 mb-2 w-56 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 space-y-1 animate-scale-in">
+
+                  {/* MOBILE NATIVE BOTTOM SHEET (< sm) */}
+                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-[#0c1427] rounded-t-3xl border-t border-slate-200/90 dark:border-white/10 shadow-2xl p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,16px))] space-y-3 animate-in slide-in-from-bottom duration-250">
+                    {/* Bottom Sheet Handle */}
+                    <div className="flex flex-col items-center gap-1.5 pb-1">
+                      <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                      <div className="flex items-center justify-between w-full pt-1">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Export &amp; Share Report
+                        </span>
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          {allRows.length} Rows
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-1">
+                      {/* PDF */}
+                      <button
+                        type="button"
+                        onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">PDF Document</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Export print-ready PDF</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-rose-100/70 text-rose-700 dark:bg-rose-950 dark:text-rose-300 shrink-0">
+                          .PDF
+                        </span>
+                      </button>
+
+                      {/* Word Docx */}
+                      <button
+                        type="button"
+                        onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Word Document</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Word report (.docx)</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-blue-100/70 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                          .DOCX
+                        </span>
+                      </button>
+
+                      {/* WhatsApp Share */}
+                      <button
+                        type="button"
+                        onClick={() => { handleShareWhatsApp(); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Share2 className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Share to WhatsApp</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Instant summary text</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
+                          WHATSAPP
+                        </span>
+                      </button>
+
+                      {/* Print View */}
+                      <button
+                        type="button"
+                        onClick={() => { window.print(); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Printer className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Print View</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Print or save via browser</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0">
+                          PRINT
+                        </span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-xs cursor-pointer active:scale-98 transition-all text-center mt-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  {/* DESKTOP POPOVER MENU (>= sm) */}
+                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-60 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
                     <button
                       onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-600 shrink-0">
-                        <FileText className="w-3.5 h-3.5" />
+                      <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-600 shrink-0">
+                        <FileText className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="truncate">PDF Document</span>
@@ -3947,8 +4055,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 shrink-0">
-                        <FileText className="w-3.5 h-3.5" />
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 shrink-0">
+                        <FileText className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="truncate">Word Document</span>
@@ -3960,8 +4068,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       onClick={() => { handleShareWhatsApp(); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
-                        <Share2 className="w-3.5 h-3.5" />
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
+                        <Share2 className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="truncate">Share to WhatsApp</span>
@@ -3975,8 +4083,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       onClick={() => { window.print(); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
-                        <Printer className="w-3.5 h-3.5" />
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+                        <Printer className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span className="truncate">Print View</span>
