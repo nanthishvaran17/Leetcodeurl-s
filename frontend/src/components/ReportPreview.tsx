@@ -947,7 +947,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (isSharingWhatsApp) return;
     setIsSharingWhatsApp(true);
 
-    const deptName = report?.department_name || report?.department || 'CSE (Cyber Security)';
+    const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
+    const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
     const contestTitle = report?.contestName || report?.title || 'Weekly Contest Performance Report';
 
     // Authoritative dynamic metrics without hardcoded static counts
@@ -969,7 +970,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (rawRole.includes('admin') || rawRole.includes('super')) {
       senderRoleTitle = 'System Administrator';
     } else if (rawRole.includes('hod') || rawRole.includes('head')) {
-      senderRoleTitle = `Head of Department • ${currentUser?.department || deptName}`;
+      senderRoleTitle = `Head of Department • ${currentUser?.department || cleanDept}`;
     } else if (currentUser?.designation) {
       senderRoleTitle = `${currentUser.designation}`;
     } else if (rawRole.includes('faculty') || rawRole.includes('staff')) {
@@ -977,7 +978,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     }
 
     let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
-      `*Department of ${deptName}*\n\n` +
+      `*Department of ${cleanDept}*\n\n` +
       `📊 *LEETCODE PERFORMANCE REPORT*\n` +
       `• *Contest:* ${contestTitle}\n` +
       `• *Total Students:* ${total}\n` +
@@ -1005,7 +1006,21 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     text += `\n*Shared by:* *${senderName}* (${senderRoleTitle})`;
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nandha-leetcode.duckdns.org';
+    // Public authoritative origin resolution: Mobile apps (localhost/capacitor) must use the public domain
+    let resolvedOrigin = 'https://nandha-leetcode.duckdns.org';
+    if (typeof window !== 'undefined' && window.location.origin) {
+      const locOrigin = window.location.origin.toLowerCase();
+      if (
+        !locOrigin.includes('localhost') &&
+        !locOrigin.includes('127.0.0.1') &&
+        !locOrigin.startsWith('capacitor://') &&
+        !locOrigin.startsWith('ionic://') &&
+        !locOrigin.startsWith('file://')
+      ) {
+        resolvedOrigin = window.location.origin.replace(/\/+$/, '');
+      }
+    }
+
     const { url, filename, mimeType } = getReportDownloadMeta('excel');
 
     // Ensure share_token is guaranteed to be present for WhatsApp recipient authentication
@@ -1019,11 +1034,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       } catch (_e) {}
     }
     const shareTokenParam = token ? `&share_token=${token}` : '';
-    const directDownloadUrl = `${origin}/api${url}${url.includes('?') ? '&' : '?'}source=whatsapp${shareTokenParam}`;
+    const directDownloadUrl = `${resolvedOrigin}/api${url}${url.includes('?') ? '&' : '?'}source=whatsapp${shareTokenParam}`;
 
     let fullShareText = text;
     fullShareText += `\n\n📥 *Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
-    fullShareText += `\n🌐 *Live Student Portal:* ${origin}/#/dashboard`;
+    fullShareText += `\n🌐 *Live Student Portal:* ${resolvedOrigin}/#/dashboard`;
 
     // Automatically copy the formatted summary text to clipboard for convenience
     try {
@@ -1086,7 +1101,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             const file = new File([res.data], filename, { type: mimeType });
             if ((navigator as any).canShare({ files: [file] })) {
               await (navigator as any).share({
-                title: `${deptName} LeetCode Performance`,
+                title: `${cleanDept} LeetCode Performance`,
                 text: fullShareText,
                 files: [file],
               });
