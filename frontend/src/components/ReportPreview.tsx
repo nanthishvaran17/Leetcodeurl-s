@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock, Share2, MoreHorizontal, ChevronUp } from 'lucide-react';
 import api from '../services/api';
@@ -78,6 +78,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [moreMenuOpen]);
 
   const fetchReport = async (forceRefresh: boolean = false) => {
     if (initialData && !forceRefresh) {
@@ -3959,7 +3973,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         </div>
 
         {/* 4. FOOTER / EXECUTIVE EXPORT ACTIONS - Compact Mobile UI with Excel + More */}
-        <div className="px-3.5 py-2.5 sm:px-5 sm:py-3 bg-white/95 dark:bg-[#0c1427]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-white/10 flex flex-row items-center justify-between gap-2 shrink-0 print:hidden shadow-lg pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
+        <div className="relative z-40 px-3.5 py-2.5 sm:px-5 sm:py-3 bg-white/95 dark:bg-[#0c1427]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-white/10 flex flex-row items-center justify-between gap-2 shrink-0 print:hidden shadow-lg pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
           <div className="flex items-center space-x-1.5 min-w-0">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <div className="flex items-center gap-1.5 truncate">
@@ -3984,7 +3998,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             </button>
 
             {/* Secondary Action: More Menu Dropdown */}
-            <div className="relative">
+            <div ref={moreMenuRef} className="relative z-50">
               <button
                 onClick={() => setMoreMenuOpen(prev => !prev)}
                 type="button"
@@ -4000,7 +4014,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               {moreMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity sm:bg-transparent sm:backdrop-blur-none"
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity sm:hidden"
                     onClick={() => setMoreMenuOpen(false)}
                   />
 
