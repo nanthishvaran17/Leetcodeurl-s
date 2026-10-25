@@ -574,12 +574,20 @@ def generate_weekly_performance_data(
             "last_contest_rating": (
                 getattr(last_contest_history_map.get(s.id), "rating_after", None)
                 if last_contest_history_map.get(s.id) and getattr(last_contest_history_map.get(s.id), "rating_after", None) is not None
-                else (getattr(last_pub_obj, "contest_rating", None) if last_pub_obj and getattr(last_pub_obj, "contest_rating", None) else None)
+                else (
+                    getattr(last_pub_obj, "contest_rating", None)
+                    if last_pub_obj and getattr(last_pub_obj, "contest_rating", None)
+                    else (getattr(hist_snap, "contest_rating", None) if hist_snap and getattr(hist_snap, "contest_rating", None) else None)
+                )
             ),
             "last_contest_ranking": (
                 getattr(last_pub_obj, "contest_rank", None)
                 if last_pub_obj and getattr(last_pub_obj, "contest_rank", None)
-                else (getattr(pr_last, "official_rank", None) if pr_last and getattr(pr_last, "official_rank", None) else None)
+                else (
+                    getattr(pr_last, "official_rank", None)
+                    if pr_last and getattr(pr_last, "official_rank", None)
+                    else (getattr(hist_snap, "contest_ranking", None) if hist_snap and getattr(hist_snap, "contest_ranking", None) else None)
+                )
             ),
             "last_total_solved": last_tot,
             "contest_name": f"Weekly Contest {curr_contest_num}",

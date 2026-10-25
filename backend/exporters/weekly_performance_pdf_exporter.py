@@ -394,6 +394,9 @@ def export_weekly_performance_pdf(dataset: dict) -> bytes:
         lw: Dict[str, Any] = b.get("last_week", {}) if isinstance(b.get("last_week"), dict) else {}
         cw: Dict[str, Any] = b.get("current_week", {}) if isinstance(b.get("current_week"), dict) else {}
 
+        lw_r = lw.get("rating_above_1500") or lw.get("rating_1500") or 0
+        lw_rnk = lw.get("rank_below_20000") or lw.get("ranking_20000") or 0
+
         # Row 1: Last Week
         row_lw = [
             Paragraph(f"<b>{b_label}</b><br/>(Last Week)", cell_body_bold),
@@ -407,8 +410,8 @@ def export_weekly_performance_pdf(dataset: dict) -> bytes:
             Paragraph(str(lw.get("q3", 0)), cell_body),
             Paragraph(str(lw.get("q2", 0)), cell_body),
             Paragraph(str(lw.get("q1", 0)), cell_body),
-            Paragraph("-", cell_body),
-            Paragraph("-", cell_body),
+            Paragraph(str(lw_r) if lw_r and int(lw_r) > 0 else "-", cell_body_bold if lw_r and int(lw_r) > 0 else cell_body),
+            Paragraph(str(lw_rnk) if lw_rnk and int(lw_rnk) > 0 else "-", cell_body_bold if lw_rnk and int(lw_rnk) > 0 else cell_body),
         ]
 
         # Row 2: Current Week

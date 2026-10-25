@@ -2324,7 +2324,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/40 space-y-1.5">
                                     <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
                                       <span>(Last Week)</span>
-                                      <span className="text-[10px] text-slate-500">Rating: - | Rank: -</span>
+                                      <span className="text-[10px] text-slate-500">
+                                        Rating: {(lw.rating_above_1500 ?? lw.rating_1500 ?? 0) > 0 ? (lw.rating_above_1500 ?? lw.rating_1500) : '-'} | Rank: {(lw.rank_below_20000 ?? lw.ranking_20000 ?? 0) > 0 ? (lw.rank_below_20000 ?? lw.ranking_20000) : '-'}
+                                      </span>
                                     </div>
                                     <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
                                       <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_above_500 ?? 0}</div></div>
@@ -2410,6 +2412,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
                                 const cwRating = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
                                 const cwRanking = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+                                const lwRating = lw.rating_above_1500 ?? lw.rating_1500 ?? 0;
+                                const lwRanking = lw.rank_below_20000 ?? lw.ranking_20000 ?? 0;
 
                                 return (
                                   <React.Fragment key={idx}>
@@ -2432,8 +2436,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                       <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q3 ?? 0}</td>
                                       <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q2 ?? 0}</td>
                                       <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q1 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-400 dark:text-slate-500">-</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-400 dark:text-slate-500">-</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {lwRating > 0 ? lwRating : '-'}
+                                      </td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {lwRanking > 0 ? lwRanking : '-'}
+                                      </td>
                                     </tr>
 
                                     {/* Row 2: Current Week */}

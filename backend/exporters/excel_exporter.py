@@ -467,9 +467,11 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         ws1.cell(row=cur_r1, column=10, value=int(lw.get("q2", 0) or 0)).font = FONT_NUMERIC_BOLD
         ws1.cell(row=cur_r1, column=11, value=int(lw.get("q1", 0) or 0)).font = FONT_NUMERIC_BOLD
 
-        # Rating / Ranking (Last week rating/ranking are not reported in official format, always "-")
-        ws1.cell(row=cur_r1, column=12, value="-").font = FONT_NUMERIC_BOLD
-        ws1.cell(row=cur_r1, column=13, value="-").font = FONT_NUMERIC_BOLD
+        # Rating / Ranking for Last Week
+        lw_r = lw.get("rating_above_1500") or lw.get("rating_1500") or 0
+        lw_rnk = lw.get("rank_below_20000") or lw.get("ranking_20000") or 0
+        ws1.cell(row=cur_r1, column=12, value=int(lw_r) if lw_r and int(lw_r) > 0 else "-").font = FONT_NUMERIC_BOLD
+        ws1.cell(row=cur_r1, column=13, value=int(lw_rnk) if lw_rnk and int(lw_rnk) > 0 else "-").font = FONT_NUMERIC_BOLD
 
         # Row 2: Current Week
         cur_r1 += 1

@@ -197,6 +197,9 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             cell_b.font = font_bold
             cell_b.alignment = align_center
             
+            lw_rating = last_w.get("rating_above_1500") or last_w.get("rating_1500") or 0
+            lw_ranking = last_w.get("rank_below_20000") or last_w.get("ranking_20000") or 0
+
             lw_vals = [
                 last_w.get("prob_above_500", 0),
                 last_w.get("prob_250_500", 0),
@@ -207,12 +210,12 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
                 last_w.get("q3", 0),
                 last_w.get("q2", 0),
                 last_w.get("q1", 0),
-                "-",
-                "-"
+                lw_rating if lw_rating and lw_rating > 0 else "-",
+                lw_ranking if lw_ranking and lw_ranking > 0 else "-"
             ]
             for idx_c, v in enumerate(lw_vals, start=3):
                 c = ws.cell(row=r1, column=idx_c, value=v)
-                c.font = font_regular
+                c.font = font_bold if idx_c >= 12 and v != "-" else font_regular
                 c.alignment = align_center
                 
             # Row 2: Current Week
