@@ -778,8 +778,8 @@ export const ChatWindow: React.FC<Props> = ({
             return (
               <React.Fragment key={msg.messageId}>
                 {showDateHeader && (
-                  <div className="flex justify-center my-2.5 sm:my-3.5 sticky top-1 z-10">
-                    <span className="text-[10px] sm:text-[10.5px] font-bold uppercase tracking-widest bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 text-slate-500 dark:text-slate-300 px-3.5 py-1 rounded-full shadow-xs">
+                  <div className="flex justify-center my-3 sm:my-4 select-none">
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-slate-200/90 dark:bg-slate-800/90 border border-slate-300/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 px-3.5 py-1 rounded-full shadow-xs">
                       {formatHeaderDate(msg.createdAt)}
                     </span>
                   </div>
@@ -788,7 +788,7 @@ export const ChatWindow: React.FC<Props> = ({
                 <div
                   id={`msg-${msg.messageId}`}
                   className={clsx(
-                    "flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative",
+                    "flex flex-col w-fit max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative",
                     isMe ? "ml-auto items-end" : "mr-auto items-start",
                     marginTopClass
                   )}
@@ -807,7 +807,7 @@ export const ChatWindow: React.FC<Props> = ({
                     onTouchStart={() => {
                       touchTimerRef.current = setTimeout(() => {
                         setActiveMenuMessageId(msg.messageId);
-                      }, 400);
+                      }, 350);
                     }}
                     onTouchEnd={() => {
                       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
@@ -816,7 +816,7 @@ export const ChatWindow: React.FC<Props> = ({
                       if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
                     }}
                     className={clsx(
-                      "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed cursor-pointer select-text",
+                      "px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed cursor-pointer select-text transition-all",
                       msg.isDeletedEveryone
                         ? clsx(
                             "border italic select-none shadow-none",
@@ -826,7 +826,7 @@ export const ChatWindow: React.FC<Props> = ({
                           )
                         : isMe
                           ? (activeWallpaper.bubbleMeClass || "bg-brand-600 text-white") + " rounded-br-xs"
-                          : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
+                          : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#202c33] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
                     )}
                   >
 
@@ -858,7 +858,7 @@ export const ChatWindow: React.FC<Props> = ({
 
                     {/* Attachment / Media Render */}
                     {(msg.attachmentFileId || msg.localMediaUrl) && !msg.isDeletedEveryone && (
-                      <div className={clsx("min-w-[200px]", msg.content ? "mb-2" : "")}>
+                      <div className={clsx("min-w-[200px]", msg.content ? "mb-1.5" : "")}>
                         {msg.localMediaUrl || (msg.fileMimeType && (msg.fileMimeType.startsWith('image/') || msg.fileMimeType.startsWith('video/'))) ? (
                           <div className="relative group/media overflow-hidden rounded-xl border border-slate-200/50 bg-black/5 dark:bg-white/5">
                             {msg.fileMimeType?.startsWith('video/') ? (
@@ -881,41 +881,83 @@ export const ChatWindow: React.FC<Props> = ({
                       </div>
                     )}
 
-                    {/* Message Body Content + Inline Options Chevron */}
-                    <div className="flex items-center justify-between gap-2 max-w-full min-w-0">
-                      {msg.isDeletedEveryone ? (
-                        <div className="italic text-xs sm:text-[13px] flex items-center gap-1.5 min-w-0 text-slate-500 dark:text-slate-400 select-none py-0.5">
-                          <Ban className="w-3.5 h-3.5 opacity-70 shrink-0" />
-                          <span className="whitespace-nowrap font-medium">
-                            {isMe ? "You deleted this message" : "This message was deleted"}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="leading-relaxed flex-1 min-w-0 break-words [word-break:break-word] [overflow-wrap:anywhere]">
-                          {msg.content}
-                        </div>
-                      )}
-
-                      {/* Dropdown Chevron directly inside the bubble */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
-                        }}
-                        className={clsx(
-                          "p-0.5 rounded-full cursor-pointer transition-all shrink-0 ml-1",
-                          msg.isDeletedEveryone
-                            ? "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-                            : isMe
-                              ? "text-white/70 hover:text-white hover:bg-black/20"
-                              : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
+                    {/* Message Body Content + Inline WhatsApp-style Timestamp */}
+                    {msg.isDeletedEveryone ? (
+                      <div className="italic text-xs sm:text-[13px] flex items-center gap-1.5 min-w-0 text-slate-500 dark:text-slate-400 select-none py-0.5">
+                        <Ban className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                        <span className="whitespace-nowrap font-medium">
+                          {isMe ? "You deleted this message" : "This message was deleted"}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="relative text-[13.5px] sm:text-[14px] leading-relaxed break-words [word-break:break-word] [overflow-wrap:anywhere]">
+                        {msg.content && (
+                          <span className="inline whitespace-pre-wrap">{msg.content}</span>
                         )}
-                        title="Options"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                        {/* Inline Floating Timestamp & Delivery Ticks */}
+                        <span className={clsx(
+                          "inline-flex items-center gap-1 float-right translate-y-1 ml-2.5 pl-1 select-none text-[10px] font-medium leading-none whitespace-nowrap",
+                          isMe ? "text-white/75" : "text-slate-400 dark:text-slate-400"
+                        )}>
+                          <span>{formatTime(msg.createdAt)}</span>
+                          {msg.isEdited && <span className="italic text-[9px]">• edited</span>}
+                          {isMe && !msg.isDeletedEveryone && (
+                            <span className="inline-flex items-center ml-0.5 shrink-0">
+                              {msg.status === 'SENDING' ? (
+                                <Loader2 className="w-2.5 h-2.5 animate-spin text-white/70" />
+                              ) : msg.status === 'SENT' ? (
+                                <Check className="w-3.5 h-3.5 text-white/70" />
+                              ) : msg.status === 'DELIVERED' ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-white/70" />
+                              ) : (
+                                <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb] stroke-[2.5]" />
+                              )}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* If Attachment only without text content, show timestamp nestled inside */}
+                    {!msg.content && (msg.attachmentFileId || msg.localMediaUrl) && !msg.isDeletedEveryone && (
+                      <div className={clsx(
+                        "flex items-center justify-end gap-1 mt-1 select-none text-[10px] font-medium leading-none",
+                        isMe ? "text-white/75" : "text-slate-400 dark:text-slate-400"
+                      )}>
+                        <span>{formatTime(msg.createdAt)}</span>
+                        {isMe && (
+                          <span className="inline-flex items-center ml-0.5 shrink-0">
+                            {msg.status === 'SENDING' ? (
+                              <Loader2 className="w-2.5 h-2.5 animate-spin text-white/70" />
+                            ) : msg.status === 'SENT' ? (
+                              <Check className="w-3.5 h-3.5 text-white/70" />
+                            ) : msg.status === 'DELIVERED' ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-white/70" />
+                            ) : (
+                              <CheckCheck className="w-3.5 h-3.5 text-[#53bdeb] stroke-[2.5]" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Desktop Hover Options Trigger */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
+                      }}
+                      className={clsx(
+                        "hidden sm:flex opacity-0 group-hover:opacity-100 absolute -top-2.5 p-1 rounded-full shadow-md cursor-pointer transition-all z-20 items-center justify-center",
+                        isMe
+                          ? "-left-2 bg-slate-800 text-white hover:bg-slate-700"
+                          : "-right-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50"
+                      )}
+                      title="Message Options"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   {/* Transparent Backdrop to close on click outside */}
@@ -1066,59 +1108,19 @@ export const ChatWindow: React.FC<Props> = ({
 
                   {/* Reaction Badges */}
                   {Object.keys(reactionCounts).length > 0 && !msg.isDeletedEveryone && (
-                    <div className={clsx("flex flex-wrap gap-1 mt-1", isMe ? "justify-end" : "justify-start")}>
+                    <div className={clsx("flex flex-wrap gap-1 -mt-1.5 z-10 mb-0.5", isMe ? "justify-end mr-1" : "justify-start ml-1")}>
                       {Object.entries(reactionCounts).map(([emoji, count]) => (
                         <span
                           key={emoji}
                           onClick={() => onToggleReaction(msg.messageId, emoji)}
-                          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-xs cursor-pointer hover:scale-110 transition-transform font-bold text-slate-700 dark:text-slate-300"
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] bg-white dark:bg-[#202c33] border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer hover:scale-110 active:scale-95 transition-transform font-bold text-slate-700 dark:text-slate-300"
                         >
                           <span>{emoji}</span>
-                          {count > 1 && <span className="text-[10px] text-slate-500">{count}</span>}
+                          {count > 1 && <span className="text-[9px] text-slate-500 dark:text-slate-400">{count}</span>}
                         </span>
                       ))}
                     </div>
                   )}
-
-                  {/* Timestamp & Delivery Ticks (WhatsApp Style) */}
-                  <div className="flex items-center gap-1.5 mt-1 px-1">
-                    <span className="text-[10.5px] font-bold text-slate-400 dark:text-slate-400">
-                      {formatTime(msg.createdAt)}
-                    </span>
-
-                    {msg.isEdited && (
-                      <span className="text-[10px] font-bold text-slate-400 italic">
-                        • edited
-                      </span>
-                    )}
-
-                    {isMe && !msg.isDeletedEveryone && (
-                      <span className="flex items-center ml-0.5 shrink-0">
-                        {msg.status === 'SENDING' ? (
-                          <Loader2 className="w-3 h-3 text-slate-400 animate-spin" />
-                        ) : msg.status === 'SENT' ? (
-                          <span title="Sent (Single Tick)"><Check className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" /></span>
-                        ) : msg.status === 'DELIVERED' ? (
-                          <span title="Delivered (Double Tick)"><CheckCheck className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" /></span>
-                        ) : (
-                          <span title="Read (Blue Ticks)"><CheckCheck className="w-3.5 h-3.5 text-[#53bdeb] dark:text-[#53bdeb] stroke-[2.5]" /></span>
-                        )}
-                      </span>
-                    )}
-
-                    {/* Quick Options Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuMessageId(isMenuOpen ? null : msg.messageId);
-                      }}
-                      className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md transition-colors cursor-pointer ml-0.5"
-                      title="Message Options (Edit, Delete, Reply)"
-                    >
-                      <MoreVertical className="w-3 h-3" />
-                    </button>
-                  </div>
                 </div>
               </React.Fragment>
             );
