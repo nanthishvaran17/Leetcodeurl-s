@@ -270,6 +270,74 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# GZip Compression Middleware (speeds up all JSON/CSS/JS responses by 70-85%)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# HTTP Security Headers & Cache-Control Middleware (Lighthouse Best Practices 100/100)
+@app.middleware("http")
+async def add_security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    if request.url.path.startswith("/assets/"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
+
+# ARD (Agentic Resource Discovery 1.0) Manifest Endpoints for 4/4 Agentic Browsing Score
+AI_CATALOG_DATA = {
+    "$schema": "https://raw.githubusercontent.com/ards-project/ard-spec/main/spec/schemas/ai-catalog.schema.json",
+    "specVersion": "1.0",
+    "host": {
+        "displayName": "Nandha Engineering College (Autonomous)",
+        "identifier": "did:web:13.53.231.6",
+        "documentationUrl": "http://13.53.231.6/docs",
+        "logoUrl": "http://13.53.231.6/pwa-512x512.png"
+    },
+    "entries": [
+        {
+            "identifier": "urn:air:nandhaengg.org:api:leetcode-tracker",
+            "displayName": "Nandha LeetCode Tracker & Contest Intelligence API",
+            "type": "application/json",
+            "url": "http://13.53.231.6/api/public/stats",
+            "description": "Provides real-time contest leaderboard, student analytics, and attendance telemetry.",
+            "tags": ["education", "coding", "analytics", "leaderboard", "leetcode"],
+            "representativeQueries": [
+                "What are the top student ranks in the latest LeetCode contest?",
+                "Show college coding leaderboard and department statistics",
+                "Check Sunday contest attendance summary"
+            ]
+        },
+        {
+            "identifier": "urn:air:nandhaengg.org:doc:llms-txt",
+            "displayName": "Nandha Platform Documentation for LLMs",
+            "type": "text/markdown",
+            "url": "http://13.53.231.6/llms.txt",
+            "description": "Comprehensive institutional architecture and agent discovery manual.",
+            "tags": ["documentation", "llms", "guide"],
+            "representativeQueries": [
+                "Where is the LLM documentation for Nandha LeetCode tracker?",
+                "How can AI agents integrate with this platform?"
+            ]
+        }
+    ]
+}
+
+@app.get("/.well-known/ai-catalog.json", include_in_schema=False)
+@app.get("/.well-known/ard.json", include_in_schema=False)
+@app.get("/ai-catalog.json", include_in_schema=False)
+async def get_ai_catalog_manifest():
+    return JSONResponse(
+        content=AI_CATALOG_DATA,
+        media_type="application/json",
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
+
+
 
 # =====================================================================
 # 2. LIGHTWEIGHT PRODUCTION HEALTH & READINESS PROBES
