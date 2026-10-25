@@ -132,6 +132,7 @@ def get_or_create_report(
 
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
     user_dept = str(getattr(current_user, "department_id", "ALL"))
+    from backend.services.authorization_service import _STAFF_ROLES
     if user_role in ("hod", "department hod", "department_hod"):
         from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
         h_ids = get_hod_authorized_department_ids(db, current_user)
@@ -140,7 +141,11 @@ def get_or_create_report(
         if auth_codes and (clean_filters.get("department") in (None, "ALL", "") or clean_filters.get("dept") in (None, "ALL", "")):
             clean_filters["department"] = auth_codes[0]
             clean_filters["dept"] = auth_codes[0]
-    user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
+        user_scope = f"hod:{user_dept}"
+    elif user_role in _STAFF_ROLES or user_role in ("faculty", "staff", "faculty coordinator", "staff coordinator", "mentor"):
+        user_scope = f"{user_role}:user_{getattr(current_user, 'id', '0')}"
+    else:
+        user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
 
     ext_info = EXT_MEDIA_TYPES.get(format.lower().strip(), ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
     ext, mime_type = ext_info
@@ -496,7 +501,8 @@ def generate_report_bytes(
             dept_filter=dept_val,
             year_filter=year_val,
             batch_filter=batch,
-            session_id=flt.get("session_id")
+            session_id=flt.get("session_id"),
+            current_user=current_user
         )
         if fmt == "pdf":
             from backend.exporters.weekly_performance_pdf_exporter import export_weekly_performance_pdf

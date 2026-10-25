@@ -348,8 +348,10 @@ def generate_weekly_performance_data(
     from backend.services.contest_performance_service import matches_dept, matches_year
     student_query = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
-    # For institutional coordinator weekly performance report, all college departments are available for review.
-    # We load all active students, and then apply the selected department/cohort filter below.
+    # Apply role-based scoping (Faculty/Staff mentors receive strictly their allocated students; HOD receives their department)
+    if current_user is not None and not getattr(current_user, "is_system_bypass", False):
+        student_query = apply_role_based_student_filter(student_query, current_user, db)
+
     students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
 
     # Apply department and year/batch filters if provided

@@ -455,8 +455,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     }
   }, []);
 
-  const userRole = (userSnapshot?.role || '').trim().toLowerCase();
+  const userRole = (userSnapshot?.role || (currentUser as any)?.role || '').trim().toLowerCase();
   const isHodUser = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRole);
+  const isStaffUser = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty coordinator', 'staff coordinator', 'mentor'].some(r => userRole.includes(r));
   const authorizedDeptCodes: string[] = useMemo(() => {
     return (userSnapshot?.authorized_department_codes || []).map((c: string) => c.trim().toUpperCase());
   }, [userSnapshot]);
@@ -671,12 +672,41 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     };
   }, [displayedStudents, isContestReport, activeFilter, solveDist, report?.metrics]);
 
+  // Check if current view is scoped to a specific cohort/allocated mentee roster
+  const isMenteeScoped = useMemo(() => {
+    return isStaffUser || Boolean(contestSummary.totalStudents && allRows.length > 0 && allRows.length < contestSummary.totalStudents);
+  }, [isStaffUser, contestSummary.totalStudents, allRows.length]);
+
+  const rowDerivedMetrics = useMemo(() => {
+    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, attended = 0;
+    allRows.forEach((r: any) => {
+      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
+      const solv = Number(r.total_solved ?? r.problems_solved ?? -1);
+      const isAtt = rawSt.includes('ATTEND') || rawSt.includes('VERIFIED') || solv >= 0;
+      if (isAtt) {
+        attended++;
+        if (solv === 4) s4++;
+        else if (solv === 3) s3++;
+        else if (solv === 2) s2++;
+        else if (solv === 1) s1++;
+        else s0++;
+      }
+    });
+    return { s4, s3, s2, s1, s0, attended, notAttended: Math.max(allRows.length - attended, 0) };
+  }, [allRows]);
+
   // Robust Contest Metrics Calculation with zero-fallback & reconciliation safety
   const totalRosterCount = useMemo(() => {
+    if (isMenteeScoped && allRows.length > 0) {
+      return allRows.length;
+    }
     return contestSummary.totalStudents || allRows.length || 0;
-  }, [contestSummary.totalStudents, allRows.length]);
+  }, [isMenteeScoped, contestSummary.totalStudents, allRows.length]);
 
   const actualParticipantCount = useMemo(() => {
+    if (isMenteeScoped && allRows.length > 0) {
+      return rowDerivedMetrics.attended;
+    }
     const sumAttended = (contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0);
     if (sumAttended > 0) return sumAttended;
     if (conditionStats.attendedCount > 0) return conditionStats.attendedCount;
@@ -686,9 +716,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       return report.histSummary.sessionParticipation[report.histSummary.sessionParticipation.length - 1].attended || 0;
     }
     return allRows.filter((r: any) => (r.totalAttended || 0) > 0 || (r.weeklyData || []).some((w: any) => w.att) || (r.status || '').toUpperCase().includes('ATTEND')).length;
-  }, [contestSummary, conditionStats.attendedCount, solveDist, report.histSummary, allRows]);
+  }, [isMenteeScoped, rowDerivedMetrics.attended, contestSummary, conditionStats.attendedCount, solveDist, report.histSummary, allRows]);
 
   const actualNotAttendedCount = useMemo(() => {
+    if (isMenteeScoped && allRows.length > 0) {
+      return rowDerivedMetrics.notAttended;
+    }
     if (solveDist.notParticipated !== undefined && solveDist.notParticipated !== null && Number(solveDist.notParticipated) >= 0) {
       return Number(solveDist.notParticipated);
     }
@@ -699,7 +732,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       return conditionStats.notAttendedCount;
     }
     return Math.max(totalRosterCount - actualParticipantCount, 0);
-  }, [solveDist.notParticipated, contestSummary.notAttended, conditionStats.notAttendedCount, totalRosterCount, actualParticipantCount]);
+  }, [isMenteeScoped, rowDerivedMetrics.notAttended, solveDist.notParticipated, contestSummary.notAttended, conditionStats.notAttendedCount, totalRosterCount, actualParticipantCount]);
 
   const turnoutPercentage = useMemo(() => {
     if (totalRosterCount <= 0) return '0%';
@@ -713,11 +746,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
   }, [actualNotAttendedCount, totalRosterCount]);
 
-  const s4Count = Number(solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? conditionStats.s4 ?? 0);
-  const s3Count = Number(solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? conditionStats.s3 ?? 0);
-  const s2Count = Number(solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? conditionStats.s2 ?? 0);
-  const s1Count = Number(solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? conditionStats.s1 ?? 0);
-  const s0Count = Number(solveDist.solved0 ?? report.metrics?.['0 Q Solved'] ?? conditionStats.s0 ?? Math.max(actualParticipantCount - (s4Count + s3Count + s2Count + s1Count), 0));
+  const s4Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s4 : Number(solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? conditionStats.s4 ?? 0);
+  const s3Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s3 : Number(solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? conditionStats.s3 ?? 0);
+  const s2Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s2 : Number(solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? conditionStats.s2 ?? 0);
+  const s1Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s1 : Number(solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? conditionStats.s1 ?? 0);
+  const s0Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s0 : Number(solveDist.solved0 ?? report.metrics?.['0 Q Solved'] ?? conditionStats.s0 ?? Math.max(actualParticipantCount - (s4Count + s3Count + s2Count + s1Count), 0));
   const notAttendedCount = actualNotAttendedCount;
 
   const getCohortPct = (count: number) => {
@@ -994,7 +1027,35 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
     }
 
-    if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
+    const sumBatchTotal = Array.isArray(report?.batch_summaries)
+      ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
+      : 0;
+    const useRowBatches = allRows.length > 0 && (isStaffUser || (sumBatchTotal > 0 && allRows.length < sumBatchTotal));
+
+    if (useRowBatches) {
+      const bMap: Record<string, { total: number; r1500: number }> = {};
+      allRows.forEach((r: any) => {
+        let b = (r.batch || '').trim();
+        if (!b) {
+          const yr = String(r.year || r.year_level || '').trim();
+          if (yr === '4' || yr === 'IV') b = '2023 - 2027';
+          else if (yr === '3' || yr === 'III') b = '2024 - 2028';
+          else if (yr === '2' || yr === 'II') b = '2025 - 2029';
+          else b = yr ? `Batch ${yr}` : 'Other';
+        }
+        if (!bMap[b]) bMap[b] = { total: 0, r1500: 0 };
+        bMap[b].total += 1;
+        const rat = Number(r.contest_rating || r.rating || 0);
+        if (rat > 1500) bMap[b].r1500 += 1;
+      });
+      const bEntries = Object.entries(bMap).filter(([_, data]) => data.total > 0);
+      if (bEntries.length > 0) {
+        text += `\n*Batch Breakdown:*\n`;
+        bEntries.forEach(([batchName, bData]) => {
+          text += `• ${batchName} (${bData.total} students) — Rating > 1500: *${bData.r1500}*\n`;
+        });
+      }
+    } else if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
       text += `\n*Batch Breakdown:*\n`;
       report.batch_summaries.forEach((b: any) => {
         const batchName = b.batch || 'Batch';

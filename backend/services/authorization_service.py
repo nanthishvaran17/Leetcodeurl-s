@@ -30,7 +30,10 @@ _HOD_ROLES = frozenset({
 _STAFF_ROLES = frozenset({
     "staff", "faculty", "professor",
     "faculty mentor", "staff mentor",
-    "faculty_mentor", "staff_mentor"
+    "faculty_mentor", "staff_mentor",
+    "faculty coordinator", "staff coordinator",
+    "faculty_coordinator", "staff_coordinator",
+    "mentor", "tutor", "class advisor"
 })
 
 
@@ -204,8 +207,17 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
         return query
 
     role = _normalize_role(user)
+    u_id = getattr(user, "id", None)
 
-    # 1. Global access — no restriction
+    # 0. Active Faculty/Staff Student Allocation Precedence:
+    # If the user has assigned student mentees (e.g. 21 students) and is not a top-level institutional administrator,
+    # strictly scope the query to their allocated students.
+    if u_id and role not in ("admin", "administrator", "super admin", "super_admin", "principal", "management"):
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, u_id)
+        if assigned_ids:
+            return query.filter(Student.id.in_(assigned_ids))
+
+    # 1. Global access — no restriction for institutional administrators
     if role in _GLOBAL_ACCESS_ROLES:
         return query
 
@@ -220,7 +232,6 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
 
     # 3. Staff / Faculty / Mentors → assigned students if allocated, else fallback to department/institutional scope
     if role in _STAFF_ROLES:
-        u_id = getattr(user, "id", None)
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, u_id) if u_id else []
         if assigned_ids:
             return query.filter(Student.id.in_(assigned_ids))

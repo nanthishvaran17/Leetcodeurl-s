@@ -2113,6 +2113,62 @@ def _get_dataset_for_id(
                     rows = filtered_report_rows
                 else:
                     rows = []
+
+                # Reconcile dataset aggregates (metrics, batch_summaries, totalStudents) to match the scoped rows
+                batch_map = {}
+                s4 = s3 = s2 = s1 = s0 = 0
+                attended = 0
+                not_attended = 0
+                for r in rows:
+                    b_label = str(r.get("batch") or r.get("cohort") or "").strip()
+                    if not b_label:
+                        yr = str(r.get("year") or r.get("year_level") or "")
+                        if yr in ("4", "IV"): b_label = "2023 - 2027"
+                        elif yr in ("3", "III"): b_label = "2024 - 2028"
+                        elif yr in ("2", "II"): b_label = "2025 - 2029"
+                        else: b_label = "Other"
+                    if b_label not in batch_map:
+                        batch_map[b_label] = {"batch": b_label, "total_students": 0, "current_week": {"rating_above_1500": 0}}
+                    batch_map[b_label]["total_students"] += 1
+                    try:
+                        rat = float(r.get("contest_rating") or r.get("rating") or 0)
+                        if rat > 1500:
+                            batch_map[b_label]["current_week"]["rating_above_1500"] += 1
+                    except (ValueError, TypeError):
+                        pass
+
+                    try:
+                        solv = int(r.get("total_solved") if r.get("total_solved") is not None else (r.get("problems_solved") if r.get("problems_solved") is not None else -1))
+                    except (ValueError, TypeError):
+                        solv = -1
+                    st = str(r.get("status") or r.get("attendance_status") or "").upper()
+                    is_att = "ATTEND" in st or "VERIFIED" in st or solv >= 0
+                    if is_att:
+                        attended += 1
+                        if solv == 4: s4 += 1
+                        elif solv == 3: s3 += 1
+                        elif solv == 2: s2 += 1
+                        elif solv == 1: s1 += 1
+                        else: s0 += 1
+                    else:
+                        not_attended += 1
+
+                dataset["batch_summaries"] = list(batch_map.values())
+                if "metrics" not in dataset or not isinstance(dataset["metrics"], dict):
+                    dataset["metrics"] = {}
+                dataset["metrics"]["totalStudents"] = len(rows)
+                dataset["metrics"]["total_students"] = len(rows)
+                dataset["metrics"]["attended"] = attended
+                dataset["metrics"]["notAttended"] = not_attended
+                dataset["metrics"]["4 Q Solved"] = s4
+                dataset["metrics"]["3 Q Solved"] = s3
+                dataset["metrics"]["2 Q Solved"] = s2
+                dataset["metrics"]["1 Q Solved"] = s1
+                dataset["metrics"]["0 Q Solved"] = s0
+                if "contestSummary" in dataset and isinstance(dataset["contestSummary"], dict):
+                    dataset["contestSummary"]["totalStudents"] = len(rows)
+                    dataset["contestSummary"]["publicAttended"] = attended
+                    dataset["contestSummary"]["notAttended"] = not_attended
             elif role_clean in _HOD_ROLES:
                 from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
                 from backend.services.contest_performance_service import matches_dept
@@ -2136,6 +2192,9 @@ def _get_dataset_for_id(
         dataset["report_type"] = report_type
         dataset["rows"] = rows
         dataset["allStudents"] = rows
+        dataset["all_students_current"] = rows
+        dataset["totalStudents"] = len(rows)
+        dataset["total_students"] = len(rows)
         if has_active_filters:
             dataset["deptFilter"] = dept
             dataset["department"] = dept
