@@ -16,6 +16,7 @@ import {
 import { Share } from '@capacitor/share';
 import { StudentData } from './LeaderboardTable';
 import { triggerDownload } from '../utils/mobileDownload';
+import { isNativeMobile } from '../services/download/downloadUtils';
 
 interface StudentShareCardModalProps {
   isOpen: boolean;
@@ -347,14 +348,40 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
     }
   };
 
-  // 1-Tap WhatsApp Status Share
+  // 1-Tap WhatsApp Status Share (Attaches actual card PNG image file)
   const handleWhatsAppShare = async () => {
     setSharing(true);
+    const filename = `Nandha_LeetCode_Badge_${cleanReg}.png`;
     try {
-      // First attempt native image share if supported
       const blob = await generateCardBlob();
-      if (blob && typeof navigator !== 'undefined' && navigator.canShare) {
-        const file = new File([blob], `LeetCode_${cleanReg}.png`, { type: 'image/png' });
+      if (!blob) throw new Error('Canvas rendering failed');
+
+      // 1. Native Mobile (Capacitor Android/iOS App): Save PNG to cache and share file URI
+      if (isNativeMobile()) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const { blobToBase64 } = await import('../services/download/downloadUtils');
+        const base64Data = await blobToBase64(blob);
+
+        const writeRes = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true,
+        });
+
+        await Share.share({
+          title: `${student.name || 'Student'} LeetCode Achievement Card`,
+          text: shareText,
+          url: writeRes.uri,
+          dialogTitle: 'Share Card to WhatsApp Status / Chat',
+        });
+        setSharing(false);
+        return;
+      }
+
+      // 2. Web Share with File (Chrome Mobile / modern browsers)
+      if (typeof navigator !== 'undefined' && navigator.canShare && typeof File !== 'undefined') {
+        const file = new File([blob], filename, { type: 'image/png' });
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
@@ -365,21 +392,67 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
           return;
         }
       }
-    } catch (_e) {}
 
-    // Fallback: Direct WhatsApp URL scheme
-    try {
+      // 3. Desktop / Fallback: Download image file & open WhatsApp scheme
+      await triggerDownload(blob, filename, 'image/png');
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
       window.open(whatsappUrl, '_blank');
-    } catch (_e) {}
-
-    setSharing(false);
+    } catch (err) {
+      console.warn('WhatsApp share error, falling back to text URL:', err);
+      try {
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+        window.open(whatsappUrl, '_blank');
+      } catch (_e) {}
+    } finally {
+      setSharing(false);
+    }
   };
 
-  // Handle Native Share functionality
+  // Handle Native Share functionality (Attaches actual card PNG image file)
   const handleShare = async () => {
     setSharing(true);
+    const filename = `Nandha_LeetCode_Badge_${cleanReg}.png`;
     try {
+      const blob = await generateCardBlob();
+
+      // 1. Native Mobile (Capacitor Android/iOS App)
+      if (blob && isNativeMobile()) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const { blobToBase64 } = await import('../services/download/downloadUtils');
+        const base64Data = await blobToBase64(blob);
+
+        const writeRes = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true,
+        });
+
+        await Share.share({
+          title: `${student.name || 'Student'} LeetCode Achievements`,
+          text: shareText,
+          url: writeRes.uri,
+          dialogTitle: 'Share Achievement Card',
+        });
+        setSharing(false);
+        return;
+      }
+
+      // 2. Web Share with File
+      if (blob && typeof navigator !== 'undefined' && navigator.canShare && typeof File !== 'undefined') {
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `${student.name || 'Student'} LeetCode Achievements`,
+            text: shareText,
+          });
+          setSharing(false);
+          return;
+        }
+      }
+
+      // 3. Fallback to basic share
       const canNativeShare = await Share.canShare();
       if (canNativeShare.value) {
         await Share.share({
@@ -545,7 +618,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
               className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700 hover:opacity-90 active:scale-95 text-white font-extrabold text-xs transition-all shadow-md shadow-emerald-500/25 cursor-pointer touch-manipulation select-none"
             >
               <Share2 className="w-4 h-4" />
-              <span>WhatsApp Status</span>
+              <span>{sharing ? 'Attaching Image...' : 'WhatsApp Status'}</span>
             </button>
           </div>
 
@@ -557,7 +630,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
               className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs active:scale-95 transition-all cursor-pointer border border-slate-300/60 dark:border-navy-700 select-none"
             >
               <Smartphone className="w-3.5 h-3.5" />
-              <span>More Share Options</span>
+              <span>{sharing ? 'Attaching Image...' : 'More Share Options'}</span>
             </button>
             
             {/* Copy Text Button */}

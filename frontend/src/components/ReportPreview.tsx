@@ -15,6 +15,7 @@ import { useNotification } from '../context/NotificationContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { isNativeMobile, saveFileToMobileStorage } from '../services/download/downloadUtils';
 import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 const formatStudentName = (name: string) => {
@@ -644,147 +645,162 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   };
 
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharingWhatsApp, setIsSharingWhatsApp] = useState(false);
+
+  // Unified download metadata resolver for Excel, PDF, and Word documents
+  const getReportDownloadMeta = (format: string = 'excel') => {
+    const queryParams = new URLSearchParams();
+    if (activeFilter) queryParams.append('attendance', activeFilter);
+    if (report?.department && report.department !== 'ALL') queryParams.append('department', report.department);
+    if (report?.year && report.year !== 'ALL') queryParams.append('year', report.year);
+    if (report?.reportType || report?.report_type) queryParams.append('report_type', report.reportType || report.report_type);
+    
+    const qString = queryParams.toString();
+    const url = `/reports/${reportId}/${format}${qString ? '?' + qString : ''}`;
+    const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
+
+    // Extract exact descriptive report title
+    let titlePart = '';
+    if (report?.title) {
+      let t = report.title;
+      if (t.includes(' - ')) {
+        const parts = t.split(' - ');
+        t = parts[parts.length - 1];
+      }
+      titlePart = t
+        .replace(/\s*\([^)]*\)/g, '')
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '_');
+    }
+
+    if (!titlePart || titlePart.length < 3) {
+      const typeMap: Record<string, string> = {
+        'CONTEST_PERFORMANCE_RANKING': 'Contest_Performance_and_Ranking_Report',
+        'CONTEST_ATTENDANCE_PARTICIPATION': 'Contest_Attendance_and_Participation_Report',
+        'WEEKLY_COORDINATOR': 'Coordinator_Weekly_Performance_Report',
+        'WEEKLY_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
+        'WEEKLY_STUDENT_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
+        'WOW_INTEL': 'Week_on_Week_Performance_Intel_Report',
+        'HISTORICAL_PERFORMANCE': 'Historical_Contest_Performance_Report',
+        'FIVE_WEEK_TREND': '5Week_Contest_Trend_Report',
+        'SUNDAY_LIVE': 'Sunday_Live_Contest_Attendance_Report',
+        'FRIDAY_OFFICIAL': 'Official_Friday_Contest_Result_Report',
+        'LEADERBOARD': 'Official_Institutional_Leaderboard_Report',
+        'MASTER_10_SHEET': 'Master_10_Sheet_Institutional_Report',
+        'STUDENT_PERFORMANCE': 'Student_Performance_Detail_Report',
+        'ASSIGNED_STUDENTS': 'Mentoring_Assigned_Students_Report',
+        'STAFF_MENTORING': 'Mentoring_Assigned_Students_Report',
+        'OFFICIAL_SUMMARY': 'Official_College_Summary_Report',
+        'HOD_DEPARTMENT_INTELLIGENCE': 'HOD_Department_Intelligence_Report',
+        'FACULTY_CONSOLIDATED': 'Faculty_Consolidated_Performance_Report',
+        'PRINCIPAL_EXECUTIVE': 'Principal_Executive_Intelligence_Report',
+      };
+      titlePart = typeMap[report?.reportType] || (report?.reportType || 'Student_Performance_Detail').replace(/\s+/g, '_');
+    }
+
+    if (isWeeklyPerformance) {
+      titlePart = 'Coordinator_Weekly_Performance_Report';
+    }
+
+    let sessionTag = '';
+    if (report?.contestName) {
+      sessionTag += `_${report.contestName.replace(/\s+/g, '_')}`;
+    } else if (report?.prevContest && report?.currContest) {
+      sessionTag += `_${report.prevContest}_vs_${report.currContest}`;
+    }
+
+    const isLiveReport = ['STUDENT_PERFORMANCE', 'ASSIGNED_STUDENTS', 'STAFF_MENTORING'].includes(report?.reportType || '');
+    const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || report?.report_date || report?.reportDate || '');
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    if (dateVal) {
+      const parts = dateVal.split(/[.-]/);
+      if (parts.length === 3) {
+        let dd = parts[0], mm = parseInt(parts[1], 10), yyyy = parts[2];
+        if (parts[0].length === 4) { yyyy = parts[0]; mm = parseInt(parts[1], 10); dd = parts[2]; }
+        if (mm >= 1 && mm <= 12) {
+          sessionTag += `_${dd.padStart(2, '0')}${months[mm - 1]}${yyyy}`;
+        } else {
+          sessionTag += `_${dateVal.replace(/[^\d]/g, '')}`;
+        }
+      } else {
+        sessionTag += `_${dateVal.replace(/[^\w]/g, '_')}`;
+      }
+    } else {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = months[now.getMonth()];
+      const yyyy = now.getFullYear();
+      sessionTag += `_${dd}${mm}${yyyy}`;
+    }
+
+    let filterTag = '';
+    const DEPT_NAME_MAP: Record<string, string> = {
+      '1': 'CSE-CS',
+      '2': 'CSE-IOT',
+      '3': 'IT',
+      '4': 'IT',
+      '7': 'IT',
+      '8': 'CSE',
+      '9': 'AGRI',
+      '10': 'AIDS',
+      '11': 'EEE',
+      '12': 'ECE',
+      'CSE(CS)': 'CSE-CS',
+      'CSE(IOT)': 'CSE-IOT',
+      'CSE(IoT)': 'CSE-IOT',
+      'CSE': 'CSE',
+      'IT': 'IT',
+      'AIDS': 'AIDS',
+      'ECE': 'ECE',
+      'EEE': 'EEE',
+      'MECH': 'MECH',
+      'CIVIL': 'CIVIL',
+      'AGRI': 'AGRI',
+      'BME': 'BME',
+    };
+    const deptRaw = (report?.department || report?.deptFilter || '').toString().trim();
+    if (deptRaw && deptRaw.toUpperCase() !== 'ALL') {
+      const dUpper = deptRaw.toUpperCase();
+      const dClean = DEPT_NAME_MAP[deptRaw] || DEPT_NAME_MAP[dUpper] || deptRaw.replace(/[\(\)\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      filterTag += `_${dClean}`;
+    }
+
+    const YEAR_NAME_MAP: Record<string, string> = {
+      '1': 'I-Yr', 'I': 'I-Yr', '1ST': 'I-Yr',
+      '2': 'II-Yr', 'II': 'II-Yr', '2ND': 'II-Yr',
+      '3': 'III-Yr', 'III': 'III-Yr', '3RD': 'III-Yr',
+      '4': 'IV-Yr', 'IV': 'IV-Yr', '4TH': 'IV-Yr',
+    };
+    const yrRaw = (report?.year || report?.yearFilter || '').toString().trim();
+    if (yrRaw && yrRaw.toUpperCase() !== 'ALL') {
+      const yUpper = yrRaw.toUpperCase();
+      const yClean = YEAR_NAME_MAP[yrRaw] || YEAR_NAME_MAP[yUpper] || `${yrRaw.replace(/YEAR|YR/gi, '').trim()}-Yr`;
+      filterTag += `_${yClean}`;
+    }
+
+    if (activeFilter && activeFilter !== 'ALL') {
+      filterTag += `_Filter_${activeFilter}`;
+    }
+
+    const filename = `NEC_${titlePart}${sessionTag}${filterTag}.${ext}`;
+    const mimeType = format === 'excel'
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : format === 'pdf'
+      ? 'application/pdf'
+      : format === 'word'
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/octet-stream';
+
+    return { url, filename, ext, mimeType };
+  };
 
   const downloadFile = async (format: string) => {
     if (isDownloading) return;
     setIsDownloading(true);
     try {
-      const queryParams = new URLSearchParams();
-      if (activeFilter) queryParams.append('attendance', activeFilter);
-      if (report?.department && report.department !== 'ALL') queryParams.append('department', report.department);
-      if (report?.year && report.year !== 'ALL') queryParams.append('year', report.year);
-      if (report?.reportType || report?.report_type) queryParams.append('report_type', report.reportType || report.report_type);
-      
-      const qString = queryParams.toString();
-      const url = `/reports/${reportId}/${format}${qString ? '?' + qString : ''}`;
-      const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
-
-      // Extract exact descriptive report title
-      let titlePart = '';
-      if (report?.title) {
-        let t = report.title;
-        if (t.includes(' - ')) {
-          const parts = t.split(' - ');
-          t = parts[parts.length - 1];
-        }
-        titlePart = t
-          .replace(/\s*\([^)]*\)/g, '')
-          .replace(/[^\w\s-]/g, '')
-          .trim()
-          .replace(/\s+/g, '_');
-      }
-
-      if (!titlePart || titlePart.length < 3) {
-        const typeMap: Record<string, string> = {
-          'CONTEST_PERFORMANCE_RANKING': 'Contest_Performance_and_Ranking_Report',
-          'CONTEST_ATTENDANCE_PARTICIPATION': 'Contest_Attendance_and_Participation_Report',
-          'WEEKLY_COORDINATOR': 'Coordinator_Weekly_Performance_Report',
-          'WEEKLY_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
-          'WEEKLY_STUDENT_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
-          'WOW_INTEL': 'Week_on_Week_Performance_Intel_Report',
-          'HISTORICAL_PERFORMANCE': 'Historical_Contest_Performance_Report',
-          'FIVE_WEEK_TREND': '5Week_Contest_Trend_Report',
-          'SUNDAY_LIVE': 'Sunday_Live_Contest_Attendance_Report',
-          'FRIDAY_OFFICIAL': 'Official_Friday_Contest_Result_Report',
-          'LEADERBOARD': 'Official_Institutional_Leaderboard_Report',
-          'MASTER_10_SHEET': 'Master_10_Sheet_Institutional_Report',
-          'STUDENT_PERFORMANCE': 'Student_Performance_Detail_Report',
-          'ASSIGNED_STUDENTS': 'Mentoring_Assigned_Students_Report',
-          'STAFF_MENTORING': 'Mentoring_Assigned_Students_Report',
-          'OFFICIAL_SUMMARY': 'Official_College_Summary_Report',
-          'HOD_DEPARTMENT_INTELLIGENCE': 'HOD_Department_Intelligence_Report',
-          'FACULTY_CONSOLIDATED': 'Faculty_Consolidated_Performance_Report',
-          'PRINCIPAL_EXECUTIVE': 'Principal_Executive_Intelligence_Report',
-        };
-        titlePart = typeMap[report?.reportType] || (report?.reportType || 'Student_Performance_Detail').replace(/\s+/g, '_');
-      }
-
-      if (isWeeklyPerformance) {
-        titlePart = 'Coordinator_Weekly_Performance_Report';
-      }
-
-      let sessionTag = '';
-      if (report?.contestName) {
-        sessionTag += `_${report.contestName.replace(/\s+/g, '_')}`;
-      } else if (report?.prevContest && report?.currContest) {
-        sessionTag += `_${report.prevContest}_vs_${report.currContest}`;
-      }
-
-      const isLiveReport = ['STUDENT_PERFORMANCE', 'ASSIGNED_STUDENTS', 'STAFF_MENTORING'].includes(report?.reportType || '');
-      const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || report?.report_date || report?.reportDate || '');
-      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-      if (dateVal) {
-        const parts = dateVal.split(/[.-]/);
-        if (parts.length === 3) {
-          let dd = parts[0], mm = parseInt(parts[1], 10), yyyy = parts[2];
-          if (parts[0].length === 4) { yyyy = parts[0]; mm = parseInt(parts[1], 10); dd = parts[2]; }
-          if (mm >= 1 && mm <= 12) {
-            sessionTag += `_${dd.padStart(2, '0')}${months[mm - 1]}${yyyy}`;
-          } else {
-            sessionTag += `_${dateVal.replace(/[^\d]/g, '')}`;
-          }
-        } else {
-          sessionTag += `_${dateVal.replace(/[^\w]/g, '_')}`;
-        }
-      } else {
-        const now = new Date();
-        const dd = String(now.getDate()).padStart(2, '0');
-        const mm = months[now.getMonth()];
-        const yyyy = now.getFullYear();
-        sessionTag += `_${dd}${mm}${yyyy}`;
-      }
-
-      let filterTag = '';
-      const DEPT_NAME_MAP: Record<string, string> = {
-        '1': 'CSE-CS',
-        '2': 'CSE-IOT',
-        '3': 'IT',
-        '4': 'IT',
-        '7': 'IT',
-        '8': 'CSE',
-        '9': 'AGRI',
-        '10': 'AIDS',
-        '11': 'EEE',
-        '12': 'ECE',
-        'CSE(CS)': 'CSE-CS',
-        'CSE(IOT)': 'CSE-IOT',
-        'CSE(IoT)': 'CSE-IOT',
-        'CSE': 'CSE',
-        'IT': 'IT',
-        'AIDS': 'AIDS',
-        'ECE': 'ECE',
-        'EEE': 'EEE',
-        'MECH': 'MECH',
-        'CIVIL': 'CIVIL',
-        'AGRI': 'AGRI',
-        'BME': 'BME',
-      };
-      const deptRaw = (report?.department || report?.deptFilter || '').toString().trim();
-      if (deptRaw && deptRaw.toUpperCase() !== 'ALL') {
-        const dUpper = deptRaw.toUpperCase();
-        const dClean = DEPT_NAME_MAP[deptRaw] || DEPT_NAME_MAP[dUpper] || deptRaw.replace(/[\(\)\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-        filterTag += `_${dClean}`;
-      }
-
-      const YEAR_NAME_MAP: Record<string, string> = {
-        '1': 'I-Yr', 'I': 'I-Yr', '1ST': 'I-Yr',
-        '2': 'II-Yr', 'II': 'II-Yr', '2ND': 'II-Yr',
-        '3': 'III-Yr', 'III': 'III-Yr', '3RD': 'III-Yr',
-        '4': 'IV-Yr', 'IV': 'IV-Yr', '4TH': 'IV-Yr',
-      };
-      const yrRaw = (report?.year || report?.yearFilter || '').toString().trim();
-      if (yrRaw && yrRaw.toUpperCase() !== 'ALL') {
-        const yUpper = yrRaw.toUpperCase();
-        const yClean = YEAR_NAME_MAP[yrRaw] || YEAR_NAME_MAP[yUpper] || `${yrRaw.replace(/YEAR|YR/gi, '').trim()}-Yr`;
-        filterTag += `_${yClean}`;
-      }
-
-      if (activeFilter && activeFilter !== 'ALL') {
-        filterTag += `_Filter_${activeFilter}`;
-      }
-
-      const filename = `NEC_${titlePart}${sessionTag}${filterTag}.${ext}`;
+      const { url, filename } = getReportDownloadMeta(format);
 
       const res = await downloadManager.download({
         endpoint: url,
@@ -845,7 +861,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 leading-tight shadow-2xs">UNKNOWN</span>;
   };
 
-  const handleShareWhatsApp = () => {
+  const handleShareWhatsApp = async () => {
+    if (isSharingWhatsApp) return;
+    setIsSharingWhatsApp(true);
+
     const deptName = report?.department_name || report?.department || 'Nandha Engineering College';
     const contestTitle = report?.contestName || report?.title || 'Weekly Contest Performance Report';
     const total = conditionStats?.totalStudents || allRows.length || 0;
@@ -876,16 +895,71 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     text += `\n🚀 *Nandha Engineering College (Autonomous)*`;
 
-    if (navigator.share) {
-      navigator.share({
-        title: `${deptName} LeetCode Performance`,
-        text: text,
-        url: window.location.href,
-      }).catch(() => {
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-      });
-    } else {
+    try {
+      const { url, filename, mimeType } = getReportDownloadMeta('excel');
+
+      // 1. Native Mobile App (Capacitor Android APK):
+      // Fetch the actual .xlsx spreadsheet file, save it to device storage, and attach it directly to WhatsApp!
+      if (isNativeMobile()) {
+        notify.info('Preparing File for WhatsApp', 'Fetching Excel report document to attach...', { category: 'SHARE' });
+        try {
+          const res = await api.get(url, { responseType: 'blob' });
+          if (res?.data) {
+            const { uri } = await saveFileToMobileStorage(res.data, filename, mimeType);
+            if (uri) {
+              let shareUrl = uri;
+              if (shareUrl && !shareUrl.startsWith('file:') && !shareUrl.startsWith('content:')) {
+                if (shareUrl.startsWith('/')) shareUrl = `file://${shareUrl}`;
+              }
+              const { Share } = await import('@capacitor/share');
+              await Share.share({
+                title: filename,
+                text: text,
+                url: shareUrl,
+                dialogTitle: `Share ${filename} to WhatsApp`,
+              });
+              notify.success('Report Ready', `${filename} ready in WhatsApp share.`, { category: 'SHARE' });
+              setIsSharingWhatsApp(false);
+              return;
+            }
+          }
+        } catch (mobileErr) {
+          console.warn('[ReportPreview] Mobile file share failed, falling back:', mobileErr);
+        }
+      }
+
+      // 2. Web Share API Level 2 (Browsers with file sharing support)
+      if (typeof navigator !== 'undefined' && (navigator as any).canShare && typeof File !== 'undefined') {
+        try {
+          const res = await api.get(url, { responseType: 'blob' });
+          if (res?.data) {
+            const file = new File([res.data], filename, { type: mimeType });
+            if ((navigator as any).canShare({ files: [file] })) {
+              await (navigator as any).share({
+                title: `${deptName} LeetCode Performance`,
+                text: text,
+                files: [file],
+              });
+              setIsSharingWhatsApp(false);
+              return;
+            }
+          }
+        } catch (_webShareErr) {
+          /* Fall through to download + WhatsApp url */
+        }
+      }
+
+      // 3. Desktop browser fallback: Trigger Excel file download & open WhatsApp Web
+      try {
+        await downloadFile('excel');
+      } catch (_e) {}
+
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    } catch (err: any) {
+      console.error('[ReportPreview] WhatsApp share error:', err);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    } finally {
+      setIsSharingWhatsApp(false);
     }
   };
 
@@ -3989,16 +4063,21 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       {/* WhatsApp Share */}
                       <button
                         type="button"
+                        disabled={isSharingWhatsApp}
                         onClick={() => { handleShareWhatsApp(); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
                             <Share2 className="w-5 h-5" />
                           </div>
                           <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">Share to WhatsApp</div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Instant summary text</div>
+                            <div className="text-xs font-black text-slate-900 dark:text-white">
+                              {isSharingWhatsApp ? 'Attaching Report File...' : 'Share to WhatsApp'}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                              Attach Excel report (.xlsx) &amp; summary
+                            </div>
                           </div>
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
@@ -4065,15 +4144,16 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     </button>
 
                     <button
+                      disabled={isSharingWhatsApp}
                       onClick={() => { handleShareWhatsApp(); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
                     >
                       <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
                         <Share2 className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="truncate">Share to WhatsApp</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Instant summary text</span>
+                        <span className="truncate">{isSharingWhatsApp ? 'Attaching File...' : 'Share to WhatsApp'}</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Attach Excel file &amp; summary</span>
                       </div>
                     </button>
 
