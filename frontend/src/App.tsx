@@ -262,10 +262,12 @@ export const App: React.FC = () => {
     }
   }, [isAuthenticated, user?.id]);
 
-  // Instant 0ms Route Warmup Engine: Staggered preloading across all primary pages
+  // Instant 0ms Route Warmup Engine: Staggered preloading only when authenticated
   useEffect(() => {
-    warmupPriorityRoutes();
-  }, []);
+    if (isAuthenticated) {
+      warmupPriorityRoutes();
+    }
+  }, [isAuthenticated]);
   const queryClient = useQueryClient();
   const { refreshAllData } = useGlobalData();
   const [activeTab, setActiveTab] = useState(() => {

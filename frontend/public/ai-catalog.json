@@ -1,32 +1,37 @@
 {
-  "name": "Nandha Engineering College LeetCode Intelligence Platform",
-  "description": "Official LeetCode tracking, student performance analytics, leaderboards, and institutional reporting for Nandha Engineering College.",
-  "publisher": {
-    "name": "Nandha Engineering College (Autonomous)",
-    "url": "https://nandhaengg.org"
+  "$schema": "https://raw.githubusercontent.com/ards-project/ard-spec/main/spec/schemas/ai-catalog.schema.json",
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Nandha Engineering College (Autonomous)",
+    "identifier": "did:web:13.53.231.6",
+    "documentationUrl": "http://13.53.231.6/docs",
+    "logoUrl": "http://13.53.231.6/pwa-512x512.png"
   },
-  "version": "2.6.7",
-  "resources": [
+  "entries": [
     {
-      "id": "public-leaderboard",
-      "name": "Public Coding Leaderboard",
-      "description": "Live real-time student competitive programming leaderboard filtered by department and year.",
-      "type": "webpage",
-      "url": "/public-leaderboard"
+      "identifier": "urn:air:nandhaengg.org:api:leetcode-tracker",
+      "displayName": "Nandha LeetCode Tracker & Contest Intelligence API",
+      "type": "application/json",
+      "url": "http://13.53.231.6/api/public/stats",
+      "description": "Provides real-time contest leaderboard, student analytics, and attendance telemetry.",
+      "tags": ["education", "coding", "analytics", "leaderboard", "leetcode"],
+      "representativeQueries": [
+        "What are the top student ranks in the latest LeetCode contest?",
+        "Show college coding leaderboard and department statistics",
+        "Check Sunday contest attendance summary"
+      ]
     },
     {
-      "id": "llms-txt",
-      "name": "LLMs.txt Documentation",
-      "description": "AI agent documentation and machine-readable sitemap overview.",
-      "type": "documentation",
-      "url": "/llms.txt"
-    },
-    {
-      "id": "openapi-spec",
-      "name": "API OpenAPI Specification",
-      "description": "REST API documentation and endpoints for student metrics, contest verification, and reports.",
-      "type": "api",
-      "url": "/docs"
+      "identifier": "urn:air:nandhaengg.org:doc:llms-txt",
+      "displayName": "Nandha Platform Documentation for LLMs",
+      "type": "text/markdown",
+      "url": "http://13.53.231.6/llms.txt",
+      "description": "Comprehensive institutional architecture and agent discovery manual.",
+      "tags": ["documentation", "llms", "guide"],
+      "representativeQueries": [
+        "Where is the LLM documentation for Nandha LeetCode tracker?",
+        "How can AI agents integrate with this platform?"
+      ]
     }
   ]
 }
