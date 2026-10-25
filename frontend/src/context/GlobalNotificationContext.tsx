@@ -4,6 +4,8 @@ import { useGlobalWebSocket } from './GlobalWebSocketProvider';
 import { useNotification as useToastNotification } from './NotificationContext';
 
 import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
+import { playNotificationChime } from '../utils/audioChime';
+import { triggerConfetti } from '../utils/confettiCelebration';
 
 export interface Notification {
   id: string;
@@ -295,6 +297,25 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       console.log(`[NOTIF-DEBUG] UNREAD_INCREMENT old=${prev} new=${prev + 1}`);
       return prev + 1;
     });
+
+    // Immediate Foreground Crisp Audio Chime & Confetti Celebration
+    try {
+      const isCelebratory = category === 'contests' || 
+        rawCat.toLowerCase().includes('milestone') || 
+        rawCat.toLowerCase().includes('achievement') || 
+        rawCat.toLowerCase().includes('finalized') ||
+        title.toLowerCase().includes('congrat') || 
+        title.toLowerCase().includes('live') ||
+        title.toLowerCase().includes('solved');
+
+      if (isCelebratory) {
+        triggerConfetti({ playSound: true });
+      } else {
+        playNotificationChime();
+      }
+    } catch {
+      // Audio/confetti safety
+    }
 
     // Immediate Foreground Popup / Toast
     console.log(`[NOTIF-DEBUG] TOAST_TRIGGERED title="${title}" document_hidden=${document.hidden}`);

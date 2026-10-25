@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock, Share2 } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 import { SwipeHandle } from './SwipeHandle';
@@ -842,6 +842,50 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-orange-50 text-orange-800 border border-orange-300 leading-tight shadow-2xs">INVALID USERNAME</span>;
     }
     return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 leading-tight shadow-2xs">UNKNOWN</span>;
+  };
+
+  const handleShareWhatsApp = () => {
+    const deptName = report?.department_name || report?.department || 'Nandha Engineering College';
+    const contestTitle = report?.contestName || report?.title || 'Weekly Contest Performance Report';
+    const total = conditionStats?.totalStudents || allRows.length || 0;
+    const s4 = conditionStats?.s4 ?? 0;
+    const s3 = conditionStats?.s3 ?? 0;
+    const s2 = conditionStats?.s2 ?? 0;
+    const s1 = conditionStats?.s1 ?? 0;
+    const absent = (conditionStats as any)?.absent ?? conditionStats?.notAttendedCount ?? 0;
+
+    let text = `📊 *${deptName} — LeetCode Performance Summary*\n` +
+      `🗓 *Contest:* ${contestTitle}\n` +
+      `👥 *In Scope Students:* ${total}\n` +
+      `🏆 *4/4 Solved:* ${s4}\n` +
+      `🥇 *3/4 Solved:* ${s3}\n` +
+      `🥈 *2/4 Solved:* ${s2}\n` +
+      `🥉 *1/4 Solved:* ${s1}\n` +
+      `⚠️ *Absent / Not Attended:* ${absent}\n`;
+
+    if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
+      text += `\n*Batch Breakdown:*\n`;
+      report.batch_summaries.forEach((b: any) => {
+        const batchName = b.batch || 'Batch';
+        const tot = b.total_students || 0;
+        const r1500 = b.current_week?.rating_above_1500 ?? 0;
+        text += `• ${batchName} (${tot} students) — Rating > 1500: *${r1500}*\n`;
+      });
+    }
+
+    text += `\n🚀 *Nandha Engineering College (Autonomous)*`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: `${deptName} LeetCode Performance`,
+        text: text,
+        url: window.location.href,
+      }).catch(() => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      });
+    } else {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
   };
 
   return createPortal(
@@ -1831,9 +1875,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         </tr>
                       ) : (
                         <tr>
-                          <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
-                          <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
+                          <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black sticky left-0 z-20 bg-slate-900">S.No</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black sticky left-12 z-20 bg-slate-900">Register No</th>
+                          <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black sticky left-[140px] z-20 bg-slate-900 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]">Student Name</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
@@ -1976,9 +2020,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                         return (
                           <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
-                            <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                            <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
-                            <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
+                            <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black sticky left-0 z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800">{idx + 1}</td>
+                            <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black sticky left-12 z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800">{s.reg_no}</td>
+                            <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black sticky left-[140px] z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{formatStudentName(s.name || s.student_name)}</td>
                             <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                             <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
                             <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
@@ -3881,6 +3925,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             >
               <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
               <span className="truncate">Word (.docx)</span>
+            </button>
+            <button
+              onClick={handleShareWhatsApp}
+              type="button"
+              className="flex items-center justify-center space-x-2 px-3.5 py-2.5 min-h-[42px] sm:min-h-[38px] bg-[#25D366] hover:bg-[#20ba59] active:bg-[#1caa51] text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer active:scale-95 touch-manipulation group"
+              title="Share summary to WhatsApp"
+            >
+              <Share2 className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <span className="truncate">WhatsApp</span>
             </button>
             <button
               onClick={() => window.print()}

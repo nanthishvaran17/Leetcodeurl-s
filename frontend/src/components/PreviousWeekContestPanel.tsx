@@ -25,7 +25,13 @@ import {
   FileText,
   Calendar,
   X,
-  RotateCcw
+  RotateCcw,
+  Megaphone,
+  Sparkles,
+  Send,
+  Users,
+  CheckCheck,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -35,6 +41,8 @@ import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestC
 import { useAuth } from '../context/AuthContext';
 import { downloadManager } from '../services/download/downloadManager';
 import { ContestForensicModal } from './ContestForensicModal';
+import { playNotificationChime, playCelebrationChime } from '../utils/audioChime';
+import { triggerCelebration, triggerConfetti } from '../utils/confettiCelebration';
 
 export interface PreviousWeekSummary {
   session_id: number;
@@ -67,6 +75,7 @@ export interface ParticipationRecord {
   student_name: string;
   reg_no: string;
   department_name: string | null;
+  department?: string | null;
   year_level: string | null;
   participation_type: 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME';
   official_rank: number | null;
@@ -237,6 +246,21 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     if (isFacultyRole) return `faculty_${user?.id || 'staff'}`;
     return 'public';
   }, [isFacultyRole, user?.id]);
+
+  const isAdminOrHod = useMemo(() => {
+    const role = (user?.role || '').trim().toLowerCase();
+    return ['admin', 'superadmin', 'hod', 'head_of_department', 'principal', 'faculty', 'staff'].some(r => role.includes(r));
+  }, [user?.role]);
+
+  // Absentee Broadcast Studio State
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState<boolean>(false);
+  const [broadcastTitle, setBroadcastTitle] = useState<string>('');
+  const [broadcastMessage, setBroadcastMessage] = useState<string>('');
+  const [broadcastDept, setBroadcastDept] = useState<string>('ALL');
+  const [broadcastYear, setBroadcastYear] = useState<string>('ALL');
+  const [sendEmailFlag, setSendEmailFlag] = useState<boolean>(true);
+  const [broadcasting, setBroadcasting] = useState<boolean>(false);
+  const [broadcastResult, setBroadcastResult] = useState<any>(null);
 
   const [summary, setSummary] = useState<PreviousWeekSummary | null>(null);
 
@@ -945,6 +969,59 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     );
   }, [deptOptions, deptSearchText]);
 
+  const absentStudentsTargetCount = useMemo(() => {
+    return records.filter(r => {
+      const isAbsent = r.participation_type === 'NOT_PARTICIPATED' || r.participation_type === 'NOT_VERIFIED' || (r.problems_solved ?? 0) === 0;
+      if (!isAbsent) return false;
+      if (broadcastDept !== 'ALL') {
+        const deptVal = r.department_name || r.department || '';
+        const info = getDeptInfo(deptVal);
+        if (info.code !== broadcastDept && info.key !== broadcastDept && deptVal !== broadcastDept) return false;
+      }
+      if (broadcastYear !== 'ALL') {
+        const normY = normalizeYear(r.year_level, r.reg_no);
+        if (normY !== broadcastYear) return false;
+      }
+      return true;
+    }).length;
+  }, [records, broadcastDept, broadcastYear]);
+
+  const handleSendAbsenteeBroadcast = async () => {
+    if (broadcasting) return;
+    setBroadcasting(true);
+    setBroadcastResult(null);
+    triggerHaptic('medium');
+
+    try {
+      const latestSessionId = summary?.session_id || sessionId;
+      const res = await api.post('/notifications/remind-absent-students', {
+        session_id: latestSessionId,
+        custom_title: broadcastTitle.trim() || undefined,
+        custom_message: broadcastMessage.trim() || undefined,
+        target_department: broadcastDept,
+        target_year: broadcastYear,
+        send_email: sendEmailFlag
+      });
+
+      if (res.data?.success) {
+        playCelebrationChime();
+        triggerConfetti({ particleCount: 140, playSound: false });
+        setBroadcastResult(res.data);
+      } else {
+        playNotificationChime();
+        setBroadcastResult({ success: false, message: res.data?.message || 'Broadcast failed' });
+      }
+    } catch (err: any) {
+      playNotificationChime();
+      setBroadcastResult({
+        success: false,
+        message: err?.response?.data?.detail || err?.message || 'Error dispatching broadcast.'
+      });
+    } finally {
+      setBroadcasting(false);
+    }
+  };
+
   const getParticipationCategory = (r: ParticipationRecord): 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME' => {
     const isMissing = r.participation_type === 'MISSING_LEETCODE_USERNAME' || !r.leetcode_username || r.leetcode_username.trim() === '' || r.leetcode_username === 'USERNAME_NOT_FOUND' || r.leetcode_username === 'UNLINKED' || r.leetcode_username === 'NO_HANDLE';
     if (isMissing) return 'MISSING_LEETCODE_USERNAME';
@@ -1088,6 +1165,35 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
 
           <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
+            {/* Celebrate Solvers with Confetti & Fanfare */}
+            <button
+              onClick={() => {
+                triggerHaptic('success');
+                triggerCelebration();
+              }}
+              title="Trigger Confetti Celebration & Fanfare"
+              className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-white text-xs font-black shadow-lg shadow-orange-500/25 transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation border border-amber-300/30"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Celebrate Solvers</span>
+            </button>
+
+            {/* HOD / Admin Broadcast Studio to Alert Absent Students */}
+            {isAdminOrHod && (
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setBroadcastResult(null);
+                  setBroadcastModalOpen(true);
+                }}
+                title="Open Broadcast Studio to Alert Absent Students"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation border border-rose-400/40"
+              >
+                <Megaphone className="w-3.5 h-3.5" />
+                <span>Alert Absent Students</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 triggerHaptic('medium');
@@ -2204,6 +2310,282 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         isLiveContest={isLiveContest}
         onStudentClick={onStudentClick}
       />
+
+      {/* HOD / ADMIN ABSENTEE BROADCAST STUDIO MODAL */}
+      <AnimatePresence>
+        {broadcastModalOpen && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                if (!broadcasting) setBroadcastModalOpen(false);
+              }}
+              className="fixed inset-0 bg-slate-950/75 backdrop-blur-md"
+            />
+
+            {/* Modal Dialog Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative z-10 w-full max-w-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-5 sm:p-7 overflow-hidden text-slate-900 dark:text-white my-auto"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-rose-500/25 shrink-0">
+                    <Megaphone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
+                      Absentee Broadcast Studio
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      One-click alert for students who have not attended {summary?.contest_title || 'Weekly Contest'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setBroadcastModalOpen(false)}
+                  disabled={broadcasting}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Success Result View */}
+              {broadcastResult?.success ? (
+                <div className="py-6 space-y-4 text-center">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-500 mx-auto flex items-center justify-center">
+                    <CheckCheck className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+                      Alert Broadcast Dispatched!
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium max-w-md mx-auto">
+                      {broadcastResult.message}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-left text-xs font-mono space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Notified Count:</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{broadcastResult.notified_count} Students</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Department Scope:</span>
+                      <span className="font-bold">{broadcastResult.target_department}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Academic Year:</span>
+                      <span className="font-bold">{broadcastResult.target_year}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBroadcastResult(null);
+                      setBroadcastModalOpen(false);
+                    }}
+                    className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black shadow-md transition cursor-pointer hover:opacity-90"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                /* Edit & Dispatch Form View */
+                <div className="py-4 space-y-4">
+                  {/* Live Target Count Banner */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-indigo-500/10 border border-rose-500/25 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                      <span className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                        Target Students Identified:
+                      </span>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-rose-500 text-white font-mono font-black text-xs shadow-xs">
+                      {absentStudentsTargetCount} Absent
+                    </span>
+                  </div>
+
+                  {/* Scope Segmentation Selectors */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Department */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-indigo-500" /> Department
+                      </label>
+                      <select
+                        value={broadcastDept}
+                        onChange={(e) => setBroadcastDept(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                      >
+                        <option value="ALL">All Departments</option>
+                        <option value="IT">IT (Information Tech)</option>
+                        <option value="CSE">CSE (Computer Science)</option>
+                        <option value="CSE(CS)">CSE(CS) - Cyber Sec</option>
+                        <option value="CSE(IOT)">CSE(IOT) - IoT</option>
+                        <option value="ECE">ECE (Electronics)</option>
+                        <option value="EEE">EEE (Electrical)</option>
+                        <option value="MECH">MECH (Mechanical)</option>
+                      </select>
+                    </div>
+
+                    {/* Academic Year */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <GraduationCap className="w-3 h-3 text-purple-500" /> Academic Year
+                      </label>
+                      <select
+                        value={broadcastYear}
+                        onChange={(e) => setBroadcastYear(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                      >
+                        <option value="ALL">All Academic Years</option>
+                        <option value="II">II Year (Batch 2025–29)</option>
+                        <option value="III">III Year (Batch 2024–28)</option>
+                        <option value="IV">IV Year (Batch 2023–27)</option>
+                        <option value="I">I Year (Batch 2026–30)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Quick Notice Templates */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      ⚡ Quick Reminder Templates
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBroadcastTitle('Contest LIVE: Immediate Login Required');
+                          setBroadcastMessage('Weekly LeetCode contest is currently ongoing! Please open LeetCode, participate, and submit solutions before contest end time.');
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900 transition cursor-pointer"
+                      >
+                        ⚡ Live Contest Alert
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBroadcastTitle('Mandatory Virtual Remedial Practice Required');
+                          setBroadcastMessage('You were marked absent in the recent contest. You are required to complete the contest virtually and submit solutions before the weekly audit deadline.');
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[11px] font-bold hover:bg-purple-100 dark:hover:bg-purple-900 transition cursor-pointer"
+                      >
+                        📋 Remedial Practice
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBroadcastTitle('Department Attendance Notice — Placement Eligibility');
+                          setBroadcastMessage('Consistent LeetCode contest attendance is strictly recorded for internal assessment and campus placement eligibility. Take immediate corrective action.');
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 dark:hover:bg-rose-900 transition cursor-pointer"
+                      >
+                        🏛️ HOD Formal Notice
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Custom Title */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Notification Title / Subject
+                    </label>
+                    <input
+                      type="text"
+                      value={broadcastTitle}
+                      onChange={(e) => setBroadcastTitle(e.target.value)}
+                      placeholder={`Contest Attendance Notice — ${summary?.contest_title || 'Weekly Contest'}`}
+                      className="w-full px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+
+                  {/* Custom Message Body */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Custom Message / Instructions
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      placeholder="Records indicate you have not participated in this week's contest. Please solve questions immediately or complete required virtual submissions..."
+                      className="w-full p-3 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-xs font-medium focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                    />
+                  </div>
+
+                  {/* Channels Checklist */}
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
+                      <Bell className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>Channels: In-App + Web Push</span>
+                    </div>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={sendEmailFlag}
+                        onChange={(e) => setSendEmailFlag(e.target.checked)}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5"
+                      />
+                      <span>Also Send Email</span>
+                    </label>
+                  </div>
+
+                  {/* Error Alert if any */}
+                  {broadcastResult?.success === false && (
+                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span>{broadcastResult.message}</span>
+                    </div>
+                  )}
+
+                  {/* Dispatch Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      disabled={broadcasting}
+                      onClick={() => setBroadcastModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-navy-800 transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={broadcasting || absentStudentsTargetCount === 0}
+                      onClick={handleSendAbsenteeBroadcast}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-rose-600/30 transition flex items-center gap-2 disabled:opacity-40 cursor-pointer active:scale-95"
+                    >
+                      {broadcasting ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Dispatching Alerts...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Dispatch Alert ({absentStudentsTargetCount} Absent)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

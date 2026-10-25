@@ -126,6 +126,22 @@ def apscheduler_listener(event):
 scheduler.add_listener(apscheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
 
 
+@with_global_lock('sunday_0745_reminder_job', timeout_minutes=15)
+async def sunday_0745_reminder_job():
+    """
+    Scheduled for Sunday 07:45 AM IST: Pre-contest 15-minute countdown push notification
+    alerting all students and faculty to log in and prepare for Weekly Contest.
+    """
+    logger.info("[SCHEDULER] Sunday 07:45 AM IST: 15-Minute Contest Reminder Push Initiated...")
+    db = SessionLocal()
+    try:
+        res = sunday_autopilot.phase_1_preflight_0755(db)
+        logger.info(f"[SCHEDULER] Sunday 07:45 AM 15-Min Reminder Completed: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_0745_reminder_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
 @with_global_lock('sunday_0755_init_job', timeout_minutes=15)
 async def sunday_0755_init_job():
     """
@@ -850,6 +866,15 @@ def start_scheduler():
     if scheduler.running:
         logger.info("APScheduler is already running. Skipping redundant start.")
         return
+
+    # 0. Sunday 07:45 AM IST — 15-Minute Contest Start Push Reminder
+    scheduler.add_job(
+        sunday_0745_reminder_job,
+        CronTrigger(day_of_week='sun', hour=7, minute=45, timezone=tz),
+        id='sunday_0745_reminder',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
 
     # 1. Sunday 07:55 AM IST — Pre-Flight, Discovery & Roster Freeze
     scheduler.add_job(

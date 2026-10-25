@@ -99,3 +99,65 @@ self.addEventListener('notificationclick', function (event) {
     })
   );
 });
+
+// PWA Service Worker Core Lifecycle & Caching
+const CACHE_NAME = 'nec-leetcode-pwa-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/site.webmanifest',
+  '/favicon.png',
+  '/nec_25_logo.png',
+  '/pwa-192x192.png',
+  '/pwa-512x512.png',
+];
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
+    })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((keys) => {
+        return Promise.all(
+          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        );
+      }),
+    ])
+  );
+});
+
+// Network-First with Cache Fallback for Static Assets
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Skip API calls, web socket connections, and chrome-extension schemes
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/ws') || !url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Network-first strategy for seamless updates with offline reliability
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response.status === 200 && event.request.method === 'GET') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone).catch(() => {});
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          return cachedResponse || caches.match('/');
+        });
+      })
+  );
+});

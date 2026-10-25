@@ -1087,6 +1087,150 @@ def simulate_contest_attendance_endpoint(
     }
 
 
+class RemindAbsentStudentsRequest(BaseModel):
+    session_id: Optional[int] = None
+    custom_title: Optional[str] = None
+    custom_message: Optional[str] = None
+    target_department: Optional[str] = "ALL"
+    target_year: Optional[str] = "ALL"
+    send_email: bool = False
+
+
+@router.post("/remind-absent-students")
+def remind_absent_students_endpoint(
+    req: RemindAbsentStudentsRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """
+    ONE-CLICK BROADCAST STUDIO FOR HOD & ADMIN
+    Dispatches targeted alerts strictly to students who have NOT attended the contest.
+    Supports department and year-level segmentation, in-app notification, push, and email.
+    """
+    from backend.logger import logger
+    user_role = str(getattr(current_user, "role", "")).upper()
+    user_dept = str(getattr(current_user, "department", "")).strip().upper()
+    
+    # Authorized roles: ADMIN, SUPERADMIN, HOD, PRINCIPAL, FACULTY
+    is_admin = any(r in user_role for r in ["ADMIN", "SUPERADMIN", "PRINCIPAL"])
+    is_hod = "HOD" in user_role
+    is_faculty = any(r in user_role for r in ["FACULTY", "STAFF", "MENTOR", "INSTRUCTOR"])
+    
+    if not (is_admin or is_hod or is_faculty):
+        raise HTTPException(status_code=403, detail="Access denied: Admin or Department Head authorization required.")
+
+    # Restrict HOD to their own department if specified
+    target_dept = req.target_department or "ALL"
+    if is_hod and not is_admin and user_dept:
+        target_dept = user_dept
+
+    # Resolve target session
+    session = None
+    if req.session_id:
+        session = db.query(WeeklySession).filter(WeeklySession.id == req.session_id).first()
+    if not session:
+        session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="No contest session found.")
+
+    contest_name = session.contest_name or "Weekly Contest"
+    
+    from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+    canonical_data = build_canonical_contest_dataset(
+        session_id=session.id, db=db, current_user=current_user,
+        dept=target_dept, year=req.target_year or "ALL"
+    )
+
+    rows = canonical_data.get("rows", [])
+    # Filter strictly to NOT_ATTENDED students
+    absent_rows = [
+        r for r in rows 
+        if r.get("status") in ("NOT_ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED", "NOT_PARTICIPATED")
+        or (r.get("status") not in ("PUBLIC", "PUBLIC_ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED") and (r.get("total_solved") or 0) == 0)
+    ]
+
+    title = req.custom_title or f"Contest Attendance Notice — {contest_name}"
+    custom_msg = (req.custom_message or "").strip()
+    
+    now_ts = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+    dispatched_count = 0
+    sample_students = []
+
+    for r in absent_rows:
+        std_email = r.get("email")
+        std_reg = r.get("reg_no")
+        std_name = r.get("name") or "Student"
+        target_id = std_email or std_reg
+        if not target_id:
+            continue
+
+        body = (
+            f"Dear {std_name} ({std_reg or ''}),\n\n"
+            f"{custom_msg}\n\n"
+            f"• Contest: {contest_name}\n"
+            f"• Status: Absent / Not Attended\n\n"
+            f"Please attend immediately or complete required virtual submissions."
+        ) if custom_msg else (
+            f"Dear {std_name} ({std_reg or ''}),\n\n"
+            f"Records show you have NOT participated in {contest_name} today.\n\n"
+            f"• Regular participation in weekly LeetCode contests is mandatory.\n"
+            f"• Solve problems virtually or complete your assigned practice set to maintain streak.\n"
+            f"• Contact your department faculty mentor if you faced technical issues."
+        )
+
+        event_id = f"absent_alert_{session.id}_{std_reg or std_email}_{now_ts}"
+        try:
+            NotificationService.emit_event(
+                event_type="CONTEST_REMINDER",
+                title=title,
+                body=body,
+                actor_user_id=get_primary_user_id(current_user),
+                recipient_scope="INDIVIDUAL",
+                recipient_target=target_id,
+                route="/weekly-contest",
+                priority="high",
+                event_id=event_id,
+                send_email_notification=bool(req.send_email)
+            )
+            dispatched_count += 1
+            if len(sample_students) < 5:
+                sample_students.append({"name": std_name, "reg_no": std_reg, "dept": r.get("department")})
+        except Exception as _e:
+            logger.warning(f"[BROADCAST_STUDIO] Failed to emit to {target_id}: {_e}")
+
+    # Emit confirmation back to dispatcher
+    dispatcher_id = get_primary_user_id(current_user)
+    try:
+        NotificationService.emit_event(
+            event_type="URGENT_ANNOUNCEMENT",
+            title=f"Broadcast Dispatched: {dispatched_count} Absent Students Alerted",
+            body=(
+                f"Your broadcast for {contest_name} was successfully delivered.\n\n"
+                f"• Target Scope: Department: {target_dept} | Year: {req.target_year or 'ALL'}\n"
+                f"• Total Absent Students Notified: {dispatched_count}\n"
+                f"• Multi-Channel: In-App, Push{' & Email' if req.send_email else ''}\n\n"
+                f"Students have received immediate notifications on web and mobile devices."
+            ),
+            recipient_scope="USER",
+            recipient_target=dispatcher_id,
+            priority="normal",
+            route="/weekly-contest",
+            event_id=f"broadcast_summary_{now_ts}"
+        )
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "message": f"Successfully broadcasted to {dispatched_count} absent students!",
+        "notified_count": dispatched_count,
+        "target_department": target_dept,
+        "target_year": req.target_year or "ALL",
+        "contest_name": contest_name,
+        "sample_students": sample_students
+    }
+
+
 # 5. SECURE FILE ACCESS & PREVIEW / DOWNLOAD 
 
 @router.get("/files/{file_id}")

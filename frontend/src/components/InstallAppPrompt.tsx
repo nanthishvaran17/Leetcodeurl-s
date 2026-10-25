@@ -57,6 +57,12 @@ export const InstallAppPrompt: React.FC = () => {
     };
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // 6. Manual trigger listener from UI (e.g. Sidebar / Settings)
+    const handleManualShow = () => {
+      setIsVisible(true);
+    };
+    window.addEventListener('show-pwa-install', handleManualShow);
+
     // Show prompt for iOS if not in standalone
     if (ios && !isStandalone) {
       // Delay prompt on iOS by 3 seconds for smooth UX
@@ -67,6 +73,7 @@ export const InstallAppPrompt: React.FC = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('show-pwa-install', handleManualShow);
     };
   }, [isStandalone]);
 

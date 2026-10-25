@@ -416,6 +416,30 @@ class UniversalWeeklyContestAutopilot:
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Prepared Contest {session.contest_name} for {session.session_date}"
 
+            # 07:45 - 07:55 AM IST Contest Push Trigger (15-Minute Alert)
+            try:
+                from backend.services.notification_service import NotificationService
+                date_tag = session.session_date or now_ist.strftime('%Y-%m-%d')
+                rem_event_id = f"contest_reminder_15m_{session.id}_{date_tag}"
+                NotificationService.emit_event(
+                    event_type="CONTEST_REMINDER",
+                    title=f"⏰ {session.contest_name} Starts in 15 Minutes!",
+                    body=(
+                        f"Dear Students & Faculty,\n\n"
+                        f"{session.contest_name} begins today at 08:00 AM IST!\n\n"
+                        f"• Login to your LeetCode account.\n"
+                        f"• Check your IDE/editor readiness and strive for 4/4 solutions!\n"
+                        f"• Real-time solves and leaderboard standings are live at /weekly-contest."
+                    ),
+                    priority="high",
+                    recipient_scope="ALL",
+                    route="/weekly-contest",
+                    event_id=rem_event_id
+                )
+                logger.info(f"[AUTOPILOT] 07:45 AM Contest Reminder push dispatched for {session.contest_name}")
+            except Exception as _notif_err:
+                logger.warning(f"[AUTOPILOT] Contest reminder notification note: {_notif_err}")
+
             return {
                 "phase": "PREPARATION",
                 "success": True,
@@ -472,6 +496,29 @@ class UniversalWeeklyContestAutopilot:
                     logger.info(f"[AUTOPILOT] Auto-spawned sunday_live_engine background task for session {session.id}")
             except Exception as _spawn_err:
                 logger.warning(f"[AUTOPILOT] Note on spawning live engine: {_spawn_err}")
+
+            # 08:00 AM IST Contest LIVE Push Trigger
+            try:
+                from backend.services.notification_service import NotificationService
+                date_tag = session.session_date or datetime.date.today().strftime('%Y-%m-%d')
+                start_event_id = f"contest_live_0800_{session.id}_{date_tag}"
+                NotificationService.emit_event(
+                    event_type="CONTEST_STARTED",
+                    title=f"🚀 {session.contest_name} is NOW LIVE!",
+                    body=(
+                        f"Contest {session.contest_name} is officially LIVE (08:00 AM - 09:30 AM IST)!\n\n"
+                        f"• All 4 contest problems are now unlocked on LeetCode.\n"
+                        f"• Solve questions to climb your department ranking!\n"
+                        f"• College TV and live stream telemetry are updating every few seconds."
+                    ),
+                    priority="critical",
+                    recipient_scope="ALL",
+                    route="/weekly-contest",
+                    event_id=start_event_id
+                )
+                logger.info(f"[AUTOPILOT] 08:00 AM Contest LIVE push dispatched for {session.contest_name}")
+            except Exception as _notif_err:
+                logger.warning(f"[AUTOPILOT] Contest started notification note: {_notif_err}")
 
             return {
                 "phase": "START_MONITORING",
@@ -667,6 +714,29 @@ class UniversalWeeklyContestAutopilot:
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Contest {session.contest_name} Finalized ({session.finalization_method}): {live_cnt} Live | {virt_cnt} Virtual | {not_cnt} Absent"
 
+            # 09:30 AM IST Contest Finalized Push Trigger
+            try:
+                from backend.services.notification_service import NotificationService
+                date_tag = session.session_date or datetime.date.today().strftime('%Y-%m-%d')
+                final_event_id = f"contest_finalized_0930_{session.id}_{date_tag}"
+                NotificationService.emit_event(
+                    event_type="CONTEST_FINALIZED",
+                    title=f"🏁 {session.contest_name} Concluded & Finalized",
+                    body=(
+                        f"Weekly Contest {session.contest_name} concluded with {live_cnt} authentic solvers!\n\n"
+                        f"• Final Results: {live_cnt} Official Solvers | {virt_cnt} Virtual Solvers\n"
+                        f"• All question times and leaderboard ranks are reconciled.\n"
+                        f"• Tap to view final standings and celebrate top performers!"
+                    ),
+                    priority="high",
+                    recipient_scope="ALL",
+                    route="/weekly-contest",
+                    event_id=final_event_id
+                )
+                logger.info(f"[AUTOPILOT] 09:30 AM Contest Finalized push dispatched for {session.contest_name}")
+            except Exception as _notif_err:
+                logger.warning(f"[AUTOPILOT] Contest finalized notification note: {_notif_err}")
+
             return {
                 "phase": "FINALIZATION",
                 "success": True,
@@ -743,6 +813,28 @@ class UniversalWeeklyContestAutopilot:
             self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
             self.last_action_summary = f"Generated Excel, PDF, Word & ZIP for {session.contest_name}"
+
+            # 09:35 AM IST Official Reports Available Push Trigger
+            try:
+                from backend.services.notification_service import NotificationService
+                date_tag = session.session_date or datetime.date.today().strftime('%Y-%m-%d')
+                report_event_id = f"contest_reports_0935_{session.id}_{date_tag}"
+                NotificationService.emit_event(
+                    event_type="REPORT_AVAILABLE",
+                    title=f"📊 Official Contest Reports Ready — {session.contest_name}",
+                    body=(
+                        f"Official Multi-Format Reports (Excel, PDF, Word) are generated for {session.contest_name}!\n\n"
+                        f"• Comprehensive student performance and department summaries ready.\n"
+                        f"• Tap to review and download official documentation."
+                    ),
+                    priority="normal",
+                    recipient_scope="ALL",
+                    route="/reports",
+                    event_id=report_event_id
+                )
+                logger.info(f"[AUTOPILOT] 09:35 AM Contest Reports push dispatched for {session.contest_name}")
+            except Exception as _notif_err:
+                logger.warning(f"[AUTOPILOT] Contest reports notification note: {_notif_err}")
 
             return {
                 "phase": "REPORTS",

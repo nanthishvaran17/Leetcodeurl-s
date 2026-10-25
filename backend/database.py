@@ -141,9 +141,11 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
             except Exception:
                 cursor.execute("PRAGMA journal_mode=DELETE")
             cursor.execute("PRAGMA synchronous=NORMAL")
-            cursor.execute("PRAGMA cache_size=-20000")  # 20MB page cache for lightning fast reads
+            cursor.execute("PRAGMA cache_size=-64000")  # 64MB page cache for ultra fast reads
             cursor.execute("PRAGMA mmap_size=268435456") # 256MB Memory-mapped I/O for instant queries
             cursor.execute("PRAGMA temp_store=MEMORY")
+            cursor.execute("PRAGMA threads=4")           # Multi-threaded query execution
+            cursor.execute("PRAGMA optimize")           # Optimize SQLite statistics and query plans
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
         except Exception as _prag_err:

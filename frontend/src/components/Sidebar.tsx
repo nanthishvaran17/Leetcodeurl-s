@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User } from 'lucide-react';
+import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
@@ -400,6 +400,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                   </button>
                 )}
               </div>
+
+              {/* Install Mobile/Desktop PWA App Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onClose) onClose();
+                  localStorage.removeItem('pwa_prompt_dismissed_at');
+                  window.dispatchEvent(new Event('show-pwa-install'));
+                }}
+                className="w-full h-[36px] px-3 rounded-xl text-brand-600 dark:text-brand-300 bg-brand-500/10 hover:bg-brand-500/15 border border-brand-500/25 transition-all duration-150 flex items-center justify-center font-bold text-xs cursor-pointer active:scale-95 gap-2"
+                title="Install LeetCode app on mobile home screen or desktop"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                <span>Install Mobile App</span>
+              </button>
 
               {/* Sunday Session Window Card */}
               <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">

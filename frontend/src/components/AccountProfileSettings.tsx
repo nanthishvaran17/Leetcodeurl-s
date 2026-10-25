@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, Phone, Calendar, KeyRound, Shield, CheckCircle,
   Camera, Trash2, Save, Loader2, Eye, EyeOff, Building2,
@@ -770,6 +771,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
 
   // Master Tabs: 'menu' (Default Native Hub matching mockup) + 5 Primary Categories + Specialized Modules
   const [activeTab, setActiveTab] = useState<'menu' | 'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship' | 'help'>('menu');
+  const effectiveTab = activeTab === 'menu' ? 'profile' : activeTab;
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
@@ -3402,10 +3404,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
     <div className="space-y-4 sm:space-y-6 animate-fade-in w-full pb-36 sm:pb-16 text-slate-900 dark:text-slate-100">
 
       {/* ========================================================================= */}
-      {/* 1. MASTER SETTINGS HUB (Mockup "After: New Professional UI") */}
+      {/* 1. MASTER SETTINGS HUB (Mockup "After: New Professional UI") - MOBILE ONLY */}
       {/* ========================================================================= */}
       {activeTab === 'menu' && (
-        <div className="space-y-4 max-w-2xl mx-auto animate-fade-in pb-12">
+        <div className="lg:hidden space-y-4 max-w-2xl mx-auto animate-fade-in pb-12">
           {/* Header Bar matching mockup: Left arrow, "Settings", Subtitle */}
           <div className="flex items-center gap-3 pt-1 pb-2">
             {onBack && (
@@ -3711,67 +3713,360 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       )}
 
       {/* ========================================================================= */}
-      {/* 2. SUBVIEW NAVIGATION (Clean mobile header matching WhatsApp / Telegram) */}
+      {/* 2. RESPONSIVE SETTINGS WORKSPACE (Mobile Subview + Desktop 2-Column Hub) */}
       {/* ========================================================================= */}
-      {activeTab !== 'menu' && (
-        <div className="space-y-4 max-w-2xl mx-auto animate-fade-in pb-48">
-          {/* Header Bar matching mockup: Left arrow, Title, Subtitle */}
-          <div className="flex items-center gap-3 pt-1 pb-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('menu')}
-              className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-95"
-              aria-label="Back to Settings"
-              title="Back to Settings"
-            >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-            </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight capitalize">
-                {activeTab === 'profile' ? 'Account & Profile' :
-                 activeTab === 'security' ? 'Security & Login' :
-                 activeTab === 'privacy' ? 'Privacy & Permissions' :
-                 activeTab === 'notifications' ? 'Notifications' :
-                 activeTab === 'preferences' ? 'App Preferences' :
-                 activeTab === 'id_card' ? 'Official Digital ID Card' :
-                 activeTab === 'mentorship' ? 'Staff Mentorship Hub' :
-                 'Help & Support Hub'}
-              </h1>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                {activeTab === 'profile' ? 'Personal details, contact info, photo' :
-                 activeTab === 'security' ? 'Password, two-step verification, devices' :
-                 activeTab === 'privacy' ? 'Visibility, data access, blocked users' :
-                 activeTab === 'notifications' ? 'Push, email and WhatsApp alerts' :
-                 activeTab === 'preferences' ? 'Language, theme, accessibility' :
-                 activeTab === 'id_card' ? 'Official institutional CR80 PVC identity badge' :
-                 activeTab === 'mentorship' ? 'Assigned student progress telemetry and mentoring' :
-                 'Frequently asked questions, campus IT support, and contact desk'}
-              </p>
+      {/* ========================================================================= */}
+      {/* 2. RESPONSIVE SETTINGS WORKSPACE (Mobile Subview + Desktop 2-Column Hub) */}
+      {/* ========================================================================= */}
+      <div className={`${activeTab === 'menu' ? 'hidden lg:block' : 'block'} w-full`}>
+        {/* DESKTOP CONTAINER: Aligns Top Header and 2-Column Body to the exact same width with zero clipping */}
+        <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* DESKTOP TOP HEADER BAR */}
+          <div className="hidden lg:flex items-center justify-between pb-5 mb-6 border-b border-slate-200/90 dark:border-navy-800/80">
+            <div className="flex items-center gap-4">
+              {onBack && (
+                <motion.button
+                  whileHover={{ scale: 1.02, x: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black bg-white dark:bg-navy-900 text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-navy-700 shadow-xs hover:shadow transition-all cursor-pointer"
+                  title="Back to Dashboard"
+                >
+                  <ArrowLeft className="w-4 h-4 stroke-[2.5] text-brand-600 dark:text-brand-400" />
+                  <span>Dashboard</span>
+                </motion.button>
+              )}
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Settings &amp; Preferences
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/80 shadow-2xs flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                    <span>{roleName?.toUpperCase() || 'ADMIN'}</span>
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                  Manage your credentials, security preferences, official ID badge, and system controls.
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Desktop Actions (Export Backup, Restore) */}
+            <div className="flex items-center gap-2.5">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => setShowExportModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-xs"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Export Backup</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => setShowRestoreModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-xs"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Restore Data</span>
+              </motion.button>
             </div>
           </div>
 
-          {/* Success / Error Alerts */}
-          {successMessage && (
-            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-950 dark:text-emerald-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
-              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>{successMessage}</span>
-            </div>
-          )}
+          {/* WORKSPACE LAYOUT: Flex row on Desktop (w-[320px] sidebar + flex-1 right content) */}
+          <div className="max-w-2xl mx-auto lg:max-w-none lg:flex lg:flex-row lg:gap-8 items-start">
 
-          {errorMessage && (
-            <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-950 dark:text-rose-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
-              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+            {/* DESKTOP-ONLY LEFT NAVIGATION SIDEBAR */}
+            <div className="hidden lg:block lg:w-[320px] xl:w-[340px] shrink-0 sticky top-6 space-y-4">
+              {/* Desktop Profile Summary Card */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl p-5 border border-slate-200/90 dark:border-navy-800 shadow-xs space-y-4">
+                <div className="flex items-center gap-3.5">
+                  <div
+                    className="relative shrink-0 w-16 h-16 cursor-pointer group select-none"
+                    onClick={() => { if (profilePhoto) setShowPhotoZoom(true); }}
+                    title="Click to view photo"
+                  >
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-indigo-200 dark:border-indigo-800 bg-slate-100 dark:bg-navy-950 flex items-center justify-center relative shadow-sm">
+                      {profilePhoto ? (
+                        <img
+                          src={profilePhoto}
+                          alt={fullName || user?.username || 'nanthishvaran17'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center">
+                          {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-900 shadow-sm flex items-center justify-center text-white z-10" title="Verified Account">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </span>
+                  </div>
 
-          <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
+                      {fullName || user?.username || 'nanthishvaran17'}
+                    </h2>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 mt-0.5 flex-wrap">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/70">
+                        {roleName?.toUpperCase() || 'ADMIN'}
+                      </span>
+                      <span className="text-slate-400">&bull; {institutionalId}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate mt-1">
+                      {user?.email || 'nanthishvaran17@gmail.com'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-navy-800">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 shrink-0">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                    <span>VERIFIED</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('profile')}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>Edit Profile</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Desktop Navigation Menu Card with Framer-Motion */}
+              <div className="bg-white dark:bg-navy-900 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-xs p-2 space-y-1">
+                {[
+                  { id: 'profile', label: 'Account & Profile', desc: 'Personal details, bio, photo', icon: User, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/60' },
+                  { id: 'security', label: 'Security & Login', desc: 'Password, 2FA, passkeys', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/60' },
+                  { id: 'privacy', label: 'Privacy & Permissions', desc: 'Visibility, data access', icon: Lock, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-950/60' },
+                  { id: 'notifications', label: 'Notifications', desc: 'Push, email & WhatsApp alerts', icon: Bell, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/60' },
+                  { id: 'preferences', label: 'App Preferences', desc: 'Language, theme, display', icon: Sliders, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-950/60' },
+                  { id: 'id_card', label: 'Digital ID Card', desc: 'PVC badge, QR verification', icon: FileBadge, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/60', badge: 'PVC BADGE' },
+                  ...(isStaffMentor ? [{ id: 'mentorship', label: 'Mentorship Hub', desc: 'Assigned student telemetry', icon: GraduationCap, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/60', badge: 'FACULTY' }] : []),
+                  { id: 'help', label: 'Help & Support', desc: 'Campus IT desk & FAQs', icon: HelpCircle, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-slate-100 dark:bg-navy-800' },
+                ].map(item => {
+                  const isActive = effectiveTab === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <motion.button
+                      key={item.id}
+                      whileHover={{ x: 2 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={() => setActiveTab(item.id as any)}
+                      className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all text-left cursor-pointer group select-none ${
+                        isActive
+                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm font-black'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-navy-800/60 font-bold'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                          isActive
+                            ? 'bg-white/20 dark:bg-slate-900/20 text-white dark:text-slate-900'
+                            : `${item.bg} ${item.color}`
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-black flex items-center gap-1.5 whitespace-nowrap">
+                            <span>{item.label}</span>
+                            {item.badge && (
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                isActive
+                                  ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
+                                  : 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300'
+                              }`}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </div>
+                          <div className={`text-[10px] leading-tight mt-0.5 ${isActive ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {item.desc}
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'translate-x-0.5 text-white dark:text-slate-900' : 'text-slate-400 group-hover:translate-x-0.5'}`} />
+                    </motion.button>
+                  );
+                })}
+
+                <div className="pt-1 border-t border-slate-100 dark:border-navy-800">
+                  <motion.button
+                    whileHover={{ x: 2 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="button"
+                    onClick={() => setShowLogoutConfirmModal(true)}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 transition-colors text-left cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-200/60 dark:border-rose-900/60">
+                        <LogOut className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black">Log out</div>
+                        <div className="text-[10px] text-slate-400 truncate">Sign out of portal</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-rose-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Campus IT & Institution Badge */}
+              <div className="p-4 rounded-3xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 text-center space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Nandha Engineering College (Autonomous)
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                  Academic Year 2025-2026 &bull; Silver Jubilee Edition
+                </p>
+                <div className="pt-1 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('nanthishvaran17@gmail.com');
+                      notify.success('IT desk email copied', 'nanthishvaran17@gmail.com', { category: 'ADMIN' });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Mail className="w-3 h-3 text-indigo-500" />
+                    <span>IT Helpdesk</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT MAIN WORKSPACE AREA */}
+            <div className="space-y-4 flex-1 min-w-0 w-full animate-fade-in pb-48 lg:pb-24">
+
+            {/* Mobile Header Bar matching mockup: Left arrow, Title, Subtitle (HIDDEN ON DESKTOP) */}
+            <div className="lg:hidden flex items-center gap-3 pt-1 pb-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('menu')}
+                className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-95"
+                aria-label="Back to Settings"
+                title="Back to Settings"
+              >
+                <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+              </button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight capitalize">
+                  {effectiveTab === 'profile' ? 'Account & Profile' :
+                   effectiveTab === 'security' ? 'Security & Login' :
+                   effectiveTab === 'privacy' ? 'Privacy & Permissions' :
+                   effectiveTab === 'notifications' ? 'Notifications' :
+                   effectiveTab === 'preferences' ? 'App Preferences' :
+                   effectiveTab === 'id_card' ? 'Official Digital ID Card' :
+                   effectiveTab === 'mentorship' ? 'Staff Mentorship Hub' :
+                   'Help & Support Hub'}
+                </h1>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {effectiveTab === 'profile' ? 'Personal details, contact info, photo' :
+                   effectiveTab === 'security' ? 'Password, two-step verification, devices' :
+                   effectiveTab === 'privacy' ? 'Visibility, data access, blocked users' :
+                   effectiveTab === 'notifications' ? 'Push, email and WhatsApp alerts' :
+                   effectiveTab === 'preferences' ? 'Language, theme, accessibility' :
+                   effectiveTab === 'id_card' ? 'Official institutional CR80 PVC identity badge' :
+                   effectiveTab === 'mentorship' ? 'Assigned student progress telemetry and mentoring' :
+                   'Frequently asked questions, campus IT support, and contact desk'}
+                </p>
+              </div>
+            </div>
+
+            {/* Desktop Section Header Banner (HIDDEN ON MOBILE) */}
+            <div className="hidden lg:flex items-center justify-between p-5 bg-white dark:bg-navy-900 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-xs mb-5">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/70 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200/80 dark:border-brand-800/80 shadow-2xs">
+                  {effectiveTab === 'profile' ? <User className="w-6 h-6" /> :
+                   effectiveTab === 'security' ? <ShieldCheck className="w-6 h-6" /> :
+                   effectiveTab === 'privacy' ? <Lock className="w-6 h-6" /> :
+                   effectiveTab === 'notifications' ? <Bell className="w-6 h-6" /> :
+                   effectiveTab === 'preferences' ? <Sliders className="w-6 h-6" /> :
+                   effectiveTab === 'id_card' ? <FileBadge className="w-6 h-6" /> :
+                   effectiveTab === 'mentorship' ? <GraduationCap className="w-6 h-6" /> :
+                   <HelpCircle className="w-6 h-6" />}
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white capitalize">
+                    {effectiveTab === 'profile' ? 'Account & Profile Details' :
+                     effectiveTab === 'security' ? 'Security & Authentication Vault' :
+                     effectiveTab === 'privacy' ? 'Privacy Controls & Access' :
+                     effectiveTab === 'notifications' ? 'Notification & Alerts Delivery' :
+                     effectiveTab === 'preferences' ? 'Interface & System Preferences' :
+                     effectiveTab === 'id_card' ? 'Official Institutional PVC ID Badge' :
+                     effectiveTab === 'mentorship' ? 'Faculty Mentorship & Student Telemetry' :
+                     'Campus Help Desk & Knowledge Base'}
+                  </h2>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {effectiveTab === 'profile' ? 'Configure your official faculty credentials, contact info, and bio details.' :
+                     effectiveTab === 'security' ? 'Configure hardware passkeys, biometrics, 2FA, and monitor active sessions.' :
+                     effectiveTab === 'privacy' ? 'Manage your public visibility, API credentials, and institutional privacy levels.' :
+                     effectiveTab === 'notifications' ? 'Tune WhatsApp dispatch, instant push alerts, and automated email reports.' :
+                     effectiveTab === 'preferences' ? 'Set color schemes, ambient sound fx, interface scale, and layout density.' :
+                     effectiveTab === 'id_card' ? 'Preview 300 DPI CR80 physical badge format, download image or export vCard.' :
+                     effectiveTab === 'mentorship' ? 'Review assigned student performance telemetry, attendance, and contest standings.' :
+                     'Answers to frequent portal queries and direct campus IT contact information.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Header Right Actions for Profile */}
+              {effectiveTab === 'profile' && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetForm}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <RefreshCcw className="w-3.5 h-3.5" />
+                    <span>Reset</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={handleSaveProfile}
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-md shadow-brand-500/20 cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save Changes</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Success / Error Alerts */}
+            {successMessage && (
+              <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-950 dark:text-emerald-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
+                <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {errorMessage && (
+              <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-950 dark:text-rose-200 text-xs font-black flex items-center gap-2.5 animate-fade-in shadow-xs">
+                <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProfile} className="space-y-6">
 
 
         {/* ========================================================================= */}
         {/* TAB 1: PERSONAL & ACADEMIC PROFILE — Native Mobile App & Desktop Bento UI */}
         {/* ========================================================================= */}
-        {activeTab === 'profile' && (
+        {effectiveTab === 'profile' && (
           <div className="space-y-4 sm:space-y-6 animate-fade-in">
             {/* Mobile-Native Filter Chips (Swiggy / Meesho / iOS Style) */}
             <div className="relative">
@@ -4584,7 +4879,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* TAB 2: SECURITY & PASSWORD VAULT — World-Class Mobile App UI (Swiggy / WhatsApp Grade) */}
         {/* ========================================================================= */}
-        {activeTab === 'security' && (
+        {effectiveTab === 'security' && (
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
 
               {/* 1. Password Management Card — Mobile App Styled with Direct Update Action */}
@@ -5201,7 +5496,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* CATEGORY C: PRIVACY & PERMISSIONS — Enterprise Data Control */}
         {/* ========================================================================= */}
-        {activeTab === 'privacy' && (
+        {effectiveTab === 'privacy' && (
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
             {/* 1. Directory Privacy Card */}
             <div className="space-y-2">
@@ -5353,7 +5648,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* CATEGORY D: NOTIFICATIONS — Live Telemetry & Alerts */}
         {/* ========================================================================= */}
-        {activeTab === 'notifications' && (
+        {effectiveTab === 'notifications' && (
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
             {/* Group 1: Automated Portal Alerts */}
             <div className="space-y-2">
@@ -5571,29 +5866,145 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* CATEGORY E: APP PREFERENCES — Appearance, Languages & Notes */}
         {/* ========================================================================= */}
-        {activeTab === 'preferences' && (
+        {effectiveTab === 'preferences' && (
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
-            {/* 1. Theme Selection Card — Compact Native Mobile Segmented Control */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3">
+            {/* 1. Theme Selection Card */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
-                    <Palette className="w-4.5 h-4.5" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60 shadow-2xs">
+                    <Palette className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      Appearance &amp; Theme
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Appearance &amp; Color Theme
                     </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personalize your color aesthetic</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Personalize your portal contrast and visual atmosphere</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize">
-                  {themeMode === 'system' ? `System (${theme})` : theme}
+                <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize border border-slate-200/80 dark:border-navy-700">
+                  {themeMode === 'system' ? `Auto (${theme})` : `${theme} Mode`}
                 </span>
               </div>
 
-              {/* iOS / WhatsApp Style Compact 3-Segment Switcher */}
-              <div className="p-1 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 grid grid-cols-3 gap-1">
+              {/* Desktop 3-Card Interactive Theme Visualizer */}
+              <div className="hidden lg:grid grid-cols-3 gap-3.5 pt-1">
+                {/* Light Card */}
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
+                    themeMode === 'light'
+                      ? 'border-brand-500 bg-brand-50/20 dark:bg-brand-950/30 shadow-md shadow-brand-500/10 ring-2 ring-brand-500/30'
+                      : 'border-slate-200/80 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
+                  }`}
+                >
+                  <div className="h-20 rounded-xl bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200/80 p-2.5 flex flex-col justify-between shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <div className="w-5 h-5 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shadow-2xs">
+                        <Sun className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 rounded-full bg-slate-300" />
+                        <span className="w-2 h-2 rounded-full bg-slate-300" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="w-12 h-1.5 rounded-full bg-slate-300" />
+                      <div className="w-20 h-1.5 rounded-full bg-brand-400" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">Daylight Bright</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Clean high-contrast theme</p>
+                    </div>
+                    {themeMode === 'light' && (
+                      <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px]">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+
+                {/* Dark Card */}
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setTheme('dark'); setThemeMode('dark'); triggerHaptic('selection'); }}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
+                    themeMode === 'dark'
+                      ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/30 shadow-md shadow-indigo-500/10 ring-2 ring-indigo-500/30'
+                      : 'border-slate-200/80 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
+                  }`}
+                >
+                  <div className="h-20 rounded-xl bg-gradient-to-br from-slate-950 via-navy-900 to-indigo-950 border border-navy-700 p-2.5 flex flex-col justify-between shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <div className="w-5 h-5 rounded-lg bg-indigo-900/80 text-indigo-400 flex items-center justify-center shadow-2xs">
+                        <Moon className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 rounded-full bg-navy-700" />
+                        <span className="w-2 h-2 rounded-full bg-navy-700" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="w-12 h-1.5 rounded-full bg-navy-700" />
+                      <div className="w-20 h-1.5 rounded-full bg-indigo-500" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">Midnight Dark</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Deep OLED contrast</p>
+                    </div>
+                    {themeMode === 'dark' && (
+                      <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+
+                {/* System Card */}
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setSystemTheme(); setThemeMode('system'); triggerHaptic('selection'); }}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
+                    themeMode === 'system'
+                      ? 'border-blue-500 bg-blue-50/20 dark:bg-blue-950/30 shadow-md shadow-blue-500/10 ring-2 ring-blue-500/30'
+                      : 'border-slate-200/80 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
+                  }`}
+                >
+                  <div className="h-20 rounded-xl bg-gradient-to-r from-slate-100 via-slate-200 to-navy-950 border border-slate-300 dark:border-navy-700 p-2.5 flex flex-col justify-between shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <div className="w-5 h-5 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center shadow-2xs">
+                        <Monitor className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/50 text-slate-700 dark:text-slate-300">AUTO</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="w-16 h-1.5 rounded-full bg-blue-400" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">System Auto</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Follows device appearance</p>
+                    </div>
+                    {themeMode === 'system' && (
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Mobile 3-Segment Switcher (PRESERVED FOR MOBILE) */}
+              <div className="lg:hidden p-1 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 grid grid-cols-3 gap-1">
                 <button
                   type="button"
                   onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
@@ -5762,7 +6173,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* TAB 4: DIGITAL IDENTITY CARD — Authentic Institutional PVC Badge */}
         {/* ========================================================================= */}
-        {activeTab === 'id_card' && (
+        {effectiveTab === 'id_card' && (
           <div className="space-y-6 animate-fade-in">
 
             {/* Top Card Controls & Theme Switcher */}
@@ -6183,7 +6594,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* TAB 5: MENTORSHIP & TRACKING (STAFF / FACULTY ONLY) */}
         {/* ========================================================================= */}
-        {isStaffMentor && activeTab === 'mentorship' && (
+        {isStaffMentor && effectiveTab === 'mentorship' && (
           <div className="grid grid-cols-1 gap-6 animate-fade-in">
             <div className="bg-white/95 dark:bg-[#0B1221]/95 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-navy-700 shadow-sm space-y-6">
               <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800 pb-4">
@@ -6400,7 +6811,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {/* TAB 8: HELP & SUPPORT HUB (FIRST-CLASS SUBVIEW PAGE) */}
         {/* ========================================================================= */}
-        {activeTab === 'help' && (
+        {effectiveTab === 'help' && (
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
             {/* 1. Official Campus IT Helpdesk Card */}
             <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
@@ -6696,10 +7107,36 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
         )}
 
-        {/* 4. STATIC / FIXED STICKY ACTION BAR (Rendered exclusively when editing Profile Tab) */}
-        {activeTab === 'profile' && (
+        {/* 4. STATIC / FIXED STICKY ACTION BAR (Rendered on mobile, plus desktop in-form save strip) */}
+        {effectiveTab === 'profile' && (
           <>
-            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            {/* Desktop in-form save banner at bottom of form */}
+            <div className="hidden lg:flex items-center justify-between p-4 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <Info className="w-4 h-4 text-brand-600 shrink-0" />
+                <span>Changes take effect immediately across all institutional session surfaces.</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetForm}
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-2xs"
+                >
+                  Reset Form
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  <span>Save Details</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile sticky bottom action bar */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
                 <div className="hidden sm:flex items-center gap-2">
                   <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
@@ -6745,13 +7182,15 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </div>
 
             {/* Safe bottom spacer so page content can scroll completely above the fixed action bar */}
-            <div className="h-28 sm:h-24" />
+            <div className="lg:hidden h-28 sm:h-24" />
           </>
         )}
 
-      </form>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
-  )}
       {/* MODAL: MENTEE PROFILE */}
       {selectedMentee && (
         <GlobalModalBackdrop isOpen={!!selectedMentee} onClose={() => setSelectedMentee(null)} className="flex items-center justify-center p-4">

@@ -1444,6 +1444,18 @@ export const ReportsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleGenerateUniversalReport()}
+                onTouchStart={() => {
+                  if (navigator.onLine) {
+                    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                    api.post('/reports/generate', {
+                      report_type: selectedReportType,
+                      department: effDept,
+                      year: selectedYear,
+                      output_scope: selectedOutputScope,
+                      filters: { session_id: selectedSessionId }
+                    }).catch(() => {});
+                  }
+                }}
                 disabled={isGeneratingUniversal}
                 className="w-full sm:w-auto min-h-[48px] flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
               >
