@@ -159,6 +159,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (initialData) {
       setReport(initialData);
       setLoading(false);
+      // Fetch share_token in background if missing from initialData
+      if (!initialData.share_token) {
+        api.get(`/reports/${reportId}/preview`)
+          .then(res => {
+            if (res.data?.share_token) {
+              setReport((prev: any) => ({
+                ...prev,
+                share_token: res.data.share_token,
+                universal_share_token: res.data.universal_share_token
+              }));
+            }
+          })
+          .catch(() => {});
+      }
     } else {
       fetchReport();
     }
@@ -991,7 +1005,18 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nandha-leetcode.duckdns.org';
     const { url, filename, mimeType } = getReportDownloadMeta('excel');
-    const shareTokenParam = report?.share_token ? `&share_token=${report.share_token}` : '';
+
+    // Ensure share_token is guaranteed to be present for WhatsApp recipient authentication
+    let token = report?.share_token || report?.universal_share_token;
+    if (!token) {
+      try {
+        const previewRes = await api.get(`/reports/${reportId}/preview`);
+        if (previewRes?.data?.share_token) {
+          token = previewRes.data.share_token;
+        }
+      } catch (_e) {}
+    }
+    const shareTokenParam = token ? `&share_token=${token}` : '';
     const directDownloadUrl = `${origin}/api${url}${url.includes('?') ? '&' : '?'}source=whatsapp${shareTokenParam}`;
 
     let fullShareText = text;

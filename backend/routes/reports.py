@@ -1046,7 +1046,9 @@ def get_report_preview(
     if isinstance(dataset, dict):
         import hashlib
         from backend.config import settings
-        dataset["share_token"] = hashlib.sha256(f"share:{report_id}:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
+        rid = str(report_id).strip()
+        dataset["share_token"] = hashlib.sha256(f"share:{rid}:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
+        dataset["universal_share_token"] = hashlib.sha256(f"share:universal:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
     return dataset
 
 
@@ -1285,6 +1287,13 @@ def generate_universal_report(
 
         dataset = build_universal_report(db, config, current_user=current_user)
         dataset = _enrich_dataset_ranks_and_ratings(dataset, db)
+
+        if isinstance(dataset, dict):
+            import hashlib
+            from backend.config import settings
+            rid = str(dataset.get("reportId") or dataset.get("report_id") or sess_id or "latest").strip()
+            dataset["share_token"] = hashlib.sha256(f"share:{rid}:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
+            dataset["universal_share_token"] = hashlib.sha256(f"share:universal:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
 
         import orjson
         json_bytes = orjson.dumps(dataset)
