@@ -457,7 +457,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   const userRole = (userSnapshot?.role || (currentUser as any)?.role || '').trim().toLowerCase();
   const isHodUser = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRole);
-  const isStaffUser = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty coordinator', 'staff coordinator', 'mentor'].some(r => userRole.includes(r));
+  const isStaffUser = [
+    'staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor',
+    'faculty coordinator', 'staff coordinator', 'faculty_coordinator', 'staff_coordinator',
+    'mentor', 'tutor', 'class advisor', 'coordinator'
+  ].some(r => userRole.includes(r)) || Boolean(userSnapshot?.assigned_students_count);
   const authorizedDeptCodes: string[] = useMemo(() => {
     return (userSnapshot?.authorized_department_codes || []).map((c: string) => c.trim().toUpperCase());
   }, [userSnapshot]);
@@ -606,6 +610,31 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     setActiveFilter(prev => prev === filterKey ? null : filterKey);
   };
 
+  // Check if current view is scoped to a specific cohort/allocated mentee roster
+  const isMenteeScoped = useMemo(() => {
+    return isStaffUser || 
+      Boolean(allRows.length > 0 && contestSummary.totalStudents && allRows.length < contestSummary.totalStudents) ||
+      Boolean(allRows.length > 0 && allRows.length < 50 && !isHodUser && userRole !== 'admin' && userRole !== 'principal');
+  }, [isStaffUser, isHodUser, userRole, contestSummary.totalStudents, allRows.length]);
+
+  const rowDerivedMetrics = useMemo(() => {
+    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, attended = 0;
+    allRows.forEach((r: any) => {
+      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
+      const solv = Number(r.total_solved ?? r.problems_solved ?? -1);
+      const isAtt = rawSt.includes('ATTEND') || rawSt.includes('VERIFIED') || solv >= 0;
+      if (isAtt) {
+        attended++;
+        if (solv === 4) s4++;
+        else if (solv === 3) s3++;
+        else if (solv === 2) s2++;
+        else if (solv === 1) s1++;
+        else s0++;
+      }
+    });
+    return { s4, s3, s2, s1, s0, attended, notAttended: Math.max(allRows.length - attended, 0) };
+  }, [allRows]);
+
   // Comprehensive Condition Stats for Summary Breakdown under the tables
   const conditionStats = useMemo(() => {
     const students = displayedStudents || [];
@@ -642,8 +671,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       totalSolves += (cSolved !== null && cSolved > 0 ? cSolved : (e + m + h));
     });
 
-    // If backend report already provided college/contest-wide solveDist and filter is not active:
-    if (!activeFilter && solveDist && (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)) {
+    // If backend report already provided college/contest-wide solveDist and filter is not active AND not mentee-scoped:
+    if (!activeFilter && !isMenteeScoped && solveDist && (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)) {
       s4 = Number(solveDist.solved4 ?? s4);
       s3 = Number(solveDist.solved3 ?? s3);
       s2 = Number(solveDist.solved2 ?? s2);
@@ -651,10 +680,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       s0 = Number(solveDist.solved0 ?? s0);
     }
 
-    if (totalEasy === 0 && report?.metrics?.easySolved) totalEasy = Number(report.metrics.easySolved);
-    if (totalMed === 0 && report?.metrics?.mediumSolved) totalMed = Number(report.metrics.mediumSolved);
-    if (totalHard === 0 && report?.metrics?.hardSolved) totalHard = Number(report.metrics.hardSolved);
-    if (totalSolves === 0 && report?.metrics?.totalSolved) totalSolves = Number(report.metrics.totalSolved);
+    if (!isMenteeScoped) {
+      if (totalEasy === 0 && report?.metrics?.easySolved) totalEasy = Number(report.metrics.easySolved);
+      if (totalMed === 0 && report?.metrics?.mediumSolved) totalMed = Number(report.metrics.mediumSolved);
+      if (totalHard === 0 && report?.metrics?.hardSolved) totalHard = Number(report.metrics.hardSolved);
+      if (totalSolves === 0 && report?.metrics?.totalSolved) totalSolves = Number(report.metrics.totalSolved);
+    }
 
     return {
       totalStudents: students.length,
@@ -670,30 +701,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       totalHard,
       totalSolves,
     };
-  }, [displayedStudents, isContestReport, activeFilter, solveDist, report?.metrics]);
+  }, [displayedStudents, isContestReport, activeFilter, solveDist, report?.metrics, isMenteeScoped]);
 
-  // Check if current view is scoped to a specific cohort/allocated mentee roster
-  const isMenteeScoped = useMemo(() => {
-    return isStaffUser || Boolean(contestSummary.totalStudents && allRows.length > 0 && allRows.length < contestSummary.totalStudents);
-  }, [isStaffUser, contestSummary.totalStudents, allRows.length]);
-
-  const rowDerivedMetrics = useMemo(() => {
-    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, attended = 0;
-    allRows.forEach((r: any) => {
-      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
-      const solv = Number(r.total_solved ?? r.problems_solved ?? -1);
-      const isAtt = rawSt.includes('ATTEND') || rawSt.includes('VERIFIED') || solv >= 0;
-      if (isAtt) {
-        attended++;
-        if (solv === 4) s4++;
-        else if (solv === 3) s3++;
-        else if (solv === 2) s2++;
-        else if (solv === 1) s1++;
-        else s0++;
-      }
-    });
-    return { s4, s3, s2, s1, s0, attended, notAttended: Math.max(allRows.length - attended, 0) };
-  }, [allRows]);
 
   // Robust Contest Metrics Calculation with zero-fallback & reconciliation safety
   const totalRosterCount = useMemo(() => {

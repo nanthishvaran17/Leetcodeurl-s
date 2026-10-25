@@ -288,6 +288,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             raw["rows"] = raw.get("all_students_current", [])
         if not raw.get("allStudents"):
             raw["allStudents"] = raw.get("all_students_current", [])
+        raw["totalStudents"] = len(raw.get("rows", []))
+        raw["total_students"] = len(raw.get("rows", []))
         return _save_and_return(raw)
 
     cfg_filters = config.filters or {}
@@ -639,6 +641,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "topStudents": top_students,
         "allStudents": all_students_dict,
         "rows": all_students_dict,
+        "totalStudents": total_students,
+        "total_students": total_students,
         "participations": participations_dict
     }
 
