@@ -2,8 +2,8 @@
 
 <img src="docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="180" style="margin-bottom: 12px;" />
 
-# 🟢 NANDHA LEETCODE INTELLIGENCE
-### Autonomous Institutional Contest Intelligence • Forensic Verification • Career Acceleration Platform
+# 🟢 NANDHA LEETCODE TRACKER & CONTEST INTELLIGENCE
+### Official LeetCode Tracker for Nandha Engineering College • Autonomous Institutional Contest Intelligence • Forensic Verification Platform
 
 **Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
