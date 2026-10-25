@@ -15,7 +15,7 @@ import { useNotification } from '../context/NotificationContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
-import { isNativeMobile, saveFileToMobileStorage } from '../services/download/downloadUtils';
+import { isNativeMobile, saveFileToMobileStorage, DocumentOpener } from '../services/download/downloadUtils';
 import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 const formatStudentName = (name: string) => {
@@ -907,11 +907,17 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       });
     }
 
-    text += `\n🚀 *Nandha Engineering College (Autonomous)*`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://nandha-leetcode.duckdns.org';
+    const { url, filename, mimeType } = getReportDownloadMeta('excel');
+    const shareTokenParam = report?.share_token ? `&share_token=${report.share_token}` : '';
+    const directDownloadUrl = `${origin}/api${url}${url.includes('?') ? '&' : '?'}source=whatsapp${shareTokenParam}`;
+
+    let fullShareText = text;
+    fullShareText += `\n\n📥 *Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
+    fullShareText += `\n🌐 *Live Student Portal:* ${origin}/#/dashboard`;
+    fullShareText += `\n\n🚀 *Nandha Engineering College (Autonomous)*`;
 
     try {
-      const { url, filename, mimeType } = getReportDownloadMeta('excel');
-
       // 1. Native Mobile App (Capacitor Android APK):
       // Fetch the actual .xlsx spreadsheet file, save it to device storage, and attach it directly to WhatsApp!
       if (isNativeMobile()) {
@@ -921,18 +927,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           if (res?.data) {
             const { uri } = await saveFileToMobileStorage(res.data, filename, mimeType);
             if (uri) {
-              let shareUrl = uri;
-              if (shareUrl && !shareUrl.startsWith('file:') && !shareUrl.startsWith('content:')) {
-                if (shareUrl.startsWith('/')) shareUrl = `file://${shareUrl}`;
-              }
-              const { Share } = await import('@capacitor/share');
-              await Share.share({
-                title: filename,
-                text: text,
-                url: shareUrl,
-                dialogTitle: `Share ${filename} to WhatsApp`,
+              await DocumentOpener.shareDocument({
+                path: uri,
+                filename,
+                mimeType,
+                text: fullShareText,
               });
-              notify.success('Report Ready', `${filename} ready in WhatsApp share.`, { category: 'SHARE' });
+              notify.success('Report Ready', `${filename} attached in WhatsApp share.`, { category: 'SHARE' });
               setIsSharingWhatsApp(false);
               return;
             }
@@ -942,7 +943,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         }
       }
 
-      // 2. Web Share API Level 2 (Browsers with file sharing support)
+      // 2. Web Share API Level 2 (Browsers with file sharing support, e.g. Mobile Chrome)
       if (typeof navigator !== 'undefined' && (navigator as any).canShare && typeof File !== 'undefined') {
         try {
           const res = await api.get(url, { responseType: 'blob' });
@@ -951,7 +952,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
             if ((navigator as any).canShare({ files: [file] })) {
               await (navigator as any).share({
                 title: `${deptName} LeetCode Performance`,
-                text: text,
+                text: fullShareText,
                 files: [file],
               });
               setIsSharingWhatsApp(false);
@@ -966,12 +967,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       // 3. Desktop browser fallback: Trigger Excel file download & open WhatsApp Web
       try {
         await downloadFile('excel');
+        notify.success('Excel Report Downloaded', `${filename} saved to your device. You can attach it in WhatsApp or send the direct link.`, { category: 'SHARE' });
       } catch (_e) {}
 
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
     } catch (err: any) {
       console.error('[ReportPreview] WhatsApp share error:', err);
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
     } finally {
       setIsSharingWhatsApp(false);
     }

@@ -150,6 +150,10 @@ public class DocumentOpenerPlugin extends Plugin {
     }
 
     public static boolean nativeShareFile(Context context, String rawPath, String filename, String mimeType) {
+        return nativeShareFile(context, rawPath, filename, mimeType, null);
+    }
+
+    public static boolean nativeShareFile(Context context, String rawPath, String filename, String mimeType, String text) {
         if (context == null) {
             return false;
         }
@@ -237,6 +241,9 @@ public class DocumentOpenerPlugin extends Plugin {
             if (!baseName.isEmpty()) {
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, baseName);
             }
+            if (text != null && !text.trim().isEmpty()) {
+                shareIntent.putExtra(Intent.EXTRA_TEXT, text);
+            }
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             shareIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -306,7 +313,9 @@ public class DocumentOpenerPlugin extends Plugin {
             return;
         }
 
-        boolean ok = nativeShareFile(getActivity() != null ? getActivity() : getContext(), rawPath, filename, mimeType);
+        String text = call.getString("text", "");
+
+        boolean ok = nativeShareFile(getActivity() != null ? getActivity() : getContext(), rawPath, filename, mimeType, text);
         if (ok) {
             call.resolve();
         } else {

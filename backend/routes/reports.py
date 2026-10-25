@@ -1043,6 +1043,10 @@ def get_report_preview(
 ):
     """Fetches the full JSON dataset snapshot for a specific report ID or session ID."""
     dataset, _ = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance, current_user=current_user)
+    if isinstance(dataset, dict):
+        import hashlib
+        from backend.config import settings
+        dataset["share_token"] = hashlib.sha256(f"share:{report_id}:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
     return dataset
 
 

@@ -1329,7 +1329,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
             {!isCapacitorNative && (
               <a
                 href="/nandha-leetcode.apk"
-                download="Nandha_LeetCode_Intelligence_v3.1.7_latest.apk"
+                download="Nandha_LeetCode_Intelligence_v3.1.8_latest.apk"
                 className="w-full mt-4 p-3 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border border-indigo-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
                 title="Download Nandha LeetCode Android App (APK)"
               >
@@ -1340,7 +1340,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-black text-slate-900 dark:text-white truncate">Get Android App (.APK)</span>
-                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v3.1.7</span>
+                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v3.1.8</span>
                     </div>
                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium truncate">Instant 1-Tap Direct Download • 17 MB</p>
                   </div>

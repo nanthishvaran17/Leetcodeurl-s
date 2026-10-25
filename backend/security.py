@@ -548,6 +548,25 @@ def require_security_access(
         session_id = request.path_params.get("session_id") or request.query_params.get("session_id")
         contest_info = f"Session {session_id}" if session_id else None
 
+        # Verified WhatsApp / Public Share Token bypass for report downloads
+        if not user:
+            share_token = request.query_params.get("share_token")
+            report_or_session = (
+                request.path_params.get("report_id")
+                or request.path_params.get("session_id")
+                or request.query_params.get("report_id")
+                or request.query_params.get("session_id")
+            )
+            if share_token and report_or_session:
+                import hmac
+                expected = hashlib.sha256(f"share:{report_or_session}:{settings.SECRET_KEY}".encode()).hexdigest()[:24]
+                if hmac.compare_digest(share_token, expected):
+                    user = User(
+                        id=999999,
+                        username="whatsapp_share_viewer",
+                        role="admin"
+                    )
+
         # 1. AUTHENTICATION CHECK
         if not user:
             log_security_access_event(
