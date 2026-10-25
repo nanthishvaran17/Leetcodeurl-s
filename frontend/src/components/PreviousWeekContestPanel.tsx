@@ -1136,7 +1136,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-36 sm:pb-24">
+    <div className="space-y-4 sm:space-y-6 pb-36 sm:pb-24 px-1 sm:px-0">
 
       {/* Top Banner Card — Modern Glassmorphic Tech Aesthetic */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 border border-indigo-500/30 shadow-2xl mb-3 sm:mb-4">
@@ -1204,142 +1204,144 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       )}
 
       {/* Summary KPI Cards Grid — Perfectly Balanced Symmetrical Grid (2-col mobile with full-width 5th card, 5-col desktop) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-        {/* Card 1: PUBLIC / LIVE */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('PUBLIC'); }}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
-            selectedTypeFilter === 'PUBLIC'
-              ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/80 dark:from-emerald-950/70 dark:to-emerald-900/50 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg scale-[1.01]'
-              : 'bg-emerald-50/50 dark:bg-emerald-950/25 border-emerald-200/80 dark:border-emerald-800/40 hover:border-emerald-400 hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider truncate">Public / Live</span>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <Award className="w-3.5 h-3.5" />
+      <div className="w-full px-0.5 sm:px-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 p-0.5">
+          {/* Card 1: PUBLIC / LIVE */}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('PUBLIC'); }}
+            className={`p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] overflow-hidden ${
+              selectedTypeFilter === 'PUBLIC'
+                ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/80 dark:from-emerald-950/70 dark:to-emerald-900/50 border-emerald-500 ring-2 ring-emerald-500/40 shadow-md'
+                : 'bg-emerald-50/50 dark:bg-emerald-950/25 border-emerald-200/80 dark:border-emerald-800/40 hover:border-emerald-400 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider truncate">Public / Live</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Award className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
-            <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-              {dynamicMetrics.PUBLIC}
-            </p>
-            {selectedTypeFilter === 'PUBLIC' && (
-              <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-emerald-600 text-white">Active</span>
-            )}
-          </div>
-        </button>
+            <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
+              <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                {dynamicMetrics.PUBLIC}
+              </p>
+              {selectedTypeFilter === 'PUBLIC' && (
+                <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-emerald-600 text-white">Active</span>
+              )}
+            </div>
+          </button>
 
-        {/* Card 2: VIRTUAL PRACTICE */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('VIRTUAL'); }}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
-            selectedTypeFilter === 'VIRTUAL'
-              ? 'bg-gradient-to-br from-purple-50 to-purple-100/80 dark:from-purple-950/70 dark:to-purple-900/50 border-purple-500 ring-2 ring-purple-500/40 shadow-lg scale-[1.01]'
-              : 'bg-purple-50/50 dark:bg-purple-950/25 border-purple-200/80 dark:border-purple-800/40 hover:border-purple-400 hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider truncate">Virtual Practice</span>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-              <Activity className="w-3.5 h-3.5" />
+          {/* Card 2: VIRTUAL PRACTICE */}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('VIRTUAL'); }}
+            className={`p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] overflow-hidden ${
+              selectedTypeFilter === 'VIRTUAL'
+                ? 'bg-gradient-to-br from-purple-50 to-purple-100/80 dark:from-purple-950/70 dark:to-purple-900/50 border-purple-500 ring-2 ring-purple-500/40 shadow-md'
+                : 'bg-purple-50/50 dark:bg-purple-950/25 border-purple-200/80 dark:border-purple-800/40 hover:border-purple-400 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider truncate">Virtual Practice</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                <Activity className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
-            <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-purple-600 dark:text-purple-400">
-              {dynamicMetrics.VIRTUAL}
-            </p>
-            {selectedTypeFilter === 'VIRTUAL' && (
-              <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-purple-600 text-white">Active</span>
-            )}
-          </div>
-        </button>
+            <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
+              <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-purple-600 dark:text-purple-400">
+                {dynamicMetrics.VIRTUAL}
+              </p>
+              {selectedTypeFilter === 'VIRTUAL' && (
+                <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-purple-600 text-white">Active</span>
+              )}
+            </div>
+          </button>
 
-        {/* Card 3: NOT ATTENDED */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_PARTICIPATED'); }}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
-            selectedTypeFilter === 'NOT_PARTICIPATED'
-              ? 'bg-gradient-to-br from-rose-50 to-rose-100/80 dark:from-rose-950/70 dark:to-rose-900/50 border-rose-500 ring-2 ring-rose-500/40 shadow-lg scale-[1.01]'
-              : 'bg-rose-50/50 dark:bg-rose-950/25 border-rose-200/80 dark:border-rose-800/40 hover:border-rose-400 hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider truncate">Not Attended</span>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-              <UserX className="w-3.5 h-3.5" />
+          {/* Card 3: NOT ATTENDED */}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_PARTICIPATED'); }}
+            className={`p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] overflow-hidden ${
+              selectedTypeFilter === 'NOT_PARTICIPATED'
+                ? 'bg-gradient-to-br from-rose-50 to-rose-100/80 dark:from-rose-950/70 dark:to-rose-900/50 border-rose-500 ring-2 ring-rose-500/40 shadow-md'
+                : 'bg-rose-50/50 dark:bg-rose-950/25 border-rose-200/80 dark:border-rose-800/40 hover:border-rose-400 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider truncate">Not Attended</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <UserX className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
-            <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-rose-600 dark:text-rose-400">
-              {dynamicMetrics.NOT_PARTICIPATED}
-            </p>
-            {selectedTypeFilter === 'NOT_PARTICIPATED' && (
-              <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-rose-600 text-white">Active</span>
-            )}
-          </div>
-        </button>
+            <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
+              <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-rose-600 dark:text-rose-400">
+                {dynamicMetrics.NOT_PARTICIPATED}
+              </p>
+              {selectedTypeFilter === 'NOT_PARTICIPATED' && (
+                <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-rose-600 text-white">Active</span>
+              )}
+            </div>
+          </button>
 
-        {/* Card 4: PENDING VERIFICATION */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_VERIFIED'); }}
-          className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] ${
-            selectedTypeFilter === 'NOT_VERIFIED'
-              ? 'bg-gradient-to-br from-amber-50 to-amber-100/80 dark:from-amber-950/70 dark:to-amber-900/50 border-amber-500 ring-2 ring-amber-500/40 shadow-lg scale-[1.01]'
-              : 'bg-amber-50/50 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-800/40 hover:border-amber-400 hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider leading-tight">
-              <span className="sm:hidden">Pending Verify</span>
-              <span className="hidden sm:inline">Pending Verification</span>
-            </span>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <HelpCircle className="w-3.5 h-3.5" />
+          {/* Card 4: PENDING VERIFICATION */}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_VERIFIED'); }}
+            className={`p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between group active:scale-[0.98] overflow-hidden ${
+              selectedTypeFilter === 'NOT_VERIFIED'
+                ? 'bg-gradient-to-br from-amber-50 to-amber-100/80 dark:from-amber-950/70 dark:to-amber-900/50 border-amber-500 ring-2 ring-amber-500/40 shadow-md'
+                : 'bg-amber-50/50 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-800/40 hover:border-amber-400 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-1.5">
+              <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider leading-tight">
+                <span className="sm:hidden">Pending Verify</span>
+                <span className="hidden sm:inline">Pending Verification</span>
+              </span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <HelpCircle className="w-3.5 h-3.5" />
+              </div>
             </div>
-          </div>
-          <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
-            <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-amber-600 dark:text-amber-400">
-              {dynamicMetrics.NOT_VERIFIED}
-            </p>
-            {selectedTypeFilter === 'NOT_VERIFIED' && (
-              <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-amber-600 text-white">Active</span>
-            )}
-          </div>
-        </button>
+            <div className="mt-2 sm:mt-2.5 flex items-baseline justify-between">
+              <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-amber-600 dark:text-amber-400">
+                {dynamicMetrics.NOT_VERIFIED}
+              </p>
+              {selectedTypeFilter === 'NOT_VERIFIED' && (
+                <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-amber-600 text-white">Active</span>
+              )}
+            </div>
+          </button>
 
-        {/* Card 5: NO LEETCODE HANDLE — col-span-2 on mobile so NO awkward gaps! */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('MISSING_LEETCODE_USERNAME'); }}
-          className={`col-span-2 sm:col-span-1 p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-row sm:flex-col justify-between items-center sm:items-stretch group active:scale-[0.98] ${
-            selectedTypeFilter === 'MISSING_LEETCODE_USERNAME'
-              ? 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-slate-500 ring-2 ring-slate-500/40 shadow-lg scale-[1.01]'
-              : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-400 hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-500/15 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-3.5 h-3.5" />
+          {/* Card 5: NO LEETCODE HANDLE — col-span-2 on mobile so NO awkward gaps! */}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('MISSING_LEETCODE_USERNAME'); }}
+            className={`col-span-2 sm:col-span-1 p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-row sm:flex-col justify-between items-center sm:items-stretch group active:scale-[0.98] overflow-hidden ${
+              selectedTypeFilter === 'MISSING_LEETCODE_USERNAME'
+                ? 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-slate-500 ring-2 ring-slate-500/40 shadow-md'
+                : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-400 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-500/15 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-slate-800 dark:text-slate-300 tracking-wider block">No LeetCode Handle</span>
+                <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium sm:hidden">Unlinked Profiles</span>
+              </div>
             </div>
-            <div>
-              <span className="text-[10px] sm:text-[10.5px] font-black uppercase text-slate-800 dark:text-slate-300 tracking-wider block">No LeetCode Handle</span>
-              <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium sm:hidden">Unlinked Profiles</span>
+            <div className="mt-0 sm:mt-2.5 flex items-baseline gap-2">
+              <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-slate-800 dark:text-slate-200">
+                {dynamicMetrics.MISSING_LEETCODE_USERNAME}
+              </p>
+              {selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' && (
+                <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-slate-700 text-white">Active</span>
+              )}
             </div>
-          </div>
-          <div className="mt-0 sm:mt-2.5 flex items-baseline gap-2">
-            <p className="text-xl sm:text-2xl md:text-3xl font-black font-mono text-slate-800 dark:text-slate-200">
-              {dynamicMetrics.MISSING_LEETCODE_USERNAME}
-            </p>
-            {selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' && (
-              <span className="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-slate-700 text-white">Active</span>
-            )}
-          </div>
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}

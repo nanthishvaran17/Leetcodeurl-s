@@ -2795,7 +2795,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
-        <div className="mt-4 sm:mt-6">
+        <div className="mt-4 sm:mt-6 px-1 sm:px-0">
           <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || 18} onStudentClick={onSelectStudent} />
         </div>
       )}
