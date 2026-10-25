@@ -952,7 +952,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         # Determine demographic merge boundary: merge from Col 1 up to first contest/metric column - 1
         first_metric_col = 1
         for col_idx, (title, raw_key) in enumerate(selected_cols, 1):
-            if str(raw_key).startswith("__weekly__") or title in ("Q1", "Q2", "Q3", "Q4", "Contests Attended", "Total Solved"):
+            if str(raw_key).startswith("__weekly__") or title in ("Q1", "Q2", "Q3", "Q4", "Total Solved"):
                 first_metric_col = col_idx
                 break
         
@@ -990,9 +990,15 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             acc = str(r.get("accommodation") or r.get("accom") or r.get("accommodation_type") or "").strip().upper()
             return "HOSTEL" in acc or acc == "H"
 
+        tot_all = len(rows)
+        tot_boys = sum(1 for r in rows if not _is_girl_student(r))
+        tot_girls = sum(1 for r in rows if _is_girl_student(r))
+        tot_ds = sum(1 for r in rows if not _is_hosteler_student(r))
+        tot_h = sum(1 for r in rows if _is_hosteler_student(r))
+
         consolidation_configs = [
             {
-                "label": "TOTAL SOLVED COUNT",
+                "label": f"TOTAL SOLVED COUNT ({tot_all} STUDENTS)",
                 "filter": lambda r: True,
                 "fill_color": "E6F0FA",
                 "font_color": "1B365D",
@@ -1000,7 +1006,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 "bold": True,
             },
             {
-                "label": "BOYS SOLVED COUNT",
+                "label": f"BOYS SOLVED COUNT ({tot_boys} BOYS)",
                 "filter": lambda r: not _is_girl_student(r),
                 "fill_color": "FFFFFF",
                 "font_color": "1B365D",
@@ -1008,7 +1014,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 "bold": True,
             },
             {
-                "label": "GIRLS SOLVED COUNT",
+                "label": f"GIRLS SOLVED COUNT ({tot_girls} GIRLS)",
                 "filter": lambda r: _is_girl_student(r),
                 "fill_color": "F8FAFC",
                 "font_color": "1B365D",
@@ -1016,7 +1022,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 "bold": True,
             },
             {
-                "label": "DAY SCHOLARS (D) SOLVED COUNT",
+                "label": f"DAY SCHOLARS (D) SOLVED COUNT ({tot_ds} STUDENTS)",
                 "filter": lambda r: not _is_hosteler_student(r),
                 "fill_color": "FFFFFF",
                 "font_color": "1B365D",
@@ -1024,7 +1030,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 "bold": True,
             },
             {
-                "label": "HOSTELERS (H) SOLVED COUNT",
+                "label": f"HOSTELERS (H) SOLVED COUNT ({tot_h} STUDENTS)",
                 "filter": lambda r: _is_hosteler_student(r),
                 "fill_color": "F8FAFC",
                 "font_color": "1B365D",
@@ -1097,13 +1103,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     c_cell.value = q_sum
                     c_cell.number_format = '#,##0'
                 elif title in ("Contests Attended",):
-                    col_att = sum(
-                        sum(1 for w in r.get("weeklyData", []) if w.get("att")) if isinstance(r.get("weeklyData"), list)
-                        else int(r.get("contests_attended") or r.get("total_attended") or 0)
-                        for r in sub_rows
-                    )
-                    c_cell.value = col_att
-                    c_cell.number_format = '#,##0'
+                    c_cell.value = "—"
                 elif title in ("Total Solved",):
                     col_tot = sum(
                         int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0))
