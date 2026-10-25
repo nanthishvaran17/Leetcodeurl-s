@@ -196,10 +196,10 @@ class OfficialContestRankingService:
                     target_pages = min(max_pages, available_pages) if available_pages > 0 else max_pages
                 else:
                     logger.info(f"[CONTEST_SCAN] Page 1 returned status {p1_resp.status_code} (Cloudflare block). Skipping REST, activating fast GraphQL engine immediately.")
-                    return {}
+                    return await cls.scan_via_graphql_contest_engine(contest_slug=contest_slug, db=db, concurrency=concurrency)
             except Exception as e:
-                logger.warning(f"[CONTEST_SCAN] Metadata probe failed for {contest_slug}: {e}. Skipping REST.")
-                return {}
+                logger.warning(f"[CONTEST_SCAN] Metadata probe failed for {contest_slug}: {e}. Skipping REST, activating GraphQL engine.")
+                return await cls.scan_via_graphql_contest_engine(contest_slug=contest_slug, db=db, concurrency=concurrency)
 
             sem = asyncio.Semaphore(concurrency)
 
