@@ -1248,10 +1248,9 @@ def generate_universal_report(
         yr = payload.year or filters.get("year", "ALL")
         scope = payload.output_scope or filters.get("output_scope", "COLLEGE")
 
-        # Security Enforcement: Strict HOD Role Department Scoping
+        # Security Enforcement: Strict HOD & Coordinator Role Department Scoping
         user_role = (getattr(current_user, "role", "") or "").lower().strip()
-        is_coord_report = (payload.report_type or "").upper() in ("WEEKLY_PERFORMANCE", "COORDINATOR", "COORDINATOR_WEEKLY_PERFORMANCE", "WEEKLY_STUDENT_PERFORMANCE", "WEEKLY_CONTEST_INTELLIGENCE")
-        if user_role in ("hod", "department hod", "department_hod") and not is_coord_report:
+        if user_role in ("hod", "department hod", "department_hod", "head of department", "placement coordinator", "placement_coordinator"):
             from backend.services.authorization_service import get_hod_authorized_department_codes
             auth_codes = get_hod_authorized_department_codes(db, current_user)
             if auth_codes and (dept in ("ALL", "", None) or dept not in auth_codes):

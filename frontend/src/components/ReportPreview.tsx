@@ -121,7 +121,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   const isContestReport = useMemo(() => {
     if (!report) return false;
-    if (rType === 'WEEKLY_PERFORMANCE' || rType === 'WEEKLY_STUDENT_PERFORMANCE' || !!report.batch_summaries) return false;
+    if (rType === 'WEEKLY_PERFORMANCE' || rType === 'WEEKLY_STUDENT_PERFORMANCE' || rType === 'COORDINATOR' || rType === 'COORDINATOR_WEEKLY_PERFORMANCE' || rType === 'WEEKLY_COORDINATOR' || !!report.batch_summaries) return false;
     return (
       rType === 'CONTEST_PERFORMANCE' ||
       rType === 'OFFICIAL_CONTEST' ||
@@ -195,6 +195,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return (
       rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
       rType === 'WEEKLY_PERFORMANCE' ||
+      rType === 'COORDINATOR' ||
+      rType === 'COORDINATOR_WEEKLY_PERFORMANCE' ||
+      rType === 'WEEKLY_COORDINATOR' ||
       !!report.college_summary ||
       !!report.department_summaries ||
       !!report.batch_summaries
