@@ -1743,11 +1743,10 @@ class SundayLiveContestEngine:
                     contest_slug = resolve_contest_slug(session)
                     logger.info(f"[SUNDAY_LIVE_ENGINE] Scanning official ranking API for {contest_slug}...")
 
-                    # Scan Official LeetCode Live Ranking API
-                    scanned_solvers = await OfficialContestRankingService.scan_live_leetcode_ranking(
+                    # Scan Official LeetCode Live Ranking API via 100% Cloudflare-Proof GraphQL
+                    scanned_solvers = await OfficialContestRankingService.scan_via_graphql_contest_engine(
                         contest_slug=contest_slug,
                         db=db,
-                        max_pages=1200,
                         concurrency=25
                     )
 
