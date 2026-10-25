@@ -3,7 +3,7 @@
 This directory contains the production-ready compiled Android APK builds for the **Nandha LeetCode Intelligence** mobile application.
 
 ## Active Releases
-- **Latest Version:** `Nandha_LeetCode_Intelligence_v3.1.8_latest.apk` (VersionCode 58)
+- **Latest Version:** `Nandha_LeetCode_Intelligence_v3.1.9_latest.apk` (VersionCode 59)
 - **Aliases:** `Nandha-LeetCode-Tracker-Latest.apk`, `nandha-leetcode.apk`
 
 ## How To Build
