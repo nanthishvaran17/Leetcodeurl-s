@@ -2163,10 +2163,39 @@ def _get_dataset_for_id(
                 dataset["metrics"]["2 Q Solved"] = s2
                 dataset["metrics"]["1 Q Solved"] = s1
                 dataset["metrics"]["0 Q Solved"] = s0
-                if "contestSummary" in dataset and isinstance(dataset["contestSummary"], dict):
-                    dataset["contestSummary"]["totalStudents"] = len(rows)
-                    dataset["contestSummary"]["publicAttended"] = attended
-                    dataset["contestSummary"]["notAttended"] = not_attended
+
+                dataset["solveDistribution"] = {
+                    "solved4": s4,
+                    "solved3": s3,
+                    "solved2": s2,
+                    "solved1": s1,
+                    "solved0": s0,
+                    "atLeast1Solved": s4 + s3 + s2 + s1,
+                    "zeroSolvedParticipated": s0,
+                    "notParticipated": not_attended
+                }
+
+                if "contestSummary" not in dataset or not isinstance(dataset["contestSummary"], dict):
+                    dataset["contestSummary"] = {}
+                dataset["contestSummary"]["totalStudents"] = len(rows)
+                dataset["contestSummary"]["publicAttended"] = attended
+                dataset["contestSummary"]["notAttended"] = not_attended
+                dataset["contestSummary"]["q4"] = s4
+                dataset["contestSummary"]["q3"] = s3
+                dataset["contestSummary"]["q2"] = s2
+                dataset["contestSummary"]["q1"] = s1
+                dataset["contestSummary"]["q0"] = s0
+
+                if "college_summary" in dataset and isinstance(dataset["college_summary"], dict):
+                    dataset["college_summary"]["total_students"] = len(rows)
+                    dataset["college_summary"]["num_students"] = len(rows)
+                if "current_week" in dataset and isinstance(dataset["current_week"], dict):
+                    dataset["current_week"]["q4"] = s4
+                    dataset["current_week"]["q3"] = s3
+                    dataset["current_week"]["q2"] = s2
+                    dataset["current_week"]["q1"] = s1
+                    dataset["current_week"]["q0"] = s0
+                    dataset["current_week"]["not_participated"] = not_attended
             elif role_clean in _HOD_ROLES:
                 from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
                 from backend.services.contest_performance_service import matches_dept
@@ -2505,6 +2534,24 @@ def _get_dataset_for_id(
                 "yearFilter": year or "ALL",
                 "attendanceFilter": effective_att or "ALL",
                 "searchFilter": search or "",
+                "totalStudents": tot_count,
+                "total_students": tot_count,
+                "contestSummary": {
+                    "totalStudents": tot_count,
+                    "total_students": tot_count,
+                    "publicAttended": off_count,
+                    "virtualAttended": virt_count,
+                    "notAttended": not_count,
+                    "dataErrors": err_count,
+                },
+                "solveDistribution": {
+                    "solved4": q4_count,
+                    "solved3": q3_count,
+                    "solved2": q2_count,
+                    "solved1": q1_count,
+                    "solved0": max(0, tot_count - (q4_count + q3_count + q2_count + q1_count + not_count)),
+                    "notAttended": not_count,
+                },
                 "metrics": {
                     "totalStudents": tot_count,
                     "officialAttended": off_count,

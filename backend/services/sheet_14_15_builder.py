@@ -52,14 +52,14 @@ def _write_section_header(ws, row_idx: int, title: str, max_cols: int = 10):
         ws.cell(row=row_idx, column=c).border = GRID_BORDER
 
 
-def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optional[str] = "ALL", year: Optional[str] = "ALL") -> openpyxl.Workbook:
+def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optional[str] = "ALL", year: Optional[str] = "ALL", current_user: Optional[Any] = None) -> openpyxl.Workbook:
     """
     Appends Sheet 14 and Sheet 15 to the provided openpyxl Workbook.
     Guarantees exactly 2 new sheets ('14 Week-on-Week Intelligence' and '15 Historical Contest Intel')
     without leaving duplicate tabs or modifying existing original sheets.
-    Respects department and cohort year filters.
+    Respects department and cohort year filters, and mentee/faculty allocations.
     """
-    from backend.models import Student, WeeklySession, WeeklyPublicResult, Department
+    from backend.models import Student, WeeklySession, WeeklyPublicResult, Department, FacultyStudentAssignment
 
     # Clean existing Sheet 14/15 tabs if re-running on an existing workbook to avoid duplicate tabs
     for sheet_name in list(wb.sheetnames):
@@ -71,7 +71,20 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session, department: Optio
 
     from sqlalchemy.orm import joinedload
     from backend.services.contest_performance_service import is_official_student, matches_dept, matches_year
+    
+    # Check if user has assigned mentees (faculty / staff allocation)
+    assigned_ids = set()
+    if current_user and getattr(current_user, "id", None) and getattr(current_user, "role", "") not in ("ADMIN", "PRINCIPAL", "SUPER_ADMIN"):
+        assigned_stus = db_session.query(FacultyStudentAssignment.student_id).filter(
+            FacultyStudentAssignment.faculty_id == current_user.id
+        ).all()
+        if assigned_stus:
+            assigned_ids = {a[0] for a in assigned_stus}
+
     all_stus = db_session.query(Student).options(joinedload(Student.department)).all()
+    if assigned_ids:
+        all_stus = [s for s in all_stus if s.id in assigned_ids]
+
     master_students = [
         s for s in all_stus
         if (s.is_active is True or s.is_active is None)

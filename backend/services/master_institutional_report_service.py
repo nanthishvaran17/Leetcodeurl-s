@@ -1074,7 +1074,7 @@ def generate_master_10_sheet_workbook(
     if report_type in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
         try:
             from backend.services.sheet_14_15_builder import append_sheets_14_and_15
-            append_sheets_14_and_15(wb, db, department=department, year=year)
+            append_sheets_14_and_15(wb, db, department=department, year=year, current_user=current_user)
         except Exception as _e_s1415:
             logger.warning(f"Note on appending Sheets 14 and 15: {_e_s1415}")
 
