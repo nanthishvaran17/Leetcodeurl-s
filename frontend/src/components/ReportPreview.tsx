@@ -71,6 +71,47 @@ const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean 
   return { easy: cEasy, medium: cMed, hard: cHard };
 };
 
+const getContestSolvedCount = (s: any, isContestReport: boolean = false): { count: number | null; isAttended: boolean } => {
+  if (!s) return { count: null, isAttended: false };
+
+  // 1. Authoritative public_result (e.g. '4_SOLVED', '3_SOLVED', 'NOT_PARTICIPATED', '0_SOLVED')
+  const pub = String(s.public_result || s.curr_public_result || s.weekly_result || '').trim().toUpperCase();
+  if (pub) {
+    if (pub.includes('4_SOLVED') || pub === '4' || pub === '4/4') return { count: 4, isAttended: true };
+    if (pub.includes('3_SOLVED') || pub === '3' || pub === '3/4') return { count: 3, isAttended: true };
+    if (pub.includes('2_SOLVED') || pub === '2' || pub === '2/4') return { count: 2, isAttended: true };
+    if (pub.includes('1_SOLVED') || pub === '1' || pub === '1/4') return { count: 1, isAttended: true };
+    if (pub.includes('0_SOLVED') || pub === '0' || pub === '0/4') return { count: 0, isAttended: true };
+    if (pub === 'NOT_PARTICIPATED' || pub === 'NOT_ATTENDED' || pub === 'ABSENT' || pub === 'UNATTENDED') {
+      return { count: null, isAttended: false };
+    }
+  }
+
+  // 2. Explicit contest solved numbers (e.g. s.contest_solved, s.q_solved, or s.solved in contest report)
+  // NEVER use s.total_solved or lifetime solved for contest solved!
+  if (s.contest_solved !== undefined && s.contest_solved !== null) {
+    const val = Number(s.contest_solved);
+    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
+  }
+  if (s.total_contest_solved !== undefined && s.total_contest_solved !== null && Number(s.total_contest_solved) <= 4) {
+    const val = Number(s.total_contest_solved);
+    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
+  }
+  if (isContestReport && s.solved !== undefined && s.solved !== null && Number(s.solved) <= 4) {
+    const val = Number(s.solved);
+    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
+  }
+
+  // 3. Attendance status tags
+  const st = String(s.status || s.attendance_status || s.attendance || '').trim().toUpperCase();
+  const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st);
+  if (isPart) {
+    return { count: 0, isAttended: true };
+  }
+
+  return { count: null, isAttended: false };
+};
+
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
   const { notify } = useNotification();
   const { user: currentUser } = useAuth();
@@ -369,8 +410,27 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return 0;
   };
 
-  const contestSummary = report?.contestSummary || report?.metrics || {};
-  const solveDist = report?.solveDistribution || {};
+  const contestSummary = report?.contestSummary || report?.metrics || report?.current_week || {};
+  const solveDist = useMemo(() => {
+    const sd = report?.solveDistribution || {};
+    if (sd.solved4 !== undefined || sd.solved3 !== undefined || sd.solved2 !== undefined || sd.solved1 !== undefined) {
+      return sd;
+    }
+    const cw = report?.current_week || 
+      report?.department_summaries?.[0]?.current_week || 
+      report?.college_summary?.current_week;
+    if (cw && (cw.q4 !== undefined || cw.q3 !== undefined)) {
+      return {
+        solved4: cw.q4,
+        solved3: cw.q3,
+        solved2: cw.q2,
+        solved1: cw.q1,
+        solved0: cw.q0,
+        notParticipated: cw.not_participated,
+      };
+    }
+    return sd;
+  }, [report]);
 
   const userSnapshot = useMemo(() => {
     try {
@@ -443,10 +503,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     return allRows.filter((r: any) => {
       const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
-      const st = rawSt.replace(/\s+/g, '_');
-      const isPart = st === 'PUBLIC_ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'PUBLIC' || st === 'VIRTUAL' || st === 'PUBLIC_LIVE' || st === 'VIRTUAL_PRACTICE' || st === 'ATTENDED';
+      const { count: cSolved, isAttended } = getContestSolvedCount(r, isContestReport);
       
-      const cSolved = r.contest_solved !== undefined && r.contest_solved !== null ? Number(r.contest_solved) : null;
       const tSolved = r.total_solved !== undefined && r.total_solved !== null 
         ? Number(r.total_solved) 
         : (r.total !== undefined && r.total !== null 
@@ -454,21 +512,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           : (r.solved !== undefined && r.solved !== null 
             ? Number(r.solved) 
             : null));
-      const solved = cSolved !== null ? cSolved : (tSolved !== null ? tSolved : 0);
       const easySolved = Number(r.easy || r.easy_solved || 0);
       const medSolved = Number(r.medium || r.medium_solved || 0);
       const hardSolved = Number(r.hard || r.hard_solved || 0);
       const overallSolved = tSolved !== null ? tSolved : (easySolved + medSolved + hardSolved);
 
-      // Contest specific filters
-      if (activeFilter === 'SOLVED_4') return isPart && solved === 4;
-      if (activeFilter === 'SOLVED_3') return isPart && solved === 3;
-      if (activeFilter === 'SOLVED_2') return isPart && solved === 2;
-      if (activeFilter === 'SOLVED_1') return isPart && solved === 1;
-      if (activeFilter === 'SOLVED_0') return isPart && solved === 0;
-      if (activeFilter === 'PUBLIC_ATTENDED') return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'PUBLIC_LIVE' || st === 'ATTENDED';
+      // Contest specific filters (Using authoritative Sunday contest solves, not lifetime problems!)
+      if (activeFilter === 'SOLVED_4') return isAttended && cSolved === 4;
+      if (activeFilter === 'SOLVED_3') return isAttended && cSolved === 3;
+      if (activeFilter === 'SOLVED_2') return isAttended && cSolved === 2;
+      if (activeFilter === 'SOLVED_1') return isAttended && cSolved === 1;
+      if (activeFilter === 'SOLVED_0') return isAttended && (cSolved === 0 || cSolved === null);
+      if (activeFilter === 'PUBLIC_ATTENDED') return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'PUBLIC_LIVE' || (isAttended && !st.includes('VIRTUAL'));
       if (activeFilter === 'VIRTUAL_ATTENDED') return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_PRACTICE';
-      if (activeFilter === 'NOT_ATTENDED') return !isPart || st === 'NOT_ATTENDED' || st === 'PUBLIC_NOT_ATTENDED' || st === 'ABSENT';
+      if (activeFilter === 'NOT_ATTENDED') return !isAttended || st === 'NOT_ATTENDED' || st === 'PUBLIC_NOT_ATTENDED' || st === 'ABSENT' || st === 'NOT_PARTICIPATED';
       if (activeFilter === 'PENDING_USERNAME') return st === 'PENDING_USERNAME' || st === 'PENDING' || st === 'DATA_ERROR' || st === 'UNLINKED';
       if (activeFilter === 'FETCH_FAILED') return st === 'FETCH_FAILED' || st === 'FETCH_ERROR' || st === 'API_ERROR';
       if (activeFilter === 'INVALID_USERNAME') return st === 'INVALID_USERNAME' || st === 'USERNAME_NOT_FOUND' || st === 'INVALID';
@@ -540,26 +597,19 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     let attendedCount = 0;
 
     students.forEach((s: any) => {
-      const st = (s.status || s.attendance_status || s.attendance || '').toString().trim().toUpperCase();
-      const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || 
-        (s.contest_solved !== undefined && s.contest_solved !== null && Number(s.contest_solved) >= 0) ||
-        (s.contests_attended !== undefined && Number(s.contests_attended) > 0);
+      const { count: cSolved, isAttended } = getContestSolvedCount(s, isContestReport);
 
-      const cSolved = s.contest_solved !== undefined && s.contest_solved !== null 
-        ? Number(s.contest_solved) 
-        : (s.solved !== undefined && s.solved !== null 
-          ? Number(s.solved) 
-          : (s.total_contest_solved !== undefined && s.total_contest_solved !== null
-            ? Number(s.total_contest_solved)
-            : (s.total_solved !== undefined && s.total_solved !== null ? Number(s.total_solved) : null)));
-
-      if (isPart || (cSolved !== null && cSolved > 0)) {
+      if (isAttended) {
         attendedCount++;
-        if (cSolved >= 4) s4++;
-        else if (cSolved === 3) s3++;
-        else if (cSolved === 2) s2++;
-        else if (cSolved === 1) s1++;
-        else s0++;
+        if (cSolved !== null) {
+          if (cSolved >= 4) s4++;
+          else if (cSolved === 3) s3++;
+          else if (cSolved === 2) s2++;
+          else if (cSolved === 1) s1++;
+          else s0++;
+        } else {
+          s0++;
+        }
       } else {
         notAtt++;
       }
