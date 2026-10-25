@@ -780,6 +780,19 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     return theme;
   });
 
+  // Suppress floating MobileBottomNav when viewing subviews or forms on mobile
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+    if (isMobile && activeTab !== 'menu') {
+      window.dispatchEvent(new CustomEvent('nec_toggle_mobile_bottom_nav', { detail: { hidden: true } }));
+    } else {
+      window.dispatchEvent(new CustomEvent('nec_toggle_mobile_bottom_nav', { detail: { hidden: false } }));
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('nec_toggle_mobile_bottom_nav', { detail: { hidden: false } }));
+    };
+  }, [activeTab]);
+
   // Mobile profile sub-section filter & accordion states for authentic app ergonomics
   const [profileSubSection, setProfileSubSection] = useState<'all' | 'contact' | 'academic' | 'institutional' | 'links'>('all');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({
@@ -3949,39 +3962,54 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             {/* RIGHT MAIN WORKSPACE AREA */}
             <div className="space-y-4 flex-1 min-w-0 w-full animate-fade-in pb-48 lg:pb-24">
 
-            {/* Mobile Header Bar matching mockup: Left arrow, Title, Subtitle (HIDDEN ON DESKTOP) */}
-            <div className="lg:hidden flex items-center gap-3 pt-1 pb-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('menu')}
-                className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-95"
-                aria-label="Back to Settings"
-                title="Back to Settings"
-              >
-                <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-              </button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight capitalize">
-                  {effectiveTab === 'profile' ? 'Account & Profile' :
-                   effectiveTab === 'security' ? 'Security & Login' :
-                   effectiveTab === 'privacy' ? 'Privacy & Permissions' :
-                   effectiveTab === 'notifications' ? 'Notifications' :
-                   effectiveTab === 'preferences' ? 'App Preferences' :
-                   effectiveTab === 'id_card' ? 'Official Digital ID Card' :
-                   effectiveTab === 'mentorship' ? 'Staff Mentorship Hub' :
-                   'Help & Support Hub'}
-                </h1>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                  {effectiveTab === 'profile' ? 'Personal details, contact info, photo' :
-                   effectiveTab === 'security' ? 'Password, two-step verification, devices' :
-                   effectiveTab === 'privacy' ? 'Visibility, data access, blocked users' :
-                   effectiveTab === 'notifications' ? 'Push, email and WhatsApp alerts' :
-                   effectiveTab === 'preferences' ? 'Language, theme, accessibility' :
-                   effectiveTab === 'id_card' ? 'Official institutional CR80 PVC identity badge' :
-                   effectiveTab === 'mentorship' ? 'Assigned student progress telemetry and mentoring' :
-                   'Frequently asked questions, campus IT support, and contact desk'}
-                </p>
+            {/* Mobile Header Bar matching iOS / Instagram: Left arrow, Title, Subtitle + Instant Save Action (HIDDEN ON DESKTOP) */}
+            <div className="lg:hidden flex items-center justify-between gap-3 pt-1 pb-3 mb-2 border-b border-slate-200/80 dark:border-navy-800/80 sticky top-0 bg-slate-50/95 dark:bg-[#070A14]/95 backdrop-blur-xl z-30">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('menu'); triggerHaptic('selection'); }}
+                  className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-95 shrink-0"
+                  aria-label="Back to Settings"
+                  title="Back to Settings"
+                >
+                  <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+                </button>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight capitalize truncate">
+                    {effectiveTab === 'profile' ? 'Account & Profile' :
+                     effectiveTab === 'security' ? 'Security & Login' :
+                     effectiveTab === 'privacy' ? 'Privacy & Permissions' :
+                     effectiveTab === 'notifications' ? 'Notifications' :
+                     effectiveTab === 'preferences' ? 'App Preferences' :
+                     effectiveTab === 'id_card' ? 'Official Digital ID Card' :
+                     effectiveTab === 'mentorship' ? 'Staff Mentorship Hub' :
+                     'Help & Support Hub'}
+                  </h1>
+                  <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
+                    {effectiveTab === 'profile' ? 'Personal details, contact info, photo' :
+                     effectiveTab === 'security' ? 'Password, two-step verification, devices' :
+                     effectiveTab === 'privacy' ? 'Visibility, data access, blocked users' :
+                     effectiveTab === 'notifications' ? 'Push, email and WhatsApp alerts' :
+                     effectiveTab === 'preferences' ? 'Language, theme, accessibility' :
+                     effectiveTab === 'id_card' ? 'Official institutional CR80 PVC identity badge' :
+                     effectiveTab === 'mentorship' ? 'Assigned student progress telemetry and mentoring' :
+                     'Frequently asked questions, campus IT support, and contact desk'}
+                  </p>
+                </div>
               </div>
+
+              {/* Instant 1-Tap Save on Top Right (Instagram / iOS Style) */}
+              {effectiveTab === 'profile' && (
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={(e) => { triggerHaptic('success'); handleSaveProfile(e); }}
+                  className="shrink-0 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs shadow-md shadow-brand-500/25 active:scale-95 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <span>Save</span>
+                </button>
+              )}
             </div>
 
             {/* Desktop Section Header Banner (HIDDEN ON MOBILE) */}
