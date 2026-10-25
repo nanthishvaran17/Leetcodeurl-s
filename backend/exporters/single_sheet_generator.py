@@ -287,7 +287,7 @@ def generate_single_sheet_contest_excel(
     
     # Merge S.No, Reg No, Name, Accommodation, Cutoff for Total Row Header Label
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=5)
-    total_lbl_cell = ws.cell(row=row_idx, column=1, value="TOTAL SOLVED COUNT")
+    total_lbl_cell = ws.cell(row=row_idx, column=1, value=f"TOTAL SOLVED COUNT ({len(student_rows)} STUDENTS)")
     total_lbl_cell.font = font_total_label
     total_lbl_cell.alignment = align_center
     
