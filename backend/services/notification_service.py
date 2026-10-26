@@ -645,7 +645,9 @@ class NotificationService:
 
 
             # 4. Formal Institutional Email Dispatch (Emoji-free & Professional)
-            should_send_email = send_email_notification or (eff_priority in ("high", "critical") and event_type not in ("ASSIGNMENT_CREATED", "ASSIGNMENT_DELETED"))
+            # CRITICAL FIX: Only dispatch emails when explicitly requested by caller (send_email_notification=True).
+            # Routine high/critical automated events (milestones, surges, autopilot, contest alerts) MUST NOT spam staff inboxes!
+            should_send_email = bool(send_email_notification)
             if should_send_email:
                 try:
                     from backend.services.email_service import send_email

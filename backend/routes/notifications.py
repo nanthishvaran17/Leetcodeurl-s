@@ -53,7 +53,7 @@ class AnnouncementCreateRequest(BaseModel):
     recipient_target: Optional[str] = None
     priority: str = "normal" # low, normal, high, critical
     action_route: Optional[str] = "/dashboard"
-    send_email: bool = True
+    send_email: bool = False
 
 class AppUpdateBroadcastRequest(BaseModel):
     title: str = "New App Version Available"
