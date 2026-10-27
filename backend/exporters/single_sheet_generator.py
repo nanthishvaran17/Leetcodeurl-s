@@ -637,7 +637,7 @@ def generate_single_sheet_contest_excel(
     r2 += 1
     
     kpi_headers = ["Total Enrolled", "Contest Attended", "Turnout Rate", "4 Qs Solved", "3 Qs Solved", "2 Qs Solved", "Rank < 5,000", "Global < 20,000"]
-    ws2.row_dimensions[r2].height = 22
+    ws2.row_dimensions[r2].height = 28
     for c_idx, kh in enumerate(kpi_headers, 1):
         cell_kh = ws2.cell(row=r2, column=c_idx, value=kh)
         cell_kh.font = font_header
@@ -646,8 +646,17 @@ def generate_single_sheet_contest_excel(
         cell_kh.border = grid_border
     r2 += 1
     
-    turnout_pct = round((total_attended_cnt / len(students) * 100), 1) if len(students) > 0 else 0.0
-    kpi_vals = [len(students), total_attended_cnt, f"{turnout_pct}%", count_q4, count_q3, count_q2, count_below_5k, count_below_20k]
+    turnout_ratio = (total_attended_cnt / len(students)) if len(students) > 0 else 0.0
+    kpi_vals = [
+        int(len(students)), 
+        int(total_attended_cnt), 
+        float(turnout_ratio), 
+        int(count_q4), 
+        int(count_q3), 
+        int(count_q2), 
+        int(count_below_5k), 
+        int(count_below_20k)
+    ]
     ws2.row_dimensions[r2].height = 22
     for c_idx, kv in enumerate(kpi_vals, 1):
         cell_kv = ws2.cell(row=r2, column=c_idx, value=kv)
@@ -655,6 +664,8 @@ def generate_single_sheet_contest_excel(
         cell_kv.fill = fill_total_row
         cell_kv.alignment = align_center
         cell_kv.border = grid_border
+        if c_idx == 3:
+            cell_kv.number_format = '0.0%'
     r2 += 2
     
     # 2. Problem-Wise Solve Distribution Table
@@ -669,7 +680,7 @@ def generate_single_sheet_contest_excel(
     r2 += 1
     
     dist_headers = ["S.No", "Problem Solve Category", "Questions Solved", "Student Count", "% of Cohort", "Participation Share", "Performance Tier", "Target Status"]
-    ws2.row_dimensions[r2].height = 22
+    ws2.row_dimensions[r2].height = 24
     for c_idx, dh in enumerate(dist_headers, 1):
         cell_dh = ws2.cell(row=r2, column=c_idx, value=dh)
         cell_dh.font = font_header
@@ -680,21 +691,22 @@ def generate_single_sheet_contest_excel(
     
     total_roster_num = max(1, len(students))
     solve_tiers = [
-        (1, "4 / 4 Questions Solved", "4 Qs", count_q4, f"{round((count_q4 / total_roster_num) * 100, 1)}%", "Grandmaster", "Top 1% Elite"),
-        (2, "3 / 4 Questions Solved", "3 Qs", count_q3, f"{round((count_q3 / total_roster_num) * 100, 1)}%", "Advanced Solver", "High Performer"),
-        (3, "2 / 4 Questions Solved", "2 Qs", count_q2, f"{round((count_q2 / total_roster_num) * 100, 1)}%", "Intermediate", "Consistent"),
-        (4, "1 / 4 Questions Solved", "1 Q", count_q1, f"{round((count_q1 / total_roster_num) * 100, 1)}%", "Active Participant", "Foundational"),
-        (5, "0 Questions / Absent", "0 Qs", count_q0, f"{round((count_q0 / total_roster_num) * 100, 1)}%", "Unattempted", "Needs Attention")
+        (1, "4 / 4 Questions Solved", "4 Qs", int(count_q4), float(count_q4 / total_roster_num), "Grandmaster", "Top 1% Elite"),
+        (2, "3 / 4 Questions Solved", "3 Qs", int(count_q3), float(count_q3 / total_roster_num), "Advanced Solver", "High Performer"),
+        (3, "2 / 4 Questions Solved", "2 Qs", int(count_q2), float(count_q2 / total_roster_num), "Intermediate", "Consistent"),
+        (4, "1 / 4 Questions Solved", "1 Q", int(count_q1), float(count_q1 / total_roster_num), "Active Participant", "Foundational"),
+        (5, "0 Questions / Absent", "0 Qs", int(count_q0), float(count_q0 / total_roster_num), "Unattempted", "Needs Attention")
     ]
     
-    for s_no, cat_name, q_lbl, cnt_val, pct_str, tier_name, target_st in solve_tiers:
+    for s_no, cat_name, q_lbl, cnt_val, cohort_pct, tier_name, target_st in solve_tiers:
+        active_pct = float(cnt_val / total_attended_cnt) if total_attended_cnt > 0 else 0.0
         tier_row = [
             s_no,
             cat_name,
             q_lbl,
             cnt_val,
-            pct_str,
-            f"{round((cnt_val / max(1, total_attended_cnt)) * 100, 1)}% of Active" if total_attended_cnt > 0 else "0%",
+            cohort_pct,
+            active_pct,
             tier_name,
             target_st
         ]
@@ -704,6 +716,8 @@ def generate_single_sheet_contest_excel(
             cell.font = font_name if c_idx == 2 else (font_bold if c_idx in (4, 7) else font_data)
             cell.alignment = align_left if c_idx == 2 else align_center
             cell.border = grid_border
+            if c_idx in (5, 6):
+                cell.number_format = '0.0%'
         r2 += 1
     r2 += 2
     
@@ -761,17 +775,17 @@ def generate_single_sheet_contest_excel(
         except Exception:
             cr_int = 999999
             
-        rate_val = s.get("rating") or s.get("contest_rating") or s.get("current_rating") or ""
+        rate_val = s.get("rating") or s.get("contest_rating") or s.get("current_rating") or None
         st_obj = student_meta_map.get(reg_upper)
-        if not rate_val and st_obj and hasattr(st_obj, "stats") and st_obj.stats:
-            rate_val = getattr(st_obj.stats, "contest_rating", None) or ""
+        if rate_val is None and st_obj and hasattr(st_obj, "stats") and st_obj.stats:
+            rate_val = getattr(st_obj.stats, "contest_rating", None)
             
-        rate_str = ""
+        rate_out = "—"
         if rate_val not in (None, "", "—", "-", "0", 0):
             try:
-                rate_str = str(round(float(rate_val), 1))
+                rate_out = round(float(rate_val), 1)
             except Exception:
-                rate_str = str(rate_val)
+                rate_out = str(rate_val)
                 
         dept_str = str(s.get("department_code") or s.get("department") or (st_obj.department.code if st_obj and st_obj.department else "")).strip().upper()
         yr_str = str(s.get("year_level") or s.get("year") or (st_obj.year_level if st_obj else "")).strip()
@@ -786,7 +800,7 @@ def generate_single_sheet_contest_excel(
                 "solved": s_count,
                 "rank": cr_int if cr_int < 999999 else "—",
                 "rank_sort": cr_int,
-                "rating": rate_str or "—"
+                "rating": rate_out
             })
             
     ranked_students.sort(key=lambda x: (-x["solved"], x["rank_sort"]))
@@ -820,8 +834,8 @@ def generate_single_sheet_contest_excel(
                     cell.fill = fill_total_row
             r2 += 1
             
-    # Set widths for Sheet 2
-    ws2_widths = [8, 18, 30, 14, 10, 14, 16, 16]
+    # Set widths for Sheet 2: properly expanded so headers and cells never truncate
+    ws2_widths = [16, 26, 28, 16, 16, 20, 18, 18]
     for c_i, w in enumerate(ws2_widths, 1):
         ws2.column_dimensions[get_column_letter(c_i)].width = w
 
