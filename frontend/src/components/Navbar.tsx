@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search, Building2 } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -147,10 +147,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </kbd>
               </button>
 
-
-
-
-              {/* Sync Status Button */}
+              {/* For Colleges / Multi-College SaaS Pilot */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open_college_saas_modal'))}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-[11px] shadow-sm hover:shadow-indigo-500/25 transition-all cursor-pointer min-h-[38px] active:scale-95 touch-manipulation"
+                title="Expand LeetCode Intelligence to other Engineering Colleges"
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">For Colleges</span>
+                <span className="sm:hidden">SaaS</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-white/20 text-[9px] uppercase tracking-wider font-extrabold hidden md:inline">Pilot</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setShowSyncModal(true)}

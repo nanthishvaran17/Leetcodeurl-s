@@ -43,7 +43,8 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
-    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs
+    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs,
+    saas
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence, nlci, hr_candidate_finder, dev_studio
 from backend.routes import command_center, scheduler, student_reports, staff_tools
@@ -1255,6 +1256,9 @@ app.include_router(institutional_dashboards.router, include_in_schema=False)
 # email_campaigns — short prefix
 app.include_router(email_campaigns.router, prefix="/api")
 app.include_router(email_campaigns.router, include_in_schema=False)
+# saas multi-college expansion — short prefix
+app.include_router(saas.router, prefix="/api")
+app.include_router(saas.router, include_in_schema=False)
 # bot_notifications — short prefix
 app.include_router(bot_notifications.router, prefix="/api")
 app.include_router(bot_notifications.router, include_in_schema=False)

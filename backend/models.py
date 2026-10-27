@@ -3584,5 +3584,26 @@ class CorrectionEvent(Base):
     student = relationship("Student")
 
 
+class CollegeDemoLead(Base):
+    """
+    SaaS Ingestion & Expansion: Multi-College Demo Requests and Lead Pipeline.
+    Tracks colleges interested in onboarding their institution.
+    """
+    __tablename__ = "college_demo_leads"
+    __table_args__ = {"extend_existing": True}
 
-
+    id = Column(Integer, primary_key=True, index=True)
+    college_name = Column(String(200), nullable=False, index=True)
+    college_code = Column(String(50), nullable=True)
+    contact_name = Column(String(150), nullable=False)
+    designation = Column(String(100), default="Principal")
+    email = Column(String(150), nullable=False, index=True)
+    phone = Column(String(50), nullable=True)
+    city = Column(String(100), default="Tamil Nadu")
+    approx_students = Column(Integer, default=500)
+    pilot_requested = Column(Boolean, default=True)
+    message = Column(Text, nullable=True)
+    status = Column(String(50), default="PENDING", index=True) # PENDING, CONTACTED, DEMO_SCHEDULED, PILOT_ACTIVE, CONVERTED
+    pitch_sent = Column(Boolean, default=False)
+    pitch_sent_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
