@@ -403,6 +403,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 )}
               </div>
 
+              {/* SaaS Multi-College Pilot button */}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('open_college_saas_modal'));
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-[11px] tracking-wide shadow-md shadow-indigo-600/20 flex items-center justify-between cursor-pointer transition transform active:scale-95"
+              >
+                <div className="flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                  <span>For Colleges • Pilot SaaS</span>
+                </div>
+                <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded font-black uppercase tracking-wider text-white">Free Demo</span>
+              </button>
+
               {/* Sunday Session Window Card */}
               <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
