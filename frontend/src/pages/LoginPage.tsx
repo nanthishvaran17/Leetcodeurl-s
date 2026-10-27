@@ -7,7 +7,7 @@ import {
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Shield,
   Cpu, Layers, CheckCircle, ChevronRight, Loader2,
-  Download, Smartphone
+  Download, Smartphone, Monitor
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -1325,30 +1325,57 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
               )}
             </AnimatePresence>
 
-            {/* Quick Mobile App Direct Download Card */}
+            {/* Direct App Downloads (Android APK & Windows EXE) */}
             {!isCapacitorNative && (
-              <a
-                href="/nandha-leetcode.apk"
-                download="Nandha_LeetCode_Intelligence_v3.2.5_latest.apk"
-                className="w-full mt-4 p-3 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border border-indigo-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
-                title="Download Nandha LeetCode Android App (APK)"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                    <Smartphone className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">Get Android App (.APK)</span>
-                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v3.2.5</span>
+              <div className="w-full mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Android App Download */}
+                <a
+                  href="/nandha-leetcode.apk"
+                  download="Nandha_LeetCode_Intelligence_v3.2.5_latest.apk"
+                  className="p-2.5 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border border-indigo-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
+                  title="Download Nandha LeetCode Android App (APK)"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                      <Smartphone className="w-4 h-4" />
                     </div>
-                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium truncate">Instant 1-Tap Direct Download • 17 MB</p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11.5px] font-black text-slate-900 dark:text-white truncate">Android (.APK)</span>
+                        <span className="text-[8.5px] font-black px-1 py-0.1 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v3.2.5</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">Direct APK • 17 MB</p>
+                    </div>
                   </div>
-                </div>
-                <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0">
-                  <Download className="w-4 h-4" />
-                </div>
-              </a>
+                  <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0">
+                    <Download className="w-3.5 h-3.5" />
+                  </div>
+                </a>
+
+                {/* Windows Desktop App (.EXE) */}
+                <a
+                  href="/nandha-leetcode-setup.exe"
+                  download="Nandha_LeetCode_Intelligence_v3.2.5_Setup.exe"
+                  className="p-2.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-emerald-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
+                  title="Download Nandha LeetCode Windows Desktop App (EXE Setup)"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                      <Monitor className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11.5px] font-black text-slate-900 dark:text-white truncate">Windows (.EXE)</span>
+                        <span className="text-[8.5px] font-black px-1 py-0.1 rounded bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30">Desktop</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">Windows Setup • 64-bit</p>
+                    </div>
+                  </div>
+                  <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0">
+                    <Download className="w-3.5 h-3.5" />
+                  </div>
+                </a>
+              </div>
             )}
 
             {/* Security Message */}
