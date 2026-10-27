@@ -6615,17 +6615,17 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* ========================================================================= */}
         {isStaffMentor && effectiveTab === 'mentorship' && (
           <div className="grid grid-cols-1 gap-6 animate-fade-in">
-            <div className="bg-white/95 dark:bg-[#0B1221]/95 backdrop-blur-xl rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-navy-700 shadow-sm space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800 pb-4">
+            <div className="bg-white/95 dark:bg-[#0B1221]/95 backdrop-blur-xl rounded-3xl p-3.5 sm:p-6 lg:p-7 border border-slate-200/90 dark:border-navy-700 shadow-sm space-y-4 sm:space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800 pb-3.5 sm:pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/25">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/25 shrink-0">
                     <GraduationCap className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
                       Student Mentorship & Attendance
                     </h3>
-                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                       Real-time academic cohort tracking & behavioral telemetry
                     </p>
                   </div>
@@ -6636,36 +6636,36 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
 
               {/* Dynamic Telemetry Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-brand-500/5 to-transparent border border-blue-200/90 dark:border-blue-500/30 flex items-center justify-between shadow-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-brand-500/5 to-transparent border border-blue-200/90 dark:border-blue-500/30 flex items-center justify-between shadow-xs">
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Assigned Mentees</div>
                     <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{totalMentees}</div>
                     <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Official Semester Roster</div>
                   </div>
-                  <div className="w-11 h-11 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5" />
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-200/90 dark:border-emerald-500/30 flex items-center justify-between shadow-xs">
+                <div className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-200/90 dark:border-emerald-500/30 flex items-center justify-between shadow-xs">
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Avg Attendance</div>
                     <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{avgAttendance}</div>
                     <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Institutional Threshold 75%</div>
                   </div>
-                  <div className="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <CheckCircle className="w-5 h-5" />
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-transparent border border-amber-200/90 dark:border-amber-500/30 flex items-center justify-between shadow-xs">
+                <div className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-transparent border border-amber-200/90 dark:border-amber-500/30 flex items-center justify-between shadow-xs">
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Pending Interventions</div>
                     <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{pendingInterventions}</div>
                     <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Requires Faculty Review</div>
                   </div>
-                  <div className="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-5 h-5" />
                   </div>
                 </div>
@@ -6753,8 +6753,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </table>
                   </div>
 
-                  {/* Mobile Native Stacked Card View */}
-                  <div className="block sm:hidden p-3 space-y-2.5 max-h-[340px] overflow-y-auto custom-scrollbar">
+                  {/* Mobile Native Stacked Card View - Redesigned with spacious badges and zero text clipping */}
+                  <div className="block sm:hidden p-2.5 sm:p-3 space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
                     {menteesLoading ? (
                       <div className="text-center py-8 text-slate-500">
                         <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-500" />
@@ -6778,44 +6778,59 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         return (
                           <div 
                             key={m.id}
-                            className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-2.5 ${
+                            className={`p-3.5 rounded-2xl border transition-all shadow-xs ${
                               isCritical 
-                                ? 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50' 
+                                ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200/90 dark:border-rose-900/50' 
                                 : isWarning 
-                                ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50' 
-                                : 'bg-slate-50/50 dark:bg-navy-900/50 border-slate-200 dark:border-navy-800'
+                                ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/90 dark:border-amber-900/50' 
+                                : 'bg-slate-50/60 dark:bg-navy-900/60 border-slate-200/90 dark:border-navy-800'
                             }`}
                           >
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-black text-slate-900 dark:text-white truncate uppercase">
-                                {m.name || m.username}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1 text-[11px] font-mono">
-                                <span className="font-bold text-slate-600 dark:text-slate-400">{m.reg_no}</span>
-                                <span>•</span>
-                                <span className={`font-black ${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                                  Att: {att}
+                            {/* Card Top Row: Student Name, Reg No & Action Button */}
+                            <div className="flex items-center justify-between gap-2.5">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-black text-slate-900 dark:text-white truncate uppercase tracking-tight">
+                                  {m.name || m.username}
+                                </p>
+                                <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-slate-200/70 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-bold">
+                                  {m.reg_no}
                                 </span>
-                                <span>•</span>
-                                <span className="font-bold text-brand-600 dark:text-brand-400">
-                                  {m.total_solved || 0} Solved
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedMentee({ name: m.name || m.username, regNo: m.reg_no, att, solved: m.total_solved || 0, actionType })}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer shrink-0 active:scale-95 shadow-xs ${
+                                  isCritical 
+                                    ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20' 
+                                    : isWarning 
+                                    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20' 
+                                    : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/20'
+                                }`}
+                                title={actionType}
+                              >
+                                {isCritical ? <AlertTriangle className="w-3.5 h-3.5" /> : isWarning ? <Bell className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                <span>{actionType}</span>
+                              </button>
+                            </div>
+
+                            {/* Card Bottom Row: Distinct Metric Chips with ample breathing room */}
+                            <div className="mt-2.5 pt-2 border-t border-slate-200/70 dark:border-navy-800/80 flex items-center justify-between gap-2">
+                              {/* Attendance Badge */}
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 text-[11px]">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Att:</span>
+                                <span className={`font-black ${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                  {att}
+                                </span>
+                              </div>
+
+                              {/* LeetCode Solved Badge */}
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-500/10 dark:bg-brand-500/15 border border-brand-500/20 text-[11px]">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-brand-700 dark:text-brand-300">Solved:</span>
+                                <span className="font-black text-brand-600 dark:text-brand-400">
+                                  {m.total_solved || 0} Qs
                                 </span>
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedMentee({ name: m.name || m.username, regNo: m.reg_no, att, solved: m.total_solved || 0, actionType })}
-                              className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95 ${
-                                isCritical 
-                                  ? 'bg-rose-500 text-white shadow-xs' 
-                                  : isWarning 
-                                  ? 'bg-amber-500 text-white shadow-xs' 
-                                  : 'bg-brand-600 text-white shadow-xs'
-                              }`}
-                              title={actionType}
-                            >
-                              {isCritical ? <AlertTriangle className="w-4 h-4" /> : isWarning ? <Bell className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
                           </div>
                         );
                       })
