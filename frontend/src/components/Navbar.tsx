@@ -147,18 +147,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </kbd>
               </button>
 
-              {/* For Colleges / Multi-College SaaS Pilot */}
+
+
+
+              {/* For Colleges — Multi-College Platform Demo */}
               <button
                 type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('open_college_saas_modal'))}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-[11px] shadow-sm hover:shadow-indigo-500/25 transition-all cursor-pointer min-h-[38px] active:scale-95 touch-manipulation"
-                title="Expand LeetCode Intelligence to other Engineering Colleges"
+                onClick={() => setActiveTab && setActiveTab('for-colleges')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer min-h-[38px] active:scale-95 touch-manipulation ${
+                  activeTab === 'for-colleges'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25'
+                }`}
+                title="Institutional Platform Trial & Multi-College Demo"
               >
                 <Building2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">For Colleges</span>
-                <span className="sm:hidden">SaaS</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-white/20 text-[9px] uppercase tracking-wider font-extrabold hidden md:inline">Pilot</span>
+                <span className="sm:hidden">Colleges</span>
               </button>
+
+              {/* Sync Status Button */}
               <button
                 type="button"
                 onClick={() => setShowSyncModal(true)}

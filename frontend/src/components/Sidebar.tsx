@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone, GraduationCap } from 'lucide-react';
+import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
@@ -403,20 +403,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 )}
               </div>
 
-              {/* SaaS Multi-College Pilot button */}
+              {/* For Colleges — Multi-College Pilot button */}
               <button
                 type="button"
                 onClick={() => {
                   onClose();
-                  window.dispatchEvent(new CustomEvent('open_college_saas_modal'));
+                  setActiveTab('for-colleges');
                 }}
-                className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-[11px] tracking-wide shadow-md shadow-indigo-600/20 flex items-center justify-between cursor-pointer transition transform active:scale-95"
+                className={`w-full py-2 px-3 rounded-xl font-bold text-[11px] tracking-wide flex items-center justify-between cursor-pointer transition transform active:scale-95 ${
+                  activeTab === 'for-colleges'
+                    ? 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-md'
+                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
+                }`}
               >
                 <div className="flex items-center gap-1.5">
-                  <GraduationCap className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <span>For Colleges • Pilot SaaS</span>
+                  <Building2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span>For Colleges • Institutional Pilot</span>
                 </div>
-                <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded font-black uppercase tracking-wider text-white">Free Demo</span>
+                <span className="text-[9px] bg-indigo-500/20 dark:bg-white/20 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Demo</span>
               </button>
 
               {/* Sunday Session Window Card */}

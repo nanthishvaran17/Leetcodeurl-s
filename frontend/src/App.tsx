@@ -100,7 +100,7 @@ const TermsOfServicePage = safeLazy(() => import('./pages/TermsOfServicePage').t
 const HRCandidateFinderPage = safeLazy(() => import('./pages/HRCandidateFinderPage').then(m => ({ default: m.HRCandidateFinderPage })));
 const DeveloperStudio = safeLazy(() => import('./pages/DeveloperStudio').then(m => ({ default: m.DeveloperStudio })));
 const Post930SolversView = safeLazy(() => import('./pages/Post930SolversView').then(m => ({ default: m.Post930SolversView })));
-const CollegeSaaSPortalModal = safeLazy(() => import('./components/CollegeSaaSPortalModal').then(m => ({ default: m.CollegeSaaSPortalModal })));
+const ForCollegesPage = safeLazy(() => import('./pages/ForCollegesPage').then(m => ({ default: m.ForCollegesPage })));
 
 const PageSkeleton = () => (
   <div className="w-full max-w-[1600px] mx-auto space-y-6 p-4 sm:p-6 animate-pulse">
@@ -335,7 +335,6 @@ export const App: React.FC = () => {
   const [aiInitialQuery, setAiInitialQuery] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMobileFilterDrawer, setShowMobileFilterDrawer] = useState(false);
-  const [showCollegeSaasModal, setShowCollegeSaasModal] = useState(false);
 
   const handleCloseCommandPalette = useCallback(() => {
     setShowCommandPalette(false);
@@ -414,11 +413,6 @@ export const App: React.FC = () => {
 
       window.addEventListener('open_share_card', handleOpenShareModal);
 
-      const handleOpenCollegeSaas = () => {
-        setShowCollegeSaasModal(true);
-      };
-      window.addEventListener('open_college_saas_modal', handleOpenCollegeSaas);
-
       return () => {
         window.removeEventListener('toggle_sidebar', handleToggleSidebar);
         window.removeEventListener('open_ai_widget', handleOpenAi);
@@ -426,7 +420,6 @@ export const App: React.FC = () => {
         window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
         window.removeEventListener('open_command_palette', handleOpenCommandPalette);
         window.removeEventListener('open_share_card', handleOpenShareModal);
-        window.removeEventListener('open_college_saas_modal', handleOpenCollegeSaas);
       };
     }, [handleOpenShareModal]);
 
@@ -1271,6 +1264,12 @@ export const App: React.FC = () => {
                 <PublicLeaderboardPage onSelectStudent={handleSelectStudent} />
               )}
 
+              {(activeTab === 'for-colleges' || activeTab === 'colleges' || activeTab === 'partner' || activeTab === 'institutional-demo') && (
+                <Suspense fallback={<PageSkeleton />}>
+                  <ForCollegesPage />
+                </Suspense>
+              )}
+
               {(activeTab === 'account-settings' || activeTab === 'account' || activeTab === 'profile-settings') && (
                 <AccountSettingsPage onBack={() => handleTabChange('dashboard')} />
               )}
@@ -1467,12 +1466,6 @@ export const App: React.FC = () => {
               hard_solved: (user as any).hard_solved,
               streak_count: (user as any).streak_count || (user as any).current_streak
             } : null)}
-          />
-        )}
-        {showCollegeSaasModal && (
-          <CollegeSaaSPortalModal
-            isOpen={showCollegeSaasModal}
-            onClose={() => setShowCollegeSaasModal(false)}
           />
         )}
       </Suspense>

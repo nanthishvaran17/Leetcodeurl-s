@@ -3584,26 +3584,28 @@ class CorrectionEvent(Base):
     student = relationship("Student")
 
 
-class CollegeDemoLead(Base):
+class InstitutionLead(Base):
     """
-    SaaS Ingestion & Expansion: Multi-College Demo Requests and Lead Pipeline.
-    Tracks colleges interested in onboarding their institution.
+    SaaS Institution Lead & Onboarding Registry.
+    Tracks Tamil Nadu & Pan-India Engineering Colleges requesting Institutional Trial / Platform Demo.
     """
-    __tablename__ = "college_demo_leads"
-    __table_args__ = {"extend_existing": True}
+    __tablename__ = "institution_leads"
+    __table_args__ = (
+        Index("ix_institution_leads_email", "email"),
+        Index("ix_institution_leads_status", "status"),
+        {"extend_existing": True},
+    )
 
     id = Column(Integer, primary_key=True, index=True)
-    college_name = Column(String(200), nullable=False, index=True)
-    college_code = Column(String(50), nullable=True)
-    contact_name = Column(String(150), nullable=False)
-    designation = Column(String(100), default="Principal")
-    email = Column(String(150), nullable=False, index=True)
-    phone = Column(String(50), nullable=True)
-    city = Column(String(100), default="Tamil Nadu")
+    college_name = Column(String(250), nullable=False)
+    college_code = Column(String(50), nullable=True) # e.g. TNEA Code: 7322, 2712
+    contact_person = Column(String(150), nullable=False)
+    designation = Column(String(100), default="Principal") # Principal, TPO, HOD-CSE, Dean
+    email = Column(String(150), nullable=False)
+    phone = Column(String(50), nullable=False)
+    district = Column(String(100), nullable=True) # e.g. Erode, Coimbatore, Chennai
     approx_students = Column(Integer, default=500)
-    pilot_requested = Column(Boolean, default=True)
-    message = Column(Text, nullable=True)
-    status = Column(String(50), default="PENDING", index=True) # PENDING, CONTACTED, DEMO_SCHEDULED, PILOT_ACTIVE, CONVERTED
-    pitch_sent = Column(Boolean, default=False)
+    status = Column(String(50), default="NEW") # NEW, DEMO_SCHEDULED, TRIAL_ACTIVE, ONBOARDED
     pitch_sent_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
