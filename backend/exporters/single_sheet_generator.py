@@ -53,20 +53,31 @@ def generate_single_sheet_contest_excel(
     )
     
     contest_name = str(dataset.get("contest_name") or dataset.get("contestName") or dataset.get("title") or "")
+    if not contest_name and target_session and getattr(target_session, "contest_name", None):
+        contest_name = str(target_session.contest_name)
     contest_date = str(dataset.get("session_date") or dataset.get("sessionDate") or dataset.get("report_date") or "")
+    if not contest_date and target_session and getattr(target_session, "session_date", None):
+        contest_date = str(target_session.session_date)
     dept = dataset.get("deptFilter") or dataset.get("department") or "ALL"
     year = dataset.get("yearFilter") or dataset.get("year") or "ALL"
     
     # Resolve Contest Title
     import re
-    c_match = re.search(r'\d+', contest_name)
-    c_num = c_match.group(0) if c_match else ""
-    if c_num:
-        single_sheet_title = f"STUDENT PERFORMANCE OF WEEKLY CONTEST {c_num}"
+    c_match = re.search(r'(?:Weekly Contest|Biweekly Contest|WC|BW|Contest|\b)\s*(\d{2,4})\b', contest_name, re.IGNORECASE)
+    contest_number = c_match.group(1) if c_match else ""
+    if not contest_number:
+        num_m = re.search(r'\d+', contest_name)
+        contest_number = num_m.group(0) if num_m else ""
+
+    if contest_number:
+        single_sheet_title = f"STUDENT PERFORMANCE OF WEEKLY CONTEST {contest_number}"
+        contest_display = f"Weekly Contest {contest_number}"
     elif contest_name:
         single_sheet_title = f"STUDENT PERFORMANCE OF {contest_name.upper()}"
+        contest_display = contest_name
     else:
-        single_sheet_title = "STUDENT PERFORMANCE"
+        single_sheet_title = "STUDENT PERFORMANCE OF WEEKLY CONTEST"
+        contest_display = "Weekly Contest"
 
     # Resolve Full Department Name (no year cohort)
     dept_clean = str(dept or "").strip().upper()
@@ -238,9 +249,9 @@ def generate_single_sheet_contest_excel(
         cutoff_disp: Any = ""
         if raw_cutoff is not None:
             try:
-                c_num = float(raw_cutoff)
-                if c_num > 0 and c_num == c_num: # check positive and not NaN
-                    cutoff_disp = round(c_num, 2)
+                co_val = float(raw_cutoff)
+                if co_val > 0 and co_val == co_val: # check positive and not NaN
+                    cutoff_disp = round(co_val, 2)
             except (ValueError, TypeError):
                 cutoff_disp = ""
                 
@@ -471,13 +482,13 @@ def generate_single_sheet_contest_excel(
     row_idx += 1
 
     # =========================================================================
-    # SECTION: CONTEST PERFORMANCE & RANKING SUMMARY (EXACT USER SPECIFICATION)
+    # SECTION: CONTEST PERFORMANCE & RANKING SUMMARY (CLEAN & SPACIOUS)
     # =========================================================================
-    row_idx += 1  # 1 blank spacing row
+    row_idx += 2  # 2 blank spacing rows for clean visual breathing room
 
     ws.row_dimensions[row_idx].height = 24
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=10)
-    perf_banner = ws.cell(row=row_idx, column=1, value=f"CONTEST PERFORMANCE & PROBLEM-WISE SOLVE SUMMARY ({contest_name.upper() if contest_name else 'WEEKLY CONTEST'})")
+    perf_banner = ws.cell(row=row_idx, column=1, value=f"CONTEST PERFORMANCE & PROBLEM-WISE SOLVE SUMMARY ({contest_display.upper()})")
     perf_banner.font = font_acc_title
     perf_banner.alignment = align_center
     for c in range(1, 11):
@@ -487,10 +498,10 @@ def generate_single_sheet_contest_excel(
     row_idx += 1
 
     # Header Row 1:
-    # last_contest_name ({c_num} - {contest_date}) | Last Contest No of Ques Solved ({contest_name}) | Below 20000 | Below 5000
+    # Contest Name & Date (Cols 1-2) | Questions Solved (Cols 3-7) | Global Rank (Col 8) | Contest Rank (Cols 9-10)
     ws.row_dimensions[row_idx].height = 26
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=2)
-    c1 = ws.cell(row=row_idx, column=1, value=f"last_contest_name\n({c_num or 'Contest'} - {contest_date or 'Session'})")
+    c1 = ws.cell(row=row_idx, column=1, value=f"{contest_display}\n({contest_date or 'Session'})")
     c1.font = font_header
     c1.fill = fill_acc_subhdr
     c1.alignment = align_center_wrap
@@ -499,7 +510,7 @@ def generate_single_sheet_contest_excel(
         ws.cell(row=row_idx, column=c).fill = fill_acc_subhdr
 
     ws.merge_cells(start_row=row_idx, start_column=3, end_row=row_idx, end_column=7)
-    c2 = ws.cell(row=row_idx, column=3, value=f"Last Contest No of Ques Solved ({contest_name or f'Weekly Contest {c_num}'})")
+    c2 = ws.cell(row=row_idx, column=3, value=f"Last Contest No of Ques Solved ({contest_display})")
     c2.font = font_header
     c2.fill = fill_acc_subhdr
     c2.alignment = align_center_wrap
@@ -524,7 +535,7 @@ def generate_single_sheet_contest_excel(
     row_idx += 1
 
     # Header Row 2:
-    # Taken Count | 4 | 3 | 2 | 1 | 0 | global_ranking | last_contest_rank
+    # Taken Count | 4 Qs | 3 Qs | 2 Qs | 1 Qs | 0 Qs | Global Rank | Contest Rank
     ws.row_dimensions[row_idx].height = 24
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=2)
     s1 = ws.cell(row=row_idx, column=1, value="Taken Count")
@@ -535,21 +546,21 @@ def generate_single_sheet_contest_excel(
         ws.cell(row=row_idx, column=c).border = grid_border
         ws.cell(row=row_idx, column=c).fill = fill_total_row
 
-    for c_i, val in enumerate(["4", "3", "2", "1", "0"], 3):
+    for c_i, val in enumerate(["4 Qs", "3 Qs", "2 Qs", "1 Qs", "0 Qs"], 3):
         sc = ws.cell(row=row_idx, column=c_i, value=val)
         sc.font = font_bold
         sc.fill = fill_total_row
         sc.alignment = align_center
         sc.border = grid_border
 
-    s3 = ws.cell(row=row_idx, column=8, value="global_ranking")
+    s3 = ws.cell(row=row_idx, column=8, value="Global Rank")
     s3.font = font_bold
     s3.fill = fill_total_row
     s3.alignment = align_center
     s3.border = grid_border
 
     ws.merge_cells(start_row=row_idx, start_column=9, end_row=row_idx, end_column=10)
-    s4 = ws.cell(row=row_idx, column=9, value="last_contest_rank")
+    s4 = ws.cell(row=row_idx, column=9, value="Contest Rank")
     s4.font = font_bold
     s4.fill = fill_total_row
     s4.alignment = align_center
@@ -559,7 +570,6 @@ def generate_single_sheet_contest_excel(
     row_idx += 1
 
     # Data Row
-    q0_count = max(0, total_attended_cnt - (count_q4 + count_q3 + count_q2 + count_q1))
     ws.row_dimensions[row_idx].height = 22
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=2)
     d1 = ws.cell(row=row_idx, column=1, value=total_attended_cnt)
@@ -568,7 +578,7 @@ def generate_single_sheet_contest_excel(
     for c in (1, 2):
         ws.cell(row=row_idx, column=c).border = grid_border
 
-    for c_i, val in enumerate([count_q4, count_q3, count_q2, count_q1, q0_count], 3):
+    for c_i, val in enumerate([count_q4, count_q3, count_q2, count_q1, count_q0], 3):
         dc = ws.cell(row=row_idx, column=c_i, value=val)
         dc.font = font_bold
         dc.alignment = align_center
@@ -587,12 +597,234 @@ def generate_single_sheet_contest_excel(
         ws.cell(row=row_idx, column=c).border = grid_border
     row_idx += 1
         
-    # Apply compact column widths tailored for 10 columns (Acc width 7 for ultra-compact layout)
-    widths = [8, 15, 26, 7, 9, 10, 11, 11, 10, 12]
+    # Apply compact column widths tailored for 10 columns (Acc width 8, Cutoff width 10, total 14)
+    widths = [8, 16, 28, 8, 10, 11, 11, 12, 11, 14]
     for col_idx, width in enumerate(widths, 1):
         col_letter = get_column_letter(col_idx)
         ws.column_dimensions[col_letter].width = width
+
+    # =========================================================================
+    # SHEET 2: DEDICATED CONTEST PERFORMANCE, RANKINGS & TOP SOLVERS SUMMARY
+    # =========================================================================
+    ws2 = wb.create_sheet(title="Performance Summary")
+    
+    next_row2 = apply_master_college_identity(
+        ws=ws2,
+        report_title=f"CONTEST PERFORMANCE & SOLVERS SUMMARY • {contest_display.upper()}",
+        department=dept,
+        year=year,
+        contest_name=contest_name,
+        session_date=contest_date,
+        total_roster=len(students),
+        cols=8,
+        show_cohort=False,
+        show_generated_time=False,
+        custom_dept_header=dept_full_title,
+        exact_report_title=f"EXECUTIVE CONTEST PERFORMANCE & LEADERBOARD • {contest_display.upper()}"
+    )
+    
+    r2 = next_row2 + 1
+    
+    # 1. Executive Summary Table
+    ws2.row_dimensions[r2].height = 24
+    ws2.merge_cells(start_row=r2, start_column=1, end_row=r2, end_column=8)
+    sec1_hdr = ws2.cell(row=r2, column=1, value="1. INSTITUTIONAL CONTEST ENGAGEMENT & OVERALL METRICS")
+    sec1_hdr.font = font_acc_title
+    sec1_hdr.alignment = align_center
+    for c in range(1, 9):
+        ws2.cell(row=r2, column=c).fill = fill_header
+        ws2.cell(row=r2, column=c).border = grid_border
+    r2 += 1
+    
+    kpi_headers = ["Total Enrolled", "Contest Attended", "Turnout Rate", "4 Qs Solved", "3 Qs Solved", "2 Qs Solved", "Rank < 5,000", "Global < 20,000"]
+    ws2.row_dimensions[r2].height = 22
+    for c_idx, kh in enumerate(kpi_headers, 1):
+        cell_kh = ws2.cell(row=r2, column=c_idx, value=kh)
+        cell_kh.font = font_header
+        cell_kh.fill = fill_acc_subhdr
+        cell_kh.alignment = align_center_wrap
+        cell_kh.border = grid_border
+    r2 += 1
+    
+    turnout_pct = round((total_attended_cnt / len(students) * 100), 1) if len(students) > 0 else 0.0
+    kpi_vals = [len(students), total_attended_cnt, f"{turnout_pct}%", count_q4, count_q3, count_q2, count_below_5k, count_below_20k]
+    ws2.row_dimensions[r2].height = 22
+    for c_idx, kv in enumerate(kpi_vals, 1):
+        cell_kv = ws2.cell(row=r2, column=c_idx, value=kv)
+        cell_kv.font = font_bold
+        cell_kv.fill = fill_total_row
+        cell_kv.alignment = align_center
+        cell_kv.border = grid_border
+    r2 += 2
+    
+    # 2. Problem-Wise Solve Distribution Table
+    ws2.row_dimensions[r2].height = 24
+    ws2.merge_cells(start_row=r2, start_column=1, end_row=r2, end_column=8)
+    sec2_hdr = ws2.cell(row=r2, column=1, value=f"2. PROBLEM-WISE SOLVE BREAKDOWN ({contest_display.upper()})")
+    sec2_hdr.font = font_acc_title
+    sec2_hdr.alignment = align_center
+    for c in range(1, 9):
+        ws2.cell(row=r2, column=c).fill = fill_header
+        ws2.cell(row=r2, column=c).border = grid_border
+    r2 += 1
+    
+    dist_headers = ["S.No", "Problem Solve Category", "Questions Solved", "Student Count", "% of Cohort", "Participation Share", "Performance Tier", "Target Status"]
+    ws2.row_dimensions[r2].height = 22
+    for c_idx, dh in enumerate(dist_headers, 1):
+        cell_dh = ws2.cell(row=r2, column=c_idx, value=dh)
+        cell_dh.font = font_header
+        cell_dh.fill = fill_acc_subhdr
+        cell_dh.alignment = align_center_wrap
+        cell_dh.border = grid_border
+    r2 += 1
+    
+    total_roster_num = max(1, len(students))
+    solve_tiers = [
+        (1, "4 / 4 Questions Solved", "4 Qs", count_q4, f"{round((count_q4 / total_roster_num) * 100, 1)}%", "Grandmaster", "Top 1% Elite"),
+        (2, "3 / 4 Questions Solved", "3 Qs", count_q3, f"{round((count_q3 / total_roster_num) * 100, 1)}%", "Advanced Solver", "High Performer"),
+        (3, "2 / 4 Questions Solved", "2 Qs", count_q2, f"{round((count_q2 / total_roster_num) * 100, 1)}%", "Intermediate", "Consistent"),
+        (4, "1 / 4 Questions Solved", "1 Q", count_q1, f"{round((count_q1 / total_roster_num) * 100, 1)}%", "Active Participant", "Foundational"),
+        (5, "0 Questions / Absent", "0 Qs", count_q0, f"{round((count_q0 / total_roster_num) * 100, 1)}%", "Unattempted", "Needs Attention")
+    ]
+    
+    for s_no, cat_name, q_lbl, cnt_val, pct_str, tier_name, target_st in solve_tiers:
+        tier_row = [
+            s_no,
+            cat_name,
+            q_lbl,
+            cnt_val,
+            pct_str,
+            f"{round((cnt_val / max(1, total_attended_cnt)) * 100, 1)}% of Active" if total_attended_cnt > 0 else "0%",
+            tier_name,
+            target_st
+        ]
+        ws2.row_dimensions[r2].height = 20
+        for c_idx, val in enumerate(tier_row, 1):
+            cell = ws2.cell(row=r2, column=c_idx, value=val)
+            cell.font = font_name if c_idx == 2 else (font_bold if c_idx in (4, 7) else font_data)
+            cell.alignment = align_left if c_idx == 2 else align_center
+            cell.border = grid_border
+        r2 += 1
+    r2 += 2
+    
+    # 3. Top Solvers & Elite Rankers Leaderboard
+    ws2.row_dimensions[r2].height = 24
+    ws2.merge_cells(start_row=r2, start_column=1, end_row=r2, end_column=8)
+    sec3_hdr = ws2.cell(row=r2, column=1, value=f"3. TOP CONTEST SOLVERS & ELITE RANKERS LEADERBOARD ({contest_display.upper()})")
+    sec3_hdr.font = font_acc_title
+    sec3_hdr.alignment = align_center
+    for c in range(1, 9):
+        ws2.cell(row=r2, column=c).fill = fill_header
+        ws2.cell(row=r2, column=c).border = grid_border
+    r2 += 1
+    
+    lb_headers = ["Rank", "Register No", "Student Name", "Dept", "Year", "Solved Qs", "Contest Rank", "Contest Rating"]
+    ws2.row_dimensions[r2].height = 22
+    for c_idx, lh in enumerate(lb_headers, 1):
+        cell_lh = ws2.cell(row=r2, column=c_idx, value=lh)
+        cell_lh.font = font_header
+        cell_lh.fill = fill_acc_subhdr
+        cell_lh.alignment = align_center
+        cell_lh.border = grid_border
+    r2 += 1
+    
+    # Build list of top performers (sorted by solved_count desc, contest_rank asc)
+    ranked_students = []
+    for s in students:
+        reg_no = str(s.get("reg_no") or s.get("register_no") or "").strip()
+        reg_upper = reg_no.upper()
+        pr = public_map.get(reg_upper)
+        vr = virtual_map.get(reg_upper)
         
+        q1_s = 1 if (pr and pr.q1) or (vr and vr.q1) or str(s.get("q1", "")).lower() in ("1", "true") else 0
+        q2_s = 1 if (pr and pr.q2) or (vr and vr.q2) or str(s.get("q2", "")).lower() in ("1", "true") else 0
+        q3_s = 1 if (pr and pr.q3) or (vr and vr.q3) or str(s.get("q3", "")).lower() in ("1", "true") else 0
+        q4_s = 1 if (pr and pr.q4) or (vr and vr.q4) or str(s.get("q4", "")).lower() in ("1", "true") else 0
+        
+        tot_s = s.get("solved") or s.get("total_solved") or s.get("total_contest_solved") or 0
+        try:
+            tot_s_int = int(tot_s)
+        except Exception:
+            tot_s_int = 0
+        s_count = max(tot_s_int, q1_s + q2_s + q3_s + q4_s)
+        
+        cr = None
+        if pr and pr.contest_rank:
+            cr = pr.contest_rank
+        elif vr and getattr(vr, "contest_rank", None):
+            cr = vr.contest_rank
+        else:
+            cr = s.get("contest_rank") or s.get("rank")
+        
+        try:
+            cr_int = int(str(cr).replace("#", "").replace(",", "").strip()) if cr else 999999
+        except Exception:
+            cr_int = 999999
+            
+        rate_val = s.get("rating") or s.get("contest_rating") or s.get("current_rating") or ""
+        st_obj = student_meta_map.get(reg_upper)
+        if not rate_val and st_obj and hasattr(st_obj, "stats") and st_obj.stats:
+            rate_val = getattr(st_obj.stats, "contest_rating", None) or ""
+            
+        rate_str = ""
+        if rate_val not in (None, "", "—", "-", "0", 0):
+            try:
+                rate_str = str(round(float(rate_val), 1))
+            except Exception:
+                rate_str = str(rate_val)
+                
+        dept_str = str(s.get("department_code") or s.get("department") or (st_obj.department.code if st_obj and st_obj.department else "")).strip().upper()
+        yr_str = str(s.get("year_level") or s.get("year") or (st_obj.year_level if st_obj else "")).strip()
+        st_name = str(s.get("name") or s.get("student_name") or (st_obj.name if st_obj else "")).strip()
+        
+        if s_count > 0 or (cr_int < 999999 and cr_int > 0):
+            ranked_students.append({
+                "reg_no": reg_no,
+                "name": st_name,
+                "dept": dept_str,
+                "year": yr_str,
+                "solved": s_count,
+                "rank": cr_int if cr_int < 999999 else "—",
+                "rank_sort": cr_int,
+                "rating": rate_str or "—"
+            })
+            
+    ranked_students.sort(key=lambda x: (-x["solved"], x["rank_sort"]))
+    
+    if not ranked_students:
+        ws2.merge_cells(start_row=r2, start_column=1, end_row=r2, end_column=8)
+        no_data_cell = ws2.cell(row=r2, column=1, value="No active contest solves recorded for this scope.")
+        no_data_cell.font = font_data
+        no_data_cell.alignment = align_center
+        no_data_cell.border = grid_border
+        r2 += 1
+    else:
+        for idx_rank, st in enumerate(ranked_students[:50], 1): # Top 50 solvers
+            row_vals = [
+                idx_rank,
+                st["reg_no"],
+                st["name"],
+                st["dept"],
+                st["year"],
+                f"{st['solved']} / 4",
+                st["rank"],
+                st["rating"]
+            ]
+            ws2.row_dimensions[r2].height = 20
+            for c_idx, val in enumerate(row_vals, 1):
+                cell = ws2.cell(row=r2, column=c_idx, value=val)
+                cell.font = font_name if c_idx == 3 else (font_bold if c_idx in (1, 6) else font_data)
+                cell.alignment = align_left if c_idx == 3 else align_center
+                cell.border = grid_border
+                if idx_rank <= 3:
+                    cell.fill = fill_total_row
+            r2 += 1
+            
+    # Set widths for Sheet 2
+    ws2_widths = [8, 18, 30, 14, 10, 14, 16, 16]
+    for c_i, w in enumerate(ws2_widths, 1):
+        ws2.column_dimensions[get_column_letter(c_i)].width = w
+
     from io import BytesIO
     out = BytesIO()
     wb.save(out)
