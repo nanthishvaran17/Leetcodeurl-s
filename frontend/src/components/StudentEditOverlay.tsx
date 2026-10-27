@@ -344,8 +344,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCanClose(false);
+      window.dispatchEvent(new CustomEvent('hide_mobile_bottom_nav'));
       const timer = setTimeout(() => setCanClose(true), 300);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+      };
     }
   }, [isOpen]);
 

@@ -41,12 +41,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   useEffect(() => {
     loadFreshness();
-    if (isAuthenticated && ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase())) {
+    const isMentorRole = ['staff', 'faculty', 'staff mentor', 'faculty mentor', 'placement coordinator', 'placement_coordinator'].includes((user?.role || '').toLowerCase());
+    if (isAuthenticated && isMentorRole) {
       loadMenteesCount();
     }
     const interval = setInterval(() => {
       loadFreshness();
-      if (isAuthenticated && ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase())) {
+      if (isAuthenticated && isMentorRole) {
         loadMenteesCount();
       }
     }, 30000);
@@ -115,8 +116,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                     {(freshness?.total_students || menteesCount !== null) ? (
                       <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/25 whitespace-nowrap flex-shrink-0 items-center tracking-wide shadow-xs">
-                        {['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase()) 
-                          ? `${menteesCount !== null ? menteesCount : '...'} MENTEES` 
+                        {menteesCount !== null && menteesCount > 0
+                          ? `${menteesCount} MENTEES` 
                           : `${freshness?.total_students || 0} STUDENTS`}
                       </span>
                     ) : null}

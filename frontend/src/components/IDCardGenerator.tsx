@@ -733,15 +733,31 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     };
   }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount, leetcodeUsername, contestRating, easySolved, mediumSolved, hardSolved, lastVerifiedAt, officialContests, virtualContests, verificationSource, credentialStatus, logoLoaded, secondaryLogoLoaded]);
 
+  const cleanYear = yearLevel?.replace(/\s*year\b/gi, '').trim() || yearLevel || 'I';
   const credentialId = `NEC-PASS-2026-${regNo || '732225CC018'}`;
   const resolvedOrigin = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
     ? window.location.origin
     : 'https://nandha-leetcode.duckdns.org';
-  const verificationUrl = `${resolvedOrigin}/verify/${encodeURIComponent(credentialId)}`;
+
+  const verificationUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (regNo) params.set('reg', regNo);
+    if (studentName) params.set('name', studentName);
+    if (deptName) params.set('dept', deptName);
+    if (cleanYear) params.set('year', `${cleanYear} Year`);
+    if (leetcodeUsername) params.set('user', leetcodeUsername);
+    if (totalSolved !== undefined && totalSolved !== null) params.set('solved', String(totalSolved));
+    if (collegeRank) params.set('rank', String(collegeRank));
+    if (streakCount !== undefined && streakCount !== null) params.set('streak', String(streakCount));
+    if (contestRating) params.set('rating', String(contestRating));
+    if (easySolved !== undefined && easySolved !== null) params.set('easy', String(easySolved));
+    if (mediumSolved !== undefined && mediumSolved !== null) params.set('med', String(mediumSolved));
+    if (hardSolved !== undefined && hardSolved !== null) params.set('hard', String(hardSolved));
+    params.set('type', 'student_pass');
+    return `${resolvedOrigin}/verify/${encodeURIComponent(credentialId)}?${params.toString()}`;
+  }, [resolvedOrigin, credentialId, regNo, studentName, deptName, cleanYear, leetcodeUsername, totalSolved, collegeRank, streakCount, contestRating, easySolved, mediumSolved, hardSolved]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewMode, setViewMode] = useState<'pass' | 'certificate'>('pass');
-
-  const cleanYear = yearLevel?.replace(/\s*year\b/gi, '').trim() || yearLevel || 'I';
 
   const handleToggleView = (mode: 'pass' | 'certificate') => {
     setViewMode(mode);

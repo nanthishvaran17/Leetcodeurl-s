@@ -41,7 +41,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isPrincipalOrManagement = ['principal', 'management', 'director'].includes(roleClean);
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
-  const isHOD = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+  const isPlacement = ['placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(roleClean);
+  const isHOD = isPlacement || ['hod', 'department hod', 'department_hod'].includes(roleClean);
   const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
 
@@ -115,15 +116,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     }
   ];
 
-  // HOD: Command center + faculty tools; NO admin-only pages 
+  // HOD / PLACEMENT COORDINATOR: Command center + faculty tools + mentee cohort access
   const hodSections: NavSection[] = [
     {
-      title: 'EXECUTIVE INTELLIGENCE',
+      title: isPlacement ? 'PLACEMENT & MENTORING' : 'EXECUTIVE INTELLIGENCE',
       items: [
-        { id: 'dashboard', label: 'Department Leadership', icon: LayoutDashboard },
+        { id: 'dashboard', label: isPlacement ? 'Placement Command Center' : 'Department Leadership', icon: LayoutDashboard },
+        { id: 'staff-dashboard', label: 'My Mentee Cohort', icon: Users, badge: 'MY STUDENTS', badgeColor: 'emerald' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
+        { id: 'hr-candidate-finder', label: 'Placement Portal (HR)', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Portal', icon: Activity, badge: 'FACULTY', badgeColor: 'indigo' },
-        { id: 'hr-candidate-finder', label: 'Placement Portal', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },

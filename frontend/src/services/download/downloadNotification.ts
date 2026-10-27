@@ -193,8 +193,13 @@ class DownloadNotificationService {
             return; // STRICT RETURN: Under NO circumstance fall through to openDownloadedDocument!
           }
 
+          // If this is an app notification (e.g. chat message, announcement), do NOT treat it as a file download!
+          if (extra.type === 'APP_NOTIFICATION' || extra.actionRoute) {
+            return;
+          }
+
           // User tapped 'OPEN_EXCEL', 'OPEN_PDF', 'OPEN_WORD', 'OPEN_FILE' OR notification body ('tap')
-          if (filePath || filename) {
+          if (filePath || (extra.type === 'DOWNLOAD_COMPLETE' && filename)) {
             console.log(`[DownloadNotification] Opening ${filename} in document viewer... (action: ${rawActionId})`);
             await openDownloadedDocument(filePath, filename, mimeType);
           }

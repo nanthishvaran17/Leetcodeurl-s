@@ -547,10 +547,10 @@ class NotificationService:
                     "academic_announcements": "academic_announcements",
                     "system": "system_status",
                     "app_updates": "system_status",
-                    "messages": "academic_announcements",
-                    "direct_message": "academic_announcements"
+                    "messages": "messages_channel",
+                    "direct_message": "messages_channel"
                 }
-                eff_channel_id = CHANNEL_MAP.get(str(category).lower(), "academic_announcements")  # type: ignore
+                eff_channel_id = CHANNEL_MAP.get(str(category).lower(), "messages_channel" if "message" in str(category).lower() else "academic_announcements")  # type: ignore
 
                 active_tokens_raw = db.query(FCMDevice).filter(
                     and_(FCMDevice.user_id.in_(list(target_uids)), FCMDevice.is_active == True)

@@ -605,6 +605,9 @@ def require_security_access(
             "department hod": "hod",
             "department_hod": "hod",
             "placement coordinator": "hod",
+            "placement_coordinator": "hod",
+            "placement officer": "hod",
+            "placement_officer": "hod",
             "administrator": "admin",
             "super admin": "admin",
             "super_admin": "admin"
@@ -769,7 +772,7 @@ def get_authenticated_user_scope(db: Session, user: User) -> dict:
         
     role = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
-    if role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "placement coordinator"]:
+    if role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"]:
         return {"type": "GLOBAL"}
         
     elif role in ["hod", "department hod", "department_hod"] or "hod" in role or "head of department" in role:

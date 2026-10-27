@@ -1066,6 +1066,27 @@ def _build_canonical_contest_dataset_internal(
         scope_virtual2 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 2 and r.get("status") == "VIRTUAL")
         scope_virtual1 = sum(1 for r in filtered_rows if (r.get("total_solved") or 0) == 1 and r.get("status") == "VIRTUAL")
 
+        scope_global_rank_below_20k = 0
+        scope_contest_rank_below_5k = 0
+        for r in filtered_rows:
+            gr = r.get("global_rank") or r.get("contest_global_rank") or r.get("profile_rank")
+            if gr not in (None, "—", "", "Unrated", "-"):
+                try:
+                    gr_int = int(str(gr).replace("#", "").replace(",", "").strip())
+                    if 0 < gr_int < 20000:
+                        scope_global_rank_below_20k += 1
+                except (ValueError, TypeError):
+                    pass
+            if r.get("status") in ("PUBLIC", "VIRTUAL"):
+                cr = r.get("contest_rank") or r.get("rank")
+                if cr not in (None, "—", "", "Unrated", "-"):
+                    try:
+                        cr_int = int(str(cr).replace("#", "").replace(",", "").strip())
+                        if 0 < cr_int < 5000:
+                            scope_contest_rank_below_5k += 1
+                    except (ValueError, TypeError):
+                        pass
+
         top_performers_scope = [
             r for r in filtered_rows
             if r.get("status") in ("PUBLIC", "VIRTUAL") and (r.get("total_solved") or 0) > 0
@@ -1115,6 +1136,10 @@ def _build_canonical_contest_dataset_internal(
             "virtual3Solved": scope_virtual3,
             "virtual2Solved": scope_virtual2,
             "virtual1Solved": scope_virtual1,
+            "rankBelow20000": scope_global_rank_below_20k,
+            "ranking_below_20000": scope_global_rank_below_20k,
+            "rankBelow5000": scope_contest_rank_below_5k,
+            "contest_rank_below_5000": scope_contest_rank_below_5k,
             "topPerformers": top_performers,
             "reconciliationPassed": reconciliation_passed,
             "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None  # type: ignore
@@ -1138,6 +1163,27 @@ def _build_canonical_contest_dataset_internal(
         virtual3_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) == 3 and r.get("status") == "VIRTUAL")
         virtual2_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) == 2 and r.get("status") == "VIRTUAL")
         virtual1_all = sum(1 for r in canonical_rows if (r.get("total_solved") or 0) == 1 and r.get("status") == "VIRTUAL")
+
+        global_rank_below_20k_all = 0
+        contest_rank_below_5k_all = 0
+        for r in canonical_rows:
+            gr = r.get("global_rank") or r.get("contest_global_rank") or r.get("profile_rank")
+            if gr not in (None, "—", "", "Unrated", "-"):
+                try:
+                    gr_int = int(str(gr).replace("#", "").replace(",", "").strip())
+                    if 0 < gr_int < 20000:
+                        global_rank_below_20k_all += 1
+                except (ValueError, TypeError):
+                    pass
+            if r.get("status") in ("PUBLIC", "VIRTUAL"):
+                cr = r.get("contest_rank") or r.get("rank")
+                if cr not in (None, "—", "", "Unrated", "-"):
+                    try:
+                        cr_int = int(str(cr).replace("#", "").replace(",", "").strip())
+                        if 0 < cr_int < 5000:
+                            contest_rank_below_5k_all += 1
+                    except (ValueError, TypeError):
+                        pass
 
         top_performers_all = [
             r for r in canonical_rows
@@ -1188,6 +1234,10 @@ def _build_canonical_contest_dataset_internal(
             "virtual3Solved": virtual3_all,
             "virtual2Solved": virtual2_all,
             "virtual1Solved": virtual1_all,
+            "rankBelow20000": global_rank_below_20k_all,
+            "ranking_below_20000": global_rank_below_20k_all,
+            "rankBelow5000": contest_rank_below_5k_all,
+            "contest_rank_below_5000": contest_rank_below_5k_all,
             "topPerformers": top_performers_global,
             "reconciliationPassed": reconciliation_passed,
             "last_synced": format_ist(session_obj.last_synced, "%d %b %Y, %I:%M %p IST") if getattr(session_obj, "last_synced", None) else None  # type: ignore

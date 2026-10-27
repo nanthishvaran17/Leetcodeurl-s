@@ -545,27 +545,27 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         except Exception:
             pass
 
-    ws2.merge_cells("A1:L1")
+    ws2.merge_cells("A1:M1")
     ws2["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052."
     ws2["A1"].font = FONT_DOC_MAIN_TITLE
     ws2["A1"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("A2:L2")
+    ws2.merge_cells("A2:M2")
     ws2["A2"] = dept_name
     ws2["A2"].font = FONT_DOC_SUBTITLE
     ws2["A2"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("A3:L3")
+    ws2.merge_cells("A3:M3")
     ws2["A3"] = f"Date: {report_date}"
     ws2["A3"].font = FONT_DOC_SUBTITLE
     ws2["A3"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("A4:L4")
+    ws2.merge_cells("A4:M4")
     ws2["A4"] = "Leetcode Contest Performance - Weekly Report"
     ws2["A4"].font = FONT_DOC_SECTION
     ws2["A4"].alignment = ALIGN_CENTER
 
-    ws2.merge_cells("A5:L5")
+    ws2.merge_cells("A5:M5")
     ws2["A5"] = f"Name & Designation of the Academic Coordinator: {coordinator}"
     ws2["A5"].font = FONT_DOC_SUBTITLE
     ws2["A5"].alignment = ALIGN_CENTER
@@ -584,6 +584,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         ("Number of Problems Solved", 4, 8, 6, 6),
         ("Leetcode Contest Rating and\nRanking", 9, 11, 6, 6),
         ("Global Ranking\nBelow 20000", 12, 12, 6, 7),
+        ("Contest Rank\nBelow 5000", 13, 13, 6, 7),
     ]
     for text, s_c, e_c, s_r, e_r in h2_r6:
         if s_c == e_c and s_r == e_r:
@@ -642,6 +643,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         r_1500 = cw.get("rating_above_1500") or cw.get("rating_1500") or 0
         r_1250 = cw.get("rating_above_1250") or cw.get("rating_1250") or 0
         rk_20k = cw.get("rank_below_20000") or cw.get("ranking_20000") or 0
+        rk_5k = cw.get("rank_below_5000") or cw.get("ranking_5000") or cw.get("rank_below_5k") or 0
 
         fmt_m = lambda val: int(val) if (isinstance(val, (int, float)) and val > 0) else "—"
 
@@ -658,6 +660,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
             (10, fmt_m(r_1500)),
             (11, fmt_m(r_1250)),
             (12, fmt_m(rk_20k)),
+            (13, fmt_m(rk_5k)),
         ]
         for col_i, val in row_vals2:
             c = ws2.cell(row=cur_r2, column=col_i, value=val)
@@ -667,7 +670,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         ws2.row_dimensions[cur_r2].height = 28
         cur_r2 += 1
 
-    col_w2 = {1: 17.5, 2: 12.0, 3: 12.0, 4: 7.0, 5: 7.0, 6: 7.0, 7: 7.0, 8: 7.0, 9: 9.5, 10: 9.5, 11: 9.5, 12: 13.5}
+    col_w2 = {1: 17.5, 2: 12.0, 3: 12.0, 4: 7.0, 5: 7.0, 6: 7.0, 7: 7.0, 8: 7.0, 9: 9.5, 10: 9.5, 11: 9.5, 12: 13.5, 13: 13.5}
     for c_i, w in col_w2.items():
         ws2.column_dimensions[get_column_letter(c_i)].width = w
 

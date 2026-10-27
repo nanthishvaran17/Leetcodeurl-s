@@ -6,6 +6,7 @@ import { useNotification as useToastNotification } from './NotificationContext';
 import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 import { playNotificationChime } from '../utils/audioChime';
 import { triggerConfetti } from '../utils/confettiCelebration';
+import { triggerSystemNotification } from '../services/systemNotification';
 
 export interface Notification {
   id: string;
@@ -249,6 +250,50 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     console.log('[NOTIF-DEBUG] RAW_EVENT_RECEIVED:', payload);
 
     const eventType = payload.type || payload.eventType;
+
+    // 1. REAL-TIME CHAT & DIRECT MESSAGES (WhatsApp-like Instant Notification)
+    if (eventType === 'NEW_MESSAGE') {
+      const msg = payload.message || payload;
+      if (!msg) return;
+
+      const currentUserId = user ? String(user.email || user.username || (user as any).reg_no || (user.id ? `STAFF_${user.id}` : '')).toLowerCase() : '';
+      const senderId = String(msg.senderId || msg.sender_id || '').toLowerCase();
+      if (currentUserId && (senderId === currentUserId || (user?.id && (senderId === String(user.id) || senderId === `staff_${user.id}`.toLowerCase())))) {
+        return; // Skip notifying own sent messages
+      }
+
+      const msgId = String(msg.messageId || msg.id || `msg_${Date.now()}`);
+      if (seenNotificationIdsRef.current.has(msgId)) return;
+      seenNotificationIdsRef.current.add(msgId);
+
+      const senderName = msg.senderName || msg.sender_name || 'Staff';
+      const msgContent = msg.content || 'Sent a new attachment/message';
+      const convId = msg.conversationId || msg.conversation_id || '';
+      const actionRoute = convId ? `/messages?conversationId=${convId}` : '/messages';
+      const title = `Message from ${senderName}`;
+
+      // In-App Toast
+      notify.info(title, msgContent, {
+        category: 'MESSAGES',
+        duration: 6000,
+        actionLabel: 'Reply',
+        onAction: () => {
+          window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: actionRoute } }));
+        }
+      });
+
+      // Official Mobile System Heads-Up Notification (Status Bar / Lock Screen with Sound & Vibration)
+      triggerSystemNotification({
+        title,
+        body: msgContent,
+        actionRoute,
+        category: 'messages',
+        notifId: msgId,
+        playSound: true
+      });
+      return;
+    }
+
     if (eventType !== 'NEW_NOTIFICATION' && eventType !== 'notification') {
       return;
     }
@@ -330,12 +375,15 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       }
     });
 
-    // Dispatch native status bar push notification for mobile devices
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('trigger_native_push_notification', {
-        detail: { title, body: message, actionRoute, notifId }
-      }));
-    }
+    // Dispatch official system status-bar notification with sound & vibration
+    triggerSystemNotification({
+      title,
+      body: message,
+      actionRoute,
+      category,
+      notifId,
+      playSound: false // already chimed above
+    });
 
     if (document.hidden) {
       // Browser background tab notification
@@ -355,7 +403,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         }
       }
     }
-  }, [user?.email, notify]);
+  }, [user?.email, user?.username, (user as any)?.reg_no, user?.id, notify]);
 
   // Register WebSocket listener
   useEffect(() => {
@@ -370,7 +418,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     };
   }, [isAuthenticated, registerCallback, unregisterCallback, handleIncomingNotification]);
 
-  // Listen to mobile FCM foreground custom event
+  // Listen to mobile FCM foreground & background events
   useEffect(() => {
     const handleFcmReceived = (event: any) => {
       const detail = event.detail;
@@ -383,23 +431,36 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
       const title = notifData.title || notifData.data?.title || 'New Notification';
       const message = notifData.body || notifData.data?.message || '';
-      const actionRoute = notifData.data?.actionRoute || '/dashboard';
+      const actionRoute = notifData.data?.actionRoute || notifData.data?.route || '/dashboard';
+      const category = notifData.data?.category || 'announcements';
 
       setUnreadCount(prev => prev + 1);
       notify.info(title, message, {
-        category: 'MOBILE PUSH',
+        category: category.toUpperCase(),
         duration: 5000,
         actionLabel: 'Open',
         onAction: () => {
           if (actionRoute) window.location.href = actionRoute;
         }
       });
+
+      triggerSystemNotification({
+        title,
+        body: message,
+        actionRoute,
+        category,
+        notifId,
+        playSound: true
+      });
+
       fetchFromBackendAPI();
     };
 
     window.addEventListener('fcm_notification_received', handleFcmReceived);
+    window.addEventListener('fcm_foreground_message', handleFcmReceived);
     return () => {
       window.removeEventListener('fcm_notification_received', handleFcmReceived);
+      window.removeEventListener('fcm_foreground_message', handleFcmReceived);
     };
   }, [notify, fetchFromBackendAPI]);
 

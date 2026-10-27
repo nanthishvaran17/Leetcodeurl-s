@@ -547,7 +547,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   exit={{ y: '100%' }}
                   transition={{ type: 'spring', stiffness: 380, damping: 38, mass: 0.8 }}
                   onClick={e => e.stopPropagation()}
-                  className="relative w-full bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-white/10 shadow-2xl px-4 pt-3 pb-8 space-y-1.5"
+                  className="relative w-full bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-white/10 shadow-2xl px-4 pt-3 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] space-y-1.5"
                 >
                   {/* Drag Handle */}
                   <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto mb-4" />

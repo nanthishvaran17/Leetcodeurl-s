@@ -807,6 +807,17 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   // Mentees Data State
   const [mentees, setMentees] = useState<any[]>([]);
   const [menteesLoading, setMenteesLoading] = useState(false);
+  const [menteeSearch, setMenteeSearch] = useState<string>('');
+
+  // Filtered Mentees for Search Query
+  const filteredMentees = useMemo(() => {
+    if (!menteeSearch.trim()) return mentees;
+    const q = menteeSearch.toLowerCase().trim();
+    return mentees.filter(m =>
+      (m.name || m.username || '').toLowerCase().includes(q) ||
+      (m.reg_no || '').toLowerCase().includes(q)
+    );
+  }, [mentees, menteeSearch]);
 
   // Dynamic Mentorship Metrics
   const totalMentees = mentees.length;
@@ -7118,79 +7129,30 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* 4. STATIC / FIXED STICKY ACTION BAR (Rendered on mobile, plus desktop in-form save strip) */}
         {effectiveTab === 'profile' && (
           <>
-            {/* Desktop in-form save banner at bottom of form */}
-            <div className="hidden lg:flex items-center justify-between p-4 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs">
+            {/* In-form save banner at bottom of form (responsive for both desktop & mobile) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                 <Info className="w-4 h-4 text-brand-600 shrink-0" />
                 <span>Changes take effect immediately across all institutional session surfaces.</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 justify-end">
                 <button
                   type="button"
                   onClick={handleResetForm}
-                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-2xs"
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
                   Reset Form
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   <span>Save Details</span>
                 </button>
               </div>
             </div>
-
-            {/* Mobile sticky bottom action bar */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-10px_30px_rgba(0,0,0,0.15)] px-3.5 sm:px-6 py-2.5 sm:py-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
-                <div className="hidden sm:flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-bold">
-                    <Info className="w-4 h-4 text-brand-600 shrink-0" />
-                    <span>Updates will apply immediately across your portal session.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      triggerHaptic('warning');
-                      handleResetForm();
-                    }}
-                    className="flex-1 sm:flex-initial min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 font-black text-xs text-slate-800 dark:text-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-xs touch-manipulation"
-                    title="Reset Form"
-                  >
-                    <RefreshCcw className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-                    <span>Reset Form</span>
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    onClick={() => triggerHaptic('success')}
-                    className="flex-[1.4] sm:flex-initial min-h-[44px] px-5 sm:px-7 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 disabled:opacity-50 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
-                  >
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 shrink-0" />
-                        <span>Save Details</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Safe bottom spacer so page content can scroll completely above the fixed action bar */}
-            <div className="lg:hidden h-28 sm:h-24" />
           </>
         )}
 

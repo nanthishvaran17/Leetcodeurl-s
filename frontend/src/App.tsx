@@ -244,8 +244,12 @@ export const App: React.FC = () => {
 
   const { user, isAuthenticated, login } = useAuth();
   
-  // Initialize Download Notification tap listener early on app boot
+  // Initialize System & Download Notification listeners early on app boot
   useEffect(() => {
+    import('./services/systemNotification').then(({ initSystemNotificationListeners }) => {
+      initSystemNotificationListeners();
+    }).catch(err => console.warn('[SystemNotification] Init note:', err));
+
     import('./services/download/downloadNotification').then(({ downloadNotification }) => {
       downloadNotification.initNotificationListeners();
     }).catch(err => console.warn('[DownloadNotification] Init note:', err));
@@ -815,6 +819,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (selectedStudent) {
+      window.dispatchEvent(new CustomEvent('hide_mobile_bottom_nav'));
       const onKey = (ev: KeyboardEvent) => {
         if (ev.key === 'Escape') setSelectedStudent(null);
       };
@@ -822,6 +827,7 @@ export const App: React.FC = () => {
 
       return () => {
         window.removeEventListener('keydown', onKey);
+        window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
       };
     }
   }, [selectedStudent]);
@@ -863,7 +869,7 @@ export const App: React.FC = () => {
     if (['staff', 'faculty', 'professor', 'faculty mentor', 'faculty_mentor', 'staff mentor', 'staff_mentor'].includes(roleClean)) {
       return <StaffDashboardView />;
     }
-    if (roleClean.includes('hod') || ['head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean)) {
+    if (roleClean.includes('hod') || ['head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(roleClean)) {
       return <HODCommandCenter />;
     }
     return (
@@ -886,11 +892,14 @@ export const App: React.FC = () => {
     administrator:    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
     super_admin:      ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
     'super admin':    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
-    // HOD: command center + all academic tools
-    hod:              ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    'department hod': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    'placement coordinator': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    department_hod:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    // HOD: command center + faculty tools + staff dashboard (for mentee monitoring)
+    hod:              ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    'department hod': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    'placement coordinator': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    placement_coordinator:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    'placement officer':     ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    placement_officer:       ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    department_hod:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
     principal:        ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','system-health','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
     management:       ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','system-health','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
     director:         ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','system-health','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
@@ -1091,7 +1100,7 @@ export const App: React.FC = () => {
       <div className={`w-full max-w-full mx-auto relative flex flex-col ${
         activeTab === 'messages'
           ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-3.5 sm:pt-4 pb-20 sm:pb-6 px-2.5 sm:px-4 max-w-full'
+          : 'pt-3.5 sm:pt-4 pb-32 sm:pb-6 px-2.5 sm:px-4 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}

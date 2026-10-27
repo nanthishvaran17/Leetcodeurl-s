@@ -36,12 +36,12 @@ export function isRoleEligibleForMentees(role?: string, mentoringRole?: string):
     return false;
   }
 
-  // Eligible mentoring roles: Faculty, Mentors, Proctors, Placement Coordinators, Staff Mentors
   const mentoringKeywords = [
     'faculty',
     'mentor',
     'proctor',
     'placement',
+    'coordinator',
     'plc',
     'staff'
   ];

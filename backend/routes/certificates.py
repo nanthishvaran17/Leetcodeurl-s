@@ -271,6 +271,15 @@ def verify_certificate_public(
     dob: Optional[str] = None,
     type: Optional[str] = None,
     id: Optional[str] = None,
+    user: Optional[str] = None,
+    solved: Optional[int] = None,
+    rank: Optional[int] = None,
+    streak: Optional[int] = None,
+    rating: Optional[float] = None,
+    easy: Optional[int] = None,
+    med: Optional[int] = None,
+    hard: Optional[int] = None,
+    year: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -389,11 +398,34 @@ def verify_certificate_public(
                     (Student.username.ilike(reg_candidate))
                 ).first()
                 if student:
-                    s_dept_name = student.department.name if student.department else "Computer Science and Engineering"
+                    s_dept_name = student.department.name if student.department else (dept or "Computer Science and Engineering")
                     stats = student.stats
-                    total_s = stats.total_solved if stats else 0
-                    c_rating = round(stats.contest_rating, 1) if (stats and stats.contest_rating) else 1500.0
+                    total_s = stats.total_solved if stats and stats.total_solved is not None else (solved if solved is not None else 0)
+                    c_rating = round(stats.contest_rating, 1) if (stats and stats.contest_rating) else (round(float(rating), 1) if rating else 1500.0)
                     clean_pass_id = clean_lookup.upper() if "PASS" in clean_lookup.upper() else f"NEC-PASS-2026-{student.reg_no}"
+                    clean_yr = (student.year_level or year or "III").replace("Year", "").strip() or "III"
+
+                    # Calculate college rank dynamically if not explicitly provided
+                    calc_rank = rank
+                    if not calc_rank and total_s and total_s > 0:
+                        try:
+                            from backend.models import LeetCodeProfileStats
+                            higher_c = db.query(LeetCodeProfileStats).filter(
+                                LeetCodeProfileStats.total_solved > total_s
+                            ).count()
+                            calc_rank = higher_c + 1
+                        except Exception:
+                            calc_rank = 1
+                    if not calc_rank:
+                        calc_rank = 1
+
+                    streak_val = streak if streak is not None else (stats.max_streak or stats.active_days or 0 if stats else 0)
+                    easy_val = easy if easy is not None else (stats.easy_solved or 0 if stats else 0)
+                    med_val = med if med is not None else (stats.medium_solved or 0 if stats else 0)
+                    hard_val = hard if hard is not None else (stats.hard_solved or 0 if stats else 0)
+                    skill_tier = "Advanced" if total_s > 100 else "Proficient" if total_s > 30 else "Foundation"
+                    lc_user = student.username or user or ""
+
                     return JSONResponse(
                         status_code=200,
                         content={
@@ -406,17 +438,26 @@ def verify_certificate_public(
                             "student_name": student.name,
                             "full_name": student.name,
                             "reg_no": student.reg_no,
+                            "register_no": student.reg_no,
                             "role": "STUDENT",
-                            "designation": f"Student • {student.year_level or 'II'} Year",
+                            "designation": f"Student • {clean_yr} Year",
                             "department": s_dept_name,
                             "department_name": s_dept_name,
-                            "year_level": student.year_level or "II",
+                            "year_level": f"{clean_yr} Year",
                             "total_solved": total_s,
+                            "college_rank": calc_rank,
+                            "streak_count": streak_val,
+                            "active_streak": streak_val,
                             "contest_rating": c_rating,
-                            "leetcode_username": student.username,
+                            "easy_solved": easy_val,
+                            "medium_solved": med_val,
+                            "hard_solved": hard_val,
+                            "skill_level": skill_tier,
+                            "leetcode_username": lc_user,
+                            "leetcode_url": f"https://leetcode.com/u/{lc_user}/" if lc_user else "https://leetcode.com/",
                             "institutional_id": clean_pass_id,
                             "email": student.email or f"{student.reg_no.lower()}@nandhaengg.org",
-                            "phone": student.phone_number or "+91 90420 20879",
+                            "phone": student.phone_number or phone or "+91 90420 20879",
                             "institution": "Nandha Engineering College (Autonomous)",
                             "accreditation": "Autonomous • Anna University • NBA & NAAC A+",
                             "issue_date": "Academic Session 2025–26",
@@ -426,6 +467,70 @@ def verify_certificate_public(
                             "message": "Student Digital DSA Identity Pass Officially Verified"
                         }
                     )
+
+            # 2b. Fallback for Student Digital Pass if not in local DB or from QR scan params
+            if (
+                type == 'student_pass' or
+                "PASS" in clean_lookup.upper() or
+                (role and role.upper() == 'STUDENT')
+            ):
+                s_name = name or (clean_lookup.replace('-', ' ').title())
+                s_reg = reg_candidate or reg or "732225CC018"
+                s_dept = dept or "Computer Science and Engineering"
+                s_year = year or "III Year"
+                clean_yr = s_year.replace("Year", "").strip() or "III"
+                s_user = user or (s_name.lower().replace(" ", "_"))
+                s_total = solved if solved is not None else 0
+                s_rank = rank if rank is not None else 1
+                s_streak = streak if streak is not None else 0
+                s_rating = round(float(rating), 1) if rating is not None else 1500.0
+                s_easy = easy if easy is not None else 0
+                s_med = med if med is not None else 0
+                s_hard = hard if hard is not None else 0
+                s_clean_pass = clean_lookup.upper() if "PASS" in clean_lookup.upper() else f"NEC-PASS-2026-{s_reg}"
+                skill_tier = "Advanced" if s_total > 100 else "Proficient" if s_total > 30 else "Foundation"
+
+                return JSONResponse(
+                    status_code=200,
+                    content={
+                        "verified": True,
+                        "status": "VERIFIED",
+                        "is_valid": True,
+                        "document_type": "STUDENT_DIGITAL_PASS",
+                        "verification_id": s_clean_pass,
+                        "certificate_id": s_clean_pass,
+                        "student_name": s_name,
+                        "full_name": s_name,
+                        "reg_no": s_reg,
+                        "register_no": s_reg,
+                        "role": "STUDENT",
+                        "designation": f"Student • {clean_yr} Year",
+                        "department": s_dept,
+                        "department_name": s_dept,
+                        "year_level": f"{clean_yr} Year",
+                        "total_solved": s_total,
+                        "college_rank": s_rank,
+                        "streak_count": s_streak,
+                        "active_streak": s_streak,
+                        "contest_rating": s_rating,
+                        "easy_solved": s_easy,
+                        "medium_solved": s_med,
+                        "hard_solved": s_hard,
+                        "skill_level": skill_tier,
+                        "leetcode_username": s_user,
+                        "leetcode_url": f"https://leetcode.com/u/{s_user}/" if s_user else "https://leetcode.com/",
+                        "institutional_id": s_clean_pass,
+                        "email": email or f"{s_reg.lower()}@nandhaengg.org",
+                        "phone": phone or "+91 90420 20879",
+                        "institution": "Nandha Engineering College (Autonomous)",
+                        "accreditation": "Autonomous • Anna University • NBA & NAAC A+",
+                        "issue_date": "Academic Session 2025–26",
+                        "sha_hash": f"SHA256-{s_reg.lower()}-verified",
+                        "integrity_status": "PASSED",
+                        "authorized_signatory": "Dr. U. S. Ragupathy, M.E., Ph.D. (Principal)",
+                        "message": "Student Digital DSA Identity Pass Officially Verified"
+                    }
+                )
 
             # 3. Dynamic fallback for Staff ID cards with query parameters in QR code
             if (

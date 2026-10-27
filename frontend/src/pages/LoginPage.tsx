@@ -1354,8 +1354,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
                 {/* Windows Desktop App (.EXE) */}
                 <a
-                  href="/nandha-leetcode-setup.exe"
+                  href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/download/v3.2.5/Nandha_LeetCode_Intelligence_v3.2.5_Setup.exe"
                   download="Nandha_LeetCode_Intelligence_v3.2.5_Setup.exe"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="p-2.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-emerald-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
                   title="Download Nandha LeetCode Windows Desktop App (EXE Setup)"
                 >

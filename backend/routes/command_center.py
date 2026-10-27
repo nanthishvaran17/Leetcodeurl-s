@@ -214,9 +214,27 @@ def get_command_center_summary(
         hod_name = current_user.username if current_user else "Head of Department"
 
         # Active staff list for Scope Selector & Performance Table
+        STAFF_MENTOR_ROLES = [
+            "faculty", "staff", "professor", "faculty mentor", "staff mentor",
+            "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
+            "faculty_coordinator", "staff_coordinator", "placement coordinator",
+            "placement_coordinator", "coordinator", "academic coordinator",
+            "mentor", "tutor", "proctor", "class advisor"
+        ]
+        assigned_faculty_ids_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
+            FacultyStudentAssignment.is_active == True
+        ).distinct()
+
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
-            func.lower(User.role).in_(["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]),
-            User.department_id.isnot(None),
+            or_(
+                func.lower(User.role).in_(STAFF_MENTOR_ROLES),
+                User.role.ilike("%Faculty%"),
+                User.role.ilike("%Staff%"),
+                User.role.ilike("%Placement%"),
+                User.role.ilike("%Coordinator%"),
+                User.id.in_(assigned_faculty_ids_subq)
+            ),
+            ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
             ~User.username.ilike("test_%"),
             ~User.username.ilike("dummy_%"),
             ~User.username.ilike("sec_test_%"),
@@ -224,9 +242,33 @@ def get_command_center_summary(
             User.is_active == True
         )
         if dept_id:
-            staff_users_q = staff_users_q.filter(User.department_id == dept_id)
+            staff_users_q = staff_users_q.filter(
+                or_(
+                    User.department_id == dept_id,
+                    User.id.in_(
+                        db.query(FacultyStudentAssignment.faculty_id).join(
+                            Student, FacultyStudentAssignment.student_id == Student.id
+                        ).filter(
+                            FacultyStudentAssignment.is_active == True,
+                            Student.department_id == dept_id
+                        )
+                    )
+                )
+            )
         else:
-            staff_users_q = staff_users_q.filter(User.department_id.in_(prod_dept_ids))
+            staff_users_q = staff_users_q.filter(
+                or_(
+                    User.department_id.in_(prod_dept_ids),
+                    User.id.in_(
+                        db.query(FacultyStudentAssignment.faculty_id).join(
+                            Student, FacultyStudentAssignment.student_id == Student.id
+                        ).filter(
+                            FacultyStudentAssignment.is_active == True,
+                            Student.department_id.in_(prod_dept_ids)
+                        )
+                    )
+                )
+            )
         staff_users = staff_users_q.all()
         
         # Single efficient aggregation query for all staff assignments
@@ -317,7 +359,11 @@ def get_command_center_summary(
             staff_prog = round((completed_cnt / float(assigned_cnt)) * 100.0, 1) if assigned_cnt > 0 else 0.0
             
             traffic_status = "GREEN" if staff_prog >= 80.0 else ("AMBER" if staff_prog >= 60.0 else "RED")
-            d_code = u.department.code if u.department else dept_code
+            d_code = u.department.code if u.department else (
+                db.query(Department.code).join(Student, Student.department_id == Department.id).join(
+                    FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+                ).filter(FacultyStudentAssignment.faculty_id == u.id, FacultyStudentAssignment.is_active == True).limit(1).scalar() or dept_code
+            )
 
             sunday_att_cnt = staff_sunday_stats_map.get(u.id, 0)
             sunday_turnout = round((sunday_att_cnt / float(assigned_cnt)) * 100.0) if assigned_cnt > 0 else 0
@@ -692,17 +738,63 @@ def get_faculty_workload(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
-    """Returns detailed workload and assigned student roster for each faculty member."""
+    STAFF_MENTOR_ROLES = [
+        "faculty", "staff", "professor", "faculty mentor", "staff mentor",
+        "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
+        "faculty_coordinator", "staff_coordinator", "placement coordinator",
+        "placement_coordinator", "coordinator", "academic coordinator",
+        "mentor", "tutor", "proctor", "class advisor"
+    ]
+    assigned_faculty_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
+        FacultyStudentAssignment.is_active == True
+    ).distinct()
+
     query = db.query(User).options(joinedload(User.department)).filter(
         User.is_active == True,
-        or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%"))
+        or_(
+            func.lower(User.role).in_(STAFF_MENTOR_ROLES),
+            User.role.ilike("%Staff%"),
+            User.role.ilike("%Faculty%"),
+            User.role.ilike("%Placement%"),
+            User.role.ilike("%Coordinator%"),
+            User.id.in_(assigned_faculty_subq)
+        ),
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%")
     )
     if dept_id:
-        query = query.filter(User.department_id == dept_id)
+        query = query.filter(
+            or_(
+                User.department_id == dept_id,
+                User.id.in_(
+                    db.query(FacultyStudentAssignment.faculty_id).join(
+                        Student, FacultyStudentAssignment.student_id == Student.id
+                    ).filter(
+                        FacultyStudentAssignment.is_active == True,
+                        Student.department_id == dept_id
+                    )
+                )
+            )
+        )
     # Apply department filtering based on user permissions
     role_lower = (current_user.role or "").strip().lower()
-    if role_lower not in ["admin", "super_admin", "super admin", "administrator"]:
-        query = query.filter(User.department_id == current_user.department_id)
+    if role_lower not in ["admin", "super_admin", "super admin", "administrator"] and current_user.department_id:
+        query = query.filter(
+            or_(
+                User.department_id == current_user.department_id,
+                User.id.in_(
+                    db.query(FacultyStudentAssignment.faculty_id).join(
+                        Student, FacultyStudentAssignment.student_id == Student.id
+                    ).filter(
+                        FacultyStudentAssignment.is_active == True,
+                        Student.department_id == current_user.department_id
+                    )
+                )
+            )
+        )
 
     faculty_list = query.all()
 
@@ -740,8 +832,16 @@ def get_faculty_workload(
             "faculty_id": fac.id,
             "faculty_name": fac.username,
             "email": fac.email,
-            "department_id": fac.department_id,
-            "department_code": fac.department.code if fac.department else "GEN",
+            "department_id": fac.department_id or (
+                db.query(Student.department_id).join(
+                    FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+                ).filter(FacultyStudentAssignment.faculty_id == fac.id, FacultyStudentAssignment.is_active == True).limit(1).scalar()
+            ),
+            "department_code": fac.department.code if fac.department else (
+                db.query(Department.code).join(Student, Student.department_id == Department.id).join(
+                    FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+                ).filter(FacultyStudentAssignment.faculty_id == fac.id, FacultyStudentAssignment.is_active == True).limit(1).scalar() or "GEN"
+            ),
             "assigned_students": count,
             "active_students": active_count,
             "inactive_students": inactive_count,
@@ -1542,12 +1642,24 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
         if h.department_id not in hod_by_dept:
             hod_by_dept[h.department_id] = h
 
-    # Pre-fetch faculty counts per department
-    STAFF_ROLES = ["Faculty", "faculty", "Staff", "staff", "Professor", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]
+    STAFF_ROLES = [
+        "Faculty", "faculty", "Staff", "staff", "Professor", "professor",
+        "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor",
+        "Placement Coordinator", "placement coordinator", "placement_coordinator",
+        "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator"
+    ]
     faculty_counts_query = db.query(
         User.department_id, func.count(User.id)
     ).filter(
-        User.role.in_(STAFF_ROLES), User.is_active == True
+        or_(
+            User.role.in_(STAFF_ROLES),
+            User.role.ilike("%Faculty%"),
+            User.role.ilike("%Staff%"),
+            User.role.ilike("%Placement%"),
+            User.role.ilike("%Coordinator%")
+        ),
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
+        User.is_active == True
     ).group_by(User.department_id).all()
     faculty_counts = {dept_id: count for dept_id, count in faculty_counts_query}
 
@@ -1627,10 +1739,22 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
     }
 
     # 2. Staff List & Workload Completion
-    STAFF_ROLES = ["Faculty", "faculty", "Staff", "staff", "Professor", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]
+    STAFF_ROLES = [
+        "Faculty", "faculty", "Staff", "staff", "Professor", "professor",
+        "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor",
+        "Placement Coordinator", "placement coordinator", "placement_coordinator",
+        "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator"
+    ]
     staff_users = db.query(User).filter(
         User.department_id == dept_id,
-        User.role.in_(STAFF_ROLES),
+        or_(
+            User.role.in_(STAFF_ROLES),
+            User.role.ilike("%Faculty%"),
+            User.role.ilike("%Staff%"),
+            User.role.ilike("%Placement%"),
+            User.role.ilike("%Coordinator%")
+        ),
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
         User.is_active == True
     ).all()
 

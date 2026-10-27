@@ -391,12 +391,39 @@ def get_faculty_workload_summary(
     user_role = (current_user.role or "").strip().lower()
     target_dept_id = current_user.department_id if user_role in ["hod"] else dept_id
 
+    assigned_faculty_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
+        FacultyStudentAssignment.is_active == True
+    ).distinct()
+
     query = db.query(User).options(joinedload(User.department)).filter(
         User.is_active == True,
-        User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
+        or_(
+            User.role.in_([
+                "Faculty", "faculty", "Staff", "staff", "HOD", "hod",
+                "Placement Coordinator", "placement coordinator", "placement_coordinator",
+                "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator",
+                "Staff Mentor", "staff mentor", "Faculty Mentor", "faculty mentor", "Professor", "professor"
+            ]),
+            User.role.ilike("%Placement%"),
+            User.role.ilike("%Coordinator%"),
+            User.id.in_(assigned_faculty_subq)
+        ),
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"])
     )
     if target_dept_id:
-        query = query.filter(User.department_id == target_dept_id)
+        query = query.filter(
+            or_(
+                User.department_id == target_dept_id,
+                User.id.in_(
+                    db.query(FacultyStudentAssignment.faculty_id).join(
+                        Student, FacultyStudentAssignment.student_id == Student.id
+                    ).filter(
+                        FacultyStudentAssignment.is_active == True,
+                        Student.department_id == target_dept_id
+                    )
+                )
+            )
+        )
 
     faculty_list = query.all()
 

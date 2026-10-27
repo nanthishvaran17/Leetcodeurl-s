@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Bell, Smartphone, Mail, CheckCircle2, AlertTriangle, AlertCircle, 
-  Send, FileSpreadsheet, Loader2, Shield, Calendar, FileText, Award, Megaphone, Sliders
+  Send, FileSpreadsheet, Loader2, Shield, Calendar, FileText, Award, Megaphone, Sliders,
+  Volume2, Play, Check, Sparkles
 } from 'lucide-react';
 import { useGlobalNotifications, type NotificationPreferences } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 import { useNotification as useToastNotification } from '../context/NotificationContext';
+import { playWhatsAppPop, playAppleGlassChime, playTechKnockDing } from '../utils/audioChime';
 
 export const NotificationPreferencesSection: React.FC = () => {
   const { preferences, updatePreferences, registerFCMDeviceToken } = useGlobalNotifications();
@@ -22,6 +24,31 @@ export const NotificationPreferencesSection: React.FC = () => {
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<string>(() => {
+    try {
+      return localStorage.getItem('notification_sound_tone') || 'whatsapp';
+    } catch {
+      return 'whatsapp';
+    }
+  });
+
+  const handleSelectTone = (tone: 'whatsapp' | 'apple' | 'tech') => {
+    setSelectedTone(tone);
+    try {
+      localStorage.setItem('notification_sound_tone', tone);
+    } catch {}
+
+    if (tone === 'whatsapp') {
+      playWhatsAppPop();
+      notify.info('WhatsApp Bubble Pop Selected', 'Short, bubbly water pop — now active for messages & alerts.', { category: 'AUDIO' });
+    } else if (tone === 'apple') {
+      playAppleGlassChime();
+      notify.info('Apple Crystal Glass Selected', 'Acoustic glass tri-tone chord — now active for messages & alerts.', { category: 'AUDIO' });
+    } else if (tone === 'tech') {
+      playTechKnockDing();
+      notify.info('Tech Knock & Ding Selected', 'Acoustic knock with crystal ding — now active for messages & alerts.', { category: 'AUDIO' });
+    }
+  };
 
   // Local state for preferences
   const [localPrefs, setLocalPrefs] = useState<NotificationPreferences>({
@@ -370,6 +397,125 @@ export const NotificationPreferencesSection: React.FC = () => {
             />
             <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-navy-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
           </label>
+        </div>
+      </div>
+
+      {/* Notification Sound Timbre Studio & Live Preview */}
+      <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-4 shadow-sm bg-gradient-to-br from-indigo-500/[0.03] to-purple-500/[0.03]">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-2">
+            <Volume2 size={18} className="text-indigo-500" />
+            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Notification Sound Studio (Live Preview)
+            </h3>
+          </div>
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+            Click to test & pick your favourite tone
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Option 1: WhatsApp Bubbly Pop */}
+          <div
+            onClick={() => handleSelectTone('whatsapp')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              selectedTone === 'whatsapp'
+                ? 'bg-emerald-500/10 border-emerald-500/40 shadow-sm ring-1 ring-emerald-500/30'
+                : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
+                  💬 WhatsApp Pop
+                </span>
+                {selectedTone === 'whatsapp' && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-0.5">
+                    <Check size={10} /> Active
+                  </span>
+                )}
+              </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                Bubbly water pop tone. Fast, playful, and non-intrusive.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('whatsapp'); }}
+              className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Play size={12} className="fill-current" />
+              <span>Listen & Select</span>
+            </button>
+          </div>
+
+          {/* Option 2: Apple Crystal Glass */}
+          <div
+            onClick={() => handleSelectTone('apple')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              selectedTone === 'apple'
+                ? 'bg-indigo-500/10 border-indigo-500/40 shadow-sm ring-1 ring-indigo-500/30'
+                : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
+                  🔔 Apple Crystal Glass
+                </span>
+                {selectedTone === 'apple' && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-indigo-500 text-white flex items-center gap-0.5">
+                    <Check size={10} /> Active
+                  </span>
+                )}
+              </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                Tri-tone acoustic glass bell. Premium, soft, and professional.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('apple'); }}
+              className="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Play size={12} className="fill-current" />
+              <span>Listen & Select</span>
+            </button>
+          </div>
+
+          {/* Option 3: Tech Knock & Ding */}
+          <div
+            onClick={() => handleSelectTone('tech')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              selectedTone === 'tech'
+                ? 'bg-cyan-500/10 border-cyan-500/40 shadow-sm ring-1 ring-cyan-500/30'
+                : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
+                  ⚡ Tech Knock & Ding
+                </span>
+                {selectedTone === 'tech' && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-cyan-600 text-white flex items-center gap-0.5">
+                    <Check size={10} /> Active
+                  </span>
+                )}
+              </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                Snappy wood knock + digital ping. Distinct, punchy & sharp.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('tech'); }}
+              className="w-full py-2 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Play size={12} className="fill-current" />
+              <span>Listen & Select</span>
+            </button>
+          </div>
         </div>
       </div>
 

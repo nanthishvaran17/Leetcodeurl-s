@@ -196,10 +196,100 @@ class AudioChimeEngine {
       // Audio safety
     }
   }
+
+  /**
+   * Option 1: WhatsApp / Telegram Style Bubbly Water Pop & Whistle
+   */
+  public playWhatsAppPop(): void {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try { navigator.vibrate([25, 20]); } catch {}
+    }
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.exponentialRampToValueAtTime(1450, now + 0.04);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.38, now + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } catch {
+      // Audio safety
+    }
+  }
+
+  /**
+   * Option 3: Modern Tech Knock & Crystal Ding (Slack / Discord Timbre)
+   */
+  public playTechKnockDing(): void {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      try { navigator.vibrate([30, 40, 30]); } catch {}
+    }
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      // 1. Acoustic low knock
+      const oscKnock = ctx.createOscillator();
+      const gainKnock = ctx.createGain();
+      oscKnock.type = 'triangle';
+      oscKnock.frequency.setValueAtTime(320, now);
+      oscKnock.frequency.exponentialRampToValueAtTime(160, now + 0.04);
+      gainKnock.gain.setValueAtTime(0.28, now);
+      gainKnock.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+      oscKnock.connect(gainKnock);
+      gainKnock.connect(ctx.destination);
+      oscKnock.start(now);
+      oscKnock.stop(now + 0.06);
+
+      // 2. High tech bell ding (E6: 1318.5 Hz)
+      const oscDing = ctx.createOscillator();
+      const gainDing = ctx.createGain();
+      oscDing.type = 'sine';
+      oscDing.frequency.setValueAtTime(1318.51, now + 0.03);
+      gainDing.gain.setValueAtTime(0.0001, now + 0.03);
+      gainDing.gain.exponentialRampToValueAtTime(0.32, now + 0.05);
+      gainDing.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+      oscDing.connect(gainDing);
+      gainDing.connect(ctx.destination);
+      oscDing.start(now + 0.03);
+      oscDing.stop(now + 0.45);
+    } catch {
+      // Audio safety
+    }
+  }
+
+  /**
+   * Plays the tone currently selected in user preferences (whatsapp | apple | tech)
+   */
+  public playSelectedNotificationChime(): void {
+    let tone = 'whatsapp';
+    try {
+      tone = localStorage.getItem('notification_sound_tone') || 'whatsapp';
+    } catch {}
+
+    if (tone === 'apple') {
+      this.playNotificationChime();
+    } else if (tone === 'tech') {
+      this.playTechKnockDing();
+    } else {
+      this.playWhatsAppPop();
+    }
+  }
 }
 
 export const audioChime = new AudioChimeEngine();
-export const playNotificationChime = () => audioChime.playNotificationChime();
+export const playNotificationChime = () => audioChime.playSelectedNotificationChime();
+export const playAppleGlassChime = () => audioChime.playNotificationChime();
+export const playWhatsAppPop = () => audioChime.playWhatsAppPop();
+export const playTechKnockDing = () => audioChime.playTechKnockDing();
 export const playCelebrationChime = () => audioChime.playCelebrationChime();
 export const playContestAlertChime = () => audioChime.playContestAlertChime();
 export const playDownloadSuccessChime = () => audioChime.playDownloadSuccessChime();

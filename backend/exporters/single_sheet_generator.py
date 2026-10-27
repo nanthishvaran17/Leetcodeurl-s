@@ -156,6 +156,14 @@ def generate_single_sheet_contest_excel(
     sum_q4 = 0
     sum_total_solved = 0
     
+    count_q4 = 0
+    count_q3 = 0
+    count_q2 = 0
+    count_q1 = 0
+    count_q0 = 0
+    count_below_20k = 0
+    count_below_5k = 0
+
     hostel_stats = {"count": 0, "attended": 0, "q1": 0, "q2": 0, "q3": 0, "q4": 0, "total_solved": 0}
     ds_stats = {"count": 0, "attended": 0, "q1": 0, "q2": 0, "q3": 0, "q4": 0, "total_solved": 0}
     
@@ -242,7 +250,48 @@ def generate_single_sheet_contest_excel(
         sum_q3 += q3
         sum_q4 += q4
         sum_total_solved += solved_count
-        
+        # Aggregate solve categories
+        if solved_count >= 4:
+            count_q4 += 1
+        elif solved_count == 3:
+            count_q3 += 1
+        elif solved_count == 2:
+            count_q2 += 1
+        elif solved_count == 1:
+            count_q1 += 1
+        else:
+            count_q0 += 1
+
+        # Check Global Ranking (< 20000)
+        gr_val = s.get("global_rank") or s.get("contest_global_rank") or s.get("profile_rank")
+        if not gr_val and st_obj:
+            gr_val = getattr(st_obj, "contest_global_ranking", None) or getattr(st_obj, "global_rank", None)
+            if not gr_val and hasattr(st_obj, "stats") and st_obj.stats:
+                gr_val = getattr(st_obj.stats, "contest_global_ranking", None) or getattr(st_obj.stats, "global_rank", None)
+        if gr_val not in (None, "", "—", "Unrated", "-"):
+            try:
+                gr_int = int(str(gr_val).replace("#", "").replace(",", "").strip())
+                if 0 < gr_int < 20000:
+                    count_below_20k += 1
+            except (ValueError, TypeError):
+                pass
+
+        # Check Contest Rank (< 5000)
+        cr_val = None
+        if pr and pr.contest_rank:
+            cr_val = pr.contest_rank
+        elif vr and getattr(vr, "contest_rank", None):
+            cr_val = vr.contest_rank
+        else:
+            cr_val = s.get("contest_rank") or s.get("rank")
+        if cr_val not in (None, "", "—", "Unrated", "-"):
+            try:
+                cr_int = int(str(cr_val).replace("#", "").replace(",", "").strip())
+                if 0 < cr_int < 5000:
+                    count_below_5k += 1
+            except (ValueError, TypeError):
+                pass
+
         # Aggregate accommodation statistics
         is_attended = (solved_count > 0)
         target_group = hostel_stats if acc_is_hostel else ds_stats
@@ -287,7 +336,7 @@ def generate_single_sheet_contest_excel(
     
     # Merge S.No, Reg No, Name, Accommodation, Cutoff for Total Row Header Label
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=5)
-    total_lbl_cell = ws.cell(row=row_idx, column=1, value=f"TOTAL SOLVED COUNT ({len(student_rows)} STUDENTS)")
+    total_lbl_cell = ws.cell(row=row_idx, column=1, value=f"TOTAL SOLVED COUNT ({len(students)} STUDENTS)")
     total_lbl_cell.font = font_total_label
     total_lbl_cell.alignment = align_center
     
@@ -419,6 +468,123 @@ def generate_single_sheet_contest_excel(
         cell.border = grid_border
         if c_idx == 10:
             cell.number_format = '0.0%'
+    row_idx += 1
+
+    # =========================================================================
+    # SECTION: CONTEST PERFORMANCE & RANKING SUMMARY (EXACT USER SPECIFICATION)
+    # =========================================================================
+    row_idx += 1  # 1 blank spacing row
+
+    ws.row_dimensions[row_idx].height = 24
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=10)
+    perf_banner = ws.cell(row=row_idx, column=1, value=f"CONTEST PERFORMANCE & PROBLEM-WISE SOLVE SUMMARY ({contest_name.upper() if contest_name else 'WEEKLY CONTEST'})")
+    perf_banner.font = font_acc_title
+    perf_banner.alignment = align_center
+    for c in range(1, 11):
+        cell_b = ws.cell(row=row_idx, column=c)
+        cell_b.fill = fill_header
+        cell_b.border = grid_border
+    row_idx += 1
+
+    # Header Row 1:
+    # last_contest_name ({c_num} - {contest_date}) | Last Contest No of Ques Solved ({contest_name}) | Below 20000 | Below 5000
+    ws.row_dimensions[row_idx].height = 26
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=2)
+    c1 = ws.cell(row=row_idx, column=1, value=f"last_contest_name\n({c_num or 'Contest'} - {contest_date or 'Session'})")
+    c1.font = font_header
+    c1.fill = fill_acc_subhdr
+    c1.alignment = align_center_wrap
+    for c in (1, 2):
+        ws.cell(row=row_idx, column=c).border = grid_border
+        ws.cell(row=row_idx, column=c).fill = fill_acc_subhdr
+
+    ws.merge_cells(start_row=row_idx, start_column=3, end_row=row_idx, end_column=7)
+    c2 = ws.cell(row=row_idx, column=3, value=f"Last Contest No of Ques Solved ({contest_name or f'Weekly Contest {c_num}'})")
+    c2.font = font_header
+    c2.fill = fill_acc_subhdr
+    c2.alignment = align_center_wrap
+    for c in range(3, 8):
+        ws.cell(row=row_idx, column=c).border = grid_border
+        ws.cell(row=row_idx, column=c).fill = fill_acc_subhdr
+
+    c3 = ws.cell(row=row_idx, column=8, value="Below 20000")
+    c3.font = font_header
+    c3.fill = fill_acc_subhdr
+    c3.alignment = align_center_wrap
+    c3.border = grid_border
+
+    ws.merge_cells(start_row=row_idx, start_column=9, end_row=row_idx, end_column=10)
+    c4 = ws.cell(row=row_idx, column=9, value="Below 5000")
+    c4.font = font_header
+    c4.fill = fill_acc_subhdr
+    c4.alignment = align_center_wrap
+    for c in (9, 10):
+        ws.cell(row=row_idx, column=c).border = grid_border
+        ws.cell(row=row_idx, column=c).fill = fill_acc_subhdr
+    row_idx += 1
+
+    # Header Row 2:
+    # Taken Count | 4 | 3 | 2 | 1 | 0 | global_ranking | last_contest_rank
+    ws.row_dimensions[row_idx].height = 24
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=2)
+    s1 = ws.cell(row=row_idx, column=1, value="Taken Count")
+    s1.font = font_bold
+    s1.fill = fill_total_row
+    s1.alignment = align_center
+    for c in (1, 2):
+        ws.cell(row=row_idx, column=c).border = grid_border
+        ws.cell(row=row_idx, column=c).fill = fill_total_row
+
+    for c_i, val in enumerate(["4", "3", "2", "1", "0"], 3):
+        sc = ws.cell(row=row_idx, column=c_i, value=val)
+        sc.font = font_bold
+        sc.fill = fill_total_row
+        sc.alignment = align_center
+        sc.border = grid_border
+
+    s3 = ws.cell(row=row_idx, column=8, value="global_ranking")
+    s3.font = font_bold
+    s3.fill = fill_total_row
+    s3.alignment = align_center
+    s3.border = grid_border
+
+    ws.merge_cells(start_row=row_idx, start_column=9, end_row=row_idx, end_column=10)
+    s4 = ws.cell(row=row_idx, column=9, value="last_contest_rank")
+    s4.font = font_bold
+    s4.fill = fill_total_row
+    s4.alignment = align_center
+    for c in (9, 10):
+        ws.cell(row=row_idx, column=c).border = grid_border
+        ws.cell(row=row_idx, column=c).fill = fill_total_row
+    row_idx += 1
+
+    # Data Row
+    q0_count = max(0, total_attended_cnt - (count_q4 + count_q3 + count_q2 + count_q1))
+    ws.row_dimensions[row_idx].height = 22
+    ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx, end_column=2)
+    d1 = ws.cell(row=row_idx, column=1, value=total_attended_cnt)
+    d1.font = font_bold
+    d1.alignment = align_center
+    for c in (1, 2):
+        ws.cell(row=row_idx, column=c).border = grid_border
+
+    for c_i, val in enumerate([count_q4, count_q3, count_q2, count_q1, q0_count], 3):
+        dc = ws.cell(row=row_idx, column=c_i, value=val)
+        dc.font = font_bold
+        dc.alignment = align_center
+        dc.border = grid_border
+
+    d3 = ws.cell(row=row_idx, column=8, value=count_below_20k)
+    d3.font = font_bold
+    d3.alignment = align_center
+    d3.border = grid_border
+
+    ws.merge_cells(start_row=row_idx, start_column=9, end_row=row_idx, end_column=10)
+    d4 = ws.cell(row=row_idx, column=9, value=count_below_5k)
+    d4.font = font_bold
+    d4.alignment = align_center
+    for c in (9, 10):
+        ws.cell(row=row_idx, column=c).border = grid_border
     row_idx += 1
         
     # Apply compact column widths tailored for 10 columns (Acc width 7 for ultra-compact layout)

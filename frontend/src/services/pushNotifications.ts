@@ -23,6 +23,15 @@ export const isStandalonePWA = () => {
 
 export const ANDROID_CHANNELS: Channel[] = [
   {
+    id: 'messages_channel',
+    name: 'Messages & Chat',
+    description: 'Real-time direct messages, staff discussions, and student chat alerts',
+    importance: 5, // High / Urgent Heads-Up
+    visibility: 1, // Public on Lock Screen
+    sound: 'default',
+    vibration: true,
+  },
+  {
     id: 'account_security',
     name: 'Account & Security',
     description: 'Critical security alerts, password changes, and account activity',
@@ -254,6 +263,18 @@ export const listenForForegroundMessages = () => {
           },
         });
         window.dispatchEvent(event);
+
+        // Instantly trigger native status bar / heads-up notification with sound & vibration
+        import('./systemNotification').then(({ triggerSystemNotification }) => {
+          triggerSystemNotification({
+            title: notification.title || 'Nandha LeetCode Intelligence',
+            body: notification.body || '',
+            actionRoute: notification.data?.actionRoute || notification.data?.route || '/dashboard',
+            category: notification.data?.category || 'announcements',
+            notifId: notification.data?.notificationId || notification.id,
+            playSound: true,
+          });
+        }).catch(() => {});
       });
 
       // User TAPS on Notification (Background, Lock screen, or Foreground)

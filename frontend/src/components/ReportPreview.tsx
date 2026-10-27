@@ -2899,6 +2899,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
                               const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
                               const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+                              const rk5k = cw.rank_below_5000 ?? cw.ranking_5000 ?? cw.rank_below_5k ?? 0;
 
                               return (
                                 <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-2.5 font-sans">
@@ -2917,7 +2918,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   </div>
                                   <div className="flex items-center justify-between text-[11px] pt-1 text-slate-600 dark:text-slate-400 font-bold border-t border-slate-100 dark:border-slate-800">
                                     <span>Ratings: &gt;2000: {r2000 > 0 ? r2000 : '—'} | &gt;1500: {r1500 > 0 ? r1500 : '—'} | &gt;1250: {r1250 > 0 ? r1250 : '—'}</span>
-                                    <span>Rank &lt;20k: {rk20k > 0 ? rk20k : '—'}</span>
+                                    <span>Rank &lt;20k: {rk20k > 0 ? rk20k : '—'} | &lt;5k: {rk5k > 0 ? rk5k : '—'}</span>
                                   </div>
                                 </div>
                               );
@@ -2946,6 +2947,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   </th>
                                   <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
                                     Global Ranking<br />Below 20000
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
+                                    Contest Rank<br />Below 5000
                                   </th>
                                 </tr>
                                 <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
@@ -2976,6 +2980,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                   const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
                                   const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
                                   const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+                                  const rk5k = cw.rank_below_5000 ?? cw.ranking_5000 ?? cw.rank_below_5k ?? 0;
 
                                   return (
                                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
@@ -2997,6 +3002,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                       <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1500 > 0 ? r1500 : '—'}</td>
                                       <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1250 > 0 ? r1250 : '—'}</td>
                                       <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk20k > 0 ? rk20k : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk5k > 0 ? rk5k : '—'}</td>
                                     </tr>
                                   );
                                 })}

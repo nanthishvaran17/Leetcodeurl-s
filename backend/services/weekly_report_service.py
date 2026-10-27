@@ -132,11 +132,13 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
     rating_1500 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 1500)
     rating_1250 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 1250)
     ranking_20000 = sum(1 for s in student_list if s.get("contest_ranking") is not None and 0 < s["contest_ranking"] < 20000)
+    ranking_5000 = sum(1 for s in student_list if s.get("contest_ranking") is not None and 0 < s["contest_ranking"] < 5000)
 
     lw_rating_2000 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 2000)
     lw_rating_1500 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 1500)
     lw_rating_1250 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 1250)
     lw_ranking_20000 = sum(1 for s in student_list if s.get("last_contest_ranking") is not None and 0 < s["last_contest_ranking"] < 20000)
+    lw_ranking_5000 = sum(1 for s in student_list if s.get("last_contest_ranking") is not None and 0 < s["last_contest_ranking"] < 5000)
 
     # STRICT PRE-GENERATION VALIDATION
     bucket_sum = above_500 + prob_250_500 + prob_100_249 + prob_1_99 + prob_0
@@ -209,6 +211,7 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
             "rating_above_1500": rating_1500, "rating_1500": rating_1500,
             "rating_above_1250": rating_1250, "rating_1250": rating_1250,
             "rank_below_20000": ranking_20000, "rank_below_20k": ranking_20000, "ranking_20000": ranking_20000,
+            "rank_below_5000": ranking_5000, "rank_below_5k": ranking_5000, "ranking_5000": ranking_5000,
             "total_students": tot_count,
             "avg_solved": avg_solved, "total_solved": total_solved,
             "verified": verified_cnt, "failed": failed_cnt
@@ -224,6 +227,7 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
             "rating_above_1500": lw_rating_1500, "rating_1500": lw_rating_1500,
             "rating_above_1250": lw_rating_1250, "rating_1250": lw_rating_1250,
             "rank_below_20000": lw_ranking_20000, "rank_below_20k": lw_ranking_20000, "ranking_20000": lw_ranking_20000,
+            "rank_below_5000": lw_ranking_5000, "rank_below_5k": lw_ranking_5000, "ranking_5000": lw_ranking_5000,
             "total_students": tot_count
         },
         "virtual_contest": {

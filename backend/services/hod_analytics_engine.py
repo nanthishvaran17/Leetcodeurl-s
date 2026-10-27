@@ -256,16 +256,49 @@ def get_institutional_benchmarks(
     ).all()
     risk_map = {r.student_id: True for r in risk_profiles}
     
-    # Pre-fetch faculty counts per department (Faculty + Staff roles)
+    # Pre-fetch faculty counts per department (Faculty + Staff roles + Placement Coordinators + Assigned Mentors)
     from sqlalchemy import or_ as _or_
+    from backend.models import FacultyStudentAssignment
+    assigned_fac_ids_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
+        FacultyStudentAssignment.is_active == True
+    ).distinct()
+
+    STAFF_MENTOR_ROLES = [
+        "faculty", "staff", "professor", "faculty mentor", "staff mentor",
+        "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
+        "faculty_coordinator", "staff_coordinator", "placement coordinator",
+        "placement_coordinator", "coordinator", "academic coordinator",
+        "mentor", "tutor", "proctor", "class advisor"
+    ]
+
     faculty_users = db.query(User).filter(
-        _or_(User.role.ilike("%Faculty%"), User.role.ilike("%Staff%")),
+        _or_(
+            func.lower(User.role).in_(STAFF_MENTOR_ROLES),
+            User.role.ilike("%Faculty%"),
+            User.role.ilike("%Staff%"),
+            User.role.ilike("%Placement%"),
+            User.role.ilike("%Coordinator%"),
+            User.id.in_(assigned_fac_ids_subq)
+        ),
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%"),
         User.is_active == True
     ).all()
     faculty_map = {}
     for f in faculty_users:
-        if f.department_id:
-            faculty_map[f.department_id] = faculty_map.get(f.department_id, 0) + 1
+        target_dept_id = f.department_id
+        if not target_dept_id:
+            target_dept_id = db.query(Student.department_id).join(
+                FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+            ).filter(
+                FacultyStudentAssignment.faculty_id == f.id,
+                FacultyStudentAssignment.is_active == True
+            ).limit(1).scalar()
+        if target_dept_id:
+            faculty_map[target_dept_id] = faculty_map.get(target_dept_id, 0) + 1
             
     # Pre-fetch contest participation for completion rate (Latest Sunday Contest)
     from backend.models import PreviousWeekParticipationRecord
@@ -589,19 +622,63 @@ def calculate_department_kpi_summary(
     prod_dept_ids = auth_ids if auth_ids else [d.id for d in db.query(Department).all() if _is_real_dept(d.code)]
 
     # 1. Total Staff in department
+    from backend.models import FacultyStudentAssignment
+    assigned_fac_ids_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
+        FacultyStudentAssignment.is_active == True
+    ).distinct()
+
+    STAFF_MENTOR_ROLES = [
+        "faculty", "staff", "professor", "faculty mentor", "staff mentor",
+        "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
+        "faculty_coordinator", "staff_coordinator", "placement coordinator",
+        "placement_coordinator", "coordinator", "academic coordinator",
+        "mentor", "tutor", "proctor", "class advisor"
+    ]
+
     staff_q = db.query(User).filter(
         User.is_active == True,
-        func.lower(User.role).in_(["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]),
-        User.department_id.isnot(None),
+        or_(
+            func.lower(User.role).in_(STAFF_MENTOR_ROLES),
+            User.role.ilike("%Faculty%"),
+            User.role.ilike("%Staff%"),
+            User.role.ilike("%Placement%"),
+            User.role.ilike("%Coordinator%"),
+            User.id.in_(assigned_fac_ids_subq)
+        ),
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
         ~User.username.ilike("test_%"),
         ~User.username.ilike("dummy_%"),
         ~User.username.ilike("sec_test_%"),
         ~User.username.ilike("hardening_%")
     )
     if dept_id:
-        staff_q = staff_q.filter(User.department_id == dept_id)
+        staff_q = staff_q.filter(
+            or_(
+                User.department_id == dept_id,
+                User.id.in_(
+                    db.query(FacultyStudentAssignment.faculty_id).join(
+                        Student, FacultyStudentAssignment.student_id == Student.id
+                    ).filter(
+                        FacultyStudentAssignment.is_active == True,
+                        Student.department_id == dept_id
+                    )
+                )
+            )
+        )
     else:
-        staff_q = staff_q.filter(User.department_id.in_(prod_dept_ids))
+        staff_q = staff_q.filter(
+            or_(
+                User.department_id.in_(prod_dept_ids),
+                User.id.in_(
+                    db.query(FacultyStudentAssignment.faculty_id).join(
+                        Student, FacultyStudentAssignment.student_id == Student.id
+                    ).filter(
+                        FacultyStudentAssignment.is_active == True,
+                        Student.department_id.in_(prod_dept_ids)
+                    )
+                )
+            )
+        )
     total_staff = staff_q.count()
 
     # 2. Base Student Query

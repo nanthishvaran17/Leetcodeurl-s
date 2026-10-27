@@ -408,7 +408,16 @@ class FacultyAssignmentService:
         faculty_members = db.query(User).filter(
             User.department_id == department_id,
             User.is_active == True,
-            User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
+            or_(
+                User.role.in_([
+                    "Faculty", "faculty", "Staff", "staff", "HOD", "hod",
+                    "Placement Coordinator", "placement coordinator", "placement_coordinator",
+                    "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator",
+                    "Staff Mentor", "staff mentor", "Faculty Mentor", "faculty mentor", "Professor", "professor"
+                ]),
+                User.role.ilike("%Placement%"),
+                User.role.ilike("%Coordinator%")
+            )
         ).all()
 
         if not faculty_members:
@@ -600,7 +609,16 @@ class FacultyAssignmentService:
         """
         query = db.query(User).filter(
             User.is_active == True,
-            User.role.in_(["Faculty", "faculty", "Staff", "staff", "HOD", "hod"])
+            or_(
+                User.role.in_([
+                    "Faculty", "faculty", "Staff", "staff", "HOD", "hod",
+                    "Placement Coordinator", "placement coordinator", "placement_coordinator",
+                    "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator",
+                    "Staff Mentor", "staff mentor", "Faculty Mentor", "faculty mentor", "Professor", "professor"
+                ]),
+                User.role.ilike("%Placement%"),
+                User.role.ilike("%Coordinator%")
+            )
         )
         if department_id:
             query = query.filter(User.department_id == department_id)

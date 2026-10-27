@@ -58,6 +58,20 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   const [isCapDropdownOpen, setIsCapDropdownOpen] = useState<boolean>(false);
   const [isWorkloadDropdownOpen, setIsWorkloadDropdownOpen] = useState<boolean>(false);
 
+  // Notify MobileBottomNav to hide when mobile sticky selection bar is active
+  useEffect(() => {
+    const hasSelection = (activeTab === 'assign' && selectedStudents.length > 0) ||
+                          (activeTab === 'unassign' && selectedAssignedStudents.length > 0);
+    if (hasSelection) {
+      window.dispatchEvent(new CustomEvent('hide_mobile_bottom_nav'));
+    } else {
+      window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+    };
+  }, [activeTab, selectedStudents.length, selectedAssignedStudents.length]);
+
   // Modals & Confirmation States (Zero Native Alerts/Confirms)
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [newUsername, setNewUsername] = useState<string>('');
@@ -1900,7 +1914,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
       {/* Mobile Sticky Floating Action Bar when students are selected in Assign Tab */}
       {activeTab === 'assign' && selectedStudents.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 md:hidden bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+        <div className="fixed bottom-0 left-0 right-0 z-[60] p-3 md:hidden bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <div className="max-w-lg mx-auto space-y-2">
             {/* Primary Filter Style CustomDropdown for Mentor Selection (Opens mobile Bottom-Sheet Drawer) */}
             <div className="w-full">
@@ -1955,7 +1969,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
       {/* Mobile Sticky Floating Action Bar when students are selected in Unassign Tab */}
       {activeTab === 'unassign' && selectedAssignedStudents.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 md:hidden bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-rose-200/90 dark:border-rose-900/60 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+        <div className="fixed bottom-0 left-0 right-0 z-[60] p-3 md:hidden bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-rose-200/90 dark:border-rose-900/60 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] animate-fade-in-up pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
           <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
             <div className="flex items-center gap-2 min-w-0">
               <span className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-rose-200 dark:border-rose-400/30 shadow-2xs">

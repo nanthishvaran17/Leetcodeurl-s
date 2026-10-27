@@ -1702,6 +1702,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     let calcVirt3 = 0;
     let calcVirt2 = 0;
     let calcVirt1 = 0;
+    let calcRankBelow20k = 0;
+    let calcRankBelow5k = 0;
 
     const hasMatrixRows = matrixRows && matrixRows.length > 0;
 
@@ -1721,6 +1723,26 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           const q3 = (r.q3 === 1 || r.q3 === '1') ? 1 : 0;
           const q4 = (r.q4 === 1 || r.q4 === '1') ? 1 : 0;
           solved = q1 + q2 + q3 + q4;
+        }
+
+        // Global Ranking check (< 20000)
+        const grRaw = r.global_rank ?? r.contest_global_rank ?? r.profile_rank ?? (r as any).site_rank ?? (r as any).stats?.global_rank ?? (r as any).stats?.contest_global_ranking;
+        if (grRaw !== undefined && grRaw !== null && grRaw !== '—' && grRaw !== 'Unrated' && grRaw !== '-') {
+          const num = typeof grRaw === 'number' ? grRaw : Number(String(grRaw).replace(/[^0-9]/g, ''));
+          if (num > 0 && num < 20000) {
+            calcRankBelow20k++;
+          }
+        }
+
+        // Contest Rank check (< 5000) for attended participants
+        if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
+          const crRaw = r.contest_rank ?? r.rank ?? (r as any).last_contest_rank ?? (r as any).stats?.contest_rank;
+          if (crRaw !== undefined && crRaw !== null && crRaw !== '—' && crRaw !== 'Unrated' && crRaw !== '-') {
+            const num = typeof crRaw === 'number' ? crRaw : Number(String(crRaw).replace(/[^0-9]/g, ''));
+            if (num > 0 && num < 5000) {
+              calcRankBelow5k++;
+            }
+          }
         }
 
         if (st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
@@ -1817,6 +1839,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const topPerformers = sessionMetrics?.topPerformers ?? [];
     const q0Solved = Math.max(0, (attendedRows + virtualRows) - q4Solved - q3Solved - q2Solved - q1Solved);
 
+    const rankBelow20k = (isScopeActive && hasMatrixRows)
+      ? calcRankBelow20k
+      : (sessionMetrics?.rankBelow20000 ?? sessionMetrics?.ranking_below_20000 ?? fastSummary?.ranking_below_20000 ?? calcRankBelow20k);
+
+    const rankBelow5k = (isScopeActive && hasMatrixRows)
+      ? calcRankBelow5k
+      : (sessionMetrics?.rankBelow5000 ?? sessionMetrics?.contest_rank_below_5000 ?? fastSummary?.contest_rank_below_5000 ?? calcRankBelow5k);
+
     return {
       totalRows: totalRowsVal,
       attendedRows,
@@ -1833,6 +1863,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       virtual3Solved,
       virtual2Solved,
       virtual1Solved,
+      rankBelow20k,
+      rankBelow5k,
       publicPct,
       virtualPct,
       notAttendedPct,
@@ -3843,46 +3875,136 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           )}
         </div>
 
-        {/* Active Cohort Problem-Wise Solve Distribution (Dynamic for Selected Department/Year) */}
-        <div className="p-4 sm:p-6 rounded-3xl glass-panel relative overflow-hidden border border-brand-500/20 dark:border-brand-500/30 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="flex items-center space-x-3.5 relative z-10 min-w-0">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
-              <Award className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 font-black text-[10px] uppercase tracking-wider border border-brand-500/30">
-                  {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
-                </span>
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  {stats.attendedRows + stats.virtualRows} Total Participants ({stats.totalRows} Students in Scope)
-                </span>
+        {/* Active Cohort Institutional Performance & Ranking Matrix (Exact Institutional Format) */}
+        <div className="p-5 sm:p-7 rounded-3xl glass-panel relative overflow-hidden border border-brand-500/20 dark:border-brand-500/30 shadow-glass flex flex-col gap-5">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          {/* Header Row */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+            <div className="flex items-center space-x-3.5 min-w-0">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
+                <Award className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                Breakdown of students solving 4/4, 3/4, 2/4, or 1/4 contest problems in the selected scope.
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 font-black text-[10px] uppercase tracking-wider border border-brand-500/30">
+                    {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
+                  </span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">
+                    {stats.attendedRows + stats.virtualRows} Total Participants ({stats.totalRows} Students in Scope)
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-relaxed">
+                  Official Institutional Performance &amp; Ranking Matrix tracking question solve distribution alongside Global Rank &lt; 20,000 and Contest Rank &lt; 5,000.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Meta Badges */}
+            <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-center">
+              <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()}
+              </span>
+              {activeSessionObj?.sessionDate && (
+                <span className="px-3 py-1.5 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
+                  Date: {activeSessionObj.sessionDate}
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 w-full md:w-auto relative z-10">
-            {[
-              { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/25 hover:border-emerald-500/40' },
-              { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-500/10 border-purple-500/25 hover:border-purple-500/40' },
-              { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/25 hover:border-indigo-500/40' },
-              { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/25 hover:border-amber-500/40' },
-              { label: '0/4 — No Solve', count: stats.q0Solved, color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/25 hover:border-rose-500/40 col-span-2 sm:col-span-1' },
-            ].map((item, idx) => (
-              <div 
-                key={idx} 
-                onClick={handleOpenDetailedRoster}
-                title="Click to view full roster for this category"
-                className={`p-2.5 sm:px-3 sm:py-2.5 rounded-2xl border text-center w-full md:w-24 h-16 flex flex-col items-center justify-center shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
-              >
-                <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-90 whitespace-nowrap">{item.label}</span>
-                <span className={`text-lg sm:text-xl font-black font-mono leading-none mt-1 ${item.color}`}>{item.count}</span>
-              </div>
-            ))}
+          {/* Executive Performance & Ranking Summary Table (Exact User Specification - Spacious & Clean) */}
+          <div className="w-full relative z-10">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md">
+              <table className="w-full min-w-[780px] text-center border-collapse text-xs">
+                <thead>
+                  {/* Header Row 1 */}
+                  <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                    <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 font-black min-w-[190px]">
+                      <span className="text-[11px] tracking-wide uppercase font-black block">last_contest_name</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 inline-block">
+                        ({activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - {activeSessionObj?.sessionDate || 'Session'})
+                      </span>
+                    </th>
+                    <th colSpan={5} className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
+                      Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
+                    </th>
+                    <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15 min-w-[130px]">
+                      Below 20000
+                    </th>
+                    <th className="py-3 px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15 min-w-[130px]">
+                      Below 5000
+                    </th>
+                  </tr>
+                  {/* Header Row 2 */}
+                  <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
+                      Taken Count
+                    </th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black min-w-[55px] bg-emerald-500/5">4</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black min-w-[55px] bg-purple-500/5">3</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black min-w-[55px] bg-indigo-500/5">2</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black min-w-[55px] bg-amber-500/5">1</th>
+                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black min-w-[55px] bg-rose-500/5">0</th>
+                    <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
+                      global_ranking
+                    </th>
+                    <th className="py-2.5 px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
+                      last_contest_rank
+                    </th>
+                  </tr>
+                </thead>
+                <tbody 
+                  onClick={handleOpenDetailedRoster}
+                  title="Click to view detailed student roster"
+                  className="font-mono divide-y divide-slate-100 dark:divide-slate-800 cursor-pointer"
+                >
+                  <tr className="bg-white/80 dark:bg-slate-950/80 hover:bg-brand-50/50 dark:hover:bg-slate-900/60 transition-colors">
+                    <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700">
+                      <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
+                        {stats.attendedRows + stats.virtualRows}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-base border border-emerald-500/25 shadow-2xs">
+                        {stats.q4Solved}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-base border border-purple-500/25 shadow-2xs">
+                        {stats.q3Solved}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-base border border-indigo-500/25 shadow-2xs">
+                        {stats.q2Solved}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-base border border-amber-500/25 shadow-2xs">
+                        {stats.q1Solved}
+                      </span>
+                    </td>
+                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-base border border-rose-500/25 shadow-2xs">
+                        {stats.q0Solved}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
+                      <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-base border border-sky-500/25 shadow-2xs">
+                        {stats.rankBelow20k}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 bg-teal-500/[0.03]">
+                      <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-base border border-teal-500/25 shadow-2xs">
+                        {stats.rankBelow5k}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

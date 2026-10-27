@@ -28,16 +28,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [forceHidden, setForceHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const scrollIdleTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // 1. Auto-hide on mobile software keyboard open
+  // 1. Auto-hide on mobile software keyboard open using visualViewport
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const checkViewport = () => {
       if (window.visualViewport) {
         const heightDiff = window.innerHeight - window.visualViewport.height;
-        setIsKeyboardOpen(heightDiff > 150);
+        setIsKeyboardOpen(heightDiff > 140);
       }
     };
 
@@ -47,12 +49,25 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     const onFocusIn = (e: FocusEvent) => {
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea') {
-        setIsKeyboardOpen(true);
+        // Double check after keyboard transition
+        setTimeout(() => {
+          if (window.visualViewport) {
+            const heightDiff = window.innerHeight - window.visualViewport.height;
+            if (heightDiff > 140) setIsKeyboardOpen(true);
+          } else {
+            setIsKeyboardOpen(true);
+          }
+        }, 300);
       }
     };
 
     const onFocusOut = () => {
-      setTimeout(() => setIsKeyboardOpen(false), 150);
+      setTimeout(() => {
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        if (activeTag !== 'input' && activeTag !== 'textarea') {
+          setIsKeyboardOpen(false);
+        }
+      }, 200);
     };
 
     window.addEventListener('focusin', onFocusIn);
@@ -66,7 +81,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     };
   }, []);
 
-  // 2. Hide on scroll down, show on scroll up (Twitter / Instagram style)
+  // 2. Custom event listeners to allow overlays / modals / bulk actions to hide bottom nav
+  useEffect(() => {
+    const handleHide = () => setForceHidden(true);
+    const handleShow = () => setForceHidden(false);
+
+    window.addEventListener('hide_mobile_bottom_nav', handleHide);
+    window.addEventListener('show_mobile_bottom_nav', handleShow);
+
+    return () => {
+      window.removeEventListener('hide_mobile_bottom_nav', handleHide);
+      window.removeEventListener('show_mobile_bottom_nav', handleShow);
+    };
+  }, []);
+
+  // 3. Hide on fast scroll down, restore on scroll up, idle, or bottom of page
   useEffect(() => {
     let ticking = false;
 
@@ -74,25 +103,41 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          if (currentScrollY > lastScrollY.current + 15 && currentScrollY > 120) {
+          const windowHeight = window.innerHeight;
+          const docHeight = document.documentElement.scrollHeight;
+          const isNearBottom = currentScrollY + windowHeight >= docHeight - 70;
+          const isNearTop = currentScrollY <= 80;
+
+          if (isNearTop || isNearBottom) {
+            setIsVisible(true);
+          } else if (currentScrollY > lastScrollY.current + 25 && currentScrollY > 150) {
             setIsVisible(false); // Scrolling down
           } else if (currentScrollY < lastScrollY.current - 10) {
             setIsVisible(true); // Scrolling up
           }
           lastScrollY.current = currentScrollY;
           ticking = false;
+
+          // Always restore visibility when scrolling pauses for 1.2s so user is never stranded
+          if (scrollIdleTimer.current) clearTimeout(scrollIdleTimer.current);
+          scrollIdleTimer.current = setTimeout(() => {
+            setIsVisible(true);
+          }, 1200);
         });
         ticking = true;
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollIdleTimer.current) clearTimeout(scrollIdleTimer.current);
+    };
   }, []);
 
   // Role-aware middle tab
   const role = (userRole || '').trim().toLowerCase();
-  const isHODorAdmin = ['hod', 'principal', 'director', 'admin', 'administrator', 'super admin', 'super_admin'].includes(role);
+  const isHODorAdmin = ['hod', 'principal', 'director', 'admin', 'administrator', 'super admin', 'super_admin', 'placement coordinator', 'placement_coordinator'].includes(role);
   const isFaculty = ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(role);
 
   // Prestige Graduation Cap for HOD, Faculty Badge for Faculty, Users Roster for Students
@@ -117,15 +162,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     }
   };
 
-  if (!isAuthenticated || isKeyboardOpen) {
+  if (!isAuthenticated) {
     return null;
   }
+
+  const shouldShow = isVisible && !isKeyboardOpen && !forceHidden;
 
   return (
     <nav
       aria-label="Mobile Bottom Island Navigation"
       className={`md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom,1rem))] inset-x-3.5 z-40 max-w-[390px] mx-auto transition-all duration-300 transform ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
+        shouldShow ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >
       <div className="relative h-[62px] rounded-full backdrop-blur-2xl bg-white/90 dark:bg-[#070A14]/90 border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
