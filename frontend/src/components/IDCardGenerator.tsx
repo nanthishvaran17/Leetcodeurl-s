@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Download, CheckCircle2, ShieldCheck, Trophy, Calendar, Smartphone, FileText } from 'lucide-react';
 import { triggerDownload } from '../utils/mobileDownload';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -886,8 +886,8 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
               {/* Student Profile Row */}
               <div className="relative flex items-center gap-3.5 pt-0.5">
-                <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-amber-400 via-brand-500 to-indigo-600 p-0.5 shadow-lg shadow-brand-500/25 shrink-0">
-                  <div className="w-full h-full rounded-[14px] bg-[#0E1A30] flex items-center justify-center text-xl font-black text-white">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 via-brand-500 to-indigo-600 p-0.5 shadow-lg shadow-brand-500/25 shrink-0 aspect-square flex items-center justify-center">
+                  <div className="w-full h-full rounded-full bg-[#0E1A30] flex items-center justify-center text-xl font-black text-white">
                     {studentName.charAt(0).toUpperCase()}
                   </div>
                 </div>

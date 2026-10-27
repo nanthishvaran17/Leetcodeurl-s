@@ -20,6 +20,7 @@ import {
 import {
   ParticipationRecord,
   PreviousWeekSummary,
+  extractContestSeconds,
   formatContestTime,
   formatFinishClockTime,
   getStartTimeInfo
@@ -223,19 +224,24 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
         let totalWeight = 0;
 
         if (!isNotJoined) {
-          const durationStr = formatContestTime(record) || '';
-          let dMins = 0;
-          if (durationStr.includes('h')) {
-            const hMatch = durationStr.match(/(\d+)h/);
-            if (hMatch) dMins += parseInt(hMatch[1], 10) * 60;
-          }
-          if (durationStr.includes('m')) {
-            const mMatch = durationStr.match(/(\d+)m/);
-            if (mMatch) dMins += parseInt(mMatch[1], 10);
-          }
-          if (dMins === 0 && /^\d+$/.test(durationStr)) dMins = Math.floor(parseInt(durationStr, 10) / 60);
+          const directSec = extractContestSeconds(record);
+          if (directSec && directSec > 0) {
+            totalAllocatableSeconds = directSec;
+          } else {
+            const durationStr = formatContestTime(record) || '';
+            let dMins = 0;
+            if (durationStr.includes('h')) {
+              const hMatch = durationStr.match(/(\d+)h/);
+              if (hMatch) dMins += parseInt(hMatch[1], 10) * 60;
+            }
+            if (durationStr.includes('m')) {
+              const mMatch = durationStr.match(/(\d+)m/);
+              if (mMatch) dMins += parseInt(mMatch[1], 10);
+            }
+            if (dMins === 0 && /^\d+$/.test(durationStr)) dMins = Math.floor(parseInt(durationStr, 10) / 60);
 
-          totalAllocatableSeconds = dMins * 60;
+            totalAllocatableSeconds = dMins * 60;
+          }
 
           for (let qIdx = 1; qIdx <= 4; qIdx++) {
             const qKey = `q${qIdx}` as 'q1' | 'q2' | 'q3' | 'q4';

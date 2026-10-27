@@ -84,6 +84,11 @@ export interface ParticipationRecord {
   q2?: number;
   q3?: number;
   q4?: number;
+  q1_observed_seconds?: number | null;
+  q2_observed_seconds?: number | null;
+  q3_observed_seconds?: number | null;
+  q4_observed_seconds?: number | null;
+  q_timing?: any;
   problems_solved: number;
   finish_time: string | null;
   source: string;
@@ -98,62 +103,167 @@ interface PreviousWeekContestPanelProps {
   sessionId?: number | null;
 }
 
-export const formatContestTime = (r: ParticipationRecord) => {
+export const extractContestSeconds = (r: ParticipationRecord): number | null => {
+  // 1. Direct finish_time inspection
   const val = r.finish_time;
-  
   if (val) {
     const strVal = String(val).trim();
-    
-    // If numeric seconds (e.g. "2520")
-    if (/^\d+$/.test(strVal)) {
-      const totalSec = parseInt(strVal, 10);
-      if (totalSec > 0) {
-        const hrs = Math.floor(totalSec / 3600);
-        const mins = Math.floor((totalSec % 3600) / 60);
-        const secs = totalSec % 60;
-        if (hrs > 0) {
-          return `${hrs}h ${mins}m ${secs > 0 ? `${secs}s` : ''}`.trim();
-        }
-        return `${mins}m ${secs}s`;
+
+    // Unix epoch timestamp e.g. 1724553000 or 1724553000000
+    if (/^\d{10,13}$/.test(strVal)) {
+      const epochSec = strVal.length === 13 ? Math.floor(parseInt(strVal, 10) / 1000) : parseInt(strVal, 10);
+      const d = new Date(epochSec * 1000);
+      // In IST (UTC + 5.5 hours)
+      const istMs = d.getTime() + (5.5 * 3600 * 1000);
+      const istDate = new Date(istMs);
+      const year = istDate.getUTCFullYear();
+      const month = istDate.getUTCMonth();
+      const day = istDate.getUTCDate();
+
+      const title = (r.contest_title || r.contest_slug || '').toLowerCase();
+      const isBiweekly = title.includes('biweekly');
+      const startHour = isBiweekly ? 20 : 8; // 8 PM for Biweekly, 8 AM for Weekly
+      const startIstUtcMs = Date.UTC(year, month, day, startHour, 0, 0) - (5.5 * 3600 * 1000);
+      const diffSec = Math.floor((d.getTime() - startIstUtcMs) / 1000);
+      if (diffSec > 0 && diffSec <= 4 * 3600) {
+        return diffSec;
       }
     }
 
-    // If HH:MM:SS format e.g. "00:42:15" or "1:15:30"
+    // Direct elapsed seconds (e.g. "4018" or "2520")
+    if (/^\d+$/.test(strVal)) {
+      const sec = parseInt(strVal, 10);
+      if (sec > 0 && sec < 86400) {
+        return sec;
+      }
+    }
+
+    // HH:MM:SS or MM:SS format e.g. "01:06:58" or "31:57"
     if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(strVal)) {
       const parts = strVal.split(':').map(Number);
       if (parts.length === 3) {
-        const [h, m, s] = parts;
-        if (h > 0) return `${h}h ${m}m ${s > 0 ? `${s}s` : ''}`.trim();
-        return `${m}m ${s}s`;
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
       } else if (parts.length === 2) {
-        const [m, s] = parts;
-        return `${m}m ${s}s`;
+        return parts[0] * 60 + parts[1];
       }
     }
 
-    return strVal;
+    // Formatted duration string e.g. "1h 6m 58s" or "31m 57s"
+    let parsedSec = 0;
+    let matched = false;
+    if (strVal.includes('h')) {
+      const h = strVal.match(/(\d+)\s*h/);
+      if (h) { parsedSec += parseInt(h[1], 10) * 3600; matched = true; }
+    }
+    if (strVal.includes('m') && !strVal.toLowerCase().includes('am') && !strVal.toLowerCase().includes('pm')) {
+      const m = strVal.match(/(\d+)\s*m(?!s)/);
+      if (m) { parsedSec += parseInt(m[1], 10) * 60; matched = true; }
+    }
+    if (strVal.includes('s')) {
+      const s = strVal.match(/(\d+)\s*s/);
+      if (s) { parsedSec += parseInt(s[1], 10); matched = true; }
+    }
+    if (matched && parsedSec > 0) {
+      return parsedSec;
+    }
+
+    // Clock time string e.g. "09:06:58 IST" or "09:06 AM" or "9:06 AM IST"
+    const clockMatch = strVal.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+    if (clockMatch) {
+      let ch = parseInt(clockMatch[1], 10);
+      const cm = parseInt(clockMatch[2], 10);
+      const cs = clockMatch[3] ? parseInt(clockMatch[3], 10) : 0;
+      const ampm = clockMatch[4] ? clockMatch[4].toUpperCase() : null;
+      if (ampm === 'PM' && ch < 12) ch += 12;
+      if (ampm === 'AM' && ch === 12) ch = 0;
+
+      const title = (r.contest_title || r.contest_slug || '').toLowerCase();
+      const isBiweekly = title.includes('biweekly');
+      const startHour = isBiweekly ? 20 : 8;
+      const startTotalSec = startHour * 3600;
+      const finishTotalSec = ch * 3600 + cm * 60 + cs;
+      const diff = finishTotalSec - startTotalSec;
+      if (diff > 0 && diff <= 4 * 3600) {
+        return diff;
+      }
+    }
   }
 
-  // Also check if any q_observed_seconds exist on the record
-  const observedSecs = [
-    (r as any).q1_observed_seconds,
-    (r as any).q2_observed_seconds,
-    (r as any).q3_observed_seconds,
-    (r as any).q4_observed_seconds
-  ].filter(s => typeof s === 'number' && s > 0);
+  // 2. Check observed seconds on record
+  const obsList: number[] = [];
+  for (const k of ['q1_observed_seconds', 'q2_observed_seconds', 'q3_observed_seconds', 'q4_observed_seconds'] as const) {
+    const v = (r as any)[k];
+    if (v != null && !isNaN(Number(v)) && Number(v) > 0) {
+      obsList.push(Number(v));
+    }
+  }
 
-  if (observedSecs.length > 0) {
-    const maxSec = Math.max(...observedSecs);
-    const hrs = Math.floor(maxSec / 3600);
-    const mins = Math.floor((maxSec % 3600) / 60);
-    const secs = maxSec % 60;
+  // 3. Check q_timing object
+  const qt = (r as any).q_timing;
+  if (qt && typeof qt === 'object') {
+    for (let i = 1; i <= 4; i++) {
+      const qItem = qt[`q${i}`];
+      if (qItem && typeof qItem === 'object') {
+        if (typeof qItem.seconds === 'number' && qItem.seconds > 0) {
+          obsList.push(qItem.seconds);
+        } else if (qItem.display && typeof qItem.display === 'string' && qItem.display !== '—') {
+          let dSec = 0;
+          let dMatched = false;
+          const hM = qItem.display.match(/(\d+)\s*h/);
+          if (hM) { dSec += parseInt(hM[1], 10) * 3600; dMatched = true; }
+          const mM = qItem.display.match(/(\d+)\s*m/);
+          if (mM) { dSec += parseInt(mM[1], 10) * 60; dMatched = true; }
+          const sM = qItem.display.match(/(\d+)\s*s/);
+          if (sM) { dSec += parseInt(sM[1], 10); dMatched = true; }
+          if (dMatched && dSec > 0) {
+            obsList.push(dSec);
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Check question direct times (e.g. q1_time)
+  for (let i = 1; i <= 4; i++) {
+    const qtDirect = (r as any)[`q${i}_time`];
+    if (qtDirect) {
+      const s = String(qtDirect).trim();
+      if (/^\d+$/.test(s)) {
+        obsList.push(parseInt(s, 10) * 60);
+      }
+    }
+  }
+
+  if (obsList.length > 0) {
+    return Math.max(...obsList);
+  }
+
+  return null;
+};
+
+export const formatContestTime = (r: ParticipationRecord): string => {
+  if (r.participation_type === 'NOT_PARTICIPATED') return '0 mins';
+
+  const totalSec = extractContestSeconds(r);
+  if (totalSec != null && totalSec > 0) {
+    const hrs = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
     if (hrs > 0) {
       return `${hrs}h ${mins}m ${secs > 0 ? `${secs}s` : ''}`.trim();
     }
-    return `${mins}m ${secs}s`;
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
   }
 
-  // True honest state: If genuine timing telemetry is not recorded yet, return '—' (no fake static 14m/28m)
+  // If finish_time is already an unparsed string format e.g. "31m 57s"
+  if (r.finish_time && typeof r.finish_time === 'string') {
+    const s = r.finish_time.trim();
+    if (s && s !== 'None' && s !== 'null' && s !== '—') {
+      return s;
+    }
+  }
+
+  // True honest state: If genuine timing telemetry is not recorded yet, return '—'
   return '—';
 };
 
@@ -198,41 +308,72 @@ export const normalizeYear = (val: string | null | undefined, regNo?: string | n
 export const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: string): string => {
   if (r.participation_type === 'NOT_PARTICIPATED') return '—';
 
+  // 1. Direct clock time string check
+  if (r.finish_time && typeof r.finish_time === 'string') {
+    const s = r.finish_time.trim();
+    if (/^\d{1,2}:\d{2}(?::\d{2})?\s*(AM|PM)?(?:\s*IST)?$/i.test(s) && (s.includes('AM') || s.includes('PM') || s.includes('IST'))) {
+      return s.includes('IST') ? s : `${s} IST`;
+    }
+    // Unix epoch timestamp e.g. 1724553000
+    if (/^\d{10,13}$/.test(s)) {
+      const epochSec = s.length === 13 ? Math.floor(parseInt(s, 10) / 1000) : parseInt(s, 10);
+      const d = new Date(epochSec * 1000);
+      const istMs = d.getTime() + (5.5 * 3600 * 1000);
+      const istDate = new Date(istMs);
+      const h24 = istDate.getUTCHours();
+      const m = istDate.getUTCMinutes();
+      const dispH = h24 % 12 === 0 ? 12 : h24 % 12;
+      const ampm = h24 >= 12 ? 'PM' : 'AM';
+      return `${dispH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm} IST`;
+    }
+  }
+
+  // 2. Compute from total elapsed seconds
+  const totalSec = extractContestSeconds(r);
+  if (totalSec != null && totalSec > 0) {
+    const startInfo = getStartTimeInfo(contestTitle || r.contest_title || r.contest_slug);
+    const totalFinishSeconds = (startInfo.hour24 * 3600 + startInfo.minute * 60) + totalSec;
+
+    const finishHour24 = Math.floor(totalFinishSeconds / 3600) % 24;
+    const finishMinute = Math.floor((totalFinishSeconds % 3600) / 60);
+
+    const displayHour = finishHour24 % 12 === 0 ? 12 : finishHour24 % 12;
+    const ampm = finishHour24 >= 12 ? 'PM' : 'AM';
+    const padMinute = finishMinute.toString().padStart(2, '0');
+    const padHour = displayHour.toString().padStart(2, '0');
+
+    return `${padHour}:${padMinute} ${ampm} IST`;
+  }
+
+  // 3. Fallback from duration string if available
   const durationStr = formatContestTime(r);
-  if (!durationStr || durationStr === '—') return '—';
+  if (durationStr && durationStr !== '—') {
+    let durationMins = 0;
+    if (durationStr.includes('h')) {
+      const hMatch = durationStr.match(/(\d+)h/);
+      if (hMatch) durationMins += parseInt(hMatch[1], 10) * 60;
+    }
+    if (durationStr.includes('m')) {
+      const mMatch = durationStr.match(/(\d+)m/);
+      if (mMatch) durationMins += parseInt(mMatch[1], 10);
+    }
+    if (durationMins > 0) {
+      const startInfo = getStartTimeInfo(contestTitle || r.contest_title || r.contest_slug);
+      const totalFinishMinutes = (startInfo.hour24 * 60 + startInfo.minute) + durationMins;
 
-  let durationMins = 0;
-  if (durationStr.includes('h')) {
-    const hMatch = durationStr.match(/(\d+)h/);
-    if (hMatch) durationMins += parseInt(hMatch[1], 10) * 60;
+      const finishHour24 = Math.floor(totalFinishMinutes / 60) % 24;
+      const finishMinute = totalFinishMinutes % 60;
+
+      const displayHour = finishHour24 % 12 === 0 ? 12 : finishHour24 % 12;
+      const ampm = finishHour24 >= 12 ? 'PM' : 'AM';
+      const padMinute = finishMinute.toString().padStart(2, '0');
+      const padHour = displayHour.toString().padStart(2, '0');
+
+      return `${padHour}:${padMinute} ${ampm} IST`;
+    }
   }
-  if (durationStr.includes('m')) {
-    const mMatch = durationStr.match(/(\d+)m/);
-    if (mMatch) durationMins += parseInt(mMatch[1], 10);
-  }
-  if (durationMins === 0 && /^\d+$/.test(durationStr)) {
-    durationMins = Math.floor(parseInt(durationStr, 10) / 60);
-  }
-  if (durationMins === 0) {
-    return '—';
-  }
 
-  const startInfo = getStartTimeInfo(contestTitle);
-  const totalFinishMinutes = (startInfo.hour24 * 60 + startInfo.minute) + durationMins;
-
-  const finishHour24 = Math.floor(totalFinishMinutes / 60);
-  const finishMinute = totalFinishMinutes % 60;
-
-  const displayHour = finishHour24 > 12 ? finishHour24 - 12 : finishHour24;
-  const ampm = (finishHour24 % 24) >= 12 ? 'PM' : 'AM';
-  const padMinute = finishMinute.toString().padStart(2, '0');
-  
-  // Handle 12 AM / 12 PM display properly
-  let displayHourAdj = displayHour;
-  if (displayHourAdj === 0) displayHourAdj = 12;
-  const padHour = displayHourAdj.toString().padStart(2, '0');
-
-  return `${padHour}:${padMinute} ${ampm} IST`;
+  return '—';
 };
 
 export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick, sessionId }) => {
@@ -462,24 +603,24 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       try {
         const keys = Object.keys(localStorage);
         for (const k of keys) {
-          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v32')) {
+          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v33')) {
             localStorage.removeItem(k);
           }
         }
         if (isFacultyRole) {
           localStorage.removeItem(`cache_prev_panel_${latestSessionId}`);
         }
-        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v32`;
+        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v33`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v32' && parsed.summary) {
+          if (parsed.v === 'v33' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           } else {
             localStorage.removeItem(localKey);
           }
-          if (parsed.v === 'v32' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+          if (parsed.v === 'v33' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
             const safeRecords = parsed.records;
             setRecords(safeRecords);
           }
@@ -693,9 +834,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             q2: q2Val,
             q3: q3Val,
             q4: q4Val,
+            q1_observed_seconds: row.q1_observed_seconds != null ? Number(row.q1_observed_seconds) : null,
+            q2_observed_seconds: row.q2_observed_seconds != null ? Number(row.q2_observed_seconds) : null,
+            q3_observed_seconds: row.q3_observed_seconds != null ? Number(row.q3_observed_seconds) : null,
+            q4_observed_seconds: row.q4_observed_seconds != null ? Number(row.q4_observed_seconds) : null,
             q_timing: (row as any).q_timing || null,
             problems_solved: finalSolved,
-            finish_time: null,
+            finish_time: row.finish_time || row.finishTime || row.total_time || null,
             source: row.source_status || 'UNKNOWN',
             verification_status: pStatusStr === 'USERNAME_NOT_FOUND' ? 'USERNAME_NOT_FOUND' : (row.source_status || 'UNKNOWN'),
             _clean_reg: row.reg_no ? row.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '') : ''
@@ -724,8 +869,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 }
               : summaryData;
 
-            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v32`, JSON.stringify({
-              v: 'v32',
+            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v33`, JSON.stringify({
+              v: 'v33',
               summary: {
                 session_id: scopedSummary.sessionId,
                 contest_slug: scopedSummary.contestId || `weekly-contest-${scopedSummary.contestNumber}`,

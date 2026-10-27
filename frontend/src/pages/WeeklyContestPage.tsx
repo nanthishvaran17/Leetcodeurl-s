@@ -583,6 +583,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [activeTab, setActiveTab] = useState<'previous_week' | 'matrix'>('previous_week');
   const [subTab, setSubTab] = useState<'matrix' | 'dept_year' | 'error_board' | 'post_930_activity'>('matrix');
   const [showDetailedView, setShowDetailedView] = useState<boolean>(false);
+  const [matrixViewMode, setMatrixViewMode] = useState<'cards' | 'table'>('cards');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
@@ -3875,7 +3876,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           )}
         </div>
 
-        {/* Active Cohort Institutional Performance & Ranking Matrix (Exact Institutional Format) */}
+        {/* Active Cohort Institutional Performance & Ranking Matrix */}
         <div className="p-5 sm:p-7 rounded-3xl glass-panel relative overflow-hidden border border-brand-500/20 dark:border-brand-500/30 shadow-glass flex flex-col gap-5">
           <div className="absolute top-0 right-0 w-36 h-36 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
           
@@ -3895,13 +3896,39 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-relaxed">
-                  Official Institutional Performance &amp; Ranking Matrix tracking question solve distribution alongside Global Rank &lt; 20,000 and Contest Rank &lt; 5,000.
+                  Official Institutional Contest Performance Matrix tracking question solve distribution alongside Global Rank &lt; 20,000 and Contest Rank &lt; 5,000.
                 </p>
               </div>
             </div>
 
-            {/* Right Meta Badges */}
+            {/* Right Controls: View Mode Toggle & Session Meta Badges */}
             <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-center">
+              {/* View Switcher: Cards View vs Table View */}
+              <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setMatrixViewMode('cards')}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${matrixViewMode === 'cards'
+                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-white/10'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Cards View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatrixViewMode('table')}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${matrixViewMode === 'table'
+                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-white/10'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>Table View</span>
+                </button>
+              </div>
+
               <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-2xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 {activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()}
@@ -3914,98 +3941,190 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           </div>
 
-          {/* Executive Performance & Ranking Summary Table (Exact User Specification - Spacious & Clean) */}
-          <div className="w-full relative z-10">
-            <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md">
-              <table className="w-full min-w-[780px] text-center border-collapse text-xs">
-                <thead>
-                  {/* Header Row 1 */}
-                  <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
-                    <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 font-black min-w-[190px]">
-                      <span className="text-[11px] tracking-wide uppercase font-black block">last_contest_name</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 inline-block">
-                        ({activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - {activeSessionObj?.sessionDate || 'Session'})
-                      </span>
-                    </th>
-                    <th colSpan={5} className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
-                      Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
-                    </th>
-                    <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15 min-w-[130px]">
-                      Below 20000
-                    </th>
-                    <th className="py-3 px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15 min-w-[130px]">
-                      Below 5000
-                    </th>
-                  </tr>
-                  {/* Header Row 2 */}
-                  <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                    <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
-                      Taken Count
-                    </th>
-                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black min-w-[55px] bg-emerald-500/5">4</th>
-                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black min-w-[55px] bg-purple-500/5">3</th>
-                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black min-w-[55px] bg-indigo-500/5">2</th>
-                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black min-w-[55px] bg-amber-500/5">1</th>
-                    <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black min-w-[55px] bg-rose-500/5">0</th>
-                    <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
-                      global_ranking
-                    </th>
-                    <th className="py-2.5 px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
-                      last_contest_rank
-                    </th>
-                  </tr>
-                </thead>
-                <tbody 
-                  onClick={handleOpenDetailedRoster}
-                  title="Click to view detailed student roster"
-                  className="font-mono divide-y divide-slate-100 dark:divide-slate-800 cursor-pointer"
-                >
-                  <tr className="bg-white/80 dark:bg-slate-950/80 hover:bg-brand-50/50 dark:hover:bg-slate-900/60 transition-colors">
-                    <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700">
-                      <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
-                        {stats.attendedRows + stats.virtualRows}
-                      </span>
-                    </td>
-                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-base border border-emerald-500/25 shadow-2xs">
-                        {stats.q4Solved}
-                      </span>
-                    </td>
-                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-base border border-purple-500/25 shadow-2xs">
-                        {stats.q3Solved}
-                      </span>
-                    </td>
-                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-base border border-indigo-500/25 shadow-2xs">
-                        {stats.q2Solved}
-                      </span>
-                    </td>
-                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-base border border-amber-500/25 shadow-2xs">
-                        {stats.q1Solved}
-                      </span>
-                    </td>
-                    <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                      <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-base border border-rose-500/25 shadow-2xs">
-                        {stats.q0Solved}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
-                      <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-base border border-sky-500/25 shadow-2xs">
-                        {stats.rankBelow20k}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 bg-teal-500/[0.03]">
-                      <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-base border border-teal-500/25 shadow-2xs">
-                        {stats.rankBelow5k}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          {/* VIEW MODE 1: MODERN SPACIOUS BENTO CARDS (DEFAULT) */}
+          {matrixViewMode === 'cards' ? (
+            <div className="flex flex-col gap-4 relative z-10 animate-fade-in">
+              {/* Tier 1: Question Solve Distribution */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-500" />
+                    Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 font-mono">5 Problem Benchmarks</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+                  {[
+                    { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/25 hover:border-emerald-500/40', sub: 'All Solved' },
+                    { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-500/10 border-purple-500/25 hover:border-purple-500/40', sub: '3 Solved' },
+                    { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/25 hover:border-indigo-500/40', sub: '2 Solved' },
+                    { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/25 hover:border-amber-500/40', sub: '1 Solved' },
+                    { label: '0/4 — No Solve', count: stats.q0Solved, color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/25 hover:border-rose-500/40 col-span-2 sm:col-span-1', sub: '0 Solved' },
+                  ].map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={handleOpenDetailedRoster}
+                      title={`Click to view full roster for ${item.label}`}
+                      className={`p-3 sm:p-3.5 rounded-2xl border text-center flex flex-col items-center justify-center min-h-[76px] shadow-2xs transition-all hover:scale-[1.03] active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
+                    >
+                      <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider block opacity-90 whitespace-nowrap">{item.label}</span>
+                      <span className={`text-xl sm:text-2xl font-black font-mono leading-none mt-1.5 ${item.color}`}>{item.count}</span>
+                      <span className="text-[9px] sm:text-[10px] font-semibold opacity-70 block mt-1 truncate max-w-full font-mono">{item.sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tier 2: Institutional Ranking & Attendance Benchmarks */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-white/[0.06]">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-amber-500" />
+                    Institutional Ranking &amp; Attendance Benchmarks
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 font-mono">Session Criteria</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                  {[
+                    { 
+                      label: 'Taken Count', 
+                      count: stats.attendedRows + stats.virtualRows, 
+                      color: 'text-slate-900 dark:text-white', 
+                      bg: 'bg-slate-100/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600', 
+                      sub: `last_contest_name (${activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - ${activeSessionObj?.sessionDate || 'Session'})`,
+                      icon: Users,
+                      iconColor: 'text-brand-500'
+                    },
+                    { 
+                      label: 'Below 20000', 
+                      count: stats.rankBelow20k, 
+                      color: 'text-sky-700 dark:text-sky-400', 
+                      bg: 'bg-sky-500/10 border-sky-500/25 hover:border-sky-500/40', 
+                      sub: 'global_ranking < 20,000',
+                      icon: TrendingUp,
+                      iconColor: 'text-sky-500'
+                    },
+                    { 
+                      label: 'Below 5000', 
+                      count: stats.rankBelow5k, 
+                      color: 'text-teal-700 dark:text-teal-400', 
+                      bg: 'bg-teal-500/10 border-teal-500/25 hover:border-teal-500/40', 
+                      sub: 'last_contest_rank < 5,000',
+                      icon: ShieldCheck,
+                      iconColor: 'text-teal-500'
+                    },
+                  ].map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={handleOpenDetailedRoster}
+                      title={`Click to view full roster for ${item.label} (${item.sub})`}
+                      className={`p-3.5 sm:p-4 rounded-2xl border text-center flex flex-col items-center justify-center min-h-[82px] shadow-2xs transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <item.icon className={`w-3.5 h-3.5 ${item.iconColor}`} />
+                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider opacity-90">{item.label}</span>
+                      </div>
+                      <span className={`text-2xl sm:text-3xl font-black font-mono leading-none ${item.color}`}>{item.count}</span>
+                      <span className="text-[10px] font-semibold opacity-75 mt-1 font-mono truncate max-w-full">{item.sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* VIEW MODE 2: INSTITUTIONAL 2-TIER TABLE VIEW */
+            <div className="w-full relative z-10 animate-fade-in">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md">
+                <table className="w-full min-w-[780px] text-center border-collapse text-xs">
+                  <thead>
+                    {/* Header Row 1 */}
+                    <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                      <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 font-black min-w-[190px]">
+                        <span className="text-[11px] tracking-wide uppercase font-black block">last_contest_name</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 inline-block">
+                          ({activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - {activeSessionObj?.sessionDate || 'Session'})
+                        </span>
+                      </th>
+                      <th colSpan={5} className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
+                        Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
+                      </th>
+                      <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15 min-w-[130px]">
+                        Below 20000
+                      </th>
+                      <th className="py-3 px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15 min-w-[130px]">
+                        Below 5000
+                      </th>
+                    </tr>
+                    {/* Header Row 2 */}
+                    <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                      <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
+                        Taken Count
+                      </th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black min-w-[55px] bg-emerald-500/5">4</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black min-w-[55px] bg-purple-500/5">3</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black min-w-[55px] bg-indigo-500/5">2</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black min-w-[55px] bg-amber-500/5">1</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black min-w-[55px] bg-rose-500/5">0</th>
+                      <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
+                        global_ranking
+                      </th>
+                      <th className="py-2.5 px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
+                        last_contest_rank
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody 
+                    onClick={handleOpenDetailedRoster}
+                    title="Click to view detailed student roster"
+                    className="font-mono divide-y divide-slate-100 dark:divide-slate-800 cursor-pointer"
+                  >
+                    <tr className="bg-white/80 dark:bg-slate-950/80 hover:bg-brand-50/50 dark:hover:bg-slate-900/60 transition-colors">
+                      <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
+                          {stats.attendedRows + stats.virtualRows}
+                        </span>
+                      </td>
+                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-base border border-emerald-500/25 shadow-2xs">
+                          {stats.q4Solved}
+                        </span>
+                      </td>
+                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-base border border-purple-500/25 shadow-2xs">
+                          {stats.q3Solved}
+                        </span>
+                      </td>
+                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-base border border-indigo-500/25 shadow-2xs">
+                          {stats.q2Solved}
+                        </span>
+                      </td>
+                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-base border border-amber-500/25 shadow-2xs">
+                          {stats.q1Solved}
+                        </span>
+                      </td>
+                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-base border border-rose-500/25 shadow-2xs">
+                          {stats.q0Solved}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
+                        <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-base border border-sky-500/25 shadow-2xs">
+                          {stats.rankBelow20k}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 bg-teal-500/[0.03]">
+                        <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-base border border-teal-500/25 shadow-2xs">
+                          {stats.rankBelow5k}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW */}

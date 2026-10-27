@@ -41,7 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   useEffect(() => {
     loadFreshness();
-    const isMentorRole = ['staff', 'faculty', 'staff mentor', 'faculty mentor', 'placement coordinator', 'placement_coordinator'].includes((user?.role || '').toLowerCase());
+    const isMentorRole = ['staff', 'faculty', 'staff mentor', 'faculty mentor', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes((user?.role || '').toLowerCase());
     if (isAuthenticated && isMentorRole) {
       loadMenteesCount();
     }

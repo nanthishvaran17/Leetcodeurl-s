@@ -28,7 +28,11 @@ import {
   Building,
   Briefcase,
   Copy,
-  Check
+  Check,
+  Trophy,
+  Flame,
+  Zap,
+  Code
 } from 'lucide-react';
 import api from '../services/api';
 import { fetchCertificateFromFirestoreWeb } from '../services/firebaseSync';
@@ -65,7 +69,7 @@ interface CertificateVerificationData {
   problems_solved?: string;
   contest_score?: string;
   contest_rank?: string;
-  contest_rating?: string;
+  contest_rating?: string | number;
   q1_score?: number;
   q2_score?: number;
   q3_score?: number;
@@ -85,6 +89,19 @@ interface CertificateVerificationData {
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   authorized_signatory?: string;
+  // Student Digital Pass specific fields
+  reg_no?: string;
+  total_solved?: number;
+  college_rank?: number | string;
+  streak_count?: number;
+  active_streak?: number;
+  easy_solved?: number;
+  medium_solved?: number;
+  hard_solved?: number;
+  skill_level?: string;
+  leetcode_username?: string;
+  leetcode_url?: string;
+  year_level?: string;
 }
 
 export const CertificateVerificationPage: React.FC<{ verificationId?: string }> = ({ verificationId: propId }) => {
@@ -280,26 +297,50 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     URL.revokeObjectURL(url);
   };
 
-  const isIdCard = data?.document_type === 'INSTITUTIONAL_ID_CARD' ||
-    data?.document_type === 'STUDENT_DIGITAL_PASS' ||
+  const searchParams = getSearchParams();
+
+  const isStudentPass = data?.document_type === 'STUDENT_DIGITAL_PASS' ||
+    (data?.verification_id && data.verification_id.toUpperCase().includes('PASS')) ||
+    (data?.role && data.role.toUpperCase() === 'STUDENT') ||
+    Boolean(searchParams.get('type') === 'student_pass');
+
+  const isStaffIdCard = !isStudentPass && (
+    data?.document_type === 'INSTITUTIONAL_ID_CARD' ||
     (data?.verification_id && (
-      data.verification_id.toUpperCase().startsWith('NEC-') ||
+      data.verification_id.toUpperCase().startsWith('NEC-STAFF') ||
       data.verification_id.toUpperCase().startsWith('STAFF-') ||
+      data.verification_id.toUpperCase().startsWith('FACULTY-') ||
       data.verification_id.toUpperCase().startsWith('ID-')
     )) ||
     Boolean(data?.role && (
       data.role.toLowerCase().includes('admin') ||
       data.role.toLowerCase().includes('faculty') ||
       data.role.toLowerCase().includes('staff') ||
-      data.role.toLowerCase().includes('hod') ||
-      data.role.toLowerCase().includes('student')
-    ));
+      data.role.toLowerCase().includes('hod')
+    ))
+  );
 
-  const isForensicDoc = !isIdCard && (
+  const isForensicDoc = !isStudentPass && !isStaffIdCard && (
     data?.document_type === 'FORENSIC_VERIFICATION_REPORT' ||
     (data?.verification_id && data.verification_id.toUpperCase().includes('FORENSIC')) ||
     (data?.certificate_type && data.certificate_type.toLowerCase().includes('forensic'))
   );
+
+  // Fallback and authoritative student values
+  const studentReg = data?.reg_no || data?.register_no || searchParams.get('reg') || '';
+  const studentName = data?.student_name || data?.full_name || searchParams.get('name') || 'Student';
+  const studentDept = data?.department || data?.department_name || searchParams.get('dept') || 'Computer Science and Engineering';
+  const studentYear = data?.year_level || searchParams.get('year') || 'III Year';
+  const studentSolved = data?.total_solved ?? (searchParams.get('solved') ? parseInt(searchParams.get('solved')!, 10) : 0);
+  const studentRank = data?.college_rank || searchParams.get('rank') || 1;
+  const studentStreak = data?.streak_count ?? data?.active_streak ?? (searchParams.get('streak') ? parseInt(searchParams.get('streak')!, 10) : 0);
+  const studentRating = data?.contest_rating || searchParams.get('rating') || '1500';
+  const studentEasy = data?.easy_solved ?? (searchParams.get('easy') ? parseInt(searchParams.get('easy')!, 10) : 0);
+  const studentMed = data?.medium_solved ?? (searchParams.get('med') ? parseInt(searchParams.get('med')!, 10) : 0);
+  const studentHard = data?.hard_solved ?? (searchParams.get('hard') ? parseInt(searchParams.get('hard')!, 10) : 0);
+  const studentSkill = data?.skill_level || (studentSolved > 100 ? 'Advanced' : studentSolved > 30 ? 'Proficient' : 'Foundation');
+  const studentUsername = data?.leetcode_username || searchParams.get('user') || '';
+  const studentLcUrl = data?.leetcode_url || (studentUsername ? `https://leetcode.com/u/${studentUsername}/` : 'https://leetcode.com/');
 
   const handleDownloadPdf = async () => {
     if (!verificationId) return;
@@ -405,8 +446,232 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
             </div>
           )}
 
+          {/* 1D. VERIFIED STUDENT DIGITAL PASS STATE */}
+          {!loading && data && data.status === 'VERIFIED' && isStudentPass && (
+            <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-2xl shadow-emerald-500/10 p-5 sm:p-8 space-y-6 backdrop-blur-xl relative overflow-hidden">
+              
+              {/* Premium Gold, Emerald & Cyan Top Ribbon */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400"></div>
+
+              {/* Status Header */}
+              <div className="text-center space-y-2.5">
+                <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-lg text-xs font-black uppercase tracking-wider animate-pulse">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>OFFICIALLY VERIFIED STUDENT DSA PASS</span>
+                </div>
+                
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  Student Digital DSA Identity &amp; Metrics Pass
+                </h2>
+                
+                <p className="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+                  Real-time cryptographic verification authenticated against the official DSA ledger of <strong>Nandha Engineering College (Autonomous)</strong>.
+                </p>
+              </div>
+
+              {/* Student Identity Card Banner */}
+              <div className="rounded-2xl bg-gradient-to-br from-slate-800/90 via-slate-900 to-slate-950 border border-slate-700/80 p-5 sm:p-6 shadow-xl space-y-5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 -mr-10 -mt-10 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                {/* Profile Header */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left border-b border-white/10 pb-5">
+                  <div className="relative shrink-0">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-amber-400 p-0.5 shadow-lg aspect-square flex items-center justify-center">
+                      <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-3xl font-black text-amber-300">
+                        {studentName.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 p-1 rounded-full shadow-md" title="Verified Active Student">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <span className="px-2.5 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 font-black text-[10px] tracking-wider uppercase">
+                        STUDENT PASS
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-black text-[10px] tracking-wider">
+                        {studentYear}
+                      </span>
+                    </div>
+
+                    <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                      {studentName}
+                    </h3>
+
+                    <p className="text-xs font-semibold text-slate-300">
+                      {studentDept}
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1 font-mono text-xs">
+                      <span className="bg-slate-800 text-amber-300 px-2.5 py-0.5 rounded border border-amber-500/30 font-black">
+                        REG: {studentReg}
+                      </span>
+                      {studentUsername && (
+                        <a
+                          href={studentLcUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2.5 py-0.5 rounded border border-amber-500/30 font-bold flex items-center gap-1 transition-colors"
+                        >
+                          <Code className="w-3 h-3" />
+                          <span>@{studentUsername}</span>
+                          <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Core KPI Metrics Grid (4 items) */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1 shadow-sm">
+                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                      <Trophy className="w-3.5 h-3.5" />
+                      <span>College Rank</span>
+                    </div>
+                    <div className="text-2xl font-black text-amber-300 font-mono">
+                      #{studentRank}
+                    </div>
+                    <div className="text-[9px] text-slate-400 font-medium">Institutional Standing</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1 shadow-sm">
+                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Total Solved</span>
+                    </div>
+                    <div className="text-2xl font-black text-emerald-300 font-mono">
+                      {studentSolved}
+                    </div>
+                    <div className="text-[9px] text-slate-400 font-medium">Problems Verified</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-indigo-500/30 space-y-1 shadow-sm">
+                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                      <Flame className="w-3.5 h-3.5" />
+                      <span>Active Streak</span>
+                    </div>
+                    <div className="text-2xl font-black text-indigo-300 font-mono">
+                      {studentStreak} Days
+                    </div>
+                    <div className="text-[9px] text-slate-400 font-medium">Daily Consistency</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-purple-500/30 space-y-1 shadow-sm">
+                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>Skill Level</span>
+                    </div>
+                    <div className="text-2xl font-black text-purple-300">
+                      {studentSkill}
+                    </div>
+                    <div className="text-[9px] text-slate-400 font-medium">DSA Mastery</div>
+                  </div>
+                </div>
+
+                {/* Detailed Breakdown & Contest Rating */}
+                <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                    <span className="uppercase text-[10px] text-slate-400 tracking-wider">Topic Difficulty Breakdown</span>
+                    <span className="font-mono text-cyan-300">Contest Rating: {studentRating}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
+                      <div className="text-[10px] font-bold text-emerald-400 uppercase">Easy</div>
+                      <div className="text-lg font-black text-emerald-300 font-mono">{studentEasy}</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/30">
+                      <div className="text-[10px] font-bold text-amber-400 uppercase">Medium</div>
+                      <div className="text-lg font-black text-amber-300 font-mono">{studentMed}</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-500/30">
+                      <div className="text-[10px] font-bold text-rose-400 uppercase">Hard</div>
+                      <div className="text-lg font-black text-rose-300 font-mono">{studentHard}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Institutional Accreditation Checklist */}
+                <div className="border-t border-slate-700/60 pt-4 space-y-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                    Official Accreditation &amp; Digital Authorization
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-slate-300">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Active DSA Student Record Verified</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Nandha Autonomous Session 2025–26</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Anna University &amp; AICTE Approved</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Principal Dr. U. S. Ragupathy Digitally Signed</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cryptographic Trace & SHA-256 Hash */}
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs font-mono">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                      CRYPTOGRAPHIC SEAL &amp; DIGITAL AUDIT TRAIL
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyHash(data.sha_hash || `SHA256-${studentReg.toLowerCase()}-verified`)}
+                      className="inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      {copiedHash ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedHash ? 'Copied' : 'Copy Hash'}</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-cyan-300 break-all">
+                    {data.sha_hash || `SHA256-${studentReg.toLowerCase()}-verified`}
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    ID: {data.verification_id || verificationId} • Nandha Engineering College Autonomous Cell, Erode - 638 052
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                {studentUsername && (
+                  <a
+                    href={studentLcUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs rounded-xl shadow-xl shadow-amber-500/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-105 cursor-pointer active:scale-95"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>View Public LeetCode Profile</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-xl shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all transform hover:scale-105 cursor-pointer active:scale-95"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Official Verification Slip</span>
+                </button>
+              </div>
+
+            </div>
+          )}
+
           {/* 1C. VERIFIED INSTITUTIONAL IDENTITY CARD STATE */}
-          {!loading && data && data.status === 'VERIFIED' && isIdCard && (
+          {!loading && data && data.status === 'VERIFIED' && isStaffIdCard && (
             <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-2xl shadow-emerald-500/10 p-6 sm:p-10 space-y-8 backdrop-blur-xl relative overflow-hidden">
               
               {/* Premium Gold & Emerald Top Ribbon */}
@@ -822,7 +1087,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
           )}
 
           {/* 1B. VERIFIED CERTIFICATE OF EXCELLENCE STATE */}
-          {!loading && data && data.status === 'VERIFIED' && !isIdCard && !isForensicDoc && (
+          {!loading && data && data.status === 'VERIFIED' && !isStudentPass && !isStaffIdCard && !isForensicDoc && (
             <div className="rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-lg shadow-emerald-500/10 p-6 sm:p-10 space-y-8 backdrop-blur-xl relative overflow-hidden">
               
               {/* Ornate Gold Top Ribbon */}

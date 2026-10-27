@@ -10,9 +10,9 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.2.3_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v3.2.6_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
   <a href="docs/ARCHITECTURE.md"><img alt="Architecture Guide" src="https://img.shields.io/badge/📘_Architecture-Docs-6366F1?style=for-the-badge&logo=gitbook&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.2.3_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v3.2.6_Latest-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 <p align="center">

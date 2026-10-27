@@ -388,16 +388,40 @@ def verify_certificate_public(
             # 2. Check if this is a Student Digital Identity Pass (e.g. NEC-PASS-2026-732225CC018 or reg_no)
             reg_candidate = reg
             if not reg_candidate:
-                m_reg = re.search(r'7322\d{2}[A-Za-z]{2,3}\d{3}', clean_lookup, re.IGNORECASE)
+                stripped_candidate = re.sub(r'^(?:NEC[-_]?)?PASS[-_]?(?:\d{4}[-_]?)?', '', clean_lookup, flags=re.IGNORECASE).strip()
+                if stripped_candidate:
+                    reg_candidate = stripped_candidate.upper()
+
+            if not reg_candidate:
+                m_reg = re.search(r'7322\d{2}[A-Za-z]{2,4}\d{1,4}', clean_lookup, re.IGNORECASE)
                 if m_reg:
                     reg_candidate = m_reg.group(0).upper()
 
+            student = None
             if reg_candidate:
                 student = db.query(Student).filter(
                     (Student.reg_no.ilike(reg_candidate)) |
                     (Student.username.ilike(reg_candidate))
                 ).first()
-                if student:
+
+            if not student:
+                student = db.query(Student).filter(
+                    (Student.reg_no.ilike(clean_lookup)) |
+                    (Student.username.ilike(clean_lookup))
+                ).first()
+
+            if not student and (user or reg):
+                student = db.query(Student).filter(
+                    (Student.reg_no.ilike(reg or "")) |
+                    (Student.username.ilike(user or ""))
+                ).first()
+
+            if not student and name:
+                student = db.query(Student).filter(
+                    func.lower(Student.name) == name.strip().lower()
+                ).first()
+
+            if student:
                     s_dept_name = student.department.name if student.department else (dept or "Computer Science and Engineering")
                     stats = student.stats
                     total_s = stats.total_solved if stats and stats.total_solved is not None else (solved if solved is not None else 0)

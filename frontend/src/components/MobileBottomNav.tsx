@@ -137,11 +137,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   // Role-aware middle tab
   const role = (userRole || '').trim().toLowerCase();
-  const isHODorAdmin = ['hod', 'principal', 'director', 'admin', 'administrator', 'super admin', 'super_admin', 'placement coordinator', 'placement_coordinator'].includes(role);
+  const isPlacement = ['placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(role);
+  const isHODorAdmin = isPlacement || ['hod', 'principal', 'director', 'admin', 'administrator', 'super admin', 'super_admin'].includes(role);
   const isFaculty = ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(role);
 
-  // Prestige Graduation Cap for HOD, Faculty Badge for Faculty, Users Roster for Students
-  const middleTab = isHODorAdmin
+  // Mentees cohort for Placement Coordinator, Prestige Graduation Cap for HOD, Faculty Badge for Faculty, Users Roster for Students
+  const middleTab = isPlacement
+    ? { id: 'staff-dashboard', label: 'Mentees', icon: Users }
+    : isHODorAdmin
     ? { id: 'hod-command-center', label: 'HOD Hub', icon: GraduationCap }
     : isFaculty
     ? { id: 'faculty-action-center', label: 'Faculty', icon: UserCheck }
