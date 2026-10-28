@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone, Building2 } from 'lucide-react';
+import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
@@ -401,44 +401,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                     <span>Sign Out</span>
                   </button>
                 )}
-              </div>
-
-              {/* For Colleges — Multi-College Pilot button */}
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  setActiveTab('for-colleges');
-                }}
-                className={`w-full py-2 px-3 rounded-xl font-bold text-[11px] tracking-wide flex items-center justify-between cursor-pointer transition transform active:scale-95 ${
-                  activeTab === 'for-colleges'
-                    ? 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-md'
-                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>For Colleges • Institutional Pilot</span>
-                </div>
-                <span className="text-[9px] bg-indigo-500/20 dark:bg-white/20 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Demo</span>
-              </button>
-
-              {/* Sunday Session Window Card */}
-              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
-                <div className="flex items-center space-x-2 relative z-10">
-                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="text-white text-[11px] sm:text-xs font-black tracking-wide">Sunday Session Window</span>
-                </div>
-                <p className="text-[10px] sm:text-[10.5px] text-slate-300 leading-snug font-medium relative z-10">
-                  Official Window: <b className="text-emerald-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
-                  Continuous tracking & live sync.
-                </p>
-                <div className="pt-1 border-t border-slate-800/80 relative z-10">
-                  <p className="text-[9px] text-slate-400 font-semibold tracking-wide">
-                    Nandha Engineering College • Erode
-                  </p>
-                </div>
               </div>
             </div>
           </motion.div>
