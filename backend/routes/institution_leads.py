@@ -337,7 +337,7 @@ def get_sample_audit_pdf(db: Session = Depends(get_db)):
         from backend.forensic_pdf_generator import generate_forensic_audit_pdf
 
         # Find a verified contest result
-        res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.problems_solved > 0).first()
+        res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.total_contest_solved > 0).first()
         if not res:
             res = db.query(WeeklyPublicResult).first()
 
