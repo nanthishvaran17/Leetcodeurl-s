@@ -196,6 +196,16 @@ LeetCode Intelligence Team
               <ArrowRight className="w-4 h-4" />
             </a>
             <a
+              href="/api/leads/sample-audit-pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              download="Sample_Institutional_Contest_Forensic_Report.pdf"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Download className="w-4 h-4 text-emerald-100" />
+              <span>Download Sample Principal PDF Report</span>
+            </a>
+            <a
               href="#/weekly-contest"
               className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95"
             >

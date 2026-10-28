@@ -159,11 +159,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
                     : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25'
                 }`}
-                title="Institutional Platform Trial & Multi-College Demo"
+                title="Add Your College / Request Institutional Demo (14-Day Free Pilot)"
               >
-                <Building2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">For Colleges</span>
-                <span className="sm:hidden">Colleges</span>
+                <Building2 className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+                <span className="hidden xl:inline">Add Your College / Request Demo</span>
+                <span className="hidden sm:inline xl:hidden">Add College / Demo</span>
+                <span className="sm:hidden">Demo</span>
+                <span className="hidden sm:inline-block px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wider ml-0.5">
+                  Free Trial
+                </span>
               </button>
 
               {/* Sync Status Button */}
