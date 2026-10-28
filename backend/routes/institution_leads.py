@@ -4,7 +4,7 @@ institution_leads.py — API for Multi-College SaaS Onboarding, Institutional Le
 
 import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
@@ -12,7 +12,7 @@ from backend.database import get_db
 from backend.models import User, InstitutionLead
 from backend.security import get_current_user_optional, require_role
 from backend.config import settings
-from backend.services.email_service import email_service
+from backend.services import email_service
 from backend.logger import logger
 
 router = APIRouter(prefix="/leads", tags=["Institutional SaaS Leads & Outreach"])
@@ -324,3 +324,43 @@ def get_pitch_template_content():
         "tamil": tamil_pitch,
         "demo_url": "http://13.53.231.6/#/for-colleges"
     }
+
+
+@router.get("/sample-audit-pdf")
+def get_sample_audit_pdf(db: Session = Depends(get_db)):
+    """
+    Public Endpoint: Generates and serves a sample Institutional Contest Forensic Audit PDF.
+    Enables Principals and Placement Officers to see the exact PDF report with 1 click.
+    """
+    try:
+        from backend.models import WeeklyPublicResult, Student
+        from backend.forensic_pdf_generator import generate_forensic_audit_pdf
+
+        # Find a verified contest result
+        res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.problems_solved > 0).first()
+        if not res:
+            res = db.query(WeeklyPublicResult).first()
+
+        student_id = res.student_id if res else None
+        session_id = res.session_id if res else None
+
+        if not student_id:
+            student = db.query(Student).first()
+            student_id = student.id if student else None
+
+        if not student_id:
+            raise HTTPException(status_code=404, detail="No contest records available for sample report.")
+
+        pdf_bytes = generate_forensic_audit_pdf(db, student_id=student_id, session_id=session_id)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="Sample_Institutional_Contest_Forensic_Report.pdf"',
+                "Content-Type": "application/pdf"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error serving sample forensic audit PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate sample forensic audit PDF: {str(e)}")
+
