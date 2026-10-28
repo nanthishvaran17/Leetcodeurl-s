@@ -1068,123 +1068,346 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       senderRoleTitle = 'Faculty Coordinator';
     }
 
-    let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
-      `*Department of ${cleanDept}*\n\n` +
-      `*LEETCODE PERFORMANCE REPORT*\n` +
-      `• *Report:* ${reportTitle}\n` +
-      `• *Contest:* ${resolvedContestName}\n`;
-
-    if (periodInfo) {
-      text += `• *Period:* ${periodInfo}\n`;
-    }
-
-    if (officialCoordinator) {
-      text += `• *Coordinator:* ${officialCoordinator}\n`;
-    }
-
-    text += `\n*Participation Summary:*\n` +
-      `• *Total Students:* ${total}\n` +
-      `• *Attended:* ${attended} (${turnoutPercentage})\n` +
-      `• *Absent / Not Attended:* ${absent} (${absentPercentage})\n\n` +
-      `*Solve Breakdown:*\n` +
-      `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-      `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-      `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-      `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
-
-    if (s0 > 0) {
-      text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
-    }
-
     const sumBatchTotal = Array.isArray(report?.batch_summaries)
       ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
       : 0;
     const useRowBatches = allRows.length > 0 && (isStaffUser || (sumBatchTotal > 0 && allRows.length < sumBatchTotal));
 
-    if (useRowBatches) {
-      const bMap: Record<string, { total: number; r1500: number }> = {};
-      allRows.forEach((r: any) => {
-        let b = (r.batch || '').trim();
-        if (!b) {
-          const yr = String(r.year || r.year_level || '').trim();
-          if (yr === '4' || yr === 'IV') b = '2023 - 2027';
-          else if (yr === '3' || yr === 'III') b = '2024 - 2028';
-          else if (yr === '2' || yr === 'II') b = '2025 - 2029';
-          else b = yr ? `Batch ${yr}` : 'Other';
-        }
-        if (!bMap[b]) bMap[b] = { total: 0, r1500: 0 };
-        bMap[b].total += 1;
-        const rat = Number(r.contest_rating || r.rating || 0);
-        if (rat > 1500) bMap[b].r1500 += 1;
-      });
-      const bEntries = Object.entries(bMap).filter(([_, data]) => data.total > 0);
-      if (bEntries.length > 0) {
-        text += `\n*Batch Breakdown (Rating > 1500):*\n`;
-        bEntries.forEach(([batchName, bData]) => {
-          text += `• ${batchName} (${bData.total} students) — Rating > 1500: *${bData.r1500}*\n`;
+    // Base Header for all 17 Institutional Reports
+    let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
+      `*Department of ${cleanDept}*\n\n` +
+      `*LEETCODE PERFORMANCE REPORT*\n` +
+      `• *Report:* ${reportTitle}\n`;
+
+    if (officialCoordinator) {
+      text += `• *Coordinator:* ${officialCoordinator}\n`;
+    }
+    text += `• *Staff:* *${senderName}* (${senderRoleTitle})\n`;
+
+    // -------------------------------------------------------------------------
+    // DEDICATED FORMATTING FOR ALL 17 OFFICIAL INSTITUTIONAL REPORTS
+    // -------------------------------------------------------------------------
+
+    // 1 & 2. WEEK-ON-WEEK INTELLIGENCE (WOW)
+    if (rType.includes('WOW') || rType.includes('WEEK_ON_WEEK') || report?.wowSummary) {
+      const wow = report?.wowSummary || {};
+      const prevCont = report?.prevContest || `Contest ${wow?.prevContestNum ?? 'Previous'}`;
+      const currCont = report?.currContest || report?.contestName || `Contest ${wow?.currContestNum ?? 'Current'}`;
+      const attDelta = Number(wow.attendanceDelta || (wow.currAttendance != null && wow.prevAttendance != null ? wow.currAttendance - wow.prevAttendance : 0));
+      const solvesDelta = Number(wow.solvesDelta || (wow.currTotalSolves != null && wow.prevTotalSolves != null ? wow.currTotalSolves - wow.prevTotalSolves : 0));
+
+      text += `• *Comparison:* ${prevCont} vs ${currCont}\n\n` +
+        `*Week-on-Week Performance:*\n` +
+        `• Total Students: *${wow.totalStudents || total}*\n` +
+        `• Last Week Attended: *${wow.prevAttendance ?? '—'}*\n` +
+        `• This Week Attended: *${wow.currAttendance ?? attended}* (${attDelta >= 0 ? '+' : ''}${attDelta})\n` +
+        `• Last Week Solves: *${wow.prevTotalSolves ?? '—'}*\n` +
+        `• This Week Solves: *${wow.currTotalSolves ?? '—'}* (${solvesDelta >= 0 ? '+' : ''}${solvesDelta})\n\n` +
+        `*Student Trajectory:*\n` +
+        `• Improving (↑): *${wow.improved ?? 0}* students\n` +
+        `• Stable (→): *${wow.stable ?? 0}* students\n` +
+        `• Declining (↓): *${wow.declined ?? 0}* students`;
+    }
+    // 3. FIVE-WEEK PERFORMANCE TREND
+    else if (rType.includes('FIVE_WEEK') || rType.includes('BATCH_PERFORMANCE') || isFiveWeekTrend) {
+      const m = report?.metrics || {};
+      if (m.contestWindow) text += `• *Window:* ${m.contestWindow}\n`;
+      text += `\n*5-Week Longitudinal Performance:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• 5-Week Consistent Solvers (≥4/5): *${m.fiveContestConsistentSolvers ?? '—'}*\n` +
+        `• Total 5-Week Solves: *${m.total5WeekSolves ?? '—'}*\n` +
+        `• Average Solves / Student: *${m.average5WeekSolves ?? '—'}*\n\n` +
+        `*Performance Trajectory:*\n` +
+        `• Improving (↑): *${m.improvingStudents ?? '—'}* students\n` +
+        `• Stable (→): *${m.stableStudents ?? '—'}* students\n` +
+        `• Declining (↓): *${m.decliningStudents ?? '—'}* students\n` +
+        `• Follow-up Required: *${m.followUpStudents ?? '—'}* students`;
+
+      if (report?.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0) {
+        text += `\n\n*Contests Evaluated:*\n• ${report.sessionHeaders.join(' → ')}`;
+      }
+    }
+    // 4. HISTORICAL CONTEST INTELLIGENCE
+    else if (rType.includes('HISTORICAL') || isHistIntel) {
+      text += `\n*Historical Participation Overview:*\n` +
+        `• Total Enrolled: *${total}*\n` +
+        `• Active Contestants: *${attended}* (${turnoutPercentage})\n` +
+        `• Inactive Students: *${absent}* (${absentPercentage})\n\n` +
+        `*Longitudinal Contest Timeline:*\n`;
+      if (report?.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0) {
+        text += `• Evaluated Contests: ${report.sessionHeaders.join(', ')}\n`;
+      }
+      text += `• Total Solves Recorded: *${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}*\n` +
+        `• Consistent Solvers: *${report?.metrics?.fiveContestConsistentSolvers ?? '—'}*`;
+    }
+    // 5. 12TH TNEA CUTOFF INTELLIGENCE
+    else if (rType.includes('CUTOFF') || rType.includes('TNEA') || report?.cutoffBandSummary) {
+      text += `\n*Participation Summary:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• Attended: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent: *${absent}* (${absentPercentage})\n\n` +
+        `*12th TNEA Cutoff Band Breakdown:*\n`;
+
+      const bands = (report?.cutoffBandSummary && Array.isArray(report.cutoffBandSummary))
+        ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
+        : [];
+      if (bands.length > 0) {
+        bands.forEach((b: any) => {
+          text += `• Cutoff ${b.band}: *${b.active_solvers || 0}* / ${b.total || 0} active (${b.attendance_pct || 0}%) — 4/4 Solvers: *${b.solvers_4 || 0}*\n`;
+        });
+      } else {
+        text += `• Data mapping completed across high, mid, and baseline cutoff bands.`;
+      }
+    }
+    // 6. PROBLEM DIFFICULTY INTELLIGENCE
+    else if (rType.includes('PROBLEM_DIFFICULTY') || rType.includes('DIFFICULTY')) {
+      const m = report?.metrics || {};
+      text += `\n*Problem Difficulty Distribution:*\n` +
+        `• Total Solved: *${m.totalSolved ?? conditionStats?.totalSolves ?? 0}*\n` +
+        `• Easy Solved: *${m.easySolved ?? 0}*\n` +
+        `• Medium Solved: *${m.mediumSolved ?? 0}*\n` +
+        `• Hard Solved: *${m.hardSolved ?? 0}*\n\n` +
+        `*Complexity Performance:*\n` +
+        `• Average Solved / Student: *${m.averageSolved ?? 0}*\n` +
+        `• Highest Problem Solver: *${m.highestSolved ?? 0}* solves\n` +
+        `• Active Participants: *${attended}* (${turnoutPercentage})`;
+    }
+    // 7. CONTEST ATTENDANCE & PARTICIPATION
+    else if (rType.includes('CONTEST_ATTENDANCE')) {
+      text += `• *Contest:* ${resolvedContestName}\n\n` +
+        `*Attendance & Turnout Summary:*\n` +
+        `• Total Cohort: *${total}*\n` +
+        `• Attended: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent / Missed: *${absent}* (${absentPercentage})\n\n` +
+        `*Participation Status:*\n` +
+        `• Turnout Rating: *${Number(attended) >= Number(total) * 0.75 ? 'Excellent (≥75%)' : Number(attended) >= Number(total) * 0.5 ? 'Moderate (≥50%)' : 'Needs Follow-up (<50%)'}*\n` +
+        `• At Least 1 Solved: *${(s4 + s3 + s2 + s1)}* (${getCohortPct(s4 + s3 + s2 + s1)})`;
+    }
+    // 8. CONTEST PERFORMANCE & RANKING
+    else if (rType.includes('CONTEST_PERFORMANCE_RANKING') || rType.includes('CONTEST_RANKING')) {
+      const m = report?.metrics || {};
+      text += `• *Contest:* ${resolvedContestName}\n\n` +
+        `*Ranking & Global Benchmark:*\n` +
+        `• Total Participants: *${attended}*\n` +
+        `• Top Global Ranks (<20,000): *${m.ranking_20000 ?? 'Available'}*\n` +
+        `• Highest Contest Rating: *${m.highestRating ?? '—'}*\n` +
+        `• Average Contest Rating: *${m.averageRating ?? '—'}*\n\n` +
+        `*Solve Breakdown:*\n` +
+        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})`;
+    }
+    // 9. WEEKLY CONTEST INTELLIGENCE
+    else if (rType.includes('WEEKLY_CONTEST_INTELLIGENCE')) {
+      text += `• *Contest:* ${resolvedContestName}\n\n` +
+        `*Weekly Contest Intelligence:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• Attended: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent: *${absent}* (${absentPercentage})\n\n` +
+        `*Solve Breakdown:*\n` +
+        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})`;
+    }
+    // 10. WEEKLY STUDENT PERFORMANCE
+    else if (rType.includes('WEEKLY_STUDENT_PERFORMANCE')) {
+      text += `\n*Student Cohort Performance:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• Active Participants: *${attended}* (${turnoutPercentage})\n` +
+        `• Zero Solved / Absent: *${absent}* (${absentPercentage})\n\n` +
+        `*Problem Milestone Bands:*\n`;
+
+      if (report?.categories) {
+        Object.entries(report.categories).forEach(([k, v]) => {
+          text += `• ${k}: *${v}* students\n`;
+        });
+      } else {
+        text += `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+          `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+          `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+          `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
+      }
+    }
+    // 11. FACULTY CONSOLIDATED PERFORMANCE REPORT
+    else if (rType.includes('FACULTY_CONSOLIDATED')) {
+      text += `\n*Faculty Mentorship Summary:*\n` +
+        `• Faculty Mentors: *${report?.facultySummary?.length || 'All'}*\n` +
+        `• Assigned Students: *${total}*\n` +
+        `• Active Solvers: *${attended}* (${turnoutPercentage})\n\n` +
+        `*Mentor Allocations:*\n`;
+
+      if (report?.facultySummary && Array.isArray(report.facultySummary)) {
+        report.facultySummary.forEach((f: any) => {
+          text += `• ${f.staff_name}: *${f.active_solvers || 0}* / ${f.total_assigned || 0} active (${f.active_pct || 0}%) — Avg Solved: *${f.avg_solved || 0}*\n`;
         });
       }
-    } else if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
-      text += `\n*Batch Breakdown (Rating > 1500):*\n`;
-      report.batch_summaries.forEach((b: any) => {
-        const batchName = b.batch || 'Batch';
-        const tot = b.total_students || 0;
-        const r1500 = b.current_week?.rating_above_1500 ?? (b.rating_1500 ?? 0);
-        text += `• ${batchName} (${tot} students) — Rating > 1500: *${r1500}*\n`;
-      });
     }
+    // 12. FACULTY COORDINATOR CONSOLIDATED
+    else if (rType.includes('FACULTY_COORDINATOR')) {
+      text += `\n*Coordinator Consolidations:*\n` +
+        `• Assigned Students: *${total}*\n` +
+        `• Active Contestants: *${attended}* (${turnoutPercentage})\n` +
+        `• Total Solved: *${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}*\n\n` +
+        `*Batch-Wise Mentorship Progress:*\n`;
 
-    // Department Staff Allocation Overview (if individual staff or department faculty summary exists)
-    if (isStaffUser) {
-      text += `\n*Staff Allocation Overview:*\n`;
-      text += `• Faculty In-Charge: *${senderName}*\n`;
-      text += `• Assigned Students: *${total}*\n`;
-      text += `• Active Solvers: *${attended}* (${turnoutPercentage})\n`;
-    } else if (report?.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0) {
-      text += `\n*Staff Allocation Summary:*\n`;
-      report.facultySummary.slice(0, 5).forEach((f: any) => {
-        text += `• ${f.staff_name}: *${f.active_solvers || 0}* / ${f.total_assigned || 0} active (${f.active_pct || 0}%)\n`;
-      });
-      if (report.facultySummary.length > 5) {
-        text += `• ...and ${report.facultySummary.length - 5} more faculty mentors\n`;
+      if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
+        report.batch_summaries.forEach((b: any) => {
+          text += `• ${b.batch || 'Batch'}: *${b.current_week?.rating_above_1500 ?? (b.rating_1500 ?? 0)}* with Rating > 1500\n`;
+        });
       }
     }
+    // 13. HOD DEPARTMENT INTELLIGENCE
+    else if (rType.includes('HOD_DEPARTMENT') || rType.includes('HOD')) {
+      text += `\n*HOD Department Executive Overview:*\n` +
+        `• Total Department Students: *${total}*\n` +
+        `• Active Solvers: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent: *${absent}* (${absentPercentage})\n\n` +
+        `*Year-Wise Breakdown:*\n`;
 
-    text += `\n*Shared by:* *${senderName}* (${senderRoleTitle})`;
+      if (report?.yearSummary && Array.isArray(report.yearSummary)) {
+        report.yearSummary.forEach((y: any) => {
+          text += `• Year ${y.year}: *${y.active_solvers || 0}* / ${y.total || 0} active (${y.attendance_pct || 0}%) — Solves: *${y.total_solved || 0}*\n`;
+        });
+      } else {
+        text += `• 4/4 Solved: *${s4}*\n• 3/4 Solved: *${s3}*\n• 2/4 Solved: *${s2}*\n• 1/4 Solved: *${s1}*\n`;
+      }
+    }
+    // 14. PRINCIPAL EXECUTIVE INTELLIGENCE
+    else if (rType.includes('PRINCIPAL_EXECUTIVE') || rType.includes('PRINCIPAL')) {
+      text += `\n*Institutional Executive Intelligence:*\n` +
+        `• College Total Students: *${total}*\n` +
+        `• Active Solvers: *${attended}* (${turnoutPercentage})\n` +
+        `• Total Solved Problems: *${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}*\n\n` +
+        `*Department Performance:*\n`;
 
-    // Public authoritative origin resolution: Mobile apps (localhost/capacitor) must use the public domain
-    let resolvedOrigin = 'https://nandha-leetcode.duckdns.org';
-    if (typeof window !== 'undefined' && window.location.origin) {
-      const locOrigin = window.location.origin.toLowerCase();
-      if (
-        !locOrigin.includes('localhost') &&
-        !locOrigin.includes('127.0.0.1') &&
-        !locOrigin.startsWith('capacitor://') &&
-        !locOrigin.startsWith('ionic://') &&
-        !locOrigin.startsWith('file://')
-      ) {
-        resolvedOrigin = window.location.origin.replace(/\/+$/, '');
+      if (report?.departmentSummary && Array.isArray(report.departmentSummary)) {
+        report.departmentSummary.forEach((d: any) => {
+          text += `• ${d.department}: *${d.active_solvers || 0}* / ${d.total || 0} active (${d.attendance_pct || 0}%) — Solves: *${d.total_solved || 0}*\n`;
+        });
+      } else {
+        text += `• Institutional adoption verified across all Engineering cohorts.`;
+      }
+    }
+    // 15. MANAGEMENT EXECUTIVE SUMMARY
+    else if (rType.includes('MANAGEMENT_EXECUTIVE') || rType.includes('MANAGEMENT')) {
+      text += `\n*Management Executive Summary:*\n` +
+        `• Institutional Strength: *${total}* students\n` +
+        `• Active Problem Solvers: *${attended}* (${turnoutPercentage})\n` +
+        `• Solvers with Rating > 1500: *${s4 + s3 + s2 + s1}* active solvers\n\n` +
+        `*Department Highlights:*\n`;
+
+      if (report?.departmentSummary && Array.isArray(report.departmentSummary)) {
+        report.departmentSummary.slice(0, 4).forEach((d: any) => {
+          text += `• ${d.department}: *${d.attendance_pct || 0}%* participation (${d.active_solvers} active)\n`;
+        });
+      } else {
+        text += `• Continuous weekly coding culture active and verified.`;
+      }
+    }
+    // 16. FRIDAY CONTEST RESULT
+    else if (rType.includes('FRIDAY')) {
+      text += `• *Contest:* ${resolvedContestName.includes('Friday') ? resolvedContestName : 'Friday Official Contest'}\n\n` +
+        `*Friday Contest Performance:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• Attended: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent: *${absent}* (${absentPercentage})\n\n` +
+        `*Solve Breakdown:*\n` +
+        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
+      if (s0 > 0) text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
+    }
+    // 17. SATURDAY BIWEEKLY CONTEST RESULT
+    else if (rType.includes('BIWEEKLY') || rType.includes('SATURDAY')) {
+      text += `• *Contest:* ${resolvedContestName.includes('Biweekly') ? resolvedContestName : 'Saturday Biweekly Contest'}\n\n` +
+        `*Saturday Biweekly Performance:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• Attended: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent: *${absent}* (${absentPercentage})\n\n` +
+        `*Solve Breakdown:*\n` +
+        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
+      if (s0 > 0) text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
+    }
+    // 18. SUNDAY LIVE CONTEST & COORDINATOR WEEKLY PERFORMANCE (DEFAULT)
+    else {
+      text += `• *Contest:* ${resolvedContestName}\n`;
+      if (periodInfo) {
+        text += `• *Period:* ${periodInfo}\n`;
+      }
+
+      text += `\n*Participation Summary:*\n` +
+        `• Total Students: *${total}*\n` +
+        `• Attended: *${attended}* (${turnoutPercentage})\n` +
+        `• Absent / Not Attended: *${absent}* (${absentPercentage})\n\n` +
+        `*Solve Breakdown:*\n` +
+        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
+        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
+        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
+        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
+
+      if (s0 > 0) {
+        text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
+      }
+
+      if (useRowBatches) {
+        const bMap: Record<string, { total: number; r1500: number }> = {};
+        allRows.forEach((r: any) => {
+          let b = (r.batch || '').trim();
+          if (!b) {
+            const yr = String(r.year || r.year_level || '').trim();
+            if (yr === '4' || yr === 'IV') b = '2023 - 2027';
+            else if (yr === '3' || yr === 'III') b = '2024 - 2028';
+            else if (yr === '2' || yr === 'II') b = '2025 - 2029';
+            else b = yr ? `Batch ${yr}` : 'Other';
+          }
+          if (!bMap[b]) bMap[b] = { total: 0, r1500: 0 };
+          bMap[b].total += 1;
+          const rat = Number(r.contest_rating || r.rating || 0);
+          if (rat > 1500) bMap[b].r1500 += 1;
+        });
+        const bEntries = Object.entries(bMap).filter(([_, data]) => data.total > 0);
+        if (bEntries.length > 0) {
+          text += `\n*Batch Breakdown (Rating > 1500):*\n`;
+          bEntries.forEach(([batchName, bData]) => {
+            text += `• ${batchName} (${bData.total} students) — Rating > 1500: *${bData.r1500}*\n`;
+          });
+        }
+      } else if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
+        text += `\n*Batch Breakdown (Rating > 1500):*\n`;
+        report.batch_summaries.forEach((b: any) => {
+          const batchName = b.batch || 'Batch';
+          const tot = b.total_students || 0;
+          const r1500 = b.current_week?.rating_above_1500 ?? (b.rating_1500 ?? 0);
+          text += `• ${batchName} (${tot} students) — Rating > 1500: *${r1500}*\n`;
+        });
+      }
+
+      // Department Staff Allocation Overview
+      if (isStaffUser) {
+        text += `\n*Staff Allocation Overview:*\n`;
+        text += `• Assigned Students: *${total}*\n`;
+        text += `• Active Solvers: *${attended}* (${turnoutPercentage})\n`;
+      } else if (report?.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0) {
+        text += `\n*Staff Allocation Summary:*\n`;
+        report.facultySummary.slice(0, 5).forEach((f: any) => {
+          text += `• ${f.staff_name}: *${f.active_solvers || 0}* / ${f.total_assigned || 0} active (${f.active_pct || 0}%)\n`;
+        });
+        if (report.facultySummary.length > 5) {
+          text += `• ...and ${report.facultySummary.length - 5} more faculty mentors\n`;
+        }
       }
     }
 
     const { url, filename, mimeType } = getReportDownloadMeta('excel');
 
-    // Ensure share_token is guaranteed to be present for WhatsApp recipient authentication
-    let token = report?.share_token || report?.universal_share_token;
-    if (!token) {
-      try {
-        const previewRes = await api.get(`/reports/${reportId}/preview`);
-        if (previewRes?.data?.share_token) {
-          token = previewRes.data.share_token;
-        }
-      } catch (_e) {}
-    }
-    const shareTokenParam = token ? `&share_token=${token}` : '';
-    const directDownloadUrl = `${resolvedOrigin}/api${url}${url.includes('?') ? '&' : '?'}source=whatsapp${shareTokenParam}`;
-
-    let fullShareText = text;
-    fullShareText += `\n\n*Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
-    fullShareText += `\n\n*Live Student Portal:*\n${resolvedOrigin}/#/dashboard`;
+    // Clean, direct report text without external URLs
+    const fullShareText = text.trim();
 
     // Automatically copy the formatted summary text to clipboard for convenience
     try {

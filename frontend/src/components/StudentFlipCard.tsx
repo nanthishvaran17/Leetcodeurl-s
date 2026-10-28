@@ -222,7 +222,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
             </div>
 
             <div className="min-w-0 px-1 pt-1">
-              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate max-w-full tracking-tight font-display" title={student.name}>
+              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white break-words line-clamp-2 max-w-full tracking-tight font-display leading-snug text-center" title={student.name}>
                 {student.name}
               </h3>
               <div className="flex items-center justify-center space-x-2 mt-1">

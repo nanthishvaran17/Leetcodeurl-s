@@ -456,13 +456,32 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       fetchFromBackendAPI();
     };
 
+    const handlePortalNotification = (event: any) => {
+      const detail = event.detail;
+      if (!detail) return;
+      handleIncomingNotification({
+        type: 'NEW_NOTIFICATION',
+        notification: {
+          id: `local_notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          title: detail.title,
+          message: detail.message,
+          category: detail.category || 'announcements',
+          priority: detail.priority || 'high',
+          actionRoute: detail.actionRoute || '/dashboard',
+          created_at: new Date().toISOString()
+        }
+      });
+    };
+
     window.addEventListener('fcm_notification_received', handleFcmReceived);
     window.addEventListener('fcm_foreground_message', handleFcmReceived);
+    window.addEventListener('dispatch_portal_notification', handlePortalNotification);
     return () => {
       window.removeEventListener('fcm_notification_received', handleFcmReceived);
       window.removeEventListener('fcm_foreground_message', handleFcmReceived);
+      window.removeEventListener('dispatch_portal_notification', handlePortalNotification);
     };
-  }, [notify, fetchFromBackendAPI]);
+  }, [notify, fetchFromBackendAPI, handleIncomingNotification]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -623,4 +642,17 @@ export const useGlobalNotifications = () => {
 };
 
 export const useNotification = useGlobalNotifications;
+
+export const dispatchPortalNotification = (payload: {
+  title: string;
+  message: string;
+  category?: string;
+  priority?: 'low' | 'normal' | 'high' | 'critical';
+  actionRoute?: string;
+}) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('dispatch_portal_notification', { detail: payload }));
+  }
+};
+
 

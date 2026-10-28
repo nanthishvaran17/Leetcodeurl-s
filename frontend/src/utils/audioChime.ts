@@ -290,6 +290,7 @@ class AudioChimeEngine {
 }
 
 export const audioChime = new AudioChimeEngine();
+export const playSelectedNotificationChime = () => audioChime.playSelectedNotificationChime();
 export const playNotificationChime = () => audioChime.playSelectedNotificationChime();
 export const playAppleGlassChime = () => audioChime.playNotificationChime();
 export const playWhatsAppPop = () => audioChime.playWhatsAppPop();

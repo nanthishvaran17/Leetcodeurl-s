@@ -2686,8 +2686,8 @@ export const HRCandidateFinderPage: React.FC = () => {
                               {c.name.charAt(0)}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors print:text-slate-900">{c.name}</div>
-                              <div className="text-[10px] text-slate-400 font-mono leading-none truncate print:text-slate-500">{c.username}</div>
+                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors print:text-slate-900">{c.name}</div>
+                              <div className="text-[10px] text-slate-400 font-mono leading-none break-all print:text-slate-500">{c.username}</div>
                             </div>
                           </div>
                         </td>
@@ -2776,8 +2776,8 @@ export const HRCandidateFinderPage: React.FC = () => {
                           className="bg-white dark:bg-navy-950 rounded-xl border border-slate-200/80 dark:border-navy-800 p-3 shadow-2xs hover:border-blue-500/50 hover:shadow-xs flex items-center justify-between gap-3 smooth-scroll-compact-card transition-colors duration-150 cursor-pointer group touch-manipulation"
                         >
                           {/* Avatar & Core Student Identity */}
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-2xs ${
+                          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-2xs mt-0.5 ${
                               isHighRated
                                 ? 'bg-gradient-to-br from-amber-500 via-purple-600 to-indigo-600 ring-2 ring-purple-400/40'
                                 : 'bg-gradient-to-br from-blue-600 to-indigo-600 ring-1 ring-blue-400/30'
@@ -2785,18 +2785,18 @@ export const HRCandidateFinderPage: React.FC = () => {
                               {c.name.charAt(0)}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <h5 className="font-extrabold text-slate-900 dark:text-white text-xs leading-snug truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              <div className="flex items-center flex-wrap gap-1.5 min-w-0">
+                                <h5 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm leading-snug break-words group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                   {c.name}
                                 </h5>
                                 {isHighRated && (
-                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5">
+                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-0.5">
                                     <Award className="w-2.5 h-2.5" />
                                     <span>Top</span>
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
+                              <div className="flex items-center flex-wrap gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                                 <span className="font-bold text-blue-600 dark:text-blue-400">{c.dept_code}</span>
                                 <span>•</span>
                                 <span>{c.batch}</span>
@@ -2864,10 +2864,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                           className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm smooth-scroll-card transition-colors duration-150 space-y-3 relative cursor-pointer group hover:border-blue-500/40 touch-manipulation"
                         >
                           {/* Card Header: Avatar + Student Name + Leetcode Link & Rating */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                            <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                               {/* Avatar with Refined Gradient */}
-                              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs ${
+                              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs mt-0.5 ${
                                 isHighRated
                                   ? 'bg-gradient-to-br from-amber-500 to-orange-600 ring-2 ring-amber-400/30 shadow-amber-500/10'
                                   : 'bg-gradient-to-br from-indigo-600 to-blue-600 ring-1 ring-indigo-500/20 shadow-indigo-500/10'
@@ -2876,25 +2876,25 @@ export const HRCandidateFinderPage: React.FC = () => {
                               </div>
 
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                <div className="flex items-center flex-wrap gap-1.5 min-w-0">
+                                  <h5 className="font-black text-slate-900 dark:text-white text-sm sm:text-base leading-snug break-words group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                     {c.name}
                                   </h5>
                                   {isHighRated && (
-                                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5" title="Top Contest Performer">
+                                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-0.5" title="Top Contest Performer">
                                       <Award className="w-2.5 h-2.5" />
                                       <span>Top</span>
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
+                                <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                                   {c.username && (
-                                    <span className="truncate">@{c.username}</span>
+                                    <span className="break-all font-medium text-slate-500 dark:text-slate-400">@{c.username}</span>
                                   )}
                                   {c.reg_no && (
                                     <>
-                                      <span className="text-slate-300 dark:text-navy-700">•</span>
-                                      <span className="truncate text-slate-600 dark:text-slate-300 font-semibold">{c.reg_no}</span>
+                                      <span className="text-slate-300 dark:text-navy-700 hidden sm:inline">•</span>
+                                      <span className="text-slate-600 dark:text-slate-300 font-bold tracking-tight">{c.reg_no}</span>
                                     </>
                                   )}
                                 </div>
@@ -2902,7 +2902,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                             </div>
 
                             {/* Top Right: Rating Pill + External LeetCode */}
-                            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
                               {ratingVal > 0 ? (
                                 <div
                                   className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1.5 border shadow-2xs ${

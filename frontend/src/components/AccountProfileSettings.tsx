@@ -14,11 +14,12 @@ import {
   Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft, HelpCircle,
   Sun, Moon, Monitor, LogOut, Play
 } from 'lucide-react';
-import { playWhatsAppPop, playAppleGlassChime, playTechKnockDing } from '../utils/audioChime';
+import { playWhatsAppPop, playAppleGlassChime, playTechKnockDing, playSelectedNotificationChime } from '../utils/audioChime';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
+import { dispatchPortalNotification } from '../context/GlobalNotificationContext';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import { SwipeHandle } from './SwipeHandle';
 import { DynamicQRCode } from './DynamicQRCode';
@@ -244,44 +245,15 @@ const parseDOBToDisplay = (rawDob: any): string => {
   return str;
 };
 
-// Play audio chime using Web Audio API with multi-tone harmonic chord
+// Play audio chime respecting user's selected tone (WhatsApp / Apple / Tech / Silent)
 const playChimeSound = () => {
   try {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => { });
-    }
-
-    const t = ctx.currentTime;
-    // Pleasant 3-note ascending chime: C5 (523.25Hz) -> E5 (659.25Hz) -> G5 (783.99Hz)
-    const notes = [
-      { freq: 523.25, start: t, duration: 0.12 },
-      { freq: 659.25, start: t + 0.10, duration: 0.14 },
-      { freq: 783.99, start: t + 0.22, duration: 0.28 }
-    ];
-
-    notes.forEach(({ freq, start, duration }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, start);
-
-      gain.gain.setValueAtTime(0.001, start);
-      gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(start);
-      osc.stop(start + duration);
-    });
+    playSelectedNotificationChime();
   } catch (err) {
     console.warn('Audio playback error:', err);
   }
 };
+
 
 // World-Class App Device & Browser Parser (Swiggy / WhatsApp / Apple ID Grade)
 export interface ParsedUA {
@@ -1448,49 +1420,92 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const handleTestAudioChime = () => {
     setIsPlayingAudioTest(true);
     playChimeSound();
+    notify.info('🔊 Audio Chime Test', `Current Tone: ${selectedNotificationTone.toUpperCase()}`, { category: 'AUDIO', duration: 3000 });
     setTimeout(() => setIsPlayingAudioTest(false), 700);
+  };
+
+  const handleTestContestAlert = () => {
+    triggerHaptic('light');
+    dispatchPortalNotification({
+      title: '🏆 Contest Finalization Receipt',
+      message: 'Weekly Contest #438 synchronized • 42 Mentees participated • Rankings finalized.',
+      category: 'contests',
+      priority: 'high',
+      actionRoute: '/weekly-contest'
+    });
+  };
+
+  const handleTestWeeklyDigest = () => {
+    triggerHaptic('light');
+    dispatchPortalNotification({
+      title: '📊 Weekly Mentee Progress Digest',
+      message: '128 problems solved this week • 3 students on 7-day streak • 2 inactive warnings.',
+      category: 'reports',
+      priority: 'normal',
+      actionRoute: '/dashboard'
+    });
+  };
+
+  const handleTestSystemAudit = () => {
+    triggerHaptic('light');
+    dispatchPortalNotification({
+      title: '🛡️ Security Audit Verified',
+      message: 'Session authenticated from Chrome on Windows • IP 127.0.0.1 • No anomalies detected.',
+      category: 'announcements',
+      priority: 'high',
+      actionRoute: '/profile'
+    });
   };
 
   const handleToggleContestAlerts = (val: boolean) => {
     setEmailContestAlerts(val);
     localStorage.setItem('pref_contest_email', String(val));
-    if (toastAudioAlerts && val) playChimeSound();
     syncNotificationPreferences(val, weeklyDigestAlerts, systemAuditAlerts);
-    notify.success(
-      val
-        ? 'Contest Receipts Enabled • Instant email receipts scheduled for weekly LeetCode contests.'
-        : 'Contest Receipts Muted • Email receipts paused.',
-      '',
-      { category: 'ADMIN' }
-    );
+    if (val) {
+      dispatchPortalNotification({
+        title: '🏆 Contest Receipts Enabled',
+        message: 'Instant email receipts scheduled for weekly LeetCode contests.',
+        category: 'contests',
+        priority: 'normal',
+        actionRoute: '/weekly-contest'
+      });
+    } else {
+      notify.info('Contest Receipts Muted', 'Email receipts paused.', { category: 'CONTEST' });
+    }
   };
 
   const handleToggleWeeklyDigest = (val: boolean) => {
     setWeeklyDigestAlerts(val);
     localStorage.setItem('pref_weekly_digest', String(val));
-    if (toastAudioAlerts && val) playChimeSound();
     syncNotificationPreferences(emailContestAlerts, val, systemAuditAlerts);
-    notify.success(
-      val
-        ? 'Weekly Mentee Digest Enabled • Assigned student summary scheduled every Monday 9:00 AM.'
-        : 'Weekly Mentee Digest Muted • Periodic digest paused.',
-      '',
-      { category: 'ADMIN' }
-    );
+    if (val) {
+      dispatchPortalNotification({
+        title: '📊 Weekly Mentee Digest Enabled',
+        message: 'Assigned student summary scheduled every Monday morning at 9:00 AM.',
+        category: 'reports',
+        priority: 'normal',
+        actionRoute: '/dashboard'
+      });
+    } else {
+      notify.info('Weekly Mentee Digest Muted', 'Periodic digest paused.', { category: 'ADMIN' });
+    }
   };
 
   const handleToggleSystemAuditAlerts = (val: boolean) => {
     setSystemAuditAlerts(val);
     localStorage.setItem('pref_audit_alerts', String(val));
-    if (toastAudioAlerts && val) playChimeSound();
     syncNotificationPreferences(emailContestAlerts, weeklyDigestAlerts, val);
-    notify.success(
-      val
-        ? 'Security Audit Alerts Active • Instant push notifications for unrecognized logins & password changes.'
-        : 'Security Audit Alerts Muted • Security activity logged silently.',
-      '',
-      { category: 'ADMIN' }
-    );
+    if (val) {
+      dispatchPortalNotification({
+        title: '🛡️ Security Audit Alerts Active',
+        message: 'Instant push notifications for unrecognized logins & password changes.',
+        category: 'announcements',
+        priority: 'high',
+        actionRoute: '/profile'
+      });
+    } else {
+      notify.info('Security Audit Alerts Muted', 'Security activity logged silently.', { category: 'SYSTEM' });
+    }
   };
 
   const handleToggleToastAudio = (val: boolean) => {
@@ -1502,18 +1517,21 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
         ? 'In-App Sound Chimes Enabled • Audio feedback active for portal alerts.'
         : 'In-App Sound Chimes Muted • Alerts will show silently.',
       '',
-      { category: 'ADMIN' }
+      { category: 'AUDIO' }
     );
   };
 
   const handleInactivityThresholdChange = (val: number) => {
     setInactivityDaysThreshold(val);
     localStorage.setItem('pref_inactivity_threshold', String(val));
-    notify.success(
-      `Inactivity Warning Threshold set to ${val} Days (${val <= 3 ? 'Strict' : val <= 7 ? 'Balanced' : 'Relaxed'}) • Student roster badges updated.`,
-      '',
-      { category: 'ADMIN' }
-    );
+    triggerHaptic('selection');
+    dispatchPortalNotification({
+      title: `⚠️ Inactivity Warning Threshold: ${val} Days`,
+      message: `Students without submissions in ${val} consecutive days will be flagged on roster (${val <= 3 ? 'Strict' : val <= 7 ? 'Balanced' : 'Relaxed'}).`,
+      category: 'attendance',
+      priority: 'high',
+      actionRoute: '/dashboard'
+    });
   };
 
   const handleToggleShowPhone = (val: boolean) => {
@@ -5758,8 +5776,21 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <Trophy className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-black text-slate-900 dark:text-white">
-                        Contest Finalization Receipts
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-slate-900 dark:text-white">
+                          Contest Finalization Receipts
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTestContestAlert();
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
+                        >
+                          <Trophy className="w-3 h-3" />
+                          <span>Test Alert</span>
+                        </button>
                       </div>
                       <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
                         Instant email receipts when weekly LeetCode contests conclude.
@@ -5783,8 +5814,21 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <GraduationCap className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-black text-slate-900 dark:text-white">
-                        Weekly Mentee Progress Digest
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-slate-900 dark:text-white">
+                          Weekly Mentee Progress Digest
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTestWeeklyDigest();
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
+                        >
+                          <GraduationCap className="w-3 h-3" />
+                          <span>Test Alert</span>
+                        </button>
                       </div>
                       <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
                         Summary of assigned students milestones every Monday morning.
@@ -5808,8 +5852,21 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-black text-slate-900 dark:text-white">
-                        Security Audit &amp; Login Alerts
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-black text-slate-900 dark:text-white">
+                          Security Audit &amp; Login Alerts
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTestSystemAudit();
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
+                        >
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>Test Alert</span>
+                        </button>
                       </div>
                       <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
                         Instant alerts if password is changed or new logins occur.
@@ -6037,11 +6094,14 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       onClick={() => handleInactivityThresholdChange(option.days)}
                       className={`py-2 px-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 active:scale-95 ${
                         inactivityDaysThreshold === option.days
-                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/25 font-black'
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-sm shadow-amber-500/25 font-black ring-2 ring-amber-400/40'
                           : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-amber-400/60 font-bold'
                       }`}
                     >
-                      <span className="text-xs">{option.label}</span>
+                      <div className="flex items-center gap-1">
+                        {inactivityDaysThreshold === option.days && <Check size={12} className="stroke-[3]" />}
+                        <span className="text-xs">{option.label}</span>
+                      </div>
                       <span className={`text-[10px] ${inactivityDaysThreshold === option.days ? 'text-amber-100' : 'text-slate-400'}`}>
                         {option.mode}
                       </span>
