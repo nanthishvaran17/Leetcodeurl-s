@@ -2,6 +2,7 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { LogOut, ChevronDown } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -1457,7 +1458,7 @@ export const App: React.FC = () => {
       {/* App Update & Notification Banners */}
       <Suspense fallback={null}>
         <AppUpdateNotifier />
-        <InstallAppPrompt />
+        {!Capacitor.isNativePlatform() && <InstallAppPrompt />}
         {showShareModal && (
           <StudentShareCardModal
             isOpen={showShareModal}

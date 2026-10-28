@@ -789,7 +789,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     }
   });
 
-  const handleSelectNotificationTone = (tone: 'whatsapp' | 'apple' | 'tech') => {
+  const handleSelectNotificationTone = (tone: 'whatsapp' | 'apple' | 'tech' | 'none') => {
     setSelectedNotificationTone(tone);
     try {
       localStorage.setItem('notification_sound_tone', tone);
@@ -806,6 +806,8 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     } else if (tone === 'tech') {
       playTechKnockDing();
       notify.info('Tech Knock & Ding Selected', 'Snappy knock with crystal ping.', { category: 'AUDIO', duration: 3000 });
+    } else if (tone === 'none') {
+      notify.info('Silent / Mute Mode Selected', 'Notifications will arrive silently without any sound.', { category: 'AUDIO', duration: 3000 });
     }
   };
 
@@ -5875,7 +5877,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
                     {/* Option 1: WhatsApp Pop */}
                     <div
                       onClick={() => handleSelectNotificationTone('whatsapp')}
@@ -5957,6 +5959,34 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       >
                         <Play size={10} className="fill-current" />
                         <span>Play</span>
+                      </button>
+                    </div>
+
+                    {/* Option 4: Silent / Mute (None) */}
+                    <div
+                      onClick={() => handleSelectNotificationTone('none')}
+                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'none' || selectedNotificationTone === 'silent'
+                          ? 'bg-rose-500/15 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
+                          : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-black text-slate-900 dark:text-white">Silent / Mute</span>
+                        {(selectedNotificationTone === 'none' || selectedNotificationTone === 'silent') && (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-rose-600 text-white flex items-center gap-0.5">
+                            <Check size={10} /> Active
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">No Sound (Silent)</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('none'); }}
+                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <VolumeX size={11} />
+                        <span>Select Mute</span>
                       </button>
                     </div>
                   </div>

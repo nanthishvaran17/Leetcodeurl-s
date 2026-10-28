@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Smartphone, X, Check, Share, PlusSquare, ShieldCheck, Zap } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
+export const isRunningInMobileApp = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+    if ((window as any).Capacitor?.isNativePlatform?.()) return true;
+    if (window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:') return true;
+    if (window.matchMedia('(display-mode: standalone)').matches) return true;
+    if ((window.navigator as any).standalone === true) return true;
+    if (document.referrer.includes('android-app://')) return true;
+    if (window.location.hostname === 'localhost' && /android/i.test(window.navigator.userAgent)) return true;
+  } catch {
+    return false;
+  }
+  return false;
+};
+
 export const InstallAppPrompt: React.FC = () => {
+  // Never show download/install banner if already running inside the native mobile app
+  if (isRunningInMobileApp()) {
+    return null;
+  }
+
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -15,6 +37,7 @@ export const InstallAppPrompt: React.FC = () => {
   const [downloadStarted, setDownloadStarted] = useState(false);
 
   useEffect(() => {
+    if (isRunningInMobileApp()) return;
     // 1. Check if running in standalone mode (PWA installed)
     const checkStandalone = () => {
       const standalone =

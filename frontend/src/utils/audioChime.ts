@@ -275,6 +275,10 @@ class AudioChimeEngine {
       tone = localStorage.getItem('notification_sound_tone') || 'whatsapp';
     } catch {}
 
+    if (tone === 'none' || tone === 'silent' || tone === 'mute') {
+      return;
+    }
+
     if (tone === 'apple') {
       this.playNotificationChime();
     } else if (tone === 'tech') {

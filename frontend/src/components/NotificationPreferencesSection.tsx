@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Bell, Smartphone, Mail, CheckCircle2, AlertTriangle, AlertCircle, 
   Send, FileSpreadsheet, Loader2, Shield, Calendar, FileText, Award, Megaphone, Sliders,
-  Volume2, Play, Check, Sparkles
+  Volume2, Play, Check, Sparkles, VolumeX
 } from 'lucide-react';
 import { useGlobalNotifications, type NotificationPreferences } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -32,7 +32,7 @@ export const NotificationPreferencesSection: React.FC = () => {
     }
   });
 
-  const handleSelectTone = (tone: 'whatsapp' | 'apple' | 'tech') => {
+  const handleSelectTone = (tone: 'whatsapp' | 'apple' | 'tech' | 'none') => {
     setSelectedTone(tone);
     try {
       localStorage.setItem('notification_sound_tone', tone);
@@ -47,6 +47,8 @@ export const NotificationPreferencesSection: React.FC = () => {
     } else if (tone === 'tech') {
       playTechKnockDing();
       notify.info('Tech Knock & Ding Selected', 'Acoustic knock with crystal ding — now active for messages & alerts.', { category: 'AUDIO' });
+    } else if (tone === 'none') {
+      notify.info('Silent / Mute Mode Selected', 'Notifications will arrive silently without any sound.', { category: 'AUDIO' });
     }
   };
 
@@ -414,7 +416,7 @@ export const NotificationPreferencesSection: React.FC = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Option 1: WhatsApp Bubbly Pop */}
           <div
             onClick={() => handleSelectTone('whatsapp')}
@@ -514,6 +516,40 @@ export const NotificationPreferencesSection: React.FC = () => {
             >
               <Play size={12} className="fill-current" />
               <span>Listen & Select</span>
+            </button>
+          </div>
+
+          {/* Option 4: Silent / Mute (None) */}
+          <div
+            onClick={() => handleSelectTone('none')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              selectedTone === 'none' || selectedTone === 'silent'
+                ? 'bg-rose-500/10 border-rose-500/40 shadow-sm ring-1 ring-rose-500/30'
+                : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
+                  🔕 Silent / Mute
+                </span>
+                {(selectedTone === 'none' || selectedTone === 'silent') && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-600 text-white flex items-center gap-0.5">
+                    <Check size={10} /> Active
+                  </span>
+                )}
+              </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                No notification sound. Alerts and toasts arrive 100% silently.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('none'); }}
+              className="w-full py-2 px-3 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <VolumeX size={13} />
+              <span>Select Mute</span>
             </button>
           </div>
         </div>
