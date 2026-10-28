@@ -19,28 +19,28 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -20, scale: 0.98 }}
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -15, scale: 0.96 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] right-4 left-4 sm:left-auto sm:right-6 z-[100060] bg-slate-900/90 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/50 text-white max-w-[calc(100vw-2rem)] sm:max-w-[420px] w-full border border-white/[0.12] font-sans overflow-hidden ring-1 ring-white/10"
+        exit={{ opacity: 0, y: 16, scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:bottom-auto sm:top-[4.25rem] right-3 left-3 sm:left-auto sm:right-6 z-[100060] bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/60 text-white max-w-[calc(100vw-1.5rem)] sm:max-w-[420px] w-full border border-white/[0.14] font-sans overflow-hidden ring-1 ring-white/10"
       >
         {/* Subtle premium gradient background effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-brand-500/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-brand-500/10 pointer-events-none" />
         
         {/* Top edge highlight */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-60" />
 
-        <div className="relative z-10 p-5 sm:p-6 space-y-4">
+        <div className="relative z-10 p-4 sm:p-6 space-y-3.5 sm:space-y-4">
           {/* Header */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className={`p-2.5 rounded-2xl flex items-center justify-center shrink-0 ${
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
+              <div className={`p-2 sm:p-2.5 rounded-2xl flex items-center justify-center shrink-0 ${
                 isFailed 
-                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
+                  ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' 
                   : isCompleted 
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                  : 'bg-brand-500/10 text-brand-400 border border-brand-500/20'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-brand-500/15 text-brand-400 border border-brand-500/30'
               }`}>
                 {isFailed ? (
                   <AlertTriangle size={18} strokeWidth={2.5} />
@@ -52,10 +52,10 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
               </div>
 
               <div className="min-w-0 flex flex-col justify-center">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
                   Instant Report Engine
                 </span>
-                <h3 className="font-bold text-sm sm:text-[15px] text-white tracking-tight truncate">
+                <h3 className="font-extrabold text-sm sm:text-[15px] text-white tracking-tight truncate">
                   {isFailed ? 'Generation Interrupted' : isGenerating ? 'Preparing Data Report' : 'Download Complete'}
                 </h3>
               </div>
@@ -64,7 +64,7 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors shrink-0 -mt-1 -mr-1"
+                className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors shrink-0 -mt-1 -mr-1 active-spring touch-manipulation cursor-pointer"
                 aria-label="Close"
               >
                 <X size={16} strokeWidth={2.5} />

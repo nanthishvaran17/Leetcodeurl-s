@@ -1272,12 +1272,18 @@ def generate_universal_report(
         yr = payload.year or filters.get("year", "ALL")
         scope = payload.output_scope or filters.get("output_scope", "COLLEGE")
 
-        # Security Enforcement: Strict HOD & Coordinator Role Department Scoping
+        # Security Enforcement: Strict HOD Role Department Scoping
         user_role = (getattr(current_user, "role", "") or "").lower().strip()
-        if user_role in ("hod", "department hod", "department_hod", "head of department", "placement coordinator", "placement_coordinator"):
+        is_placement_role = any(p in user_role for p in ("placement", "coordinator", "admin", "principal", "management"))
+        is_inst_report = str(payload.report_type or "").upper() in (
+            "MANAGEMENT_EXECUTIVE_SUMMARY", "PRINCIPAL_EXECUTIVE", "COLLEGE_EXECUTIVE", 
+            "12TH_TNEA_CUTOFF_ANALYSIS", "STUDENT_MASTER", "MASTER_EXCEL"
+        )
+        if not is_placement_role and user_role in ("hod", "department hod", "department_hod", "head of department"):
             from backend.services.authorization_service import get_hod_authorized_department_codes
             auth_codes = get_hod_authorized_department_codes(db, current_user)
-            if auth_codes and (dept in ("ALL", "", None) or dept not in auth_codes):
+            # Only restrict if user is a departmental HOD and requesting an out-of-scope department
+            if auth_codes and not is_inst_report and (dept in ("ALL", "", None) or dept not in auth_codes):
                 dept = auth_codes[0]
                 filters["department"] = auth_codes[0]
                 filters["dept"] = auth_codes[0]
@@ -2101,7 +2107,15 @@ def _get_dataset_for_id(
                 filtered_rows.append(r)
             rows = filtered_rows
 
-        # RBAC: Scoping for ReportHistory
+        # RBAC & Metadata Annotation for ReportHistory
+        canon_total = dataset.get("total_students") or dataset.get("totalStudents") or getattr(report, "total_students", None)
+        canon_solve_dist = dataset.get("solveDistribution")
+        canon_batch_summaries = dataset.get("batch_summaries")
+        canon_metrics = dataset.get("metrics")
+        canon_contest_summary = dataset.get("contestSummary")
+        canon_college_summary = dataset.get("college_summary")
+        canon_current_week = dataset.get("current_week")
+
         if current_user is not None and not hasattr(current_user, "dependency"):
             from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
             from backend.services.faculty_assignment_service import FacultyAssignmentService
@@ -2114,106 +2128,15 @@ def _get_dataset_for_id(
                 assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
                 assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
 
-                filtered_report_rows = []
                 for r in rows:
                     r_id = str(r.get("student_id") or r.get("id") or "").strip()
                     r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
                     r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
-                    if r_reg:
-                        if r_reg in assigned_reg_nos:
-                            filtered_report_rows.append(r)
-                    elif r_id:
-                        if r_id in assigned_ids_str:
-                            filtered_report_rows.append(r)
-                    elif r_uname:
-                        if r_uname in assigned_usernames:
-                            filtered_report_rows.append(r)
-                rows = filtered_report_rows
+                    is_mine = (r_reg and r_reg in assigned_reg_nos) or (r_id and r_id in assigned_ids_str) or (r_uname and r_uname in assigned_usernames)
+                    r["is_assigned_mentee"] = bool(is_mine)
 
-                # Reconcile dataset aggregates (metrics, batch_summaries, totalStudents) to match the scoped rows
-                batch_map = {}
-                s4 = s3 = s2 = s1 = s0 = 0
-                attended = 0
-                not_attended = 0
-                for r in rows:
-                    b_label = str(r.get("batch") or r.get("cohort") or "").strip()
-                    if not b_label:
-                        yr = str(r.get("year") or r.get("year_level") or "")
-                        if yr in ("4", "IV"): b_label = "2023 - 2027"
-                        elif yr in ("3", "III"): b_label = "2024 - 2028"
-                        elif yr in ("2", "II"): b_label = "2025 - 2029"
-                        else: b_label = "Other"
-                    if b_label not in batch_map:
-                        batch_map[b_label] = {"batch": b_label, "total_students": 0, "current_week": {"rating_above_1500": 0}}
-                    batch_map[b_label]["total_students"] += 1
-                    try:
-                        rat = float(r.get("contest_rating") or r.get("rating") or 0)
-                        if rat > 1500:
-                            batch_map[b_label]["current_week"]["rating_above_1500"] += 1
-                    except (ValueError, TypeError):
-                        pass
-
-                    try:
-                        solv = int(r.get("total_solved") if r.get("total_solved") is not None else (r.get("problems_solved") if r.get("problems_solved") is not None else -1))
-                    except (ValueError, TypeError):
-                        solv = -1
-                    st = str(r.get("status") or r.get("attendance_status") or "").upper()
-                    is_att = "ATTEND" in st or "VERIFIED" in st or solv >= 0
-                    if is_att:
-                        attended += 1
-                        if solv == 4: s4 += 1
-                        elif solv == 3: s3 += 1
-                        elif solv == 2: s2 += 1
-                        elif solv == 1: s1 += 1
-                        else: s0 += 1
-                    else:
-                        not_attended += 1
-
-                dataset["batch_summaries"] = list(batch_map.values())
-                if "metrics" not in dataset or not isinstance(dataset["metrics"], dict):
-                    dataset["metrics"] = {}
-                dataset["metrics"]["totalStudents"] = len(rows)
-                dataset["metrics"]["total_students"] = len(rows)
-                dataset["metrics"]["attended"] = attended
-                dataset["metrics"]["notAttended"] = not_attended
-                dataset["metrics"]["4 Q Solved"] = s4
-                dataset["metrics"]["3 Q Solved"] = s3
-                dataset["metrics"]["2 Q Solved"] = s2
-                dataset["metrics"]["1 Q Solved"] = s1
-                dataset["metrics"]["0 Q Solved"] = s0
-
-                dataset["solveDistribution"] = {
-                    "solved4": s4,
-                    "solved3": s3,
-                    "solved2": s2,
-                    "solved1": s1,
-                    "solved0": s0,
-                    "atLeast1Solved": s4 + s3 + s2 + s1,
-                    "zeroSolvedParticipated": s0,
-                    "notParticipated": not_attended
-                }
-
-                if "contestSummary" not in dataset or not isinstance(dataset["contestSummary"], dict):
-                    dataset["contestSummary"] = {}
-                dataset["contestSummary"]["totalStudents"] = len(rows)
-                dataset["contestSummary"]["publicAttended"] = attended
-                dataset["contestSummary"]["notAttended"] = not_attended
-                dataset["contestSummary"]["q4"] = s4
-                dataset["contestSummary"]["q3"] = s3
-                dataset["contestSummary"]["q2"] = s2
-                dataset["contestSummary"]["q1"] = s1
-                dataset["contestSummary"]["q0"] = s0
-
-                if "college_summary" in dataset and isinstance(dataset["college_summary"], dict):
-                    dataset["college_summary"]["total_students"] = len(rows)
-                    dataset["college_summary"]["num_students"] = len(rows)
-                if "current_week" in dataset and isinstance(dataset["current_week"], dict):
-                    dataset["current_week"]["q4"] = s4
-                    dataset["current_week"]["q3"] = s3
-                    dataset["current_week"]["q2"] = s2
-                    dataset["current_week"]["q1"] = s1
-                    dataset["current_week"]["q0"] = s0
-                    dataset["current_week"]["not_participated"] = not_attended
+                dataset["faculty_assigned_student_ids"] = list(assigned_ids)
+                dataset["assigned_mentees_count"] = len(assigned_ids)
             elif role_clean in _HOD_ROLES:
                 from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
                 from backend.services.contest_performance_service import matches_dept
@@ -2238,8 +2161,27 @@ def _get_dataset_for_id(
         dataset["rows"] = rows
         dataset["allStudents"] = rows
         dataset["all_students_current"] = rows
-        dataset["totalStudents"] = len(rows)
-        dataset["total_students"] = len(rows)
+
+        # Preserve verified canonical summary metrics so official counts remain 100% accurate regardless of viewer role
+        if canon_total is not None and not has_active_filters:
+            dataset["totalStudents"] = canon_total
+            dataset["total_students"] = canon_total
+        else:
+            dataset["totalStudents"] = len(rows)
+            dataset["total_students"] = len(rows)
+
+        if canon_batch_summaries and not has_active_filters:
+            dataset["batch_summaries"] = canon_batch_summaries
+        if canon_solve_dist and not has_active_filters:
+            dataset["solveDistribution"] = canon_solve_dist
+        if canon_metrics and not has_active_filters:
+            dataset["metrics"] = canon_metrics
+        if canon_contest_summary and not has_active_filters:
+            dataset["contestSummary"] = canon_contest_summary
+        if canon_college_summary and not has_active_filters:
+            dataset["college_summary"] = canon_college_summary
+        if canon_current_week and not has_active_filters:
+            dataset["current_week"] = canon_current_week
         if has_active_filters:
             dataset["deptFilter"] = dept
             dataset["department"] = dept
@@ -2346,21 +2288,27 @@ def _get_dataset_for_id(
                     assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
                     assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
 
-                    filtered_raw_rows = []
-                    for r in all_raw_rows:
-                        r_id = str(r.get("student_id") or r.get("id") or "").strip()
-                        r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
-                        r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
-                        if r_reg:
-                            if r_reg in assigned_reg_nos:
+                    is_mentee_only_report = report_type and any(k in str(report_type).upper() for k in ("MENTEE", "STAFF_ALLOCATION", "FACULTY_ASSIGNMENT"))
+                    if is_mentee_only_report:
+                        filtered_raw_rows = []
+                        for r in all_raw_rows:
+                            r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                            r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                            r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                            if r_reg and r_reg in assigned_reg_nos:
                                 filtered_raw_rows.append(r)
-                        elif r_id:
-                            if r_id in assigned_ids_str:
+                            elif r_id and r_id in assigned_ids_str:
                                 filtered_raw_rows.append(r)
-                        elif r_uname:
-                            if r_uname in assigned_usernames:
+                            elif r_uname and r_uname in assigned_usernames:
                                 filtered_raw_rows.append(r)
-                    all_raw_rows = filtered_raw_rows
+                        all_raw_rows = filtered_raw_rows
+                    else:
+                        for r in all_raw_rows:
+                            r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                            r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                            r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                            is_mine = (r_reg and r_reg in assigned_reg_nos) or (r_id and r_id in assigned_ids_str) or (r_uname and r_uname in assigned_usernames)
+                            r["is_assigned_mentee"] = bool(is_mine)
                 elif role_clean in _HOD_ROLES:
                     # HOD: filter by department (matches both department_id and department code)
                     from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes

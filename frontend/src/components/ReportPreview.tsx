@@ -610,12 +610,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     setActiveFilter(prev => prev === filterKey ? null : filterKey);
   };
 
-  // Check if current view is scoped to a specific cohort/allocated mentee roster
+  // Only scope metrics if the report is explicitly an individual mentee allocation report
   const isMenteeScoped = useMemo(() => {
-    return isStaffUser || 
-      Boolean(allRows.length > 0 && contestSummary.totalStudents && allRows.length < contestSummary.totalStudents) ||
-      Boolean(allRows.length > 0 && allRows.length < 50 && !isHodUser && userRole !== 'admin' && userRole !== 'principal');
-  }, [isStaffUser, isHodUser, userRole, contestSummary.totalStudents, allRows.length]);
+    return Boolean(rType.includes('MENTEE') || rType.includes('STAFF_ALLOCATION') || rType.includes('FACULTY_ASSIGNMENT'));
+  }, [rType]);
 
   const rowDerivedMetrics = useMemo(() => {
     let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, attended = 0;
@@ -709,8 +707,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (isMenteeScoped && allRows.length > 0) {
       return allRows.length;
     }
-    return contestSummary.totalStudents || allRows.length || 0;
-  }, [isMenteeScoped, contestSummary.totalStudents, allRows.length]);
+    const bSum = Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0
+      ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
+      : 0;
+    return contestSummary.totalStudents || report?.total_students || report?.totalStudents || report?.college_summary?.total_students || bSum || allRows.length || 0;
+  }, [isMenteeScoped, contestSummary.totalStudents, report?.total_students, report?.totalStudents, report?.college_summary?.total_students, report?.batch_summaries, allRows.length]);
 
   const actualParticipantCount = useMemo(() => {
     if (isMenteeScoped && allRows.length > 0) {
@@ -718,14 +719,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     }
     const sumAttended = (contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0);
     if (sumAttended > 0) return sumAttended;
-    if (conditionStats.attendedCount > 0) return conditionStats.attendedCount;
     const distSum = (Number(solveDist.solved4) || 0) + (Number(solveDist.solved3) || 0) + (Number(solveDist.solved2) || 0) + (Number(solveDist.solved1) || 0) + (Number(solveDist.solved0) || 0);
     if (distSum > 0) return distSum;
+    if (report?.metrics?.attended) return Number(report.metrics.attended);
+    if (conditionStats.attendedCount > 0) return conditionStats.attendedCount;
     if (report.histSummary?.sessionParticipation?.length > 0) {
       return report.histSummary.sessionParticipation[report.histSummary.sessionParticipation.length - 1].attended || 0;
     }
     return allRows.filter((r: any) => (r.totalAttended || 0) > 0 || (r.weeklyData || []).some((w: any) => w.att) || (r.status || '').toUpperCase().includes('ATTEND')).length;
-  }, [isMenteeScoped, rowDerivedMetrics.attended, contestSummary, conditionStats.attendedCount, solveDist, report.histSummary, allRows]);
+  }, [isMenteeScoped, rowDerivedMetrics.attended, contestSummary, solveDist, report?.metrics?.attended, conditionStats.attendedCount, report.histSummary, allRows]);
 
   const actualNotAttendedCount = useMemo(() => {
     if (isMenteeScoped && allRows.length > 0) {
@@ -737,11 +739,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     if (contestSummary.notAttended !== undefined && contestSummary.notAttended !== null && Number(contestSummary.notAttended) > 0) {
       return Number(contestSummary.notAttended);
     }
+    if (report?.metrics?.notAttended !== undefined && report?.metrics?.notAttended !== null && Number(report.metrics.notAttended) >= 0) {
+      return Number(report.metrics.notAttended);
+    }
     if (conditionStats.notAttendedCount > 0) {
       return conditionStats.notAttendedCount;
     }
     return Math.max(totalRosterCount - actualParticipantCount, 0);
-  }, [isMenteeScoped, rowDerivedMetrics.notAttended, solveDist.notParticipated, contestSummary.notAttended, conditionStats.notAttendedCount, totalRosterCount, actualParticipantCount]);
+  }, [isMenteeScoped, rowDerivedMetrics.notAttended, solveDist.notParticipated, contestSummary.notAttended, report?.metrics?.notAttended, conditionStats.notAttendedCount, totalRosterCount, actualParticipantCount]);
 
   const turnoutPercentage = useMemo(() => {
     if (totalRosterCount <= 0) return '0%';
@@ -1042,53 +1047,132 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       periodInfo = String(report.session_date);
     }
 
-    // Authoritative dynamic metrics without hardcoded static counts
-    const total = totalRosterCount || conditionStats?.totalStudents || displayedStudents?.length || allRows.length || 0;
-    const attended = actualParticipantCount;
-    const absent = notAttendedCount;
-    const s4 = s4Count;
-    const s3 = s3Count;
-    const s2 = s2Count;
-    const s1 = s1Count;
-    const s0 = s0Count;
-
-    // Logged in User Attribution (Admin / HOD / Staff Coordinator)
-    const rawName = currentUser?.full_name || currentUser?.displayName || currentUser?.name || 'Academic Coordinator';
-    const senderName = rawName.trim();
-    const rawRole = (currentUser?.role || '').toLowerCase();
-
-    let senderRoleTitle = 'Faculty Coordinator';
-    if (rawRole.includes('admin') || rawRole.includes('super')) {
-      senderRoleTitle = 'System Administrator';
-    } else if (rawRole.includes('hod') || rawRole.includes('head')) {
-      senderRoleTitle = `Head of Department • ${currentUser?.department || cleanDept}`;
-    } else if (currentUser?.designation) {
-      senderRoleTitle = `${currentUser.designation}`;
-    } else if (rawRole.includes('faculty') || rawRole.includes('staff')) {
-      senderRoleTitle = 'Faculty Coordinator';
-    }
-
-    const sumBatchTotal = Array.isArray(report?.batch_summaries)
+    // 1. Authoritative metrics (Numbers only, NO percentages!)
+    // Ensure all report types show 100% accurate canonical counts regardless of who is logged in (Admin, HOD, or Staff)
+    const sumBatchTotal = Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0
       ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
       : 0;
-    const useRowBatches = allRows.length > 0 && (isStaffUser || (sumBatchTotal > 0 && allRows.length < sumBatchTotal));
 
-    // Base Header for all 17 Institutional Reports
+    const distSum = (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)
+      ? (Number(solveDist.solved4 || 0) + Number(solveDist.solved3 || 0) + Number(solveDist.solved2 || 0) + Number(solveDist.solved1 || 0) + Number(solveDist.solved0 || 0))
+      : 0;
+
+    const total = Number(
+      report?.total_students ||
+      report?.totalStudents ||
+      contestSummary?.totalStudents ||
+      sumBatchTotal ||
+      report?.metrics?.totalStudents ||
+      report?.college_summary?.total_students ||
+      totalRosterCount ||
+      allRows.length ||
+      0
+    );
+
+    const attended = Number(
+      (contestSummary?.publicAttended ?? 0) + (contestSummary?.virtualAttended ?? 0) > 0
+        ? (contestSummary.publicAttended ?? 0) + (contestSummary.virtualAttended ?? 0)
+        : (distSum > 0
+            ? distSum
+            : (report?.metrics?.attended ?? actualParticipantCount))
+    );
+
+    const absent = Number(
+      solveDist?.notParticipated !== undefined && solveDist?.notParticipated !== null
+        ? solveDist.notParticipated
+        : (contestSummary?.notAttended !== undefined && contestSummary?.notAttended !== null
+            ? contestSummary.notAttended
+            : (report?.metrics?.notAttended !== undefined && report?.metrics?.notAttended !== null
+                ? report.metrics.notAttended
+                : (total > attended ? total - attended : notAttendedCount)))
+    );
+
+    const s4 = Number(solveDist.solved4 ?? report?.metrics?.['4 Q Solved'] ?? contestSummary?.q4 ?? s4Count ?? 0);
+    const s3 = Number(solveDist.solved3 ?? report?.metrics?.['3 Q Solved'] ?? contestSummary?.q3 ?? s3Count ?? 0);
+    const s2 = Number(solveDist.solved2 ?? report?.metrics?.['2 Q Solved'] ?? contestSummary?.q2 ?? s2Count ?? 0);
+    const s1 = Number(solveDist.solved1 ?? report?.metrics?.['1 Q Solved'] ?? contestSummary?.q1 ?? s1Count ?? 0);
+    const s0 = Number(solveDist.solved0 ?? report?.metrics?.['0 Q Solved'] ?? contestSummary?.q0 ?? s0Count ?? Math.max(attended - (s4 + s3 + s2 + s1), 0));
+
+    // 2. Single Clean In-Charge / Coordinator Line
+    const rawName = currentUser?.full_name || currentUser?.displayName || currentUser?.name || '';
+    const rawRole = (currentUser?.role || '').toLowerCase();
+    const isStaffOrFaculty = rawRole.includes('faculty') || rawRole.includes('staff') || isStaffUser;
+
+    let inChargeRole = 'Coordinator';
+    let inChargeName = officialCoordinator;
+    if (isStaffOrFaculty && rawName) {
+      inChargeRole = 'Staff In-Charge';
+      inChargeName = rawName.trim();
+    }
+
+    // 3. Compact Batch Rating > 1500 List
+    const batchRatingList: { name: string; count: number }[] = [];
+    if (Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0) {
+      report.batch_summaries.forEach((b: any) => {
+        const rawBatch = (b.batch || '').trim();
+        let bName = rawBatch;
+        if (!bName) {
+          const yr = String(b.year || '').trim();
+          if (yr === '4' || yr === 'IV') bName = '2023 - 2027';
+          else if (yr === '3' || yr === 'III') bName = '2024 - 2028';
+          else if (yr === '2' || yr === 'II') bName = '2025 - 2029';
+          else bName = 'Batch';
+        } else {
+          if (rawBatch.includes('2023')) bName = '2023 - 2027';
+          else if (rawBatch.includes('2024')) bName = '2024 - 2028';
+          else if (rawBatch.includes('2025')) bName = '2025 - 2029';
+        }
+        const bTot = b.total_students ? ` (${b.total_students} students)` : '';
+        const r1500 = Number(b.current_week?.rating_above_1500 ?? b.rating_above_1500 ?? b.rating_1500 ?? 0);
+        batchRatingList.push({ name: `${bName}${bTot}`, count: r1500 });
+      });
+    } else if (allRows.length > 0) {
+      const bMap: Record<string, { count: number; total: number }> = {};
+      allRows.forEach((r: any) => {
+        let b = (r.batch || '').trim();
+        if (!b) {
+          const yr = String(r.year || r.year_level || '').trim();
+          if (yr === '4' || yr === 'IV') b = '2023 - 2027';
+          else if (yr === '3' || yr === 'III') b = '2024 - 2028';
+          else if (yr === '2' || yr === 'II') b = '2025 - 2029';
+          else b = yr ? `Batch ${yr}` : 'Other';
+        } else {
+          if (b.includes('2023')) b = '2023 - 2027';
+          else if (b.includes('2024')) b = '2024 - 2028';
+          else if (b.includes('2025')) b = '2025 - 2029';
+        }
+        if (!bMap[b]) bMap[b] = { count: 0, total: 0 };
+        bMap[b].total += 1;
+        const rat = Number(r.contest_rating || r.rating || 0);
+        if (rat > 1500) bMap[b].count += 1;
+      });
+      Object.entries(bMap).forEach(([bName, data]) => {
+        batchRatingList.push({ name: `${bName} (${data.total} students)`, count: data.count });
+      });
+    }
+
+    // 4. Base Header (Compact & Executive)
     let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
-      `*Department of ${cleanDept}*\n\n` +
+      `*Department of ${cleanDept}*\n` +
       `*LEETCODE PERFORMANCE REPORT*\n` +
       `• *Report:* ${reportTitle}\n`;
 
-    if (officialCoordinator) {
-      text += `• *Coordinator:* ${officialCoordinator}\n`;
+    if (resolvedContestName) {
+      text += `• *Contest:* ${resolvedContestName}\n`;
     }
-    text += `• *Staff:* *${senderName}* (${senderRoleTitle})\n`;
+    if (periodInfo) {
+      text += `• *Period:* ${periodInfo}\n`;
+    }
+    if (inChargeName) {
+      text += `• *${inChargeRole}:* ${inChargeName}\n`;
+    }
+    text += `\n`;
 
     // -------------------------------------------------------------------------
-    // DEDICATED FORMATTING FOR ALL 17 OFFICIAL INSTITUTIONAL REPORTS
+    // CLEAN, SIMPLE, QUICK-TO-READ DYNAMIC MESSAGE PER REPORT TYPE
     // -------------------------------------------------------------------------
 
-    // 1 & 2. WEEK-ON-WEEK INTELLIGENCE (WOW)
+    // 1. WEEK-ON-WEEK INTELLIGENCE (WOW)
     if (rType.includes('WOW') || rType.includes('WEEK_ON_WEEK') || report?.wowSummary) {
       const wow = report?.wowSummary || {};
       const prevCont = report?.prevContest || `Contest ${wow?.prevContestNum ?? 'Previous'}`;
@@ -1096,311 +1180,134 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       const attDelta = Number(wow.attendanceDelta || (wow.currAttendance != null && wow.prevAttendance != null ? wow.currAttendance - wow.prevAttendance : 0));
       const solvesDelta = Number(wow.solvesDelta || (wow.currTotalSolves != null && wow.prevTotalSolves != null ? wow.currTotalSolves - wow.prevTotalSolves : 0));
 
-      text += `• *Comparison:* ${prevCont} vs ${currCont}\n\n` +
-        `*Week-on-Week Performance:*\n` +
-        `• Total Students: *${wow.totalStudents || total}*\n` +
-        `• Last Week Attended: *${wow.prevAttendance ?? '—'}*\n` +
-        `• This Week Attended: *${wow.currAttendance ?? attended}* (${attDelta >= 0 ? '+' : ''}${attDelta})\n` +
-        `• Last Week Solves: *${wow.prevTotalSolves ?? '—'}*\n` +
-        `• This Week Solves: *${wow.currTotalSolves ?? '—'}* (${solvesDelta >= 0 ? '+' : ''}${solvesDelta})\n\n` +
-        `*Student Trajectory:*\n` +
-        `• Improving (↑): *${wow.improved ?? 0}* students\n` +
-        `• Stable (→): *${wow.stable ?? 0}* students\n` +
-        `• Declining (↓): *${wow.declined ?? 0}* students`;
+      text += `Contests: ${prevCont} vs ${currCont}\n\n` +
+        `Total Students: ${wow.totalStudents || total}\n` +
+        `Attended: ${wow.prevAttendance ?? '—'} → ${wow.currAttendance ?? attended} (${attDelta >= 0 ? '+' : ''}${attDelta})\n` +
+        `Total Solves: ${wow.prevTotalSolves ?? '—'} → ${wow.currTotalSolves ?? '—'} (${solvesDelta >= 0 ? '+' : ''}${solvesDelta})\n\n` +
+        `Trajectory:\n` +
+        `Improving: ${wow.improved ?? 0}\n` +
+        `Stable: ${wow.stable ?? 0}\n` +
+        `Declining: ${wow.declined ?? 0}`;
     }
-    // 3. FIVE-WEEK PERFORMANCE TREND
+    // 2. FIVE-WEEK PERFORMANCE TREND
     else if (rType.includes('FIVE_WEEK') || rType.includes('BATCH_PERFORMANCE') || isFiveWeekTrend) {
       const m = report?.metrics || {};
-      if (m.contestWindow) text += `• *Window:* ${m.contestWindow}\n`;
-      text += `\n*5-Week Longitudinal Performance:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• 5-Week Consistent Solvers (≥4/5): *${m.fiveContestConsistentSolvers ?? '—'}*\n` +
-        `• Total 5-Week Solves: *${m.total5WeekSolves ?? '—'}*\n` +
-        `• Average Solves / Student: *${m.average5WeekSolves ?? '—'}*\n\n` +
-        `*Performance Trajectory:*\n` +
-        `• Improving (↑): *${m.improvingStudents ?? '—'}* students\n` +
-        `• Stable (→): *${m.stableStudents ?? '—'}* students\n` +
-        `• Declining (↓): *${m.decliningStudents ?? '—'}* students\n` +
-        `• Follow-up Required: *${m.followUpStudents ?? '—'}* students`;
-
-      if (report?.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0) {
-        text += `\n\n*Contests Evaluated:*\n• ${report.sessionHeaders.join(' → ')}`;
-      }
+      if (m.contestWindow) text += `Window: ${m.contestWindow}\n`;
+      text += `\nTotal Students: ${total}\n` +
+        `Consistent Solvers: ${m.fiveContestConsistentSolvers ?? '—'}\n` +
+        `Total Solves: ${m.total5WeekSolves ?? '—'} | Avg: ${m.average5WeekSolves ?? '—'}\n\n` +
+        `Trajectory:\n` +
+        `Improving: ${m.improvingStudents ?? '—'}\n` +
+        `Stable: ${m.stableStudents ?? '—'}\n` +
+        `Declining: ${m.decliningStudents ?? '—'}\n` +
+        `Follow-up: ${m.followUpStudents ?? '—'}`;
     }
-    // 4. HISTORICAL CONTEST INTELLIGENCE
+    // 3. HISTORICAL CONTEST INTELLIGENCE
     else if (rType.includes('HISTORICAL') || isHistIntel) {
-      text += `\n*Historical Participation Overview:*\n` +
-        `• Total Enrolled: *${total}*\n` +
-        `• Active Contestants: *${attended}* (${turnoutPercentage})\n` +
-        `• Inactive Students: *${absent}* (${absentPercentage})\n\n` +
-        `*Longitudinal Contest Timeline:*\n`;
+      text += `\nTotal Students: ${total}\n` +
+        `Attended: ${attended} | Absent: ${absent}\n` +
+        `Total Solves: ${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}\n` +
+        `Consistent Solvers: ${report?.metrics?.fiveContestConsistentSolvers ?? '—'}`;
       if (report?.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0) {
-        text += `• Evaluated Contests: ${report.sessionHeaders.join(', ')}\n`;
+        text += `\nContests: ${report.sessionHeaders.join(' → ')}`;
       }
-      text += `• Total Solves Recorded: *${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}*\n` +
-        `• Consistent Solvers: *${report?.metrics?.fiveContestConsistentSolvers ?? '—'}*`;
     }
-    // 5. 12TH TNEA CUTOFF INTELLIGENCE
+    // 4. 12TH TNEA CUTOFF INTELLIGENCE
     else if (rType.includes('CUTOFF') || rType.includes('TNEA') || report?.cutoffBandSummary) {
-      text += `\n*Participation Summary:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• Attended: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent: *${absent}* (${absentPercentage})\n\n` +
-        `*12th TNEA Cutoff Band Breakdown:*\n`;
+      text += `\nTotal Students: ${total}\n` +
+        `Attended: ${attended} | Absent: ${absent}\n\n` +
+        `Cutoff Bands (Attended / Total):\n`;
 
       const bands = (report?.cutoffBandSummary && Array.isArray(report.cutoffBandSummary))
         ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
         : [];
       if (bands.length > 0) {
         bands.forEach((b: any) => {
-          text += `• Cutoff ${b.band}: *${b.active_solvers || 0}* / ${b.total || 0} active (${b.attendance_pct || 0}%) — 4/4 Solvers: *${b.solvers_4 || 0}*\n`;
+          text += `Cutoff ${b.band}: ${b.active_solvers || 0} / ${b.total || 0} (4/4: ${b.solvers_4 || 0})\n`;
         });
       } else {
-        text += `• Data mapping completed across high, mid, and baseline cutoff bands.`;
+        text += `All Cutoff Bands mapped and tracked.`;
       }
     }
-    // 6. PROBLEM DIFFICULTY INTELLIGENCE
+    // 5. PROBLEM DIFFICULTY INTELLIGENCE
     else if (rType.includes('PROBLEM_DIFFICULTY') || rType.includes('DIFFICULTY')) {
       const m = report?.metrics || {};
-      text += `\n*Problem Difficulty Distribution:*\n` +
-        `• Total Solved: *${m.totalSolved ?? conditionStats?.totalSolves ?? 0}*\n` +
-        `• Easy Solved: *${m.easySolved ?? 0}*\n` +
-        `• Medium Solved: *${m.mediumSolved ?? 0}*\n` +
-        `• Hard Solved: *${m.hardSolved ?? 0}*\n\n` +
-        `*Complexity Performance:*\n` +
-        `• Average Solved / Student: *${m.averageSolved ?? 0}*\n` +
-        `• Highest Problem Solver: *${m.highestSolved ?? 0}* solves\n` +
-        `• Active Participants: *${attended}* (${turnoutPercentage})`;
+      text += `\nTotal Students: ${total} | Active: ${attended}\n` +
+        `Total Solved: ${m.totalSolved ?? conditionStats?.totalSolves ?? 0} | Avg: ${m.averageSolved ?? 0}\n\n` +
+        `Difficulty Breakdown:\n` +
+        `Easy: ${m.easySolved ?? 0}\n` +
+        `Medium: ${m.mediumSolved ?? 0}\n` +
+        `Hard: ${m.hardSolved ?? 0}`;
     }
-    // 7. CONTEST ATTENDANCE & PARTICIPATION
+    // 6. CONTEST ATTENDANCE & PARTICIPATION
     else if (rType.includes('CONTEST_ATTENDANCE')) {
-      text += `• *Contest:* ${resolvedContestName}\n\n` +
-        `*Attendance & Turnout Summary:*\n` +
-        `• Total Cohort: *${total}*\n` +
-        `• Attended: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent / Missed: *${absent}* (${absentPercentage})\n\n` +
-        `*Participation Status:*\n` +
-        `• Turnout Rating: *${Number(attended) >= Number(total) * 0.75 ? 'Excellent (≥75%)' : Number(attended) >= Number(total) * 0.5 ? 'Moderate (≥50%)' : 'Needs Follow-up (<50%)'}*\n` +
-        `• At Least 1 Solved: *${(s4 + s3 + s2 + s1)}* (${getCohortPct(s4 + s3 + s2 + s1)})`;
+      text += `Contest: ${resolvedContestName}\n\n` +
+        `Total Students: ${total}\n` +
+        `Attended: ${attended} | Absent: ${absent}\n` +
+        `Solved at least 1: ${s4 + s3 + s2 + s1}`;
     }
-    // 8. CONTEST PERFORMANCE & RANKING
+    // 7. CONTEST PERFORMANCE & RANKING
     else if (rType.includes('CONTEST_PERFORMANCE_RANKING') || rType.includes('CONTEST_RANKING')) {
       const m = report?.metrics || {};
-      text += `• *Contest:* ${resolvedContestName}\n\n` +
-        `*Ranking & Global Benchmark:*\n` +
-        `• Total Participants: *${attended}*\n` +
-        `• Top Global Ranks (<20,000): *${m.ranking_20000 ?? 'Available'}*\n` +
-        `• Highest Contest Rating: *${m.highestRating ?? '—'}*\n` +
-        `• Average Contest Rating: *${m.averageRating ?? '—'}*\n\n` +
-        `*Solve Breakdown:*\n` +
-        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})`;
+      text += `Contest: ${resolvedContestName}\n\n` +
+        `Total Participants: ${attended}\n` +
+        `Global Ranks (< 20,000): ${m.ranking_20000 ?? 'Available'}\n` +
+        `Highest Rating: ${m.highestRating ?? '—'} | Avg: ${m.averageRating ?? '—'}\n\n` +
+        `Top Solvers:\n` +
+        `4/4 Solved: ${s4}\n` +
+        `3/4 Solved: ${s3}\n` +
+        `2/4 Solved: ${s2}\n` +
+        `1/4 Solved: ${s1}`;
     }
-    // 9. WEEKLY CONTEST INTELLIGENCE
-    else if (rType.includes('WEEKLY_CONTEST_INTELLIGENCE')) {
-      text += `• *Contest:* ${resolvedContestName}\n\n` +
-        `*Weekly Contest Intelligence:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• Attended: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent: *${absent}* (${absentPercentage})\n\n` +
-        `*Solve Breakdown:*\n` +
-        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})`;
-    }
-    // 10. WEEKLY STUDENT PERFORMANCE
-    else if (rType.includes('WEEKLY_STUDENT_PERFORMANCE')) {
-      text += `\n*Student Cohort Performance:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• Active Participants: *${attended}* (${turnoutPercentage})\n` +
-        `• Zero Solved / Absent: *${absent}* (${absentPercentage})\n\n` +
-        `*Problem Milestone Bands:*\n`;
+    // 8. FACULTY / STAFF CONSOLIDATED
+    else if (rType.includes('FACULTY') && report?.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0) {
+      text += `\nTotal Mentors: ${report.facultySummary.length}\n` +
+        `Total Students: ${total} | Active: ${attended}\n\n` +
+        `Staff Breakdown (Active / Assigned):\n`;
 
-      if (report?.categories) {
-        Object.entries(report.categories).forEach(([k, v]) => {
-          text += `• ${k}: *${v}* students\n`;
-        });
-      } else {
-        text += `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-          `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-          `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-          `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
-      }
+      report.facultySummary.forEach((f: any) => {
+        text += `${f.staff_name}: ${f.active_solvers || 0} / ${f.total_assigned || 0} (Avg: ${f.avg_solved || 0})\n`;
+      });
     }
-    // 11. FACULTY CONSOLIDATED PERFORMANCE REPORT
-    else if (rType.includes('FACULTY_CONSOLIDATED')) {
-      text += `\n*Faculty Mentorship Summary:*\n` +
-        `• Faculty Mentors: *${report?.facultySummary?.length || 'All'}*\n` +
-        `• Assigned Students: *${total}*\n` +
-        `• Active Solvers: *${attended}* (${turnoutPercentage})\n\n` +
-        `*Mentor Allocations:*\n`;
-
-      if (report?.facultySummary && Array.isArray(report.facultySummary)) {
-        report.facultySummary.forEach((f: any) => {
-          text += `• ${f.staff_name}: *${f.active_solvers || 0}* / ${f.total_assigned || 0} active (${f.active_pct || 0}%) — Avg Solved: *${f.avg_solved || 0}*\n`;
-        });
-      }
-    }
-    // 12. FACULTY COORDINATOR CONSOLIDATED
-    else if (rType.includes('FACULTY_COORDINATOR')) {
-      text += `\n*Coordinator Consolidations:*\n` +
-        `• Assigned Students: *${total}*\n` +
-        `• Active Contestants: *${attended}* (${turnoutPercentage})\n` +
-        `• Total Solved: *${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}*\n\n` +
-        `*Batch-Wise Mentorship Progress:*\n`;
-
-      if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
-        report.batch_summaries.forEach((b: any) => {
-          text += `• ${b.batch || 'Batch'}: *${b.current_week?.rating_above_1500 ?? (b.rating_1500 ?? 0)}* with Rating > 1500\n`;
-        });
-      }
-    }
-    // 13. HOD DEPARTMENT INTELLIGENCE
-    else if (rType.includes('HOD_DEPARTMENT') || rType.includes('HOD')) {
-      text += `\n*HOD Department Executive Overview:*\n` +
-        `• Total Department Students: *${total}*\n` +
-        `• Active Solvers: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent: *${absent}* (${absentPercentage})\n\n` +
-        `*Year-Wise Breakdown:*\n`;
+    // 9. HOD / PRINCIPAL / MANAGEMENT EXECUTIVE
+    else if (rType.includes('HOD') || rType.includes('PRINCIPAL') || rType.includes('MANAGEMENT')) {
+      text += `\nTotal Students: ${total}\n` +
+        `Attended: ${attended} | Absent: ${absent}\n\n`;
 
       if (report?.yearSummary && Array.isArray(report.yearSummary)) {
+        text += `Year-Wise (Active / Total):\n`;
         report.yearSummary.forEach((y: any) => {
-          text += `• Year ${y.year}: *${y.active_solvers || 0}* / ${y.total || 0} active (${y.attendance_pct || 0}%) — Solves: *${y.total_solved || 0}*\n`;
+          text += `Year ${y.year}: ${y.active_solvers || 0} / ${y.total || 0} (Solves: ${y.total_solved || 0})\n`;
         });
-      } else {
-        text += `• 4/4 Solved: *${s4}*\n• 3/4 Solved: *${s3}*\n• 2/4 Solved: *${s2}*\n• 1/4 Solved: *${s1}*\n`;
-      }
-    }
-    // 14. PRINCIPAL EXECUTIVE INTELLIGENCE
-    else if (rType.includes('PRINCIPAL_EXECUTIVE') || rType.includes('PRINCIPAL')) {
-      text += `\n*Institutional Executive Intelligence:*\n` +
-        `• College Total Students: *${total}*\n` +
-        `• Active Solvers: *${attended}* (${turnoutPercentage})\n` +
-        `• Total Solved Problems: *${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}*\n\n` +
-        `*Department Performance:*\n`;
-
-      if (report?.departmentSummary && Array.isArray(report.departmentSummary)) {
+      } else if (report?.departmentSummary && Array.isArray(report.departmentSummary)) {
+        text += `Department-Wise (Active / Total):\n`;
         report.departmentSummary.forEach((d: any) => {
-          text += `• ${d.department}: *${d.active_solvers || 0}* / ${d.total || 0} active (${d.attendance_pct || 0}%) — Solves: *${d.total_solved || 0}*\n`;
+          text += `${d.department}: ${d.active_solvers || 0} / ${d.total || 0} (Solves: ${d.total_solved || 0})\n`;
         });
       } else {
-        text += `• Institutional adoption verified across all Engineering cohorts.`;
+        text += `Solved: 4/4: ${s4} | 3/4: ${s3} | 2/4: ${s2} | 1/4: ${s1}`;
       }
     }
-    // 15. MANAGEMENT EXECUTIVE SUMMARY
-    else if (rType.includes('MANAGEMENT_EXECUTIVE') || rType.includes('MANAGEMENT')) {
-      text += `\n*Management Executive Summary:*\n` +
-        `• Institutional Strength: *${total}* students\n` +
-        `• Active Problem Solvers: *${attended}* (${turnoutPercentage})\n` +
-        `• Solvers with Rating > 1500: *${s4 + s3 + s2 + s1}* active solvers\n\n` +
-        `*Department Highlights:*\n`;
-
-      if (report?.departmentSummary && Array.isArray(report.departmentSummary)) {
-        report.departmentSummary.slice(0, 4).forEach((d: any) => {
-          text += `• ${d.department}: *${d.attendance_pct || 0}%* participation (${d.active_solvers} active)\n`;
-        });
-      } else {
-        text += `• Continuous weekly coding culture active and verified.`;
-      }
-    }
-    // 16. FRIDAY CONTEST RESULT
-    else if (rType.includes('FRIDAY')) {
-      text += `• *Contest:* ${resolvedContestName.includes('Friday') ? resolvedContestName : 'Friday Official Contest'}\n\n` +
-        `*Friday Contest Performance:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• Attended: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent: *${absent}* (${absentPercentage})\n\n` +
-        `*Solve Breakdown:*\n` +
-        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
-      if (s0 > 0) text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
-    }
-    // 17. SATURDAY BIWEEKLY CONTEST RESULT
-    else if (rType.includes('BIWEEKLY') || rType.includes('SATURDAY')) {
-      text += `• *Contest:* ${resolvedContestName.includes('Biweekly') ? resolvedContestName : 'Saturday Biweekly Contest'}\n\n` +
-        `*Saturday Biweekly Performance:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• Attended: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent: *${absent}* (${absentPercentage})\n\n` +
-        `*Solve Breakdown:*\n` +
-        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
-      if (s0 > 0) text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
-    }
-    // 18. SUNDAY LIVE CONTEST & COORDINATOR WEEKLY PERFORMANCE (DEFAULT)
+    // 10. WEEKLY CONTEST, SUNDAY LIVE, FRIDAY CONTEST, SATURDAY BIWEEKLY, COORDINATOR WEEKLY (DEFAULT)
     else {
-      text += `• *Contest:* ${resolvedContestName}\n`;
-      if (periodInfo) {
-        text += `• *Period:* ${periodInfo}\n`;
-      }
-
-      text += `\n*Participation Summary:*\n` +
-        `• Total Students: *${total}*\n` +
-        `• Attended: *${attended}* (${turnoutPercentage})\n` +
-        `• Absent / Not Attended: *${absent}* (${absentPercentage})\n\n` +
+      text += `• *Total Students:* ${total}\n` +
+        `• *Attended:* ${attended}\n` +
+        `• *Absent / Not Attended:* ${absent}\n\n` +
         `*Solve Breakdown:*\n` +
-        `• 4/4 Solved: *${s4}* (${getCohortPct(s4)})\n` +
-        `• 3/4 Solved: *${s3}* (${getCohortPct(s3)})\n` +
-        `• 2/4 Solved: *${s2}* (${getCohortPct(s2)})\n` +
-        `• 1/4 Solved: *${s1}* (${getCohortPct(s1)})\n`;
+        `• 4/4 Solved: ${s4}\n` +
+        `• 3/4 Solved: ${s3}\n` +
+        `• 2/4 Solved: ${s2}\n` +
+        `• 1/4 Solved: ${s1}\n`;
 
       if (s0 > 0) {
-        text += `• 0/4 Solved: *${s0}* (${getCohortPct(s0)})\n`;
+        text += `• 0/4 Solved: ${s0}\n`;
       }
 
-      if (useRowBatches) {
-        const bMap: Record<string, { total: number; r1500: number }> = {};
-        allRows.forEach((r: any) => {
-          let b = (r.batch || '').trim();
-          if (!b) {
-            const yr = String(r.year || r.year_level || '').trim();
-            if (yr === '4' || yr === 'IV') b = '2023 - 2027';
-            else if (yr === '3' || yr === 'III') b = '2024 - 2028';
-            else if (yr === '2' || yr === 'II') b = '2025 - 2029';
-            else b = yr ? `Batch ${yr}` : 'Other';
-          }
-          if (!bMap[b]) bMap[b] = { total: 0, r1500: 0 };
-          bMap[b].total += 1;
-          const rat = Number(r.contest_rating || r.rating || 0);
-          if (rat > 1500) bMap[b].r1500 += 1;
+      if (batchRatingList.length > 0) {
+        text += `\n*Batch Breakdown:*\n`;
+        batchRatingList.forEach(b => {
+          text += `• ${b.name} — Rating > 1500: ${b.count}\n`;
         });
-        const bEntries = Object.entries(bMap).filter(([_, data]) => data.total > 0);
-        if (bEntries.length > 0) {
-          text += `\n*Batch Breakdown (Rating > 1500):*\n`;
-          bEntries.forEach(([batchName, bData]) => {
-            text += `• ${batchName} (${bData.total} students) — Rating > 1500: *${bData.r1500}*\n`;
-          });
-        }
-      } else if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
-        text += `\n*Batch Breakdown (Rating > 1500):*\n`;
-        report.batch_summaries.forEach((b: any) => {
-          const batchName = b.batch || 'Batch';
-          const tot = b.total_students || 0;
-          const r1500 = b.current_week?.rating_above_1500 ?? (b.rating_1500 ?? 0);
-          text += `• ${batchName} (${tot} students) — Rating > 1500: *${r1500}*\n`;
-        });
-      }
-
-      // Department Staff Allocation Overview
-      if (isStaffUser) {
-        text += `\n*Staff Allocation Overview:*\n`;
-        text += `• Assigned Students: *${total}*\n`;
-        text += `• Active Solvers: *${attended}* (${turnoutPercentage})\n`;
-      } else if (report?.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0) {
-        text += `\n*Staff Allocation Summary:*\n`;
-        report.facultySummary.slice(0, 5).forEach((f: any) => {
-          text += `• ${f.staff_name}: *${f.active_solvers || 0}* / ${f.total_assigned || 0} active (${f.active_pct || 0}%)\n`;
-        });
-        if (report.facultySummary.length > 5) {
-          text += `• ...and ${report.facultySummary.length - 5} more faculty mentors\n`;
-        }
       }
     }
 

@@ -1271,9 +1271,10 @@ export const HODCommandCenter: React.FC = () => {
  const { user } = useAuth();
  const { notify } = useNotification();
  const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
- const isGlobalAdmin = useMemo(() => ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean), [roleClean]);
+ const isPlacement = useMemo(() => ['placement', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(roleClean), [roleClean]);
+ const isGlobalAdmin = useMemo(() => ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean) || isPlacement, [roleClean, isPlacement]);
  const isHod = useMemo(() => ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean), [roleClean]);
- const isGlobalRole = useMemo(() => ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean), [roleClean]);
+ const isGlobalRole = useMemo(() => ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'placement', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(roleClean), [roleClean]);
 
  const defaultDeptValue = useMemo(() => {
    if (isHod && !isGlobalRole) {

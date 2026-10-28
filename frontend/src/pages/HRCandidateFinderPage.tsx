@@ -5,6 +5,7 @@ import api from "../services/api";
 import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
 import { StudentIntelligenceProfileModal } from "../components/StudentIntelligenceProfileModal";
+import { ReportPreview } from "../components/ReportPreview";
 import { SwipeHandle } from "../components/SwipeHandle";
 import { useScrollLock, forceUnlockScroll } from "../hooks/useScrollLock";
 
@@ -550,6 +551,9 @@ export const HRCandidateFinderPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [probSearch, setProbSearch] = useState<string>("");
   const [probDiff, setProbDiff] = useState<string>("all");
+  const [previewReportData, setPreviewReportData] = useState<any>(null);
+  const [previewReportId, setPreviewReportId] = useState<string | null>(null);
+  const [isLoadingReport, setIsLoadingReport] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -1117,6 +1121,27 @@ export const HRCandidateFinderPage: React.FC = () => {
       current.active = (current.val1 > 0 || current.val2 > 0) || (current.op !== ">=");
       return { ...prev, [key]: current };
     });
+  };
+
+  // In-Browser Management Report Preview
+  const openManagementReportPreview = async () => {
+    setIsLoadingReport(true);
+    try {
+      const res = await api.post('/reports/generate', {
+        report_type: 'MANAGEMENT_EXECUTIVE_SUMMARY',
+        department: filters.department === 'ALL' ? 'ALL' : filters.department,
+        year: filters.year_level === 'ALL' ? 'ALL' : filters.year_level,
+        output_scope: 'COLLEGE'
+      });
+      if (res.data) {
+        setPreviewReportData(res.data);
+        setPreviewReportId(res.data.reportId || res.data.report_id || `mgmt_${Date.now()}`);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.detail || "Failed to load Management Report preview.");
+    } finally {
+      setIsLoadingReport(false);
+    }
   };
 
   // Excel Export
@@ -2505,7 +2530,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       {/* 3. CANDIDATE RESULTS SECTION */}
       <div className="space-y-4">
         {/* Results Header & Summary Cards */}
-        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
               Candidate Results
@@ -2515,18 +2540,23 @@ export const HRCandidateFinderPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full xl:w-auto justify-between xl:justify-end">
-            {/* Export Actions */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button onClick={exportToExcel} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
-                <FileSpreadsheet className="w-4 h-4" /> Export Excel
-              </button>
-              <button onClick={exportToPDF} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs border border-slate-600 dark:border-navy-600 transition-all cursor-pointer">
-                <Printer className="w-4 h-4" /> Print PDF
-              </button>
-            </div>
-
-
+          {/* Export Actions - Always Single Row & Compact */}
+          <div className="flex flex-row items-center gap-2 w-full sm:w-auto shrink-0">
+            <button 
+              onClick={openManagementReportPreview} 
+              disabled={isLoadingReport}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-bold text-[11px] sm:text-xs tracking-tight shadow-sm shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+            >
+              <Eye className={`w-3.5 h-3.5 shrink-0 ${isLoadingReport ? 'animate-spin' : ''}`} />
+              <span>{isLoadingReport ? 'Opening...' : 'Open Management Report'}</span>
+            </button>
+            <button 
+              onClick={exportToExcel} 
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-bold text-[11px] sm:text-xs tracking-tight shadow-sm shadow-emerald-600/20 transition-all cursor-pointer whitespace-nowrap"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
+              <span>Management Report (Excel)</span>
+            </button>
           </div>
         </div>
 
@@ -3084,6 +3114,18 @@ export const HRCandidateFinderPage: React.FC = () => {
           initialStudent={selectedCandidate}
           onClose={() => setSelectedCandidate(null)}
           onRefreshList={handleFind}
+        />
+      )}
+
+      {/* 5. MANAGEMENT REPORT IN-BROWSER PREVIEW MODAL */}
+      {previewReportId && (
+        <ReportPreview
+          reportId={previewReportId}
+          initialData={previewReportData}
+          onClose={() => {
+            setPreviewReportId(null);
+            setPreviewReportData(null);
+          }}
         />
       )}
 

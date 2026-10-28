@@ -1375,13 +1375,22 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         ("Average Solved Count", avg_tot)
     ]
     for idx, (lbl, val) in enumerate(crit_list, start=11):
-        ws1.cell(row=idx, column=1, value=lbl).font = FONT_DATA_BOLD
-        ws1.cell(row=idx, column=1).border = _THIN_BORDER
-        ws1.merge_cells(start_row=idx, start_column=2, end_row=idx, end_column=8)
-        c_val = ws1.cell(row=idx, column=2, value=clean_cell_value(val))
-        c_val.font = FONT_DATA; c_val.alignment = ALIGN_LEFT
-        for col_i in range(2, 9):
+        # Merge columns 1 to 3 (A:C) for label so text is never cropped (width 49.5)
+        ws1.merge_cells(start_row=idx, start_column=1, end_row=idx, end_column=3)
+        c_lbl = ws1.cell(row=idx, column=1, value=lbl)
+        c_lbl.font = FONT_DATA_BOLD
+        c_lbl.alignment = ALIGN_LEFT
+        for col_i in range(1, 4):
             ws1.cell(row=idx, column=col_i).border = _THIN_BORDER
+
+        # Merge columns 4 to 8 (D:H) for value
+        ws1.merge_cells(start_row=idx, start_column=4, end_row=idx, end_column=8)
+        c_val = ws1.cell(row=idx, column=4, value=clean_cell_value(val))
+        c_val.font = FONT_DATA
+        c_val.alignment = ALIGN_LEFT
+        for col_i in range(4, 9):
+            ws1.cell(row=idx, column=col_i).border = _THIN_BORDER
+        ws1.row_dimensions[idx].height = 20
 
     tot_easy = sum(_safe_int(c.get("easy_solved", 0)) for c in candidates)
     tot_med = sum(_safe_int(c.get("medium_solved", 0)) for c in candidates)

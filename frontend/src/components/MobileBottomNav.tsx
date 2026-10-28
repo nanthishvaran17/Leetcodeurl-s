@@ -159,7 +159,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   ];
 
   const handleTabClick = (tabId: string) => {
-    triggerHaptic();
+    triggerHaptic('selection');
     if (setActiveTab) {
       setActiveTab(tabId);
     }
@@ -178,7 +178,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         shouldShow ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >
-      <div className="relative h-[62px] rounded-full bg-white dark:bg-[#070A14] border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
+      <div className="relative h-[62px] rounded-full bg-white/95 dark:bg-[#070A14]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = 
@@ -197,7 +197,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               onMouseEnter={() => prefetchRoute(tab.id)}
               onTouchStart={() => prefetchRoute(tab.id)}
               onClick={() => handleTabClick(tab.id)}
-              className={`relative flex flex-col items-center justify-center flex-1 h-full py-1 px-1 rounded-full transition-all duration-200 active:scale-90 select-none cursor-pointer touch-manipulation ${
+              className={`relative flex flex-col items-center justify-center flex-1 h-full py-1 px-1 rounded-full transition-all duration-200 active:scale-90 active-spring select-none cursor-pointer touch-manipulation ${
                 isActive 
                   ? 'text-brand-600 dark:text-brand-400 font-black' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'

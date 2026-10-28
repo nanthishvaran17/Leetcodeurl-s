@@ -205,6 +205,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     useRef<HTMLInputElement>(null)
   ];
 
+  // 2FA Challenge States & Refs
+  const [twoFactorPending, setTwoFactorPending] = useState(false);
+  const [twoFactorTempToken, setTwoFactorTempToken] = useState('');
+  const [twoFactorDigits, setTwoFactorDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const twoFactorDigitRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null)
+  ];
+
   // Eagerly warm up Render server — deferred by 1s to avoid competing with LCP image fetch
   useEffect(() => {
     const warmUp = async () => {
@@ -312,6 +325,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         username: username.trim().toLowerCase(),
         password
       }, { timeout: 60000 });
+
+      if (res.data?.require_2fa) {
+        setTwoFactorPending(true);
+        setTwoFactorTempToken(res.data.two_factor_temp_token || '');
+        setTwoFactorDigits(['', '', '', '', '', '']);
+        setSuccessMsg('Identity verified. Please enter the 6-digit code from Google Authenticator.');
+        setError('');
+        setTimeout(() => {
+          twoFactorDigitRefs[0]?.current?.focus();
+        }, 150);
+        return;
+      }
+
       if (res.data?.access_token) {
         setAuthStatusText('Authenticating...');
         setSuccessMsg('Authentication verified. Directing to workspace...');
@@ -438,6 +464,63 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     if (index < 5 && digit) {
       digitRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleTwoFactorDigitChange = (index: number, value: string) => {
+    const cleanVal = value.replace(/\D/g, '');
+    if (!cleanVal) {
+      const newDigits = [...twoFactorDigits];
+      newDigits[index] = '';
+      setTwoFactorDigits(newDigits);
+      return;
+    }
+    const digit = cleanVal[cleanVal.length - 1];
+    const newDigits = [...twoFactorDigits];
+    newDigits[index] = digit;
+    setTwoFactorDigits(newDigits);
+    setError('');
+
+    if (index < 5 && digit) {
+      twoFactorDigitRefs[index + 1].current?.focus();
+    }
+
+    if (index === 5 && digit && newDigits.every(d => d !== '')) {
+      handleTwoFactorChallengeSubmit(newDigits.join(''));
+    }
+  };
+
+  const handleTwoFactorChallengeSubmit = async (codeOverride?: string) => {
+    const code = (codeOverride || twoFactorDigits.join('')).trim();
+    if (code.length !== 6) {
+      triggerShake();
+      setError('Please enter all 6 digits from your authenticator app.');
+      return;
+    }
+
+    setLoading(true);
+    setAuthStatusText('Verifying 2FA Security Token...');
+    try {
+      const res = await api.post('/auth/2fa/challenge', {
+        temp_token: twoFactorTempToken,
+        code
+      });
+      if (res.data?.access_token) {
+        setAuthStatusText('Authentication verified • Directing to workspace...');
+        setSuccessMsg('2FA verified successfully!');
+        if (rememberMe) {
+          localStorage.setItem('nec_remembered_username', username.trim());
+          localStorage.setItem('nec_remembered_password', password.trim());
+        }
+        login(res.data.access_token, res.data.user);
+        setTimeout(() => { onSuccess(); }, 180);
+      }
+    } catch (err: any) {
+      triggerShake();
+      setError(err?.response?.data?.detail || 'Invalid 2FA code. Please check Google Authenticator.');
+    } finally {
+      setLoading(false);
+      setAuthStatusText('');
     }
   };
 
@@ -860,8 +943,76 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                     </button>
                   </motion.div>
 
-                  {/* Password Form */}
+                  {/* Password Form or 2FA Challenge */}
                   {authMode === 'password' ? (
+                    twoFactorPending ? (
+                      <form onSubmit={(e) => { e.preventDefault(); handleTwoFactorChallengeSubmit(); }} noValidate>
+                        <div className="text-center pb-3">
+                          <div className="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto mb-2.5">
+                            <ShieldCheck size={26} />
+                          </div>
+                          <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">2FA Security Challenge</h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Enter the 6-digit verification code from Google Authenticator or Microsoft Authenticator.
+                          </p>
+                        </div>
+
+                        <div className="field">
+                          <div className="otp-boxes-row">
+                            {twoFactorDigits.map((digit, index) => (
+                              <input
+                                key={index}
+                                ref={twoFactorDigitRefs[index]}
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                pattern="\d{1}"
+                                maxLength={1}
+                                className="otp-box"
+                                value={digit}
+                                onChange={(e) => handleTwoFactorDigitChange(index, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Backspace' && !digit && index > 0) {
+                                    twoFactorDigitRefs[index - 1].current?.focus();
+                                  }
+                                }}
+                                disabled={loading}
+                                required
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <motion.button className="submit-btn" type="submit" disabled={loading}>
+                          {loading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin shrink-0" size={18} />
+                              <span>{authStatusText || 'Verifying 2FA...'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Verify &amp; Sign In</span>
+                              <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
+                            </>
+                          )}
+                        </motion.button>
+
+                        <div className="text-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTwoFactorPending(false);
+                              setTwoFactorDigits(['', '', '', '', '', '']);
+                              setError('');
+                              setSuccessMsg('');
+                            }}
+                            className="text-xs font-bold text-slate-500 hover:text-brand-500 transition-colors cursor-pointer"
+                          >
+                            ← Back to Password Login
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
                     <form onSubmit={handlePasswordLogin} noValidate>
                       <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                         <label htmlFor="userId">Institutional Email or User ID</label>
@@ -943,6 +1094,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                         )}
                       </motion.button>
                     </form>
+                    )
                   ) : (
                     /* OTP Form */
                     <form onSubmit={otpStep === 'email' ? handleSendOtp : handleVerifyOtp} noValidate>

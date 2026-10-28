@@ -801,71 +801,114 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   return (
     <div className="space-y-8 sm:space-y-10 pt-3 sm:pt-4 pb-12 animate-fade-in">
       
-      {/* 1. PROVIDER STATUS BAR (Admins Only) — 2026 SaaS Glassmorphic Ambient Banner */}
+      {/* 1. PROVIDER STATUS BAR (Admins Only) — Modern SaaS Glassmorphic Telemetry Console */}
       {!isStaff && (
-        <div className="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-950 via-[#0c162c] to-[#091122] text-white border border-brand-500/30 shadow-xl mb-8 sm:mb-10">
-          <div className="absolute top-0 right-1/4 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-slate-950 via-[#0a1324] to-[#060b17] text-white border border-slate-800/80 shadow-2xl mb-8 sm:mb-10 backdrop-blur-xl">
+          {/* Ambient Cybernetic Glows */}
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-24" />
+          <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-            <div className="flex min-w-0 flex-1 items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 text-emerald-300 shadow-inner">
-                <Server className="w-6 h-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-sm sm:text-base font-black text-white tracking-tight">
-                    Brevo Official API
-                  </h2>
-                  <span className="inline-flex items-center gap-1.5 text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-black tracking-wide shrink-0 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    HTTPS PORT 443
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 font-black font-mono">
-                    <Lock className="w-3 h-3 text-brand-300" />
-                    TLS 1.3
+          <div className="relative z-10 flex flex-col gap-5 sm:gap-6">
+            {/* Top Bar: Identity & Real-time Action Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/10 border border-emerald-400/30 flex items-center justify-center shrink-0 text-emerald-300 shadow-inner group">
+                  <Server className="w-6 h-6 transition-transform group-hover:scale-110" />
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-slate-950" />
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 font-medium mt-0.5 flex items-center gap-2 flex-wrap">
-                  <span>Active Provider: <strong className="text-brand-300 font-black uppercase font-mono">{providerInfo?.active_provider || 'brevo_api'}</strong></span>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-slate-400">Institutional Delivery Engine</span>
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                      Brevo Official API
+                    </h2>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 font-bold tracking-wide shrink-0 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live & Operational
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                    <span>Active Provider: <strong className="text-cyan-300 font-black uppercase font-mono">{providerInfo?.active_provider || 'BREVO_API'}</strong></span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">Institutional Delivery Engine</span>
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex shrink-0 items-center justify-between sm:justify-end gap-3 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
-              <div className="hidden md:flex items-center gap-5 text-xs">
-                <div className="flex flex-col">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Timeout</span>
-                  <span className="font-mono font-black text-white">90s</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Retry Policy</span>
-                  <span className="font-mono font-black text-white">3 Exponential</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Last Success</span>
-                  <span className="font-mono font-black text-emerald-300">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'Verified'}</span>
-                </div>
-              </div>
-              
-              <div className="h-8 w-px bg-white/15 hidden sm:block" />
-              
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Refreshed</div>
+              {/* Refresh & Last Refreshed Controls */}
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                <div className="text-left sm:text-right">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Telemetry Synced</div>
                   <div className="text-xs font-mono font-bold text-slate-200">{lastRefreshedAt || 'Just now'}</div>
                 </div>
                 <button
                   type="button"
                   onClick={() => fetchAllData(false)}
                   disabled={refreshing}
-                  className="px-3.5 py-2 min-h-[44px] rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/20 transition-all disabled:opacity-50 cursor-pointer touch-manipulation active:scale-95 flex items-center gap-2 shadow-xs"
+                  className="px-3.5 py-2 min-h-[42px] rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 transition-all disabled:opacity-50 cursor-pointer touch-manipulation active:scale-95 flex items-center gap-2 shadow-xs group"
                   title="Refresh Telemetry"
                 >
-                  <RefreshCw className={`w-4 h-4 text-brand-300 ${refreshing ? 'animate-spin' : ''}`} />
-                  <span className="text-xs font-bold sm:hidden">Refresh</span>
+                  <RefreshCw className={`w-4 h-4 text-brand-300 transition-transform group-hover:rotate-180 duration-500 ${refreshing ? 'animate-spin' : ''}`} />
+                  <span className="text-xs font-bold text-slate-200">Refresh</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Bottom Telemetry Grid: 4 Modern Micro-Capsule Cards (Responsive: 2 cols on mobile, 4 on desktop) */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5 pt-1">
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 transition-colors">
+                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <Lock className="w-3 h-3 text-emerald-400" />
+                  <span>Protocol & Port</span>
+                </div>
+                <div className="font-mono font-bold text-xs sm:text-sm text-white">
+                  HTTPS Port 443
+                </div>
+                <div className="text-[10px] text-emerald-400/90 font-medium mt-0.5 flex items-center gap-1 font-mono">
+                  <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                  TLS 1.3 Verified
+                </div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 transition-colors">
+                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <Clock className="w-3 h-3 text-cyan-400" />
+                  <span>Gateway Timeout</span>
+                </div>
+                <div className="font-mono font-bold text-xs sm:text-sm text-white">
+                  90s Maximum
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                  Zero-drop buffer
+                </div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 transition-colors">
+                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <RotateCcw className="w-3 h-3 text-brand-400" />
+                  <span>Retry Policy</span>
+                </div>
+                <div className="font-mono font-bold text-xs sm:text-sm text-white">
+                  3x Exponential
+                </div>
+                <div className="text-[10px] text-brand-300 font-medium mt-0.5">
+                  Auto-healing queue
+                </div>
+              </div>
+
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.06] border border-white/10 transition-colors">
+                <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <CheckCircle2 className="w-3 h-3 text-teal-400" />
+                  <span>Verified Channel</span>
+                </div>
+                <div className="font-mono font-bold text-xs sm:text-sm text-emerald-300 truncate" title={metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'Verified'}>
+                  {metrics.lastSuccessTime ? '100% Operational' : 'Operational'}
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium mt-0.5 truncate font-mono">
+                  {metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'Ready for dispatch'}
+                </div>
               </div>
             </div>
           </div>

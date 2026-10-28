@@ -9,19 +9,56 @@ interface CountdownTimerProps {
 }
 
 export const MOTIVATIONAL_HOOKS = [
-  (name: string) => `Keep Grinding, ${name}!`,
-  (name: string) => `Consistency beats intensity, ${name}!`,
   (name: string) => `One problem a day builds mastery, ${name}!`,
-  (name: string) => `Debug your limits & elevate your logic, ${name}!`,
-  (name: string) => `Small daily code reps build big careers, ${name}!`,
+  (name: string) => `Consistency beats intensity, ${name}!`,
+  (name: string) => `Keep grinding, every line of code counts, ${name}!`,
   (name: string) => `Master the patterns, conquer the contest, ${name}!`,
-  (name: string) => `Sharpen your skills for Sunday's arena, ${name}!`,
-  (name: string) => `Algorithms get sharper with practice, ${name}!`,
-  (name: string) => `Every accepted submission counts, ${name}!`,
+  (name: string) => `Small daily code reps build big careers, ${name}!`,
   (name: string) => `Turn tough bugs into deep breakthroughs, ${name}!`,
-  (name: string) => `Break complex challenges into simple wins, ${name}!`,
-  (name: string) => `Stay focused, stay persistent, ${name}!`,
+  (name: string) => `Every accepted submission counts toward greatness, ${name}!`,
+  (name: string) => `Debug your limits & elevate your logic, ${name}!`,
+  (name: string) => `Algorithms get sharper with daily practice, ${name}!`,
+  (name: string) => `Sharpen your skills for Sunday's arena, ${name}!`,
+  (name: string) => `Break complex challenges into simple daily wins, ${name}!`,
+  (name: string) => `Stay focused, stay persistent, stay relentless, ${name}!`,
+  (name: string) => `Clean logic and deep focus write the future, ${name}!`,
+  (name: string) => `Your daily streak is your competitive advantage, ${name}!`,
+  (name: string) => `Great coders are built one problem at a time, ${name}!`,
+  (name: string) => `Embrace edge cases; mastery lives in details, ${name}!`,
+  (name: string) => `Progress over perfection: keep pushing your code, ${name}!`,
+  (name: string) => `Think before you code, optimize as you grow, ${name}!`,
+  (name: string) => `Every runtime error is a step toward optimization, ${name}!`,
+  (name: string) => `Confidence in coding comes from deliberate practice, ${name}!`,
+  (name: string) => `Tackle hard problems; easy ones won't build strength, ${name}!`,
+  (name: string) => `Step by step, line by line, you are building mastery, ${name}!`,
+  (name: string) => `Cultivate patience: great algorithms take time to mature, ${name}!`,
+  (name: string) => `Your mindset determines your algorithm's efficiency, ${name}!`,
+  (name: string) => `Focus on understanding core patterns, ${name}!`,
+  (name: string) => `Today's disciplined practice is tomorrow's top rank, ${name}!`,
+  (name: string) => `From brute force to optimal solutions, keep evolving, ${name}!`,
+  (name: string) => `Build resilience: every failed test case is free coaching, ${name}!`,
+  (name: string) => `The code you write today shapes the engineer you become, ${name}!`,
+  (name: string) => `Believe in your preparation and dominate the weekly contest, ${name}!`,
 ];
+
+/**
+ * Calculates a deterministic daily quote index (0 to 29) that updates strictly at 06:00 AM IST every day.
+ * 06:00 AM IST to 05:59:59 AM IST next day = 1 full daily cycle.
+ */
+export function getDailyQuoteIndex(): number {
+  try {
+    const nowMs = Date.now();
+    // Indian Standard Time (IST) offset = UTC + 5:30
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istTimeMs = nowMs + istOffset;
+    // Shift by -6 hours so the day boundary resets at 06:00:00 AM IST
+    const sixAmCycleMs = istTimeMs - (6 * 60 * 60 * 1000);
+    const dayEpoch = Math.floor(sixAmCycleMs / (24 * 60 * 60 * 1000));
+    return Math.abs(dayEpoch) % MOTIVATIONAL_HOOKS.length;
+  } catch {
+    return 0;
+  }
+}
 
 export function getIstSessionTiming(userName: string = 'User', customMotivation?: string): {
   isLive: boolean;
@@ -83,7 +120,7 @@ export function getIstSessionTiming(userName: string = 'User', customMotivation?
       // Monday (1) through Saturday (6)
       const daysUntilSunday = (7 - dayOfWeek) % 7;
       const secondsRemaining = (daysUntilSunday * 86400) + (startSec - secondsToday);
-      const motivation = customMotivation || `Keep Grinding, ${userName}!`;
+      const motivation = customMotivation || MOTIVATIONAL_HOOKS[getDailyQuoteIndex()](userName);
       return {
         isLive: false,
         secondsRemaining: Math.max(0, secondsRemaining),
@@ -106,28 +143,26 @@ export function getIstSessionTiming(userName: string = 'User', customMotivation?
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _propTarget, isLive: propIsLive }) => {
   const { user } = useAuth();
   const rawName = user?.name ? user.name.split(' ')[0] : 'Admin';
-  const firstName = rawName.length > 12 ? rawName.substring(0, 12) + '...' : rawName;
+  // Allow full first name up to 20 chars so names like Nanthishvaran aren't cut off
+  const firstName = rawName.length > 20 ? rawName.substring(0, 18) + '...' : rawName;
   const displayName = firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1) : 'Admin';
 
-  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_HOOKS.length));
+  const [quoteIndex, setQuoteIndex] = useState(() => getDailyQuoteIndex());
 
-  useEffect(() => {
-    const quoteInterval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_HOOKS.length);
-    }, 6000);
-    return () => clearInterval(quoteInterval);
-  }, []);
-
-  const [timing, setTiming] = useState(() => getIstSessionTiming(displayName, MOTIVATIONAL_HOOKS[quoteIndex](displayName)));
+  const [timing, setTiming] = useState(() =>
+    getIstSessionTiming(displayName, MOTIVATIONAL_HOOKS[getDailyQuoteIndex()](displayName))
+  );
 
   useEffect(() => {
     const updateTiming = () => {
-      setTiming(getIstSessionTiming(displayName, MOTIVATIONAL_HOOKS[quoteIndex](displayName)));
+      const currentQuoteIdx = getDailyQuoteIndex();
+      setQuoteIndex(currentQuoteIdx);
+      setTiming(getIstSessionTiming(displayName, MOTIVATIONAL_HOOKS[currentQuoteIdx](displayName)));
     };
     updateTiming();
     const interval = setInterval(updateTiming, 1000);
     return () => clearInterval(interval);
-  }, [displayName, quoteIndex]);
+  }, [displayName]);
 
   const isSessionLive = propIsLive !== undefined ? propIsLive : timing.isLive;
   const secondsLeft = timing.secondsRemaining;

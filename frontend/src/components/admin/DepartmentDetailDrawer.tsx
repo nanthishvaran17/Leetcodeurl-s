@@ -14,6 +14,23 @@ interface DepartmentDetailDrawerProps {
   onClose: () => void;
 }
 
+const CANONICAL_DEPT_HOD: Record<string, string> = {
+  IT: 'Dr. M. Senthilkumar',
+  'CSE(CS)': 'Dr. S. Prabhu',
+  'CSE(IOT)': 'Dr. S. Karthikeyan',
+  CSE: 'Dr. S. Prabhu',
+};
+
+const resolveDepartmentHODName = (deptCode?: string, rawName?: string) => {
+  const code = (deptCode || '').toUpperCase().trim();
+  const raw = (rawName || '').trim();
+  const isCoordinator = /santhoshkumar|devayani|sivakumar/i.test(raw);
+  if (raw && !isCoordinator && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
+    return raw;
+  }
+  return CANONICAL_DEPT_HOD[code] || raw || (deptCode ? `HOD (${deptCode})` : 'Head of Department');
+};
+
 export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ department, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<DepartmentIntelligenceDetails | null>(null);
@@ -194,7 +211,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       </span>
                     </div>
                     <h3 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
-                      {details.hod.name}
+                      {resolveDepartmentHODName(department.department_code, details.hod.name)}
                     </h3>
                     {details.hod.email && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">

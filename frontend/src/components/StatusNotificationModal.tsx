@@ -117,14 +117,17 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
       role="dialog"
       aria-modal="true"
       aria-labelledby="notif-modal-title"
-      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-modal-backdrop select-none"
+      className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/65 dark:bg-navy-950/80 backdrop-blur-md animate-modal-backdrop select-none"
       onClick={handleCancelClick}
     >
-      {/* Modal Container Card */}
+      {/* Modal Container Card / Mobile Bottom Sheet */}
       <div
-        className={`relative w-full max-w-[500px] bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-2xl overflow-y-auto max-h-[90vh]`}
+        className={`relative w-full max-w-full sm:max-w-[500px] bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-t-3xl sm:rounded-3xl border-t sm:border ${config.borderGlow} p-6 pb-9 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-2xl overflow-y-auto max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Indicator Handle */}
+        <div className="sm:hidden w-10 h-1 bg-slate-700 rounded-full mx-auto -mt-2 mb-2" />
+
         {/* Subtle Top Close Icon */}
         <button
           onClick={handleCancelClick}

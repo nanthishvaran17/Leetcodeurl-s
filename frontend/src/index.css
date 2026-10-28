@@ -10,6 +10,63 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Eliminate default mobile browser gray highlight on tap */
+* {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Mobile responsive touch manipulation (eliminates 300ms tap delay) */
+button, a, [role="button"], input[type="submit"], input[type="button"], select {
+  touch-action: manipulation;
+}
+/* Prevent automatic mobile browser viewport zoom on input tap */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+
+/* Native tactile spring press effect for mobile buttons and cards */
+.active-spring {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.12s ease;
+}
+.active-spring:active {
+  transform: scale(0.96);
+  opacity: 0.92;
+}
+
+/* Apple & Revolut style horizontal segmented scroll pills */
+.horizontal-pills-scroll {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.horizontal-pills-scroll::-webkit-scrollbar {
+  display: none;
+}
+.horizontal-pills-scroll > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* Edge-to-edge safe area utility helpers */
+.safe-area-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem)) !important;
+}
+.safe-area-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem)) !important;
+}
+
 body {
   overflow-x: clip;
   max-width: 100%;

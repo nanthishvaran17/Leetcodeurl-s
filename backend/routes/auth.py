@@ -22,7 +22,7 @@ from sqlalchemy import or_, func
 from backend.database import get_db
 from backend.config import settings
 from backend.models import User, Student, AdminSession
-from backend.schemas import UserLogin, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordSubmitRequest
+from backend.schemas import UserLogin, TwoFactorChallengePayload, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordSubmitRequest
 from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
 from backend.logger import logger
 
@@ -1153,6 +1153,18 @@ def get_real_client_ip(request: Request) -> str:
         return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "127.0.0.1"
 
+def create_2fa_temp_token(user: User) -> str:
+    """Generates an ephemeral, cryptographically signed 5-minute JWT challenge token for 2FA verification."""
+    expires = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=5)
+    payload = {
+        "sub": user.username,
+        "user_id": user.id,
+        "email": user.email,
+        "purpose": "2fa_challenge",
+        "exp": expires
+    }
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
 # In-memory rate limiter: dict mapping (IP:username) -> list of timestamps
 _login_attempts = {}
 
@@ -1260,6 +1272,28 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
             logger.info(f"[SECURITY] Automatically upgraded password for user {user.username} to 12-round Bcrypt hash.")
         except Exception:
             db.rollback()
+
+    # 2FA Enterprise Protection Gate
+    is_2fa_active = bool(getattr(user, "is_2fa_enabled", False))
+    if is_2fa_active:
+        totp_secret = getattr(user, "totp_secret", None)
+        totp_code_input = getattr(login_data, "totp_code", None)
+        if totp_code_input:
+            clean_code = str(totp_code_input).strip().replace(" ", "").replace("-", "")
+            if not totp_secret or not pyotp.TOTP(totp_secret).verify(clean_code, valid_window=2):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid 2FA verification code. Please check your authenticator app."
+                )
+        else:
+            temp_token = create_2fa_temp_token(user)
+            return {
+                "require_2fa": True,
+                "two_factor_temp_token": temp_token,
+                "user_id": user.id,
+                "username": user.username,
+                "message": "Two-factor authentication required. Please enter the 6-digit code from your authenticator app."
+            }
 
     _record_user_login(db, user, request)
 
@@ -2079,6 +2113,93 @@ def verify_2fa_code(payload: Verify2FARequest, request: Request, db: Session = D
             status_code=400,
             detail="Invalid 2FA verification code. Ensure your device time is set to Automatic and enter the latest 6-digit code shown in Google Authenticator or Microsoft Authenticator."
         )
+
+
+@router.post("/2fa/challenge")
+def verify_2fa_login_challenge(
+    payload: TwoFactorChallengePayload,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    validate_csrf_origin(request)
+    client_ip = get_real_client_ip(request)
+    
+    # 1. Decode & verify temporary challenge token
+    try:
+        token_data = jwt.decode(payload.temp_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if token_data.get("purpose") != "2fa_challenge":
+            raise HTTPException(status_code=400, detail="Invalid 2FA challenge token.")
+        user_id = token_data.get("user_id")
+    except Exception:
+        raise HTTPException(status_code=401, detail="2FA verification session expired. Please sign in again.")
+
+    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User account not found or deactivated.")
+
+    # 2. Verify TOTP 6-digit code
+    totp_secret = getattr(user, 'totp_secret', None)
+    if not totp_secret:
+        raise HTTPException(status_code=400, detail="2FA is not configured for this account.")
+
+    clean_code = (payload.code or "").strip().replace(" ", "").replace("-", "")
+    if len(clean_code) != 6 or not clean_code.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 6-digit numeric code from your authenticator app.")
+
+    totp = pyotp.TOTP(totp_secret)
+    if not totp.verify(clean_code, valid_window=2):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid 2FA verification code. Ensure your device time is set to Automatic and enter the latest 6-digit code shown in Google Authenticator or Microsoft Authenticator."
+        )
+
+    # 3. Successful 2FA verification: Record login & create session
+    _record_user_login(db, user, request)
+
+    session_id = None
+    refresh_token_value = None
+    try:
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[SESSION_CREATION_FAILED] Could not create server session: {e}")
+
+    try:
+        from backend.services.audit_service import log_admin_action
+        metadata = {"session_id": session_id} if session_id else {}
+        event_id = f"evt_2fa_login_{session_id}" if session_id else None
+        log_admin_action(
+            db, action="ADMIN_2FA_LOGIN_SUCCESS", action_type="SECURITY",
+            description=f"User {user.username} ({user.email}) completed 2FA challenge successfully with role {user.role}",
+            current_user=user, target_type="User", target_id=str(user.id),
+            metadata_json=metadata, event_id=event_id,
+            ip_address=client_ip, user_agent=request.headers.get("User-Agent")
+        )
+    except Exception as e:
+        logger.warning(f"[AUDIT_LOG_SKIP] Could not write audit log: {e}")
+
+    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+    dept_scope = _get_user_dept_scope(db, user)
+
+    return {
+        "success": True,
+        "access_token": access_token,
+        "refresh_token": refresh_token_value,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
+            "email": user.email,
+            "role": user.role,
+            "department_id": user.department_id,
+            "section_id": user.section_id,
+            "require_password_change": getattr(user, "require_password_change", False),
+            "profile_photo": getattr(user, "profile_photo", None) or "",
+            **dept_scope
+        }
+    }
 
 
 # =========================================================================

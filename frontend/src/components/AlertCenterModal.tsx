@@ -3,6 +3,7 @@ import {
   Bell, AlertTriangle, ShieldAlert, CheckCircle2, Award, X, Check, ArrowRight, RefreshCw 
 } from 'lucide-react';
 import { getSystemAlerts, markAlertRead, markAlertResolve, SystemAlertItem } from '../services/intelligenceService';
+import { SwipeHandle } from './SwipeHandle';
 
 interface AlertCenterModalProps {
   isOpen: boolean;
@@ -64,34 +65,37 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
     <div className="modal-overlay-responsive animate-fade-in">
       <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg flex flex-col overflow-hidden">
         
+        {/* Mobile Swipe / Pull Down Handle */}
+        <SwipeHandle onClose={onClose} className="pt-2 pb-0 block sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-950/50 flex items-center justify-between shrink-0">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-950/50 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
               <Bell className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 dark:text-white">Automated Priority Alert Center</h2>
-              <p className="text-xs text-slate-500 font-bold">Institutional Anomalies, Critical Risk & Milestones</p>
+              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">Priority Alert Center</h2>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-bold">Institutional Anomalies, Critical Risk & Milestones</p>
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
+          <button onClick={onClose} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer active-spring">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Filter Bar */}
-        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-navy-950 text-xs font-bold text-slate-600 shrink-0">
-          <div className="flex items-center space-x-2">
+        {/* Segmented Filter Bar (Revolut/Apple Style horizontal swipe) */}
+        <div className="px-4 sm:px-5 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-navy-950 text-xs font-bold text-slate-600 shrink-0 gap-2">
+          <div className="horizontal-pills-scroll gap-1.5 sm:gap-2">
             {['ALL', 'UNREAD', 'CRITICAL'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1 rounded-xl transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer text-xs font-extrabold active-spring touch-manipulation ${
                   filter === f 
-                    ? 'bg-brand-600 text-white font-black' 
-                    : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300'
+                    ? 'bg-brand-600 text-white shadow-sm' 
+                    : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
                 }`}
               >
                 {f}
@@ -99,8 +103,8 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
             ))}
           </div>
 
-          <button onClick={loadAlerts} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <button onClick={loadAlerts} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer active-spring shrink-0" title="Refresh alerts">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 

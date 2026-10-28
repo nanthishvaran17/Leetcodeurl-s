@@ -46,7 +46,8 @@ export const ReportsPage: React.FC = () => {
   const [selectedReportType, setSelectedReportType] = useState<string>('WEEKLY_PERFORMANCE');
 
   const userRole = (user?.role || '').trim().toLowerCase();
-  const isHodUser = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator', 'placement_coordinator'].includes(userRole);
+  const isPlacementUser = ['placement', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(userRole);
+  const isHodUser = !isPlacementUser && ['hod', 'department hod', 'department_hod', 'head of department'].includes(userRole);
   const hodDeptDefault = useMemo(() => {
     if (!isHodUser) return 'ALL';
     const codes = user?.authorized_department_codes || [];
@@ -647,11 +648,11 @@ export const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Tab Navigation */}
-      <div className="flex items-center gap-2 sm:gap-3 bg-slate-100 dark:bg-navy-950 p-1.5 sm:p-2.5 rounded-2xl w-full sm:max-w-fit border border-slate-200 dark:border-slate-800 flex-nowrap overflow-x-auto mt-2 mb-6 sm:mb-10 shadow-sm scrollbar-none">
+      {/* Main Tab Navigation — Sticky Frosted Glass */}
+      <div className="sticky top-14 sm:top-16 z-30 flex items-center gap-2 sm:gap-3 bg-white/90 dark:bg-navy-950/90 backdrop-blur-2xl p-1.5 sm:p-2.5 rounded-2xl w-full sm:max-w-fit border border-slate-200/90 dark:border-white/[0.08] horizontal-pills-scroll mt-2 mb-6 sm:mb-8 shadow-sm">
         <button
           onClick={() => startTransition(() => setActiveTab('reports'))}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active:scale-95 ${activeTab === 'reports'
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active-spring ${activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
@@ -662,7 +663,7 @@ export const ReportsPage: React.FC = () => {
 
         <button
           onClick={() => startTransition(() => setActiveTab('email'))}
-          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active:scale-95 ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
+          className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active-spring ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
               ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}

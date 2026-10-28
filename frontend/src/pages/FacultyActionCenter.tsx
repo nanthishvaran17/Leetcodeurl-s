@@ -4,7 +4,7 @@ import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User, Check, Building2, GraduationCap,
   Calendar, Target, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Award,
-  LayoutGrid, SlidersHorizontal
+  LayoutGrid, SlidersHorizontal, MessageCircle
 } from 'lucide-react';
 import {
   getFacultyActionKPIs, getFacultyActionsList, updateFacultyAction,
@@ -16,6 +16,7 @@ import { StudentCodingProfileView } from '../components/StudentCodingProfileView
 import { GlobalFilter } from '../components/GlobalFilter';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { useAuth } from '../context/AuthContext';
 
 // Priority Config (Red=Critical, Orange=High, Amber=Medium, Green=Low)
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
@@ -742,6 +743,35 @@ const UpdateModal: React.FC<{
             </div>
           </div>
 
+          {/* Quick Mentoring Action (1-Click Fill) */}
+          <div>
+            <label className={labelCls}>
+              <Target size={13} className="text-brand-500" />
+              Quick Mentoring Action (1-Click Fill)
+            </label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {[
+                { label: '📞 Contacted & Reminded', action: 'Spoke directly with student. Encouraged to resume LeetCode practice and attend Sunday contest.', status: 'In Progress' },
+                { label: '🎯 Assigned 2 Easy Problems', action: 'Assigned 2 beginner problems on Arrays/Strings to build confidence.', status: 'In Progress' },
+                { label: '🤝 1-on-1 Mentoring Conducted', action: 'Conducted 1-on-1 session to resolve coding doubts and debug setup issues.', status: 'In Progress' },
+                { label: '✅ Doubts Cleared & On-Track', action: 'Student confirmed setup is working and completed initial assigned tasks.', status: 'Resolved' },
+              ].map((tmpl, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setForm(f => ({
+                    ...f,
+                    action_taken: tmpl.action,
+                    status: tmpl.status
+                  }))}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-navy-700 text-[11px] font-bold transition active:scale-95 cursor-pointer"
+                >
+                  {tmpl.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className={labelCls}>
               <FileText size={13} className="text-emerald-500" />
@@ -882,6 +912,27 @@ const UpdateModal: React.FC<{
           </button>
           <button
             type="button"
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await updateFacultyAction(item.id, {
+                  ...form,
+                  status: 'Resolved',
+                  action_taken: form.action_taken || 'Student intervention completed and resolved.'
+                });
+                setMsg('Marked as Resolved!');
+                setTimeout(() => { onSaved(); onClose(); }, 700);
+              } catch { setMsg('Failed'); }
+              finally { setSaving(false); }
+            }}
+            disabled={saving}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 min-h-[44px] rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
+          >
+            <CheckCircle2 size={14} />
+            <span>Mark Resolved</span>
+          </button>
+          <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 min-h-[44px] rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 active:scale-95 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
@@ -907,6 +958,10 @@ export const FacultyActionCenter: React.FC = () => {
   const [syncMsg, setSyncMsg] = useState('');
 
   const { departments, allDepartments, isGlobalAccess } = useDepartments();
+  const { user } = useAuth();
+  const isAdmin = ['admin', 'super_admin', 'super admin', 'principal'].includes(user?.role?.toLowerCase() || '');
+  const isHOD = ['hod', 'department hod', 'department_hod'].includes(user?.role?.toLowerCase() || '');
+  const canFilterDepts = isGlobalAccess || isAdmin || isHOD;
 
   // Filters
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
@@ -990,6 +1045,20 @@ export const FacultyActionCenter: React.FC = () => {
       .split('_')
       .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(' ');
+  };
+
+  const handleWhatsApp = (item: FacultyActionItem) => {
+    const rawPhone = (item.phone_number || '').replace(/[^0-9]/g, '');
+    const studentName = item.student_name || 'Student';
+    const solved = item.total_solved || 0;
+    const msg = `Dear ${studentName}, this is a gentle reminder from your Faculty Mentor. Your current LeetCode problem solve count is ${solved}. Please practice today's recommended problems and attend upcoming weekly coding contests. Feel free to reach out if you need guidance!`;
+    const encoded = encodeURIComponent(msg);
+    if (rawPhone && rawPhone.length >= 10) {
+      const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+      window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, '_blank');
+    } else {
+      window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    }
   };
 
   // Sort
@@ -1137,70 +1206,125 @@ export const FacultyActionCenter: React.FC = () => {
                 {syncMsg}
               </span>
             )}
-            <button
-              type="button"
-              onClick={handleSync}
-              disabled={syncing}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-glass hover:shadow-indigo-500/25 transition-all duration-300 cursor-pointer disabled:opacity-50 border border-white/10 active:scale-95"
-            >
-              <RefreshCw size={14} className={syncing ? 'animate-spin text-amber-300' : 'text-amber-300'} />
-              <span>{syncing ? 'Resyncing All Data...' : 'Force Sync'}</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={handleSync}
+                disabled={syncing}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-glass hover:shadow-indigo-500/25 transition-all duration-300 cursor-pointer disabled:opacity-50 border border-white/10 active:scale-95"
+              >
+                <RefreshCw size={14} className={syncing ? 'animate-spin text-amber-300' : 'text-amber-300'} />
+                <span>{syncing ? 'Resyncing All Data...' : 'Force Sync'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* KPI Cards (2026 Bento Matrix / Mobile Responsive Grid & Snap Carousel) */}
+      {/* Action Matrix — 4 Compact Stat Boxes (2 per line on mobile, 4 on desktop) */}
       {kpis && (
-        <div className="space-y-2 mb-5 sm:mb-6">
-          <div className="flex md:hidden items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 select-none">
-            <span className="uppercase tracking-wider font-extrabold text-[10.5px] text-slate-700 dark:text-slate-300">
-              Action Metric KPIs (8)
-            </span>
-            <button
-              type="button"
-              onClick={() => setKpiViewMode(prev => prev === 'grid' ? 'carousel' : 'grid')}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-navy-700 text-[10.5px] font-extrabold active:scale-95 transition-all shadow-2xs cursor-pointer"
-            >
-              {kpiViewMode === 'grid' ? (
-                <>
-                  <SlidersHorizontal className="w-3 h-3 text-indigo-500" />
-                  <span>Swipe View</span>
-                </>
-              ) : (
-                <>
-                  <LayoutGrid className="w-3 h-3 text-indigo-500" />
-                  <span>Grid View</span>
-                </>
-              )}
-            </button>
-          </div>
-          <div className={
-            kpiViewMode === 'grid'
-              ? "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-2.5 md:gap-3.5"
-              : "flex md:grid overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 md:py-0 pb-2 md:pb-0 gap-2.5 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-8 scroll-smooth pr-4 md:pr-0"
-          }>
-            <KPICard label="Critical" value={kpis.critical_count} colorTheme="red" isGrid={kpiViewMode === 'grid'}
-              icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
-            <KPICard label="High" value={kpis.high_count} colorTheme="orange" isGrid={kpiViewMode === 'grid'}
-              icon={<AlertTriangle size={14} strokeWidth={2.5} />} active={kpiFilter === 'High'} onClick={() => applyKPIFilter('High', 'priority')} subtitle="Urgent review" />
-            <KPICard label="Monitoring" value={kpis.monitoring_count} colorTheme="amber" isGrid={kpiViewMode === 'grid'}
-              icon={<Activity size={14} strokeWidth={2.5} />} active={kpiFilter === 'Monitoring'} onClick={() => applyKPIFilter('Monitoring', 'status')} subtitle="Track progress" />
-            <KPICard label="In Progress" value={kpis.in_progress_count} colorTheme="blue" isGrid={kpiViewMode === 'grid'}
-              icon={<Clock size={14} strokeWidth={2.5} />} active={kpiFilter === 'In Progress'} onClick={() => applyKPIFilter('In Progress', 'status')} subtitle="Active intervention" />
-            <KPICard label="Completed" value={kpis.completed_count} colorTheme="cyan" isGrid={kpiViewMode === 'grid'}
-              icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Completed'} onClick={() => applyKPIFilter('Completed', 'status')} subtitle="Task finished" />
-            <KPICard label="Resolved" value={kpis.resolved_count} colorTheme="emerald" isGrid={kpiViewMode === 'grid'}
-              icon={<CheckCircle2 size={14} strokeWidth={2.5} />} active={kpiFilter === 'Resolved'} onClick={() => applyKPIFilter('Resolved', 'status')} subtitle="Issue resolved" />
-            <KPICard label="Overdue" value={kpis.overdue_count} colorTheme="pink" isGrid={kpiViewMode === 'grid'}
-              icon={<Bell size={14} strokeWidth={2.5} />} active={kpiFilter === 'Overdue'} onClick={() => applyKPIFilter('Overdue', 'overdue')} subtitle="Follow-up missed" />
-            <KPICard label="Escalated" value={kpis.escalated_count} colorTheme="violet" isGrid={kpiViewMode === 'grid'}
-              icon={<ArrowUpRight size={14} strokeWidth={2.5} />} active={kpiFilter === 'Escalated'} onClick={() => applyKPIFilter('Escalated', 'escalated')} subtitle="Escalated to HOD" />
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+
+          {/* 1. Critical Box */}
+          <button
+            onClick={() => applyKPIFilter(kpiFilter === 'Critical' ? '' : 'Critical', 'priority')}
+            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+              kpiFilter === 'Critical'
+                ? 'bg-rose-100/90 dark:bg-rose-950/70 border-rose-500 dark:border-rose-500 ring-2 ring-rose-500/25 shadow-rose-500/10'
+                : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 hover:border-rose-400 dark:hover:border-rose-700 hover:bg-rose-100/60'
+            }`}
+          >
+            {kpiFilter === 'Critical' && (
+              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-rose-600 dark:bg-rose-500 rounded-r-full" />
+            )}
+            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
+              <ShieldAlert size={14} strokeWidth={2.5} className="shrink-0 text-rose-600 dark:text-rose-400" />
+              <span className="truncate">Critical</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-rose-600 dark:text-rose-400">
+              {kpis.critical_count}
+            </div>
+            <div className="text-[11px] font-bold text-rose-700/80 dark:text-rose-300/80 truncate">
+              Immediate action
+            </div>
+          </button>
+
+          {/* 2. High Priority Box */}
+          <button
+            onClick={() => applyKPIFilter(kpiFilter === 'High' ? '' : 'High', 'priority')}
+            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+              kpiFilter === 'High'
+                ? 'bg-amber-100/90 dark:bg-amber-950/70 border-amber-500 dark:border-amber-500 ring-2 ring-amber-500/25 shadow-amber-500/10'
+                : 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 dark:hover:border-amber-700 hover:bg-amber-100/60'
+            }`}
+          >
+            {kpiFilter === 'High' && (
+              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-amber-600 dark:bg-amber-500 rounded-r-full" />
+            )}
+            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+              <AlertTriangle size={14} strokeWidth={2.5} className="shrink-0 text-amber-600 dark:text-amber-400" />
+              <span className="truncate">High Priority</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-amber-600 dark:text-amber-400">
+              {kpis.high_count}
+            </div>
+            <div className="text-[11px] font-bold text-amber-800/80 dark:text-amber-300/80 truncate">
+              Urgent review
+            </div>
+          </button>
+
+          {/* 3. Active Mentoring Box */}
+          <button
+            onClick={() => applyKPIFilter(kpiFilter === 'In Progress' ? '' : 'In Progress', 'status')}
+            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+              kpiFilter === 'In Progress'
+                ? 'bg-blue-100/90 dark:bg-blue-950/70 border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/25 shadow-blue-500/10'
+                : 'bg-blue-50/80 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/60 hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-100/60'
+            }`}
+          >
+            {kpiFilter === 'In Progress' && (
+              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
+            )}
+            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              <Clock size={14} strokeWidth={2.5} className="shrink-0 text-blue-600 dark:text-blue-400" />
+              <span className="truncate">Active Mentoring</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-blue-600 dark:text-blue-400">
+              {kpis.in_progress_count + kpis.monitoring_count}
+            </div>
+            <div className="text-[11px] font-bold text-blue-700/80 dark:text-blue-300/80 truncate">
+              {kpis.in_progress_count} Active &middot; {kpis.monitoring_count} Watch
+            </div>
+          </button>
+
+          {/* 4. Target Achieved Box */}
+          <button
+            onClick={() => applyKPIFilter(kpiFilter === 'Resolved' ? '' : 'Resolved', 'status')}
+            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+              kpiFilter === 'Resolved'
+                ? 'bg-emerald-100/90 dark:bg-emerald-950/70 border-emerald-500 dark:border-emerald-500 ring-2 ring-emerald-500/25 shadow-emerald-500/10'
+                : 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60 hover:border-emerald-400 dark:hover:border-emerald-700 hover:bg-emerald-100/60'
+            }`}
+          >
+            {kpiFilter === 'Resolved' && (
+              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-600 dark:bg-emerald-500 rounded-r-full" />
+            )}
+            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 size={14} strokeWidth={2.5} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span className="truncate">Target Achieved</span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-emerald-600 dark:text-emerald-400">
+              {kpis.resolved_count}
+            </div>
+            <div className="text-[11px] font-bold text-emerald-700/80 dark:text-emerald-300/80 truncate">
+              Mentees on-track ✓
+            </div>
+          </button>
+
         </div>
       )}
 
-      {/* Filters Container - Fully styled for clean dark theme */}
+            {/* Filters Container - Fully styled for clean dark theme */}
       <div className="relative z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-md backdrop-blur-xl mb-6">
         {/* Search Bar Input */}
         <div className="relative group flex-1 min-w-[200px] w-full md:w-auto">
@@ -1267,15 +1391,17 @@ export const FacultyActionCenter: React.FC = () => {
           />
           </div>
 
-          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
-          <CustomSelect
-            value={filterDept}
-            onChange={v => { setFilterDept(v); setPage(1); }}
-            placeholder="All Departments"
-            icon={<Building2 size={15} />}
-            options={deptOptions}
-          />
-          </div>
+          {canFilterDepts && (
+            <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
+              <CustomSelect
+                value={filterDept}
+                onChange={v => { setFilterDept(v); setPage(1); }}
+                placeholder="All Departments"
+                icon={<Building2 size={15} />}
+                options={deptOptions}
+              />
+            </div>
+          )}
 
           <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
           <CustomSelect
@@ -1491,9 +1617,12 @@ export const FacultyActionCenter: React.FC = () => {
                         {item.assigned_faculty_name || 'Unassigned'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-mono shrink-0 text-slate-400 font-bold">
-                      <Calendar size={12} className="text-slate-400" />
-                      <span>{formatDate(item.due_date)}</span>
+                    <div className="flex items-center gap-1.5 text-[10.5px] font-mono shrink-0 font-bold bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/10">
+                      <span className="text-emerald-500">E:{item.easy_solved || 0}</span>
+                      <span className="text-slate-400">·</span>
+                      <span className="text-amber-500">M:{item.medium_solved || 0}</span>
+                      <span className="text-slate-400">·</span>
+                      <span className="text-rose-500">H:{item.hard_solved || 0}</span>
                     </div>
                   </div>
 
@@ -1501,15 +1630,23 @@ export const FacultyActionCenter: React.FC = () => {
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       onClick={() => setUpdateItem(item)}
-                      className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-black text-xs shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-95 border border-white/20 touch-manipulation"
+                      className="flex-1 min-h-[44px] py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-black text-xs shadow-md shadow-brand-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 border border-white/20 touch-manipulation"
                     >
                       <ArrowUpRight size={14} className="shrink-0" />
                       <span>Take Action</span>
                     </button>
                     <button
+                      onClick={() => handleWhatsApp(item)}
+                      title="Send WhatsApp Mentoring Nudge"
+                      className="min-h-[44px] py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 transition-all text-xs font-black flex items-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation shadow-xs"
+                    >
+                      <MessageCircle size={14} className="text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                      <span className="hidden sm:inline">Nudge</span>
+                    </button>
+                    <button
                       onClick={() => setViewItem(item)}
                       title="View Student Coding Profile"
-                      className="min-h-[44px] py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 transition-all text-xs font-black flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation shadow-xs group"
+                      className="min-h-[44px] py-2.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 transition-all text-xs font-black flex items-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation shadow-xs group"
                     >
                       <div className="w-5 h-5 rounded-md bg-indigo-500/15 dark:bg-indigo-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                         <Eye size={13} className="text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
@@ -1518,7 +1655,7 @@ export const FacultyActionCenter: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setExpandedRow(isExpanded ? null : item.id)}
-                      className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 hover:bg-slate-100 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition-colors text-xs flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation shrink-0"
+                      className="min-h-[44px] min-w-[40px] p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 hover:bg-slate-100 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition-colors text-xs flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation shrink-0"
                       title="Toggle details"
                     >
                       {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1565,7 +1702,7 @@ export const FacultyActionCenter: React.FC = () => {
               </colgroup>
               <thead className="table-header-group border-b border-white/[0.08] bg-white/[0.03]">
                 <tr>
-                  {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
+                  {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Breakdown', ''], ['Actions', '']].map(([label, col]) => (
                     <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
                       <span className="inline-flex items-center gap-1">{label} {col && <SortIcon col={col} />}</span>
                     </th>
@@ -1636,7 +1773,13 @@ export const FacultyActionCenter: React.FC = () => {
 
                         {/* Due Date */}
                         <td className={tdCls}>
-                          <div className={`text-xs font-mono ${item.due_date ? 'text-slate-700 dark:text-slate-200 font-bold' : 'text-slate-500 font-bold'}`}>{formatDate(item.due_date)}</div>
+                          <div className="flex items-center gap-1 font-mono text-[11px] font-bold">
+                            <span className="text-emerald-500">E:{item.easy_solved || 0}</span>
+                            <span className="text-slate-400">·</span>
+                            <span className="text-amber-500">M:{item.medium_solved || 0}</span>
+                            <span className="text-slate-400">·</span>
+                            <span className="text-rose-500">H:{item.hard_solved || 0}</span>
+                          </div>
                         </td>
 
                         {/* Actions */}
@@ -1649,6 +1792,13 @@ export const FacultyActionCenter: React.FC = () => {
                             >
                               <ArrowUpRight size={12} />
                               <span>Take Action</span>
+                            </button>
+                            <button
+                              onClick={() => handleWhatsApp(item)}
+                              title="Send WhatsApp Nudge"
+                              className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 transition cursor-pointer"
+                            >
+                              <MessageCircle size={14} />
                             </button>
                             <button
                               onClick={() => setViewItem(item)}

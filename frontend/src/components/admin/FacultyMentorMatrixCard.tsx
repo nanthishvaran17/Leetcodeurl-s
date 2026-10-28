@@ -56,9 +56,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       const u = (s.username || '').toLowerCase();
+      const fn = ((s as any).full_name || '').toLowerCase();
       const e = (s.email || '').toLowerCase();
-      const d = ((s as any).department_code || '').toLowerCase();
-      return u.includes(q) || e.includes(q) || d.includes(q);
+      const d = ((s as any).department_code || (s as any).department || '').toLowerCase();
+      return u.includes(q) || fn.includes(q) || e.includes(q) || d.includes(q);
     }
     return true;
   });
@@ -255,16 +256,22 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate flex items-center gap-1.5">
-                        <span className="truncate">{s.username}</span>
+                        <span className="truncate">{s.full_name || s.username}</span>
                         {isSelected && (
                           <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase shrink-0">
                             Active
                           </span>
                         )}
                       </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
-                        {s.email}
-                      </p>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                        {s.full_name && s.full_name !== s.username && (
+                          <>
+                            <span className="text-slate-400 font-medium">@{s.username}</span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                          </>
+                        )}
+                        <span className="truncate">{s.email}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -422,9 +429,9 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                 const active = (s as any).active_count || 0;
                 const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
                 const isSelected = selectedStaff === String(s.id);
-                const deptCode = (s as any).department_code || 'DEPT';
+                const deptCode = (s as any).department_code || (s as any).department || 'DEPT';
                 const deptBadge = getDeptBadgeStyle(deptCode);
-                const initial = (s.username || 'F').charAt(0).toUpperCase();
+                const initial = ((s.full_name || s.username || 'F').trim().charAt(0)).toUpperCase();
 
                 return (
                   <tr
@@ -444,15 +451,21 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                         </div>
                         <div className="min-w-0">
                           <div className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5 truncate">
-                            <span>{s.username}</span>
+                            <span>{s.full_name || s.username}</span>
                             {isSelected && (
                               <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider">
                                 Active Filter
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium truncate">
-                            {s.email}
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium truncate flex items-center gap-1.5">
+                            {s.full_name && s.full_name !== s.username && (
+                              <>
+                                <span className="text-slate-400">@{s.username}</span>
+                                <span className="text-slate-300 dark:text-slate-700">•</span>
+                              </>
+                            )}
+                            <span className="truncate">{s.email}</span>
                           </div>
                         </div>
                       </div>

@@ -402,6 +402,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                   </button>
                 )}
               </div>
+
+              {/* Sunday Session Window Card */}
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-center space-x-2 relative z-10">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-white text-[11px] sm:text-xs font-black tracking-wide">Sunday Session Window</span>
+                </div>
+                <p className="text-[10px] sm:text-[10.5px] text-slate-300 leading-snug font-medium relative z-10">
+                  Official Window: <b className="text-emerald-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
+                  Continuous tracking & live sync.
+                </p>
+                <div className="pt-1 border-t border-slate-800/80 relative z-10">
+                  <p className="text-[9px] text-slate-400 font-semibold tracking-wide">
+                    Nandha Engineering College • Erode
+                  </p>
+                </div>
+              </div>
             </div>
           </motion.div>
 

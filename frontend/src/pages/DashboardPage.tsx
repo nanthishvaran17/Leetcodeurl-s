@@ -63,6 +63,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [commandCenterDepts, setCommandCenterDepts] = useState<DepartmentRecord[]>([]);
   const [selectedDeptForDrawer, setSelectedDeptForDrawer] = useState<DeptBenchmark | null>(null);
 
+  const CANONICAL_DEPT_HOD: Record<string, string> = {
+    IT: 'Dr. M. Senthilkumar',
+    'CSE(CS)': 'Dr. S. Prabhu',
+    'CSE(IOT)': 'Dr. S. Karthikeyan',
+    CSE: 'Dr. S. Prabhu',
+  };
+
+  const resolveDepartmentHODName = (dept: { code?: string; hod_name?: string }) => {
+    const code = (dept.code || '').toUpperCase().trim();
+    const raw = (dept.hod_name || '').trim();
+    const isCoordinator = /santhoshkumar|devayani|sivakumar/i.test(raw);
+    if (raw && !isCoordinator && !raw.startsWith('HOD (')) {
+      return raw;
+    }
+    return CANONICAL_DEPT_HOD[code] || raw || (dept.code ? `HOD (${dept.code})` : 'Head of Department');
+  };
+
   const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
   const isPrincipal = useMemo(() => ['principal', 'director', 'management', 'admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean), [roleClean]);
 
@@ -963,7 +980,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   {/* HOD Tag */}
                   <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-bold bg-white dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
                     <GraduationCap className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                    <span className="truncate">{d.hod_name || `HOD (${d.code})`}</span>
+                    <span className="truncate">{resolveDepartmentHODName(d)}</span>
                   </div>
                 </div>
 

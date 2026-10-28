@@ -23,6 +23,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
 import { PullToRefresh } from './components/PullToRefresh';
+import { SwipeHandle } from './components/SwipeHandle';
 import { OfflineIndicatorBanner } from './components/OfflineIndicatorBanner';
 import { warmupPriorityRoutes } from './utils/pagePrefetch';
 
@@ -1372,7 +1373,7 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
@@ -1380,8 +1381,9 @@ export const App: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[94dvh] sm:h-[88vh] max-h-[94dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-white dark:bg-navy-950"
+            className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[92dvh] sm:h-[88vh] max-h-[92dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-white dark:bg-navy-950 border-t sm:border border-slate-200/90 dark:border-white/10"
           >
+            <SwipeHandle onClose={() => setSelectedStudent(null)} className="pt-2 pb-0 block sm:hidden shrink-0" />
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <PullToRefresh
                 onRefresh={async () => {
@@ -1402,14 +1404,17 @@ export const App: React.FC = () => {
       {/* EXIT CONFIRMATION DIALOG */}
         {showExitConfirmModal && (
           <div
-            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+            className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowExitConfirmModal(false);
             }}
           >
             <div
-              className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 sm:p-7 w-full max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5 animate-modal-content"
+              className="bg-white dark:bg-navy-950 border-t sm:border border-slate-200 dark:border-navy-800 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-9 sm:p-7 w-full sm:max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5 animate-modal-content"
             >
+              {/* Mobile Drag Indicator Handle */}
+              <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto -mt-2 mb-2" />
+
               <div className="flex items-center gap-3.5">
                 <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">
                   <LogOut size={22} className="stroke-[2.2]" />

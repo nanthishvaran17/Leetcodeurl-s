@@ -72,9 +72,20 @@ class FacultyActionEngine:
         search: Optional[str] = None
     ) -> dict:
         from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
-        from sqlalchemy import or_
+        from sqlalchemy import or_, not_
 
-        query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
+        query = db.query(FacultyActionQueueItem).join(
+            Student, FacultyActionQueueItem.student_id == Student.id
+        ).filter(
+            Student.is_active == True,
+            not_(Student.name.like("%TEST%")),
+            not_(Student.name.like("%SOLVER%")),
+            not_(Student.name.like("STUDENT %")),
+            not_(Student.name.like("RACE %")),
+            not_(Student.reg_no.like("%TEST%")),
+            not_(Student.reg_no.like("%CONCUR%")),
+            not_(Student.reg_no.like("%P930%"))
+        )
 
         if faculty_id:
             from backend.services.faculty_assignment_service import FacultyAssignmentService
@@ -273,13 +284,24 @@ def get_faculty_actions_list(
     is_overdue: Optional[bool] = None,
     is_escalated: Optional[bool] = None,
 ) -> dict:
-    from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
-    from sqlalchemy import or_
+    from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment, LeetCodeProfileStats
+    from sqlalchemy import or_, not_, case
     from sqlalchemy.orm import joinedload
 
     query = db.query(FacultyActionQueueItem).options(
-        joinedload(FacultyActionQueueItem.student).joinedload(Student.department)
-    ).join(Student, FacultyActionQueueItem.student_id == Student.id)
+        joinedload(FacultyActionQueueItem.student).joinedload(Student.department),
+        joinedload(FacultyActionQueueItem.student).joinedload(Student.stats),
+        joinedload(FacultyActionQueueItem.student).joinedload(Student.faculty_assignment).joinedload(FacultyStudentAssignment.faculty)
+    ).join(Student, FacultyActionQueueItem.student_id == Student.id).filter(
+        Student.is_active == True,
+        not_(Student.name.like("%TEST%")),
+        not_(Student.name.like("%SOLVER%")),
+        not_(Student.name.like("STUDENT %")),
+        not_(Student.name.like("RACE %")),
+        not_(Student.reg_no.like("%TEST%")),
+        not_(Student.reg_no.like("%CONCUR%")),
+        not_(Student.reg_no.like("%P930%"))
+    )
 
     if faculty_id:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
@@ -288,7 +310,6 @@ def get_faculty_actions_list(
             query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
         else:
             query = query.filter(FacultyActionQueueItem.student_id == -1)
-
 
     # Base query for total_count
     total_count = query.count()
@@ -319,7 +340,15 @@ def get_faculty_actions_list(
         ))
 
     filtered_count = query.count()
-    raw_items = query.order_by(FacultyActionQueueItem.priority_score.desc(), FacultyActionQueueItem.created_at.desc()).offset(offset).limit(limit).all()
+    status_order = case(
+        (FacultyActionQueueItem.status.in_(["Pending", "In Progress", "Monitoring"]), 0),
+        else_=1
+    )
+    raw_items = query.order_by(
+        status_order.asc(),
+        FacultyActionQueueItem.priority_score.desc(),
+        FacultyActionQueueItem.created_at.desc()
+    ).offset(offset).limit(limit).all()
     
     formatted_items = []
     for item in raw_items:
@@ -351,6 +380,7 @@ def get_faculty_actions_list(
             "student_id": item.student_id,
             "student_name": s.name if s else "Unknown Student",
             "reg_no": s.reg_no if s else "",
+            "phone_number": getattr(s, "phone_number", "") or "",
             "leetcode_username": getattr(s, "username", "") or getattr(s, "primary_leetcode_id", "") if s else "",
             "department_name": dept.name if dept else (getattr(s, 'department_name', '') if s else ""),
             "department_code": dept.code if dept else (getattr(s, 'department_code', '') if s else ""),
@@ -375,8 +405,11 @@ def get_faculty_actions_list(
             "created_at": item.created_at.isoformat() if item.created_at else "",
             "updated_at": item.updated_at.isoformat() if item.updated_at else "",
             "total_solved": stats.total_solved if stats and stats.total_solved is not None else 0,
-            "current_rating": stats.contest_rating if stats and stats.contest_rating is not None else 0,
-            "contests_attended": stats.attended_contests_count if stats and hasattr(stats, 'attended_contests_count') else 0,
+            "easy_solved": stats.easy_solved if stats and stats.easy_solved is not None else 0,
+            "medium_solved": stats.medium_solved if stats and stats.medium_solved is not None else 0,
+            "hard_solved": stats.hard_solved if stats and stats.hard_solved is not None else 0,
+            "current_rating": round(float(stats.contest_rating), 1) if stats and stats.contest_rating is not None else 0,
+            "contests_attended": stats.attended_contests_count if stats and hasattr(stats, 'attended_contests_count') and stats.attended_contests_count else 0,
             "last_active_days_ago": 0
         })
 
@@ -399,60 +432,80 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False, faculty_id
     assigned students — prevents inflation of KPI counts across the institution.
     When called without faculty_id (e.g. admin Force Sync), processes all students.
     """
-    from backend.models import Student, FacultyActionQueueItem, LeetCodeProfileStats
+    from backend.models import Student, FacultyActionQueueItem, LeetCodeProfileStats, FacultyStudentAssignment
+    from sqlalchemy import not_
 
-    student_query = db.query(Student).filter(Student.is_active == True)
+    student_query = db.query(Student).filter(
+        Student.is_active == True,
+        not_(Student.name.like("%TEST%")),
+        not_(Student.name.like("%SOLVER%")),
+        not_(Student.name.like("STUDENT %")),
+        not_(Student.name.like("RACE %")),
+        not_(Student.reg_no.like("%TEST%")),
+        not_(Student.reg_no.like("%CONCUR%")),
+        not_(Student.reg_no.like("%P930%"))
+    )
     if faculty_id:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
         assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, faculty_id)
         if assigned_ids:
             student_query = student_query.filter(Student.id.in_(assigned_ids))
         else:
-            return {"status": "success", "created": 0, "updated": 0, "note": "No assigned students found"}
+            return {"status": "success", "created": 0, "updated": 0, "resolved": 0, "note": "No assigned students found"}
 
     students = student_query.all()
     created_count = 0
     updated_count = 0
+    resolved_count = 0
 
     for student in students:
         stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student.id).first()
         solved = stats.total_solved if stats and stats.total_solved is not None else 0
 
-        if solved == 0:
-            prio = "Critical"
-            score = 95
-            sig_type = "LOW_SOLVE_COUNT"
-            reason = f"Student {student.name} ({student.reg_no or 'N/A'}) has 0 solved problems on LeetCode. Immediate intervention required."
-            rec_action = "Schedule 1-on-1 mentoring session, guide student through basic LeetCode setup, and assign 3 beginner practice problems."
-        elif solved < 10:
-            prio = "High"
-            score = 75
-            sig_type = "PERFORMANCE_DROP"
-            reason = f"Student {student.name} has solved only {solved} problem(s). Requires guided DSA mentoring."
-            rec_action = "Assign topic-wise practice modules and monitor weekly contest participation."
-        elif solved < 25:
-            prio = "Medium"
-            score = 50
-            sig_type = "WEAK_TOPIC"
-            reason = f"Student {student.name} solved count ({solved}) is below cohort benchmark."
-            rec_action = "Provide structured learning path and conduct bi-weekly progress review."
-        else:
-            prio = "Low"
-            score = 25
-            sig_type = "SILENT_DISENGAGED"
-            reason = f"Student {student.name} active with {solved} solved problems."
-            rec_action = "Continue standard cohort monitoring and track advanced problem progression."
-
-        existing = db.query(FacultyActionQueueItem).filter(
-            FacultyActionQueueItem.student_id == student.id,
-            FacultyActionQueueItem.signal_type == sig_type
-        ).first()
-
+        # Assigned faculty name resolution
         assigned_fac_name = None
         if getattr(student, "faculty_assignment", None) and getattr(student.faculty_assignment, "is_active", False):
             f_user = getattr(student.faculty_assignment, "faculty", None)
             if f_user:
                 assigned_fac_name = f_user.full_name or f_user.username
+
+        # If student has solved >= 25, auto-resolve any open intervention items!
+        if solved >= 25:
+            prev_open_items = db.query(FacultyActionQueueItem).filter(
+                FacultyActionQueueItem.student_id == student.id,
+                FacultyActionQueueItem.status.in_(["Pending", "In Progress", "Monitoring"])
+            ).all()
+            for prev in prev_open_items:
+                setattr(prev, "status", "Resolved")
+                setattr(prev, "action_taken", f"Target achieved: Student actively solving DSA ({solved} solved).")
+                setattr(prev, "resolved_at", datetime.now(timezone.utc))
+                setattr(prev, "updated_at", datetime.now(timezone.utc))
+                resolved_count += 1
+            continue
+
+        if solved == 0:
+            prio = "Critical"
+            score = 95
+            sig_type = "LOW_SOLVE_COUNT"
+            reason = f"Student {student.name} ({student.reg_no or 'N/A'}) has 0 solved problems on LeetCode. Immediate onboarding & 1-on-1 mentoring required."
+            rec_action = "Schedule 1-on-1 mentoring session, assist with LeetCode onboarding, and assign 3 beginner practice problems."
+        elif solved < 10:
+            prio = "High"
+            score = 75
+            sig_type = "PERFORMANCE_DROP"
+            reason = f"Student {student.name} has solved only {solved} problem(s). Requires guided DSA mentoring."
+            rec_action = "Assign curated Easy topics (Arrays, Strings) and track weekly practice progression."
+        else:
+            prio = "Medium"
+            score = 50
+            sig_type = "WEAK_TOPIC"
+            reason = f"Student {student.name} solved count ({solved}) is below cohort benchmark (25+)."
+            rec_action = "Provide structured learning roadmap and conduct bi-weekly progress review."
+
+        existing = db.query(FacultyActionQueueItem).filter(
+            FacultyActionQueueItem.student_id == student.id,
+            FacultyActionQueueItem.contest_id == "live"
+        ).first()
 
         if not existing:
             item = FacultyActionQueueItem(
@@ -460,6 +513,7 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False, faculty_id
                 priority=prio,
                 priority_score=score,
                 signal_type=sig_type,
+                contest_id="live",
                 reason=reason,
                 recommended_action=rec_action,
                 assigned_faculty_name=assigned_fac_name,
@@ -472,10 +526,13 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False, faculty_id
         else:
             setattr(existing, "priority", prio)
             setattr(existing, "priority_score", score)
+            setattr(existing, "signal_type", sig_type)
             setattr(existing, "reason", reason)
             setattr(existing, "recommended_action", rec_action)
-            if assigned_fac_name and not getattr(existing, "assigned_faculty_name", None):
+            if assigned_fac_name:
                 setattr(existing, "assigned_faculty_name", assigned_fac_name)
+            if existing.status == "Resolved":
+                setattr(existing, "status", "Pending")
             setattr(existing, "updated_at", datetime.now(timezone.utc))
             updated_count += 1
 
@@ -483,9 +540,9 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False, faculty_id
         db.commit()
     except Exception as e:
         db.rollback()
-        return {"status": "error", "error": str(e), "created": 0, "updated": 0}
+        return {"status": "error", "error": str(e), "created": 0, "updated": 0, "resolved": 0}
 
-    return {"status": "success", "created": created_count, "updated": updated_count}
+    return {"status": "success", "created": created_count, "updated": updated_count, "resolved": resolved_count}
 
 
 def get_what_needs_attention_items(db, user=None):

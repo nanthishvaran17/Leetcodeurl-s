@@ -15,7 +15,39 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(DocumentOpenerPlugin.class);
         super.onCreate(savedInstanceState);
+        createNotificationChannels();
         handleNotificationAction(getIntent());
+    }
+
+    private void createNotificationChannels() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            android.app.NotificationManager notificationManager = getSystemService(android.app.NotificationManager.class);
+            if (notificationManager == null) return;
+
+            // 1. Messages & Chat channel (Urgent Heads-Up 24/7)
+            android.app.NotificationChannel messagesChannel = new android.app.NotificationChannel(
+                "messages_channel",
+                "Messages & Chat",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            messagesChannel.setDescription("Real-time direct messages, staff discussions, and student chat alerts");
+            messagesChannel.enableVibration(true);
+            messagesChannel.enableLights(true);
+            messagesChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            notificationManager.createNotificationChannel(messagesChannel);
+
+            // 2. Default LeetCode channel
+            android.app.NotificationChannel defaultChannel = new android.app.NotificationChannel(
+                "leetcode_intelligence_channel",
+                "LeetCode General Alerts",
+                android.app.NotificationManager.IMPORTANCE_HIGH
+            );
+            defaultChannel.setDescription("General system alerts, role updates, and real-time announcements");
+            defaultChannel.enableVibration(true);
+            defaultChannel.enableLights(true);
+            defaultChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            notificationManager.createNotificationChannel(defaultChannel);
+        }
     }
 
     @Override

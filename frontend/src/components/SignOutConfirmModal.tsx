@@ -48,7 +48,7 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 select-none">
+        <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
           {/* Subtle backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -56,18 +56,20 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
           />
 
-          {/* Clean, Simple Dialog Card */}
+          {/* Clean, Simple Dialog Card / Mobile Bottom Sheet */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            initial={{ opacity: 0, scale: 0.98, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ type: 'spring', damping: 24, stiffness: 360 }}
+            exit={{ opacity: 0, scale: 0.98, y: 30 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 380 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-[360px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center z-10"
+            className="relative w-full sm:max-w-[360px] rounded-t-3xl sm:rounded-2xl bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl p-6 pb-9 sm:pb-6 text-center z-10"
           >
+            {/* Mobile Drag Indicator Handle */}
+            <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4" />
             {/* Top Close Button */}
             <button
               type="button"

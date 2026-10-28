@@ -281,8 +281,10 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 difficulty: 'Easy',
                 val: false,
                 time: 'Unknown',
-                timingSource: null,
-                timeDisplay: null,
+                timingSource: null as string | null,
+                timeDisplay: null as string | null,
+                qSec: null as number | null,
+                clockTime: null as string | null,
                 attempts: 'Unattempted',
                 status: 'SKIPPED'
               },
@@ -293,8 +295,10 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 difficulty: 'Medium',
                 val: false,
                 time: 'Unknown',
-                timingSource: null,
-                timeDisplay: null,
+                timingSource: null as string | null,
+                timeDisplay: null as string | null,
+                qSec: null as number | null,
+                clockTime: null as string | null,
                 attempts: 'Unattempted',
                 status: 'SKIPPED'
               },
@@ -305,8 +309,10 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 difficulty: 'Medium-Hard',
                 val: false,
                 time: 'Unknown',
-                timingSource: null,
-                timeDisplay: null,
+                timingSource: null as string | null,
+                timeDisplay: null as string | null,
+                qSec: null as number | null,
+                clockTime: null as string | null,
                 attempts: 'Unattempted',
                 status: 'SKIPPED'
               },
@@ -317,8 +323,10 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 difficulty: 'Hard',
                 val: false,
                 time: 'Unknown',
-                timingSource: null,
-                timeDisplay: null,
+                timingSource: null as string | null,
+                timeDisplay: null as string | null,
+                qSec: null as number | null,
+                clockTime: null as string | null,
                 attempts: 'Unattempted',
                 status: 'SKIPPED'
               }
@@ -333,9 +341,15 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
               let timingSource: string | null = qTiming?.source || null;
               let timeDisplay: string | null = qTiming?.display || null;
 
+              let qSec: number | null = null;
               const qObsSec = (record as any)[`${qKey}_observed_seconds`];
-              if (!timeDisplay && qObsSec && Number(qObsSec) > 0) {
-                const qSec = Number(qObsSec);
+              if (qObsSec && Number(qObsSec) > 0) {
+                qSec = Number(qObsSec);
+              } else if (qTiming && typeof qTiming.seconds === 'number' && qTiming.seconds > 0) {
+                qSec = qTiming.seconds;
+              }
+
+              if (!timeDisplay && qSec && qSec > 0) {
                 const h = Math.floor(qSec / 3600);
                 const m = Math.floor((qSec % 3600) / 60);
                 const s = qSec % 60;
@@ -348,6 +362,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 const qStr = String(qTimeDirect).trim();
                 if (/^\d+$/.test(qStr)) {
                   timeDisplay = `${qStr} mins`;
+                  if (!qSec) qSec = parseInt(qStr, 10) * 60;
                 } else if (qStr.includes(':')) {
                   timeDisplay = qStr;
                 } else {
@@ -359,6 +374,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
               if (!timeDisplay && isSolvedQ) {
                 if (dynamicEstimates[qIdx]) {
                   const estSec = dynamicEstimates[qIdx];
+                  qSec = estSec;
                   const h = Math.floor(estSec / 3600);
                   const m = Math.floor((estSec % 3600) / 60);
                   timeDisplay = h > 0 ? `~${h}h ${m}m` : `~${m}m`;
@@ -367,6 +383,22 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                   timeDisplay = null;
                   timingSource = null;
                 }
+              }
+
+              let clockTime: string | null = null;
+              if (qSec && qSec > 0) {
+                const contestRef = summary?.contest_slug || (record as any).contest_slug || (record as any).contest_name || (summary as any)?.contest_name;
+                const startInfo = getStartTimeInfo(contestRef);
+                const totalFinishSeconds = (startInfo.hour24 * 3600 + startInfo.minute * 60) + qSec;
+                const h24 = Math.floor(totalFinishSeconds / 3600) % 24;
+                const m = Math.floor((totalFinishSeconds % 3600) / 60);
+                const s = totalFinishSeconds % 60;
+                const dispH = h24 % 12 === 0 ? 12 : h24 % 12;
+                const ampm = h24 >= 12 ? 'PM' : 'AM';
+                const padH = dispH.toString().padStart(2, '0');
+                const padM = m.toString().padStart(2, '0');
+                const padS = s.toString().padStart(2, '0');
+                clockTime = `${padH}:${padM}:${padS} ${ampm} IST`;
               }
 
               const qTitleMap: Record<number, string> = {
@@ -395,6 +427,8 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 time: timeDisplay || (isSolvedQ ? '~15m' : '--'),
                 timingSource,
                 timeDisplay,
+                qSec,
+                clockTime,
                 attempts: isSolvedQ ? '1+ Submissions (AC)' : 'Unattempted',
                 status: isSolvedQ ? 'SOLVED' : 'SKIPPED'
               };
@@ -702,9 +736,26 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
 
                   {/* Question Rows (Q1 - Q4) */}
                   <div className="space-y-2.5 pt-2">
-                    {forensicQuestions.map((q) => {
+                    {forensicQuestions.map((q, idx) => {
                       const isSolved = q.status === 'SOLVED' || q.val;
                       const isFailed = q.status === 'FAILED';
+
+                      // Find previous solved question with seconds to calculate interval
+                      let intervalLabel = 'from start';
+                      if (q.qSec && q.qSec > 0) {
+                        const prevSolved = forensicQuestions
+                          .slice(0, idx)
+                          .reverse()
+                          .find((pq) => (pq.status === 'SOLVED' || pq.val) && pq.qSec && pq.qSec > 0);
+                        if (prevSolved && prevSolved.qSec) {
+                          const diffSec = q.qSec - prevSolved.qSec;
+                          if (diffSec > 0) {
+                            const dMins = Math.floor(diffSec / 60);
+                            const dSecs = diffSec % 60;
+                            intervalLabel = dMins > 0 ? `+${dMins}m ${dSecs > 0 ? `${dSecs}s` : ''} after ${prevSolved.id}`.trim() : `+${dSecs}s after ${prevSolved.id}`;
+                          }
+                        }
+                      }
 
                       return (
                         <div
@@ -779,21 +830,40 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
 
                             {/* Forensic Timing Display */}
                             {q.timeDisplay ? (
-                              <div className="text-right">
-                                <span className="text-[11px] font-black block text-emerald-700 dark:text-emerald-400">
-                                  {q.timeDisplay.replace('~', '')}
-                                </span>
-                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600">
-                                  ● EXACT
+                              <div className="text-right space-y-0.5">
+                                {q.clockTime ? (
+                                  <div className="text-[11px] font-mono font-black text-slate-900 dark:text-white flex items-center justify-end gap-1">
+                                    <Clock className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                                    <span>{q.clockTime.replace(' IST', '')}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-[11px] font-black block text-emerald-700 dark:text-emerald-400">
+                                    {q.timeDisplay.replace('~', '')}
+                                  </span>
+                                )}
+                                <div className="text-[9.5px] font-mono font-semibold text-emerald-600 dark:text-emerald-400/90 leading-tight">
+                                  <span>{q.timeDisplay.replace('~', '')}</span>
+                                  <span className="text-[8.5px] font-medium text-slate-400 dark:text-slate-500 block">
+                                    {intervalLabel}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider border ${
+                                    q.timingSource === 'OBSERVED_LIVE'
+                                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600'
+                                      : 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600'
+                                  }`}
+                                >
+                                  {q.timingSource === 'OBSERVED_LIVE' ? '● EXACT' : '≈ ESTIMATE'}
                                 </span>
                               </div>
                             ) : isSolved ? (
-                              <div className="text-right">
+                              <div className="text-right space-y-0.5">
                                 <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">
                                   15m
                                 </span>
-                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600">
-                                  ● EXACT
+                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600">
+                                  ≈ ESTIMATE
                                 </span>
                               </div>
                             ) : null}

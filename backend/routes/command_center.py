@@ -146,10 +146,11 @@ def get_command_center_summary(
 
     uid = current_user.id if current_user else "anon"
     role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower() if current_user else "admin"
-    is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator", "principal", "management", "director"]
+    is_placement = any(p in role_clean for p in ["placement", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"])
+    is_global_admin = is_placement or role_clean in ["admin", "super_admin", "super admin", "administrator", "principal", "management", "director"]
     
-    # Strictly enforce server-side department isolation for non-admin HODs
-    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
+    # Strictly enforce server-side department isolation for non-admin departmental HODs (not placement coordinators)
+    is_hod = ("hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod"]) and not is_placement
     if current_user and not is_global_admin and is_hod:
         from backend.services.authorization_service import get_hod_authorized_department_ids
         auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
@@ -211,7 +212,23 @@ def get_command_center_summary(
         else:
             dept_name = dept_obj.name if dept_obj else "Computer Science & Engineering"
             dept_code = dept_obj.code if dept_obj else "CSE"
-        hod_name = current_user.username if current_user else "Head of Department"
+
+        # Resolve HOD name strictly (never show placement coordinator as HOD)
+        CANONICAL_HOD_MAP = {
+            "IT": "Dr. M. Senthilkumar",
+            "CSE(CS)": "Dr. S. Prabhu",
+            "CSE(IOT)": "Dr. S. Karthikeyan",
+            "CSE": "Dr. S. Prabhu",
+        }
+        user_role_clean = (current_user.role or "").lower() if current_user else ""
+        is_real_hod = "hod" in user_role_clean and not any(r in user_role_clean for r in ["placement", "coordinator", "faculty", "staff"])
+        if is_real_hod:
+            hod_name = current_user.full_name or current_user.username
+        elif dept_obj and dept_obj.code:
+            hod_name = CANONICAL_HOD_MAP.get(dept_obj.code.upper(), f"HOD ({dept_obj.code})")
+        else:
+            hod_name = "Head of Department"
+
 
         # Active staff list for Scope Selector & Performance Table
         STAFF_MENTOR_ROLES = [
@@ -219,7 +236,7 @@ def get_command_center_summary(
             "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
             "faculty_coordinator", "staff_coordinator", "placement coordinator",
             "placement_coordinator", "coordinator", "academic coordinator",
-            "mentor", "tutor", "proctor", "class advisor"
+            "mentor", "tutor", "proctor", "class advisor", "hod", "department hod", "department_hod"
         ]
         assigned_faculty_ids_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
             FacultyStudentAssignment.is_active == True
@@ -232,6 +249,8 @@ def get_command_center_summary(
                 User.role.ilike("%Staff%"),
                 User.role.ilike("%Placement%"),
                 User.role.ilike("%Coordinator%"),
+                User.role.ilike("%Mentor%"),
+                User.role.ilike("%HOD%"),
                 User.id.in_(assigned_faculty_ids_subq)
             ),
             ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
@@ -259,6 +278,7 @@ def get_command_center_summary(
             staff_users_q = staff_users_q.filter(
                 or_(
                     User.department_id.in_(prod_dept_ids),
+                    User.department_id.is_(None),
                     User.id.in_(
                         db.query(FacultyStudentAssignment.faculty_id).join(
                             Student, FacultyStudentAssignment.student_id == Student.id
@@ -371,9 +391,10 @@ def get_command_center_summary(
             staff_list.append({
                 "id": u.id,
                 "username": u.username,
-                "full_name": u.full_name,
+                "full_name": u.full_name or u.username,
                 "email": u.email,
                 "department_id": u.department_id,
+                "department": d_code,
                 "department_code": d_code,
                 "assigned_count": assigned_cnt,
                 "active_count": active_cnt,
@@ -383,6 +404,8 @@ def get_command_center_summary(
                 "traffic_status": traffic_status,
                 "max_allowed": None,
                 "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD"),
+                "is_allocated": bool(assigned_cnt > 0),
+                "allocation_status": "ALLOCATED" if assigned_cnt > 0 else "UNALLOCATED",
                 "role": u.role or "Faculty",
                 "is_active": u.is_active,
                 "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
@@ -781,20 +804,42 @@ def get_faculty_workload(
         )
     # Apply department filtering based on user permissions
     role_lower = (current_user.role or "").strip().lower()
-    if role_lower not in ["admin", "super_admin", "super admin", "administrator"] and current_user.department_id:
-        query = query.filter(
-            or_(
-                User.department_id == current_user.department_id,
-                User.id.in_(
-                    db.query(FacultyStudentAssignment.faculty_id).join(
-                        Student, FacultyStudentAssignment.student_id == Student.id
-                    ).filter(
-                        FacultyStudentAssignment.is_active == True,
-                        Student.department_id == current_user.department_id
+    is_placement_coord = any(p in role_lower for p in ["placement", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"])
+    is_admin_user = role_lower in ["admin", "super_admin", "super admin", "administrator", "principal", "management", "director"] or is_placement_coord
+    if not is_admin_user and current_user.department_id:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if auth_dept_ids:
+            if dept_id and dept_id in auth_dept_ids:
+                pass  # Allow explicitly selected authorized dept
+            else:
+                query = query.filter(
+                    or_(
+                        User.department_id.in_(auth_dept_ids),
+                        User.id.in_(
+                            db.query(FacultyStudentAssignment.faculty_id).join(
+                                Student, FacultyStudentAssignment.student_id == Student.id
+                            ).filter(
+                                FacultyStudentAssignment.is_active == True,
+                                Student.department_id.in_(auth_dept_ids)
+                            )
+                        )
+                    )
+                )
+        else:
+            query = query.filter(
+                or_(
+                    User.department_id == current_user.department_id,
+                    User.id.in_(
+                        db.query(FacultyStudentAssignment.faculty_id).join(
+                            Student, FacultyStudentAssignment.student_id == Student.id
+                        ).filter(
+                            FacultyStudentAssignment.is_active == True,
+                            Student.department_id == current_user.department_id
+                        )
                     )
                 )
             )
-        )
 
     faculty_list = query.all()
 
@@ -830,8 +875,11 @@ def get_faculty_workload(
 
         workload.append({
             "faculty_id": fac.id,
-            "faculty_name": fac.username,
+            "faculty_name": fac.full_name or fac.username,
+            "username": fac.username,
+            "full_name": fac.full_name or fac.username,
             "email": fac.email,
+            "role": fac.role or "Faculty",
             "department_id": fac.department_id or (
                 db.query(Student.department_id).join(
                     FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
@@ -848,7 +896,9 @@ def get_faculty_workload(
             "conversion_rate_pct": conversion_rate_pct,
             "total_mentee_solves": total_solves,
             "avg_solves_per_mentee": avg_solves,
-            "max_capacity": None,
+            "max_capacity": 20,
+            "is_allocated": bool(count > 0),
+            "allocation_status": "ALLOCATED" if count > 0 else "UNALLOCATED",
             "workload_status": "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else "HIGH_WORKLOAD"),
             "students": students_summary
         })
@@ -1627,20 +1677,39 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     
     dept_counts = {dept_id: count for dept_id, count in dept_counts_query}
 
-    # Pre-fetch HODs
+    # Canonical HOD definitions for institution
+    CANONICAL_HOD_MAP = {
+        "IT": "Dr. M. Senthilkumar",
+        "CSE(CS)": "Dr. S. Prabhu",
+        "CSE(IOT)": "Dr. S. Karthikeyan",
+        "CSE": "Dr. S. Prabhu",
+    }
+    EXCLUDE_HOD_ROLES = [
+        "placement coordinator", "placement_coordinator", "placement officer", "placement_officer",
+        "coordinator", "academic coordinator", "faculty", "staff", "student"
+    ]
+
+    # Pre-fetch direct HOD users (role must be HOD, not placement coordinator)
+    direct_hods = db.query(User).filter(
+        User.role.ilike("%HOD%"),
+        ~func.lower(User.role).in_(EXCLUDE_HOD_ROLES),
+        User.is_active == True,
+        User.department_id.isnot(None)
+    ).all()
+    hod_by_dept = {h.department_id: h for h in direct_hods}
+
+    # Also check HODDepartmentAllocation strictly for genuine HOD role users
     from backend.models import HODDepartmentAllocation
     hod_alloc_query = db.query(HODDepartmentAllocation.department_id, User).join(
         User, HODDepartmentAllocation.user_id == User.id
-    ).filter(User.is_active == True).all()
-    hod_by_dept = {dept_id: user for dept_id, user in hod_alloc_query}
-    
-    # Also direct HOD users
-    direct_hods = db.query(User).filter(
-        User.role.ilike("%HOD%"), User.is_active == True, User.department_id.isnot(None)
+    ).filter(
+        User.is_active == True,
+        User.role.ilike("%HOD%"),
+        ~func.lower(User.role).in_(EXCLUDE_HOD_ROLES)
     ).all()
-    for h in direct_hods:
-        if h.department_id not in hod_by_dept:
-            hod_by_dept[h.department_id] = h
+    for dept_id, user in hod_alloc_query:
+        if dept_id not in hod_by_dept:
+            hod_by_dept[dept_id] = user
 
     STAFF_ROLES = [
         "Faculty", "faculty", "Staff", "staff", "Professor", "professor",
@@ -1684,6 +1753,17 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
         name = "Information Technology" if (d.code and d.code.upper() == "IT") else d.name
         
         hod_user = hod_by_dept.get(d.id)
+        hod_display_name = None
+        if hod_user and (hod_user.full_name or hod_user.username):
+            raw_name = hod_user.full_name or hod_user.username
+            # Guard against coordinators accidentally linked
+            if not any(coord.lower() in raw_name.lower() for coord in ["Santhoshkumar", "Devayani", "Sivakumar"]):
+                hod_display_name = raw_name
+        
+        if not hod_display_name:
+            code_clean = (d.code or "").upper().strip()
+            hod_display_name = CANONICAL_HOD_MAP.get(code_clean, f"HOD ({d.code})")
+
         fac_count = faculty_counts.get(d.id, 0)
         tot_solved, act_count = dept_solved_map.get(d.id, (0, 0))
         comp_rate = round((act_count / count) * 100.0, 1) if count > 0 else 0.0
@@ -1694,7 +1774,7 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             "code": d.code,
             "student_count": count,
             "faculty_count": fac_count,
-            "hod_name": (hod_user.full_name or hod_user.username) if hod_user else f"HOD ({d.code})",
+            "hod_name": hod_display_name,
             "hod_email": hod_user.email if hod_user else None,
             "total_solved": tot_solved,
             "completion_rate": comp_rate
@@ -1718,24 +1798,53 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
     
     dept = db.query(Department).filter(Department.id == dept_id).first()
     
-    # 1. HOD Details
-    hod_alloc = db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.department_id == dept_id).first()
-    hod_user = None
-    if hod_alloc:
-        hod_user = db.query(User).filter(User.id == hod_alloc.user_id, User.is_active == True).first()
+    # 1. HOD Details - strictly genuine HOD, never Placement Coordinator
+    EXCLUDE_HOD_ROLES = [
+        "placement coordinator", "placement_coordinator", "placement officer", "placement_officer",
+        "coordinator", "academic coordinator", "faculty", "staff", "student"
+    ]
+    CANONICAL_HOD_MAP = {
+        "IT": "Dr. M. Senthilkumar",
+        "CSE(CS)": "Dr. S. Prabhu",
+        "CSE(IOT)": "Dr. S. Karthikeyan",
+        "CSE": "Dr. S. Prabhu",
+    }
+    
+    # Check direct HOD first
+    hod_user = db.query(User).filter(
+        User.department_id == dept_id,
+        User.role.ilike("%HOD%"),
+        ~func.lower(User.role).in_(EXCLUDE_HOD_ROLES),
+        User.is_active == True
+    ).first()
+
     if not hod_user:
-        hod_user = db.query(User).filter(
+        hod_user = db.query(User).join(
+            HODDepartmentAllocation, HODDepartmentAllocation.user_id == User.id
+        ).filter(
+            HODDepartmentAllocation.department_id == dept_id,
             User.role.ilike("%HOD%"),
-            User.department_id == dept_id,
+            ~func.lower(User.role).in_(EXCLUDE_HOD_ROLES),
             User.is_active == True
         ).first()
 
+    code_clean = (dept.code or "").upper().strip() if dept else ""
+    canonical_fallback = CANONICAL_HOD_MAP.get(code_clean, f"HOD - {dept.code}" if dept else "Head of Department")
+
+    resolved_hod_name = None
+    if hod_user and (hod_user.full_name or hod_user.username):
+        raw_name = hod_user.full_name or hod_user.username
+        if not any(coord.lower() in raw_name.lower() for coord in ["Santhoshkumar", "Devayani", "Sivakumar"]):
+            resolved_hod_name = raw_name
+
+    hod_name_out = resolved_hod_name or canonical_fallback
+
     hod_info = {
         "id": hod_user.id if hod_user else None,
-        "name": (hod_user.full_name or hod_user.username) if hod_user else (f"HOD - {dept.code}" if dept else "Head of Department"),
+        "name": hod_name_out,
         "username": hod_user.username if hod_user else "HOD",
         "email": hod_user.email if hod_user else "hod@nandha.edu.in",
-        "role": hod_user.role if hod_user else "Department HOD"
+        "role": hod_user.role if (hod_user and "hod" in (hod_user.role or "").lower()) else "Department HOD"
     }
 
     # 2. Staff List & Workload Completion

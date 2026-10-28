@@ -7,7 +7,7 @@ and faculty-scoped student lists.
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 import datetime
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
@@ -229,24 +229,34 @@ def get_faculty_assignments(
     if not faculty:
         raise HTTPException(status_code=404, detail="Faculty member not found.")
 
-    # HOD department check
+    # HOD & Placement Coordinator authorization check
     user_role = (current_user.role or "").strip().lower()
-    if user_role in ["hod"] and current_user.department_id != faculty.department_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Access restricted: You can only view faculty within your own department."
-        )
+    is_placement_coord = any(p in user_role for p in ["placement", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"])
+    is_admin_user = user_role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"] or is_placement_coord
+    if not is_admin_user and "hod" in user_role:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if faculty.department_id and auth_dept_ids and faculty.department_id not in auth_dept_ids:
+            raise HTTPException(
+                status_code=403,
+                detail="Access restricted: You can only view faculty within your authorized department(s)."
+            )
 
     assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, faculty_id)
     students = db.query(Student).filter(Student.id.in_(assigned_ids)).all() if assigned_ids else []
 
+    total_assigned = len(students)
     return {
         "faculty_id": int(faculty.id),  # type: ignore
-        "faculty_name": faculty.username,
+        "faculty_name": faculty.full_name or faculty.username,
+        "username": faculty.username,
+        "full_name": faculty.full_name or faculty.username,
         "department_id": faculty.department_id,
-        "total_assigned": len(students),
-        "max_allowed": None,
-        "slots_remaining": None,
+        "total_assigned": total_assigned,
+        "max_allowed": 20,
+        "slots_remaining": max(0, 20 - total_assigned),
+        "is_allocated": total_assigned > 0,
+        "allocation_status": "ALLOCATED" if total_assigned > 0 else "UNALLOCATED",
         "students": [
             {
                 "id": s.id,
@@ -278,11 +288,16 @@ def assign_students(
         raise HTTPException(status_code=404, detail="Target faculty member not found.")
 
     user_role = (current_user.role or "").strip().lower()
-    if user_role in ["hod"] and current_user.department_id != faculty.department_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Access restricted: HOD can only assign students to faculty in their own department."
-        )
+    is_placement_coord = any(p in user_role for p in ["placement", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"])
+    is_admin_user = user_role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"] or is_placement_coord
+    if not is_admin_user and "hod" in user_role:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if faculty.department_id and auth_dept_ids and faculty.department_id not in auth_dept_ids:
+            raise HTTPException(
+                status_code=403,
+                detail="Access restricted: HOD can only assign students to faculty in their authorized department(s)."
+            )
 
     return faculty_assignment_service.assign_students_to_faculty(
         db=db,
@@ -389,7 +404,20 @@ def get_faculty_workload_summary(
     Returns faculty workload distribution (e.g. 18/20, 20/20) across a department.
     """
     user_role = (current_user.role or "").strip().lower()
-    target_dept_id = current_user.department_id if user_role in ["hod"] else dept_id
+    is_placement_coord = any(p in user_role for p in ["placement", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"])
+    is_admin_user = user_role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "director"] or is_placement_coord
+    
+    target_dept_id = dept_id
+    if not is_admin_user and "hod" in user_role:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
+        if auth_dept_ids:
+            if dept_id and dept_id in auth_dept_ids:
+                target_dept_id = dept_id
+            else:
+                target_dept_id = auth_dept_ids[0] if len(auth_dept_ids) == 1 else None
+        elif current_user.department_id:
+            target_dept_id = current_user.department_id
 
     assigned_faculty_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
         FacultyStudentAssignment.is_active == True
@@ -408,7 +436,11 @@ def get_faculty_workload_summary(
             User.role.ilike("%Coordinator%"),
             User.id.in_(assigned_faculty_subq)
         ),
-        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"])
+        ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%")
     )
     if target_dept_id:
         query = query.filter(
@@ -446,13 +478,19 @@ def get_faculty_workload_summary(
         status_label = "Normal" if count < 20 else ("At Ratio" if count == 20 else ("Above Ratio" if count <= 30 else "High Workload"))
         workload.append({
             "faculty_id": int(fac.id),  # type: ignore
-            "faculty_name": fac.username,
+            "faculty_name": fac.full_name or fac.username,
+            "username": fac.username,
+            "full_name": fac.full_name or fac.username,
             "email": fac.email,
             "role": fac.role,
             "department_id": fac.department_id,
             "department_name": fac.department.name if fac.department else "General",
+            "department_code": fac.department.code if fac.department else "GEN",
             "assigned_students": count,
             "recommended_ratio": 20,
+            "max_capacity": 20,
+            "is_allocated": bool(count > 0),
+            "allocation_status": "ALLOCATED" if count > 0 else "UNALLOCATED",
             "workload_status": status_code,
             "workload_label": status_label,
             "is_above_ratio": count > 20
@@ -462,7 +500,7 @@ def get_faculty_workload_summary(
         "total_faculty": len(faculty_list),
         "target_department_id": target_dept_id,
         "recommended_ratio_per_faculty": 20,
-        "max_capacity_per_faculty": None,
+        "max_capacity_per_faculty": 20,
         "faculty_workload": workload
     }
 

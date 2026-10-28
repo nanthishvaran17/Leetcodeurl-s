@@ -1120,6 +1120,54 @@ from backend.csrf_middleware import global_csrf_middleware
 async def add_global_csrf_middleware(request, call_next):
     return await global_csrf_middleware(request, call_next)
 
+# In-memory sliding-window request rate limiter per client IP
+_IP_REQUEST_TIMESTAMPS: dict = {}
+_LAST_RATE_CLEANUP = 0.0
+
+@app.middleware("http")
+async def global_anti_abuse_rate_limiter(request: Request, call_next):
+    global _LAST_RATE_CLEANUP
+    path = request.url.path
+    
+    # Bypass health checks, static assets, and WebSocket handshakes
+    if (
+        path in ("/health", "/api/health", "/ready", "/api/ready", "/system-health")
+        or path.startswith(("/assets/", "/static/"))
+        or path.endswith((".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2"))
+        or request.headers.get("upgrade", "").lower() == "websocket"
+    ):
+        return await call_next(request)
+
+    # Resolve real client IP
+    forwarded = request.headers.get("x-forwarded-for") or request.headers.get("cf-connecting-ip") or request.headers.get("x-real-ip")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1")
+
+    now = time.time()
+    # Prune old entries every 60 seconds
+    if now - _LAST_RATE_CLEANUP > 60:
+        _LAST_RATE_CLEANUP = now
+        stale_cutoff = now - 60
+        stale_ips = [ip for ip, timestamps in _IP_REQUEST_TIMESTAMPS.items() if not timestamps or timestamps[-1] < stale_cutoff]
+        for ip in stale_ips:
+            _IP_REQUEST_TIMESTAMPS.pop(ip, None)
+
+    timestamps = _IP_REQUEST_TIMESTAMPS.setdefault(client_ip, [])
+    # Keep only requests within the last 60 seconds
+    one_min_ago = now - 60
+    _IP_REQUEST_TIMESTAMPS[client_ip] = [t for t in timestamps if t > one_min_ago]
+
+    # Limit: 200 requests per minute per IP for standard API traffic
+    max_rpm = 200
+    if len(_IP_REQUEST_TIMESTAMPS[client_ip]) >= max_rpm:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded (HTTP 429). Too many requests from your IP. Please try again in 1 minute."},
+            headers={"Retry-After": "60"}
+        )
+
+    _IP_REQUEST_TIMESTAMPS[client_ip].append(now)
+    return await call_next(request)
+
 @app.middleware("http")
 async def request_size_limiter(request: Request, call_next):
     # Enforce 10MB maximum request size for all endpoints to prevent DoS via payload size

@@ -52,13 +52,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Update Android status bar & browser navigation theme-color
     try {
-      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (!metaThemeColor) {
-        metaThemeColor = document.createElement('meta');
-        metaThemeColor.setAttribute('name', 'theme-color');
-        document.head.appendChild(metaThemeColor);
+      const themeColor = theme === 'dark' ? '#060813' : '#f8fafc';
+      const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+      if (metaTags.length > 0) {
+        metaTags.forEach(tag => tag.setAttribute('content', themeColor));
+      } else {
+        const meta = document.createElement('meta');
+        meta.setAttribute('name', 'theme-color');
+        meta.setAttribute('content', themeColor);
+        document.head.appendChild(meta);
       }
-      metaThemeColor.setAttribute('content', theme === 'dark' ? '#060813' : '#f8fafc');
     } catch (_) {}
   }, [theme]);
 

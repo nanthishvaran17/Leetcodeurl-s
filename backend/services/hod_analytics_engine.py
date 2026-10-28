@@ -632,7 +632,7 @@ def calculate_department_kpi_summary(
         "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
         "faculty_coordinator", "staff_coordinator", "placement coordinator",
         "placement_coordinator", "coordinator", "academic coordinator",
-        "mentor", "tutor", "proctor", "class advisor"
+        "mentor", "tutor", "proctor", "class advisor", "hod", "department hod", "department_hod"
     ]
 
     staff_q = db.query(User).filter(
@@ -643,6 +643,8 @@ def calculate_department_kpi_summary(
             User.role.ilike("%Staff%"),
             User.role.ilike("%Placement%"),
             User.role.ilike("%Coordinator%"),
+            User.role.ilike("%Mentor%"),
+            User.role.ilike("%HOD%"),
             User.id.in_(assigned_fac_ids_subq)
         ),
         ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
@@ -669,6 +671,7 @@ def calculate_department_kpi_summary(
         staff_q = staff_q.filter(
             or_(
                 User.department_id.in_(prod_dept_ids),
+                User.department_id.is_(None),
                 User.id.in_(
                     db.query(FacultyStudentAssignment.faculty_id).join(
                         Student, FacultyStudentAssignment.student_id == Student.id

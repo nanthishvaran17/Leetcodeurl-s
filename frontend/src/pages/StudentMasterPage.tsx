@@ -599,8 +599,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
       </div>
 
-      {/* Search & Comprehensive Responsive Filter Bar */}
-      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-navy-700 space-y-3.5 mb-6 sm:mb-10 backdrop-blur-xl">
+      {/* Search & Comprehensive Responsive Filter Bar — Sticky Frosted Glass */}
+      <div className="sticky top-14 sm:top-16 z-20 bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-2xl p-3.5 sm:p-5 shadow-md border border-slate-200/90 dark:border-white/[0.08] space-y-3 mb-6 sm:mb-8 transition-all">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Live Search Input */}
           <div className="relative flex-1 flex items-center min-w-0">

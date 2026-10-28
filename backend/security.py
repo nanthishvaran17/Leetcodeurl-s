@@ -604,6 +604,7 @@ def require_security_access(
             "staff mentor": "staff",
             "department hod": "hod",
             "department_hod": "hod",
+            "placement": "hod",
             "placement coordinator": "hod",
             "placement_coordinator": "hod",
             "placement officer": "hod",

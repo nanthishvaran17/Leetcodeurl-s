@@ -80,13 +80,18 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
 
     # 0. Check in-memory dataset cache for sub-millisecond responses (< 5ms)
     user_role = (getattr(current_user, "role", "") or "").lower().strip()
+    is_placement_role = any(p in user_role for p in ("placement", "coordinator", "admin", "principal", "management"))
+    is_inst_report = str(config.report_type or "").upper() in (
+        "MANAGEMENT_EXECUTIVE_SUMMARY", "PRINCIPAL_EXECUTIVE", "COLLEGE_EXECUTIVE", 
+        "12TH_TNEA_CUTOFF_ANALYSIS", "STUDENT_MASTER", "MASTER_EXCEL"
+    )
     user_dept = str(getattr(current_user, "department_id", "") or "")
-    if user_role in ("hod", "department hod", "department_hod", "head of department", "placement coordinator", "placement_coordinator"):
+    if not is_placement_role and user_role in ("hod", "department hod", "department_hod", "head of department"):
         from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
         h_ids = get_hod_authorized_department_ids(db, current_user)
         user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
         auth_codes = get_hod_authorized_department_codes(db, current_user)
-        if auth_codes and (config.department in ("ALL", "", None) or config.department not in auth_codes):
+        if auth_codes and not is_inst_report and (config.department in ("ALL", "", None) or config.department not in auth_codes):
             config.department = auth_codes[0]
             if config.filters:
                 config.filters["department"] = auth_codes[0]

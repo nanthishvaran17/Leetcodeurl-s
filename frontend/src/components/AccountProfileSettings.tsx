@@ -414,34 +414,34 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
   };
 
   return (
-    <div id="delete-account-section" className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-rose-200/90 dark:border-rose-900/50 shadow-sm space-y-4">
-      <div className="flex items-center justify-between border-b border-rose-100 dark:border-rose-900/40 pb-3 flex-wrap gap-2">
-        <div className="flex items-center gap-2.5">
+    <div id="delete-account-section" className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-rose-200/90 dark:border-rose-900/50 shadow-sm space-y-3.5 sm:space-y-4 scroll-mt-24">
+      <div className="flex items-center justify-between border-b border-rose-100 dark:border-rose-900/40 pb-3 gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/25">
             <Trash2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </div>
-          <div>
-            <h3 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider">
+          <div className="min-w-0">
+            <h3 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider truncate">
               Danger Zone
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Permanent account deletion</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">Permanent account deletion</p>
           </div>
         </div>
-        <span className="text-[10px] font-black uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-800">
+        <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-rose-200 dark:border-rose-800 shrink-0 whitespace-nowrap">
           Play Store Compliance
         </span>
       </div>
 
-      <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+      <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
         In accordance with Google Play Store data safety and privacy regulations, you have the right to permanently delete your account and associated personal data at any time.
       </p>
 
-      <div className="p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-[11px] font-bold text-rose-800 dark:text-rose-300 space-y-1.5">
+      <div className="p-3 sm:p-3.5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-[11px] font-bold text-rose-800 dark:text-rose-300 space-y-1.5">
         <div className="flex items-center gap-1.5 font-black uppercase tracking-wider text-[10px]">
           <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
-          What happens when you delete:
+          <span>What happens when you delete:</span>
         </div>
-        <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300 text-[11px]">
+        <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
           <li>All active login sessions and biometric tokens are immediately revoked.</li>
           <li>Your profile name, contact info, and device tokens are permanently wiped.</li>
           <li>Aggregated institutional problem counts remain anonymized for academic records.</li>
@@ -455,17 +455,17 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
           onClick={() => setIsOpen(true)}
           className="w-full py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
         >
-          <Trash2 className="w-4 h-4" />
-          Delete My Account Permanently
+          <Trash2 className="w-4 h-4 shrink-0" />
+          <span>Delete My Account Permanently</span>
         </button>
       ) : (
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-rose-300 dark:border-rose-800/80 space-y-3.5 animate-fade-in">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-rose-300 dark:border-rose-800/80 space-y-3 animate-fade-in">
           {/* Mobile Reason Selector Field */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <HelpCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                Reason for leaving (Optional)
+                <span>Reason for leaving (Optional)</span>
               </label>
               {reason && (
                 <button
@@ -484,24 +484,24 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
             <button
               type="button"
               onClick={() => setIsSheetOpen(true)}
-              className={`w-full py-2.5 px-3.5 rounded-2xl border-2 flex items-center justify-between gap-3 text-left transition-all duration-200 cursor-pointer group active:scale-[0.99] ${
+              className={`w-full py-2 px-3 sm:py-2.5 sm:px-3.5 rounded-xl sm:rounded-2xl border-2 flex items-center justify-between gap-2.5 text-left transition-all duration-200 cursor-pointer group active:scale-[0.99] ${
                 selectedReasonObj
                   ? 'bg-white dark:bg-navy-900 border-rose-300 dark:border-rose-800/80 shadow-xs'
                   : 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600'
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
                 {selectedReasonObj ? (
                   <>
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${selectedReasonObj.iconColor}`}>
                       <selectedReasonObj.icon className="w-4 h-4" />
                     </div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                      <div className="flex items-center gap-1.5 flex-nowrap">
                         <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                           {selectedReasonObj.title}
                         </span>
-                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md border ${selectedReasonObj.badgeColor}`}>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md border shrink-0 ${selectedReasonObj.badgeColor}`}>
                           {selectedReasonObj.badge}
                         </span>
                       </div>
@@ -515,11 +515,11 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
                     <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
                       <HelpCircle className="w-4 h-4" />
                     </div>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                         Tap to choose a reason...
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
                         Optional feedback for why you are leaving
                       </span>
                     </div>
@@ -528,24 +528,26 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-lg border border-rose-200/80 dark:border-rose-900/60 group-hover:bg-rose-100 transition-colors">
+                <span className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-lg border border-rose-200/80 dark:border-rose-900/60 group-hover:bg-rose-100 transition-colors whitespace-nowrap">
                   {selectedReasonObj ? 'Change' : 'Choose'}
                 </span>
-                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors shrink-0" />
               </div>
             </button>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
-              Type <span className="font-mono bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded text-rose-800 dark:text-rose-200">DELETE MY ACCOUNT</span> to confirm
+            <label className="text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-1.5 flex-wrap">
+              <span>Type</span>
+              <span className="font-mono bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded text-rose-800 dark:text-rose-200 font-black">DELETE MY ACCOUNT</span>
+              <span>to confirm</span>
             </label>
             <input
               type="text"
               value={confirmationText}
               onChange={(e) => setConfirmationText(e.target.value)}
               placeholder="DELETE MY ACCOUNT"
-              className="w-full text-xs font-black font-mono tracking-wider px-3 py-2.5 rounded-xl bg-white dark:bg-navy-900 border-2 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 placeholder:text-slate-400 focus:outline-hidden focus:border-rose-600"
+              className="w-full text-xs font-black font-mono tracking-wider px-3 py-2.5 rounded-xl bg-white dark:bg-navy-900 border-2 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 placeholder:text-slate-400 focus:outline-hidden focus:border-rose-600 transition-colors"
             />
           </div>
 
@@ -559,7 +561,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
                 setReason('');
                 setOtherNote('');
               }}
-              className="flex-1 py-2.5 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-95"
             >
               Cancel
             </button>
@@ -567,16 +569,16 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
               type="button"
               disabled={isDeleting || confirmationText.trim().toUpperCase() !== 'DELETE MY ACCOUNT'}
               onClick={handleDelete}
-              className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 dark:disabled:bg-rose-900/50 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-rose-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 dark:disabled:bg-rose-900/50 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-rose-600/30 flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed whitespace-nowrap active:scale-95"
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
                   <span>Deleting...</span>
                 </>
               ) : (
                 <>
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3.5 h-3.5 shrink-0" />
                   <span>Confirm Delete</span>
                 </>
               )}
@@ -4208,6 +4210,97 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </div>
 
             <div className="space-y-4 sm:space-y-5">
+              {/* 0. Mobile-Native Hero Identity Card (Apple ID / Revolut / Linear Style) */}
+              <div className="relative overflow-hidden rounded-3xl p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white border border-slate-800/80 shadow-xl shadow-brand-950/20">
+                {/* Ambient Background Glows */}
+                <div className="absolute -right-10 -top-10 w-44 h-44 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 sm:gap-4.5">
+                    {/* Avatar with Glowing Gradient Border & Quick Tap */}
+                    <div
+                      className="relative group cursor-pointer shrink-0"
+                      onClick={() => {
+                        setExpandedCards(prev => ({ ...prev, photo: true }));
+                        if (fileInputRef.current) fileInputRef.current.click();
+                      }}
+                      title="Click to change photo"
+                    >
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-0.5 bg-gradient-to-tr from-brand-400 via-indigo-400 to-purple-400 shadow-lg shadow-brand-500/30 overflow-hidden">
+                        <div className="w-full h-full rounded-[14px] bg-slate-900 overflow-hidden flex items-center justify-center">
+                          {profilePhoto ? (
+                            <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-8 h-8 sm:w-9 sm:h-9 text-slate-300" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-brand-600 text-white border-2 border-slate-900 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <Camera className="w-3 h-3" />
+                      </div>
+                    </div>
+
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
+                          {fullName || user?.username || 'Staff Member'}
+                        </h2>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Active Record</span>
+                        </span>
+                      </div>
+
+                      <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-brand-300 font-semibold">{designation || 'Director & Chief Administrator'}</span>
+                        {institutionalId && (
+                          <>
+                            <span className="text-slate-600">•</span>
+                            <span className="font-mono text-slate-400 text-[11px]">{institutionalId}</span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Quick Metric Pills */}
+                      <div className="flex items-center gap-2 pt-1 flex-wrap text-[11px]">
+                        {bloodGroup && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">
+                            <Activity className="w-3 h-3 text-rose-400" />
+                            <span>{bloodGroup}</span>
+                          </span>
+                        )}
+                        {officeLocation && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
+                            <MapPin className="w-3 h-3 text-cyan-400" />
+                            <span>{officeLocation}</span>
+                          </span>
+                        )}
+                        {phoneNumber && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 text-slate-300 border border-white/10 font-bold font-mono">
+                            <Phone className="w-3 h-3 text-emerald-400" />
+                            <span>{phoneNumber}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Action: Change Photo Button */}
+                  <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExpandedCards(prev => ({ ...prev, photo: !prev.photo }));
+                      }}
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-black text-white border border-white/15 transition-all shadow-xs cursor-pointer"
+                    >
+                      <Palette className="w-3.5 h-3.5 text-brand-300" />
+                      <span>Customize Avatar</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
                 {/* 1. Photo & Avatar Customizer */}
                 {(profileSubSection === 'all' || profileSubSection === 'contact') && (
@@ -4382,166 +4475,266 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     )}
 
                     {expandedCards.contact && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 animate-fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 animate-fade-in">
                         {/* Full Display Name */}
-                        <div className="space-y-1.5 sm:col-span-2">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Full Display Name</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <User className="w-4 h-4" />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all sm:col-span-2 shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-2xs">
+                              <User className="w-5 h-5" />
                             </div>
-                            <input
-                              type="text"
-                              value={fullName}
-                              onChange={e => setFullName(e.target.value)}
-                              placeholder="Dr. / Mr. / Ms. Name"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                              required
-                            />
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Full Display Name <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={fullName}
+                                onChange={e => setFullName(e.target.value)}
+                                placeholder="Dr. / Mr. / Ms. Name"
+                                className="w-full bg-transparent text-sm sm:text-base font-black text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                                required
+                              />
+                            </div>
                           </div>
                         </div>
 
                         {/* Professional Designation / Title */}
-                        <div className="space-y-1.5 sm:col-span-2">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Professional Designation / Academic Title</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <Briefcase className="w-4 h-4" />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all sm:col-span-2 shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/20 shadow-2xs">
+                              <Briefcase className="w-5 h-5" />
                             </div>
-                            <input
-                              type="text"
-                              value={designation}
-                              onChange={e => setDesignation(e.target.value)}
-                              placeholder="e.g. Assistant Professor, Lead System Architect, HOD"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Phone / Mobile Number */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Mobile / Contact Number</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <Phone className="w-4 h-4" />
-                            </div>
-                            <input
-                              type="tel"
-                              inputMode="tel"
-                              value={phoneNumber}
-                              onChange={e => setPhoneNumber(e.target.value)}
-                              placeholder="+91 9876543210"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Date of Birth (MM/DD/YYYY) */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Date of Birth</label>
-                            <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold font-mono bg-brand-50 dark:bg-brand-950/60 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800/80">DD/MM/YYYY</span>
-                          </div>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <Calendar className="w-4 h-4" />
-                            </div>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={dateOfBirth}
-                              onChange={e => {
-                                let val = e.target.value.replace(/\D/g, '');
-                                if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
-                                else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
-                                setDateOfBirth(val);
-                              }}
-                              placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
-                              maxLength={10}
-                              className="w-full h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-                              <input
-                                type="date"
-                                id="acc-settings-dob-picker"
-                                className="opacity-0 absolute w-6 h-6 cursor-pointer"
-                                onChange={e => {
-                                  if (e.target.value) {
-                                    const parts = e.target.value.split('-');
-                                    if (parts.length === 3) {
-                                      setDateOfBirth(`${parts[2]}/${parts[1]}/${parts[0]}`);
-                                    }
-                                  }
-                                }}
-                              />
-                              <label htmlFor="acc-settings-dob-picker" className="p-1 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer" title="Pick from calendar">
-                                <Calendar className="w-4 h-4" />
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Professional Designation / Academic Title
                               </label>
+                              <input
+                                type="text"
+                                value={designation}
+                                onChange={e => setDesignation(e.target.value)}
+                                placeholder="e.g. Director & Chief Administrator, Lead System Architect, HOD"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
                             </div>
                           </div>
                         </div>
 
-                        {/* Blood Group */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Blood Group (Medical Record)</label>
-                          <PremiumSelect
-                            value={bloodGroup}
-                            onChange={setBloodGroup}
-                            options={BLOOD_GROUP_OPTIONS}
-                            placeholder="Select Blood Group"
-                            heightClass="h-12"
-                          />
+                        {/* Mobile / Contact Number */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+                              <Phone className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Mobile / Contact Number
+                              </label>
+                              <input
+                                type="tel"
+                                inputMode="tel"
+                                value={phoneNumber}
+                                onChange={e => setPhoneNumber(e.target.value)}
+                                placeholder="+91 9876543210"
+                                className="w-full bg-transparent text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Date of Birth */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-2xs">
+                              <Calendar className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                  Date of Birth
+                                </label>
+                                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold font-mono bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800/80">
+                                  DD/MM/YYYY
+                                </span>
+                              </div>
+                              <div className="relative flex items-center gap-2 pt-0.5">
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  value={dateOfBirth}
+                                  onChange={e => {
+                                    let val = e.target.value.replace(/\D/g, '');
+                                    if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
+                                    else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+                                    setDateOfBirth(val);
+                                  }}
+                                  placeholder="DD/MM/YYYY (e.g. 15/08/1990)"
+                                  maxLength={10}
+                                  className="w-full bg-transparent text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
+                                />
+                                <div className="relative flex items-center">
+                                  <input
+                                    type="date"
+                                    id="acc-settings-dob-picker"
+                                    className="opacity-0 absolute w-7 h-7 cursor-pointer right-0"
+                                    onChange={e => {
+                                      if (e.target.value) {
+                                        const parts = e.target.value.split('-');
+                                        if (parts.length === 3) {
+                                          setDateOfBirth(`${parts[2]}/${parts[1]}/${parts[0]}`);
+                                        }
+                                      }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor="acc-settings-dob-picker"
+                                    className="p-1.5 rounded-lg bg-amber-100/80 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 hover:bg-amber-200 cursor-pointer transition-colors shadow-2xs"
+                                    title="Pick from calendar"
+                                  >
+                                    <Calendar className="w-4 h-4" />
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Blood Group (Medical Record) — 1-Tap Touch Carousel */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 space-y-2.5 sm:col-span-2 shadow-2xs">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
+                                <Activity className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                  Blood Group (Medical Record)
+                                </label>
+                                <span className="text-[10px] text-slate-400 font-bold">1-Tap Mobile Selection:</span>
+                              </div>
+                            </div>
+                            {bloodGroup && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900 inline-flex items-center gap-1.5 shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                <span>Selected: {bloodGroup}</span>
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 1-Tap Quick Touch Pills */}
+                          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                            {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => {
+                              const isSelected = bloodGroup === bg;
+                              return (
+                                <button
+                                  key={bg}
+                                  type="button"
+                                  onClick={() => setBloodGroup(bg)}
+                                  className={`shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 select-none ${
+                                    isSelected
+                                      ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-500/30 ring-2 ring-rose-400/50 scale-105'
+                                      : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-navy-700 hover:border-rose-300 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 shadow-2xs'
+                                  }`}
+                                >
+                                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-rose-500'}`} />
+                                  <span>{bg}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Detailed medical dropdown if desired */}
+                          <div className="pt-1">
+                            <PremiumSelect
+                              value={bloodGroup}
+                              onChange={setBloodGroup}
+                              options={BLOOD_GROUP_OPTIONS}
+                              placeholder="Or choose from detailed medical options..."
+                              heightClass="h-11"
+                            />
+                          </div>
                         </div>
 
                         {/* Office Cabin / Room Location */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Office Cabin / Room Location</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <MapPin className="w-4 h-4" />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/20 transition-all sm:col-span-2 shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20 shadow-2xs">
+                              <MapPin className="w-5 h-5" />
                             </div>
-                            <input
-                              type="text"
-                              value={officeLocation}
-                              onChange={e => setOfficeLocation(e.target.value)}
-                              placeholder="e.g. CS Block Room 204"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Office Cabin / Room Location
+                              </label>
+                              <input
+                                type="text"
+                                value={officeLocation}
+                                onChange={e => setOfficeLocation(e.target.value)}
+                                placeholder="e.g. CS Block Room 204"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        {/* Emergency Contact Person */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Emergency Contact Person</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <Users className="w-4 h-4" />
+                        {/* Emergency SOS Contact Section */}
+                        <div className="sm:col-span-2 rounded-2xl p-4 bg-gradient-to-br from-rose-50/80 to-amber-50/50 dark:from-rose-950/30 dark:to-navy-950 border border-rose-200/80 dark:border-rose-900/40 space-y-3.5">
+                          <div className="flex items-center justify-between pb-2 border-b border-rose-200/60 dark:border-rose-900/30">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                                <ShieldAlert className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-black text-rose-950 dark:text-rose-200 uppercase tracking-wider">
+                                  Emergency SOS Contact
+                                </h4>
+                                <p className="text-[10px] text-rose-700/80 dark:text-rose-400/80 font-bold">
+                                  Campus medical &amp; emergency dispatch priority contact
+                                </p>
+                              </div>
                             </div>
-                            <input
-                              type="text"
-                              value={emergencyContactName}
-                              onChange={e => setEmergencyContactName(e.target.value)}
-                              placeholder="e.g. Spouse / Parent / Relative"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
+                            <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900">
+                              Campus SOS
+                            </span>
                           </div>
-                        </div>
 
-                        {/* Emergency Contact Phone */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Emergency Contact Phone</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <Phone className="w-4 h-4" />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Emergency Contact Person */}
+                            <div className="p-3 rounded-xl bg-white/90 dark:bg-navy-900/90 border border-rose-200/60 dark:border-rose-900/40 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20 transition-all shadow-2xs">
+                              <div className="flex items-center gap-2.5">
+                                <Users className="w-4 h-4 text-rose-500 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    Contact Person Name
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={emergencyContactName}
+                                    onChange={e => setEmergencyContactName(e.target.value)}
+                                    placeholder="e.g. Spouse / Parent / Relative"
+                                    className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
+                                  />
+                                </div>
+                              </div>
                             </div>
-                            <input
-                              type="tel"
-                              inputMode="tel"
-                              value={emergencyContactPhone}
-                              onChange={e => setEmergencyContactPhone(e.target.value)}
-                              placeholder="+91 9876543210"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
+
+                            {/* Emergency Contact Phone */}
+                            <div className="p-3 rounded-xl bg-white/90 dark:bg-navy-900/90 border border-rose-200/60 dark:border-rose-900/40 focus-within:border-rose-500 focus-within:ring-2 focus-within:ring-rose-500/20 transition-all shadow-2xs">
+                              <div className="flex items-center gap-2.5">
+                                <Phone className="w-4 h-4 text-rose-500 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    Emergency Phone
+                                  </label>
+                                  <input
+                                    type="tel"
+                                    inputMode="tel"
+                                    value={emergencyContactPhone}
+                                    onChange={e => setEmergencyContactPhone(e.target.value)}
+                                    placeholder="+91 9876543210"
+                                    className="w-full bg-transparent text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -4594,69 +4787,81 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     )}
 
                     {expandedCards.academic && (
-                      <div className="space-y-4 sm:space-y-5 animate-fade-in">
+                      <div className="space-y-3.5 sm:space-y-4 animate-fade-in">
                         {/* Highest Degree */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Highest Academic Degree &amp; Institution</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <GraduationCap className="w-4 h-4" />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-2xs">
+                              <GraduationCap className="w-5 h-5" />
                             </div>
-                            <input
-                              type="text"
-                              value={highestDegree}
-                              onChange={e => setHighestDegree(e.target.value)}
-                              placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Highest Academic Degree &amp; Institution
+                              </label>
+                              <input
+                                type="text"
+                                value={highestDegree}
+                                onChange={e => setHighestDegree(e.target.value)}
+                                placeholder="e.g. M.E. Computer Science & Engineering • Anna University"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
+                            </div>
                           </div>
                         </div>
 
                         {/* Research Specialization */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Specialization &amp; Research Domains</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <Award className="w-4 h-4" />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-2xs">
+                              <Award className="w-5 h-5" />
                             </div>
-                            <input
-                              type="text"
-                              value={specialization}
-                              onChange={e => setSpecialization(e.target.value)}
-                              placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Specialization &amp; Research Domains
+                              </label>
+                              <input
+                                type="text"
+                                value={specialization}
+                                onChange={e => setSpecialization(e.target.value)}
+                                placeholder="e.g. Algorithms, Distributed Cloud Systems, Deep Learning"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
+                            </div>
                           </div>
                         </div>
 
                         {/* Courses Taught */}
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Courses &amp; Lab Subjects Handling</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                              <BookOpen className="w-4 h-4" />
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+                              <BookOpen className="w-5 h-5" />
                             </div>
-                            <input
-                              type="text"
-                              value={coursesTaught}
-                              onChange={e => setCoursesTaught(e.target.value)}
-                              placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Courses &amp; Lab Subjects Handling
+                              </label>
+                              <input
+                                type="text"
+                                value={coursesTaught}
+                                onChange={e => setCoursesTaught(e.target.value)}
+                                placeholder="e.g. CS8451 Design & Analysis of Algorithms, Data Structures Lab"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
+                            </div>
                           </div>
                         </div>
 
                         {/* Faculty Bio with 1-Tap Quick Templates */}
-                        <div className="space-y-2">
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all shadow-2xs space-y-2">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-0">
-                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Faculty Bio &amp; Mentoring Philosophy</label>
+                            <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              Faculty Bio &amp; Mentoring Philosophy
+                            </label>
                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                              <span>Templates:</span>
-                              <button type="button" onClick={() => insertBioTemplate('mentor')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60">Mentor</button>
-                              <span>•</span>
-                              <button type="button" onClick={() => insertBioTemplate('researcher')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60">Research</button>
-                              <span>•</span>
-                              <button type="button" onClick={() => insertBioTemplate('placement')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold px-1.5 py-0.5 rounded bg-brand-50 dark:bg-brand-950/60">Placement</button>
+                              <span>Quick Fill:</span>
+                              <button type="button" onClick={() => insertBioTemplate('mentor')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/80 shadow-2xs active:scale-95">Mentor</button>
+                              <button type="button" onClick={() => insertBioTemplate('researcher')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/80 shadow-2xs active:scale-95">Research</button>
+                              <button type="button" onClick={() => insertBioTemplate('placement')} className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer font-bold px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/80 shadow-2xs active:scale-95">Placement</button>
                             </div>
                           </div>
                           <textarea
@@ -4664,9 +4869,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             value={facultyBio}
                             onChange={e => setFacultyBio(e.target.value)}
                             placeholder="Write a brief professional summary about your teaching journey..."
-                            className="w-full p-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all resize-none shadow-2xs"
+                            className="w-full bg-transparent text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none resize-none pt-1"
                           />
-                          <div className="text-right text-[10px] text-slate-500 font-bold">{facultyBio.length} characters</div>
+                          <div className="text-right text-[10px] text-slate-400 font-bold">{facultyBio.length} characters</div>
                         </div>
                       </div>
                     )}
@@ -4817,85 +5022,113 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     )}
 
                     {expandedCards.links && (
-                      <div className="space-y-4 sm:space-y-5 animate-fade-in">
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">LinkedIn Profile URL</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-500 pointer-events-none">
-                              <LinkIcon className="w-4 h-4" />
+                      <div className="space-y-3.5 sm:space-y-4 animate-fade-in">
+                        {/* LinkedIn */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20 shadow-2xs">
+                              <LinkIcon className="w-5 h-5" />
                             </div>
-                            <input
-                              type="url"
-                              value={linkedinUrl}
-                              onChange={e => setLinkedinUrl(e.target.value)}
-                              placeholder="https://linkedin.com/in/username"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">GitHub Profile URL</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
-                              <Laptop className="w-4 h-4" />
-                            </div>
-                            <input
-                              type="url"
-                              value={githubUrl}
-                              onChange={e => setGithubUrl(e.target.value)}
-                              placeholder="https://github.com/username"
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Google Scholar Profile URL</label>
-                          <div className="relative">
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
-                              <BookOpen className="w-4 h-4" />
-                            </div>
-                            <input
-                              type="url"
-                              value={scholarUrl}
-                              onChange={e => setScholarUrl(e.target.value)}
-                              placeholder="https://scholar.google.com/citations?user=..."
-                              className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">ORCID iD</label>
-                            <div className="relative">
-                              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
-                                <ShieldCheck className="w-4 h-4" />
-                              </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                LinkedIn Profile URL
+                              </label>
                               <input
-                                type="text"
-                                value={orcidId}
-                                onChange={e => setOrcidId(e.target.value)}
-                                placeholder="0000-0002-1825-0097"
-                                className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                                type="url"
+                                value={linkedinUrl}
+                                onChange={e => setLinkedinUrl(e.target.value)}
+                                placeholder="https://linkedin.com/in/username"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
                               />
                             </div>
                           </div>
+                        </div>
 
-                          <div className="space-y-1.5">
-                            <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">LeetCode Handle</label>
-                            <div className="relative">
-                              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 pointer-events-none">
-                                <Terminal className="w-4 h-4" />
-                              </div>
+                        {/* GitHub */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-slate-500 focus-within:ring-2 focus-within:ring-slate-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-500/10 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300 flex items-center justify-center shrink-0 border border-slate-500/20 shadow-2xs">
+                              <Laptop className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                GitHub Profile URL
+                              </label>
                               <input
-                                type="text"
-                                value={leetcodeHandle}
-                                onChange={e => setLeetcodeHandle(e.target.value)}
-                                placeholder="nanthish_nec"
-                                className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                                type="url"
+                                value={githubUrl}
+                                onChange={e => setGithubUrl(e.target.value)}
+                                placeholder="https://github.com/username"
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
                               />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Google Scholar */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shadow-2xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-2xs">
+                              <BookOpen className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Google Scholar Profile URL
+                              </label>
+                              <input
+                                type="url"
+                                value={scholarUrl}
+                                onChange={e => setScholarUrl(e.target.value)}
+                                placeholder="https://scholar.google.com/citations?user=..."
+                                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                          {/* ORCID iD */}
+                          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all shadow-2xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+                                <ShieldCheck className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                  ORCID iD
+                                </label>
+                                <input
+                                  type="text"
+                                  value={orcidId}
+                                  onChange={e => setOrcidId(e.target.value)}
+                                  placeholder="0000-0002-1825-0097"
+                                  className="w-full bg-transparent text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* LeetCode Handle */}
+                          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-2xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-2xs">
+                                <Terminal className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    LeetCode Handle
+                                  </label>
+                                  <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Syncs Live</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  value={leetcodeHandle}
+                                  onChange={e => setLeetcodeHandle(e.target.value)}
+                                  placeholder="nanthish_nec"
+                                  className="w-full bg-transparent text-sm sm:text-base font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none pt-0.5"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -4981,23 +5214,90 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* TAB 2: SECURITY & PASSWORD VAULT — World-Class Mobile App UI (Swiggy / WhatsApp Grade) */}
         {/* ========================================================================= */}
         {effectiveTab === 'security' && (
-          <div className="space-y-4 sm:space-y-5 animate-fade-in">
+          <div className="space-y-4 sm:space-y-6 animate-fade-in">
 
-              {/* 1. Password Management Card — Mobile App Styled with Direct Update Action */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/20 shadow-2xs">
-                      <KeyRound className="w-4.5 h-4.5" />
+              {/* 0. Mobile-Native Hero Security Vault Card (Apple ID Security / 1Password / CRED Grade) */}
+              <div className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white border border-slate-800/80 shadow-xl shadow-brand-950/20">
+                {/* Ambient Cybernetic Glows */}
+                <div className="absolute -right-10 -top-10 w-52 h-52 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -left-10 -bottom-10 w-52 h-52 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
+                    <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-violet-500 via-indigo-500 to-emerald-400 shadow-lg shadow-violet-500/25 shrink-0 flex items-center justify-center">
+                      <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center text-violet-300">
+                        <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
+                      </div>
+                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-slate-950" />
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Password &amp; Credentials
-                      </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Update master login credentials &amp; encryption</p>
+
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
+                          Institutional Security Vault
+                        </h2>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Vault Active</span>
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 font-medium flex items-center gap-2 flex-wrap">
+                        <span>Zero-Knowledge Encryption</span>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-400">Hardware Session Quorum</span>
+                      </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-800/60">
+
+                  {/* Security Quick Metric Capsules */}
+                  <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 flex items-center gap-2 text-xs">
+                      <Lock className="w-3.5 h-3.5 text-violet-400" />
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Encryption</span>
+                        <span className="font-mono font-bold text-white text-[11px]">Bcrypt (Cost 12)</span>
+                      </div>
+                    </div>
+
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 flex items-center gap-2 text-xs">
+                      <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">2FA Status</span>
+                        <span className={`font-mono font-bold text-[11px] ${is2FAEnabled ? 'text-emerald-300' : 'text-amber-300'}`}>
+                          {is2FAEnabled ? 'TOTP Active' : 'Disabled'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 flex items-center gap-2 text-xs">
+                      <Laptop className="w-3.5 h-3.5 text-emerald-400" />
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Sessions</span>
+                        <span className="font-mono font-bold text-white text-[11px]">{sessions.length || 1} Device{sessions.length > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 1. Password Management Card — iOS Inset Style with Entropy Meter */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-violet-500/15 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/20 shadow-2xs">
+                      <KeyRound className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Password &amp; Credentials
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Update master login credentials &amp; hashing encryption</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800/60 font-mono">
                     Bcrypt Secured
                   </span>
                 </div>
@@ -5015,7 +5315,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         value={currentPassword}
                         onChange={e => setCurrentPassword(e.target.value)}
                         placeholder="Enter your current password"
-                        className="w-full h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                        className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                       />
                       <button
                         type="button"
@@ -5041,7 +5341,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           value={newPassword}
                           onChange={e => setNewPassword(e.target.value)}
                           placeholder="Min 6 characters"
-                          className="w-full h-12 pl-10 pr-11 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                          className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                         />
                         <button
                           type="button"
@@ -5065,7 +5365,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           value={confirmPassword}
                           onChange={e => setConfirmPassword(e.target.value)}
                           placeholder="Repeat new password"
-                          className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                          className="w-full h-12 pl-10 pr-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
                         />
                       </div>
                     </div>
@@ -5073,9 +5373,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                   {/* Password Strength Meter & Live Requirement Checklist */}
                   {newPassword && (
-                    <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-navy-950/90 border border-slate-200/90 dark:border-navy-800 space-y-3 animate-fade-in">
+                    <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-navy-950/90 border border-slate-200/90 dark:border-navy-800 space-y-3 animate-fade-in">
                       <div className="flex items-center justify-between text-xs font-black">
-                        <span className="text-slate-700 dark:text-slate-300">Password Entropy Strength:</span>
+                        <span className="text-slate-700 dark:text-slate-300">Entropy Strength:</span>
                         <span className={`font-black ${passwordStrength.color.replace('bg-', 'text-')}`}>
                           {passwordStrength.label} (Crack time: {passwordStrength.crackTime})
                         </span>
@@ -5106,12 +5406,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       type="button"
                       disabled={isSaving || !newPassword || !currentPassword}
                       onClick={handleUpdatePasswordOnly}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:scale-95 disabled:opacity-50 text-white font-black text-xs transition-all shadow-md shadow-violet-500/20 cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:scale-95 disabled:opacity-50 text-white font-black text-xs transition-all shadow-md shadow-violet-500/20 cursor-pointer flex items-center justify-center gap-2"
                     >
                       {isSaving ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Updating...</span>
+                          <span>Updating Password...</span>
                         </>
                       ) : (
                         <>
@@ -5124,21 +5424,21 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* 2. Grouped Modern Authentication & Biometric Vault (Apple iOS / WhatsApp Grouped Style) */}
+              {/* 2. Grouped Modern Authentication & Biometric Vault (Apple iOS Grouped Style) */}
               <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
-                      <ShieldCheck className="w-4.5 h-4.5" />
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+                      <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                         Biometrics &amp; Security Vault
                       </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Hardware-backed passkeys, face scan &amp; multi-factor protection</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Hardware-backed passkeys, face scan &amp; multi-factor protection</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1.5 font-mono">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Vault Active</span>
                   </span>
@@ -5146,22 +5446,22 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <div className="divide-y divide-slate-100 dark:divide-navy-800/80">
 
-                  {/* VAULT ROW 2: Passkeys & Hardware Biometrics */}
+                  {/* VAULT ROW 1: Passkeys & Hardware Biometrics */}
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
                     <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+                      <div className="w-11 h-11 rounded-2xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
                         <Fingerprint className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
                             {isNativeMobile ? biometricTypeName : 'Passkeys & Hardware Keys'}
                           </h4>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 font-mono">
                             FIDO2 / WebAuthn
                           </span>
                         </div>
-                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                           {isNativeMobile
                             ? 'Unlock your portal session with device fingerprint or facial scanner.'
                             : 'Sign in instantly with Windows Hello, Apple Touch ID, or YubiKey.'}
@@ -5176,13 +5476,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             type="button"
                             disabled={isVerifyingBiometric}
                             onClick={handleTestNativeBiometric}
-                            className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
+                            className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-xs font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 active:scale-95"
                           >
                             {isVerifyingBiometric ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Fingerprint className="w-3.5 h-3.5" />}
                             <span>Test Biometric</span>
                           </button>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
+                          <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
                             Not Enrolled
                           </span>
                         )
@@ -5210,13 +5510,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                 notify.error(err?.message || 'Passkey registration failed.', '', { category: 'ADMIN' });
                               }
                             }}
-                            className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+                            className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-xs font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
                           >
-                            <Fingerprint className="w-3.5 h-3.5" />
+                            <Fingerprint className="w-4 h-4" />
                             <span>Register Passkey</span>
                           </button>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-500 text-[10px] font-bold">
+                          <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-500 text-[10px] font-bold">
                             Not Supported
                           </span>
                         )
@@ -5224,23 +5524,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </div>
                   </div>
 
-                  {/* VAULT ROW 3: Two-Factor Authentication (2FA TOTP) */}
+                  {/* VAULT ROW 2: Two-Factor Authentication (2FA TOTP) */}
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 hover:bg-slate-50/60 dark:hover:bg-navy-950/40 transition-colors">
                     <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
+                      <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 shadow-2xs">
                         <Lock className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white">Two-Factor Authentication (2FA)</h4>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black border ${is2FAEnabled
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">Two-Factor Authentication (2FA)</h4>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black border font-mono ${is2FAEnabled
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300'
                             : 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300'
                             }`}>
                             {is2FAEnabled ? 'ENABLED' : 'DISABLED'}
                           </span>
                         </div>
-                        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                           {is2FAEnabled
                             ? 'Protected by 6-digit TOTP app codes on every sign-in.'
                             : 'Require 6-digit authenticator code (Google, Microsoft, 1Password) on login.'}
@@ -5254,9 +5554,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           type="button"
                           onClick={() => handleOpen2FASetup()}
                           disabled={isGenerating2FA}
-                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-[11px] font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
+                          className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                         >
-                          {isGenerating2FA ? <RefreshCcw className="w-3.5 h-3.5 animate-spin" /> : <QrCode className="w-3.5 h-3.5" />}
+                          {isGenerating2FA ? <RefreshCcw className="w-3.5 h-3.5 animate-spin" /> : <QrCode className="w-4 h-4" />}
                           <span>Enable 2FA Protection</span>
                         </button>
                       ) : (
@@ -5264,9 +5564,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <button
                             type="button"
                             onClick={() => setShowBackupCodesModal(true)}
-                            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-100 text-[11px] font-black transition-all border border-slate-300 dark:border-navy-700 cursor-pointer inline-flex items-center gap-1"
+                            className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-900 dark:text-slate-100 text-xs font-black transition-all border border-slate-300 dark:border-navy-700 cursor-pointer inline-flex items-center gap-1.5"
                           >
-                            <Key className="w-3 h-3 text-brand-500" />
+                            <Key className="w-3.5 h-3.5 text-brand-500" />
                             <span>Backup Codes</span>
                           </button>
                           <button
@@ -5279,9 +5579,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               } catch { }
                               notify.success('2FA disabled.', '', { category: 'ADMIN' });
                             }}
-                            className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 text-[11px] font-black transition-all border border-rose-300 dark:border-rose-500/30 cursor-pointer inline-flex items-center gap-1"
+                            className="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 text-xs font-black transition-all border border-rose-300 dark:border-rose-500/30 cursor-pointer inline-flex items-center gap-1.5"
                           >
-                            <ShieldX className="w-3 h-3" />
+                            <ShieldX className="w-3.5 h-3.5" />
                             <span>Disable</span>
                           </button>
                         </>
@@ -5292,40 +5592,40 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* Active Logged-in Devices — Modern WhatsApp/Swiggy Session List */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
+              {/* 3. Active Logged-in Devices — Modern Device Session Manager */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
-                      <Laptop className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    <div className="w-10 h-10 rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20 shadow-2xs">
+                      <Laptop className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                         Active Logged-in Devices
                       </h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Browsers &amp; hardware sessions authorized</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Browsers &amp; hardware sessions authorized</p>
                     </div>
                   </div>
                   {sessions.length > 1 && (
                     <button
                       type="button"
                       onClick={handleRevokeAllOtherSessions}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-black text-rose-600 hover:text-white hover:bg-rose-600 dark:text-rose-400 dark:hover:bg-rose-600/90 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer active:scale-95"
+                      className="px-3 py-1.5 rounded-xl text-xs font-black text-rose-600 hover:text-white hover:bg-rose-600 dark:text-rose-400 dark:hover:bg-rose-600/90 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer active:scale-95"
                     >
-                      Revoke Other
+                      Revoke Other Sessions
                     </button>
                   )}
                 </div>
 
-                <div className="space-y-2.5 relative">
+                <div className="space-y-3 relative">
                   {sessionsLoading && (
-                    <div className="p-6 text-center text-xs font-bold text-slate-500">
-                      <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1 text-brand-500" />
-                      Loading sessions...
+                    <div className="p-8 text-center text-xs font-bold text-slate-500">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-brand-500" />
+                      Loading active sessions...
                     </div>
                   )}
                   {sessions.length === 0 && !sessionsLoading && (
-                    <div className="p-4 text-center text-xs font-bold text-slate-500">No active sessions found.</div>
+                    <div className="p-6 text-center text-xs font-bold text-slate-500">No active sessions found.</div>
                   )}
                   {sessions.map(s => {
                     const parsed = parseUserAgentDetails(s.device);
@@ -5333,35 +5633,38 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     return (
                       <div
                         key={s.id}
-                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${isCurrentSession
-                          ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-800/80 shadow-xs'
-                          : 'bg-slate-50/80 dark:bg-navy-950/80 border-slate-200/80 dark:border-navy-800'
+                        className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isCurrentSession
+                          ? 'bg-emerald-50/70 dark:bg-emerald-950/25 border-emerald-300 dark:border-emerald-800 shadow-xs'
+                          : 'bg-slate-50/80 dark:bg-navy-950/80 border-slate-200/90 dark:border-navy-800'
                           }`}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${isCurrentSession
-                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${isCurrentSession
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 shadow-inner'
                             : 'bg-slate-200/80 dark:bg-navy-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-navy-700'
                             }`}>
                             {parsed.isMobile ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
                           </div>
 
-                          <div className="space-y-0.5 min-w-0">
+                          <div className="space-y-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
                                 {parsed.deviceName}
                               </span>
                               {isCurrentSession && (
-                                <span className="inline-flex items-center gap-1 text-[9px] font-black bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                   This Device
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 truncate">
+                            <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 flex-wrap">
                               <span>{s.ip === '127.0.0.1' ? '127.0.0.1 (Localhost)' : s.ip}</span>
-                              <span>•</span>
-                              <span className="text-emerald-600 dark:text-emerald-400">Active Now</span>
+                              <span className="text-slate-400">•</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                                <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                                Active Now
+                              </span>
                             </p>
                           </div>
                         </div>
@@ -5370,7 +5673,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <button
                             type="button"
                             onClick={() => handleRevokeSession(s.id)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-black bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-600 transition-all border border-rose-200 dark:border-rose-900/50 cursor-pointer shrink-0 active:scale-95 flex items-center gap-1"
+                            className="px-3.5 py-2 rounded-xl text-xs font-black bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-600 transition-all border border-rose-200 dark:border-rose-900/50 cursor-pointer shrink-0 active:scale-95 flex items-center gap-1.5 justify-center"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Revoke</span>
@@ -5743,6 +6046,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
             {/* 4. Danger Zone: Permanent Account Deletion */}
             <DeleteAccountPanel notify={notify} />
+
+            {/* Clean bottom clearance spacer for mobile view above MobileBottomNav & BackToTop */}
+            <div className="h-32 sm:h-16 pointer-events-none" aria-hidden="true" />
           </div>
         )}
 
@@ -7400,10 +7706,13 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {effectiveTab === 'profile' && (
           <>
             {/* In-form save banner at bottom of form (responsive for both desktop & mobile) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs gap-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                <Info className="w-4 h-4 text-brand-600 shrink-0" />
-                <span>Changes take effect immediately across all institutional session surfaces.</span>
+            <div className="sticky bottom-3 z-30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-3.5 sm:p-4 bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/50 gap-3">
+              <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-[11px] sm:text-xs">Live Sync: Updates apply across institutional sessions immediately.</span>
               </div>
               <div className="flex items-center gap-2 sm:gap-3 justify-end">
                 <button
@@ -7416,7 +7725,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
+                  className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   <span>Save Details</span>

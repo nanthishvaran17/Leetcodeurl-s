@@ -955,10 +955,10 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
               {/* QR Code & Digital Signature */}
               <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-3">
-                <div className="p-1.5 rounded-xl bg-white shrink-0 shadow-md">
+                <div className="p-2 rounded-xl bg-white shrink-0 shadow-lg">
                   <QRCodeCanvas
                     value={verificationUrl}
-                    size={68}
+                    size={84}
                     level="M"
                     bgColor="#ffffff"
                     fgColor="#0B1528"

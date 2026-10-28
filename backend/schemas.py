@@ -316,6 +316,11 @@ class LeaderboardPaginatedOut(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+    totp_code: Optional[str] = None
+
+class TwoFactorChallengePayload(BaseModel):
+    temp_token: str
+    code: str
 
 class Token(BaseModel):
     access_token: str

@@ -230,9 +230,13 @@ export interface FacultyActionItem {
   created_at: string;
   updated_at: string;
   total_solved: number;
+  easy_solved?: number;
+  medium_solved?: number;
+  hard_solved?: number;
   current_rating: number;
   contests_attended: number;
   last_active_days_ago: number;
+  phone_number?: string;
 }
 
 export interface ActionTimelineEvent {
