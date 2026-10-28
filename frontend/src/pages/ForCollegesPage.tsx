@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -101,6 +101,14 @@ export const ForCollegesPage: React.FC = () => {
       setLoadingLeads(false);
     }
   };
+
+  useEffect(() => {
+    const handlePull = () => {
+      loadLeads();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, []);
 
   const handleQuickSend = async () => {
     if (!quickSendEmail.trim()) return;

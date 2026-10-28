@@ -780,6 +780,9 @@ export const App: React.FC = () => {
       setShowLoginModal(true);
       return;
     }
+    if (tab !== 'profile' && selectedStudent) {
+      setSelectedStudent(null);
+    }
     setActiveTab(tab);
     try {
       if (window.history && window.history.replaceState) {
@@ -1121,9 +1124,8 @@ export const App: React.FC = () => {
         <PullToRefresh 
           onRefresh={handleGlobalPullToRefresh}
           disabled={
-            activeTab === 'messages' ||
             isSidebarOpen ||
-            Boolean(selectedStudent) ||
+            (Boolean(selectedStudent) && activeTab !== 'profile') ||
             showLoginModal ||
             showImportModal ||
             showAlertCenterModal ||
@@ -1146,6 +1148,7 @@ export const App: React.FC = () => {
                   onViewDashboard={() => handleTabChange('dashboard')}
                   onOpenLogin={handleOpenLogin}
                   onSelectStudent={handleSelectStudent}
+                  onViewForColleges={() => handleTabChange('for-colleges')}
                 />
               )}
 
@@ -1379,10 +1382,17 @@ export const App: React.FC = () => {
             className="w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[94dvh] sm:h-[88vh] max-h-[94dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-white dark:bg-navy-950"
           >
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
-              <StudentProfilePage
-                student={selectedStudent}
-                onBack={handleCloseProfile}
-              />
+              <PullToRefresh
+                onRefresh={async () => {
+                  clearApiCache();
+                  window.dispatchEvent(new CustomEvent('pull_to_refresh'));
+                }}
+              >
+                <StudentProfilePage
+                  student={selectedStudent}
+                  onBack={handleCloseProfile}
+                />
+              </PullToRefresh>
             </Suspense>
           </div>
         </div>

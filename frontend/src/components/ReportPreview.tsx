@@ -991,7 +991,56 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
     const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
-    const contestTitle = report?.contestName || report?.title || 'Weekly Contest Performance Report';
+
+    // 1. Resolve Official Coordinator
+    const officialCoordinator = (
+      report?.coordinator ||
+      report?.academicCoordinator ||
+      report?.coordinator_name ||
+      (cleanDept.toLowerCase().includes('iot') ? 'P.Devayani / AP' : 'M. Santhoshkumar, AP / CSE (Cyber Security)')
+    ).trim();
+
+    // 2. Resolve Report Title vs Contest Name
+    let reportTitle = report?.title || report?.reportTitle || '';
+    if (!reportTitle) {
+      if (isWeeklyPerformance) reportTitle = 'Coordinator Weekly Performance Report';
+      else if (isWowIntel) reportTitle = 'Week-on-Week Intelligence Report';
+      else if (isFridayOfficial) reportTitle = 'Friday Official Contest Report';
+      else if (isSundayLive) reportTitle = 'Sunday Live Contest Report';
+      else reportTitle = 'LeetCode Performance Report';
+    }
+
+    // Resolve true contest name (e.g. Weekly Contest 446, Biweekly Contest, etc.)
+    let resolvedContestName = '';
+    if (report?.current_session?.contest_name) {
+      resolvedContestName = report.current_session.contest_name;
+    } else if (report?.discovered_contests?.current_week_contests_str) {
+      resolvedContestName = report.discovered_contests.current_week_contests_str.split(',')[0].trim();
+    } else if (report?.contest_name && !report.contest_name.toLowerCase().includes('coordinator')) {
+      resolvedContestName = report.contest_name;
+    } else if (report?.contestName && !report.contestName.toLowerCase().includes('coordinator')) {
+      resolvedContestName = report.contestName;
+    } else if (report?.session_date) {
+      resolvedContestName = `Weekly Contest (${report.session_date})`;
+    } else {
+      resolvedContestName = isWowIntel ? 'Week-on-Week Performance' : 'Weekly LeetCode Contest';
+    }
+
+    // Resolve Period / Week (e.g. REP-2026-W43-1793150981 -> Week 43, 2026)
+    const rawRepId = String(report?.report_id || report?.reportId || reportId || '');
+    const weekMatch = rawRepId.match(/(\d{4})[-_]W(\d+)/i) || rawRepId.match(/W(\d+)/i);
+    let periodInfo = '';
+    if (weekMatch) {
+      if (weekMatch.length >= 3 && weekMatch[1] && weekMatch[2]) {
+        periodInfo = `Week ${weekMatch[2]} (${weekMatch[1]})`;
+      } else if (weekMatch[1]) {
+        periodInfo = `Week ${weekMatch[1]}`;
+      }
+    } else if (report?.reporting_period) {
+      periodInfo = String(report.reporting_period);
+    } else if (report?.session_date) {
+      periodInfo = String(report.session_date);
+    }
 
     // Authoritative dynamic metrics without hardcoded static counts
     const total = totalRosterCount || conditionStats?.totalStudents || displayedStudents?.length || allRows.length || 0;
@@ -1021,8 +1070,19 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
     let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
       `*Department of ${cleanDept}*\n\n` +
-      `📊 *LEETCODE PERFORMANCE REPORT*\n` +
-      `• *Contest:* ${contestTitle}\n` +
+      `*LEETCODE PERFORMANCE REPORT*\n` +
+      `• *Report:* ${reportTitle}\n` +
+      `• *Contest:* ${resolvedContestName}\n`;
+
+    if (periodInfo) {
+      text += `• *Period:* ${periodInfo}\n`;
+    }
+
+    if (officialCoordinator) {
+      text += `• *Coordinator:* ${officialCoordinator}\n`;
+    }
+
+    text += `\n*Participation Summary:*\n` +
       `• *Total Students:* ${total}\n` +
       `• *Attended:* ${attended} (${turnoutPercentage})\n` +
       `• *Absent / Not Attended:* ${absent} (${absentPercentage})\n\n` +
@@ -1059,19 +1119,35 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       });
       const bEntries = Object.entries(bMap).filter(([_, data]) => data.total > 0);
       if (bEntries.length > 0) {
-        text += `\n*Batch Breakdown:*\n`;
+        text += `\n*Batch Breakdown (Rating > 1500):*\n`;
         bEntries.forEach(([batchName, bData]) => {
           text += `• ${batchName} (${bData.total} students) — Rating > 1500: *${bData.r1500}*\n`;
         });
       }
     } else if (report?.batch_summaries && Array.isArray(report.batch_summaries)) {
-      text += `\n*Batch Breakdown:*\n`;
+      text += `\n*Batch Breakdown (Rating > 1500):*\n`;
       report.batch_summaries.forEach((b: any) => {
         const batchName = b.batch || 'Batch';
         const tot = b.total_students || 0;
-        const r1500 = b.current_week?.rating_above_1500 ?? 0;
+        const r1500 = b.current_week?.rating_above_1500 ?? (b.rating_1500 ?? 0);
         text += `• ${batchName} (${tot} students) — Rating > 1500: *${r1500}*\n`;
       });
+    }
+
+    // Department Staff Allocation Overview (if individual staff or department faculty summary exists)
+    if (isStaffUser) {
+      text += `\n*Staff Allocation Overview:*\n`;
+      text += `• Faculty In-Charge: *${senderName}*\n`;
+      text += `• Assigned Students: *${total}*\n`;
+      text += `• Active Solvers: *${attended}* (${turnoutPercentage})\n`;
+    } else if (report?.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0) {
+      text += `\n*Staff Allocation Summary:*\n`;
+      report.facultySummary.slice(0, 5).forEach((f: any) => {
+        text += `• ${f.staff_name}: *${f.active_solvers || 0}* / ${f.total_assigned || 0} active (${f.active_pct || 0}%)\n`;
+      });
+      if (report.facultySummary.length > 5) {
+        text += `• ...and ${report.facultySummary.length - 5} more faculty mentors\n`;
+      }
     }
 
     text += `\n*Shared by:* *${senderName}* (${senderRoleTitle})`;
@@ -1107,8 +1183,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     const directDownloadUrl = `${resolvedOrigin}/api${url}${url.includes('?') ? '&' : '?'}source=whatsapp${shareTokenParam}`;
 
     let fullShareText = text;
-    fullShareText += `\n\n📥 *Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
-    fullShareText += `\n🌐 *Live Student Portal:* ${resolvedOrigin}/#/dashboard`;
+    fullShareText += `\n\n*Download Official Excel Workbook (.xlsx):*\n${directDownloadUrl}`;
+    fullShareText += `\n\n*Live Student Portal:*\n${resolvedOrigin}/#/dashboard`;
 
     // Automatically copy the formatted summary text to clipboard for convenience
     try {

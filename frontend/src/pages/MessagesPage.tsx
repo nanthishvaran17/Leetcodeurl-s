@@ -124,6 +124,22 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     }
   }, []);
 
+  // Native Pull-to-refresh support: reloads conversations and current thread
+  useEffect(() => {
+    const handlePull = async () => {
+      try {
+        await fetchConversations();
+        if (activeConversationId) {
+          await fetchMessages(activeConversationId, true);
+        }
+      } catch (e) {
+        console.warn('Messages pull-to-refresh warning:', e);
+      }
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [fetchConversations, fetchMessages, activeConversationId]);
+
   const fetchTransparency = async () => {
     setLoadingTransparency(true);
     try {

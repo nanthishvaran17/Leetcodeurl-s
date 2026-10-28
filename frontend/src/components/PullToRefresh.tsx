@@ -21,6 +21,9 @@ function isScrolledDown(target: EventTarget | null): boolean {
   const winY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
   if (winY > 4) return true;
 
+  const mainEl = document.getElementById('main-content');
+  if (mainEl && mainEl.scrollTop > 4) return true;
+
   let el = target as HTMLElement | null;
   while (el && el !== document.body && el !== document.documentElement) {
     try {
@@ -86,8 +89,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // Horizontal swipe gesture (e.g. tabs, slider, carousel) -> cancel pull
-    if (Math.abs(deltaX) > 8 && Math.abs(deltaX) >= Math.abs(deltaY) * 0.75) {
+    // Only cancel if clearly an intentional horizontal swipe (e.g. tabs/slider), never for normal downward angled pull
+    if (Math.abs(deltaX) > 28 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35) {
       isPullingRef.current = false;
       reachedThresholdRef.current = false;
       setIsThresholdReached(false);
@@ -96,24 +99,14 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // If target has scrolled down during gesture -> abort
-    if (isScrolledDown(e.target)) {
-      isPullingRef.current = false;
-      reachedThresholdRef.current = false;
-      setIsThresholdReached(false);
-      setPullDistance(0);
-      detachTouchMove();
-      return;
-    }
-
-    // Deadzone: smooth start after 6px of intentional downward drag
-    if (deltaY > 6) {
+    // Deadzone: smooth start after 4px of downward drag
+    if (deltaY > 4) {
       if (e.cancelable) {
         e.preventDefault();
       }
 
       // Smooth rubberband dampening curve
-      const damped = Math.min((deltaY - 6) * 0.48, MAX_PULL_DISTANCE);
+      const damped = Math.min((deltaY - 4) * 0.48, MAX_PULL_DISTANCE);
       setPullDistance(damped);
 
       if (damped >= PULL_THRESHOLD && !reachedThresholdRef.current) {
@@ -250,15 +243,15 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
         const deltaY = me.clientY - startY;
         const deltaX = me.clientX - startX;
 
-        if (deltaY <= 0 || (Math.abs(deltaX) > 8 && Math.abs(deltaX) >= Math.abs(deltaY) * 0.75)) {
+        if (deltaY <= 0 || (Math.abs(deltaX) > 28 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35)) {
           pulling = false;
           setPullDistance(0);
           setIsThresholdReached(false);
           return;
         }
 
-        if (deltaY > 6) {
-          const damped = Math.min((deltaY - 6) * 0.48, MAX_PULL_DISTANCE);
+        if (deltaY > 4) {
+          const damped = Math.min((deltaY - 4) * 0.48, MAX_PULL_DISTANCE);
           setPullDistance(damped);
           if (damped >= PULL_THRESHOLD && !reached) {
             reached = true;

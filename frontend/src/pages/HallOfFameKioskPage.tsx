@@ -71,7 +71,12 @@ export const HallOfFameKioskPage: React.FC = () => {
   useEffect(() => {
     fetchData();
     const pollInterval = setInterval(fetchData, 30000); // 30s auto-refresh
-    return () => clearInterval(pollInterval);
+    const handlePull = () => fetchData();
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('pull_to_refresh', handlePull);
+    };
   }, []);
 
   // Auto slide rotation

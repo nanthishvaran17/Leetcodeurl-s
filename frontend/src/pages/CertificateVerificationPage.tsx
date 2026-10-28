@@ -151,6 +151,16 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     fetchVerification();
   }, [verificationId]);
 
+  useEffect(() => {
+    const handlePull = () => {
+      if (verificationId) {
+        fetchVerification();
+      }
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [verificationId]);
+
   const fetchVerification = async () => {
     setLoading(true);
     setError(null);

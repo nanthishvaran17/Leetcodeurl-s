@@ -42,6 +42,7 @@ interface LandingPageProps {
   onViewDashboard: () => void;
   onOpenLogin: () => void;
   onSelectStudent?: (student: StudentData) => void;
+  onViewForColleges?: () => void;
 }
 
 // million-ignore
@@ -49,7 +50,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   summaryData,
   onViewDashboard,
   onOpenLogin,
-  onSelectStudent
+  onSelectStudent,
+  onViewForColleges
 }) => {
   const { user } = useAuth();
   const [departments, setDepartments] = useState<any[]>([]);
@@ -527,6 +529,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
     const handlePull = () => {
       clearApiCache();
+      fetchDepartments();
       fetchFilteredStudents();
     };
     window.addEventListener('pull_to_refresh', handlePull);
@@ -903,16 +906,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4 pt-1 sm:pt-2"
+            className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 sm:gap-3.5 pt-1.5 sm:pt-2 w-full max-w-xl"
           >
             <motion.button
               whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.97 }}
               onClick={onViewDashboard}
-              className="w-full sm:w-auto h-11 sm:h-12 px-5 py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/30 flex items-center justify-center space-x-2 transition-all cursor-pointer"
+              className="h-10 sm:h-11 px-3 sm:px-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-[11.5px] sm:text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer active:scale-95 touch-manipulation"
+              title="Open Executive Analytics Dashboard"
             >
-              <span>View Executive Dashboard</span>
-              <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3] shrink-0" />
+              <span className="truncate">
+                <span className="hidden sm:inline">View </span>Dashboard
+              </span>
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-950 stroke-[3] shrink-0" />
             </motion.button>
 
             {(() => {
@@ -922,17 +928,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               return (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleRefreshAll}
                   disabled={refreshing || syncProgress?.is_running}
-                  className="w-full sm:w-auto h-11 sm:h-12 px-5 py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-xs sm:text-sm backdrop-blur-md shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                  className="h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.2] text-white border border-white/15 font-bold text-[11.5px] sm:text-sm backdrop-blur-md shadow-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer touch-manipulation disabled:opacity-60"
                   title="Perform live synchronization for active student roster"
                 >
-                  <RefreshCw className={`w-4 h-4 shrink-0 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
-                  <span>
+                  <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${refreshing || syncProgress?.is_running ? 'animate-spin text-cyan-300' : 'text-slate-300'}`} />
+                  <span className="truncate">
                     {refreshing || syncProgress?.is_running
-                      ? `FETCHING ${processedCount} / ${totalProgress !== null ? totalProgress : '...'}`
-                      : 'FETCH LIVE DATA'}
+                      ? `Syncing ${processedCount}/${totalProgress ?? '...'}`
+                      : <><span>Live Sync</span><span className="hidden sm:inline"> Data</span></>}
                   </span>
                 </motion.button>
               );
@@ -949,15 +955,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               const formattedLastFetched = lastVerifiedTs ? formatAgo(lastVerifiedTs) : 'Just now';
 
               return (
-                <div className={`hidden sm:flex items-center space-x-2 px-4 py-3 rounded-2xl ${verifiedCount > 0
+                <div className={`hidden lg:flex items-center space-x-2 px-3.5 py-2.5 rounded-xl ${verifiedCount > 0
                   ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300'
                   : 'bg-amber-500/20 border-amber-400/30 text-amber-300'
-                  } border font-extrabold text-xs backdrop-blur-md shadow-lg`}>
-                  <CheckCircle2 className={`w-4 h-4 ${verifiedCount > 0 ? 'text-emerald-400' : 'text-amber-400'}`} />
-                  <span>
+                  } border font-extrabold text-xs backdrop-blur-md shadow-xs ml-auto`}>
+                  <CheckCircle2 className={`w-3.5 h-3.5 ${verifiedCount > 0 ? 'text-emerald-400' : 'text-amber-400'}`} />
+                  <span className="whitespace-nowrap">
                     {totalStudents !== null
                       ? (verifiedCount > 0 ? `${verifiedCount}/${totalStudents} Verified • ${formattedLastFetched}` : `${verifiedCount}/${totalStudents} Verified • Pending Sync`)
-                      : 'Loading roster status...'}
+                      : 'Loading status...'}
                   </span>
                 </div>
               );

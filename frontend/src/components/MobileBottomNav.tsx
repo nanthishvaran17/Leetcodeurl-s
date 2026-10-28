@@ -178,7 +178,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         shouldShow ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >
-      <div className="relative h-[62px] rounded-full backdrop-blur-2xl bg-white/90 dark:bg-[#070A14]/90 border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
+      <div className="relative h-[62px] rounded-full bg-white dark:bg-[#070A14] border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = 

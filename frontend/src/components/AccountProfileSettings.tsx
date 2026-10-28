@@ -1354,6 +1354,38 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     }
   }, [user]);
 
+  // Listen for native Pull-to-Refresh events to refresh profile, mentees, and sessions
+  useEffect(() => {
+    const handlePull = async () => {
+      try {
+        const p1 = api.get('/auth/me').then(res => {
+          if (res.data?.user) {
+            const u = res.data.user;
+            setFullName(u.full_name || u.username || '');
+            setDesignation(u.designation || '');
+            setPhoneNumber(u.phone_number || '');
+            setDateOfBirth(parseDOBToDisplay(u.date_of_birth));
+            setProfilePhoto(u.profile_photo || null);
+            if (u.is_2fa_enabled !== undefined) setIs2FAEnabled(Boolean(u.is_2fa_enabled));
+          }
+        }).catch(() => {});
+
+        const p2 = isStaffMentor ? api.get('/faculty-assignments/my-students').then(res => {
+          if (res.data?.students) setMentees(res.data.students);
+        }).catch(() => {}) : Promise.resolve();
+
+        const p3 = fetchSessions();
+        const p4 = fetchLoginHistory();
+        await Promise.allSettled([p1, p2, p3, p4]);
+      } catch (err) {
+        console.warn('AccountProfileSettings pull-to-refresh error:', err);
+      }
+    };
+
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [user, isStaffMentor]);
+
   // Sync notification preferences to backend in real-time
   const syncNotificationPreferences = async (
     contestsVal: boolean,
@@ -3418,7 +3450,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       {/* 1. MASTER SETTINGS HUB (Mockup "After: New Professional UI") - MOBILE ONLY */}
       {/* ========================================================================= */}
       {activeTab === 'menu' && (
-        <div className="lg:hidden space-y-4 max-w-2xl mx-auto animate-fade-in pb-12">
+        <div className="lg:hidden space-y-4 max-w-2xl mx-auto animate-fade-in pb-32 sm:pb-20">
           {/* Header Bar matching mockup: Left arrow, "Settings", Subtitle */}
           <div className="flex items-center gap-3 pt-1 pb-2">
             {onBack && (
@@ -3720,6 +3752,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <ChevronRight className="w-5 h-5 text-rose-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
           </div>
+
+          {/* Bottom spacer ensuring the last settings item (Log out) cleanly clears the floating bottom navigation bar */}
+          <div className="h-20 sm:h-12 pointer-events-none" aria-hidden="true" />
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Radio, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,7 +8,22 @@ interface CountdownTimerProps {
   isLive?: boolean;
 }
 
-export function getIstSessionTiming(userName: string = 'User'): {
+export const MOTIVATIONAL_HOOKS = [
+  (name: string) => `Keep Grinding, ${name}! 💪`,
+  (name: string) => `Consistency beats intensity, ${name}! ⚡`,
+  (name: string) => `One problem a day builds mastery, ${name}! 🚀`,
+  (name: string) => `Debug your limits & elevate your logic, ${name}! 🎯`,
+  (name: string) => `Small daily code reps build big careers, ${name}! 🏆`,
+  (name: string) => `Master the patterns, conquer the contest, ${name}! 🔥`,
+  (name: string) => `Sharpen your skills for Sunday's arena, ${name}! ⚔️`,
+  (name: string) => `Algorithms get sharper with practice, ${name}! 🧠`,
+  (name: string) => `Every accepted submission counts, ${name}! 💻`,
+  (name: string) => `Turn tough bugs into deep breakthroughs, ${name}! 🌟`,
+  (name: string) => `Break complex challenges into simple wins, ${name}! 🧩`,
+  (name: string) => `Stay focused, stay persistent, ${name}! ✨`,
+];
+
+export function getIstSessionTiming(userName: string = 'User', customMotivation?: string): {
   isLive: boolean;
   secondsRemaining: number;
   phase: 'COUNTDOWN_TODAY' | 'LIVE_NOW' | 'NEXT_WEEK';
@@ -68,12 +83,13 @@ export function getIstSessionTiming(userName: string = 'User'): {
       // Monday (1) through Saturday (6)
       const daysUntilSunday = (7 - dayOfWeek) % 7;
       const secondsRemaining = (daysUntilSunday * 86400) + (startSec - secondsToday);
+      const motivation = customMotivation || `Keep Grinding, ${userName}!`;
       return {
         isLive: false,
         secondsRemaining: Math.max(0, secondsRemaining),
         phase: 'NEXT_WEEK',
         headerTitle: `${userName}'s Next Sunday Session`,
-        subTitle: `Keep Grinding, ${userName}! • Next Window: 08:00 AM – 09:30 AM IST`
+        subTitle: `${motivation} • Next Window: 08:00 AM – 09:30 AM IST`
       };
     }
   } catch (_e) {
@@ -89,19 +105,29 @@ export function getIstSessionTiming(userName: string = 'User'): {
 
 export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _propTarget, isLive: propIsLive }) => {
   const { user } = useAuth();
-  const rawName = user?.name ? user.name.split(' ')[0] : 'Nanthish';
+  const rawName = user?.name ? user.name.split(' ')[0] : 'Admin';
   const firstName = rawName.length > 12 ? rawName.substring(0, 12) + '...' : rawName;
+  const displayName = firstName ? firstName.charAt(0).toUpperCase() + firstName.slice(1) : 'Admin';
 
-  const [timing, setTiming] = useState(() => getIstSessionTiming(firstName));
+  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_HOOKS.length));
+
+  useEffect(() => {
+    const quoteInterval = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_HOOKS.length);
+    }, 6000);
+    return () => clearInterval(quoteInterval);
+  }, []);
+
+  const [timing, setTiming] = useState(() => getIstSessionTiming(displayName, MOTIVATIONAL_HOOKS[quoteIndex](displayName)));
 
   useEffect(() => {
     const updateTiming = () => {
-      setTiming(getIstSessionTiming(firstName));
+      setTiming(getIstSessionTiming(displayName, MOTIVATIONAL_HOOKS[quoteIndex](displayName)));
     };
     updateTiming();
     const interval = setInterval(updateTiming, 1000);
     return () => clearInterval(interval);
-  }, [firstName]);
+  }, [displayName, quoteIndex]);
 
   const isSessionLive = propIsLive !== undefined ? propIsLive : timing.isLive;
   const secondsLeft = timing.secondsRemaining;
@@ -209,7 +235,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
               )}
             </div>
 
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-[13px] font-bold shadow-xs ${
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-[13px] font-bold shadow-xs transition-colors duration-300 ${
               isSessionLive
                 ? 'bg-emerald-50/80 border border-emerald-200 text-emerald-800'
                 : 'bg-slate-50 border border-slate-200 text-slate-700'
@@ -217,7 +243,27 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
               <Sparkles className={`w-3.5 h-3.5 shrink-0 ${
                 isSessionLive ? 'text-emerald-600 animate-pulse' : 'text-brand-600'
               }`} />
-              <span className="line-clamp-2 break-words max-w-full">{timing.subTitle}</span>
+              <div className="line-clamp-2 break-words max-w-full overflow-hidden">
+                {timing.phase === 'NEXT_WEEK' && !isSessionLive ? (
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={quoteIndex}
+                        initial={{ opacity: 0, y: 3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -3 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-slate-900 font-extrabold"
+                      >
+                        {MOTIVATIONAL_HOOKS[quoteIndex](displayName)}
+                      </motion.span>
+                    </AnimatePresence>
+                    <span className="text-slate-500 font-medium">• Next Window: 08:00 AM – 09:30 AM IST</span>
+                  </span>
+                ) : (
+                  <span>{timing.subTitle}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

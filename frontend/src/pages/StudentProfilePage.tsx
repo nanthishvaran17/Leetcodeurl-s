@@ -384,12 +384,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   ];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl isolate">
+    <div className="h-full flex flex-col overflow-hidden bg-[#0a0f1d] dark:bg-navy-950 rounded-2xl sm:rounded-3xl isolate">
       
       {/* Header Bar with Close Button & Actions — Ultra-modern 2026 Glassmorphic Header */}
-      <div className="relative p-4 sm:p-5 bg-gradient-to-br from-[#0a0f1d] via-[#0f172a] to-[#070b14] text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/[0.08] shrink-0 shadow-2xl rounded-t-2xl sm:rounded-t-3xl overflow-visible">
-        {/* Ambient Radial Mesh Glow — contained so overflow-visible on parent doesn't bleed */}
-        <div className="absolute inset-0 overflow-hidden rounded-t-2xl sm:rounded-t-3xl pointer-events-none">
+      <div className="relative p-4 sm:p-5 bg-gradient-to-br from-[#0a0f1d] via-[#0f172a] to-[#070b14] text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/[0.08] shrink-0 shadow-2xl overflow-hidden">
+        {/* Ambient Radial Mesh Glow */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-1/4 -mt-16 w-80 h-80 rounded-full bg-brand-500/15 blur-3xl" />
           <div className="absolute bottom-0 right-0 -mb-16 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
         </div>
@@ -654,7 +654,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       </div>
 
       {/* Scrollable Body Content */}
-      <div className="px-4 sm:px-6 pt-2 pb-28 sm:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar">
+      <div className="px-4 sm:px-6 pt-2 pb-28 sm:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar bg-white dark:bg-navy-950">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

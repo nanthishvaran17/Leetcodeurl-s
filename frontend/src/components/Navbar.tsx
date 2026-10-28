@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search, Building2 } from 'lucide-react';
+import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -150,25 +150,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
 
 
-              {/* For Colleges — Multi-College Platform Demo */}
-              <button
-                type="button"
-                onClick={() => setActiveTab && setActiveTab('for-colleges')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer min-h-[38px] active:scale-95 touch-manipulation ${
-                  activeTab === 'for-colleges'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
-                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25'
-                }`}
-                title="Add Your College / Request Institutional Demo (14-Day Free Pilot)"
-              >
-                <Building2 className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                <span className="hidden xl:inline">Add Your College / Request Demo</span>
-                <span className="hidden sm:inline xl:hidden">Add College / Demo</span>
-                <span className="sm:hidden">Demo</span>
-                <span className="hidden sm:inline-block px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wider ml-0.5">
-                  Free Trial
-                </span>
-              </button>
 
               {/* Sync Status Button */}
               <button

@@ -79,9 +79,19 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
 
   useEffect(() => {
     if (hasAccess) {
-      fetchFiles('');
+      fetchFiles(currentPath);
     }
   }, [hasAccess]);
+
+  useEffect(() => {
+    const handlePull = () => {
+      if (hasAccess) {
+        fetchFiles(currentPath);
+      }
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [hasAccess, currentPath]);
 
   const fetchFiles = async (dirPath: string) => {
     setLoading(true);

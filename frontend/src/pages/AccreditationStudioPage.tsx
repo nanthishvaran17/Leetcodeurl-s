@@ -64,6 +64,9 @@ export const AccreditationStudioPage: React.FC = () => {
 
   useEffect(() => {
     fetchMetrics();
+    const handlePull = () => fetchMetrics();
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, []);
 
   const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);

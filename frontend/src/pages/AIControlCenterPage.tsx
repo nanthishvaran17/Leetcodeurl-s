@@ -39,7 +39,12 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
   useEffect(() => {
     fetchHealth();
     const interval = setInterval(fetchHealth, 30000); // 30s auto-refresh
-    return () => clearInterval(interval);
+    const handlePull = () => fetchHealth();
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('pull_to_refresh', handlePull);
+    };
   }, []);
 
   const handleSyncNow = async () => {

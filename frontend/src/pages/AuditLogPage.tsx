@@ -366,6 +366,15 @@ export const AuditLogPage: React.FC = () => {
     };
   }, [searchTerm, roleFilter, statusFilter, limitFilter]);
 
+  // Native Pull-to-refresh listener
+  useEffect(() => {
+    const handlePull = () => {
+      fetchLogs();
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [searchTerm, roleFilter, statusFilter, limitFilter]);
+
   const fetchLogs = async (signal?: AbortSignal) => {
     setLoading(true);
     try {

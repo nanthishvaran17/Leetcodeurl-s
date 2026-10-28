@@ -159,6 +159,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
     }
   }, [currentUser, isAuthenticated]);
 
+  // Native Pull-to-refresh listener
+  useEffect(() => {
+    const handlePull = () => {
+      fetchSettings();
+      fetchSystemHealth();
+      if (currentUser || isAuthenticated) {
+        fetchBackups();
+        fetchAuditLogs();
+      }
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, [currentUser, isAuthenticated]);
+
   // Lock body scroll when modals are active
   useEffect(() => {
     if (confirmModal.open || selectedIntegrityRule) {

@@ -867,6 +867,7 @@ def _build_canonical_contest_dataset_internal(
         q4_sec = (getattr(p_res, "q4_observed_seconds", None) if p_res else None) or (getattr(pw_rec, "q4_observed_seconds", None) if pw_rec else None)
 
         observed_secs_list = [s for s in [q1_sec, q2_sec, q3_sec, q4_sec] if s is not None and isinstance(s, (int, float)) and s > 0]
+        calc_finish_s = max(observed_secs_list) if observed_secs_list else None
         p_fin = getattr(p_res, "finish_time", None) if p_res else None
         pw_fin = getattr(pw_rec, "finish_time", None) if pw_rec else None
         v_fin = getattr(v_res, "finish_time", None) if v_res else None

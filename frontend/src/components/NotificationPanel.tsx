@@ -242,32 +242,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
-  const [showSoundPicker, setShowSoundPicker] = useState(false);
-  const [selectedTone, setSelectedTone] = useState<string>(() => {
-    try {
-      return localStorage.getItem('notification_sound_tone') || 'whatsapp';
-    } catch {
-      return 'whatsapp';
-    }
-  });
 
-  const handleSelectTone = (tone: 'whatsapp' | 'apple' | 'tech') => {
-    setSelectedTone(tone);
-    try {
-      localStorage.setItem('notification_sound_tone', tone);
-    } catch {}
-
-    if (tone === 'whatsapp') {
-      playWhatsAppPop();
-      notify.info('WhatsApp Bubble Pop Selected', 'Short, bubbly water pop tone.', { category: 'AUDIO', duration: 3000 });
-    } else if (tone === 'apple') {
-      playAppleGlassChime();
-      notify.info('Apple Crystal Glass Selected', 'Tri-tone acoustic glass bell.', { category: 'AUDIO', duration: 3000 });
-    } else if (tone === 'tech') {
-      playTechKnockDing();
-      notify.info('Tech Knock & Ding Selected', 'Snappy knock with crystal ping.', { category: 'AUDIO', duration: 3000 });
-    }
-  };
 
   const confirmDeleteNotification = async (notification: Notification, onCancel?: () => void) => {
     const rawTitle = (notification.title || '').trim();
@@ -623,19 +598,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setShowSoundPicker(prev => !prev)}
-                    className={`p-2 rounded-xl transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                      showSoundPicker
-                        ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-200/60 dark:hover:bg-white/[0.08]'
-                    }`}
-                    title="Audio Tone Studio (Preview & Select Sound)"
-                    aria-label="Sound Studio"
-                  >
-                    <Volume2 size={16} />
-                  </button>
+
                   <button
                     type="button"
                     onClick={() => void handleRefreshNotifications()}
@@ -659,96 +622,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                 </div>
               </div>
 
-              {/* Sound Studio Preview Drawer */}
-              <AnimatePresence>
-                {showSoundPicker && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border-b border-indigo-500/20 px-3 py-2.5 shrink-0"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-black text-slate-800 dark:text-white flex items-center gap-1.5">
-                        <Volume2 size={13} className="text-indigo-500" />
-                        <span>Notification Sound Studio (Click to Preview)</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowSoundPicker(false)}
-                        className="text-[10px] text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold"
-                      >
-                        ✕
-                      </button>
-                    </div>
 
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {/* WhatsApp Pop */}
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTone('whatsapp')}
-                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                          selectedTone === 'whatsapp'
-                            ? 'bg-emerald-500/20 border-emerald-500/50 shadow-xs'
-                            : 'bg-white/80 dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[10.5px] font-black text-slate-900 dark:text-white truncate">WhatsApp</span>
-                          {selectedTone === 'whatsapp' && <Check size={11} className="text-emerald-500 shrink-0" />}
-                        </div>
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Bubbly Pop</span>
-                        <div className="mt-0.5 flex items-center gap-1 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400">
-                          <Play size={9} className="fill-current" />
-                          <span>Play</span>
-                        </div>
-                      </button>
-
-                      {/* Apple Crystal Glass */}
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTone('apple')}
-                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                          selectedTone === 'apple'
-                            ? 'bg-indigo-500/20 border-indigo-500/50 shadow-xs'
-                            : 'bg-white/80 dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[10.5px] font-black text-slate-900 dark:text-white truncate">Apple Glass</span>
-                          {selectedTone === 'apple' && <Check size={11} className="text-indigo-500 shrink-0" />}
-                        </div>
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Crystal Chime</span>
-                        <div className="mt-0.5 flex items-center gap-1 text-[9.5px] font-bold text-indigo-600 dark:text-indigo-400">
-                          <Play size={9} className="fill-current" />
-                          <span>Play</span>
-                        </div>
-                      </button>
-
-                      {/* Tech Knock & Ding */}
-                      <button
-                        type="button"
-                        onClick={() => handleSelectTone('tech')}
-                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 active:scale-95 ${
-                          selectedTone === 'tech'
-                            ? 'bg-cyan-500/20 border-cyan-500/50 shadow-xs'
-                            : 'bg-white/80 dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-[10.5px] font-black text-slate-900 dark:text-white truncate">Tech Knock</span>
-                          {selectedTone === 'tech' && <Check size={11} className="text-cyan-500 shrink-0" />}
-                        </div>
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Knock & Ding</span>
-                        <div className="mt-0.5 flex items-center gap-1 text-[9.5px] font-bold text-cyan-600 dark:text-cyan-400">
-                          <Play size={9} className="fill-current" />
-                          <span>Play</span>
-                        </div>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {/* Category Filter Pills */}
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 dark:border-white/[0.08] overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-[#070A12] touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
