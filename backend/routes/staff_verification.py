@@ -7,7 +7,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 from backend.database import get_db, engine
 from backend.models import StaffVerification, User, Department

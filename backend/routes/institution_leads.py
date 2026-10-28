@@ -2,10 +2,11 @@
 institution_leads.py — API for Multi-College SaaS Onboarding, Institutional Lead Capture & Principal Pitch Outreach
 """
 
+import re
 import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -17,24 +18,45 @@ from backend.logger import logger
 
 router = APIRouter(prefix="/leads", tags=["Institutional SaaS Leads & Outreach"])
 
+_EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
 
 class CollegeLeadRequest(BaseModel):
     college_name: str = Field(..., min_length=3, max_length=250)
     college_code: Optional[str] = Field(None, max_length=50) # TNEA Code
     contact_person: str = Field(..., min_length=2, max_length=150)
     designation: str = Field("Principal", max_length=100) # Principal, TPO, HOD-CSE, Dean
-    email: EmailStr
+    email: str = Field(..., min_length=5, max_length=255)
     phone: str = Field(..., min_length=10, max_length=20)
     district: Optional[str] = Field(None, max_length=100)
     approx_students: int = Field(500, ge=10, le=50000)
     notes: Optional[str] = None
 
+    @field_validator("email")
+    @classmethod
+    def validate_email_format(cls, v: str) -> str:
+        v = (v or "").strip().lower()
+        if not _EMAIL_REGEX.match(v):
+            raise ValueError("Invalid email format")
+        return v
+
 
 class DispatchPitchRequest(BaseModel):
-    recipient_emails: List[EmailStr]
+    recipient_emails: List[str] = Field(..., min_length=1)
     custom_college_name: Optional[str] = None
     recipient_name: Optional[str] = None
     recipient_designation: Optional[str] = "Principal"
+
+    @field_validator("recipient_emails")
+    @classmethod
+    def validate_recipient_emails(cls, v: List[str]) -> List[str]:
+        cleaned = []
+        for em in v:
+            em_clean = (em or "").strip().lower()
+            if not _EMAIL_REGEX.match(em_clean):
+                raise ValueError(f"Invalid email address: {em}")
+            cleaned.append(em_clean)
+        return cleaned
 
 
 def _build_principal_pitch_html(college_name: str = "Your Institution", recipient_name: str = "Respected Principal / Leadership") -> str:
