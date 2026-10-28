@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Radio, ShieldCheck, Sparkles } from 'lucide-react';
+import { Clock, Radio, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CountdownTimerProps {
@@ -9,18 +9,18 @@ interface CountdownTimerProps {
 }
 
 export const MOTIVATIONAL_HOOKS = [
-  (name: string) => `Keep Grinding, ${name}! 💪`,
-  (name: string) => `Consistency beats intensity, ${name}! ⚡`,
-  (name: string) => `One problem a day builds mastery, ${name}! 🚀`,
-  (name: string) => `Debug your limits & elevate your logic, ${name}! 🎯`,
-  (name: string) => `Small daily code reps build big careers, ${name}! 🏆`,
-  (name: string) => `Master the patterns, conquer the contest, ${name}! 🔥`,
-  (name: string) => `Sharpen your skills for Sunday's arena, ${name}! ⚔️`,
-  (name: string) => `Algorithms get sharper with practice, ${name}! 🧠`,
-  (name: string) => `Every accepted submission counts, ${name}! 💻`,
-  (name: string) => `Turn tough bugs into deep breakthroughs, ${name}! 🌟`,
-  (name: string) => `Break complex challenges into simple wins, ${name}! 🧩`,
-  (name: string) => `Stay focused, stay persistent, ${name}! ✨`,
+  (name: string) => `Keep Grinding, ${name}!`,
+  (name: string) => `Consistency beats intensity, ${name}!`,
+  (name: string) => `One problem a day builds mastery, ${name}!`,
+  (name: string) => `Debug your limits & elevate your logic, ${name}!`,
+  (name: string) => `Small daily code reps build big careers, ${name}!`,
+  (name: string) => `Master the patterns, conquer the contest, ${name}!`,
+  (name: string) => `Sharpen your skills for Sunday's arena, ${name}!`,
+  (name: string) => `Algorithms get sharper with practice, ${name}!`,
+  (name: string) => `Every accepted submission counts, ${name}!`,
+  (name: string) => `Turn tough bugs into deep breakthroughs, ${name}!`,
+  (name: string) => `Break complex challenges into simple wins, ${name}!`,
+  (name: string) => `Stay focused, stay persistent, ${name}!`,
 ];
 
 export function getIstSessionTiming(userName: string = 'User', customMotivation?: string): {
@@ -240,9 +240,6 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
                 ? 'bg-emerald-50/80 border border-emerald-200 text-emerald-800'
                 : 'bg-slate-50 border border-slate-200 text-slate-700'
             }`}>
-              <Sparkles className={`w-3.5 h-3.5 shrink-0 ${
-                isSessionLive ? 'text-emerald-600 animate-pulse' : 'text-brand-600'
-              }`} />
               <div className="line-clamp-2 break-words max-w-full overflow-hidden">
                 {timing.phase === 'NEXT_WEEK' && !isSessionLive ? (
                   <span className="inline-flex items-center gap-1.5 flex-wrap">

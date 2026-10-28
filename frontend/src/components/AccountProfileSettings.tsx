@@ -12,8 +12,9 @@ import {
   RotateCw, RefreshCcw, Volume2, VolumeX, Sparkles, Search, UploadCloud,
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
   Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft, HelpCircle,
-  Sun, Moon, Monitor, LogOut
+  Sun, Moon, Monitor, LogOut, Play
 } from 'lucide-react';
+import { playWhatsAppPop, playAppleGlassChime, playTechKnockDing } from '../utils/audioChime';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -779,6 +780,34 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     if (typeof window !== 'undefined' && !localStorage.getItem('theme_user_set')) return 'system';
     return theme;
   });
+
+  const [selectedNotificationTone, setSelectedNotificationTone] = useState<string>(() => {
+    try {
+      return localStorage.getItem('notification_sound_tone') || 'whatsapp';
+    } catch {
+      return 'whatsapp';
+    }
+  });
+
+  const handleSelectNotificationTone = (tone: 'whatsapp' | 'apple' | 'tech') => {
+    setSelectedNotificationTone(tone);
+    try {
+      localStorage.setItem('notification_sound_tone', tone);
+    } catch (e) {
+      console.warn('Could not store notification sound preference:', e);
+    }
+    triggerHaptic('light');
+    if (tone === 'whatsapp') {
+      playWhatsAppPop();
+      notify.info('WhatsApp Bubble Pop Selected', 'Short, bubbly water pop tone.', { category: 'AUDIO', duration: 3000 });
+    } else if (tone === 'apple') {
+      playAppleGlassChime();
+      notify.info('Apple Crystal Glass Selected', 'Tri-tone acoustic glass bell.', { category: 'AUDIO', duration: 3000 });
+    } else if (tone === 'tech') {
+      playTechKnockDing();
+      notify.info('Tech Knock & Ding Selected', 'Snappy knock with crystal ping.', { category: 'AUDIO', duration: 3000 });
+    }
+  };
 
   // Mobile profile sub-section filter & accordion states for authentic app ergonomics
   const [profileSubSection, setProfileSubSection] = useState<'all' | 'contact' | 'academic' | 'institutional' | 'links'>('all');
@@ -5829,6 +5858,107 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
                   <div className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${toastAudioAlerts ? 'bg-amber-500' : 'bg-slate-200 dark:bg-navy-700'}`}>
                     <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${toastAudioAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </div>
+                </div>
+
+                {/* 5. Notification Sound Studio (Click to Preview) */}
+                <div className="p-4 sm:p-5 bg-gradient-to-br from-indigo-500/[0.04] via-purple-500/[0.03] to-pink-500/[0.04] dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-pink-950/20 border-t border-slate-100 dark:border-navy-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Volume2 size={16} className="text-indigo-500 shrink-0" />
+                      <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                        Notification Sound Studio (Click to Preview)
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 hidden sm:inline">
+                      Active sound tone for alerts & push
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                    {/* Option 1: WhatsApp Pop */}
+                    <div
+                      onClick={() => handleSelectNotificationTone('whatsapp')}
+                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'whatsapp'
+                          ? 'bg-emerald-500/15 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
+                          : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-black text-slate-900 dark:text-white">WhatsApp</span>
+                        {selectedNotificationTone === 'whatsapp' && (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500 text-white flex items-center gap-0.5">
+                            <Check size={10} /> Active
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Bubbly Pop</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('whatsapp'); }}
+                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Play size={10} className="fill-current" />
+                        <span>Play</span>
+                      </button>
+                    </div>
+
+                    {/* Option 2: Apple Glass */}
+                    <div
+                      onClick={() => handleSelectNotificationTone('apple')}
+                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'apple'
+                          ? 'bg-indigo-500/15 border-indigo-500/50 shadow-xs ring-1 ring-indigo-500/30'
+                          : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-black text-slate-900 dark:text-white">Apple Glass</span>
+                        {selectedNotificationTone === 'apple' && (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-500 text-white flex items-center gap-0.5">
+                            <Check size={10} /> Active
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Crystal Chime</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('apple'); }}
+                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Play size={10} className="fill-current" />
+                        <span>Play</span>
+                      </button>
+                    </div>
+
+                    {/* Option 3: Tech Knock */}
+                    <div
+                      onClick={() => handleSelectNotificationTone('tech')}
+                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'tech'
+                          ? 'bg-cyan-500/15 border-cyan-500/50 shadow-xs ring-1 ring-cyan-500/30'
+                          : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-black text-slate-900 dark:text-white">Tech Knock</span>
+                        {selectedNotificationTone === 'tech' && (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-500 text-white flex items-center gap-0.5">
+                            <Check size={10} /> Active
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Knock & Ding</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('tech'); }}
+                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Play size={10} className="fill-current" />
+                        <span>Play</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
