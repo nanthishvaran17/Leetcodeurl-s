@@ -1420,14 +1420,14 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const handleTestAudioChime = () => {
     setIsPlayingAudioTest(true);
     playChimeSound();
-    notify.info('🔊 Audio Chime Test', `Current Tone: ${selectedNotificationTone.toUpperCase()}`, { category: 'AUDIO', duration: 3000 });
+    notify.info('Audio Chime Test', `Current Tone: ${selectedNotificationTone.toUpperCase()}`, { category: 'AUDIO', duration: 3000 });
     setTimeout(() => setIsPlayingAudioTest(false), 700);
   };
 
   const handleTestContestAlert = () => {
     triggerHaptic('light');
     dispatchPortalNotification({
-      title: '🏆 Contest Finalization Receipt',
+      title: 'Contest Finalization Receipt',
       message: 'Weekly Contest #438 synchronized • 42 Mentees participated • Rankings finalized.',
       category: 'contests',
       priority: 'high',
@@ -1438,7 +1438,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const handleTestWeeklyDigest = () => {
     triggerHaptic('light');
     dispatchPortalNotification({
-      title: '📊 Weekly Mentee Progress Digest',
+      title: 'Weekly Mentee Progress Digest',
       message: '128 problems solved this week • 3 students on 7-day streak • 2 inactive warnings.',
       category: 'reports',
       priority: 'normal',
@@ -1449,7 +1449,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const handleTestSystemAudit = () => {
     triggerHaptic('light');
     dispatchPortalNotification({
-      title: '🛡️ Security Audit Verified',
+      title: 'Security Audit Verified',
       message: 'Session authenticated from Chrome on Windows • IP 127.0.0.1 • No anomalies detected.',
       category: 'announcements',
       priority: 'high',
@@ -1463,7 +1463,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     syncNotificationPreferences(val, weeklyDigestAlerts, systemAuditAlerts);
     if (val) {
       dispatchPortalNotification({
-        title: '🏆 Contest Receipts Enabled',
+        title: 'Contest Receipts Enabled',
         message: 'Instant email receipts scheduled for weekly LeetCode contests.',
         category: 'contests',
         priority: 'normal',
@@ -1480,7 +1480,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     syncNotificationPreferences(emailContestAlerts, val, systemAuditAlerts);
     if (val) {
       dispatchPortalNotification({
-        title: '📊 Weekly Mentee Digest Enabled',
+        title: 'Weekly Mentee Digest Enabled',
         message: 'Assigned student summary scheduled every Monday morning at 9:00 AM.',
         category: 'reports',
         priority: 'normal',
@@ -1497,7 +1497,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     syncNotificationPreferences(emailContestAlerts, weeklyDigestAlerts, val);
     if (val) {
       dispatchPortalNotification({
-        title: '🛡️ Security Audit Alerts Active',
+        title: 'Security Audit Alerts Active',
         message: 'Instant push notifications for unrecognized logins & password changes.',
         category: 'announcements',
         priority: 'high',
@@ -1526,7 +1526,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     localStorage.setItem('pref_inactivity_threshold', String(val));
     triggerHaptic('selection');
     dispatchPortalNotification({
-      title: `⚠️ Inactivity Warning Threshold: ${val} Days`,
+      title: `Inactivity Warning Threshold: ${val} Days`,
       message: `Students without submissions in ${val} consecutive days will be flagged on roster (${val <= 3 ? 'Strict' : val <= 7 ? 'Balanced' : 'Relaxed'}).`,
       category: 'attendance',
       priority: 'high',

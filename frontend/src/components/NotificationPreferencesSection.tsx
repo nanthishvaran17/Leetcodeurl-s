@@ -429,7 +429,7 @@ export const NotificationPreferencesSection: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-slate-900 dark:text-white">
-                  💬 WhatsApp Pop
+                  WhatsApp Pop
                 </span>
                 {selectedTone === 'whatsapp' && (
                   <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-0.5">
@@ -463,7 +463,7 @@ export const NotificationPreferencesSection: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-slate-900 dark:text-white">
-                  🔔 Apple Crystal Glass
+                  Apple Crystal Glass
                 </span>
                 {selectedTone === 'apple' && (
                   <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-indigo-500 text-white flex items-center gap-0.5">
@@ -497,7 +497,7 @@ export const NotificationPreferencesSection: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-slate-900 dark:text-white">
-                  ⚡ Tech Knock & Ding
+                  Tech Knock & Ding
                 </span>
                 {selectedTone === 'tech' && (
                   <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-cyan-600 text-white flex items-center gap-0.5">
@@ -531,7 +531,7 @@ export const NotificationPreferencesSection: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-slate-900 dark:text-white">
-                  🔕 Silent / Mute
+                  Silent / Mute
                 </span>
                 {(selectedTone === 'none' || selectedTone === 'silent') && (
                   <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-600 text-white flex items-center gap-0.5">
