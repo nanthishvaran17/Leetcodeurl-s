@@ -159,6 +159,57 @@ def get_submission_code(submission_id: str):
         "message": "Direct source code extraction requires active LeetCode session authorization. View on official contest leaderboard or submission URL."
     }
 
+@router.get("/problem-solution/{slug}")
+def get_problem_solution(
+    slug: str,
+    username: Optional[str] = Query(None),
+    sub_id: Optional[str] = Query(None)
+):
+    """
+    Returns authentic solution code (Python3, Java, C++) and student submission telemetry for any problem.
+    """
+    from backend.services.contest_problem_solutions import get_solution_for_slug
+    sol_data = get_solution_for_slug(slug) or {}
+    
+    student_sub_id = sub_id
+    if not student_sub_id and username:
+        try:
+            import httpx
+            query = """
+            query userRecent($username: String!) {
+              recentAcSubmissionList(username: $username, limit: 20) {
+                id
+                titleSlug
+                timestamp
+              }
+            }
+            """
+            with httpx.Client(timeout=8, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}) as client:
+                r = client.post("https://leetcode.com/graphql", json={"query": query, "variables": {"username": username}})
+                if r.status_code == 200:
+                    subs = r.json().get("data", {}).get("recentAcSubmissionList") or []
+                    clean_slug = slug.strip().lower()
+                    for s in subs:
+                        if s.get("titleSlug") == clean_slug:
+                            student_sub_id = s.get("id")
+                            break
+        except Exception:
+            pass
+
+    return {
+        "status": "success",
+        "slug": slug,
+        "title": sol_data.get("title", slug),
+        "difficulty": sol_data.get("difficulty", "Medium"),
+        "submission_id": student_sub_id,
+        "solutions": {
+            "python3": sol_data.get("python3", ""),
+            "java": sol_data.get("java", ""),
+            "cpp": sol_data.get("cpp", "")
+        }
+    }
+
+
 @router.get("/verification-windows")
 def list_verification_windows(db: Session = Depends(get_db)):
     """
