@@ -6770,18 +6770,32 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-Verify Contest Solvers</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Authenticates finish timestamps against LeetCode GQL engine automatically</div>
                   </div>
-                  <button
-                    type="button"
+                  <div
+                    role="switch"
+                    aria-checked={autoVerifyContest}
                     onClick={() => {
                       const next = !autoVerifyContest;
                       setAutoVerifyContest(next);
-                      try { localStorage.setItem('nec_auto_verify_contest', String(next)); } catch {}
+                      try {
+                        localStorage.setItem('nec_auto_verify_contest', String(next));
+                        if (next) {
+                          notify.success('Auto-Verification Active', 'Contest solver timings will be verified against LeetCode GQL.');
+                        } else {
+                          notify.info('Auto-Verification Paused', 'Manual verification mode enabled.');
+                        }
+                      } catch {}
                       triggerHaptic('selection');
                     }}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${autoVerifyContest ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-navy-700'}`}
+                    className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
+                      autoVerifyContest ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-navy-700'
+                    }`}
                   >
-                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${autoVerifyContest ? 'left-5.5' : 'left-0.5'}`} />
-                  </button>
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                        autoVerifyContest ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
@@ -6789,18 +6803,32 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <div className="text-xs font-bold text-slate-900 dark:text-white">Sunday 10:00 AM Master Reports Auto-Staging</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Auto-generates all 17 Executive Department Excel &amp; PDF reports following contest closing</div>
                   </div>
-                  <button
-                    type="button"
+                  <div
+                    role="switch"
+                    aria-checked={autoSundayReports}
                     onClick={() => {
                       const next = !autoSundayReports;
                       setAutoSundayReports(next);
-                      try { localStorage.setItem('nec_auto_sunday_reports', String(next)); } catch {}
+                      try {
+                        localStorage.setItem('nec_auto_sunday_reports', String(next));
+                        if (next) {
+                          notify.success('Sunday Reports Active', 'All 17 department reports will auto-stage every Sunday morning.');
+                        } else {
+                          notify.info('Sunday Reports Manual', 'Automatic report staging disabled.');
+                        }
+                      } catch {}
                       triggerHaptic('selection');
                     }}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${autoSundayReports ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-navy-700'}`}
+                    className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
+                      autoSundayReports ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-navy-700'
+                    }`}
                   >
-                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${autoSundayReports ? 'left-5.5' : 'left-0.5'}`} />
-                  </button>
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                        autoSundayReports ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -6836,22 +6864,50 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Blurs sensitive student phone numbers &amp; personal email IDs when presenting on projector / smartboard screens</div>
                   </div>
-                  <button
-                    type="button"
+                  <div
+                    role="switch"
+                    aria-checked={presentationShield}
                     onClick={() => {
                       const next = !presentationShield;
                       setPresentationShield(next);
-                      try { localStorage.setItem('nec_presentation_shield', String(next)); } catch {}
+                      try {
+                        localStorage.setItem('nec_presentation_shield', String(next));
+                        if (typeof document !== 'undefined') {
+                          if (next) {
+                            document.body.classList.add('presentation-shield-active');
+                            document.documentElement.setAttribute('data-presentation-shield', 'true');
+                            notify.success('Presentation Shield Active', 'Student phone numbers & private emails are blurred for smartboard projection.');
+                          } else {
+                            document.body.classList.remove('presentation-shield-active');
+                            document.documentElement.removeAttribute('data-presentation-shield');
+                            notify.info('Presentation Shield Deactivated', 'Sensitive contact info is visible again.');
+                          }
+                        }
+                      } catch {}
                       triggerHaptic('selection');
                     }}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${presentationShield ? 'bg-brand-600' : 'bg-slate-300 dark:bg-navy-700'}`}
+                    className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 cursor-pointer ${
+                      presentationShield ? 'bg-brand-600' : 'bg-slate-300 dark:bg-navy-700'
+                    }`}
                   >
-                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${presentationShield ? 'left-5.5' : 'left-0.5'}`} />
-                  </button>
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                        presentationShield ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
                 </div>
 
                 {/* Tactile Haptics */}
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                <div
+                  onClick={() => {
+                    const next = !hapticEnabled;
+                    setHapticEnabled(next);
+                    try { localStorage.setItem('nec_haptics_enabled', String(next)); } catch {}
+                    triggerHaptic('selection');
+                  }}
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800 hover:bg-slate-100/60 dark:hover:bg-navy-900/60 transition-colors cursor-pointer select-none"
+                >
                   <div className="min-w-0 pr-3">
                     <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
@@ -6859,18 +6915,19 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400">Provides physical micro-vibration feedback when tapping interactive controls &amp; toggles</div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = !hapticEnabled;
-                      setHapticEnabled(next);
-                      try { localStorage.setItem('nec_haptics_enabled', String(next)); } catch {}
-                      triggerHaptic('selection');
-                    }}
-                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${hapticEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'}`}
+                  <div
+                    role="switch"
+                    aria-checked={hapticEnabled}
+                    className={`w-12 h-7 rounded-full p-1 transition-colors duration-200 ease-in-out shrink-0 ${
+                      hapticEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'
+                    }`}
                   >
-                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${hapticEnabled ? 'left-5.5' : 'left-0.5'}`} />
-                  </button>
+                    <div
+                      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                        hapticEnabled ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

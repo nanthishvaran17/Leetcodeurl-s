@@ -1,11 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { CollegeLogo } from './CollegeLogo';
-import { useTheme } from '../context/ThemeContext';
-import { SignOutConfirmModal } from './SignOutConfirmModal';
 import { getApiUrl } from '../services/api';
 import { isAdminOtpVerified } from '../utils/adminOtpAuth';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -33,9 +31,7 @@ interface NavSection {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
-  const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const { user } = useAuth();
   const touchStartXRef = React.useRef(0);
   const touchStartYRef = React.useRef(0);
   const roleClean = (user?.role || '').trim().toLowerCase();
@@ -387,60 +383,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
 
             </div>
 
-            {/* Region 3: Clean Linear-Style Compact User Dock (User avatar, Sun/Moon theme toggle, Sign out) */}
+            {/* Region 3: Static Sunday Session Window Card (Pinned at bottom, never scrolls) */}
             <div className="shrink-0 relative z-10 border-t border-slate-200/80 dark:border-white/[0.08] pt-2 mt-auto">
-              <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06]">
-                {/* Left: User Identity */}
-                <div className="flex items-center space-x-2.5 min-w-0 flex-1 px-1">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs uppercase font-sans">
-                    {(user?.name || user?.username || 'U').charAt(0)}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
-                      {user?.name || user?.username || 'Admin User'}
-                    </span>
-                    <span className="text-[9.5px] font-mono text-brand-600 dark:text-brand-400 uppercase font-bold truncate leading-none mt-0.5">
-                      {user?.role || 'Access'}
-                    </span>
-                  </div>
+              <div className="p-2.5 rounded-xl bg-slate-900/90 dark:bg-navy-900/90 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-center space-x-2 relative z-10">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-white text-[11px] font-bold tracking-wide">Sunday Session Window</span>
                 </div>
-
-                {/* Right: Quick Action Icon Buttons */}
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={toggleTheme}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer"
-                    aria-label="Toggle Theme"
-                  >
-                    {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-navy-700 dark:text-slate-300" />}
-                  </button>
-
-                  {user && (
-                    <button
-                      type="button"
-                      onClick={() => setShowLogoutConfirm(true)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 active:scale-95 transition-all cursor-pointer"
-                      aria-label="Sign Out"
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  )}
+                <p className="text-[10px] text-slate-300 leading-snug font-medium relative z-10">
+                  Official Window: <b className="text-emerald-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
+                  Continuous tracking & live sync.
+                </p>
+                <div className="pt-1 border-t border-slate-800/80 relative z-10">
+                  <p className="text-[9px] text-slate-400 font-medium tracking-wide">
+                    Nandha Engineering College • Erode
+                  </p>
                 </div>
               </div>
             </div>
           </motion.div>
-
-          {/* Sign Out Confirmation Modal */}
-          <SignOutConfirmModal
-            isOpen={showLogoutConfirm}
-            onClose={() => setShowLogoutConfirm(false)}
-            onConfirm={() => {
-              if (onClose) onClose();
-              logout();
-            }}
-            user={user}
-          />
         </div>
       )}
     </AnimatePresence>,
