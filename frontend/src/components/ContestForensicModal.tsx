@@ -16,6 +16,8 @@ import {
   UserX,
   Award,
   ChevronDown,
+  ChevronUp,
+  ShieldCheck,
   Code2
 } from 'lucide-react';
 import {
@@ -48,6 +50,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
   const dragControls = useDragControls();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
   if (typeof document === 'undefined') return null;
 
@@ -762,10 +765,20 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                         }
                       }
 
+                      const isExpanded = expandedQuestionId === q.id;
+                      const problemSlug = q.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                      const contestSlug = summary?.contest_slug || (record as any)?.contest_slug || '';
+                      const problemUrl = contestSlug
+                        ? `https://leetcode.com/contest/${contestSlug}/problems/${problemSlug}/`
+                        : `https://leetcode.com/problems/${problemSlug}/`;
+                      const submissionUrl = (q as any).submissionId
+                        ? `https://leetcode.com/submissions/detail/${(q as any).submissionId}/`
+                        : problemUrl;
+
                       return (
                         <div
                           key={q.id}
-                          className={`p-3 sm:p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 text-xs ${
+                          className={`rounded-2xl border transition-all text-xs overflow-hidden ${
                             isSolved
                               ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300/80 dark:border-emerald-500/30 text-slate-900 dark:text-white shadow-2xs'
                               : isFailed
@@ -773,117 +786,213 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                 : 'bg-slate-50/80 dark:bg-navy-950/60 border-slate-200/80 dark:border-navy-800 text-slate-900 dark:text-white'
                           }`}
                         >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            {/* Question Badge with Difficulty */}
-                            <div className="flex flex-col items-center shrink-0">
-                              <span
-                                className={`w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center border shadow-2xs ${
-                                  isSolved
-                                    ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
-                                    : isFailed
-                                      ? 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
-                                      : 'bg-white dark:bg-navy-900 text-slate-500 border-slate-200 dark:text-slate-400 dark:border-navy-700'
-                                }`}
-                              >
-                                {q.id}
-                              </span>
-                              <span
-                                className={`text-[8.5px] font-black uppercase tracking-tight mt-0.5 ${
-                                  q.difficulty === 'Easy'
-                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                    : q.difficulty === 'Medium'
-                                      ? 'text-amber-600 dark:text-amber-400'
-                                      : q.difficulty === 'Medium-Hard'
-                                        ? 'text-orange-600 dark:text-orange-400'
-                                        : 'text-rose-600 dark:text-rose-400'
-                                }`}
-                              >
-                                {q.difficulty}
-                              </span>
-                            </div>
-
-                            {/* Title & Telemetry Status */}
-                            <div className="min-w-0 flex-1 space-y-0.5">
-                              <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
-                                {q.title}
-                              </h4>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-bold flex-wrap">
-                                <span>{q.attempts}</span>
-                                {(q as any).lang && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono text-[9.5px] font-bold uppercase">
-                                    <Code2 className="w-2.5 h-2.5" />
-                                    {(q as any).lang}
-                                  </span>
-                                )}
-                                {(q as any).submissionId && (
-                                  <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500">
-                                    • Sub #{(q as any).submissionId}
-                                  </span>
-                                )}
-                                {q.timingSource && (
-                                  <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">
-                                    • {q.timingSource === 'OBSERVED_LIVE' ? 'Live Telemetry' : 'Weighted Estimate'}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Side: Status Tag & Exact Time Display */}
-                          <div className="text-right shrink-0 font-mono space-y-1">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-black tracking-wider uppercase border shadow-2xs ${
-                                isSolved
-                                  ? 'bg-emerald-100/80 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
-                                  : isFailed
-                                    ? 'bg-rose-100/80 text-rose-700 border-rose-300 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
-                                    : 'bg-slate-100 dark:bg-navy-900 text-slate-500 border-slate-200 dark:text-slate-400 dark:border-navy-700'
-                              }`}
-                            >
-                              {isSolved && <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
-                              {q.status}
-                            </span>
-
-                            {/* Forensic Timing Display */}
-                            {q.timeDisplay ? (
-                              <div className="text-right space-y-0.5">
-                                {q.clockTime ? (
-                                  <div className="text-[11px] font-mono font-black text-slate-900 dark:text-white flex items-center justify-end gap-1">
-                                    <Clock className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
-                                    <span>{q.clockTime.replace(' IST', '')}</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-[11px] font-black block text-emerald-700 dark:text-emerald-400">
-                                    {q.timeDisplay.replace('~', '')}
-                                  </span>
-                                )}
-                                <div className="text-[9.5px] font-mono font-semibold text-emerald-600 dark:text-emerald-400/90 leading-tight">
-                                  <span>{q.timeDisplay.replace('~', '')}</span>
-                                  <span className="text-[8.5px] font-medium text-slate-400 dark:text-slate-500 block">
-                                    {intervalLabel}
-                                  </span>
-                                </div>
+                          {/* Clickable Header Row */}
+                          <div
+                            onClick={() => setExpandedQuestionId(isExpanded ? null : q.id)}
+                            className="p-3 sm:p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none active:bg-black/5 dark:active:bg-white/5 transition-colors"
+                            role="button"
+                            tabIndex={0}
+                            title="Click to view verified code and submission telemetry"
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {/* Question Badge with Difficulty */}
+                              <div className="flex flex-col items-center shrink-0">
                                 <span
-                                  className={`inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider border ${
-                                    q.timingSource === 'OBSERVED_LIVE'
-                                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600'
-                                      : 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600'
+                                  className={`w-8 h-8 rounded-xl font-mono font-black text-xs flex items-center justify-center border shadow-2xs ${
+                                    isSolved
+                                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
+                                      : isFailed
+                                        ? 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
+                                        : 'bg-white dark:bg-navy-900 text-slate-500 border-slate-200 dark:text-slate-400 dark:border-navy-700'
                                   }`}
                                 >
-                                  {q.timingSource === 'OBSERVED_LIVE' ? '● EXACT' : '≈ ESTIMATE'}
+                                  {q.id}
+                                </span>
+                                <span
+                                  className={`text-[8.5px] font-black uppercase tracking-tight mt-0.5 ${
+                                    q.difficulty === 'Easy'
+                                      ? 'text-emerald-600 dark:text-emerald-400'
+                                      : q.difficulty === 'Medium'
+                                        ? 'text-amber-600 dark:text-amber-400'
+                                        : q.difficulty === 'Medium-Hard'
+                                          ? 'text-orange-600 dark:text-orange-400'
+                                          : 'text-rose-600 dark:text-rose-400'
+                                  }`}
+                                >
+                                  {q.difficulty}
                                 </span>
                               </div>
-                            ) : isSolved ? (
-                              <div className="text-right space-y-0.5">
-                                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">
-                                  15m
-                                </span>
-                                <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600">
-                                  ≈ ESTIMATE
-                                </span>
+
+                              {/* Title & Telemetry Status */}
+                              <div className="min-w-0 flex-1 space-y-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                                    {q.title}
+                                  </h4>
+                                  {isExpanded ? (
+                                    <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  ) : (
+                                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-bold flex-wrap">
+                                  <span>{q.attempts}</span>
+                                  {(q as any).lang && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono text-[9.5px] font-bold uppercase">
+                                      <Code2 className="w-2.5 h-2.5" />
+                                      {(q as any).lang}
+                                    </span>
+                                  )}
+                                  {(q as any).submissionId && (
+                                    <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500">
+                                      • Sub #{(q as any).submissionId}
+                                    </span>
+                                  )}
+                                  <span className="text-[9.5px] text-indigo-500 dark:text-indigo-400 font-medium">
+                                    {isExpanded ? 'Hide code details' : 'Click to inspect code ↗'}
+                                  </span>
+                                </div>
                               </div>
-                            ) : null}
+                            </div>
+
+                            {/* Right Side: Status Tag & Exact Time Display */}
+                            <div className="text-right shrink-0 font-mono space-y-1">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-black tracking-wider uppercase border shadow-2xs ${
+                                  isSolved
+                                    ? 'bg-emerald-100/80 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
+                                    : isFailed
+                                      ? 'bg-rose-100/80 text-rose-700 border-rose-300 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
+                                      : 'bg-slate-100 dark:bg-navy-900 text-slate-500 border-slate-200 dark:text-slate-400 dark:border-navy-700'
+                                }`}
+                              >
+                                {isSolved && <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+                                {q.status}
+                              </span>
+
+                              {/* Forensic Timing Display */}
+                              {q.timeDisplay ? (
+                                <div className="text-right space-y-0.5">
+                                  {q.clockTime ? (
+                                    <div className="text-[11px] font-mono font-black text-slate-900 dark:text-white flex items-center justify-end gap-1">
+                                      <Clock className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                                      <span>{q.clockTime.replace(' IST', '')}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[11px] font-black block text-emerald-700 dark:text-emerald-400">
+                                      {q.timeDisplay.replace('~', '')}
+                                    </span>
+                                  )}
+                                  <div className="text-[9.5px] font-mono font-semibold text-emerald-600 dark:text-emerald-400/90 leading-tight">
+                                    <span>{q.timeDisplay.replace('~', '')}</span>
+                                    <span className="text-[8.5px] font-medium text-slate-400 dark:text-slate-500 block">
+                                      {intervalLabel}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={`inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider border ${
+                                      q.timingSource === 'OBSERVED_LIVE'
+                                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600'
+                                        : 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600'
+                                    }`}
+                                  >
+                                    {q.timingSource === 'OBSERVED_LIVE' ? '● EXACT' : '≈ ESTIMATE'}
+                                  </span>
+                                </div>
+                              ) : isSolved ? (
+                                <div className="text-right space-y-0.5">
+                                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">
+                                    15m
+                                  </span>
+                                  <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600">
+                                    ≈ ESTIMATE
+                                  </span>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
+
+                          {/* Expanded Code & Telemetry Drawer */}
+                          {isExpanded && (
+                            <div className="p-3 sm:p-4 bg-white/80 dark:bg-navy-900/90 border-t border-slate-200/80 dark:border-white/10 space-y-3 animate-fade-in">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/70 dark:border-navy-800">
+                                <div className="space-y-0.5 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                      Official LeetCode Verification
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold">
+                                      <ShieldCheck className="w-2.5 h-2.5" />
+                                      Authoritative Record
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                    Problem Slug: <span className="text-slate-700 dark:text-slate-200">{problemSlug}</span>
+                                  </p>
+                                </div>
+                                {(q as any).submissionId && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-navy-900 px-2 py-1 rounded-lg border border-slate-200 dark:border-navy-700">
+                                      ID: {(q as any).submissionId}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopy(String((q as any).submissionId), `sub_${q.id}`);
+                                      }}
+                                      className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition cursor-pointer"
+                                      title="Copy submission ID"
+                                    >
+                                      {copiedField === `sub_${q.id}` ? (
+                                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                      ) : (
+                                        <Copy className="w-3.5 h-3.5" />
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Authentic Code Action Links */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {isSolved ? (
+                                  <a
+                                    href={submissionUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 active:scale-95 transition-all text-center"
+                                  >
+                                    <Code2 className="w-3.5 h-3.5 shrink-0" />
+                                    <span>{(q as any).submissionId ? 'View Authentic Code on LeetCode ↗' : 'View Verified Solve on LeetCode ↗'}</span>
+                                  </a>
+                                ) : (
+                                  <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                                    <span>No Code Submitted (Skipped)</span>
+                                  </div>
+                                )}
+
+                                <a
+                                  href={problemUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-100 font-bold text-xs transition-all border border-slate-200 dark:border-navy-700 text-center"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Open Problem Statement ↗</span>
+                                </a>
+                              </div>
+
+                              {/* Security & Anti-Dummy Transparency Notice */}
+                              <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-[10px] text-indigo-900 dark:text-indigo-200 leading-relaxed flex items-start gap-2">
+                                <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-bold">Authentic Telemetry Protocol: </span>
+                                  LeetCode strictly protects raw source code under private user session credentials to prevent contest leaks. We do not inject fake or dummy code. Tap <b>"View Authentic Code on LeetCode ↗"</b> above to inspect the student's authentic submitted code, runtime execution graphs, and test results directly on LeetCode.
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

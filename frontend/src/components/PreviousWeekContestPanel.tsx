@@ -601,10 +601,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       // 1. Instant Cache Hydration from memory/local storage (0ms load time!)
       try {
-        const keys = Object.keys(localStorage);
-        for (const k of keys) {
-          if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v33')) {
-            localStorage.removeItem(k);
+        if (forceSync) {
+          const keys = Object.keys(localStorage);
+          for (const k of keys) {
+            if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v33')) {
+              localStorage.removeItem(k);
+            }
           }
         }
         if (isFacultyRole) {
@@ -950,16 +952,18 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Silent automatic background polling every 10 seconds so UI updates seamlessly without manual reloads (ideal for TV displays)
+  // Silent automatic background polling: ONLY for active live contests (every 30 seconds), never poll finalized past contests
   useEffect(() => {
+    if (!isLiveContest) return;
+
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchPreviousWeekData(false, true);
       }
-    }, 10000);
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, [sessionId]);
+  }, [sessionId, isLiveContest]);
 
   const handleSimulateStep = async (studentId: number, currentSolved: number) => {
     try {
@@ -1281,47 +1285,40 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-36 sm:pb-24 px-1 sm:px-0">
+    <div className="space-y-4 sm:space-y-6 pb-52 sm:pb-32 px-1 sm:px-0">
 
-      {/* Top Banner Card — Modern Glassmorphic Tech Aesthetic */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-6 border border-indigo-500/30 shadow-2xl mb-3 sm:mb-4">
-        {/* Glow ambient background elements */}
-        <div className="pointer-events-none absolute -top-12 -right-12 w-48 h-48 bg-indigo-500/15 blur-3xl rounded-full" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 w-48 h-48 bg-brand-500/10 blur-3xl rounded-full" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-          <div className="space-y-1 max-w-2xl">
+      {/* Sleek Compact Action Toolbar (Eliminates redundant stacked contest banner on mobile) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 sm:p-3.5 rounded-2xl bg-white/80 dark:bg-navy-950/80 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-2xs mb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-slate-200 text-xs font-mono font-bold shadow-xs">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Target: {summary?.target_date_ist || '—'}</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                Authoritative Question Telemetry
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-300 text-[10px] font-mono font-bold">
+                <Calendar className="w-3 h-3 text-indigo-500" />
+                <span>{summary?.target_date_ist ? `Target: ${summary.target_date_ist}` : 'Verified Telemetry'}</span>
               </span>
             </div>
-
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-indigo-200">
-                {summary?.contest_title || (sessionId ? `Weekly Contest ${sessionId}` : 'Weekly Contest')}
-              </span>
-            </h2>
-
-            <p className="text-xs sm:text-[13px] text-slate-300 font-medium leading-relaxed">
-              Authoritative question-level contest telemetry • Realtime Ingestion
+            <p className="text-[10.5px] text-slate-400 dark:text-slate-500 truncate">
+              Real-time Ingestion • {lastSyncAt || 'Live Auto-Sync'}
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
-            <button
-              onClick={() => {
-                triggerHaptic('medium');
-                fetchPreviousWeekData(true);
-              }}
-              disabled={syncing}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              <span>{syncing ? 'Re-Syncing Live...' : 'Force Live Re-Sync'}</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              fetchPreviousWeekData(true);
+            }}
+            disabled={syncing}
+            className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>{syncing ? 'Re-Syncing Live...' : 'Force Live Re-Sync'}</span>
+          </button>
         </div>
       </div>
 
