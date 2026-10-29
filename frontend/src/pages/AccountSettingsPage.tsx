@@ -10,7 +10,7 @@ export const AccountSettingsPage: React.FC<{ onBack?: () => void }> = ({ onBack 
       <div className="absolute top-48 right-10 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="w-full px-0 sm:px-4 lg:px-6 pt-0 sm:pt-5">
+      <div className="w-full px-0 sm:px-4 lg:px-6 pt-[max(0.875rem,env(safe-area-inset-top))] sm:pt-5">
         {/* Main Profile & Settings Engine with Native UI matching mockup */}
         <AccountProfileSettings onBack={onBack} />
       </div>

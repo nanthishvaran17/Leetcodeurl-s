@@ -163,15 +163,63 @@ def get_submission_code(submission_id: str):
 def get_problem_solution(
     slug: str,
     username: Optional[str] = Query(None),
-    sub_id: Optional[str] = Query(None)
+    sub_id: Optional[str] = Query(None),
+    lang: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
 ):
     """
     Returns authentic solution code (Python3, Java, C++) and student submission telemetry for any problem.
+    Identifies the student's exact language used (e.g. Java, Python3, C++) from our verified records.
     """
     from backend.services.contest_problem_solutions import get_solution_for_slug
     sol_data = get_solution_for_slug(slug) or {}
     
-    student_sub_id = sub_id
+    student_sub_id = sub_id if (sub_id and isinstance(sub_id, str)) else None
+    detected_lang = lang.strip().lower() if (lang and isinstance(lang, str)) else None
+    runtime_disp = None
+    memory_disp = None
+    status_disp = "Accepted"
+    verbatim_code = None
+
+    # 1. Lookup student and their submission in verified local database
+    if username:
+        try:
+            from backend.models import Student, LeetCodeSubmission
+            clean_user = username.strip().lower()
+            student = db.query(Student).filter(
+                (Student.username.ilike(clean_user)) | 
+                (Student.primary_leetcode_id.ilike(clean_user))
+            ).first()
+
+            if student:
+                clean_slug = slug.strip().lower()
+                sub = db.query(LeetCodeSubmission).filter(
+                    LeetCodeSubmission.student_id == student.id,
+                    (LeetCodeSubmission.title_slug == clean_slug) | 
+                    (LeetCodeSubmission.title_slug.like(f"%{clean_slug}%"))
+                ).order_by(LeetCodeSubmission.id.desc()).first()
+
+                if sub:
+                    if sub.lang:
+                        detected_lang = sub.lang.strip().lower()
+                    if sub.runtime_display:
+                        runtime_disp = sub.runtime_display
+                    if sub.memory_display:
+                        memory_disp = sub.memory_display
+                    if sub.status_display:
+                        status_disp = sub.status_display
+                elif not detected_lang:
+                    # Look up student's predominant language across all submissions
+                    prev_sub = db.query(LeetCodeSubmission).filter(
+                        LeetCodeSubmission.student_id == student.id,
+                        LeetCodeSubmission.lang != None
+                    ).first()
+                    if prev_sub and prev_sub.lang:
+                        detected_lang = prev_sub.lang.strip().lower()
+        except Exception as e:
+            logger.warning(f"[PROBLEM_SOLUTION] DB lookup error for {username}: {e}")
+
+    # 2. Try fetching recent Ac submissions from LeetCode GraphQL if submission_id is missing
     if not student_sub_id and username:
         try:
             import httpx
@@ -196,17 +244,71 @@ def get_problem_solution(
         except Exception:
             pass
 
+    # 3. If sub_id is present and LEETCODE_SESSION is configured, attempt to fetch verbatim code
+    if student_sub_id:
+        try:
+            sub_id_int = int(str(student_sub_id).strip())
+            session_cookie = os.environ.get("LEETCODE_SESSION")
+            if session_cookie:
+                import httpx
+                sub_query = """
+                query submissionDetails($submissionId: Int!) {
+                  submissionDetails(submissionId: $submissionId) {
+                    code
+                    lang {
+                      name
+                      verboseName
+                    }
+                  }
+                }
+                """
+                with httpx.Client(timeout=8) as client:
+                    resp = client.post(
+                        "https://leetcode.com/graphql",
+                        json={"query": sub_query, "variables": {"submissionId": sub_id_int}},
+                        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://leetcode.com"},
+                        cookies={"LEETCODE_SESSION": session_cookie}
+                    )
+                    if resp.status_code == 200:
+                        s_data = resp.json().get("data", {}).get("submissionDetails")
+                        if s_data and s_data.get("code"):
+                            verbatim_code = s_data.get("code")
+                            if s_data.get("lang"):
+                                detected_lang = (s_data["lang"].get("verboseName") or s_data["lang"].get("name") or detected_lang).lower()
+        except Exception as e:
+            logger.debug(f"[PROBLEM_SOLUTION] Verbatim code fetch error: {e}")
+
+    # Standardize detected_lang to one of: 'java', 'python3', 'cpp'
+    normalized_lang = "java"
+    if detected_lang:
+        dl = detected_lang.lower()
+        if "python" in dl or "py" in dl:
+            normalized_lang = "python3"
+        elif "c++" in dl or "cpp" in dl:
+            normalized_lang = "cpp"
+        elif "java" in dl:
+            normalized_lang = "java"
+        else:
+            normalized_lang = dl
+
     return {
         "status": "success",
         "slug": slug,
         "title": sol_data.get("title", slug),
         "difficulty": sol_data.get("difficulty", "Medium"),
         "submission_id": student_sub_id,
+        "student_lang": normalized_lang,
+        "raw_lang": detected_lang or normalized_lang,
+        "runtime": runtime_disp,
+        "memory": memory_disp,
+        "status_display": status_disp,
         "solutions": {
             "python3": sol_data.get("python3", ""),
             "java": sol_data.get("java", ""),
             "cpp": sol_data.get("cpp", "")
-        }
+        },
+        "verbatim_code": verbatim_code,
+        "is_verbatim": bool(verbatim_code)
     }
 
 

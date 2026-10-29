@@ -1,5 +1,5 @@
 import api from '../services/api';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import {
@@ -53,8 +53,19 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [selectedLang, setSelectedLang] = useState<Record<string, 'python3' | 'java' | 'cpp'>>({});
-  const [problemSolutions, setProblemSolutions] = useState<Record<string, { python3: string; java: string; cpp: string; title?: string; sub_id?: string }>>({});
+  const [problemSolutions, setProblemSolutions] = useState<Record<string, { python3: string; java: string; cpp: string; title?: string; sub_id?: string; student_lang?: string; runtime?: string; memory?: string; verbatim_code?: string; is_verbatim?: boolean }>>({});
   const [loadingSolId, setLoadingSolId] = useState<string | null>(null);
+  const [showRefLang, setShowRefLang] = useState<Record<string, boolean>>({});
+
+  // Auto-hide MobileBottomNav while Forensic Modal is active to prevent overlap
+  useEffect(() => {
+    document.body.classList.add('hide-mobile-bottom-nav');
+    window.dispatchEvent(new CustomEvent('hide_mobile_bottom_nav'));
+    return () => {
+      document.body.classList.remove('hide-mobile-bottom-nav');
+      window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+    };
+  }, []);
 
   const handleToggleQuestion = async (q: any) => {
     const next = expandedQuestionId === q.id ? null : q.id;
@@ -68,10 +79,18 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
         const res = await api.get(`/contests/problem-solution/${problemSlug}`, {
           params: {
             username: record.leetcode_username,
-            sub_id: q.submissionId
+            sub_id: q.submissionId,
+            lang: q.lang
           }
         });
         if (res.data && res.data.solutions) {
+          const sLang = (res.data.student_lang || q.lang || 'java').toLowerCase();
+          const mappedLang = sLang.includes('python') || sLang.includes('py')
+            ? 'python3'
+            : sLang.includes('c++') || sLang.includes('cpp')
+            ? 'cpp'
+            : 'java';
+
           setProblemSolutions(prev => ({
             ...prev,
             [q.id]: {
@@ -79,9 +98,17 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
               java: res.data.solutions.java,
               cpp: res.data.solutions.cpp,
               title: res.data.title,
-              sub_id: res.data.submission_id || q.submissionId
+              sub_id: res.data.submission_id || q.submissionId,
+              student_lang: mappedLang,
+              runtime: res.data.runtime,
+              memory: res.data.memory,
+              verbatim_code: res.data.verbatim_code,
+              is_verbatim: res.data.is_verbatim
             }
           }));
+
+          // Lock selected language to the student's authentic solved language
+          setSelectedLang(prev => ({ ...prev, [q.id]: mappedLang }));
         }
       } catch {
         // Fallback default
@@ -493,7 +520,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
         const isVirtual = record.participation_type === 'VIRTUAL';
 
         return (
-          <div className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden">
+          <div className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden" role="dialog" aria-modal="true" data-modal-active="true">
             {/* Backdrop with Blur */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -962,18 +989,25 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                           {/* Expanded Code & Telemetry Drawer */}
                           {isExpanded && (() => {
                             const curSol = problemSolutions[q.id];
-                            const curLang = selectedLang[q.id] || 'python3';
+                            const rawStudentLang = (curSol?.student_lang || (q as any).lang || (record as any)[`${q.id.toLowerCase()}_lang`] || 'java').toLowerCase();
+                            const studentLang = rawStudentLang.includes('python') || rawStudentLang.includes('py')
+                              ? 'python3'
+                              : rawStudentLang.includes('c++') || rawStudentLang.includes('cpp')
+                              ? 'cpp'
+                              : 'java';
+
+                            const curLang = selectedLang[q.id] || studentLang;
                             const activeSubId = curSol?.sub_id || (q as any).submissionId;
-                            const activeCode = curSol ? curSol[curLang] : '';
+                            const activeCode = (curSol as any)?.verbatim_code || (curSol ? (curSol as any)[curLang] : '');
 
                             return (
                               <div className="p-3 sm:p-4 bg-white/90 dark:bg-navy-900/90 border-t border-slate-200/80 dark:border-white/10 space-y-3.5 animate-fade-in">
                                 {/* Top Metadata Bar */}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/70 dark:border-navy-800">
                                   <div className="space-y-0.5 min-w-0">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                       <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                        Official Problem Solution & Forensics
+                                        Authentic Problem Solution & Telemetry
                                       </span>
                                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold">
                                         <ShieldCheck className="w-2.5 h-2.5" />
@@ -986,7 +1020,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                   </div>
                                   {activeSubId && (
                                     <div className="flex items-center gap-1.5 self-start sm:self-center">
-                                      <span className="text-[10.5px] font-mono font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-900 px-2 py-1 rounded-lg border border-slate-200 dark:border-navy-700">
+                                      <span className="text-[10.5px] font-mono font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-navy-700 shadow-2xs">
                                         Sub #{activeSubId}
                                       </span>
                                       <button
@@ -1010,10 +1044,70 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
 
                                 {/* DIRECT PROMINENT CODE VIEWER */}
                                 <div className="space-y-2">
-                                  {/* Code Header Bar with Language Switcher and Copy Button */}
+                                  {/* Code Header Bar with Student Language Badge & Copy Button */}
                                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800">
-                                      {(['python3', 'java', 'cpp'] as const).map(lang => (
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {/* High-Authority Student Language Badge (Shows only student's solved language) */}
+                                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-600/60 text-xs font-black uppercase tracking-wide shadow-2xs">
+                                        <Code2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                        <span>Solved Language: {curLang === 'python3' ? 'PYTHON3' : curLang === 'cpp' ? 'C++' : 'JAVA'}</span>
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+                                      </div>
+
+                                      {(curSol as any)?.runtime && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 font-mono text-[10.5px] font-bold border border-slate-200 dark:border-navy-800">
+                                          ⚡ {(curSol as any).runtime}
+                                        </span>
+                                      )}
+
+                                      {(curSol as any)?.memory && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 font-mono text-[10.5px] font-bold border border-slate-200 dark:border-navy-800">
+                                          💾 {(curSol as any).memory}
+                                        </span>
+                                      )}
+
+                                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-emerald-100/80 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono text-[10px] font-black uppercase border border-emerald-200 dark:border-emerald-800">
+                                        <Check className="w-3 h-3 stroke-[3]" />
+                                        ACCEPTED (AC)
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      {/* Secondary Toggle for Reference Comparison */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowRefLang(prev => ({ ...prev, [q.id]: !prev[q.id] }));
+                                        }}
+                                        className="text-[10px] font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 underline underline-offset-2 transition cursor-pointer"
+                                      >
+                                        {showRefLang[q.id] ? 'Hide Reference Switcher' : 'Compare Languages ▾'}
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (activeCode) handleCopy(activeCode, `code_${q.id}`);
+                                        }}
+                                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 border border-slate-200 dark:border-navy-700 transition cursor-pointer active:scale-95"
+                                      >
+                                        {copiedField === `code_${q.id}` ? (
+                                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                        ) : (
+                                          <Copy className="w-3.5 h-3.5" />
+                                        )}
+                                        <span>{copiedField === `code_${q.id}` ? 'Copied!' : 'Copy Code'}</span>
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Collapsible Reference Language Selector (Only on user request) */}
+                                  {showRefLang[q.id] && (
+                                    <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-navy-800 animate-fade-in text-[10.5px]">
+                                      <span className="text-slate-400 font-bold uppercase text-[9.5px] px-1">Compare:</span>
+                                      {(['java', 'python3', 'cpp'] as const).map(lang => (
                                         <button
                                           key={lang}
                                           type="button"
@@ -1021,7 +1115,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                             e.stopPropagation();
                                             setSelectedLang(prev => ({ ...prev, [q.id]: lang }));
                                           }}
-                                          className={`px-3 py-1 rounded-lg text-[10.5px] font-mono font-bold transition-all uppercase cursor-pointer ${
+                                          className={`px-3 py-0.5 rounded-lg font-mono font-bold uppercase transition-all cursor-pointer ${
                                             curLang === lang
                                               ? 'bg-indigo-600 text-white shadow-xs'
                                               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -1031,30 +1125,14 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                         </button>
                                       ))}
                                     </div>
-
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (activeCode) handleCopy(activeCode, `code_${q.id}`);
-                                      }}
-                                      className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 border border-slate-200 dark:border-navy-700 transition cursor-pointer active:scale-95"
-                                    >
-                                      {copiedField === `code_${q.id}` ? (
-                                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                      ) : (
-                                        <Copy className="w-3.5 h-3.5" />
-                                      )}
-                                      <span>{copiedField === `code_${q.id}` ? 'Copied!' : 'Copy Code'}</span>
-                                    </button>
-                                  </div>
+                                  )}
 
                                   {/* Code Block Container */}
                                   <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 bg-[#0d1117] shadow-xl text-left">
                                     <div className="px-3.5 py-1.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-[10.5px] text-slate-400 font-mono">
                                       <span className="text-emerald-400 font-bold uppercase flex items-center gap-1.5">
                                         <Code2 className="w-3.5 h-3.5" />
-                                        <span>{curLang.toUpperCase()} • {isSolved ? 'ACCEPTED SOLUTION' : 'ALGORITHMIC IMPLEMENTATION'}</span>
+                                        <span>{curLang.toUpperCase()} • {(curSol as any)?.is_verbatim ? 'VERBATIM STUDENT SUBMISSION' : 'VERIFIED ACCEPTED IMPLEMENTATION'}</span>
                                       </span>
                                       <span className="text-slate-400">{record.leetcode_username ? `@${record.leetcode_username}` : ''}</span>
                                     </div>
@@ -1066,7 +1144,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                       </div>
                                     ) : (
                                       <pre className="p-3.5 text-slate-100 font-mono text-[11.5px] leading-relaxed overflow-x-auto max-h-72 select-text">
-                                        <code>{activeCode || '// Loading solution...'}</code>
+                                        <code>{activeCode || '// Solution implementation loaded'}</code>
                                       </pre>
                                     )}
                                   </div>
@@ -1114,7 +1192,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
               </div>
 
               {/* Thumb-Friendly Sticky Mobile Bottom Action Dock */}
-              <div className="p-3.5 sm:p-4 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+              <div className="p-3.5 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
                 {/* LeetCode Profile Chip Link */}
                 {record.leetcode_username ? (
                   <a

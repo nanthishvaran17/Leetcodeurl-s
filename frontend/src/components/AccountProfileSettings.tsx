@@ -4161,7 +4161,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="space-y-4 flex-1 min-w-0 w-full animate-fade-in pb-48 lg:pb-24">
 
             {/* Mobile Header Bar: Sticky top bar with Back, Title, Reset & Save (HIDDEN ON DESKTOP) */}
-            <div className="lg:hidden flex items-center justify-between gap-2.5 pt-1 pb-2 px-1 mb-2">
+            <div className="lg:hidden sticky top-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl flex items-center justify-between gap-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 px-3 mb-2 border-b border-slate-200/60 dark:border-navy-800/60 shadow-2xs">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <button
                   type="button"

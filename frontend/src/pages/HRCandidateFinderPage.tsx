@@ -2032,7 +2032,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                 {filters.department === 'all' ? 'All' : filters.department}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 -mx-1 px-1 scroll-smooth touch-pan-x pr-6">
               {['all', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE'].map((d) => {
                 const active = (filters.department || 'all').toUpperCase() === d.toUpperCase();
                 return (
@@ -2063,7 +2063,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                 {filters.contest_rating.active ? `≥${filters.contest_rating.val1}` : 'All'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 -mx-1 px-1 scroll-smooth touch-pan-x pr-6">
               {[
                 { label: 'All', min: 0 },
                 { label: '1800+', min: 1800 },
@@ -2107,7 +2107,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                 {filters.total_solved.active ? `≥${filters.total_solved.val1}` : 'All'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 -mx-1 px-1 scroll-smooth touch-pan-x pr-6">
               {[
                 { label: 'All', min: 0 },
                 { label: '800+', min: 800 },
