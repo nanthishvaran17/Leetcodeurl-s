@@ -69,7 +69,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
               ease: [0.16, 1, 0.3, 1] // Apple Spring deceleration
             }
           }}
-          className="fixed inset-0 z-[100099] flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden touch-none"
+          className="fixed inset-0 z-[100099] flex flex-col items-center justify-center bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden touch-none"
         >
           {/* Subtle Ambient Light Gradients (Clean Pastel Atmosphere) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -92,7 +92,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
           
 
           {/* Centerpiece: Clean White Ceramic Jewel Emblem */}
-          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center w-full max-w-lg my-auto">
+          <div className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 text-center w-full max-w-lg">
             {/* Floating Insignia Tile */}
             <motion.div
               initial={{ scale: 0.88, opacity: 0, y: 14 }}
@@ -149,51 +149,46 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
               </p>
             </motion.div>
 
-            {/* Trending Modern Status Capsule (Swiggy / Apple style) */}
+            {/* Integrated Liquid Progress Capsule (Dynamic Island Style - No Disconnected Line) */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.25, duration: 0.35 }}
-              className="mt-8 flex flex-col items-center space-y-3"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22, duration: 0.35 }}
+              className="mt-8 flex items-center justify-center"
             >
-              {/* Progress Rail */}
-              <div className="w-48 h-1 bg-slate-200/80 rounded-full overflow-hidden relative shadow-inner">
+              <div className="relative overflow-hidden pl-3.5 pr-2.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_4px_20px_rgba(0,43,73,0.07),0_1px_3px_rgba(0,0,0,0.04)] flex items-center space-x-3 min-w-[230px]">
+                {/* Smooth Liquid Glass Gradient Fill inside the pill */}
                 <motion.div
-                  className="h-full bg-gradient-to-r from-[#006A94] via-indigo-500 to-teal-400 rounded-full"
-                  initial={{ width: '15%' }}
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-sky-400/15 via-[#006A94]/12 to-teal-400/15 border-r border-sky-400/30"
+                  initial={{ width: '25%' }}
                   animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
                 />
-              </div>
 
-              {/* Status Capsule Pill */}
-              <div className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-ping" />
-                <span className="text-[10px] font-mono font-bold text-slate-700 tracking-wider">
-                  {statusText}
+                {/* Left: Micro animated indicator */}
+                <div className="relative z-10 flex items-center space-x-2.5 flex-1 min-w-0">
+                  {progress < 100 ? (
+                    <div className="w-3.5 h-3.5 rounded-full border-[2px] border-sky-200 border-t-[#006A94] animate-spin shrink-0" />
+                  ) : (
+                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-xs">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                  <span className="text-[11px] font-semibold text-slate-700 tracking-tight truncate">
+                    {statusText}
+                  </span>
+                </div>
+
+                {/* Right: Percentage Counter Badge */}
+                <span className="relative z-10 text-[10px] font-mono font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200/60 shadow-2xs shrink-0">
+                  {Math.round(progress)}%
                 </span>
               </div>
             </motion.div>
           </div>
 
-          {/* Bottom Accreditation Badge */}
-          <div 
-            className="w-full px-4 text-center flex flex-col items-center justify-center"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 1.25rem, 1.75rem)' }}
-          >
-            <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-100/95 border border-slate-200/90 shadow-2xs max-w-[94vw]">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 tracking-wide uppercase">
-                Autonomous Institution
-              </span>
-              <span className="text-slate-400 font-bold">•</span>
-              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600 tracking-wide uppercase">
-                Affiliated to Anna University
-              </span>
-            </div>
-            <p className="mt-1.5 text-[9px] sm:text-[9.5px] font-semibold text-slate-500 tracking-wider uppercase">
-              Accredited by NAAC with &apos;A+&apos; Grade &amp; NBA
-            </p>
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import {
-  ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database,
+  ShieldCheck, Zap, Lock, Activity, Clock, RefreshCw, Mail, Database,
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye,
@@ -86,6 +86,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
     MAX_LOGIN_ATTEMPTS: '5',
     LOCKOUT_DURATION: '15',
     MAINTENANCE_MODE: 'false',
+    ENABLE_AUTO_BIWEEKLY_CONTEST: 'true',
+    ENABLE_DAILY_SOLVE_SYNC: 'true',
+    DAILY_SOLVE_SYNC_TIME: '02:00',
+    AUTO_DAILY_FACULTY_BRIEFING: 'true',
+    AUTO_DAILY_HOD_BRIEFING: 'true',
+    AUTO_DAILY_PRINCIPAL_BRIEFING: 'true',
+    AUTO_PRUNE_BACKUPS: 'true',
     LAST_UPDATED_AT: ''
   });
 
@@ -114,6 +121,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
   const [selectedIntegrityRule, setSelectedIntegrityRule] = useState<any>(null);
   const [inspectorTab, setInspectorTab] = useState<'overview' | 'sql' | 'telemetry' | 'actions'>('overview');
   const [customSnapshotTag, setCustomSnapshotTag] = useState<string>('');
+  const [schedulerStatus, setSchedulerStatus] = useState<any>(null);
+  const [loadingSchedulerStatus, setLoadingSchedulerStatus] = useState(false);
+
+  const fetchSchedulerStatus = useCallback(async () => {
+    try {
+      setLoadingSchedulerStatus(true);
+      const res = await api.get('/settings/scheduler-status');
+      if (res.data) setSchedulerStatus(res.data);
+    } catch (e) {
+      console.debug('Scheduler status fetch note:', e);
+    } finally {
+      setLoadingSchedulerStatus(false);
+    }
+  }, []);
 
   // Update activeSectionFilter when initialSection prop changes
   useEffect(() => {
@@ -149,6 +170,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
     if (initialFetchRef.current) return;
     initialFetchRef.current = true;
     fetchSettings();
+    fetchSchedulerStatus();
     fetchSystemHealth();
   }, []);
 
@@ -1082,6 +1104,80 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               </div>
             </div>
 
+            {/* LIVE SCHEDULER TELEMETRY & NEXT-RUN INTELLIGENCE CARD */}
+            <div className="p-5 rounded-3xl bg-slate-900/90 dark:bg-navy-950/90 border border-brand-500/30 text-white shadow-xl backdrop-blur-md relative overflow-hidden space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div className="flex items-center space-x-2.5">
+                  <span className="p-2 rounded-xl bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                    <Zap className="w-4 h-4 text-brand-400 animate-pulse" />
+                  </span>
+                  <div>
+                    <h3 className="font-black text-sm uppercase tracking-wider text-white flex items-center gap-2">
+                      <span>APScheduler Background Daemon Telemetry</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        {schedulerStatus?.scheduler_status || 'RUNNING (ACTIVE)'}
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Zero-touch autonomous execution engine running under {schedulerStatus?.timezone || 'Asia/Kolkata (IST)'}.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={fetchSchedulerStatus}
+                  disabled={loadingSchedulerStatus}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-mono font-bold text-xs border border-slate-700 flex items-center gap-1.5 transition-all cursor-pointer self-start sm:self-auto disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingSchedulerStatus ? 'animate-spin' : ''}`} />
+                  <span>Refresh Telemetry</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                    Next Sunday Baseline
+                  </span>
+                  <p className="text-xs font-mono font-black text-brand-400">
+                    {schedulerStatus?.next_public_run || 'Sunday 08:00:00 AM IST'}
+                  </p>
+                  <span className="text-[9.5px] text-slate-500 block">Baseline snapshot & solve sync</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                    Next Report Dispatch
+                  </span>
+                  <p className="text-xs font-mono font-black text-emerald-400">
+                    {schedulerStatus?.next_report_run || 'Sunday 09:40:00 AM IST'}
+                  </p>
+                  <span className="text-[9.5px] text-slate-500 block">Excel/PDF/Word to HOD list</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                    Next Virtual Sweep & Lock
+                  </span>
+                  <p className="text-xs font-mono font-black text-indigo-400">
+                    {schedulerStatus?.next_virtual_run || 'Sunday 22:00:00 IST'}
+                  </p>
+                  <span className="text-[9.5px] text-slate-500 block">Final recheck & next contest discovery</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                    Daily Maintenance & Prune
+                  </span>
+                  <p className="text-xs font-mono font-black text-amber-400">
+                    Daily 03:00:00 AM IST
+                  </p>
+                  <span className="text-[9.5px] text-slate-500 block">DB vacuum & snapshot retention cleanup</span>
+                </div>
+              </div>
+            </div>
+
             {/* Core Schedule Timings Grid */}
             <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
               <div className="flex items-center justify-between border-b pb-3 dark:border-navy-800">
@@ -1263,6 +1359,101 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Trigger automated database snapshot immediately following session finalization for disaster recovery.
+                  </p>
+                </div>
+
+                {/* 7: Biweekly Saturday Contest */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-amber-500" />
+                      Biweekly Saturday Contest (08:00 PM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.ENABLE_AUTO_BIWEEKLY_CONTEST === 'true'}
+                      onChange={(e) => setSettings({ ...settings, ENABLE_AUTO_BIWEEKLY_CONTEST: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Automatically discovers and syncs alternate Saturday Biweekly Contest scores without manual intervention.
+                  </p>
+                </div>
+
+                {/* 8: Daily POTD / Solve Count Sync */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <RefreshCw className="w-4 h-4 text-teal-500" />
+                      Daily POTD & Stats Sync (02:00 AM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.ENABLE_DAILY_SOLVE_SYNC === 'true'}
+                      onChange={(e) => setSettings({ ...settings, ENABLE_DAILY_SOLVE_SYNC: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Nightly sync of cumulative solves, easy/med/hard counts, and daily problem streaks across all active students.
+                  </p>
+                </div>
+
+                {/* 9: Daily Faculty Mentorship Intelligence Briefing */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-emerald-500" />
+                      Daily Faculty Briefing (10:00 AM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_DAILY_FACULTY_BRIEFING === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_DAILY_FACULTY_BRIEFING: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Daily in-app intelligence digest sent to assigned faculty mentors summarizing mentee activity and drop-offs.
+                  </p>
+                </div>
+
+                {/* 10: Daily HOD Performance Digest */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Shield className="w-4 h-4 text-blue-500" />
+                      Daily HOD Performance Digest (10:05 AM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_DAILY_HOD_BRIEFING === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_DAILY_HOD_BRIEFING: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Dispatches high-level departmental benchmark summaries to Department Heads every morning.
+                  </p>
+                </div>
+
+                {/* 11: Auto Prune Snapshot Storage */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <HardDrive className="w-4 h-4 text-rose-500" />
+                      Auto-Prune Expired Snapshots
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_PRUNE_BACKUPS === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_PRUNE_BACKUPS: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Automatically deletes database backup snapshots exceeding the retention period ({settings.BACKUP_RETENTION || '14'} days) to preserve server disk space.
                   </p>
                 </div>
               </div>
