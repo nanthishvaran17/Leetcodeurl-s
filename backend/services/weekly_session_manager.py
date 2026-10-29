@@ -882,8 +882,10 @@ def sync_single_historical_session(db: Session, session_id: int):
     ist_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
     c_start_dt = datetime.datetime.combine(dt_base, datetime.time(8, 0, 0), tzinfo=ist_tz)
     c_end_dt = datetime.datetime.combine(dt_base, datetime.time(9, 30, 0), tzinfo=ist_tz)
+    v_end_dt = datetime.datetime.combine(dt_base, datetime.time(23, 59, 59), tzinfo=ist_tz)
     c_start_ts = int(c_start_dt.timestamp())
     c_end_ts = int(c_end_dt.timestamp())
+    v_end_ts = int(v_end_dt.timestamp())
 
     GRAPHQL_URL = "https://leetcode.com/graphql"
     HEADERS = {
@@ -950,42 +952,6 @@ def sync_single_historical_session(db: Session, session_id: int):
                     }
 
                 clean_u = raw_u.strip()
-                if c_num == 523 or session_id == 14:
-                    if not hasattr(_fetch_all_evidence, "_contest_523_data"):
-                        json_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "contest_523_authentic_scanned_solvers.json")
-                        if os.path.exists(json_path):
-                            with open(json_path, "r", encoding="utf-8") as jf:
-                                setattr(_fetch_all_evidence, "_contest_523_data", json.load(jf))
-                        else:
-                            setattr(_fetch_all_evidence, "_contest_523_data", {})
-                    c523_map = getattr(_fetch_all_evidence, "_contest_523_data", {})
-                    
-                    if s.reg_no in c523_map:
-                        sol = c523_map[s.reg_no]
-                        return {
-                            "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
-                            "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
-                            "username": clean_u, "canonical_username": clean_u,
-                            "classification": "PUBLIC_ATTENDED", "participation_status": "PUBLIC",
-                            "data_fetch_status": "SUCCESS", "confidence": "VERIFIED",
-                            "reason": f"Official LeetCode Contest 523 Ranking Record (Solved {sol['total_solved']}/4)",
-                            "attended": True, "problems_solved": sol["total_solved"],
-                            "q1": sol["q1"], "q2": sol["q2"], "q3": sol["q3"], "q4": sol["q4"],
-                            "contest_score": sol["score"], "contest_rank": sol.get("rank"), "contest_rating": None,
-                            "finish_time": str(sol.get("finish_time"))
-                        }
-                    else:
-                        return {
-                            "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
-                            "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
-                            "username": clean_u, "canonical_username": clean_u,
-                            "classification": "NOT_ATTENDED", "participation_status": "NOT_ATTENDED",
-                            "data_fetch_status": "SUCCESS", "confidence": "VERIFIED",
-                            "reason": f"Verified profile with 0 activity during {target_contest_title} window",
-                            "attended": False, "problems_solved": 0, "q1": 0, "q2": 0, "q3": 0, "q4": 0,
-                            "contest_score": 0, "contest_rank": None, "contest_rating": None
-                        }
-
                 async with sem:
                     for attempt in range(3):
                         try:
@@ -1164,6 +1130,64 @@ def sync_single_historical_session(db: Session, session_id: int):
                                             "reason": f"Verified {verified_solved} AC problem submission(s) during live contest window",
                                             "attended": True, "problems_solved": verified_solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
                                             "contest_score": score, "contest_rank": None, "contest_rating": None
+                                        }
+
+                                # Strategy 3: Virtual Practice Solvers (After 09:30 AM up to 11:59 PM IST)
+                                virtual_subs = []
+                                for sub in subs:
+                                    ts = int(sub.get("submission_timestamp") or sub.get("timestamp") or 0)
+                                    if (c_end_ts + 300) < ts <= (v_end_ts + 300):
+                                        virtual_subs.append(sub)
+
+                                if virtual_subs:
+                                    v_solved_q = set()
+                                    for sub in virtual_subs:
+                                        provided_status = sub.get("status") or sub.get("statusDisplay") or sub.get("verdict")
+                                        if provided_status is not None and str(provided_status).strip() != "":
+                                            raw_status = str(provided_status).upper().strip()
+                                            is_ac = raw_status in ("ACCEPTED", "AC", "10")
+                                        else:
+                                            is_ac = True
+                                        if not is_ac:
+                                            continue
+                                        slug_or_title = str(sub.get("title_slug") or sub.get("titleSlug") or sub.get("slug") or sub.get("title") or "").strip().lower()
+                                        problem_def = prob_mapping.find_problem(slug_or_title)
+                                        if problem_def and problem_def.question_number:
+                                            v_solved_q.add(problem_def.question_number)
+
+                                    if not v_solved_q:
+                                        distinct_v_slugs = []
+                                        for sub in virtual_subs:
+                                            provided_status = sub.get("status") or sub.get("statusDisplay") or sub.get("verdict")
+                                            is_ac = True if provided_status is None else (str(provided_status).upper().strip() in ("ACCEPTED", "AC", "10"))
+                                            if not is_ac:
+                                                continue
+                                            slug = str(sub.get("title_slug") or sub.get("titleSlug") or sub.get("slug") or sub.get("title") or "").strip().lower()
+                                            if slug and prob_mapping.find_problem(slug):
+                                                if slug not in distinct_v_slugs:
+                                                    distinct_v_slugs.append(slug)
+                                        for q_idx in range(1, len(distinct_v_slugs) + 1):
+                                            if q_idx <= 4:
+                                                v_solved_q.add(q_idx)
+
+                                    if v_solved_q:
+                                        vq1 = 1 if 1 in v_solved_q else 0
+                                        vq2 = 1 if 2 in v_solved_q else 0
+                                        vq3 = 1 if 3 in v_solved_q else 0
+                                        vq4 = 1 if 4 in v_solved_q else 0
+                                        v_solved_total = len(v_solved_q)
+                                        v_score = vq1 * 3 + vq2 * 4 + vq3 * 5 + vq4 * 6
+                                        return {
+                                            "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                                            "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
+                                            "username": clean_u, "canonical_username": canonical_u,
+                                            "classification": "VIRTUAL_ATTENDED",
+                                            "participation_status": "VIRTUAL",
+                                            "data_fetch_status": "SUCCESS",
+                                            "confidence": "VERIFIED",
+                                            "reason": f"Verified {v_solved_total} Virtual AC problem submission(s) after live contest window",
+                                            "attended": True, "problems_solved": v_solved_total, "q1": vq1, "q2": vq2, "q3": vq3, "q4": vq4,
+                                            "contest_score": v_score, "contest_rank": None, "contest_rating": None
                                         }
 
                                 # Authoritative evidence of verified profile with 0 contest activity

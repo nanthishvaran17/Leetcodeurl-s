@@ -1046,17 +1046,24 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   async function fetchInitialContestData() {
     try {
+      const sortDesc = (arr: any[]) => [...arr].sort((a: any, b: any) => {
+        const numA = parseInt((a.contestName || a.sessionCode || '').match(/\d+/)?.[0] || '0', 10);
+        const numB = parseInt((b.contestName || b.sessionCode || '').match(/\d+/)?.[0] || '0', 10);
+        return numB - numA;
+      });
+
       // Check cached sessions first for instant 0ms shell population
       const cachedList = getCachedContestData<any[]>('all_contest_sessions');
       const cachedCurr = getCachedContestData<any>('current_contest_session');
       if (cachedList && cachedList.length > 0) {
-        setSessionsList(cachedList);
+        const sortedCached = sortDesc(cachedList);
+        setSessionsList(sortedCached);
         if (cachedCurr) setCurrentSession(cachedCurr);
-        const liveSessionCached = cachedList.find((s: any) => (s.status || '').toUpperCase() === 'LIVE');
-        const latestSyncedCached = cachedList.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
-        const targetId = cachedCurr?.sessionId || liveSessionCached?.sessionId || latestSyncedCached?.sessionId || null;
+        const liveSessionCached = sortedCached.find((s: any) => (s.status || '').toUpperCase() === 'LIVE');
+        const latestSyncedCached = sortedCached.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
+        const targetId = cachedCurr?.sessionId || liveSessionCached?.sessionId || latestSyncedCached?.sessionId || sortedCached[0]?.sessionId || null;
         if (targetId) {
-          setSelectedSessionId(prev => prev || targetId);
+          setSelectedSessionId(targetId);
         }
       }
 
@@ -1066,21 +1073,21 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       ]);
       
       setCurrentSession(currRes);
-      const list = allSessionsRes || [];
-      setSessionsList(list);
+      const rawList = allSessionsRes || [];
+      const sortedList = sortDesc(rawList);
+      setSessionsList(sortedList);
 
-      // Auto-select: prefer LIVE first, then most recent FINALIZED — skip SCHEDULED future sessions
-      const liveSession = list.find((s: any) => (s.status || '').toUpperCase() === 'LIVE');
-      const latestSynced = list.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
-      const targetId = currRes?.sessionId || liveSession?.sessionId || latestSynced?.sessionId || null;
+      // Auto-select: strictly prefer current active/finalized contest session first (never 510)
+      const liveSession = sortedList.find((s: any) => (s.status || '').toUpperCase() === 'LIVE');
+      const latestSynced = sortedList.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
+      const targetId = currRes?.sessionId || liveSession?.sessionId || latestSynced?.sessionId || sortedList[0]?.sessionId || null;
       if (targetId) {
-        setSelectedSessionId(prev => prev || targetId);
+        setSelectedSessionId(targetId);
       }
     } catch (err) {
       console.error("Failed to load contest session data", err);
     }
   };
-
 
   const selectedSessionIdRef = React.useRef<number | null>(null);
 

@@ -165,7 +165,7 @@ export const All17ReportsManager: React.FC = () => {
     <div className="min-h-screen bg-slate-100 p-4 font-sans text-slate-800">
       
       {/* Selector & Export Bar (Hidden on print) */}
-      <div className="no-print max-w-[1200px] mx-auto bg-white rounded-xl shadow-md p-4 mb-6 border border-slate-200">
+      <div className="no-print max-w-[1200px] mx-auto bg-white dark:bg-navy-900 rounded-xl shadow-md p-4 mb-6 border border-slate-200 dark:border-navy-700">
         
         {/* Title & Controls */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200">
@@ -228,7 +228,7 @@ export const All17ReportsManager: React.FC = () => {
               type="text" 
               value={department} 
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg p-2 bg-white text-slate-900 font-semibold"
+              className="w-full border border-slate-300 dark:border-navy-700 rounded-lg p-2 bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 font-semibold"
             />
           </div>
 
@@ -237,7 +237,7 @@ export const All17ReportsManager: React.FC = () => {
             <select 
               value={year} 
               onChange={(e) => setYear(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg p-2 bg-white text-slate-900 font-semibold"
+              className="w-full border border-slate-300 dark:border-navy-700 rounded-lg p-2 bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 font-semibold"
             >
               <option value="I">I YEAR</option>
               <option value="II">II YEAR</option>
@@ -252,14 +252,14 @@ export const All17ReportsManager: React.FC = () => {
               type="text" 
               value={sessionDate} 
               onChange={(e) => setSessionDate(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg p-2 bg-white text-slate-900 font-semibold"
+              className="w-full border border-slate-300 dark:border-navy-700 rounded-lg p-2 bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 font-semibold"
             />
           </div>
         </div>
       </div>
 
       {/* Render Active Report using the EXACT ONE MASTER DESIGN TEMPLATE */}
-      <div className="max-w-[1200px] mx-auto shadow-xl rounded-md overflow-hidden bg-white">
+      <div className="max-w-[1200px] mx-auto shadow-xl rounded-md overflow-hidden bg-white dark:bg-navy-900">
         <CoordinatorWeeklyReport 
           reportTitle={activeReport.title}
           sessionDate={sessionDate}

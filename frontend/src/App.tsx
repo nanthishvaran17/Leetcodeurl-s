@@ -444,7 +444,8 @@ export const App: React.FC = () => {
     }, 6000);
 
     const normalizeRouteAlias = (rawTab: string): string => {
-      const t = rawTab.replace('#/', '').replace('/', '').trim();
+      const [baseTab] = (rawTab || '').split('?');
+      const t = baseTab.replace('#/', '').replace('/', '').trim();
       if (t === 'data-quality') return 'quality';
       if (t === 'account' || t === 'profile-settings') return 'account-settings';
       if (t === 'department') return 'departments';
@@ -482,8 +483,19 @@ export const App: React.FC = () => {
     const handleDeepLinkNav = (e: any) => {
       const routeStr = e?.detail?.route || '';
       if (!routeStr) return;
-      const cleanRoute = normalizeRouteAlias(routeStr.replace('/api', '').replace('#/', '').replace('/', '').trim());
+      const [pathOnly, queryPart] = routeStr.split('?');
+      const cleanRoute = normalizeRouteAlias(pathOnly.replace('/api', '').replace('#/', '').replace('/', '').trim());
       if (cleanRoute && cleanRoute !== 'main-content') {
+        if (queryPart) {
+          try {
+            const params = new URLSearchParams(queryPart);
+            const convId = params.get('conversationId') || params.get('conversation_id');
+            if (convId) {
+              sessionStorage.setItem('target_conversation_id', convId);
+              window.dispatchEvent(new CustomEvent('open_conversation', { detail: { conversationId: convId } }));
+            }
+          } catch (_e) {}
+        }
         setActiveTab(cleanRoute);
       }
     };
@@ -634,42 +646,82 @@ export const App: React.FC = () => {
     isAuthenticated
   ]);
 
-  // Native Mobile Edge Swipe to Open Sidebar (Left-to-Right swipe)
+  // Native Mobile Edge Swipe to Open Sidebar (Left-to-Right swipe) & Swipe Left to Close
   useEffect(() => {
     if (typeof window === 'undefined' || !isAuthenticated) return;
 
     let startX = 0;
     let startY = 0;
     let isTracking = false;
+    let isVerticalScroll = false;
 
     const onTouchStart = (e: TouchEvent) => {
-      if (isSidebarOpen || e.touches.length !== 1) return;
-      const x = e.touches[0].clientX;
-      if (x <= 35) {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const x = touch.clientX;
+      const y = touch.clientY;
+
+      if (!isSidebarOpen) {
+        // Natural thumb swipe from left edge (x <= 60px)
+        if (x <= 60) {
+          startX = x;
+          startY = y;
+          isTracking = true;
+          isVerticalScroll = false;
+        }
+      } else {
+        // Sidebar is open: allow swiping left from anywhere to close
         startX = x;
-        startY = e.touches[0].clientY;
+        startY = y;
         isTracking = true;
+        isVerticalScroll = false;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isTracking || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const currentDeltaX = Math.abs(touch.clientX - startX);
+      const currentDeltaY = Math.abs(touch.clientY - startY);
+
+      // Cancel tracking if user is scrolling vertically
+      if (currentDeltaY > 35 && currentDeltaY > currentDeltaX * 1.5) {
+        isVerticalScroll = true;
+        isTracking = false;
       }
     };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (!isTracking) return;
+      if (!isTracking || isVerticalScroll) {
+        isTracking = false;
+        return;
+      }
       isTracking = false;
       if (!e.changedTouches || e.changedTouches.length === 0) return;
       const touch = e.changedTouches[0];
       const deltaX = touch.clientX - startX;
       const deltaY = Math.abs(touch.clientY - startY);
 
-      if (deltaX > 45 && deltaX > deltaY * 1.5) {
-        setIsSidebarOpen(true);
+      if (!isSidebarOpen) {
+        // Swipe right from left edge to open (deltaX >= 35px, horizontal)
+        if (deltaX >= 35 && deltaX > deltaY) {
+          setIsSidebarOpen(true);
+        }
+      } else {
+        // Swipe left to close (deltaX <= -40px)
+        if (deltaX <= -40 && Math.abs(deltaX) > deltaY) {
+          setIsSidebarOpen(false);
+        }
       }
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
       window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
     };
   }, [isAuthenticated, isSidebarOpen]);
@@ -1381,9 +1433,9 @@ export const App: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[92dvh] sm:h-[88vh] max-h-[92dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-white dark:bg-navy-950 border-t sm:border border-slate-200/90 dark:border-white/10"
+            className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[92dvh] sm:h-[88vh] max-h-[92dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-[#0a0f1d] dark:bg-navy-950 border-t sm:border border-slate-800/80 dark:border-white/10"
           >
-            <SwipeHandle onClose={() => setSelectedStudent(null)} className="pt-2 pb-0 block sm:hidden shrink-0" />
+            <SwipeHandle onClose={() => setSelectedStudent(null)} className="pt-2.5 pb-1 block sm:hidden shrink-0 bg-[#0a0f1d]" pillClassName="bg-white/30 hover:bg-white/50" />
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <PullToRefresh
                 onRefresh={async () => {

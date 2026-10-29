@@ -81,17 +81,44 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     };
   }, []);
 
-  // 2. Custom event listeners to allow overlays / modals / bulk actions to hide bottom nav
+  // 2. Custom event listeners and DOM observer to hide bottom nav during modals / dialogs
   useEffect(() => {
+    const checkModals = () => {
+      if (typeof document === 'undefined') return;
+      const hasModal = 
+        document.body.classList.contains('hide-mobile-bottom-nav') ||
+        !!document.querySelector('[role="dialog"]') ||
+        !!document.querySelector('[data-modal-active="true"]') ||
+        !!document.querySelector('.modal-backdrop');
+      setForceHidden(hasModal);
+    };
+
+    checkModals();
+
     const handleHide = () => setForceHidden(true);
-    const handleShow = () => setForceHidden(false);
+    const handleShow = () => {
+      setTimeout(checkModals, 50);
+    };
 
     window.addEventListener('hide_mobile_bottom_nav', handleHide);
     window.addEventListener('show_mobile_bottom_nav', handleShow);
 
+    // Watch for DOM changes (modals mounting/unmounting)
+    const observer = new MutationObserver(() => {
+      checkModals();
+    });
+
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true, 
+      attributes: true, 
+      attributeFilter: ['class', 'data-modal-active', 'role'] 
+    });
+
     return () => {
       window.removeEventListener('hide_mobile_bottom_nav', handleHide);
       window.removeEventListener('show_mobile_bottom_nav', handleShow);
+      observer.disconnect();
     };
   }, []);
 

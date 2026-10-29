@@ -280,10 +280,19 @@ class MessagingService:
                 filename = f_rec.filename
                 file_size = f_rec.file_size
 
+        # Sender display details
+        sender_disp = MessagingService._get_user_display(db, m.sender_id)
+        sender_name = sender_disp.get("name") or "Staff"
+        sender_role = sender_disp.get("role") or ""
+        sender_dept = sender_disp.get("department") or ""
+
         return {
             "messageId": m.message_id,
             "conversationId": m.conversation_id,
             "senderId": m.sender_id,
+            "senderName": sender_name,
+            "senderRole": sender_role,
+            "senderDepartment": sender_dept,
             "receiverId": m.receiver_id,
             "content": content_text,
             "status": m.status, # SENT, DELIVERED, READ
@@ -535,11 +544,12 @@ class MessagingService:
             return msg
         
         # 5. Emit Notification asynchronously in background thread (Deep linked to exact conversation)
+        sender_disp = MessagingService._get_user_display(db, sender_id)
         sender_name = (
+            sender_disp.get("name") or 
             getattr(current_user, "full_name", None) or 
             getattr(current_user, "name", None) or 
             getattr(current_user, "username", None) or 
-            getattr(current_user, "email", None) or 
             ("Admin" if (getattr(current_user, "role", "") or "").lower() in ("admin", "super admin") else "User")
         )
         receiver_info = MessagingService._get_user_display(db, receiver_id)

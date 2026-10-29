@@ -575,9 +575,10 @@
 }
 
 .dark .tabs button.active {
-  background: #FFFFFF !important;
-  color: #091E36 !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+  background: #0F172A !important;
+  color: #38BDF8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 0 12px rgba(56, 189, 248, 0.15) !important;
 }
 
 /* ========================================================

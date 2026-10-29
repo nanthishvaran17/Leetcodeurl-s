@@ -746,6 +746,24 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
 
   // Master Tabs: 'menu' (Default Native Hub matching mockup) + 5 Primary Categories + Specialized Modules
   const [activeTab, setActiveTab] = useState<'menu' | 'profile' | 'security' | 'privacy' | 'notifications' | 'preferences' | 'id_card' | 'mentorship' | 'help'>('menu');
+
+  // Auto-hide MobileBottomNav on mobile when entering settings details (subpages), restore on menu or unmount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isMobileView = window.innerWidth < 1024;
+    if (isMobileView && activeTab !== 'menu') {
+      document.body.classList.add('hide-mobile-bottom-nav');
+      window.dispatchEvent(new CustomEvent('hide_mobile_bottom_nav'));
+    } else {
+      document.body.classList.remove('hide-mobile-bottom-nav');
+      window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+    }
+
+    return () => {
+      document.body.classList.remove('hide-mobile-bottom-nav');
+      window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+    };
+  }, [activeTab]);
   const effectiveTab = activeTab === 'menu' ? 'profile' : activeTab;
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
@@ -936,6 +954,10 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(() => localStorage.getItem('nec_2fa_enabled') === 'true' || Boolean((user as any)?.is_2fa_enabled));
   const [show2FASetupModal, setShow2FASetupModal] = useState<boolean>(false);
+  const [showDisable2FAModal, setShowDisable2FAModal] = useState<boolean>(false);
+  const [disable2FACode, setDisable2FACode] = useState<string>('');
+  const [isDisabling2FA, setIsDisabling2FA] = useState<boolean>(false);
+  const [disable2FAError, setDisable2FAError] = useState<string | null>(null);
 
   // Native Mobile Biometrics State (Capacitor Android / iOS)
   const [isNativeMobile, setIsNativeMobile] = useState<boolean>(false);
@@ -4046,39 +4068,42 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             {/* RIGHT MAIN WORKSPACE AREA */}
             <div className="space-y-4 flex-1 min-w-0 w-full animate-fade-in pb-48 lg:pb-24">
 
-            {/* Mobile Header Bar matching mockup: Left arrow, Title, Subtitle (HIDDEN ON DESKTOP) */}
-            <div className="lg:hidden flex items-center gap-3 pt-1 pb-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('menu')}
-                className="p-2 -ml-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-95"
-                aria-label="Back to Settings"
-                title="Back to Settings"
-              >
-                <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-              </button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight capitalize">
-                  {effectiveTab === 'profile' ? 'Account & Profile' :
-                   effectiveTab === 'security' ? 'Security & Login' :
-                   effectiveTab === 'privacy' ? 'Privacy & Permissions' :
-                   effectiveTab === 'notifications' ? 'Notifications' :
-                   effectiveTab === 'preferences' ? 'App Preferences' :
-                   effectiveTab === 'id_card' ? 'Official Digital ID Card' :
-                   effectiveTab === 'mentorship' ? 'Staff Mentorship Hub' :
-                   'Help & Support Hub'}
-                </h1>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
-                  {effectiveTab === 'profile' ? 'Personal details, contact info, photo' :
-                   effectiveTab === 'security' ? 'Password, two-step verification, devices' :
-                   effectiveTab === 'privacy' ? 'Visibility, data access, blocked users' :
-                   effectiveTab === 'notifications' ? 'Push, email and WhatsApp alerts' :
-                   effectiveTab === 'preferences' ? 'Language, theme, accessibility' :
-                   effectiveTab === 'id_card' ? 'Official institutional CR80 PVC identity badge' :
-                   effectiveTab === 'mentorship' ? 'Assigned student progress telemetry and mentoring' :
-                   'Frequently asked questions, campus IT support, and contact desk'}
-                </p>
+            {/* Mobile Header Bar: Sticky top bar with Back, Title, Reset & Save (HIDDEN ON DESKTOP) */}
+            <div className="lg:hidden sticky top-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl flex items-center justify-between gap-2 pt-2.5 pb-2.5 px-3.5 -mx-4 -mt-2 mb-3 border-b border-slate-200/80 dark:border-navy-800 shadow-xs">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('menu')}
+                  className="p-1.5 -ml-1 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer active:scale-90 shrink-0"
+                  aria-label="Back to Settings"
+                  title="Back to Settings"
+                >
+                  <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate capitalize leading-tight">
+                    {effectiveTab === 'profile' ? 'Account & Profile' :
+                     effectiveTab === 'security' ? 'Security & Login' :
+                     effectiveTab === 'privacy' ? 'Privacy & Permissions' :
+                     effectiveTab === 'notifications' ? 'Notifications' :
+                     effectiveTab === 'preferences' ? 'App Preferences' :
+                     effectiveTab === 'id_card' ? 'Official Digital ID' :
+                     effectiveTab === 'mentorship' ? 'Staff Mentorship' :
+                     'Help & Support'}
+                  </h1>
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate leading-tight">
+                    {effectiveTab === 'profile' ? 'Details, contact & photo' :
+                     effectiveTab === 'security' ? 'Password, 2FA & devices' :
+                     effectiveTab === 'privacy' ? 'Visibility & permissions' :
+                     effectiveTab === 'notifications' ? 'Alerts & WhatsApp' :
+                     effectiveTab === 'preferences' ? 'Theme & appearance' :
+                     effectiveTab === 'id_card' ? 'Official PVC badge' :
+                     effectiveTab === 'mentorship' ? 'Mentoring & students' :
+                     'Campus IT & FAQs'}
+                  </p>
+                </div>
               </div>
+
             </div>
 
             {/* Desktop Section Header Banner (HIDDEN ON MOBILE) */}
@@ -4118,28 +4143,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* Header Right Actions for Profile */}
-              {effectiveTab === 'profile' && (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleResetForm}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all cursor-pointer shadow-2xs"
-                  >
-                    <RefreshCcw className="w-3.5 h-3.5" />
-                    <span>Reset</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isSaving}
-                    onClick={handleSaveProfile}
-                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-md shadow-brand-500/20 cursor-pointer active:scale-95 disabled:opacity-50"
-                  >
-                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                    <span>Save Changes</span>
-                  </button>
-                </div>
-              )}
+
             </div>
 
             {/* Success / Error Alerts */}
@@ -4210,15 +4214,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </div>
 
             <div className="space-y-4 sm:space-y-5">
-              {/* 0. Mobile-Native Hero Identity Card (Apple ID / Revolut / Linear Style) */}
-              <div className="relative overflow-hidden rounded-3xl p-4 sm:p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white border border-slate-800/80 shadow-xl shadow-brand-950/20">
-                {/* Ambient Background Glows */}
-                <div className="absolute -right-10 -top-10 w-44 h-44 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5 sm:gap-4.5">
-                    {/* Avatar with Glowing Gradient Border & Quick Tap */}
+              {/* 0. Mobile-Native Hero Identity Card */}
+              <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs text-slate-900 dark:text-white transition-all space-y-3.5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    {/* Avatar with Quick Tap */}
                     <div
                       className="relative group cursor-pointer shrink-0"
                       onClick={() => {
@@ -4227,37 +4227,37 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       }}
                       title="Click to change photo"
                     >
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-0.5 bg-gradient-to-tr from-brand-400 via-indigo-400 to-purple-400 shadow-lg shadow-brand-500/30 overflow-hidden">
-                        <div className="w-full h-full rounded-[14px] bg-slate-900 overflow-hidden flex items-center justify-center">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-brand-500 via-indigo-500 to-purple-500 shadow-sm overflow-hidden">
+                        <div className="w-full h-full rounded-[14px] bg-slate-100 dark:bg-navy-950 overflow-hidden flex items-center justify-center">
                           {profilePhoto ? (
                             <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                           ) : (
-                            <User className="w-8 h-8 sm:w-9 sm:h-9 text-slate-300" />
+                            <User className="w-7 h-7 sm:w-8 sm:h-8 text-slate-500 dark:text-slate-400" />
                           )}
                         </div>
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-brand-600 text-white border-2 border-slate-900 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                        <Camera className="w-3 h-3" />
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-brand-600 text-white border-2 border-white dark:border-navy-900 flex items-center justify-center shadow-xs">
+                        <Camera className="w-2.5 h-2.5" />
                       </div>
                     </div>
 
-                    <div className="min-w-0 space-y-1">
+                    <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
+                        <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
                           {fullName || user?.username || 'Staff Member'}
                         </h2>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           <span>Active Record</span>
                         </span>
                       </div>
 
-                      <div className="text-xs font-bold text-slate-300 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-brand-300 font-semibold">{designation || 'Director & Chief Administrator'}</span>
+                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-brand-600 dark:text-brand-400 font-bold">{designation || 'Director & Chief Administrator'}</span>
                         {institutionalId && (
                           <>
-                            <span className="text-slate-600">•</span>
-                            <span className="font-mono text-slate-400 text-[11px]">{institutionalId}</span>
+                            <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                            <span className="font-mono text-slate-500 dark:text-slate-400 text-[11px] font-bold">{institutionalId}</span>
                           </>
                         )}
                       </div>
@@ -4265,20 +4265,20 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       {/* Quick Metric Pills */}
                       <div className="flex items-center gap-2 pt-1 flex-wrap text-[11px]">
                         {bloodGroup && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">
-                            <Activity className="w-3 h-3 text-rose-400" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40 font-bold">
+                            <Activity className="w-3 h-3 text-rose-500" />
                             <span>{bloodGroup}</span>
                           </span>
                         )}
                         {officeLocation && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
-                            <MapPin className="w-3 h-3 text-cyan-400" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold">
+                            <MapPin className="w-3 h-3 text-slate-500" />
                             <span>{officeLocation}</span>
                           </span>
                         )}
                         {phoneNumber && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 text-slate-300 border border-white/10 font-bold font-mono">
-                            <Phone className="w-3 h-3 text-emerald-400" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold font-mono">
+                            <Phone className="w-3 h-3 text-emerald-500" />
                             <span>{phoneNumber}</span>
                           </span>
                         )}
@@ -4293,16 +4293,16 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       onClick={() => {
                         setExpandedCards(prev => ({ ...prev, photo: !prev.photo }));
                       }}
-                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-black text-white border border-white/15 transition-all shadow-xs cursor-pointer"
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 transition-all shadow-xs cursor-pointer"
                     >
-                      <Palette className="w-3.5 h-3.5 text-brand-300" />
+                      <Palette className="w-3.5 h-3.5 text-brand-500" />
                       <span>Customize Avatar</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-                {/* 1. Photo & Avatar Customizer */}
+              {/* 1. Photo & Avatar Customizer */}
                 {(profileSubSection === 'all' || profileSubSection === 'contact') && (
                   <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
                     <div
@@ -5216,67 +5216,50 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {effectiveTab === 'security' && (
           <div className="space-y-4 sm:space-y-6 animate-fade-in">
 
-              {/* 0. Mobile-Native Hero Security Vault Card (Apple ID Security / 1Password / CRED Grade) */}
-              <div className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white border border-slate-800/80 shadow-xl shadow-brand-950/20">
-                {/* Ambient Cybernetic Glows */}
-                <div className="absolute -right-10 -top-10 w-52 h-52 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -left-10 -bottom-10 w-52 h-52 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
-                    <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-violet-500 via-indigo-500 to-emerald-400 shadow-lg shadow-violet-500/25 shrink-0 flex items-center justify-center">
-                      <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center text-violet-300">
-                        <ShieldCheck className="w-7 h-7 sm:w-8 sm:h-8" />
-                      </div>
-                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-slate-950" />
-                      </span>
+              {/* 0. Mobile-Native Security Overview Card */}
+              <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs mb-4 sm:mb-6 transition-all space-y-3.5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0 shadow-2xs">
+                      <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
                     </div>
-
-                    <div className="min-w-0 space-y-1">
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-base sm:text-xl font-black text-white tracking-tight truncate">
-                          Institutional Security Vault
+                        <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                          Account Security &amp; Login
                         </h2>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>Vault Active</span>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          is2FAEnabled
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25'
+                            : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${is2FAEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                          <span>{is2FAEnabled ? '2FA Protected' : 'Action Recommended'}</span>
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 font-medium flex items-center gap-2 flex-wrap">
-                        <span>Zero-Knowledge Encryption</span>
-                        <span className="text-slate-600">•</span>
-                        <span className="text-slate-400">Hardware Session Quorum</span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                        Manage your password, two-factor authentication, and signed-in devices
                       </p>
                     </div>
                   </div>
 
                   {/* Security Quick Metric Capsules */}
-                  <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
-                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 flex items-center gap-2 text-xs">
-                      <Lock className="w-3.5 h-3.5 text-violet-400" />
-                      <div>
-                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Encryption</span>
-                        <span className="font-mono font-bold text-white text-[11px]">Bcrypt (Cost 12)</span>
-                      </div>
-                    </div>
-
-                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 flex items-center gap-2 text-xs">
-                      <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-navy-800">
+                    <div className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/70 dark:border-navy-800 flex items-center gap-2 text-xs">
+                      <KeyRound className="w-3.5 h-3.5 text-indigo-500" />
                       <div>
                         <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">2FA Status</span>
-                        <span className={`font-mono font-bold text-[11px] ${is2FAEnabled ? 'text-emerald-300' : 'text-amber-300'}`}>
-                          {is2FAEnabled ? 'TOTP Active' : 'Disabled'}
+                        <span className={`font-mono font-bold text-[11px] ${is2FAEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                          {is2FAEnabled ? 'Active' : 'Disabled'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="px-3 py-1.5 rounded-xl bg-white/[0.06] border border-white/10 flex items-center gap-2 text-xs">
-                      <Laptop className="w-3.5 h-3.5 text-emerald-400" />
+                    <div className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/70 dark:border-navy-800 flex items-center gap-2 text-xs">
+                      <Laptop className="w-3.5 h-3.5 text-emerald-500" />
                       <div>
-                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Sessions</span>
-                        <span className="font-mono font-bold text-white text-[11px]">{sessions.length || 1} Device{sessions.length > 1 ? 's' : ''}</span>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Active Sessions</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white text-[11px]">{sessions.length || 1} Device{sessions.length > 1 ? 's' : ''}</span>
                       </div>
                     </div>
                   </div>
@@ -5571,13 +5554,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           </button>
                           <button
                             type="button"
-                            onClick={async () => {
-                              setIs2FAEnabled(false);
-                              localStorage.setItem('nec_2fa_enabled', 'false');
-                              try {
-                                await api.put('/auth/profile', { is_2fa_enabled: false });
-                              } catch { }
-                              notify.success('2FA disabled.', '', { category: 'ADMIN' });
+                            onClick={() => {
+                              setDisable2FACode('');
+                              setDisable2FAError(null);
+                              setShowDisable2FAModal(true);
                             }}
                             className="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 text-xs font-black transition-all border border-rose-300 dark:border-rose-500/30 cursor-pointer inline-flex items-center gap-1.5"
                           >
@@ -7705,8 +7685,29 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         {/* 4. STATIC / FIXED STICKY ACTION BAR (Rendered on mobile, plus desktop in-form save strip) */}
         {effectiveTab === 'profile' && (
           <>
-            {/* In-form save banner at bottom of form (responsive for both desktop & mobile) */}
-            <div className="sticky bottom-3 z-30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-3.5 sm:p-4 bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/50 gap-3">
+            {/* 1. Mobile Fixed Bottom Action Bar (Replaces MobileBottomNav when editing profile) */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl border-t border-slate-200/90 dark:border-navy-800 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 animate-fade-in">
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="flex-1 py-3 px-3 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-xs font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation flex items-center justify-center gap-1.5"
+              >
+                <RefreshCcw className="w-3.5 h-3.5" />
+                <span>Reset Form</span>
+              </button>
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={handleSaveProfile}
+                className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 touch-manipulation"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>Save Details</span>
+              </button>
+            </div>
+
+            {/* 2. Desktop-only in-form bottom save banner */}
+            <div className="hidden lg:flex sticky bottom-3 z-30 flex-col sm:flex-row items-stretch sm:items-center justify-between p-3.5 sm:p-4 bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/50 gap-3">
               <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span className="relative flex h-2.5 w-2.5 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -7718,20 +7719,22 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <button
                   type="button"
                   onClick={handleResetForm}
-                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-xs font-black text-slate-800 dark:text-slate-200 transition-all cursor-pointer shadow-2xs active:scale-95"
                 >
                   Reset Form
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   <span>Save Details</span>
                 </button>
               </div>
             </div>
+            {/* Mobile bottom clearance so fixed bottom buttons never overlap content */}
+            <div className="h-36 lg:h-8 pointer-events-none" aria-hidden="true" />
           </>
         )}
 
@@ -7967,6 +7970,97 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md cursor-pointer"
               >
                 Verify & Activate
+              </button>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
+
+      {/* MODAL: DISABLE 2FA CONFIRMATION & OTP VERIFICATION */}
+      {showDisable2FAModal && (
+        <GlobalModalBackdrop isOpen={showDisable2FAModal} onClose={() => !isDisabling2FA && setShowDisable2FAModal(false)} className="flex items-center justify-center p-4">
+          <div className="relative max-w-md w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-rose-500/50 shadow-2xl space-y-5 animate-scale-up text-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800">
+              <h3 className="text-xs font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-rose-600" /> Disable Two-Factor Authentication
+              </h3>
+              <button 
+                type="button"
+                onClick={() => !isDisabling2FA && setShowDisable2FAModal(false)} 
+                className="p-1 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-lg cursor-pointer text-slate-500 hover:text-slate-800 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs font-bold">
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 text-xs font-medium leading-relaxed">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Security Warning:</strong> Disabling 2FA removes the extra layer of security on your institutional account. You will only require your password to sign in.
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-slate-700 dark:text-slate-300 block">
+                  Enter current 6-digit Authenticator code to confirm:
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  autoFocus
+                  value={disable2FACode}
+                  onChange={(e) => {
+                    setDisable2FACode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                    setDisable2FAError(null);
+                  }}
+                  placeholder="000000"
+                  className="w-full text-center tracking-[0.4em] text-2xl font-mono font-black p-3.5 bg-slate-50 dark:bg-navy-950 border-2 border-slate-300 dark:border-navy-700 rounded-2xl focus:border-rose-500 focus:outline-none transition-colors"
+                />
+              </div>
+
+              {disable2FAError && (
+                <div className="p-2.5 rounded-xl bg-rose-100/70 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-center text-xs font-bold">
+                  {disable2FAError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isDisabling2FA}
+                onClick={() => setShowDisable2FAModal(false)}
+                className="px-4 py-2.5 rounded-xl border-2 border-slate-300 dark:border-navy-700 text-xs font-black cursor-pointer hover:bg-slate-100 dark:hover:bg-navy-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={disable2FACode.length !== 6 || isDisabling2FA}
+                onClick={async () => {
+                  setIsDisabling2FA(true);
+                  setDisable2FAError(null);
+                  try {
+                    const res = await api.post('/auth/2fa/disable', { code: disable2FACode.trim() });
+                    if (res.data?.success) {
+                      setIs2FAEnabled(false);
+                      localStorage.setItem('nec_2fa_enabled', 'false');
+                      setShowDisable2FAModal(false);
+                      notify.success('2FA Disabled', 'Two-Factor Authentication has been safely deactivated.', { category: 'ADMIN' });
+                    }
+                  } catch (err: any) {
+                    setDisable2FAError(err.response?.data?.detail || 'Invalid verification code. Please check Google Authenticator.');
+                  } finally {
+                    setIsDisabling2FA(false);
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-black transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+              >
+                {isDisabling2FA && <RefreshCcw className="w-3.5 h-3.5 animate-spin" />}
+                <span>Confirm & Disable</span>
               </button>
             </div>
           </div>

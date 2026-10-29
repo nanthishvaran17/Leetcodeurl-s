@@ -6,7 +6,7 @@ interface StudentProfileSkeletonProps {
 
 export const StudentProfileSkeleton: React.FC<StudentProfileSkeletonProps> = ({ studentName }) => {
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl animate-pulse">
+    <div className="h-full flex flex-col overflow-hidden bg-[#0a0f1d] dark:bg-navy-950 rounded-3xl animate-pulse">
       {/* Header Bar */}
       <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between gap-4 border-b border-slate-800 shrink-0">
         <div className="flex items-center space-x-4">

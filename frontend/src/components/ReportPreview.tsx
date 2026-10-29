@@ -1208,8 +1208,17 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         `Attended: ${attended} | Absent: ${absent}\n` +
         `Total Solves: ${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}\n` +
         `Consistent Solvers: ${report?.metrics?.fiveContestConsistentSolvers ?? '—'}`;
-      if (report?.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0) {
-        text += `\nContests: ${report.sessionHeaders.join(' → ')}`;
+      const formatContestHeader = (h: any) => {
+        if (!h) return '';
+        if (typeof h === 'string') return h;
+        return h.title || h.name || h.label || h.code || h.contest_name || Object.values(h)[0] || '';
+      };
+      const formattedHeaders = report?.sessionHeaders && Array.isArray(report.sessionHeaders)
+        ? report.sessionHeaders.map(formatContestHeader).filter(Boolean)
+        : [];
+      if (formattedHeaders.length > 0) {
+        text += `
+Contests: ${formattedHeaders.join(' → ')}`;
       }
     }
     // 4. 12TH TNEA CUTOFF INTELLIGENCE
@@ -1751,7 +1760,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Cards View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-1.5">
                     {report.questionWiseResult.map((q: any, i: number) => (
-                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs flex items-center justify-between">
+                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs flex items-center justify-between">
                         <div>
                           <span className="text-xs font-bold text-slate-900">{q.question}</span>
                           <div className="text-[10px] text-slate-500 font-bold mt-0.5 space-x-1.5">
@@ -1803,7 +1812,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Cards View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-1.5">
                     {report.solveDistributionList.map((sd: any, i: number) => (
-                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs flex items-center justify-between">
+                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs flex items-center justify-between">
                         <div>
                           <span className="text-xs font-bold text-slate-900">{sd.category}</span>
                           <div className="text-[10px] text-slate-500 font-bold mt-0.5">
@@ -1854,7 +1863,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       const rankVal = formatRank(lb.global_rank || lb.rank_val || lb.rank);
                       const ratingVal = formatRating(lb.rating || lb.contest_rating);
                       return (
-                        <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                        <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                           <div className="flex items-center justify-between gap-1.5">
                             <div className="flex items-center space-x-1.5 min-w-0">
                               <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
@@ -1940,7 +1949,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Cards View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2">
                     {displayDepartmentResults.map((dr: any, i: number) => (
-                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                           <h4 className="text-xs font-bold text-slate-900">{dr.department}</h4>
                           <span className="text-[10.5px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
@@ -2110,7 +2119,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Card View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2 max-h-[500px] overflow-y-auto pr-0.5">
                     {(report.rows || []).map((r: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5">
                           <div className="flex items-center space-x-1.5 min-w-0">
                             <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
@@ -2292,7 +2301,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     const ratingVal = formatRating(s.rating || s.contest_rating || s.stats?.contest_rating);
 
                     return (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5 hover:border-slate-300 transition-colors">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5 hover:border-slate-300 transition-colors">
                         {/* Top: Rank #, Name, Dept, Status Badge */}
                         <div className="flex items-center justify-between gap-1.5">
                           <div className="flex items-center space-x-1.5 min-w-0">
@@ -2721,7 +2730,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       {/* Mobile Card View (< sm) */}
                       <div className="block sm:hidden print:hidden space-y-2">
                         {report.department_summaries.filter((d: any) => (d.total_students || 0) > 0).map((d: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                             <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                               <div className="flex items-center space-x-1.5 min-w-0">
                                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">#{idx + 1}</span>
@@ -3241,7 +3250,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               return r;
                             };
                             return (
-                              <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5 transition-all active:scale-[0.98] touch-manipulation">
+                              <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5 transition-all active:scale-[0.98] touch-manipulation">
                                 <div className="flex items-center justify-between gap-1.5">
                                   <div className="flex items-center space-x-1.5 min-w-0">
                                     <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
@@ -3596,7 +3605,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Card View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2">
                     {report.departmentSummary.map((d: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                           <div className="flex items-center space-x-1.5 min-w-0">
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
@@ -3660,7 +3669,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Card View */}
                   <div className="block sm:hidden print:hidden space-y-2">
                     {report.yearSummary.map((y: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                           <h4 className="text-xs font-bold text-indigo-700">{y.year}</h4>
                           <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{y.attendance_pct}% Active</span>
@@ -3722,7 +3731,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
                       : report.cutoffBandSummary
                     ).map((b: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                           <h4 className="text-xs font-bold text-rose-700">{b.band}</h4>
                           <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{b.attendance_pct}% Active</span>
@@ -3787,7 +3796,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Card View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2">
                     {report.facultySummary.map((f: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
                           <div className="flex items-center space-x-1.5 min-w-0">
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
@@ -3851,7 +3860,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                   {/* Mobile Card View (< sm) */}
                   <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
                     {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between gap-1.5">
                           <div className="flex items-center space-x-1.5 min-w-0">
                             <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
@@ -3954,7 +3963,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         ? Math.round(Number(r)).toLocaleString()
                         : "—";
                       return (
-                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                           <div className="flex items-center justify-between gap-1.5">
                             <div className="flex items-center space-x-1.5 min-w-0">
                               <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
@@ -4097,7 +4106,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       {/* Mobile Card View (< sm) */}
                       <div className="block sm:hidden print:hidden space-y-2 max-h-[500px] overflow-y-auto pr-1">
                         {displayedStudents.map((s: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 bg-white shadow-2xs space-y-1.5">
+                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
                             <div className="flex items-center justify-between gap-1.5">
                               <div className="flex items-center space-x-1.5 min-w-0">
                                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0">

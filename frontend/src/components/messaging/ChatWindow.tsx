@@ -950,7 +950,10 @@ export const ChatWindow: React.FC<Props> = ({
                           <span>{formatTime(msg.createdAt)}</span>
                           {msg.isEdited && <span className="italic text-[9px]">• edited</span>}
                           {isMe && !msg.isDeletedEveryone && (
-                            <span className="inline-flex items-center ml-0.5 shrink-0">
+                            <span 
+                              className="inline-flex items-center ml-0.5 shrink-0 cursor-default"
+                              title={msg.status === 'READ' ? `Seen ${msg.readAt ? formatTime(msg.readAt) : ''}`.trim() : msg.status === 'DELIVERED' ? 'Delivered' : msg.status === 'SENT' ? 'Sent' : 'Sending...'}
+                            >
                               {msg.status === 'SENDING' ? (
                                 <Loader2 className="w-2.5 h-2.5 animate-spin text-white/70" />
                               ) : msg.status === 'SENT' ? (

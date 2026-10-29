@@ -96,7 +96,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     // 2. Dynamic Browser Tab Title with Live Unread Counter
     if (typeof document !== 'undefined') {
-      const baseTitle = 'NEC LeetCode Tracker';
+      const baseTitle = 'Nandha LeetCode Tracker';
       if (unreadCount > 0) {
         document.title = `(${unreadCount}) ${baseTitle}`;
       } else {
@@ -266,18 +266,22 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       if (seenNotificationIdsRef.current.has(msgId)) return;
       seenNotificationIdsRef.current.add(msgId);
 
-      const senderName = msg.senderName || msg.sender_name || 'Staff';
+      const senderRealName = msg.senderName || msg.sender_name || 'Faculty / Staff';
+      const senderRole = msg.senderRole ? ` · ${msg.senderRole}` : '';
       const msgContent = msg.content || 'Sent a new attachment/message';
       const convId = msg.conversationId || msg.conversation_id || '';
       const actionRoute = convId ? `/messages?conversationId=${convId}` : '/messages';
-      const title = `Message from ${senderName}`;
+      const title = `Message from ${senderRealName}${senderRole}`;
 
-      // In-App Toast
+      // In-App Toast with WhatsApp-style Sender Card & Quick Reply
       notify.info(title, msgContent, {
         category: 'MESSAGES',
-        duration: 6000,
+        duration: 7000,
         actionLabel: 'Reply',
         onAction: () => {
+          if (convId) {
+            sessionStorage.setItem('target_conversation_id', convId);
+          }
           window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: actionRoute } }));
         }
       });

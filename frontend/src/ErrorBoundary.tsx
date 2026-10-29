@@ -17,11 +17,11 @@ export class ErrorBoundary extends React.Component<any, any> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '40px', background: '#ffffff', color: '#0f172a', minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#0f172a' }}>Something went wrong.</h1>
-          <p style={{ color: '#475569', marginBottom: '16px' }}>We encountered an unexpected error. Please try reloading the page.</p>
+        <div className="p-8 sm:p-12 bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 min-h-[80vh] flex flex-col items-center justify-center text-center transition-colors">
+          <h1 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">Something went wrong.</h1>
+          <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">We encountered an unexpected error. Please try reloading the page.</p>
           {this.state.error && (
-            <div style={{ padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: '8px', fontSize: '12px', maxWidth: '700px', overflowX: 'auto', marginBottom: '24px', textAlign: 'left', fontFamily: 'monospace' }}>
+            <div className="p-3.5 sm:p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 rounded-xl text-xs max-w-2xl overflow-x-auto mb-6 text-left font-mono w-full shadow-xs">
               <strong>Error Details:</strong> {String(this.state.error?.message || this.state.error)}
             </div>
           )}
@@ -30,7 +30,7 @@ export class ErrorBoundary extends React.Component<any, any> {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }}
-            style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-md transition-all active:scale-95 cursor-pointer"
           >
             Reload Page
           </button>

@@ -93,12 +93,17 @@
       "target": [
         "nsis"
       ],
-      "icon": "public/desktop-icon.ico"
+      "icon": "public/desktop-icon.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Nandha Intelligence LeetCode Tracker"
+      "shortcutName": "Nandha Intelligence LeetCode Tracker",
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "installerIcon": "public/desktop-icon.ico",
+      "uninstallerIcon": "public/desktop-icon.ico"
     }
   }
 }

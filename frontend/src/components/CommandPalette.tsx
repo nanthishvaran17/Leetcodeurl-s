@@ -65,6 +65,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const [studentResults, setStudentResults] = useState<any[]>([]);
   const [isSearchingStudents, setIsSearchingStudents] = useState(false);
   const [activeCategory, setActiveCategory] = useState<'All' | 'AI' | 'Commands' | 'Students' | 'Actions'>('All');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -466,7 +474,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         {/* Search Header */}
         <div className="p-3.5 sm:p-6 pb-3 sm:pb-5 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/70 backdrop-blur-md">
           <div className="relative group w-full">
-            <div className="absolute left-3.5 sm:left-5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-2 sm:gap-3">
+            <div className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1.5 sm:gap-3">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 dark:text-brand-400 group-focus-within:scale-110 transition-transform shrink-0" />
               <div className="w-[1.5px] h-4 sm:h-5 bg-slate-200 dark:border-white/10 dark:bg-navy-700 shrink-0" />
             </div>
@@ -477,8 +485,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
-              className="w-full h-11 sm:h-14 pl-[48px] sm:pl-[68px] pr-12 sm:pr-28 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-base font-semibold shadow-inner outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 transition-all"
-              placeholder="Search commands, students (e.g. 732224CC031)..."
+              className="w-full h-11 sm:h-14 pl-10 sm:pl-[68px] pr-10 sm:pr-28 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-base font-semibold shadow-inner outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 transition-all"
+              placeholder={isMobile ? "Search commands, students..." : "Search commands, students (e.g. 732224CC031)..."}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  CheckSquare, Square, Users, Sparkles,
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User, Check, Building2, GraduationCap,
   Calendar, Target, FileText, ArrowUpRight, Bell, RotateCcw, Eye, Award,
@@ -11,6 +12,8 @@ import {
   escalateAction, getActionTimeline, triggerSignalDetection,
   FacultyActionKPIs, FacultyActionItem, ActionTimelineEvent, UpdateActionPayload
 } from '../services/intelligenceService';
+import { BulkWhatsAppModal } from '../components/BulkWhatsAppModal';
+import { StudentWhatsAppModal } from '../components/StudentWhatsAppModal';
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -963,6 +966,12 @@ export const FacultyActionCenter: React.FC = () => {
   const isHOD = ['hod', 'department hod', 'department_hod'].includes(user?.role?.toLowerCase() || '');
   const canFilterDepts = isGlobalAccess || isAdmin || isHOD;
 
+  // Bulk Selection & Outreach
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(new Set());
+  const [whatsAppStudent, setWhatsAppStudent] = useState<FacultyActionItem | null>(null);
+  const [showBulkWhatsAppModal, setShowBulkWhatsAppModal] = useState(false);
+  const [filterStaff, setFilterStaff] = useState('');
+
   // Filters
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [filterPriority, setFilterPriority] = useState('');
@@ -1047,18 +1056,57 @@ export const FacultyActionCenter: React.FC = () => {
       .join(' ');
   };
 
-  const handleWhatsApp = (item: FacultyActionItem) => {
-    const rawPhone = (item.phone_number || '').replace(/[^0-9]/g, '');
-    const studentName = item.student_name || 'Student';
-    const solved = item.total_solved || 0;
-    const msg = `Dear ${studentName}, this is a gentle reminder from your Faculty Mentor. Your current LeetCode problem solve count is ${solved}. Please practice today's recommended problems and attend upcoming weekly coding contests. Feel free to reach out if you need guidance!`;
-    const encoded = encodeURIComponent(msg);
-    if (rawPhone && rawPhone.length >= 10) {
-      const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
-      window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, '_blank');
+  const staffOptions = React.useMemo(() => {
+    const set = new Set<string>();
+    items.forEach(it => {
+      if (it.assigned_faculty_name && it.assigned_faculty_name.trim()) {
+        set.add(it.assigned_faculty_name.trim());
+      }
+    });
+    return Array.from(set).sort().map(name => ({
+      label: name,
+      value: name,
+      icon: <User size={14} />
+    }));
+  }, [items]);
+
+  const visibleItems = React.useMemo(() => {
+    if (!filterStaff) return items;
+    return items.filter(it => (it.assigned_faculty_name || '').toLowerCase() === filterStaff.toLowerCase());
+  }, [items, filterStaff]);
+
+  const toggleSelectStudent = (id: number) => {
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectTop50 = () => {
+    const top50 = visibleItems.slice(0, 50).map(it => it.id);
+    setSelectedStudentIds(new Set(top50));
+  };
+
+  const handleSelectAll = () => {
+    if (selectedStudentIds.size === visibleItems.length && visibleItems.length > 0) {
+      setSelectedStudentIds(new Set());
     } else {
-      window.open(`https://wa.me/?text=${encoded}`, '_blank');
+      setSelectedStudentIds(new Set(visibleItems.map(it => it.id)));
     }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedStudentIds(new Set());
+  };
+
+  const selectedStudentsList = React.useMemo(() => {
+    return items.filter(it => selectedStudentIds.has(it.id));
+  }, [items, selectedStudentIds]);
+
+  const handleWhatsApp = (item: FacultyActionItem) => {
+    setWhatsAppStudent(item);
   };
 
   // Sort
@@ -1418,6 +1466,19 @@ export const FacultyActionCenter: React.FC = () => {
             ]}
           />
           </div>
+
+          {staffOptions.length > 0 && (
+            <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
+              <CustomSelect
+                value={filterStaff}
+                onChange={v => { setFilterStaff(v); setPage(1); }}
+                placeholder="All Staff Mentors"
+                icon={<User size={15} />}
+                alignRight={true}
+                options={staffOptions}
+              />
+            </div>
+          )}
         </div>
 
         {/* Count & Page Size Toggle */}
@@ -1431,7 +1492,7 @@ export const FacultyActionCenter: React.FC = () => {
               )}
             </span>
             {(hasFilters || kpiFilter) && (
-               <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterDept(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
+               <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterDept(''); setFilterYear(''); setFilterStaff(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition flex items-center gap-0.5 ml-1 shrink-0 cursor-pointer">
                  <X size={14} /> Clear
                </button>
@@ -1501,7 +1562,7 @@ export const FacultyActionCenter: React.FC = () => {
             ))}
           </div>
         </div>
-      ) : items.length === 0 ? (
+      ) : visibleItems.length === 0 ? (
         <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 p-8 sm:p-12 text-center shadow-sm transition-all duration-300">
 
           <div className="relative z-10 max-w-md mx-auto flex flex-col items-center">
@@ -1565,26 +1626,128 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Mobile Intervention Cards (Compact, 100% width, 2026 Bento Glass Cards) */}
-          <div className="block md:hidden space-y-3.5 mt-6">
-            {items.map((item) => {
+          {/* Bulk Action & Outreach Toolbar — Native Clean Mobile Bar */}
+          <div className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-xs mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer border border-slate-200/80 dark:border-navy-700 active:scale-95 touch-manipulation"
+              >
+                {selectedStudentIds.size === visibleItems.length && visibleItems.length > 0 ? (
+                  <>
+                    <CheckSquare size={15} className="text-emerald-600 dark:text-emerald-400" />
+                    <span>Deselect All</span>
+                  </>
+                ) : (
+                  <>
+                    <Square size={15} className="text-slate-400" />
+                    <span>Select All ({visibleItems.length})</span>
+                  </>
+                )}
+              </button>
+
+              {selectedStudentIds.size > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all cursor-pointer border border-rose-200 dark:border-rose-800/80 active:scale-95 touch-manipulation"
+                >
+                  <X size={14} />
+                  <span>Clear</span>
+                </button>
+              )}
+
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 ml-1">
+                <strong className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{selectedStudentIds.size}</strong> of {visibleItems.length} selected
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedStudentIds.size === 0) {
+                    handleSelectAll();
+                  }
+                  setShowBulkWhatsAppModal(true);
+                }}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation ${
+                  selectedStudentIds.size > 0
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-500/30 shadow-emerald-600/20'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                }`}
+              >
+                <MessageCircle size={16} className="stroke-[2.5]" />
+                <span>
+                  {selectedStudentIds.size > 0
+                    ? `Send Bulk WhatsApp (${selectedStudentIds.size})`
+                    : `Send Bulk WhatsApp (${visibleItems.length})`}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Intervention Cards (Native iOS/Android App Quality Cards) */}
+          <div className="block md:hidden space-y-3 mt-2 pb-24">
+            {visibleItems.map((item) => {
               const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
-              const isExpanded = expandedRow === item.id;
+              const isSelected = selectedStudentIds.has(item.id);
+              const initials = (item.student_name || 'S')
+                .split(' ')
+                .map(w => w[0])
+                .filter(Boolean)
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
+
               return (
                 <div
                   key={item.id}
-                  className="rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/80 dark:border-navy-800 p-4 shadow-sm hover:shadow-md space-y-3 transition-all duration-300"
+                  className={`rounded-2xl transition-all duration-200 p-3.5 space-y-3 border touch-manipulation ${
+                    isSelected
+                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
+                      : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 shadow-2xs hover:border-slate-300'
+                  }`}
                 >
-                  {/* Top: Student Details + Priority & Status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-extrabold text-sm text-slate-800 dark:text-white truncate">
-                        {item.student_name}
-                      </h4>
-                      <div className="text-[11.5px] font-bold text-slate-600 dark:text-slate-400 truncate mt-0.5">
-                        <span className="font-mono font-black text-brand-400">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
+                  {/* Card Header: Checkbox + Avatar + Name & RegNo + Priority & Status */}
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      {/* Checkbox Touch Target */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleSelectStudent(item.id); }}
+                        className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 mt-0.5 touch-manipulation active:scale-90 ${
+                          isSelected
+                            ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
+                            : 'bg-slate-50 dark:bg-navy-800 text-slate-400 border-slate-300 dark:border-navy-700 hover:text-slate-600'
+                        }`}
+                        aria-label={isSelected ? "Deselect student" : "Select student for bulk outreach"}
+                      >
+                        {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                      </button>
+
+                      {/* Student Avatar */}
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                        {initials}
+                      </div>
+
+                      {/* Name & Metadata */}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-black text-sm text-slate-900 dark:text-white truncate tracking-tight">
+                          {item.student_name}
+                        </h4>
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                          <span className="font-mono text-slate-700 dark:text-slate-300">{item.reg_no}</span>
+                          <span>&bull;</span>
+                          <span className="text-brand-600 dark:text-brand-400">{item.department_code}</span>
+                          <span>&bull;</span>
+                          <span>{formatYearLevel(item.year_level)}</span>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Status & Priority Pills */}
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
                       <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full ${statusCls}`}>
@@ -1593,96 +1756,90 @@ export const FacultyActionCenter: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Stats & Signal Grid */}
-                  <div className="grid grid-cols-2 gap-2 bg-white/5 p-2.5 rounded-xl text-xs border border-white/[0.06]">
-                    <div>
-                      <div className="text-[10px] uppercase font-black text-slate-400">Coding Stats</div>
-                      <div className="font-mono font-bold text-slate-800 dark:text-slate-100 mt-0.5 text-[11.5px]">
-                        Solved: <span className="text-emerald-400 font-black">{item.total_solved}</span> <span className="text-slate-500 font-semibold">| R: {item.current_rating || 0}</span>
+                  {/* Signal Alert Banner (Why this student needs intervention) */}
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 text-xs">
+                    <div className="flex items-center gap-1.5 min-w-0 text-amber-800 dark:text-amber-300 font-bold text-[11.5px] truncate">
+                      <AlertTriangle size={13} className="text-amber-600 shrink-0" />
+                      <span className="truncate">{formatSignalLabel(item.signal_type)}</span>
+                    </div>
+                    {item.is_escalated && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 shrink-0">
+                        Escalated
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Coding Metrics Capsule Row */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800">
+                      <div className="text-[9.5px] uppercase font-bold text-slate-400">Solved</div>
+                      <div className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs mt-0.5">
+                        {item.total_solved}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] uppercase font-black text-slate-400">Signal Trigger</div>
-                      <div className="font-bold text-amber-400 truncate mt-0.5 text-[11.5px]" title={item.signal_type}>
-                        {formatSignalLabel(item.signal_type)}
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800">
+                      <div className="text-[9.5px] uppercase font-bold text-slate-400">Rating</div>
+                      <div className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs mt-0.5">
+                        {Math.round(Number(item.current_rating || 0))}
+                      </div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800">
+                      <div className="text-[9.5px] uppercase font-bold text-slate-400">Breakdown</div>
+                      <div className="font-mono font-bold text-[10px] mt-0.5 truncate">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{item.easy_solved || 0}</span>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">{item.medium_solved || 0}</span>
+                        <span className="text-slate-300 dark:text-slate-600">/</span>
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">{item.hard_solved || 0}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Mentor & Due Date Row */}
-                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-1.5 truncate max-w-[60%]">
+                  {/* Mentor Row */}
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-0.5">
+                    <div className="flex items-center gap-1.5 truncate">
                       <User size={12} className="text-slate-400 shrink-0" />
-                      <span className="truncate font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
-                        {item.assigned_faculty_name || 'Unassigned'}
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">
+                        Mentor: {item.assigned_faculty_name || 'Unassigned'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10.5px] font-mono shrink-0 font-bold bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md border border-slate-200 dark:border-white/10">
-                      <span className="text-emerald-500">E:{item.easy_solved || 0}</span>
-                      <span className="text-slate-400">·</span>
-                      <span className="text-amber-500">M:{item.medium_solved || 0}</span>
-                      <span className="text-slate-400">·</span>
-                      <span className="text-rose-500">H:{item.hard_solved || 0}</span>
-                    </div>
+                    {item.recommended_action && (
+                      <span className="text-[10.5px] font-medium text-slate-400 truncate max-w-[45%]">
+                        {item.recommended_action}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Buttons Row */}
-                  <div className="flex items-center gap-2 pt-1">
+                  {/* Action Buttons Row — 3 Touch-Friendly Actions */}
+                  <div className="grid grid-cols-12 gap-2 pt-1 border-t border-slate-100 dark:border-navy-800">
                     <button
-                      onClick={() => setUpdateItem(item)}
-                      className="flex-1 min-h-[44px] py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-black text-xs shadow-md shadow-brand-500/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 border border-white/20 touch-manipulation"
-                    >
-                      <ArrowUpRight size={14} className="shrink-0" />
-                      <span>Take Action</span>
-                    </button>
-                    <button
+                      type="button"
                       onClick={() => handleWhatsApp(item)}
-                      title="Send WhatsApp Mentoring Nudge"
-                      className="min-h-[44px] py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 transition-all text-xs font-black flex items-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation shadow-xs"
+                      title="Send WhatsApp Nudge"
+                      className="col-span-5 min-h-[42px] py-2 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs touch-manipulation transition-all"
                     >
-                      <MessageCircle size={14} className="text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
-                      <span className="hidden sm:inline">Nudge</span>
+                      <MessageCircle size={15} className="stroke-[2.5]" />
+                      <span>WhatsApp</span>
                     </button>
+
                     <button
+                      type="button"
+                      onClick={() => setUpdateItem(item)}
+                      className="col-span-5 min-h-[42px] py-2 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs touch-manipulation transition-all"
+                    >
+                      <ArrowUpRight size={14} className="stroke-[2.5]" />
+                      <span>Action</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setViewItem(item)}
-                      title="View Student Coding Profile"
-                      className="min-h-[44px] py-2.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 transition-all text-xs font-black flex items-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation shadow-xs group"
+                      title="View Coding Profile"
+                      className="col-span-2 min-h-[42px] py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 active:scale-95 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700 flex items-center justify-center cursor-pointer touch-manipulation transition-all"
                     >
-                      <div className="w-5 h-5 rounded-md bg-indigo-500/15 dark:bg-indigo-500/25 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                        <Eye size={13} className="text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />
-                      </div>
-                      <span>Profile</span>
-                    </button>
-                    <button
-                      onClick={() => setExpandedRow(isExpanded ? null : item.id)}
-                      className="min-h-[44px] min-w-[40px] p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 hover:bg-slate-100 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 transition-colors text-xs flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation shrink-0"
-                      title="Toggle details"
-                    >
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      <Eye size={15} />
                     </button>
                   </div>
-
-                  {/* Expanded Detail on Mobile */}
-                  {isExpanded && (
-                    <div className="pt-2.5 border-t border-white/[0.06] space-y-2 text-xs">
-                      <div>
-                        <div className="text-[10px] font-bold uppercase text-slate-400">Recommended Action</div>
-                        <div className="text-brand-400 font-semibold mt-0.5">{item.recommended_action || '—'}</div>
-                      </div>
-                      {item.action_taken && (
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-slate-400">Action Taken</div>
-                          <div className="text-slate-300 mt-0.5">{item.action_taken}</div>
-                        </div>
-                      )}
-                      {item.faculty_notes && (
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-slate-400">Faculty Notes</div>
-                          <div className="text-slate-300 mt-0.5">{item.faculty_notes}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -1691,17 +1848,32 @@ export const FacultyActionCenter: React.FC = () => {
           <div className="hidden md:block table-responsive-container rounded-2xl glass-panel shadow-glass border-white/[0.08] overflow-x-auto mt-6">
             <table className="w-full table-fixed min-w-[1150px]">
               <colgroup>
-                <col style={{ width: '25%' }} />
+                <col style={{ width: '4%' }} />
+                <col style={{ width: '23%' }} />
                 <col style={{ width: '11%' }} />
                 <col style={{ width: '9%' }} />
                 <col style={{ width: '15%' }} />
                 <col style={{ width: '10%' }} />
                 <col style={{ width: '11%' }} />
                 <col style={{ width: '7%' }} />
-                <col style={{ width: '12%' }} />
+                <col style={{ width: '10%' }} />
               </colgroup>
               <thead className="table-header-group border-b border-white/[0.08] bg-white/[0.03]">
                 <tr>
+                  <th className={`${thCls} !w-10 !px-3 select-none text-center`}>
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className="p-1 rounded-lg text-slate-400 hover:text-emerald-500 transition cursor-pointer"
+                      title="Select all visible students"
+                    >
+                      {selectedStudentIds.size === visibleItems.length && visibleItems.length > 0 ? (
+                        <CheckSquare size={16} className="text-emerald-500" />
+                      ) : (
+                        <Square size={16} />
+                      )}
+                    </button>
+                  </th>
                   {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Breakdown', ''], ['Actions', '']].map(([label, col]) => (
                     <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
                       <span className="inline-flex items-center gap-1">{label} {col && <SortIcon col={col} />}</span>
@@ -1710,7 +1882,7 @@ export const FacultyActionCenter: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-navy-700/60">
-                {items.map((item) => {
+                {visibleItems.map((item) => {
                   const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
                   const isExpanded = expandedRow === item.id;
                   return (
@@ -1719,6 +1891,21 @@ export const FacultyActionCenter: React.FC = () => {
                         onClick={() => setExpandedRow(isExpanded ? null : item.id)}
                         className={`cursor-pointer transition-colors ${isExpanded ? 'bg-indigo-50/30 dark:bg-navy-800/80' : 'hover:bg-slate-50/70 dark:hover:bg-navy-700/40'}`}
                       >
+                        {/* Checkbox */}
+                        <td className={`${tdCls} !w-10 !px-3 text-center`} onClick={e => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => toggleSelectStudent(item.id)}
+                            className={`p-1 rounded-lg border transition cursor-pointer ${
+                              selectedStudentIds.has(item.id)
+                                ? 'bg-emerald-500 text-white border-emerald-600'
+                                : 'bg-slate-100 dark:bg-navy-800 text-slate-400 border-slate-200 dark:border-navy-700 hover:text-slate-600'
+                            }`}
+                          >
+                            {selectedStudentIds.has(item.id) ? <CheckSquare size={15} /> : <Square size={15} />}
+                          </button>
+                        </td>
+
                         {/* Student */}
                         <td className={tdCls}>
                           <div className="font-bold text-sm text-slate-800 dark:text-white truncate">{item.student_name}</div>
@@ -1814,7 +2001,7 @@ export const FacultyActionCenter: React.FC = () => {
                       {/* Expanded detail row */}
                       {isExpanded && (
                         <tr className="bg-brand-500/5 dark:bg-navy-950/60">
-                          <td colSpan={8} className="px-5 py-4">
+                          <td colSpan={9} className="px-5 py-4">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                               <div>
                                 <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Recommended Action</div>
@@ -1873,6 +2060,24 @@ export const FacultyActionCenter: React.FC = () => {
       {/* Modals */}
       {updateItem && <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />}
       {viewItem && <StudentViewModal item={viewItem} onClose={() => setViewItem(null)} onOpenUpdate={() => setUpdateItem(viewItem)} />}
+
+      {/* Single Student WhatsApp Mentoring Modal (10 Message Templates & Custom Edit) */}
+      {whatsAppStudent && (
+        <StudentWhatsAppModal
+          isOpen={!!whatsAppStudent}
+          onClose={() => setWhatsAppStudent(null)}
+          student={whatsAppStudent}
+        />
+      )}
+
+      {/* Bulk WhatsApp Outreach Modal */}
+      {showBulkWhatsAppModal && (
+        <BulkWhatsAppModal
+          isOpen={showBulkWhatsAppModal}
+          onClose={() => setShowBulkWhatsAppModal(false)}
+          selectedStudents={selectedStudentsList.length > 0 ? selectedStudentsList : visibleItems.slice(0, 50)}
+        />
+      )}
     </div>
   );
 };

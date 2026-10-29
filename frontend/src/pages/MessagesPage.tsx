@@ -57,20 +57,41 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
   // Deep Link Auto-Navigation from Notification tap or AI Chat share links
   useEffect(() => {
+    const handleOpenConv = (e: any) => {
+      const cid = e?.detail?.conversationId;
+      if (cid) {
+        setActiveConversationId(cid);
+      }
+    };
+    window.addEventListener('open_conversation', handleOpenConv);
+
     try {
-      const params = new URLSearchParams(window.location.search);
-      const convId = params.get('conversationId') || params.get('conversation_id');
-      const aiChatParam = params.get('ai_chat') || params.get('chat') || params.get('shareData');
-      if (aiChatParam) {
-        console.log('[DEEP LINK] Automatically opening AI Agent from share link');
-        setActiveConversationId('system-ai-agent');
-      } else if (convId) {
-        console.log(`[DEEP LINK] Automatically opening target conversation: ${convId}`);
-        setActiveConversationId(convId);
+      const sessionConv = sessionStorage.getItem('target_conversation_id');
+      if (sessionConv) {
+        sessionStorage.removeItem('target_conversation_id');
+        setActiveConversationId(sessionConv);
+      } else {
+        const hashParams = window.location.hash.includes('?') 
+          ? new URLSearchParams(window.location.hash.split('?')[1]) 
+          : null;
+        const searchParams = new URLSearchParams(window.location.search);
+        const convId = hashParams?.get('conversationId') || searchParams.get('conversationId') || searchParams.get('conversation_id');
+        const aiChatParam = searchParams.get('ai_chat') || searchParams.get('chat') || searchParams.get('shareData');
+        if (aiChatParam) {
+          console.log('[DEEP LINK] Automatically opening AI Agent from share link');
+          setActiveConversationId('system-ai-agent');
+        } else if (convId) {
+          console.log(`[DEEP LINK] Automatically opening target conversation: ${convId}`);
+          setActiveConversationId(convId);
+        }
       }
     } catch (e) {
       console.warn('[DEEP LINK] Error parsing conversation query parameter:', e);
     }
+
+    return () => {
+      window.removeEventListener('open_conversation', handleOpenConv);
+    };
   }, []);
 
   const fetchConversations = useCallback(async () => {

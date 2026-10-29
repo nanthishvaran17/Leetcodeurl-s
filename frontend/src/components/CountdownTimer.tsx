@@ -189,8 +189,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 relative overflow-hidden backdrop-blur-xl ${
         isSessionLive
-          ? 'bg-white border-emerald-200/90 shadow-[0_10px_35px_-8px_rgba(16,185,129,0.15),0_4px_12px_rgba(0,0,0,0.02)]'
-          : 'bg-white border-slate-200/90 shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12),0_4px_12px_rgba(0,0,0,0.02)]'
+          ? 'bg-white dark:bg-navy-900/95 border-emerald-200/90 dark:border-emerald-600/50 shadow-[0_10px_35px_-8px_rgba(16,185,129,0.15),0_4px_12px_rgba(0,0,0,0.02)]'
+          : 'bg-white dark:bg-navy-900/95 border-slate-200/90 dark:border-navy-700/80 shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12),0_4px_12px_rgba(0,0,0,0.02)]'
       }`}
     >
       {/* Soft Pastel Ambient Glow Halos (Clean White Atmosphere) */}
@@ -273,7 +273,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-[13px] font-bold shadow-xs transition-colors duration-300 ${
               isSessionLive
                 ? 'bg-emerald-50/80 border border-emerald-200 text-emerald-800'
-                : 'bg-slate-50 border border-slate-200 text-slate-700'
+                : 'bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-200'
             }`}>
               <div className="line-clamp-2 break-words max-w-full overflow-hidden">
                 {timing.phase === 'NEXT_WEEK' && !isSessionLive ? (
@@ -306,7 +306,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
             <>
               {/* Days Box */}
               <div className="flex flex-col items-center">
-                <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
+                <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
                   <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
                     {time.days}
                   </span>
@@ -321,7 +321,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
           {/* Hours Box */}
           <div className="flex flex-col items-center">
-            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
+            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
               <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
                 {time.hours}
               </span>
@@ -335,7 +335,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
           {/* Minutes Box */}
           <div className="flex flex-col items-center">
-            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
+            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
               <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
                 {time.minutes}
               </span>

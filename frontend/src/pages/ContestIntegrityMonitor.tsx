@@ -483,7 +483,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   autoComplete="off"
                   spellCheck={false}
-                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 bg-slate-50/60 text-xs font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-left transition"
+                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50/60 dark:bg-navy-900/60 text-xs font-bold text-slate-900 dark:text-white placeholder:font-normal placeholder:text-slate-400 focus:bg-white dark:focus:bg-navy-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-left transition"
                 />
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
                   <Search size={15} />
@@ -515,7 +515,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
                     className={`h-10 px-3.5 rounded-xl text-xs font-bold border transition whitespace-nowrap cursor-pointer ${
                       filterStatus === filter.value
                         ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                        : 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800'
                     }`}
                   >
                     {filter.label}
@@ -642,7 +642,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
 
                       {/* Contest & Linked Accounts */}
                       <div className="flex items-center gap-2 flex-wrap bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-white border border-slate-300 text-slate-900 text-[11px] font-mono font-black shrink-0">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 text-slate-900 dark:text-slate-200 text-[11px] font-mono font-black shrink-0">
                           {c.contest_id}
                         </span>
                         <div className="flex items-center gap-1.5 flex-wrap min-w-0">
@@ -703,7 +703,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
             </div>
 
             {/* DESKTOP & TABLET TABLE VIEW (hidden md:block) */}
-            <div className="hidden md:block bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] overflow-hidden w-full">
+            <div className="hidden md:block bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] overflow-hidden w-full">
               <div className="overflow-x-auto w-full custom-scrollbar">
                 <table className="w-full text-left text-sm border-collapse min-w-[1400px]">
                   <thead className="bg-slate-100/90 text-slate-800 border-b border-slate-300 text-xs font-black uppercase tracking-wider">
@@ -753,7 +753,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
                           <tr
                             key={c.id}
                             onClick={() => setSelectedCase(c)}
-                            className="hover:bg-purple-50/50 transition-colors bg-white cursor-pointer group"
+                            className="hover:bg-purple-50/50 dark:hover:bg-purple-950/25 transition-colors bg-white dark:bg-navy-900 cursor-pointer group"
                           >
                             
                             {/* Case Ref */}
@@ -903,7 +903,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
           </div>
         ) : (
           /* REDESIGNED HUMAN-READABLE ELEGANT AUDIT LOGS VIEW */
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] w-full">
+          <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 p-6 space-y-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] w-full">
             <div className="flex items-center justify-between border-b pb-4 border-slate-200">
               <div className="space-y-1">
                 <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
@@ -930,7 +930,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
                   return (
                     <div
                       key={log.id}
-                      className="p-4 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                      className="p-4 rounded-xl border border-slate-200/80 dark:border-navy-700/80 bg-white dark:bg-navy-900 hover:bg-slate-50/80 dark:hover:bg-navy-800/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
                     >
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         <div className={`p-2 rounded-xl shrink-0 mt-0.5 ${
@@ -1001,7 +1001,7 @@ export const ContestIntegrityMonitor: React.FC = () => {
             className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 sm:p-6 pt-20 sm:pt-24 pb-6 animate-fade-in"
             onClick={(e) => e.target === e.currentTarget && setSelectedCase(null)}
           >
-            <div className="bg-white border border-slate-200 max-w-2xl w-full max-h-[78vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden my-auto">
+            <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 max-w-2xl w-full max-h-[78vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden my-auto">
               
               {/* Pinned Header */}
               <div className="flex items-center justify-between border-b border-slate-200 p-5 shrink-0 bg-slate-50/50">
@@ -1186,8 +1186,8 @@ export const ContestIntegrityMonitor: React.FC = () => {
             className="fixed inset-0 z-[100001] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 sm:p-6 pt-20 sm:pt-24 pb-6 animate-fade-in"
             onClick={(e) => e.target === e.currentTarget && setInspectPayload(null)}
           >
-            <div className="bg-white border border-slate-200 max-w-xl w-full max-h-[78vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden my-auto">
-              <div className="flex items-center justify-between border-b border-slate-200 p-4 shrink-0 bg-slate-50/50">
+            <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 max-w-xl w-full max-h-[78vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden my-auto">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-700 p-4 shrink-0 bg-slate-50/50 dark:bg-navy-950/50">
                 <div className="flex items-center gap-2">
                   <Code className="w-5 h-5 text-purple-600" />
                   <h3 className="text-base font-black text-slate-900">Event Raw Payload Data</h3>

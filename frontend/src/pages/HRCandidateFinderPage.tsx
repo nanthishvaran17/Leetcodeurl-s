@@ -2541,18 +2541,18 @@ export const HRCandidateFinderPage: React.FC = () => {
           </div>
 
           {/* Export Actions - Always Single Row & Compact */}
-          <div className="flex flex-row items-center gap-2 w-full sm:w-auto shrink-0">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
             <button 
               onClick={openManagementReportPreview} 
               disabled={isLoadingReport}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-bold text-[11px] sm:text-xs tracking-tight shadow-sm shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-semibold text-[11px] tracking-tight shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
             >
               <Eye className={`w-3.5 h-3.5 shrink-0 ${isLoadingReport ? 'animate-spin' : ''}`} />
               <span>{isLoadingReport ? 'Opening...' : 'Open Management Report'}</span>
             </button>
             <button 
               onClick={exportToExcel} 
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-bold text-[11px] sm:text-xs tracking-tight shadow-sm shadow-emerald-600/20 transition-all cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-semibold text-[11px] tracking-tight shadow-xs shadow-emerald-600/20 transition-all cursor-pointer whitespace-nowrap"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
               <span>Management Report (Excel)</span>

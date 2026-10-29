@@ -1477,7 +1477,11 @@ def update_user_profile(
     if payload.designation is not None:
         user.designation = payload.designation.strip()  # type: ignore
     if payload.is_2fa_enabled is not None:
-        setattr(user, "is_2fa_enabled", bool(payload.is_2fa_enabled))  # type: ignore
+        # Security: Cannot silently disable active 2FA via generic profile update; must use /2fa/disable with TOTP verification
+        if bool(getattr(user, "is_2fa_enabled", False)) and not payload.is_2fa_enabled:
+            pass
+        else:
+            setattr(user, "is_2fa_enabled", bool(payload.is_2fa_enabled))  # type: ignore
     if payload.date_of_birth is not None:
         dob_str = payload.date_of_birth.strip()
         if not dob_str:
@@ -2112,6 +2116,38 @@ def verify_2fa_code(payload: Verify2FARequest, request: Request, db: Session = D
         raise HTTPException(
             status_code=400,
             detail="Invalid 2FA verification code. Ensure your device time is set to Automatic and enter the latest 6-digit code shown in Google Authenticator or Microsoft Authenticator."
+        )
+
+
+class Disable2FARequest(BaseModel):
+    code: str
+
+
+@router.post("/2fa/disable")
+def disable_2fa_code(payload: Disable2FARequest, request: Request, db: Session = Depends(get_db)):
+    user = get_current_user_from_request(request, db)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthenticated")
+
+    totp_secret = getattr(user, 'totp_secret', None)
+    if not totp_secret:
+        setattr(user, 'is_2fa_enabled', False)
+        db.commit()
+        return {"success": True, "message": "2FA successfully disabled."}
+
+    clean_code = (payload.code or "").strip().replace(" ", "").replace("-", "")
+    if len(clean_code) != 6 or not clean_code.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 6-digit numeric verification code from your authenticator app.")
+
+    totp = pyotp.TOTP(totp_secret)  # type: ignore
+    if totp.verify(clean_code, valid_window=2):
+        setattr(user, 'is_2fa_enabled', False)
+        db.commit()
+        return {"success": True, "message": "2FA successfully disabled."}
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid 2FA code. Please enter the current 6-digit code shown in Google Authenticator or Microsoft Authenticator to disable 2FA."
         )
 
 

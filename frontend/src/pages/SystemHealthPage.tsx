@@ -2604,7 +2604,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* 13. OFFICIAL FORENSIC AUDIT CERTIFICATE PREVIEW MODAL */}
       {showCertPreviewModal && forensicResult && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-3xl bg-white text-slate-900 rounded-3xl shadow-lg border-4 border-amber-500/40 animate-modal-content">
+          <div className="modal-container-responsive max-w-3xl bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 rounded-3xl shadow-lg border-4 border-amber-500/40 animate-modal-content">
             
             {/* Modal Controls Bar */}
             <div className="px-6 py-3 bg-navy-950 text-white flex items-center justify-between border-b border-slate-800">
@@ -2725,25 +2725,25 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
                 {/* Question breakdown table */}
                 <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                  <div className="p-2 rounded-lg bg-white border border-slate-300">
+                  <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-700">
                     <span className="text-[10px] text-slate-500 block">Q1 (Easy)</span>
                     <span className={`font-black ${forensicResult.result.q1 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {forensicResult.result.q1 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
-                  <div className="p-2 rounded-lg bg-white border border-slate-300">
+                  <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-700">
                     <span className="text-[10px] text-slate-500 block">Q2 (Medium)</span>
                     <span className={`font-black ${forensicResult.result.q2 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {forensicResult.result.q2 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
-                  <div className="p-2 rounded-lg bg-white border border-slate-300">
+                  <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-700">
                     <span className="text-[10px] text-slate-500 block">Q3 (Medium)</span>
                     <span className={`font-black ${forensicResult.result.q3 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {forensicResult.result.q3 === 1 ? 'Accepted' : 'Not Solved'}
                     </span>
                   </div>
-                  <div className="p-2 rounded-lg bg-white border border-slate-300">
+                  <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-700">
                     <span className="text-[10px] text-slate-500 block">Q4 (Hard)</span>
                     <span className={`font-black ${forensicResult.result.q4 === 1 ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {forensicResult.result.q4 === 1 ? 'Accepted' : 'Not Solved'}
