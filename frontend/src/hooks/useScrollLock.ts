@@ -1,12 +1,24 @@
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useEffect } from 'react';
 
 // Global counter for active scroll locks
 let scrollLockCount = 0;
 
 /**
+ * Check if any modal, drawer, or dialog is currently present in the DOM
+ */
+export function hasActiveModalDOM(): boolean {
+  if (typeof document === 'undefined') return false;
+  return Boolean(
+    document.querySelector(
+      '[role="dialog"], .modal-backdrop, .modal-overlay-responsive, [data-modal-active="true"], [data-scroll-locked="true"]'
+    )
+  );
+}
+
+/**
  * Completely clean all scroll lock classes and inline overflow styles from body and html
  */
-function applyUnlock() {
+export function applyUnlock() {
   if (typeof document === 'undefined') return;
   document.body.classList.remove('global-scroll-lock');
   document.documentElement.classList.remove('global-scroll-lock');
@@ -30,7 +42,14 @@ function applyUnlock() {
  */
 export const useScrollLock = (lock: boolean = true) => {
   useLayoutEffect(() => {
-    if (!lock) return;
+    if (!lock) {
+      // If lock is explicitly false and no modal is active in DOM, auto-heal
+      if (!hasActiveModalDOM()) {
+        scrollLockCount = 0;
+        applyUnlock();
+      }
+      return;
+    }
     
     // Increment active locks
     scrollLockCount += 1;
@@ -44,7 +63,8 @@ export const useScrollLock = (lock: boolean = true) => {
       // Decrement active locks safely
       scrollLockCount = Math.max(0, scrollLockCount - 1);
       
-      if (scrollLockCount === 0) {
+      if (scrollLockCount === 0 || !hasActiveModalDOM()) {
+        scrollLockCount = 0;
         applyUnlock();
       }
     };
@@ -59,13 +79,20 @@ export const forceUnlockScroll = () => {
   applyUnlock();
 };
 
-// Automatic route-navigation failsafe: whenever browser history changes, ensure scroll is not trapped
+// Automatic route-navigation and visibility failsafe: ensure scroll is never trapped
 if (typeof window !== 'undefined') {
-  window.addEventListener('popstate', () => {
-    forceUnlockScroll();
+  window.addEventListener('popstate', forceUnlockScroll);
+  window.addEventListener('hashchange', forceUnlockScroll);
+  window.addEventListener('visibilitychange', () => {
+    if (!hasActiveModalDOM()) {
+      forceUnlockScroll();
+    }
   });
-  window.addEventListener('hashchange', () => {
-    forceUnlockScroll();
-  });
-}
 
+  // Periodic safety pulse: if no dialog is present in DOM, heal body scroll automatically
+  setInterval(() => {
+    if (scrollLockCount > 0 && !hasActiveModalDOM()) {
+      forceUnlockScroll();
+    }
+  }, 1200);
+}

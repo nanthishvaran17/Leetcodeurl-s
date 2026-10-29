@@ -679,8 +679,7 @@ export const App: React.FC = () => {
     isAuthenticated
   ]);
 
-  // Native Edge Swipe to Open Sidebar (Left-to-Right swipe) & Swipe Left to Close
-  // Supports BOTH Touch (Mobile/Tablet) AND Mouse Drag (Desktop Browser & DevTools Responsive Mode)
+  // Native Edge Swipe to Open Sidebar (Left-to-Right swipe) & Swipe Left to Close on Mobile
   useEffect(() => {
     if (typeof window === 'undefined' || !isAuthenticated) return;
 
@@ -689,7 +688,9 @@ export const App: React.FC = () => {
     let isTracking = false;
 
     const handleStart = (clientX: number, clientY: number, target: HTMLElement | null) => {
-      // Ignore interactions on inputs, textareas, selects, or sliders
+      // Only enable touch edge swipe on mobile/tablet screens (< 1024px)
+      if (window.innerWidth >= 1024) return;
+
       if (target) {
         const tag = target.tagName?.toLowerCase();
         if (
@@ -703,15 +704,14 @@ export const App: React.FC = () => {
       }
 
       if (!isSidebarOpen) {
-        // Generous zone: anywhere in the left 40% of the screen or up to 160px
-        const maxEdgeX = Math.max(160, window.innerWidth * 0.40);
-        if (clientX <= maxEdgeX) {
+        // Strict edge zone on mobile: within 28px from the very left edge of the screen
+        if (clientX <= 28) {
           startX = clientX;
           startY = clientY;
           isTracking = true;
         }
       } else {
-        // Sidebar is open: allow swiping left from anywhere to close
+        // Sidebar is open: allow swiping left from the drawer body to close
         startX = clientX;
         startY = clientY;
         isTracking = true;
@@ -724,110 +724,59 @@ export const App: React.FC = () => {
       const absDeltaX = Math.abs(currentDeltaX);
       const absDeltaY = Math.abs(clientY - startY);
 
+      // If user is scrolling vertically, cancel immediately so normal vertical page scroll is butter smooth
+      if (absDeltaY > 10 && absDeltaY > absDeltaX) {
+        isTracking = false;
+        return;
+      }
+
       if (!isSidebarOpen) {
-        // Instant response during drag: as soon as moved 26px right horizontally, OPEN IMMEDIATELY!
-        if (currentDeltaX >= 26 && currentDeltaX > absDeltaY * 0.55) {
+        // Quick 30px right swipe opens drawer
+        if (currentDeltaX >= 30 && currentDeltaX > absDeltaY * 1.5) {
           setIsSidebarOpen(true);
-          isTracking = false; // Triggered!
+          isTracking = false;
           if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
             try { navigator.vibrate(14); } catch {}
           }
-          return;
-        }
-
-        // Cancel only if user is clearly scrolling vertically
-        if (absDeltaY > 45 && absDeltaY > absDeltaX * 1.6 && absDeltaX < 20) {
-          isTracking = false;
         }
       } else {
-        // Sidebar is open: as soon as moved 26px left horizontally, CLOSE IMMEDIATELY!
-        if (currentDeltaX <= -26 && absDeltaX > absDeltaY * 0.55) {
+        // 30px left swipe closes drawer
+        if (currentDeltaX <= -30 && absDeltaX > absDeltaY * 1.5) {
           setIsSidebarOpen(false);
           isTracking = false;
           if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
             try { navigator.vibrate(10); } catch {}
           }
-          return;
         }
       }
     };
 
-    const handleEnd = (clientX: number, clientY: number) => {
-      if (!isTracking) return;
+    const handleEnd = () => {
       isTracking = false;
-      const deltaX = clientX - startX;
-      const deltaY = Math.abs(clientY - startY);
-
-      if (!isSidebarOpen) {
-        if (deltaX >= 20 && deltaX > deltaY * 0.55) {
-          setIsSidebarOpen(true);
-          if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
-            try { navigator.vibrate(14); } catch {}
-          }
-        }
-      } else {
-        if (deltaX <= -20 && Math.abs(deltaX) > deltaY * 0.55) {
-          setIsSidebarOpen(false);
-          if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
-            try { navigator.vibrate(10); } catch {}
-          }
-        }
-      }
     };
 
-    // Pointer events (Handles Mouse on Desktop + Touch on Modern Browsers)
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      handleStart(e.clientX, e.clientY, e.target as HTMLElement | null);
-    };
-    const onPointerMove = (e: PointerEvent) => {
-      handleMove(e.clientX, e.clientY);
-    };
-    const onPointerUp = (e: PointerEvent) => {
-      handleEnd(e.clientX, e.clientY);
-    };
-    const onPointerCancel = (e: PointerEvent) => {
-      handleEnd(e.clientX, e.clientY);
-    };
-
-    // Fallback touch events for older webviews
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       handleStart(e.touches[0].clientX, e.touches[0].clientY, e.target as HTMLElement | null);
     };
     const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
+      if (!isTracking || e.touches.length !== 1) return;
       handleMove(e.touches[0].clientX, e.touches[0].clientY);
     };
-    const onTouchEnd = (e: TouchEvent) => {
-      if (!e.changedTouches || e.changedTouches.length === 0) return;
-      handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    };
-    const onTouchCancel = (e: TouchEvent) => {
-      if (!e.changedTouches || e.changedTouches.length === 0) return;
-      handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    const onTouchEnd = () => {
+      handleEnd();
     };
 
-    document.addEventListener('pointerdown', onPointerDown, { passive: true, capture: true });
-    document.addEventListener('pointermove', onPointerMove, { passive: true, capture: true });
-    document.addEventListener('pointerup', onPointerUp, { passive: true, capture: true });
-    document.addEventListener('pointercancel', onPointerCancel, { passive: true, capture: true });
-
-    document.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
-    document.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
-    document.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
-    document.addEventListener('touchcancel', onTouchCancel, { passive: true, capture: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('pointerdown', onPointerDown, { capture: true });
-      document.removeEventListener('pointermove', onPointerMove, { capture: true });
-      document.removeEventListener('pointerup', onPointerUp, { capture: true });
-      document.removeEventListener('pointercancel', onPointerCancel, { capture: true });
-
-      document.removeEventListener('touchstart', onTouchStart, { capture: true });
-      document.removeEventListener('touchmove', onTouchMove, { capture: true });
-      document.removeEventListener('touchend', onTouchEnd, { capture: true });
-      document.removeEventListener('touchcancel', onTouchCancel, { capture: true });
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
     };
   }, [isAuthenticated, isSidebarOpen]);
 
