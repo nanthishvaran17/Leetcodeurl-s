@@ -6514,61 +6514,56 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* ========================================================================= */}
-        {/* CATEGORY E: APP PREFERENCES — Executive Institutional Workstation */}
+        {/* CATEGORY E: APP PREFERENCES — Clean, Human-Crafted Settings */}
         {/* ========================================================================= */}
         {effectiveTab === 'preferences' && (
           <div className="space-y-4 sm:space-y-6 animate-fade-in">
-            {/* 1. Executive Workstation Live Metric Header */}
-            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-navy-950 to-indigo-950 text-white border border-brand-500/30 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
-                    <Sliders className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-base font-black tracking-tight text-white font-display">
-                        Institutional Workstation &amp; Engine
-                      </h3>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap">
-                        ACTIVE PRODUCTION PLAN
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-slate-300 font-medium mt-0.5 truncate">
-                      Nandha Engineering College • Autonomous Institutional Telemetry &amp; Intelligence
-                    </p>
-                  </div>
+            {/* 1. Clean App & Institutional Identity Header */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20">
+                  <Sliders className="w-5 h-5" />
                 </div>
-
-                <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 shrink-0">
-                  <div className="flex flex-col sm:items-end">
-                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Official Timezone</span>
-                    <span className="text-xs font-mono font-bold text-brand-300 flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-brand-400" />
-                      Asia/Kolkata (IST • UTC+05:30)
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white font-display">
+                      Nandha LeetCode Tracker
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      v4.1 • Live
                     </span>
                   </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Nandha Engineering College, Erode
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-navy-800/80 shrink-0">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 text-xs text-slate-600 dark:text-slate-300">
+                  <Clock className="w-3.5 h-3.5 text-brand-500" />
+                  <span className="font-medium">Timezone:</span>
+                  <span className="font-mono font-semibold text-slate-900 dark:text-white">Asia/Kolkata (IST)</span>
                 </div>
               </div>
             </div>
 
-            {/* 2. Visual Atmosphere, Theme & Accent Hue */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+            {/* 2. Appearance & Theme */}
+            <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-xs space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap border-b border-slate-100 dark:border-navy-800/80 pb-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs">
                     <Palette className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      Appearance &amp; Theme Atmosphere
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Appearance
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Personalize visual theme and UI layout density</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Choose how Nandha LeetCode looks on your device</p>
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center">
-                  <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize border border-slate-200/80 dark:border-navy-700 whitespace-nowrap inline-flex items-center justify-center">
+                  <span className="text-[11px] font-medium px-3 py-1 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 capitalize border border-slate-200/80 dark:border-navy-700 whitespace-nowrap inline-flex items-center justify-center">
                     {themeMode === 'system' ? `Auto (${theme})` : `${theme} Mode`}
                   </span>
                 </div>
@@ -6579,55 +6574,55 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <button
                   type="button"
                   onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'light'
                       ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
                   <Sun className={`w-4 h-4 ${themeMode === 'light' ? 'text-amber-500 stroke-[2.5]' : ''}`} />
-                  <span>Light Daylight</span>
+                  <span>Light</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => { setTheme('dark'); setThemeMode('dark'); triggerHaptic('selection'); }}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'dark'
                       ? 'bg-navy-900 text-white shadow-sm border border-navy-700'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
                   <Moon className={`w-4 h-4 ${themeMode === 'dark' ? 'text-indigo-400 stroke-[2.5]' : ''}`} />
-                  <span>Midnight Dark</span>
+                  <span>Dark</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => { setSystemTheme(); setThemeMode('system'); triggerHaptic('selection'); }}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'system'
                       ? 'bg-white dark:bg-navy-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-navy-700'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
                   <Monitor className={`w-4 h-4 ${themeMode === 'system' ? 'text-blue-500 stroke-[2.5]' : ''}`} />
-                  <span>System Auto</span>
+                  <span>System</span>
                 </button>
               </div>
 
               {/* Accent Color Palette Selector */}
               <div className="pt-2">
-                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  Institutional Accent Color
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
+                  Accent Color
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   {[
-                    { id: 'indigo', label: 'NEC Indigo', hex: '#4F46E5', desc: 'Core Standard' },
-                    { id: 'emerald', label: 'Emerald Campus', hex: '#10B981', desc: 'Growth & Vigor' },
-                    { id: 'violet', label: 'Cyber Violet', hex: '#8B5CF6', desc: 'Intelligence' },
-                    { id: 'amber', label: 'Electric Amber', hex: '#F59E0B', desc: 'Active Alert' },
-                    { id: 'rose', label: 'Crimson Rose', hex: '#F43F5E', desc: 'High Impact' },
+                    { id: 'indigo', label: 'Indigo (Default)', hex: '#4F46E5' },
+                    { id: 'emerald', label: 'Emerald', hex: '#10B981' },
+                    { id: 'violet', label: 'Violet', hex: '#8B5CF6' },
+                    { id: 'amber', label: 'Amber', hex: '#F59E0B' },
+                    { id: 'rose', label: 'Rose', hex: '#F43F5E' },
                   ].map(acc => (
                     <button
                       key={acc.id}
@@ -6639,51 +6634,50 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       }}
                       className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
                         accentColor === acc.id
-                          ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
-                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
+                          ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
+                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: acc.hex }} />
                         {accentColor === acc.id && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[3]" />}
                       </div>
-                      <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">{acc.label}</div>
-                      <div className="text-[9.5px] text-slate-400 truncate">{acc.desc}</div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{acc.label}</div>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* 3. Contest Telemetry & Real-Time Sync Engine */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+            {/* 3. Live Contest Updates & Automation */}
+            <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-xs space-y-4">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
                     <Activity className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      Contest Telemetry &amp; Sync Engine
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Live Contest Updates
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Live polling cadence, solver verification &amp; automated report staging</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Settings for Sunday live contest tracking and report automation</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                  LIVE ENGINE
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Active
                 </span>
               </div>
 
               {/* Contest Live Sync Interval Cadence */}
               <div>
-                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  Contest Live-Sync Polling Cadence
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
+                  Live Sync Frequency
                 </span>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
-                    { sec: 15, label: '15 Seconds', desc: 'Contest Window Only', badge: 'HIGH REALTIME' },
-                    { sec: 30, label: '30 Seconds', desc: 'Balanced Performance', badge: 'DEFAULT' },
-                    { sec: 60, label: '60 Seconds', desc: 'Low Data Usage', badge: 'ECO MODE' },
+                    { sec: 15, label: 'Fast (15s)', desc: 'Best during active contest' },
+                    { sec: 30, label: 'Balanced (30s)', desc: 'Recommended default' },
+                    { sec: 60, label: 'Power Saver (60s)', desc: 'Low data usage' },
                   ].map(cad => (
                     <button
                       key={cad.sec}
@@ -6693,14 +6687,14 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         try { localStorage.setItem('nec_live_sync_interval', String(cad.sec)); } catch {}
                         triggerHaptic('selection');
                       }}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
                         liveSyncInterval === cad.sec
-                          ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
-                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50'
+                          ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
+                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
                       }`}
                     >
                       <div className="text-xs font-bold text-slate-900 dark:text-white">{cad.label}</div>
-                      <div className="text-[9.5px] text-slate-400 mt-0.5">{cad.desc}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{cad.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -6708,10 +6702,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
               {/* Automation Toggles */}
               <div className="pt-2 space-y-2.5 border-t border-slate-100 dark:border-navy-800/80">
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
                   <div className="min-w-0 pr-3">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-Verify Contest Solvers</div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Authenticates finish timestamps against LeetCode GQL engine automatically</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-verify contest solvers</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Verifies finish timestamps directly against LeetCode contest rankings</div>
                   </div>
                   <div
                     role="switch"
@@ -6722,7 +6716,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       try {
                         localStorage.setItem('nec_auto_verify_contest', String(next));
                         if (next) {
-                          notify.success('Auto-Verification Active', 'Contest solver timings will be verified against LeetCode GQL.');
+                          notify.success('Auto-Verification Enabled', 'Contest solver timings will be verified against LeetCode.');
                         } else {
                           notify.info('Auto-Verification Paused', 'Manual verification mode enabled.');
                         }
@@ -6741,10 +6735,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
                   <div className="min-w-0 pr-3">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Sunday 10:00 AM Master Reports Auto-Staging</div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Auto-generates all 17 Executive Department Excel &amp; PDF reports following contest closing</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-generate Sunday 10:00 AM reports</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Prepares all department Excel and PDF performance reports right after contest closing</div>
                   </div>
                   <div
                     role="switch"
@@ -6755,9 +6749,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       try {
                         localStorage.setItem('nec_auto_sunday_reports', String(next));
                         if (next) {
-                          notify.success('Sunday Reports Active', 'All 17 department reports will auto-stage every Sunday morning.');
+                          notify.success('Sunday Reports Enabled', 'All department reports will be prepared every Sunday morning.');
                         } else {
-                          notify.info('Sunday Reports Manual', 'Automatic report staging disabled.');
+                          notify.info('Sunday Reports Disabled', 'Automatic report generation disabled.');
                         }
                       } catch {}
                       triggerHaptic('selection');
@@ -6776,36 +6770,36 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
             </div>
 
-            {/* 4. Presentation Shield & Workstation Privacy Controls */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+            {/* 4. Display & Privacy Mode */}
+            <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-xs space-y-4">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 dark:bg-sky-950/70 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      Presentation &amp; Privacy Shield
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Display &amp; Privacy
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Smartboard projection safeguards and tactile audio settings</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Classroom smartboard safeguards and mobile haptic feedback</p>
                   </div>
                 </div>
                 {presentationShield && (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                    SHIELD ACTIVE
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    Shield Active
                   </span>
                 )}
               </div>
 
               <div className="space-y-2.5">
                 {/* Classroom / Auditorium Mode */}
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
                   <div className="min-w-0 pr-3">
                     <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <EyeOff className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                      Auditorium &amp; Projector Presentation Mode
+                      Auditorium &amp; Projector Mode
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Blurs sensitive student phone numbers &amp; personal email IDs when presenting on projector / smartboard screens</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Hides student phone numbers and emails when presenting on projectors or shared screens</div>
                   </div>
                   <div
                     role="switch"
@@ -6819,11 +6813,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           if (next) {
                             document.body.classList.add('presentation-shield-active');
                             document.documentElement.setAttribute('data-presentation-shield', 'true');
-                            notify.success('Presentation Shield Active', 'Student phone numbers & private emails are blurred for smartboard projection.');
+                            notify.success('Projector Shield Active', 'Student contact details are blurred for screen sharing.');
                           } else {
                             document.body.classList.remove('presentation-shield-active');
                             document.documentElement.removeAttribute('data-presentation-shield');
-                            notify.info('Presentation Shield Deactivated', 'Sensitive contact info is visible again.');
+                            notify.info('Projector Shield Disabled', 'Contact details are visible again.');
                           }
                         }
                       } catch {}
@@ -6854,9 +6848,9 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="min-w-0 pr-3">
                     <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
-                      Tactile Spring Haptics (Mobile &amp; Tablet)
+                      Touch Haptics (Mobile &amp; Tablet)
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Provides physical micro-vibration feedback when tapping interactive controls &amp; toggles</div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Provides subtle vibration feedback when tapping buttons and toggles</div>
                   </div>
                   <div
                     role="switch"
@@ -6875,18 +6869,18 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
             </div>
 
-            {/* 5. Interactive Institutional Task Board & Contest Action Plan */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+            {/* 5. Contest Checklist & Quick Notes */}
+            <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-xs space-y-4">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3 flex-wrap">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-950/70 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-200/60 dark:border-purple-800/60 shadow-2xs">
                     <CheckSquare className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider font-display">
-                      Institutional Action Plan &amp; Tasks
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
+                      Contest Checklist &amp; Notes
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Weekly contest milestones, verification checks &amp; reminders</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Weekly contest reminders, checks, and personal notes</p>
                   </div>
                 </div>
 
