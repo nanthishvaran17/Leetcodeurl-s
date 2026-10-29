@@ -427,6 +427,39 @@ export const App: React.FC = () => {
 
 
 
+  const [isPresentationShieldOn, setIsPresentationShieldOn] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('nec_presentation_shield') === 'true';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const savedAccent = localStorage.getItem('nec_accent_color') || 'indigo';
+      document.documentElement.setAttribute('data-accent', savedAccent);
+      document.body.setAttribute('data-accent', savedAccent);
+
+      const isShield = localStorage.getItem('nec_presentation_shield') === 'true';
+      setIsPresentationShieldOn(isShield);
+      if (isShield) {
+        document.body.classList.add('presentation-shield-active');
+        document.documentElement.setAttribute('data-presentation-shield', 'true');
+      } else {
+        document.body.classList.remove('presentation-shield-active');
+        document.documentElement.removeAttribute('data-presentation-shield');
+      }
+    } catch {}
+
+    const handleStorageChange = () => {
+      const isShield = localStorage.getItem('nec_presentation_shield') === 'true';
+      setIsPresentationShieldOn(isShield);
+      const savedAccent = localStorage.getItem('nec_accent_color') || 'indigo';
+      document.documentElement.setAttribute('data-accent', savedAccent);
+      document.body.setAttribute('data-accent', savedAccent);
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   useEffect(() => {
     fetchSummary();
     const handleRefresh = () => fetchSummary();
