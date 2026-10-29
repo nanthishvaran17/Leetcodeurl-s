@@ -90,7 +90,10 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
           </div>
 
           {/* Top Bar Status */}
-          <div className="w-full pt-10 sm:pt-12 px-6 sm:px-10 flex items-center justify-between">
+          <div 
+            className="w-full px-5 sm:px-8 flex items-center justify-between"
+            style={{ paddingTop: 'max(env(safe-area-inset-top, 0px) + 0.75rem, 1.75rem)' }}
+          >
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/40" />
               <span className="text-[10px] font-mono tracking-[0.22em] text-slate-500 font-bold uppercase">
@@ -103,7 +106,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
           </div>
 
           {/* Centerpiece: Clean White Ceramic Jewel Emblem */}
-          <div className="relative z-10 flex flex-col items-center px-6 -mt-4 text-center">
+          <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center w-full max-w-lg my-auto">
             {/* Floating Insignia Tile */}
             <motion.div
               initial={{ scale: 0.88, opacity: 0, y: 14 }}
@@ -188,10 +191,22 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
           </div>
 
           {/* Bottom Accreditation Badge */}
-          <div className="w-full pb-8 sm:pb-10 px-6 text-center">
-            <span className="text-[9.5px] font-mono tracking-[0.25em] text-slate-400 font-bold uppercase">
-              AN AUTONOMOUS INSTITUTION • AFFILIATED TO ANNA UNIVERSITY
-            </span>
+          <div 
+            className="w-full px-4 text-center flex flex-col items-center justify-center"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 1.25rem, 1.75rem)' }}
+          >
+            <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-slate-100/95 border border-slate-200/90 shadow-2xs max-w-[94vw]">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 tracking-wide uppercase">
+                Autonomous Institution
+              </span>
+              <span className="text-slate-400 font-bold">•</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600 tracking-wide uppercase">
+                Affiliated to Anna University
+              </span>
+            </div>
+            <p className="mt-1.5 text-[9px] sm:text-[9.5px] font-semibold text-slate-500 tracking-wider uppercase">
+              Accredited by NAAC with &apos;A+&apos; Grade &amp; NBA
+            </p>
           </div>
         </motion.div>
       )}
