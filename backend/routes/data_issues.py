@@ -17,6 +17,48 @@ from backend.security import require_security_access
 router = APIRouter(prefix="/data-issues", tags=["Student Data Issues & Recovery"])
 
 # Helper: Classify a student's data issue using mutually exclusive strict priority
+def matches_department_filter(c_dept_code: str, c_dept_name: str, target_dept: str) -> bool:
+    """
+    Robust department filter preventing substring false-positives
+    (e.g. prevents 'IT' from matching 'Cyber Security' or 'Communication').
+    """
+    code = (c_dept_code or "").strip().upper()
+    name = (c_dept_name or "").strip().upper()
+    target = (target_dept or "").strip().upper()
+
+    if not target or target == "ALL":
+        return True
+
+    # 1. Exact match on department code (e.g. "IT" == "IT", "CSE(CS)" == "CSE(CS)")
+    if code == target:
+        return True
+
+    # 2. Alphanumeric normalized code match (e.g. "CSECS", "CSEIOT", "IT")
+    clean_code = re.sub(r'[^A-Z0-9]', '', code)
+    clean_target = re.sub(r'[^A-Z0-9]', '', target)
+    if clean_code == clean_target:
+        return True
+
+    # 3. IT / Information Technology specific check (never match "Security" or "Communication")
+    if target in ["IT", "BTECH IT", "B.TECH IT", "INFO TECH", "INFORMATION TECHNOLOGY"]:
+        return code == "IT" or "INFORMATION TECHNOLOGY" in name
+
+    # 4. Cyber Security specific check
+    if target in ["CSE(CS)", "CSE-CS", "CSE_CS", "CYBER", "CYBER SECURITY", "CS"]:
+        return "CS" in code or "CYBER" in name
+
+    # 5. IoT specific check
+    if target in ["CSE(IOT)", "CSE-IOT", "CSE_IOT", "IOT"]:
+        return "IOT" in code or "INTERNET OF THINGS" in name
+
+    # 6. Word-boundary regex match on name or code to avoid substring collisions
+    pattern = r'\b' + re.escape(target) + r'\b'
+    if re.search(pattern, name) or re.search(pattern, code):
+        return True
+
+    return False
+
+
 def classify_student_issue(student: Student, duplicate_usernames: Optional[set] = None) -> dict:
     stats = student.stats
     username = (student.username or "").strip()
@@ -341,14 +383,11 @@ def get_data_issues_students(
             id_set = set(raw_ids)
             classified = [c for c in classified if c["id"] in id_set]
 
-    # 1. Filter by Department
+    # 1. Filter by Department (Strict canonical & boundary matching to prevent false positives)
     if department and department.lower() != "all":
-        dept_upper = department.strip().upper()
         classified = [
             c for c in classified
-            if c["department_code"].upper() == dept_upper or
-               dept_upper in c["department_code"].upper() or
-               dept_upper in c["department_name"].upper()
+            if matches_department_filter(c.get("department_code", ""), c.get("department_name", ""), department)
         ]
 
     # 2. Filter by Academic Year (Canonical normalization matching)
