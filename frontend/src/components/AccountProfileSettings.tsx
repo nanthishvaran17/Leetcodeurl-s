@@ -810,9 +810,6 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const [uiDensity, setUiDensity] = useState<'compact' | 'standard' | 'comfortable'>(() => {
     return (typeof window !== 'undefined' && localStorage.getItem('nec_ui_density') as any) || 'standard';
   });
-  const [aiModelMode, setAiModelMode] = useState<'flash' | 'pro'>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('nec_ai_model_mode') as any) || 'flash';
-  });
   const [liveSyncInterval, setLiveSyncInterval] = useState<number>(() => {
     return (typeof window !== 'undefined' && Number(localStorage.getItem('nec_live_sync_interval'))) || 30;
   });
@@ -6658,81 +6655,27 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               </div>
             </div>
 
-            {/* 3. AI Copilot & Real-Time Intelligence Engine Configuration */}
+            {/* 3. Contest Telemetry & Real-Time Sync Engine */}
             <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs">
-                    <Cpu className="w-5 h-5" />
+                    <Activity className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      AI &amp; Contest Telemetry Engine
+                      Contest Telemetry &amp; Sync Engine
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Model precision, polling cadence &amp; automated verification</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Live polling cadence, solver verification &amp; automated report staging</p>
                   </div>
                 </div>
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
-                  GEN-AI SYNC
+                  LIVE ENGINE
                 </span>
-              </div>
-
-              {/* AI Precision Mode Selector */}
-              <div>
-                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                  AI Analytical Model Mode
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAiModelMode('flash');
-                      try { localStorage.setItem('nec_ai_model_mode', 'flash'); } catch {}
-                      triggerHaptic('selection');
-                    }}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                      aiModelMode === 'flash'
-                        ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/40 ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-amber-500" />
-                        <span className="text-xs font-black text-slate-900 dark:text-white">Gemini 2.5 Flash</span>
-                      </div>
-                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">RECOMMENDED</span>
-                    </div>
-                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">Ultra-low latency live sync, instant solver verification and real-time streaming queries.</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAiModelMode('pro');
-                      try { localStorage.setItem('nec_ai_model_mode', 'pro'); } catch {}
-                      triggerHaptic('selection');
-                    }}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                      aiModelMode === 'pro'
-                        ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/40 ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1.5">
-                        <Cpu className="w-4 h-4 text-purple-500" />
-                        <span className="text-xs font-black text-slate-900 dark:text-white">Gemini 2.5 Pro Engine</span>
-                      </div>
-                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400">DEEP REASONING</span>
-                    </div>
-                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">Deep structural anomaly scanning, cross-department ranking correlation &amp; complex reports.</p>
-                  </button>
-                </div>
               </div>
 
               {/* Contest Live Sync Interval Cadence */}
-              <div className="pt-2">
+              <div>
                 <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
                   Contest Live-Sync Polling Cadence
                 </span>
