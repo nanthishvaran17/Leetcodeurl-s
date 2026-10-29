@@ -2015,128 +2015,133 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-10 pt-0 animate-fade-in pb-40 sm:pb-32 md:pb-16">
 
-      {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
-      <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
-        ? 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-emerald-500/40 shadow-emerald-500/10'
-        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.09] shadow-[0_20px_50px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.15)]'
+      {/* 1. SLEEK EXECUTIVE INSTITUTIONAL HERO HEADER */}
+      <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-4 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
+        ? 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border-emerald-500/40 shadow-emerald-500/10'
+        : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border-white/10 shadow-xl'
         }`}>
         {/* Ambient Radial Mesh Glow */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-gradient-to-br from-brand-500/20 via-indigo-500/15 to-transparent blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
-          {/* Left Context Info */}
-          <div className="space-y-2 flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {isLive ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-                  <span>LIVE NOW</span>
-                </span>
-              ) : isScheduled ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1 shadow-sm bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  <Clock className="w-3 h-3" />
-                  <span>SCHEDULED</span>
-                </span>
-              ) : isFinalizing ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1 shadow-sm bg-brand-600 text-white animate-pulse">
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                  <span>FINALIZING</span>
-                </span>
-              ) : null}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Left Context Info & Title */}
+          <div className="space-y-2.5 flex-1 min-w-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-brand-500/25 border border-white/15">
+                <Award className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-white font-display">
+                    {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
+                      ? (activeSessionObj?.contestName || 'Weekly Contest Intelligence')
+                      : (activeSessionObj?.contestName || 'Weekly Contest Intelligence')}
+                  </h1>
 
-              {wsSyncState === 'INITIAL_SYNC' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[11px] font-mono font-bold animate-pulse">
-                  <RefreshCw className="w-2.5 h-2.5 text-indigo-400 animate-spin shrink-0" />
-                  <span>INITIAL SYNC</span>
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-0.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-display tracking-tight text-white uppercase font-black">
-                  {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
-                    <>
-                      MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">{activeSessionObj?.contestName || 'WEEKLY CONTEST'}</span>
-                    </>
+                  {isLive ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md bg-rose-600 text-white animate-pulse">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                      <span>Live Session</span>
+                    </span>
+                  ) : isScheduled ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <Clock className="w-3 h-3" />
+                      <span>Scheduled</span>
+                    </span>
+                  ) : isFinalizing ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 bg-brand-600 text-white animate-pulse">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      <span>Finalizing</span>
+                    </span>
                   ) : (
-                    <>
-                      {activeSessionObj?.contestName || 'WEEKLY CONTEST'} <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">DASHBOARD</span>
-                    </>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span>Official Ledger</span>
+                    </span>
                   )}
-                </h1>
-                
-                {user?.role?.toLowerCase() === 'admin (system admin)' && (
-                  <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-black uppercase tracking-wider flex items-center space-x-1 shadow-sm">
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>Admin</span>
-                  </span>
-                )}
+
+                  {wsSyncState === 'INITIAL_SYNC' && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[10px] font-mono font-bold animate-pulse">
+                      <RefreshCw className="w-2.5 h-2.5 text-indigo-400 animate-spin shrink-0" />
+                      <span>Syncing Baseline...</span>
+                    </span>
+                  )}
+
+                  {user?.role?.toLowerCase() === 'admin (system admin)' && (
+                    <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>Admin</span>
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs sm:text-[13px] text-slate-300 font-medium mt-0.5">
+                  Nandha Engineering College • Sunday Official Window (08:00 AM – 09:30 AM IST)
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center flex-wrap gap-2 text-[11px] text-slate-300 font-bold tracking-wide pt-1.5 border-t border-white/10">
-              <span className="text-indigo-300">
+            {/* Bottom Context Bar */}
+            <div className="flex items-center flex-wrap gap-2 text-[11px] text-slate-300 font-medium pt-1.5 border-t border-white/10">
+              <span className="text-indigo-300 font-semibold">
                 {isLive ? (
                   <>Last Updated: {liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in <NextUpdateTicker initialSec={nextUpdateTicker} />)</>
                 ) : (
-                  <>
-                    <span className="sm:hidden">Filter students by Dept, Year, Status</span>
-                    <span className="hidden sm:inline">Filter students by Department, Academic Year, Name &amp; Status</span>
-                  </>
+                  <span>Official departmental evaluation and contest solve ledger</span>
                 )}
               </span>
-              {!isLive && activeSessionObj?.status && (
+              {!isLive && (sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate) && (
                 <>
                   <span className="text-slate-500">•</span>
                   <span className="text-slate-400">
-                    Last synced: {sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate || 'Live'}
+                    Last synced: {sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate}
                   </span>
                 </>
               )}
             </div>
           </div>
 
-          {/* Right Controls: Unified Responsive Session Selector & Live Monitor Toggle */}
-          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/[0.06] dark:bg-slate-900/50 p-2 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-md shadow-md shrink-0">
+          {/* Right Controls: Unified Session Selector & Live Monitor Button */}
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-900/60 p-1.5 sm:p-2 rounded-2xl border border-white/10 backdrop-blur-md shadow-xs shrink-0">
 
             {/* Session Dropdown Selector with Delete Option */}
             <div className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:min-w-[280px]">
               <div className="min-w-0 flex-1">
                 <GlobalFilter
                   options={displaySessions.map((s) => {
-                  const statusUp = (s.status || '').toUpperCase();
-                  const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
-                  const isScheduled = statusUp.includes('SCHEDULE');
+                    const statusUp = (s.status || '').toUpperCase();
+                    const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
+                    const isScheduled = statusUp.includes('SCHEDULE');
 
-                  let rawDate = s.sessionDate || '';
-                  let formattedDate = rawDate;
-                  if (rawDate.includes('-')) {
-                    const parts = rawDate.split('-');
-                    if (parts.length === 3 && parts[0].length === 4) {
-                      formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                    let rawDate = s.sessionDate || '';
+                    let formattedDate = rawDate;
+                    if (rawDate.includes('-')) {
+                      const parts = rawDate.split('-');
+                      if (parts.length === 3 && parts[0].length === 4) {
+                        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                      }
                     }
-                  }
 
-                  return {
-                    value: String(s.sessionId),
-                    label: `${formattedDate} — ${s.contestName}`,
-                    pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
-                    pillColorClass: isScheduled
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                      : (isCompleted
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                        : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')
-                  };
+                    return {
+                      value: String(s.sessionId),
+                      label: `${formattedDate} — ${s.contestName}`,
+                      pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
+                      pillColorClass: isScheduled
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        : (isCompleted
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'),
+                      hidePill: !s.sessionId
+                    };
                   })}
                   value={selectedSessionId ? String(selectedSessionId) : ''}
                   onChange={(val) => handleSelectSession(Number(val))}
-                  hideIcon={true}
-                  placeholder="[ Select Session ]"
+                  icon={<Calendar className="w-4 h-4 text-indigo-400" />}
+                  placeholder="Choose Contest Session..."
                   searchPlaceholder="Search contest session..."
                   showSearch={true}
                   variant="dark"
-                  className="w-full !rounded-xl border border-white/15 !shadow-sm !bg-slate-900/80 hover:!bg-slate-800/90 !text-white text-xs font-bold"
+                  className="w-full !rounded-xl border border-white/15 !shadow-sm !bg-slate-900/90 hover:!bg-slate-800/90 !text-white text-xs font-semibold"
                   dropdownWidth="w-full sm:w-[320px]"
                 />
               </div>
@@ -2145,10 +2150,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-2 sm:p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
+                  className="p-2.5 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
-                  <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -2169,14 +2174,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border active:scale-[0.98] whitespace-nowrap shadow-sm shrink-0 w-full sm:w-auto ${
+                className={`flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all cursor-pointer border active:scale-95 whitespace-nowrap shadow-sm shrink-0 w-full sm:w-auto ${
                   showAdminMonitor
-                    ? 'bg-rose-600/90 hover:bg-rose-600 text-white border-rose-500/50 shadow-rose-900/30'
-                    : 'bg-slate-800/90 hover:bg-slate-800 text-emerald-400 hover:text-white border-emerald-500/30 hover:border-emerald-500/60'
+                    ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border-rose-500/40 shadow-rose-950/20'
+                    : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white border-emerald-500/30 hover:border-emerald-500/50'
                 }`}
-                title="Toggle Live Contest Monitor"
+                title="Toggle Live Contest Operations & Telemetry"
               >
-                <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-white' : 'text-emerald-400 animate-pulse'}`} />
+                <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-rose-300' : 'text-emerald-400 animate-pulse'}`} />
                 <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
               </button>
             )}
