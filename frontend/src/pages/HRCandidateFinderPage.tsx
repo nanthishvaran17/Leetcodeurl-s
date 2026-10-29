@@ -2022,102 +2022,125 @@ export const HRCandidateFinderPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Quick Filter Horizontal Pill Strip */}
-        <div className="space-y-2 bg-slate-50/70 dark:bg-navy-900/60 p-2.5 rounded-2xl border border-slate-200/70 dark:border-navy-800">
-          {/* Department Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
-            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-1">Dept:</span>
-            {['all', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE'].map((d) => {
-              const active = (filters.department || 'all').toUpperCase() === d.toUpperCase();
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => {
-                    setFilters(prev => ({ ...prev, department: active && d !== 'all' ? 'all' : d }));
-                  }}
-                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
-                    active
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                      : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                  }`}
-                >
-                  {d === 'all' ? 'All Depts' : d}
-                </button>
-              );
-            })}
+        {/* Quick Filter Mobile Pill Strip — Clean Dedicated Rows */}
+        <div className="space-y-2.5 bg-white/90 dark:bg-navy-900/90 p-3.5 rounded-2xl border border-slate-200/80 dark:border-navy-800 shadow-2xs">
+          {/* Row 1: Department Pills */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Department</span>
+              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 font-mono">
+                {filters.department === 'all' ? 'All' : filters.department}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+              {['all', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE'].map((d) => {
+                const active = (filters.department || 'all').toUpperCase() === d.toUpperCase();
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => {
+                      setFilters(prev => ({ ...prev, department: active && d !== 'all' ? 'all' : d }));
+                    }}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                      active
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                    }`}
+                  >
+                    {d === 'all' ? 'All Depts' : d}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Rating Tier Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
-            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-1">Rating:</span>
-            {[
-              { label: 'All', min: 0 },
-              { label: '1800+', min: 1800 },
-              { label: '1600+', min: 1600 },
-              { label: '1400+', min: 1400 },
-            ].map((r) => {
-              const active = filters.contest_rating.active && filters.contest_rating.val1 === r.min;
-              return (
-                <button
-                  key={r.label}
-                  type="button"
-                  onClick={() => {
-                    setFilters(prev => ({
-                      ...prev,
-                      contest_rating: {
-                        op: '>=',
-                        val1: r.min,
-                        val2: 0,
-                        active: r.min > 0 ? !active : false
-                      }
-                    }));
-                  }}
-                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
-                    (r.min === 0 && !filters.contest_rating.active) || active
-                      ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                      : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                  }`}
-                >
-                  {r.label}
-                </button>
-              );
-            })}
+          {/* Row 2: Rating Tier Pills */}
+          <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-navy-800/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Contest Rating</span>
+              <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 font-mono">
+                {filters.contest_rating.active ? `≥${filters.contest_rating.val1}` : 'All'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+              {[
+                { label: 'All', min: 0 },
+                { label: '1800+', min: 1800 },
+                { label: '1600+', min: 1600 },
+                { label: '1400+', min: 1400 },
+              ].map((r) => {
+                const active = filters.contest_rating.active && filters.contest_rating.val1 === r.min;
+                return (
+                  <button
+                    key={r.label}
+                    type="button"
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        contest_rating: {
+                          op: '>=',
+                          val1: r.min,
+                          val2: 0,
+                          active: r.min > 0 ? !active : false
+                        }
+                      }));
+                    }}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                      (r.min === 0 && !filters.contest_rating.active) || active
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* Solved Pills */}
-            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mx-1">Solved:</span>
-            {[
-              { label: 'All', min: 0 },
-              { label: '800+', min: 800 },
-              { label: '500+', min: 500 },
-              { label: '300+', min: 300 },
-            ].map((s) => {
-              const active = filters.total_solved.active && filters.total_solved.val1 === s.min;
-              return (
-                <button
-                  key={s.label}
-                  type="button"
-                  onClick={() => {
-                    setFilters(prev => ({
-                      ...prev,
-                      total_solved: {
-                        op: '>=',
-                        val1: s.min,
-                        val2: 0,
-                        active: s.min > 0 ? !active : false
-                      }
-                    }));
-                  }}
-                  className={`px-2.5 py-1 rounded-lg font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
-                    (s.min === 0 && !filters.total_solved.active) || active
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                      : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
+          {/* Row 3: Total Solved Pills */}
+          <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-navy-800/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Problems Solved</span>
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                {filters.total_solved.active ? `≥${filters.total_solved.val1}` : 'All'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+              {[
+                { label: 'All', min: 0 },
+                { label: '800+', min: 800 },
+                { label: '500+', min: 500 },
+                { label: '300+', min: 300 },
+              ].map((s) => {
+                const active = filters.total_solved.active && filters.total_solved.val1 === s.min;
+                return (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => {
+                      setFilters(prev => ({
+                        ...prev,
+                        total_solved: {
+                          op: '>=',
+                          val1: s.min,
+                          val2: 0,
+                          active: s.min > 0 ? !active : false
+                        }
+                      }));
+                    }}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                      (s.min === 0 && !filters.total_solved.active) || active
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -2532,7 +2555,7 @@ export const HRCandidateFinderPage: React.FC = () => {
         {/* Results Header & Summary Cards */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
               Candidate Results
             </h3>
             <p className="text-xs text-slate-500 font-medium">
@@ -2540,22 +2563,22 @@ export const HRCandidateFinderPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Export Actions - Always Single Row & Compact */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
+          {/* Export Actions — Balanced Full-Width Grid on Mobile, Flex on Desktop */}
+          <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 shrink-0">
             <button 
               onClick={openManagementReportPreview} 
               disabled={isLoadingReport}
-              className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-semibold text-[11px] tracking-tight shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-7 px-3 rounded-xl sm:rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50"
             >
               <Eye className={`w-3.5 h-3.5 shrink-0 ${isLoadingReport ? 'animate-spin' : ''}`} />
-              <span>{isLoadingReport ? 'Opening...' : 'Open Management Report'}</span>
+              <span className="truncate">{isLoadingReport ? 'Opening...' : 'Management Report'}</span>
             </button>
             <button 
               onClick={exportToExcel} 
-              className="inline-flex items-center justify-center gap-1.5 h-7 px-2.5 sm:px-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-semibold text-[11px] tracking-tight shadow-xs shadow-emerald-600/20 transition-all cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-7 px-3 rounded-xl sm:rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-emerald-600/20 transition-all cursor-pointer"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
-              <span>Management Report (Excel)</span>
+              <span className="truncate">Excel Export</span>
             </button>
           </div>
         </div>
