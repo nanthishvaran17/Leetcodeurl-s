@@ -198,7 +198,9 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
         "rating_1250": rating_1250,
         "ranking_20000": ranking_20000,
         "avg_solved": avg_solved,
+        "average_solved": avg_solved,
         "total_solved": total_solved,
+        "verified_students": verified_cnt,
         "current_week": {
             "q4": cw_q4, "q3": cw_q3, "q2": cw_q2, "q1": cw_q1, "q0": cw_q0,
             "not_participated": cw_not_part, "unknown": cw_unknown, "source_unavailable": cw_unavail,

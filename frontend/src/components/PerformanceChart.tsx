@@ -427,7 +427,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
           {latestPoint && (
             <div className="inline-flex items-center space-x-2 text-[10.5px] font-extrabold text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-navy-900 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-navy-800 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-              <span className="text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[9.5px] font-bold">Scope Live:</span>
+              <span className="text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[9.5px] font-bold">Scope Live:</span>
               <span className="text-blue-600 dark:text-blue-400 font-mono font-black">{latestPoint.problemsSolved.toLocaleString()} Solved</span>
               <span className="text-slate-300 dark:text-navy-700">•</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{latestPoint.activeStudents.toLocaleString()} Active</span>

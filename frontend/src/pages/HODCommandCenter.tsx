@@ -381,7 +381,7 @@ const StaffAllocationModal: React.FC<{
  <div className="flex items-center justify-between">
  <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2 font-display">
  <Users className="w-4 h-4 text-brand-500" />
- <span>Department Faculty Workload Matrix</span>
+ <span>Faculty Mentoring Distribution</span>
  </h4>
  <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-[11px] uppercase tracking-wider border border-slate-300 dark:border-navy-600">
  1:20 Ideal Ratio Target
@@ -571,7 +571,7 @@ const StaffAllocationModal: React.FC<{
                   <h4 className="font-black text-slate-900 dark:text-white text-sm font-display leading-tight">
                     Manual Student Allocation
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Select pending students to assign to a faculty mentor</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Select pending students to assign to a faculty mentor</p>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
@@ -856,7 +856,7 @@ const ReportHubModal: React.FC<{
  </div>
  <div>
  <h4 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Report Configuration & Scope Filters</h4>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Refine parameters to dynamically update institutional reports</p>
+ <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Refine parameters to dynamically update institutional reports</p>
  </div>
  </div>
  <div className="hidden sm:flex items-center px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold border border-emerald-200 dark:border-emerald-800/40 shadow-xs">
@@ -1777,12 +1777,12 @@ export const HODCommandCenter: React.FC = () => {
           <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black">
             <span className="uppercase tracking-wide truncate max-w-[220px] xs:max-w-none">
               {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
-                ? 'EXECUTIVE LEADERSHIP DECK | ALL DEPARTMENTS'
+                ? 'Executive Overview • All Departments'
                 : user?.role?.toLowerCase() === 'hod'
-                ? `LEADERSHIP DECK | ${departments[0]?.name || 'Loading...'}`
+                ? `Department Leadership • ${departments[0]?.name || 'Loading...'}`
                 : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
                 ? 'FACULTY PORTAL'
-                : 'NANDHA INTELLIGENCE COMMAND'}
+                : 'Institutional Performance Overview'}
             </span>
           </div>
 
@@ -1800,19 +1800,19 @@ export const HODCommandCenter: React.FC = () => {
         <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase max-w-xl leading-snug">
           {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase()) ? (
             <>
-              CAMPUS EXECUTIVE <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
+              Campus Executive <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Overview</span>
             </>
           ) : ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
             <>
-              MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
+              Faculty <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Action Center</span>
             </>
           ) : user?.role?.toLowerCase() === 'hod' ? (
             <>
-              DEPARTMENT <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">LEADERSHIP DECK</span>
+              Department <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Leadership</span>
             </>
           ) : (
             <>
-              INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ANALYTICS DASHBOARD</span>
+              Institutional <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Performance Overview</span>
             </>
           )}
         </h1>
@@ -1837,7 +1837,7 @@ export const HODCommandCenter: React.FC = () => {
           className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-indigo-500/20 active:bg-indigo-500/40 text-indigo-200 border border-indigo-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer"
         >
           <Users size={12} className="shrink-0 text-indigo-300" />
-          <span className="whitespace-nowrap">Faculty Matrix</span>
+          <span className="whitespace-nowrap">Faculty Mentors</span>
         </button>
 
         <button
@@ -1859,16 +1859,16 @@ export const HODCommandCenter: React.FC = () => {
 
       {/* DESKTOP ACTION BUTTONS (sm and up) */}
       <div className="hidden sm:flex sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto sm:justify-end pt-2 sm:pt-0">
-        {/* Quick Faculty Matrix Button */}
+        {/* Quick Faculty Mentors Button */}
         <button
           onClick={() => {
             document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
           className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-200 sm:text-indigo-300 border border-indigo-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
-          title="Jump to Faculty Mentors Performance & Progress Matrix"
+          title="Jump to Faculty Mentors Roster"
         >
           <Users size={15} className="shrink-0 text-indigo-400" />
-          <span className="truncate">Faculty Matrix</span>
+          <span className="truncate">Faculty Mentors</span>
         </button>
 
         {/* HOD Staff Allocation Manager Button */}
@@ -2186,7 +2186,7 @@ export const HODCommandCenter: React.FC = () => {
  {/* High-Contrast Live Telemetry Pill */}
  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg sm:rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-[10px] sm:text-xs font-mono shadow-2xs">
             <Clock size={11} className="text-emerald-500 shrink-0" />
- <span className="text-slate-500 dark:text-slate-400 font-semibold hidden xs:inline">Last Sync:</span>
+ <span className="text-slate-600 dark:text-slate-300 font-semibold hidden xs:inline">Last Sync:</span>
  <span className="font-black text-slate-900 dark:text-white tracking-wide">{lastLiveTimestamp}</span>
  </div>
 
@@ -2242,7 +2242,7 @@ export const HODCommandCenter: React.FC = () => {
  <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_staff ?? staffList.length}
  </div>
- <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Faculty Mentors</div>
+ <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">Faculty Mentors</div>
  </div>
  </Card>
 
@@ -2263,7 +2263,7 @@ export const HODCommandCenter: React.FC = () => {
  <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
  {summary?.kpi_summary?.total_students ?? totalInScope}
  </div>
- <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enrolled Scope</div>
+ <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">Enrolled Scope</div>
  </div>
  </Card>
 
@@ -2288,7 +2288,7 @@ export const HODCommandCenter: React.FC = () => {
  <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
  {summary?.kpi_summary?.total_allocated ?? activeInScope}
  </div>
- <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
+ <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
  </div>
  </Card>
 
@@ -2645,7 +2645,7 @@ export const HODCommandCenter: React.FC = () => {
                 placeholder="Search student, reg no, or LeetCode handle..."
                 className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500 text-left transition-all"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-500 dark:text-slate-400">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-600 dark:text-slate-300">
                 <Search size={14} />
               </div>
             </div>
@@ -2688,7 +2688,7 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* Mobile Select-All Action Bar */}
  {students.length > 0 && !studentsLoading && (
-   <div className="flex md:hidden items-center justify-between px-1 py-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+   <div className="flex md:hidden items-center justify-between px-1 py-0.5 text-[11px] text-slate-600 dark:text-slate-300">
      <label className="flex items-center gap-2 cursor-pointer select-none">
        <input
          type="checkbox"
@@ -2749,7 +2749,7 @@ export const HODCommandCenter: React.FC = () => {
  <span className="font-bold text-xs text-slate-900 dark:text-white truncate block">
  {s.name}
  </span>
- <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+ <div className="flex items-center gap-1 text-[10px] text-slate-600 dark:text-slate-300 font-mono truncate">
  <span>{s.reg_no}</span>
  {cleanYear && <span>• {cleanYear}</span>}
  {s.leetcode_username && (
@@ -3002,7 +3002,7 @@ export const HODCommandCenter: React.FC = () => {
  <div>
  <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
  <Building2 size={16} className="text-brand-500" />
- <span>Department Performance & Intelligence Matrix</span>
+ <span>Department Performance Overview</span>
  </h3>
  <p className="text-xs text-slate-700 dark:text-slate-400">Comprehensive real-time view of departmental health, engagement, and mentorship.</p>
  </div>
@@ -3248,7 +3248,7 @@ export const HODCommandCenter: React.FC = () => {
            ? 'bg-brand-50/70 dark:bg-brand-950/40 border-brand-500 shadow-md ring-2 ring-brand-500/30'
            : 'bg-slate-50 dark:bg-navy-900/80 border-slate-200 dark:border-navy-800 hover:border-brand-500/60 hover:shadow-md hover:bg-slate-100/70 dark:hover:bg-navy-800/80'
        }`}
-       title="Click to view detailed Cohort Benchmark Deck & Analytics"
+       title="Click to view detailed Cohort Benchmarks & Analytics"
      >
        <div className="flex items-start justify-between gap-2">
          <div className="space-y-1 min-w-0">
@@ -3271,7 +3271,7 @@ export const HODCommandCenter: React.FC = () => {
            <div className={`font-extrabold text-base ${y.participation_pct >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
              {y.participation_pct}%
            </div>
-           <div className="text-xs font-sans text-slate-500 dark:text-slate-400">
+           <div className="text-xs font-sans text-slate-600 dark:text-slate-300">
              Health: <span className="font-bold text-brand-600 dark:text-brand-400">{y.health_score}</span>
            </div>
          </div>
@@ -3296,7 +3296,7 @@ export const HODCommandCenter: React.FC = () => {
          </button>
 
          <span className="text-[11px] font-sans text-brand-600 dark:text-brand-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-           <span>Inspect Cohort Deck</span>
+           <span>View Cohort Details</span>
            <ChevronRight size={13} />
          </span>
        </div>
@@ -3363,10 +3363,10 @@ export const HODCommandCenter: React.FC = () => {
      />
    </div>
 
-   <div className="flex items-center justify-between text-[11px] font-sans text-slate-500 dark:text-slate-400 pt-1">
+   <div className="flex items-center justify-between text-[11px] font-sans text-slate-600 dark:text-slate-300 pt-1">
      <span>Deficit: <strong className="text-rose-600 dark:text-rose-400 font-mono font-bold">{s.deficit}</strong></span>
      <span className="text-brand-600 dark:text-brand-400 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-       <span>Inspect Sprint Deck</span>
+       <span>View Lab Sprint Plan</span>
        <ChevronRight size={13} />
      </span>
    </div>
@@ -3594,7 +3594,7 @@ export const HODCommandCenter: React.FC = () => {
  )}
 
       {/* =========================================================================
-          COHORT ACADEMIC BENCHMARK & INTELLIGENCE DECK MODAL
+          COHORT ACADEMIC BENCHMARK MODAL
           ========================================================================= */}
       {selectedYearBenchmark && typeof document !== 'undefined' && createPortal(
         <div
@@ -3610,7 +3610,7 @@ export const HODCommandCenter: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-display text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
-                    <span>{selectedYearBenchmark.year} Cohort Intelligence Deck</span>
+                    <span>{selectedYearBenchmark.year} Cohort Academic Performance</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">
                       Cohort {selectedYearBenchmark.year_level}
                     </span>
@@ -3624,7 +3624,7 @@ export const HODCommandCenter: React.FC = () => {
                 type="button"
                 onClick={() => setSelectedYearBenchmark(null)}
                 className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition"
-                title="Close Deck"
+                title="Close"
               >
                 <X size={18} />
               </button>
@@ -3635,11 +3635,11 @@ export const HODCommandCenter: React.FC = () => {
               {/* Telemetry Metric Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block font-mono">Cohort Strength</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300 block font-mono">Cohort Strength</span>
                   <span className="text-xl font-extrabold text-slate-900 dark:text-white font-mono mt-0.5 block">
                     {selectedYearBenchmark.student_count || 0}
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Total Enrolled</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300">Total Enrolled</span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/60">
@@ -3788,7 +3788,7 @@ export const HODCommandCenter: React.FC = () => {
       )}
 
       {/* =========================================================================
-          INSTITUTIONAL SKILL GAP & 2-WEEK LAB SPRINT DECK MODAL
+          INSTITUTIONAL SKILL GAP & LAB SPRINT MODAL
           ========================================================================= */}
       {selectedSkillGap && typeof document !== 'undefined' && createPortal(
         <div
@@ -3830,7 +3830,7 @@ export const HODCommandCenter: React.FC = () => {
                 type="button"
                 onClick={() => setSelectedSkillGap(null)}
                 className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition shrink-0"
-                title="Close Deck"
+                title="Close"
               >
                 <X size={18} />
               </button>
@@ -3841,13 +3841,13 @@ export const HODCommandCenter: React.FC = () => {
               {/* Telemetry Metric Strip */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block font-mono">Current Solve Rate</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300 block font-mono">Current Solve Rate</span>
                   <span className={`text-xl font-extrabold font-mono mt-0.5 block ${
                     selectedSkillGap.color === 'rose' ? 'text-rose-600' : selectedSkillGap.color === 'amber' ? 'text-amber-600' : 'text-blue-600'
                   }`}>
                     {selectedSkillGap.solve}
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Telemetry Data</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300">Telemetry Data</span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/60">
@@ -3953,7 +3953,7 @@ export const HODCommandCenter: React.FC = () => {
                     <Award size={15} className="text-amber-500" />
                     <span>Curated LeetCode Problem Ladder (5 Key Sprints)</span>
                   </h4>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans">
+                  <span className="text-[10px] text-slate-600 dark:text-slate-300 font-sans">
                     Click problem to open directly on LeetCode
                   </span>
                 </div>
@@ -3965,7 +3965,7 @@ export const HODCommandCenter: React.FC = () => {
                       className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-navy-900/60 transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500 w-8">
+                        <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-300 w-8">
                           #{prob.number}
                         </span>
                         <div className="min-w-0">
@@ -3978,7 +3978,7 @@ export const HODCommandCenter: React.FC = () => {
                             <span className="truncate">{prob.title}</span>
                             <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-600" />
                           </a>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
+                          <span className="text-[10px] text-slate-600 dark:text-slate-300 block font-mono">
                             Pattern: {prob.pattern}
                           </span>
                         </div>

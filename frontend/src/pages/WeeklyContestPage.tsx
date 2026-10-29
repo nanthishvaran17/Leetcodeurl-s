@@ -559,6 +559,44 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>(() => initialDeptFilter);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
 
+  // Quick 1-Tap Department List for instant filter switching
+  const quickDeptList = useMemo(() => {
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
+    const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+    const isGlobal = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+    const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '';
+
+    if (isStaffMentor) {
+      return [
+        { code: 'ALL', label: 'My Mentees' },
+        ...(userDeptCode ? [{ code: userDeptCode, label: userDeptCode }] : [])
+      ];
+    }
+
+    if (isHod && !isGlobal) {
+      const hodAuthCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
+      const hodDepts = departments.filter(d => hodAuthCodes.includes(d.code.toUpperCase()) || (userDeptCode && d.code.toUpperCase() === userDeptCode.toUpperCase()));
+      return [
+        { code: 'ALL', label: 'All My Depts' },
+        ...hodDepts.map(d => ({ code: d.code, label: d.code }))
+      ];
+    }
+
+    const priorityCodes = ['CSE(CS)', 'CSE(IOT)', 'CSE', 'IT', 'AIDS', 'ECE'];
+    const matched = priorityCodes
+      .map(code => departments.find(d => d.code.toUpperCase() === code.toUpperCase() || d.code.toUpperCase().replace(/\s+/g, '') === code.replace(/\s+/g, '')))
+      .filter(Boolean)
+      .map(d => ({ code: (d as any).code, label: (d as any).code }));
+
+    const result = matched.length >= 3 ? matched : departments.slice(0, 6).map(d => ({ code: d.code, label: d.code }));
+
+    return [
+      { code: 'ALL', label: 'All Depts' },
+      ...result
+    ];
+  }, [user, departments]);
+
   useEffect(() => {
     if (isUserHod && !isUserGlobal) {
       const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
@@ -2179,7 +2217,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border-rose-500/40 shadow-rose-950/20'
                     : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white border-emerald-500/30 hover:border-emerald-500/50'
                 }`}
-                title="Toggle Live Contest Operations & Telemetry"
+                title="Toggle Live Contest Monitor"
               >
                 <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-rose-300' : 'text-emerald-400 animate-pulse'}`} />
                 <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
@@ -2355,7 +2393,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
               <div className="min-w-0">
                 <h4 className="text-sm font-black uppercase tracking-wider text-brand-300 flex items-center gap-2 flex-wrap">
-                  <span>Admin Live Contest Operations & Worker Telemetry</span>
+                  <span>Live Contest Operations & Sync Status</span>
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 font-mono border border-emerald-400/40 font-bold shrink-0">
                      ACTIVE SUITE
                   </span>
@@ -2561,7 +2599,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           )}
 
-          {/* Tab 2: Token-Bucket & Rate Limiter Telemetry */}
+          {/* Tab 2: Token-Bucket & Rate Limits */}
           {adminSubTab === 'rate_limiter' && (
             <div className="space-y-4 animate-fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -3220,10 +3258,51 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
 
-        {/* Row 2: Sleek 4-Column Filter Bar (Collapsible on mobile) */}
+        {/* Row 2: Sleek Multi-Tier Filter Bar (Collapsible on mobile) */}
         <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
+
+          {/* 1. Quick Department 1-Tap Filter Bar */}
+          <div className="mb-3 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Quick Department Filter (1-Tap)</span>
+              </span>
+              {selectedDeptFilter !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDeptFilter('ALL')}
+                  className="text-[10.5px] font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset Dept ({selectedDeptFilter})</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 -mx-1 px-1 scroll-smooth touch-pan-x">
+              {quickDeptList.map((d) => {
+                const isSelected = selectedDeptFilter === d.code;
+                return (
+                  <button
+                    key={d.code}
+                    type="button"
+                    onClick={() => setSelectedDeptFilter(d.code)}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-xs shadow-blue-500/25 font-black ring-2 ring-blue-500/30'
+                        : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:border-indigo-400 hover:text-indigo-600'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 items-end">
-          {/* Department Filter */}
+          {/* Department Filter (Searchable Dropdown for All Depts) */}
           {(() => {
             const roleClean = (user?.role || '').trim().toLowerCase();
             const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
@@ -3262,7 +3341,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             return (
               <div className="space-y-1 min-w-0 w-full">
                 <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
-                  Department
+                  Department (All / Search)
                 </label>
                 <GlobalFilter
                   value={selectedDeptFilter}
@@ -3278,30 +3357,50 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             );
           })()}
 
-          {/* Academic Year Filter */}
+          {/* Academic Year Filter — Quick 1-Tap Segmented Control */}
           {(() => {
-            const yearOptions: GlobalFilterOption[] = [
-              { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' },
-              { value: 'II',  label: 'II Year (2025–2029)', pillText: 'II' },
-              { value: 'III', label: 'III Year (2024–2028)', pillText: 'III' },
-              { value: 'IV',  label: 'IV Year (2023–2027)', pillText: 'IV' },
-            ];
-
             const normalizedYear = selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
+            const yearList = [
+              { value: 'ALL', label: 'All Years', pill: 'ALL' },
+              { value: 'II',  label: 'II Year',   pill: 'II' },
+              { value: 'III', label: 'III Year',  pill: 'III' },
+              { value: 'IV',  label: 'IV Year',   pill: 'IV' },
+            ];
 
             return (
               <div className="space-y-1 min-w-0 w-full">
-                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
-                  Academic Year
-                </label>
-                <GlobalFilter
-                  value={normalizedYear}
-                  onChange={(val) => setSelectedYearFilter(val)}
-                  options={yearOptions}
-                  icon={<GraduationCap className="w-4 h-4 text-brand-500" />}
-                  dropdownWidth="w-64 sm:w-72"
-                  placeholder="All Academic Years"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate flex items-center gap-1">
+                    <GraduationCap className="w-3.5 h-3.5 text-purple-500" />
+                    <span>Academic Year (1-Tap)</span>
+                  </label>
+                  {normalizedYear !== 'ALL' && (
+                    <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400">
+                      {normalizedYear} Active
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-4 gap-1 p-1 bg-white/95 dark:bg-navy-950/95 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-white/[0.08] h-10 min-h-[40px] sm:h-11 sm:min-h-[44px] items-center shadow-subtle">
+                  {yearList.map((y) => {
+                    const isActive = normalizedYear === y.value;
+                    return (
+                      <button
+                        key={y.value}
+                        type="button"
+                        onClick={() => setSelectedYearFilter(y.value)}
+                        className={`h-full rounded-lg sm:rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs shadow-purple-600/30 font-black'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800'
+                        }`}
+                        title={`Filter by ${y.label}`}
+                      >
+                        <span className="sm:hidden font-mono">{y.pill}</span>
+                        <span className="hidden sm:inline">{y.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             );
           })()}
@@ -4308,7 +4407,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Table Legend & Top Quick Pagination */}
               <div className="px-5 py-3 border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] text-xs font-medium backdrop-blur-md">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Legend:</span>
+                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-300 mr-1">Legend:</span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     PUBLIC

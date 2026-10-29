@@ -954,7 +954,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                 {imp.reg_no}
                               </span>
                               {imp.username && (
-                                <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                                <span className="text-[11px] font-mono text-slate-600 dark:text-slate-300">
                                   @{imp.username}
                                 </span>
                               )}

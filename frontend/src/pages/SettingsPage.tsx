@@ -933,7 +933,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             </span>
           </div>
           <div className="relative w-full sm:w-72 flex items-center rounded-xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-950 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 shadow-xs transition-all group">
-            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-500 ml-3 transition-colors shrink-0" />
+            <Search className="w-4 h-4 text-slate-600 dark:text-slate-300 group-focus-within:text-brand-500 ml-3 transition-colors shrink-0" />
             <input
               type="text"
               value={settingsSearch}
@@ -1344,7 +1344,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 </div>
               </div>
               <div className="flex items-center space-x-2 self-start sm:self-auto">
-                <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 uppercase tracking-widest px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
                   Section II
                 </span>
               </div>
@@ -1352,7 +1352,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
             {/* 1. Compact Numeric Parameter Cards */}
             <div>
-              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2 block">
                 Network & Concurrency Limits
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1447,7 +1447,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
             {/* 2. Automated Pipeline Feature Toggles */}
             <div>
-              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 block">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2 block">
                 Sync Modes & Guard Protocols
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

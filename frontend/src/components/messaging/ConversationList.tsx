@@ -441,7 +441,7 @@ export const ConversationList: React.FC<Props> = ({
                       </h3>
                       <span className={clsx(
                         "text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0 ml-auto tabular-nums",
-                        isUnread ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-400 dark:text-slate-500"
+                        isUnread ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-600 dark:text-slate-300"
                       )}>
                         {formatTime(conv.lastMessageAt)}
                       </span>

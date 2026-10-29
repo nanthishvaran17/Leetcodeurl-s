@@ -1301,7 +1301,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 <span>{summary?.target_date_ist ? `Target: ${summary.target_date_ist}` : 'Verified Telemetry'}</span>
               </span>
             </div>
-            <p className="text-[10.5px] text-slate-400 dark:text-slate-500 truncate">
+            <p className="text-[10.5px] text-slate-600 dark:text-slate-300 truncate">
               Real-time Ingestion • {lastSyncAt || 'Live Auto-Sync'}
             </p>
           </div>
@@ -1962,7 +1962,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                                   {opt.label}
                                 </span>
                                 {opt.desc && (
-                                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                                  <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                                     {opt.desc}
                                   </span>
                                 )}
@@ -2190,7 +2190,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         className={`py-2 px-1 rounded-xl flex items-center justify-center gap-1 text-xs text-center border transition-all ${
                           q.val
                             ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-500 shadow-xs font-black'
-                            : 'bg-white dark:bg-navy-900 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-navy-800 font-bold'
+                            : 'bg-white dark:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-800 font-bold'
                         }`}
                       >
                         <span className={`text-[11px] font-bold ${q.val ? 'text-emerald-100' : 'text-slate-500 dark:text-slate-400'}`}>

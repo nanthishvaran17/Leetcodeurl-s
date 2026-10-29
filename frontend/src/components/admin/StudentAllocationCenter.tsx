@@ -198,7 +198,7 @@ export const StudentAllocationCenter: React.FC = () => {
           {/* Department Filters */}
           <div className="space-y-3 mb-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-indigo-500" /> Department Scope
               </span>
               <span className="text-[10px] text-slate-400">
@@ -238,7 +238,7 @@ export const StudentAllocationCenter: React.FC = () => {
 
             {/* Academic Year Cohort Tabs */}
             <div className="flex items-center justify-between pt-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                 <GraduationCap className="w-3.5 h-3.5 text-emerald-500" /> Academic Year Cohort
               </span>
             </div>

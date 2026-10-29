@@ -30,7 +30,7 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
   if (!studentId) {
     return (
       <div className="p-8 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-navy-900/60 rounded-2xl border border-slate-200 dark:border-navy-700">
-        <AlertCircle className="w-8 h-8 mx-auto mb-3 text-slate-400 dark:text-slate-500" />
+        <AlertCircle className="w-8 h-8 mx-auto mb-3 text-slate-600 dark:text-slate-300" />
         <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">No Student Selected</h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Please select a student from the dashboard to generate their personalized reports.</p>
       </div>

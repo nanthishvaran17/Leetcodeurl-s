@@ -577,7 +577,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
             <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
               {displayChatsList.length === 0 ? (
                 <div className="px-3 py-6 text-center">
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                     {showArchivedView ? 'No archived chats.' : 'Your recent chats will appear here.'}
                   </p>
                 </div>
@@ -602,7 +602,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
                       <span className="block truncate text-xs font-bold text-slate-800 dark:text-slate-200">
                         {chat.title}
                       </span>
-                      <span className="block mt-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                      <span className="block mt-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                         {new Date(chat.updatedAt).toLocaleDateString()}
                       </span>
                     </button>

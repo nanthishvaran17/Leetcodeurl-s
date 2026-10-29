@@ -1178,7 +1178,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                         )}
 
                         {student.last_sync && (
-                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 hidden sm:inline-block">
+                          <span className="text-[9px] font-mono text-slate-600 dark:text-slate-300 hidden sm:inline-block">
                             Sync: {student.last_sync}
                           </span>
                         )}
@@ -1203,7 +1203,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                         </div>
 
                         {student.last_sync && (
-                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 sm:hidden">
+                          <span className="text-[9px] font-mono text-slate-600 dark:text-slate-300 sm:hidden">
                             Sync: {student.last_sync}
                           </span>
                         )}

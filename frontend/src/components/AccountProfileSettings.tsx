@@ -150,7 +150,7 @@ const PremiumSelect: React.FC<{
             ? 'border-brand-500 bg-white dark:bg-navy-950 ring-4 ring-brand-500/15 shadow-sm'
             : value
               ? 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-950 dark:text-white hover:border-brand-400'
-              : 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-400 dark:text-slate-500 hover:border-slate-400'
+              : 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-300 hover:border-slate-400'
             }`}
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -191,7 +191,7 @@ const PremiumSelect: React.FC<{
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     {opt.icon && (
-                      <span className={`shrink-0 ${isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}>{opt.icon}</span>
+                      <span className={`shrink-0 ${isSelected ? 'text-white' : 'text-slate-600 dark:text-slate-300'}`}>{opt.icon}</span>
                     )}
                     <span className="truncate">{opt.label}</span>
                     {opt.badge && (
@@ -334,7 +334,7 @@ const DELETION_REASONS = [
   {
     id: 'Privacy / Data concerns',
     title: 'Privacy / Data concerns',
-    subtitle: 'I want my personal telemetry & account completely erased',
+    subtitle: 'I want my personal account and data deleted',
     badge: 'Privacy',
     badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800',
     icon: ShieldAlert,
@@ -424,7 +424,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
             <h3 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wider truncate">
               Danger Zone
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">Permanent account deletion</p>
+            <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold truncate">Permanent account deletion</p>
           </div>
         </div>
         <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-rose-200 dark:border-rose-800 shrink-0 whitespace-nowrap">
@@ -505,21 +505,21 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
                           {selectedReasonObj.badge}
                         </span>
                       </div>
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 truncate mt-0.5">
                         {reason === 'Other' && otherNote ? otherNote : selectedReasonObj.subtitle}
                       </span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
                       <HelpCircle className="w-4 h-4" />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                         Tap to choose a reason...
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 truncate">
                         Optional feedback for why you are leaving
                       </span>
                     </div>
@@ -610,7 +610,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">
                   Reason for Leaving
                 </h3>
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
                   Select why you are closing your account (optional)
                 </p>
               </div>
@@ -619,7 +619,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
             <button
               type="button"
               onClick={() => setIsSheetOpen(false)}
-              className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -663,7 +663,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
                         </span>
                       </div>
                       <span className={`text-[10px] font-bold line-clamp-1 mt-0.5 ${
-                        isSelected ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-500 dark:text-slate-400'
+                        isSelected ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-600 dark:text-slate-300'
                       }`}>
                         {opt.subtitle}
                       </span>
@@ -3633,7 +3633,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 Settings
               </h1>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+              <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
                 Manage your account and preferences
               </p>
             </div>
@@ -3682,11 +3682,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <span className="truncate">{designation || roleName || 'Admin'} &bull; {institutionalId}</span>
               </div>
 
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+              <div className="text-xs text-slate-600 dark:text-slate-300 font-medium truncate">
                 {user?.email || 'nanthishvaran17@gmail.com'}
               </div>
 
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
+              <div className="text-xs text-slate-600 dark:text-slate-300 font-mono font-bold">
                 {phoneNumber || '9042020879'}
               </div>
 
@@ -3725,7 +3725,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                     Account &amp; Profile
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Personal details, contact info, photo
                   </div>
                 </div>
@@ -3747,7 +3747,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     Security &amp; Login
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Password, two-step verification, devices
                   </div>
                 </div>
@@ -3769,7 +3769,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
                     Privacy &amp; Permissions
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Visibility, data access, blocked users
                   </div>
                 </div>
@@ -3791,7 +3791,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                     Notifications
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Push, email and WhatsApp alerts
                   </div>
                 </div>
@@ -3813,7 +3813,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                     App Preferences
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Language, theme, accessibility
                   </div>
                 </div>
@@ -3838,7 +3838,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       PVC BADGE
                     </span>
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Official PVC identity badge, QR code &amp; NFC
                   </div>
                 </div>
@@ -3864,8 +3864,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         FACULTY
                       </span>
                     </div>
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
-                      Assigned students, reviews &amp; progress telemetry
+                    <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
+                      Assigned students, reviews &amp; progress
                     </div>
                   </div>
                 </div>
@@ -3887,7 +3887,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     Help &amp; Support
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     FAQs, contact support, send feedback
                   </div>
                 </div>
@@ -3909,7 +3909,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div className="text-sm font-black text-rose-600 dark:text-rose-400">
                     Log out
                   </div>
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                     Sign out from your account
                   </div>
                 </div>
@@ -3959,7 +3959,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <span>{roleName?.toUpperCase() || 'ADMIN'}</span>
                   </span>
                 </div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-300 mt-0.5">
                   Manage your credentials, security preferences, official ID badge, and system controls.
                 </p>
               </div>
@@ -4031,7 +4031,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       </span>
                       <span className="text-slate-400">&bull; {institutionalId}</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate mt-1">
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300 font-mono truncate mt-1">
                       {user?.email || 'nanthishvaran17@gmail.com'}
                     </div>
                   </div>
@@ -4062,7 +4062,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   { id: 'notifications', label: 'Notifications', desc: 'Push, email & WhatsApp alerts', icon: Bell, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/60' },
                   { id: 'preferences', label: 'App Preferences', desc: 'Language, theme, display', icon: Sliders, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-950/60' },
                   { id: 'id_card', label: 'Digital ID Card', desc: 'PVC badge, QR verification', icon: FileBadge, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/60', badge: 'PVC BADGE' },
-                  ...(isStaffMentor ? [{ id: 'mentorship', label: 'Mentorship Hub', desc: 'Assigned student telemetry', icon: GraduationCap, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/60', badge: 'FACULTY' }] : []),
+                  ...(isStaffMentor ? [{ id: 'mentorship', label: 'Mentorship Hub', desc: 'Assigned student progress', icon: GraduationCap, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/60', badge: 'FACULTY' }] : []),
                   { id: 'help', label: 'Help & Support', desc: 'Campus IT desk & FAQs', icon: HelpCircle, color: 'text-brand-600 dark:text-brand-400', bg: 'bg-slate-100 dark:bg-navy-800' },
                 ].map(item => {
                   const isActive = effectiveTab === item.id;
@@ -4101,7 +4101,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               </span>
                             )}
                           </div>
-                          <div className={`text-[10px] leading-tight mt-0.5 ${isActive ? 'text-slate-300 dark:text-slate-600' : 'text-slate-400 dark:text-slate-500'}`}>
+                          <div className={`text-[10px] leading-tight mt-0.5 ${isActive ? 'text-slate-300 dark:text-slate-600' : 'text-slate-600 dark:text-slate-300'}`}>
                             {item.desc}
                           </div>
                         </div>
@@ -4135,7 +4135,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
               {/* Campus IT & Institution Badge */}
               <div className="p-4 rounded-3xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 text-center space-y-2">
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                   Nandha Engineering College (Autonomous)
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
@@ -4183,7 +4183,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                      effectiveTab === 'mentorship' ? 'Staff Mentorship' :
                      'Help & Support'}
                   </h1>
-                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate leading-tight">
+                  <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 truncate leading-tight">
                     {effectiveTab === 'profile' ? 'Details, contact & photo' :
                      effectiveTab === 'security' ? 'Password, 2FA & devices' :
                      effectiveTab === 'privacy' ? 'Visibility & permissions' :
@@ -4219,17 +4219,17 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                      effectiveTab === 'notifications' ? 'Notification & Alerts Delivery' :
                      effectiveTab === 'preferences' ? 'Interface & System Preferences' :
                      effectiveTab === 'id_card' ? 'Official Institutional PVC ID Badge' :
-                     effectiveTab === 'mentorship' ? 'Faculty Mentorship & Student Telemetry' :
+                     effectiveTab === 'mentorship' ? 'Faculty Mentorship & Student Progress' :
                      'Campus Help Desk & Knowledge Base'}
                   </h2>
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
                     {effectiveTab === 'profile' ? 'Configure your official faculty credentials, contact info, and bio details.' :
                      effectiveTab === 'security' ? 'Configure hardware passkeys, biometrics, 2FA, and monitor active sessions.' :
                      effectiveTab === 'privacy' ? 'Manage your public visibility, API credentials, and institutional privacy levels.' :
                      effectiveTab === 'notifications' ? 'Tune WhatsApp dispatch, instant push alerts, and automated email reports.' :
                      effectiveTab === 'preferences' ? 'Set color schemes, ambient sound fx, interface scale, and layout density.' :
                      effectiveTab === 'id_card' ? 'Preview 300 DPI CR80 physical badge format, download image or export vCard.' :
-                     effectiveTab === 'mentorship' ? 'Review assigned student performance telemetry, attendance, and contest standings.' :
+                     effectiveTab === 'mentorship' ? 'Review assigned student performance, attendance, and contest standings.' :
                      'Answers to frequent portal queries and direct campus IT contact information.'}
                   </p>
                 </div>
@@ -4291,7 +4291,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     >
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isActive
                           ? 'bg-white/20 dark:bg-slate-900/20 text-white dark:text-slate-900'
-                          : 'bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400'
+                          : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400'
                         }`}>
                         <Icon className="w-3.5 h-3.5" />
                       </div>
@@ -4324,7 +4324,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           {profilePhoto ? (
                             <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
                           ) : (
-                            <User className="w-7 h-7 sm:w-8 sm:h-8 text-slate-500 dark:text-slate-400" />
+                            <User className="w-7 h-7 sm:w-8 sm:h-8 text-slate-600 dark:text-slate-300" />
                           )}
                         </div>
                       </div>
@@ -4344,12 +4344,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         </span>
                       </div>
 
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5 flex-wrap">
                         <span className="text-brand-600 dark:text-brand-400 font-bold">{designation || 'Director & Chief Administrator'}</span>
                         {institutionalId && (
                           <>
                             <span className="text-slate-300 dark:text-slate-600">&bull;</span>
-                            <span className="font-mono text-slate-500 dark:text-slate-400 text-[11px] font-bold">{institutionalId}</span>
+                            <span className="font-mono text-slate-600 dark:text-slate-300 text-[11px] font-bold">{institutionalId}</span>
                           </>
                         )}
                       </div>
@@ -4450,7 +4450,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             </div>
                             <div className="min-w-0">
                               <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">Profile Photo or Preset Avatar</h4>
-                              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">PNG, JPG, WEBP up to 5 MB or pick icon</p>
+                              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">PNG, JPG, WEBP up to 5 MB or pick icon</p>
                             </div>
                           </div>
 
@@ -4537,7 +4537,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                             Identity &amp; Contact Information
                           </h3>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Personal details &amp; primary contact record</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold">Personal details &amp; primary contact record</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -4556,8 +4556,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       >
                         <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
                           <span className="text-slate-900 dark:text-white font-black">{fullName || user?.username || 'Staff Member'}</span>
-                          {phoneNumber && <span className="text-slate-500 dark:text-slate-400 font-mono"> • {phoneNumber}</span>}
-                          {officeLocation && <span className="text-slate-500 dark:text-slate-400"> • {officeLocation}</span>}
+                          {phoneNumber && <span className="text-slate-600 dark:text-slate-300 font-mono"> • {phoneNumber}</span>}
+                          {officeLocation && <span className="text-slate-600 dark:text-slate-300"> • {officeLocation}</span>}
                         </div>
                         <span className="text-brand-600 dark:text-brand-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
                           <span>Edit</span>
@@ -4575,7 +4575,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <User className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Full Display Name <span className="text-rose-500">*</span>
                               </label>
                               <input
@@ -4597,7 +4597,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <Briefcase className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Professional Designation / Academic Title
                               </label>
                               <input
@@ -4618,7 +4618,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <Phone className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Mobile / Contact Number
                               </label>
                               <input
@@ -4641,7 +4641,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                   Date of Birth
                                 </label>
                                 <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold font-mono bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800/80">
@@ -4753,7 +4753,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <MapPin className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Office Cabin / Room Location
                               </label>
                               <input
@@ -4794,7 +4794,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <div className="flex items-center gap-2.5">
                                 <Users className="w-4 h-4 text-rose-500 shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                     Contact Person Name
                                   </label>
                                   <input
@@ -4813,7 +4813,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <div className="flex items-center gap-2.5">
                                 <Phone className="w-4 h-4 text-rose-500 shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                  <label className="block text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                     Emergency Phone
                                   </label>
                                   <input
@@ -4849,7 +4849,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                             Academic Background &amp; Mentoring Bio
                           </h3>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Degrees, research domains &amp; guidance philosophy</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold">Degrees, research domains &amp; guidance philosophy</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -4868,8 +4868,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       >
                         <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
                           <span className="text-slate-900 dark:text-white font-black">{highestDegree || 'Degree not specified'}</span>
-                          {specialization && <span className="text-slate-500 dark:text-slate-400"> • {specialization}</span>}
-                          {experienceYears && <span className="text-slate-500 dark:text-slate-400"> • {experienceYears}</span>}
+                          {specialization && <span className="text-slate-600 dark:text-slate-300"> • {specialization}</span>}
+                          {experienceYears && <span className="text-slate-600 dark:text-slate-300"> • {experienceYears}</span>}
                         </div>
                         <span className="text-indigo-600 dark:text-indigo-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
                           <span>Edit</span>
@@ -4887,7 +4887,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <GraduationCap className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Highest Academic Degree &amp; Institution
                               </label>
                               <input
@@ -4908,7 +4908,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <Award className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Specialization &amp; Research Domains
                               </label>
                               <input
@@ -4929,7 +4929,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <BookOpen className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Courses &amp; Lab Subjects Handling
                               </label>
                               <input
@@ -4946,7 +4946,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         {/* Faculty Bio with 1-Tap Quick Templates */}
                         <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/90 dark:border-navy-800 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all shadow-2xs space-y-2">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-0">
-                            <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                               Faculty Bio &amp; Mentoring Philosophy
                             </label>
                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
@@ -4987,7 +4987,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                             Institutional Scope
                           </h3>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Verified academic record &amp; department allocation</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold">Verified academic record &amp; department allocation</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -5006,8 +5006,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       >
                         <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
                           <span className="font-mono text-indigo-700 dark:text-indigo-300 font-black">{institutionalId}</span>
-                          <span className="text-slate-500 dark:text-slate-400"> • {departmentName}</span>
-                          <span className="text-slate-500 dark:text-slate-400"> • {roleName}</span>
+                          <span className="text-slate-600 dark:text-slate-300"> • {departmentName}</span>
+                          <span className="text-slate-600 dark:text-slate-300"> • {roleName}</span>
                         </div>
                         <span className="text-indigo-600 dark:text-indigo-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
                           <span>View</span>
@@ -5082,11 +5082,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                             Academic &amp; Portfolio Links
                           </h3>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Coding profiles, publications &amp; handles</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold">Coding profiles, publications &amp; handles</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Web Visibility</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">Web Visibility</span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.links ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
@@ -5103,7 +5103,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               {[linkedinUrl && 'LinkedIn', githubUrl && 'GitHub', leetcodeHandle && 'LeetCode'].filter(Boolean).join(' • ')}
                             </span>
                           ) : (
-                            <span className="text-slate-500 dark:text-slate-400">No public profiles configured yet</span>
+                            <span className="text-slate-600 dark:text-slate-300">No public profiles configured yet</span>
                           )}
                         </div>
                         <span className="text-purple-600 dark:text-purple-400 font-black text-[11px] shrink-0 group-hover:underline flex items-center gap-1">
@@ -5122,7 +5122,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <LinkIcon className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 LinkedIn Profile URL
                               </label>
                               <input
@@ -5143,7 +5143,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <Laptop className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 GitHub Profile URL
                               </label>
                               <input
@@ -5164,7 +5164,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               <BookOpen className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                 Google Scholar Profile URL
                               </label>
                               <input
@@ -5186,7 +5186,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                 <ShieldCheck className="w-5 h-5" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                   ORCID iD
                                 </label>
                                 <input
@@ -5208,7 +5208,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                  <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                  <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                     LeetCode Handle
                                   </label>
                                   <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Syncs Live</span>
@@ -5244,11 +5244,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                             Language Proficiencies
                           </h3>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Multi-lingual communication skills</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold">Multi-lingual communication skills</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{selectedLanguages.length} Selected</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">{selectedLanguages.length} Selected</span>
                         <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${expandedCards.languages ? 'rotate-180 text-brand-600' : ''}`} />
                       </div>
                     </div>
@@ -5329,7 +5329,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <span>{is2FAEnabled ? '2FA Protected' : 'Action Recommended'}</span>
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
                         Manage your password, two-factor authentication, and signed-in devices
                       </p>
                     </div>
@@ -5369,7 +5369,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                         Password &amp; Credentials
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Update master login credentials &amp; hashing encryption</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Update master login credentials &amp; hashing encryption</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800/60 font-mono">
@@ -5510,7 +5510,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                         Biometrics &amp; Security Vault
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Hardware-backed passkeys, face scan &amp; multi-factor protection</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Hardware-backed passkeys, face scan &amp; multi-factor protection</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1.5 font-mono">
@@ -5536,7 +5536,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             FIDO2 / WebAuthn
                           </span>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 mt-0.5">
                           {isNativeMobile
                             ? 'Unlock your portal session with device fingerprint or facial scanner.'
                             : 'Sign in instantly with Windows Hello, Apple Touch ID, or YubiKey.'}
@@ -5615,7 +5615,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             {is2FAEnabled ? 'ENABLED' : 'DISABLED'}
                           </span>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 mt-0.5">
                           {is2FAEnabled
                             ? 'Protected by 6-digit TOTP app codes on every sign-in.'
                             : 'Require 6-digit authenticator code (Google, Microsoft, 1Password) on login.'}
@@ -5675,7 +5675,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                         Active Logged-in Devices
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Browsers &amp; hardware sessions authorized</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Browsers &amp; hardware sessions authorized</p>
                     </div>
                   </div>
                   {sessions.length > 1 && (
@@ -5730,7 +5730,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 flex-wrap">
+                            <p className="text-[11px] font-mono text-slate-600 dark:text-slate-300 font-bold flex items-center gap-2 flex-wrap">
                               <span>{s.ip === '127.0.0.1' ? '127.0.0.1 (Localhost)' : s.ip}</span>
                               <span className="text-slate-400">•</span>
                               <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
@@ -5774,7 +5774,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
                           Login Security Audit Log
                         </h3>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+                        <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold truncate">
                           {isAuditLogExpanded
                             ? 'Click header to collapse access ledger'
                             : 'Tamper-evident chronological access ledger • Tap to view all sessions'}
@@ -5871,7 +5871,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             </span>
                           </div>
                         ) : (
-                          <span className="text-slate-500 dark:text-slate-400 font-bold">
+                          <span className="text-slate-600 dark:text-slate-300 font-bold">
                             No login security events recorded yet.
                           </span>
                         )}
@@ -5887,7 +5887,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {/* Expanded State: Scrollable Event Feed */}
                 {isAuditLogExpanded && (
                   <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                       <span>Showing {loginHistory.length} recorded authentication events</span>
                       <span className="text-[10px] text-purple-600 dark:text-purple-400 font-black uppercase">
                         Scroll to inspect
@@ -5898,7 +5898,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       {loginHistory.length === 0 ? (
                         <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-950/50 border border-dashed border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
                           <Clock className="w-8 h-8 text-slate-400 dark:text-navy-600 mb-2 opacity-50" />
-                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No login security events recorded yet.</p>
+                          <p className="text-xs font-bold text-slate-600 dark:text-slate-300">No login security events recorded yet.</p>
                           <p className="text-[10px] text-slate-400 dark:text-navy-500 mt-1">Authentic original logs will appear here upon next sign-in.</p>
                         </div>
                       ) : (
@@ -5929,7 +5929,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                   <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate">
                                     {parsed.deviceName}
                                   </p>
-                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5 flex-wrap">
+                                  <div className="text-[10px] text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5 flex-wrap">
                                     <span>{lh.date} at {lh.time}</span>
                                     <span>•</span>
                                     <span className="font-mono">{lh.ip === '127.0.0.1' ? 'Localhost (127.0.0.1)' : lh.ip}</span>
@@ -5976,7 +5976,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
             {/* 1. Directory Privacy Card */}
             <div className="space-y-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 px-1">
                 Directory Privacy &amp; Visibility
               </span>
 
@@ -5996,7 +5996,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-sm font-black text-slate-900 dark:text-white">
                         Share Contact with Mentees
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                         Allow students assigned to your mentoring cohort to view your contact.
                       </div>
                     </div>
@@ -6021,7 +6021,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-sm font-black text-slate-900 dark:text-white">
                         Show Office / Cabin Number
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                         Display room/cabin on internal college directory and mentor search.
                       </div>
                     </div>
@@ -6044,7 +6044,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-black text-slate-900 dark:text-white">
                       Platform Presence &amp; Activity
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Role verification and sync status</p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Role verification and sync status</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
@@ -6056,7 +6056,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
                   <div>
                     <div className="font-black text-slate-900 dark:text-white">Institutional Authentication Scope</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Scoped to Nandha Engineering College credentials ({institutionalId})</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">Scoped to Nandha Engineering College credentials ({institutionalId})</div>
                   </div>
                   <span className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-mono font-bold shrink-0">
                     NEC-AUTH
@@ -6065,8 +6065,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex items-center justify-between gap-3">
                   <div>
-                    <div className="font-black text-slate-900 dark:text-white">LeetCode Sync Telemetry</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Automated multi-threaded GraphQL tracking of solve metrics</div>
+                    <div className="font-black text-slate-900 dark:text-white">LeetCode Sync Status</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">Automated multi-threaded GraphQL tracking of solve metrics</div>
                   </div>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold shrink-0">
                     SYNC ACTIVE
@@ -6086,7 +6086,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-black text-slate-900 dark:text-white">
                       Data Safety &amp; Portability
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Google Play compliance &amp; backups</p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Google Play compliance &amp; backups</p>
                   </div>
                 </div>
               </div>
@@ -6125,14 +6125,14 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* ========================================================================= */}
-        {/* CATEGORY D: NOTIFICATIONS — Live Telemetry & Alerts */}
+        {/* CATEGORY D: NOTIFICATIONS — Live Alerts & Sync */}
         {/* ========================================================================= */}
         {effectiveTab === 'notifications' && (
           <div className="space-y-4 sm:space-y-5 animate-fade-in">
             {/* Group 1: Automated Portal Alerts */}
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                   Automated Portal Alerts
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
@@ -6170,7 +6170,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <span>Test Alert</span>
                         </button>
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                         Instant email receipts when weekly LeetCode contests conclude.
                       </div>
                     </div>
@@ -6208,7 +6208,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <span>Test Alert</span>
                         </button>
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                         Summary of assigned students milestones every Monday morning.
                       </div>
                     </div>
@@ -6246,7 +6246,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <span>Test Alert</span>
                         </button>
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                         Instant alerts if password is changed or new logins occur.
                       </div>
                     </div>
@@ -6288,7 +6288,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <span>{isPlayingAudioTest ? 'Playing...' : 'Test Sound'}</span>
                         </button>
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
                         Subtle audio chimes on milestone toasts and contest conclude.
                       </div>
                     </div>
@@ -6307,7 +6307,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         Notification Sound Studio (Click to Preview)
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 hidden sm:inline">
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 hidden sm:inline">
                       Active sound tone for alerts & push
                     </span>
                   </div>
@@ -6330,7 +6330,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Bubbly Pop</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Bubbly Pop</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('whatsapp'); }}
@@ -6358,7 +6358,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Crystal Chime</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Crystal Chime</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('apple'); }}
@@ -6386,7 +6386,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Knock & Ding</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Knock & Ding</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('tech'); }}
@@ -6414,7 +6414,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">No Sound (Silent)</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">No Sound (Silent)</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('none'); }}
@@ -6431,7 +6431,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
             {/* Group 2: Mentee Inactivity Smart Alarm */}
             <div className="space-y-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 px-1">
                 Student Inactivity Warning
               </span>
 
@@ -6445,7 +6445,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-sm font-black text-slate-900 dark:text-white truncate">
                         Inactivity Threshold
                       </div>
-                      <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                         Flag inactive mentees on roster
                       </div>
                     </div>
@@ -6489,7 +6489,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 {/* Slider */}
                 <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300">
                     <span>Fine-tune threshold</span>
                     <span className="font-mono text-slate-800 dark:text-slate-200">{inactivityDaysThreshold} Days</span>
                   </div>
@@ -6533,7 +6533,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       v4.1 • Live
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                     Nandha Engineering College, Erode
                   </p>
                 </div>
@@ -6559,7 +6559,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       Appearance
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Choose how Nandha LeetCode looks on your device</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">Choose how Nandha LeetCode looks on your device</p>
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center">
@@ -6660,7 +6660,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       Live Contest Updates
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Settings for Sunday live contest tracking and report automation</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">Settings for Sunday live contest tracking and report automation</p>
                   </div>
                 </div>
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -6694,7 +6694,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       }`}
                     >
                       <div className="text-xs font-bold text-slate-900 dark:text-white">{cad.label}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{cad.desc}</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{cad.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -6705,7 +6705,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
                   <div className="min-w-0 pr-3">
                     <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-verify contest solvers</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Verifies finish timestamps directly against LeetCode contest rankings</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">Verifies finish timestamps directly against LeetCode contest rankings</div>
                   </div>
                   <div
                     role="switch"
@@ -6738,7 +6738,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
                   <div className="min-w-0 pr-3">
                     <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-generate Sunday 10:00 AM reports</div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Prepares all department Excel and PDF performance reports right after contest closing</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">Prepares all department Excel and PDF performance reports right after contest closing</div>
                   </div>
                   <div
                     role="switch"
@@ -6781,7 +6781,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       Display &amp; Privacy
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Classroom smartboard safeguards and mobile haptic feedback</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">Classroom smartboard safeguards and mobile haptic feedback</p>
                   </div>
                 </div>
                 {presentationShield && (
@@ -6799,7 +6799,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <EyeOff className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       Auditorium &amp; Projector Mode
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Hides student phone numbers and emails when presenting on projectors or shared screens</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">Hides student phone numbers and emails when presenting on projectors or shared screens</div>
                   </div>
                   <div
                     role="switch"
@@ -6850,7 +6850,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
                       Touch Haptics (Mobile &amp; Tablet)
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">Provides subtle vibration feedback when tapping buttons and toggles</div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">Provides subtle vibration feedback when tapping buttons and toggles</div>
                   </div>
                   <div
                     role="switch"
@@ -6880,7 +6880,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white font-display">
                       Contest Checklist &amp; Notes
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Weekly contest reminders, checks, and personal notes</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">Weekly contest reminders, checks, and personal notes</p>
                   </div>
                 </div>
 
@@ -6956,7 +6956,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="min-w-0 flex-1">
                         <span className={`text-xs font-bold block truncate ${
                           task.completed
-                            ? 'line-through text-slate-400 dark:text-slate-500'
+                            ? 'line-through text-slate-600 dark:text-slate-300'
                             : 'text-slate-800 dark:text-slate-200'
                         }`}>
                           {task.text}
@@ -7059,7 +7059,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   Nandha Engineering College (Autonomous), Erode • NIRF / NBA Compliant
                 </span>
               </div>
-              <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+              <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 font-bold">
                 Platform v4.2.0 • Institutional Standard
               </span>
             </div>
@@ -7501,7 +7501,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-xs sm:text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
                       Student Mentorship & Attendance
                     </h3>
-                    <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    <p className="text-[10px] sm:text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                       Real-time academic cohort tracking & behavioral telemetry
                     </p>
                   </div>
@@ -7517,7 +7517,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">Assigned Mentees</div>
                     <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{totalMentees}</div>
-                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Official Semester Roster</div>
+                    <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-1">Official Semester Roster</div>
                   </div>
                   <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5" />
@@ -7528,7 +7528,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Avg Attendance</div>
                     <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{avgAttendance}</div>
-                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Institutional Threshold 75%</div>
+                    <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-1">Institutional Threshold 75%</div>
                   </div>
                   <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <CheckCircle className="w-5 h-5" />
@@ -7539,7 +7539,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Pending Interventions</div>
                     <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 leading-none">{pendingInterventions}</div>
-                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1">Requires Faculty Review</div>
+                    <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 mt-1">Requires Faculty Review</div>
                   </div>
                   <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-5 h-5" />
@@ -7597,7 +7597,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                                 <div className="text-xs font-black text-slate-900 dark:text-white">
                                   No Mentees Assigned Yet
                                 </div>
-                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                                <div className="text-[11px] text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
                                   Your department coordinator or HOD will assign student mentees to your staff account for this academic cycle.
                                 </div>
                               </div>
@@ -7693,7 +7693,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             <div className="mt-2.5 pt-2 border-t border-slate-200/70 dark:border-navy-800/80 flex items-center justify-between gap-2">
                               {/* Attendance Badge */}
                               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 text-[11px]">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">Att:</span>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Att:</span>
                                 <span className={`font-black ${isCritical ? 'text-rose-600 dark:text-rose-400' : isWarning ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                   {att}
                                 </span>
@@ -7734,7 +7734,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                       Campus IT Helpdesk
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Direct technical support &amp; administrative desk</p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Direct technical support &amp; administrative desk</p>
                   </div>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
@@ -7745,11 +7745,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Official IT Desk Email</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Official IT Desk Email</div>
                   <div className="text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white break-all">
                     nanthishvaran17@gmail.com
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">Main Campus • Administrative Block A-102</div>
+                  <div className="text-[11px] text-slate-600 dark:text-slate-300">Main Campus • Administrative Block A-102</div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
@@ -7792,7 +7792,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                       Quick Resolution Topics
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Direct navigation to self-serve settings</p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Direct navigation to self-serve settings</p>
                   </div>
                 </div>
               </div>
@@ -7815,7 +7815,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                         Designation / Dept Correction
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      <div className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">
                         Request update from IT Registrar
                       </div>
                     </div>
@@ -7841,7 +7841,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                         LeetCode Handle Sync
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      <div className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">
                         Configure crawler handle &amp; links
                       </div>
                     </div>
@@ -7866,7 +7866,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
                         Face ID &amp; 2-Factor Auth
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      <div className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">
                         Manage passkeys, devices &amp; OTP
                       </div>
                     </div>
@@ -7891,7 +7891,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                         Digital ID Card &amp; PVC Print
                       </div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                      <div className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">
                         Download 300 DPI high-res badge
                       </div>
                     </div>
@@ -7912,7 +7912,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
                       Frequently Asked Questions
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Quick solutions for common portal workflows</p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Quick solutions for common portal workflows</p>
                   </div>
                 </div>
               </div>
@@ -8965,7 +8965,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
                     Help &amp; Support Hub
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Frequently asked questions &amp; campus IT support</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">Frequently asked questions &amp; campus IT support</p>
                 </div>
               </div>
               <button
@@ -9094,7 +9094,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <Mail className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Campus IT Helpdesk</div>
+                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Campus IT Helpdesk</div>
                     <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">nanthishvaran17@gmail.com</div>
                   </div>
                 </div>
@@ -9197,7 +9197,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
                     Export Account Data
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Google Play compliant portable JSON backup</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">Google Play compliant portable JSON backup</p>
                 </div>
               </div>
               <button
@@ -9244,7 +9244,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <Share2 className="w-4 h-4 text-blue-600" />
                   <div className="text-left">
                     <p className="font-black">Share Backup via Apps</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">WhatsApp, Drive, Gmail, or Files</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">WhatsApp, Drive, Gmail, or Files</p>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-70" />
@@ -9261,7 +9261,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <Copy className="w-4 h-4 text-amber-600" />
                   <div className="text-left">
                     <p className="font-black">Copy JSON to Clipboard</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Direct paste into Notes or chat</p>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Direct paste into Notes or chat</p>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 opacity-70" />
@@ -9294,7 +9294,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
                     Restore Account Data
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Import from file or paste backup JSON</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-bold">Import from file or paste backup JSON</p>
                 </div>
               </div>
               <button
@@ -9308,7 +9308,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
             {/* Option 1: Native Mobile File Upload via direct label */}
             <div className="space-y-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Option 1: Select JSON Backup File
               </span>
               <label
@@ -9336,7 +9336,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             {/* Option 2: Paste Raw JSON */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                   Option 2: Paste Backup JSON
                 </span>
                 <button

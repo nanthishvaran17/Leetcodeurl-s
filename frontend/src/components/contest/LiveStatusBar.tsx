@@ -51,7 +51,7 @@ export const LiveStatusBar: React.FC<LiveStatusBarProps> = ({
       
       <div className="flex items-center gap-4 flex-wrap">
         <span className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+          <Clock className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
           Last Event: <span className="text-slate-900 dark:text-white">{lastEventTime || '—'}</span>
         </span>
         <span className="flex items-center gap-1.5">
@@ -59,7 +59,7 @@ export const LiveStatusBar: React.FC<LiveStatusBarProps> = ({
           Sync: <span className={isLive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}>{syncStatus}</span>
         </span>
         <span className="flex items-center gap-1.5">
-          {isLive ? <Wifi className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <WifiOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />}
+          {isLive ? <Wifi className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <WifiOff className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />}
           Realtime: <span className={isLive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}>{isLive ? 'CONNECTED' : 'DISCONNECTED'}</span>
         </span>
         <div className={`px-2.5 py-1 rounded-lg border ${statusColor}`}>

@@ -528,7 +528,7 @@ export const AuditLogPage: React.FC = () => {
             }}
             className="w-full h-10 sm:h-11 bg-slate-50/80 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs font-bold py-2 pl-9 pr-9 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-left transition-all"
           />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-400 dark:text-slate-500">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-600 dark:text-slate-300">
             <Search className="w-3.5 h-3.5 stroke-[2.5]" />
           </div>
           {searchTerm && (
@@ -545,7 +545,7 @@ export const AuditLogPage: React.FC = () => {
 
         {/* 2. Quick Limit Pills Bar (Top 5, Top 10, Top 25, Top 50, Top 100) */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-0.5 px-0.5">
-          <span className="text-[10px] font-extrabold uppercase text-slate-400 dark:text-slate-500 tracking-wider shrink-0 mr-0.5 flex items-center gap-1">
+          <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-slate-300 tracking-wider shrink-0 mr-0.5 flex items-center gap-1">
             <ListFilter className="w-3 h-3 text-indigo-500" />
             <span>Show:</span>
           </span>
@@ -681,7 +681,7 @@ export const AuditLogPage: React.FC = () => {
           <div className="p-12 text-center">
             <ShieldAlert className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
             <div className="text-slate-500 dark:text-slate-400 font-bold text-sm">No audit activity logged yet.</div>
-            <div className="text-slate-400 dark:text-slate-500 font-semibold text-xs mt-1">Audit logs will appear here as administrators take actions.</div>
+            <div className="text-slate-600 dark:text-slate-300 font-semibold text-xs mt-1">Audit logs will appear here as administrators take actions.</div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -738,7 +738,7 @@ export const AuditLogPage: React.FC = () => {
                       <td className="py-3.5 px-4 max-w-xs">
                         <div className="font-bold text-slate-700 dark:text-slate-200 truncate text-[11px]">{log.description || '—'}</div>
                         {log.ip_address && (
-                          <div className="text-[10px] font-mono font-semibold text-slate-400 dark:text-slate-500 mt-0.5">IP: {log.ip_address}</div>
+                          <div className="text-[10px] font-mono font-semibold text-slate-600 dark:text-slate-300 mt-0.5">IP: {log.ip_address}</div>
                         )}
                       </td>
 

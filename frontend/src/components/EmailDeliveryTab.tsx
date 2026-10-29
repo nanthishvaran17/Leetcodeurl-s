@@ -1474,7 +1474,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
                 {/* Recipient Search Filter */}
                 <div className="relative flex items-center">
-                  <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+                  <Search className="w-4 h-4 text-slate-600 dark:text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
                   <input
                     type="text"
                     value={recipientSearchQuery}
@@ -1516,7 +1516,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                               {isSelected ? (
                                 <CheckSquare className="w-5 h-5 text-brand-500" />
                               ) : (
-                                <Square className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                                <Square className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                               )}
                             </div>
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500/20 to-purple-500/20 border border-brand-500/30 text-brand-600 dark:text-brand-400 flex items-center justify-center text-[10px] font-black shrink-0">

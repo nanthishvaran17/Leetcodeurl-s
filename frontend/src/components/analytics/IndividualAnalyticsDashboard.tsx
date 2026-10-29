@@ -350,7 +350,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     Overall Acceptance Rate
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                  <div className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                     Based on {data.current_stats.total_submissions.toLocaleString()} total submissions
                   </div>
                 </div>

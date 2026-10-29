@@ -1552,7 +1552,7 @@ Contests: ${formattedHeaders.join(' → ')}`;
                         <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                           Contest / Weekly Solve Distribution Cohorts
                         </span>
-                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
                           Click any cohort card to filter students in the table
                         </span>
                       </div>
@@ -3537,7 +3537,7 @@ Contests: ${formattedHeaders.join(' → ')}`;
                                 {fKey ? 'tap to filter' : chipLabel}
                               </span>
                             )}
-                            <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 opacity-60">
+                            <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 opacity-60">
                               {chipLabel}
                             </span>
                           </div>
@@ -4225,7 +4225,7 @@ Contests: ${formattedHeaders.join(' → ')}`;
                         <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                           Contest / Weekly Solve Distribution Cohorts
                         </span>
-                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
                           Click any cohort card to filter students in the table
                         </span>
                       </div>

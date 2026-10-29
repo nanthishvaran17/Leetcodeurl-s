@@ -96,7 +96,7 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
         </div>
 
         {/* Institutional Footer */}
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
           Nandha Engineering College • Autonomous • Official Performance Tracking Platform
         </p>
 

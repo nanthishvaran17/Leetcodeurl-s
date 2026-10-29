@@ -536,7 +536,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         {/* Results List */}
         <div className="flex-1 overflow-y-auto p-2 sm:p-3.5 space-y-1 sm:space-y-1.5 custom-scrollbar" ref={listRef}>
           {filteredItems.length === 0 ? (
-            <div className="p-8 sm:p-10 text-center text-slate-400 dark:text-slate-500">
+            <div className="p-8 sm:p-10 text-center text-slate-600 dark:text-slate-300">
               <p className="text-xs sm:text-sm font-medium">No commands or records found for "{search}"</p>
               <p className="text-[11px] sm:text-xs mt-1 text-slate-400">Try searching by Register Number, Name, or Action.</p>
             </div>
@@ -588,7 +588,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       )}
                     </div>
                     {item.sublabel && (
-                      <span className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 truncate block mt-0.5">
+                      <span className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 truncate block mt-0.5">
                         {item.sublabel}
                       </span>
                     )}

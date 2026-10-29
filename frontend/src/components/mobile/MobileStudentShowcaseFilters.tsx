@@ -330,7 +330,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
                               {dept.label}
                             </p>
                             {dept.student_count !== undefined && (
-                              <p className={`text-[9px] font-semibold mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'}`}>
+                              <p className={`text-[9px] font-semibold mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-600 dark:text-slate-300'}`}>
                                 {dept.value === 'all' ? `${dept.student_count} total enrolled` : `${dept.student_count} students`}
                               </p>
                             )}

@@ -551,7 +551,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                           <tbody className="text-sm divide-y divide-slate-100 dark:divide-navy-800">
                             {details.top_performers.map(p => (
                               <tr key={p.student_id} className="hover:bg-slate-50 dark:hover:bg-navy-700/50 transition">
-                                <td className="py-2.5 px-2 sm:px-3 font-mono font-black text-slate-400 dark:text-slate-500 text-center text-xs sm:text-sm">
+                                <td className="py-2.5 px-2 sm:px-3 font-mono font-black text-slate-600 dark:text-slate-300 text-center text-xs sm:text-sm">
                                   #{p.rank}
                                 </td>
                                 <td className="py-2.5 px-2 sm:px-3 min-w-0">

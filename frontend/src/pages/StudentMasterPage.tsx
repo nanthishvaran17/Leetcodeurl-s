@@ -53,7 +53,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
           <span className="font-bold">Account verified — <span className="font-black">{state.username}</span></span>
         </div>
         {(state.total_solved != null || state.contest_rating != null) && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 pl-5">
+          <div className="text-xs text-slate-600 dark:text-slate-300 pl-5">
             {state.total_solved != null && <span>{state.total_solved} solved</span>}
             {state.total_solved != null && state.contest_rating != null && <span> · </span>}
             {state.contest_rating != null && <span>Rating {state.contest_rating}</span>}
@@ -101,7 +101,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'network_error') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 mt-1.5">
         <WifiOff className="w-3.5 h-3.5" />
         <span className="font-semibold">Could not reach LeetCode — check your connection</span>
       </div>
@@ -612,7 +612,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               autoComplete="off"
               className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
             />
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-500 dark:text-slate-400">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-600 dark:text-slate-300">
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             {localSearch && (
@@ -661,7 +661,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
 
         {/* Results Counter & Active Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
           <div className="min-w-0 flex-1 break-words flex flex-wrap items-center gap-2">
             {filters.isFilteringActive ? (
               <span>
@@ -714,7 +714,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {isTableLoading ? (
         <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white dark:border-navy-700 dark:bg-navy-950">
           <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Loading student directory...</p>
+          <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Loading student directory...</p>
         </div>
       ) : serverTotalCount === 0 && filters.isFilteringActive && (
         <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-sm space-y-4">
@@ -723,7 +723,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           </div>
           <div className="space-y-1">
             <h4 className="text-base font-black text-slate-900 dark:text-white">No students found</h4>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
               Try searching with: <br/>
               • Student name<br/>
               • Register number<br/>
@@ -994,7 +994,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">4</span>
                     LEETCODE LIVE SYNC INTEGRATION
                   </span>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">AUTOMATIC VERIFICATION</span>
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">AUTOMATIC VERIFICATION</span>
                 </div>
 
                 <div className="relative">
@@ -1029,7 +1029,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 <LcValidationChip state={lcValidation} />
 
                 {!saveAllowed && (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 italic">
                     Tip: Fix the LeetCode URL above, or clear it to save record without profile sync.
                   </p>
                 )}

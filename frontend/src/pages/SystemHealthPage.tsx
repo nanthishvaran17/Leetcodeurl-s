@@ -1485,7 +1485,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   </div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{forensicResult.result.contest_score}</span>
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Points</span>
+                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase">Points</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] font-black tracking-wider text-slate-600 dark:text-slate-300">
                     <span className={forensicResult.result.q1 ? 'text-emerald-600 dark:text-emerald-400' : 'opacity-40'}>Q1:{forensicResult.result.q1}</span>

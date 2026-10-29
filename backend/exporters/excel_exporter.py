@@ -95,7 +95,7 @@ def _fmt_null(val, default="—"):
         return default
     return val
 
-def _write_college_header(ws, report_title: str, dept_text: str, cols: int, metadata_block: Optional[Dict[str, str]] = None):
+def _write_college_header(ws, report_title: str, dept_text: str, cols: int, metadata_block: Optional[Dict[str, str]] = None, custom_dept_header: Optional[str] = None):
     from backend.exporters.nec_master_excel_design import apply_master_college_identity
     import re
     dept_parts = dept_text.split("•")
@@ -103,7 +103,10 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     
     # Strip case-insensitive "DEPARTMENT OF" prefix if present
     dept_clean = re.sub(r'(?i)^department\s+of\s+', '', dept_raw).strip()
-    dept_val = dept_clean if dept_clean and dept_clean.upper() != "ALL" else "ALL"
+    if dept_clean.upper() in ("ALL", "ALL DEPARTMENTS", "DEPARTMENT PERFORMANCE SUMMARY", "PERFORMANCE SUMMARY"):
+        dept_val = "ALL DEPARTMENTS"
+    else:
+        dept_val = dept_clean if dept_clean else "ALL DEPARTMENTS"
     
     year_val = "ALL"
     if len(dept_parts) > 1:
@@ -131,7 +134,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         contest_name=metadata_block.get("Contest", "") if metadata_block else "",
         session_date=session_date,
         total_roster=total_roster,
-        cols=cols
+        cols=cols,
+        custom_dept_header=custom_dept_header
     )
 
 def normalize_row_data(r: dict) -> dict:
@@ -684,14 +688,15 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
     _write_college_header(
         ws_dept,
         "COORDINATOR WEEKLY PERFORMANCE REPORT",
-        "DEPARTMENT PERFORMANCE SUMMARY",
+        "ALL DEPARTMENTS",
         13,
         {
             "Report ID": str(dataset.get("report_id") or dataset.get("reportId") or "REP-2026"),
             "Report Date": report_date,
             "Total Roster": f"{dataset.get('total_students', 0)} Students",
             "Verified Solvers": f"{dataset.get('verified_students', 0)} Solvers"
-        }
+        },
+        custom_dept_header="DEPARTMENT PERFORMANCE SUMMARY"
     )
 
     d_row = 7
@@ -702,33 +707,123 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         c.fill = NAVY_SECONDARY
         c.alignment = ALIGN_CENTER
         _apply_thin_border(c)
+    ws_dept.row_dimensions[d_row].height = 28
     d_row += 1
 
     dept_summaries = dataset.get("department_summaries") or dataset.get("dept_summaries") or []
+    sum_tot = sum_ver = sum_tot_solved = sum_ab500 = sum_250_500 = sum_q4 = sum_q3 = sum_q2 = sum_q1 = 0
+
     for d_i, d in enumerate(dept_summaries, 1):
         d_cats = d.get("categories") or {}
         d_cw = d.get("current_week") or {}
+        d_m = d.get("metrics") or {}
+
+        t_students = int(d.get("total_students", 0) or 0)
+        v_students = int(d_m.get("verified_students") or d_m.get("verified") or t_students)
+        t_solved = int(d_m.get("total_solved", 0) or 0)
+
+        # Precise Average Solved Calculation
+        avg_s = d_m.get("avg_solved") if d_m.get("avg_solved") is not None else d_m.get("average_solved")
+        if (avg_s is None or avg_s == 0) and t_students > 0 and t_solved > 0:
+            avg_s = round(t_solved / t_students, 1)
+        elif avg_s is None:
+            avg_s = 0.0
+
+        c_ab500 = int(d_cats.get("Above 500", 0) or 0)
+        c_250_500 = int(d_cats.get("250 - 500") or d_cats.get("250–500", 0) or 0)
+        cq4 = int(d_cw.get("q4", 0) or 0)
+        cq3 = int(d_cw.get("q3", 0) or 0)
+        cq2 = int(d_cw.get("q2", 0) or 0)
+        cq1 = int(d_cw.get("q1", 0) or 0)
+
+        sum_tot += t_students
+        sum_ver += v_students
+        sum_tot_solved += t_solved
+        sum_ab500 += c_ab500
+        sum_250_500 += c_250_500
+        sum_q4 += cq4
+        sum_q3 += cq3
+        sum_q2 += cq2
+        sum_q1 += cq1
+
         d_vals = [
             d_i,
             d.get("department") or d.get("dept") or "",
             d.get("coordinator") or "—",
-            d.get("total_students", 0),
-            (d.get("metrics") or {}).get("verified_students", d.get("total_students", 0)),
-            (d.get("metrics") or {}).get("average_solved", 0),
-            (d.get("metrics") or {}).get("total_solved", 0),
-            d_cats.get("Above 500", 0),
-            d_cats.get("250 - 500") or d_cats.get("250–500", 0),
-            d_cw.get("q4", 0),
-            d_cw.get("q3", 0),
-            d_cw.get("q2", 0),
-            d_cw.get("q1", 0),
+            t_students,
+            v_students,
+            round(avg_s, 1) if isinstance(avg_s, float) else avg_s,
+            t_solved,
+            c_ab500,
+            c_250_500,
+            cq4,
+            cq3,
+            cq2,
+            cq1,
         ]
         for c_i, v in enumerate(d_vals, 1):
             c = ws_dept.cell(row=d_row, column=c_i, value=v)
-            c.font = FONT_BODY if c_i in (2, 3) else FONT_NUMERIC
+            c.font = FONT_BODY_BOLD if c_i == 2 else (FONT_BODY if c_i == 3 else FONT_NUMERIC)
             c.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
             _apply_thin_border(c)
+        ws_dept.row_dimensions[d_row].height = 26
         d_row += 1
+
+    # Total Summary Row for Institutional Consolidation
+    if dept_summaries:
+        ws_dept.cell(row=d_row, column=1, value="")
+        tot_label_cell = ws_dept.cell(row=d_row, column=2, value="TOTAL")
+        tot_label_cell.font = FONT_BODY_BOLD
+        tot_label_cell.alignment = ALIGN_CENTER
+        tot_label_cell.fill = SUB_FILL
+        _apply_thin_border(tot_label_cell)
+
+        tot_coord_cell = ws_dept.cell(row=d_row, column=3, value="INSTITUTIONAL SUMMARY")
+        tot_coord_cell.font = FONT_BODY_BOLD
+        tot_coord_cell.alignment = ALIGN_LEFT
+        tot_coord_cell.fill = SUB_FILL
+        _apply_thin_border(tot_coord_cell)
+
+        overall_avg = round(sum_tot_solved / sum_tot, 1) if sum_tot > 0 else 0.0
+
+        tot_summary_vals = [
+            sum_tot,
+            sum_ver,
+            overall_avg,
+            sum_tot_solved,
+            sum_ab500,
+            sum_250_500,
+            sum_q4,
+            sum_q3,
+            sum_q2,
+            sum_q1
+        ]
+        for c_i, v in enumerate(tot_summary_vals, 4):
+            c = ws_dept.cell(row=d_row, column=c_i, value=v)
+            c.font = FONT_NUMERIC_BOLD
+            c.alignment = ALIGN_CENTER
+            c.fill = SUB_FILL
+            _apply_thin_border(c)
+        ws_dept.row_dimensions[d_row].height = 26
+
+    # Column Widths Optimized for Alignment & Readability
+    dept_col_widths = {
+        1: 8.0,   # S.No
+        2: 15.0,  # Department
+        3: 40.0,  # Coordinator
+        4: 10.0,  # Total
+        5: 10.0,  # Verified
+        6: 13.0,  # Avg Solved
+        7: 15.0,  # Total Solved
+        8: 12.0,  # Above 500
+        9: 12.0,  # 250–500
+        10: 12.0, # 4/4 Solved
+        11: 12.0, # 3/4 Solved
+        12: 12.0, # 2/4 Solved
+        13: 12.0  # 1/4 Solved
+    }
+    for c_i, w in dept_col_widths.items():
+        ws_dept.column_dimensions[get_column_letter(c_i)].width = w
 
     # SHEET 4: FULL STUDENT ROSTER
     ws_roster = wb.create_sheet(title="Full Student Roster")
@@ -833,7 +928,7 @@ def export_weekly_performance_excel(dataset: dict, include_extra_sheets: bool = 
         ws_roster.row_dimensions[row_num].height = 20
 
     # Column Auto-Widths & Min-Widths ONLY for ws_dept and ws_roster (ws1 and ws2 keep their exact A4 landscape widths)
-    for sheet in [ws_dept, ws_roster]:
+    for sheet in [ws_roster]:
         for col in sheet.columns:
             if not col or col[0].column is None:
                 continue

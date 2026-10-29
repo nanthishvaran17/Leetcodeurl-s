@@ -886,12 +886,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </h1>
 
             <p className="text-xs sm:text-sm md:text-[15px] text-slate-300 font-normal max-w-2xl leading-relaxed">
-              Real-time competitive programming forensics across all departments, automated Sunday contest verification, and faculty mentoring analytics.
+              Real-time competitive programming analytics across all departments, automated Sunday contest verification, and faculty mentoring tracking.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            {['Real-time Telemetry', 'Contest Forensics', 'Sunday Automated Audits', 'Faculty Mentor Matrix'].map((tag) => (
+            {['Live Solve Tracking', 'Sunday Contest Verification', 'Automated Department Audits', 'Faculty Mentoring Roster'].map((tag) => (
               <span
                 key={tag}
                 className="inline-flex items-center justify-start px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold tracking-wide bg-white/[0.06] border border-white/10 text-slate-200 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors"

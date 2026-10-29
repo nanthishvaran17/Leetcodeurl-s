@@ -87,7 +87,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     Live Telemetry
                   </span>
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1 sm:line-clamp-none">
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-semibold line-clamp-1 sm:line-clamp-none">
                   Track mentorship workload, active solver rates, Sunday contest engagement, and completion across staff members
                 </p>
               </div>
@@ -127,7 +127,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             title="Click to open Faculty Allocation & Mentors Manager"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 Total Mentors
               </span>
               <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
@@ -138,7 +138,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
               <span className="text-lg sm:text-xl font-black font-mono text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 {totalStaff}
               </span>
-              <span className="text-[10px] font-bold text-slate-500">Faculty</span>
+              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Faculty</span>
             </div>
           </div>
 
@@ -158,7 +158,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             </div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-lg sm:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">{allocatedStaff}</span>
-              <span className="text-[10px] font-bold text-slate-500">Active Duty</span>
+              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Active Duty</span>
             </div>
           </div>
 
@@ -178,7 +178,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             </div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-lg sm:text-xl font-black font-mono text-amber-600 dark:text-amber-400">{unallocatedStaff}</span>
-              <span className="text-[10px] font-bold text-slate-500">Mentors</span>
+              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Mentors</span>
             </div>
           </div>
 
@@ -207,13 +207,13 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
 
         {/* 3. Search Toolbar */}
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search faculty mentor by name, email, or department..."
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-medium"
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-300/80 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all font-medium"
           />
         </div>
       </div>
@@ -263,14 +263,14 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                           </span>
                         )}
                       </h4>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 font-mono truncate font-medium">
                         {s.full_name && s.full_name !== s.username && (
                           <>
-                            <span className="text-slate-400 font-medium">@{s.username}</span>
-                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="text-slate-600 dark:text-slate-300 font-semibold">@{s.username}</span>
+                            <span className="text-slate-400 dark:text-slate-600">•</span>
                           </>
                         )}
-                        <span className="truncate">{s.email}</span>
+                        <span className="truncate text-slate-600 dark:text-slate-300">{s.email}</span>
                       </div>
                     </div>
                   </div>
@@ -283,7 +283,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                 {/* 3-Cell Inset Metric Grid */}
                 <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 text-center">
                   <div>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
                       Mentees
                     </span>
                     <span className="text-xs font-mono font-black text-slate-800 dark:text-white">
@@ -291,7 +291,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     </span>
                   </div>
                   <div>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
                       Active Solvers
                     </span>
                     <span className="text-xs font-mono font-black text-teal-600 dark:text-teal-400">
@@ -299,7 +299,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     </span>
                   </div>
                   <div>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
                       Sunday Contest
                     </span>
                     <span className="text-xs font-mono font-black text-indigo-600 dark:text-indigo-400">
@@ -320,7 +320,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       />
                     </div>
                     <span className={`text-[10px] font-mono font-black shrink-0 ${
-                      completionRate === 0 ? 'text-slate-400' : 'text-slate-800 dark:text-white'
+                      completionRate === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
                     }`}>
                       {completionRate}%
                     </span>
@@ -338,16 +338,16 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                 </div>
 
                 {/* Mobile Action Buttons */}
-                <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-white/5" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedStaffDetail(s);
                     }}
-                    className="flex-1 min-h-[32px] px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 text-white text-[11px] font-black transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
+                    className="flex-1 h-8 px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 text-white text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-xs shadow-indigo-600/20"
                   >
-                    <Eye size={11} className="shrink-0" />
+                    <Eye size={12} className="shrink-0" />
                     <span>Inspect</span>
                   </button>
 
@@ -357,13 +357,14 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       e.stopPropagation();
                       handleFilterByStaff(s.id, s.username);
                     }}
-                    className={`min-h-[32px] px-2.5 rounded-xl text-[11px] font-black transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${
+                    className={`h-8 px-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${
                       isSelected
-                        ? 'bg-emerald-600 text-white shadow-emerald-600/30'
+                        ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-600/30'
                         : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    <span>{isSelected ? 'Scoped' : 'Filter Scope'}</span>
+                    <Filter size={11} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400'} />
+                    <span>{isSelected ? 'Scoped' : 'Scope'}</span>
                   </button>
 
                   <button
@@ -372,23 +373,32 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       e.stopPropagation();
                       setShowStaffAllocationModal(true);
                     }}
-                    className="min-h-[32px] px-2 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 text-[11px] font-bold border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-95"
-                    title="Reassign"
+                    className="h-8 w-8 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center active:scale-95 shrink-0"
+                    title="Manage Allocation"
                   >
-                    <ArrowRightLeft size={11} />
+                    <ArrowRightLeft size={12} className="text-slate-500 dark:text-slate-400" />
                   </button>
 
-                  {assigned > 0 && (
+                  {assigned > 0 ? (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleUnassignAllForStaff(s.id, s.username);
                       }}
-                      className="min-h-[32px] px-2 rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[11px] font-bold border border-rose-200 dark:border-rose-900/50 flex items-center justify-center active:scale-95"
-                      title="Unassign All"
+                      className="h-8 w-8 rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center active:scale-95 shrink-0"
+                      title="Unassign All Mentees"
                     >
-                      <UserX size={11} />
+                      <UserX size={12} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="h-8 w-8 rounded-xl bg-slate-100/40 text-slate-300 dark:bg-slate-800/20 dark:text-slate-600 border border-dashed border-slate-200/60 dark:border-white/5 flex items-center justify-center cursor-not-allowed shrink-0"
+                      title="No mentees allocated"
+                    >
+                      <UserX size={12} />
                     </button>
                   )}
                 </div>
@@ -402,7 +412,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
       <div className="hidden md:block w-full overflow-x-auto pb-6 sm:pb-8">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-white/10">
+            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-white/10">
               <th className="py-4 px-4">Faculty Mentor</th>
               <th className="py-4 px-3">Dept</th>
               <th className="py-4 px-3 text-center">Assigned</th>
@@ -410,7 +420,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
               <th className="py-4 px-3 text-center">Sunday Contest</th>
               <th className="py-4 px-3 text-center">Completion Rate</th>
               <th className="py-4 px-3 text-center">Workload Status</th>
-              <th className="py-4 px-4 text-center">Actions</th>
+              <th className="py-4 px-4 text-center w-[275px] min-w-[275px]">Actions</th>
             </tr>
           </thead>
           <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-white/5 font-mono">
@@ -458,14 +468,14 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium truncate flex items-center gap-1.5">
+                          <div className="text-[11px] text-slate-600 dark:text-slate-300 font-mono font-medium truncate flex items-center gap-1.5">
                             {s.full_name && s.full_name !== s.username && (
                               <>
-                                <span className="text-slate-400">@{s.username}</span>
-                                <span className="text-slate-300 dark:text-slate-700">•</span>
+                                <span className="text-slate-600 dark:text-slate-300 font-semibold">@{s.username}</span>
+                                <span className="text-slate-400 dark:text-slate-600">•</span>
                               </>
                             )}
-                            <span className="truncate">{s.email}</span>
+                            <span className="truncate text-slate-600 dark:text-slate-300 font-medium">{s.email}</span>
                           </div>
                         </div>
                       </div>
@@ -495,7 +505,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             <span className="text-[10px] text-slate-500 font-sans font-bold">Mentees</span>
                           </span>
                         ) : (
-                          <span className="text-slate-400 dark:text-slate-500 font-bold text-xs">0 Mentees</span>
+                          <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">0 Mentees</span>
                         )}
                       </div>
                     </td>
@@ -519,7 +529,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             <span className="text-[10px] opacity-80 font-bold">({completionRate}%)</span>
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs inline-flex items-center gap-1 border border-slate-300/80 dark:border-slate-700">
                             0 / 0
                           </span>
                         )}
@@ -553,7 +563,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             </span>
                           </span>
                         ) : (
-                          <span className="text-slate-400 font-bold text-xs">—</span>
+                          <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">—</span>
                         )}
                       </div>
                     </td>
@@ -579,7 +589,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                           />
                         </div>
                         <span className={`font-black text-xs ${
-                          completionRate === 0 ? 'text-slate-400' : 'text-slate-800 dark:text-white'
+                          completionRate === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
                         }`}>
                           {completionRate}%
                         </span>
@@ -595,7 +605,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                         <span
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-black border uppercase tracking-wider ${
                             assigned === 0
-                              ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                              ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-slate-300/80 dark:border-slate-700 font-black'
                               : active === assigned
                               ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
                               : active > 0
@@ -614,18 +624,19 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       </div>
                     </td>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons — Perfectly Aligned Fixed Slot Dock */}
                     <td
-                      className="flex flex-col md:table-cell py-3 md:py-3.5 md:px-4 text-center"
+                      className="py-3 md:py-3.5 md:px-4 text-center w-[275px] min-w-[275px]"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="flex flex-wrap items-center justify-end md:justify-center gap-1.5 w-full">
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedStaffDetail(s);
                           }}
-                          className="min-h-[34px] px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-500 hover:to-brand-500 text-white text-xs font-black transition-all cursor-pointer shadow-sm shadow-indigo-600/20 whitespace-nowrap flex items-center justify-center gap-1.5 active:scale-95 touch-manipulation"
+                          className="h-8 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-500 hover:to-brand-500 text-white text-xs font-bold transition-all shadow-xs shadow-indigo-600/20 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0"
                           title="Open full profile & performance popup drawer"
                         >
                           <Eye size={12} className="shrink-0" />
@@ -633,14 +644,15 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                         </button>
 
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleFilterByStaff(s.id, s.username);
                           }}
-                          className={`min-h-[34px] px-3 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1 active:scale-95 touch-manipulation ${
+                          className={`h-8 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0 ${
                             isSelected
-                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30'
-                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shadow-emerald-600/30'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 font-extrabold border border-slate-300/80 dark:border-slate-700'
                           }`}
                           title={
                             isSelected
@@ -648,31 +660,42 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                               : `Filter entire dashboard table to ${s.username}'s mentees`
                           }
                         >
+                          <Filter size={11} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400'} />
                           <span>{isSelected ? 'Active Scope' : 'Filter Scope'}</span>
                         </button>
 
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowStaffAllocationModal(true);
                           }}
-                          className="min-h-[34px] px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer border border-slate-200 dark:border-slate-700 whitespace-nowrap flex items-center justify-center touch-manipulation active:scale-95"
-                          title="Manage Faculty Allocation"
+                          className="h-8 w-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 border border-slate-300/80 dark:border-slate-700 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+                          title="Manage Faculty Allocation & Reassign"
                         >
-                          <ArrowRightLeft size={11} className="mr-1 text-slate-500" />
-                          Reassign
+                          <ArrowRightLeft size={12} className="text-slate-600 dark:text-slate-300" />
                         </button>
 
-                        {assigned > 0 && (
+                        {assigned > 0 ? (
                           <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleUnassignAllForStaff(s.id, s.username);
                             }}
-                            className="min-h-[34px] px-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-xs font-bold transition-all cursor-pointer border border-rose-200 dark:border-rose-900/50 whitespace-nowrap flex items-center justify-center touch-manipulation active:scale-95"
-                            title="Unassign All Mentees from this Staff Mentor"
+                            className="h-8 w-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0"
+                            title={`Unassign All (${assigned}) Mentees from this Staff Mentor`}
                           >
-                            Unassign
+                            <UserX size={12} />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            className="h-8 w-8 rounded-xl bg-slate-100/40 dark:bg-slate-800/20 text-slate-300 dark:text-slate-600 border border-dashed border-slate-200/60 dark:border-white/5 flex items-center justify-center cursor-not-allowed shrink-0"
+                            title="No mentees allocated to unassign"
+                          >
+                            <UserX size={12} />
                           </button>
                         )}
                       </div>
@@ -694,7 +717,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             <strong className="text-slate-800 dark:text-slate-200">{staffList.length}</strong> faculty mentors
           </span>
         </div>
-        <div className="text-[11px] text-slate-400 dark:text-slate-500 font-sans">
+        <div className="text-[11px] text-slate-600 dark:text-slate-300 font-sans">
           Click any faculty row to inspect student telemetry
         </div>
       </div>

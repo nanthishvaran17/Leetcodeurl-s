@@ -114,7 +114,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Active</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">08:00 AM IST Cron</span>
+          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">08:00 AM IST Cron</span>
         </div>
 
         {/* Last Sync */}
@@ -148,7 +148,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
           <div className="text-xs font-black text-slate-900 dark:text-white">
             Sunday 08:00
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Weekly Auto Scan</span>
+          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Weekly Auto Scan</span>
         </div>
 
         {/* Database Health */}
@@ -165,7 +165,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <span className={`w-2 h-2 rounded-full ${isDbHealthy ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Healthy (WAL)</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">
             {systemHealth?.orphan_records !== undefined ? `${systemHealth.orphan_records} Orphan Records` : (freshness?.total_students ? `${freshness.total_students} Records` : '0 Orphan Records')}
           </span>
         </div>
@@ -195,7 +195,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <span className="w-2 h-2 rounded-full bg-brand-500"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Ready</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Click to Export Excel</span>
+          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Click to Export Excel</span>
         </div>
 
         {/* Email Transport */}
@@ -218,7 +218,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Connected</span>
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Gmail IPv4 SMTP</span>
+          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Gmail IPv4 SMTP</span>
         </div>
 
       </div>

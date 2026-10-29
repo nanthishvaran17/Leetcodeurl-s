@@ -696,7 +696,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <User className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+                            <User className="w-8 h-8 text-slate-600 dark:text-slate-300" />
                           )}
                         </div>
                       </div>

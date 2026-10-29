@@ -297,7 +297,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 <div key={sIdx} className="space-y-1">
                   {/* Clean Section Header (No annoying OS tooltips) */}
                   <div className="px-2 pt-2.5 pb-0.5 flex items-center justify-between select-none">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                       {section.title}
                     </span>
                   </div>
@@ -370,7 +370,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                                 <ChevronRight className={`w-3 h-3 shrink-0 transition-all duration-150 ${
                                   isActive
                                     ? 'text-white/80 opacity-100 translate-x-0.5'
-                                    : 'opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 text-slate-400 dark:text-slate-500'
+                                    : 'opacity-0 group-hover:opacity-60 group-hover:translate-x-0.5 text-slate-600 dark:text-slate-300'
                                 }`} />
                               </div>
                             </button>

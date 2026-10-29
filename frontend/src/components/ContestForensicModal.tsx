@@ -558,7 +558,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 title="Swipe down to close"
               >
                 <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-600 transition-colors" />
-                <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-1 opacity-75 sm:hidden">
+                <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 mt-1 opacity-75 sm:hidden">
                   Swipe down to close
                 </span>
               </div>
@@ -671,7 +671,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                         ? 'Did Not Join'
                         : getStartTimeInfo(summary?.contest_title).formatted}
                     </span>
-                    <span className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 block">
+                    <span className="text-[9.5px] text-slate-600 dark:text-slate-300 mt-1 block">
                       Official Live Window
                     </span>
                   </div>
@@ -710,12 +710,12 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                         VIRTUAL ENTRY
                       </span>
                     ) : (
-                      <span className="text-xs sm:text-sm font-mono font-black text-slate-400 dark:text-slate-500 block">
+                      <span className="text-xs sm:text-sm font-mono font-black text-slate-600 dark:text-slate-300 block">
                         {isLiveContest ? 'NO SUBMISSION' : 'DID NOT JOIN'}
                       </span>
                     )}
 
-                    <span className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 block truncate">
+                    <span className="text-[9.5px] text-slate-600 dark:text-slate-300 mt-1 block truncate">
                       {isPublic
                         ? 'Live Window Entry'
                         : isVirtual
@@ -741,7 +741,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                           : '—'
                         : formatFinishClockTime(record, summary?.contest_title)}
                     </span>
-                    <span className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 block truncate">
+                    <span className="text-[9.5px] text-slate-600 dark:text-slate-300 mt-1 block truncate">
                       {isLiveContest
                         ? 'Contest in progress'
                         : record.participation_type === 'NOT_PARTICIPATED'
@@ -765,7 +765,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                         ? '0 mins'
                         : formatContestTime(record) || '—'}
                     </span>
-                    <span className="text-[9.5px] text-slate-400 dark:text-slate-500 mt-1 block truncate">
+                    <span className="text-[9.5px] text-slate-600 dark:text-slate-300 mt-1 block truncate">
                       {record.problems_solved > 0
                         ? `${record.problems_solved}/4 Problems Solved`
                         : 'No solves recorded'}
@@ -784,7 +784,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                         <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white block">
                           Question Solve & Attempt Forensics
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">
+                        <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium block">
                           Contest live telemetry & submission verification
                         </span>
                       </div>
@@ -807,7 +807,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                 : 'bg-slate-200 dark:bg-navy-800'
                             }`}
                           />
-                          <div className="flex items-center justify-between text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 px-0.5">
+                          <div className="flex items-center justify-between text-[9px] font-mono font-bold text-slate-600 dark:text-slate-300 px-0.5">
                             <span>Q{idx}</span>
                             <span>{isQSolved ? 'AC' : '—'}</span>
                           </div>
@@ -918,7 +918,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                     </span>
                                   )}
                                   {(q as any).submissionId && (
-                                    <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500">
+                                    <span className="text-[9.5px] font-mono text-slate-600 dark:text-slate-300">
                                       • Sub #{(q as any).submissionId}
                                     </span>
                                   )}
@@ -959,7 +959,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                   )}
                                   <div className="text-[9.5px] font-mono font-semibold text-emerald-600 dark:text-emerald-400/90 leading-tight">
                                     <span>{q.timeDisplay.replace('~', '')}</span>
-                                    <span className="text-[8.5px] font-medium text-slate-400 dark:text-slate-500 block">
+                                    <span className="text-[8.5px] font-medium text-slate-600 dark:text-slate-300 block">
                                       {intervalLabel}
                                     </span>
                                   </div>
@@ -1205,7 +1205,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                     <span className="truncate">@{record.leetcode_username}</span>
                   </a>
                 ) : (
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 dark:text-slate-500 font-mono font-bold">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 font-mono font-bold">
                     <UserX className="w-3.5 h-3.5 shrink-0" />
                     <span>No Handle Registered</span>
                   </div>

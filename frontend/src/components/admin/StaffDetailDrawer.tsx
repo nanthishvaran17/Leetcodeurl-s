@@ -342,7 +342,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                     <RefreshCw size={11} className="animate-spin" /> Loading mentees...
                   </span>
                 ) : (
-                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                  <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <span className="hidden md:inline">↔ Swipe Table</span>
                   </span>
                 )}
@@ -352,7 +352,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-900 shadow-sm">
               {mentees.length === 0 ? (
                 <div className="p-8 text-center flex flex-col items-center justify-center space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
                     <Users size={22} />
                   </div>
                   <div className="space-y-1">
@@ -465,7 +465,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                                     {isFraction || isRank ? standing : 'Attended'}
                                   </span>
                                 ) : (
-                                  <span className="text-slate-400 dark:text-slate-500 font-bold text-xs">—</span>
+                                  <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">—</span>
                                 )}
                               </div>
                             </div>
@@ -548,7 +548,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                                     </span>
                                   );
                                 })() : (
-                                  <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500 text-[9px] font-bold border border-slate-200 dark:border-navy-700">
+                                  <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold border border-slate-200 dark:border-navy-700">
                                     —
                                   </span>
                                 )}

@@ -735,7 +735,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="text-xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
                 {fmtCount(canonicalTotal ?? totalStudents)}
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Students</span>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Students</span>
             </div>
           </div>
 
@@ -895,7 +895,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="text-xl sm:text-3xl font-display font-black text-purple-600 dark:text-purple-300 tracking-tight">
                 {contestParticipationRate}%
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate max-w-[85px] sm:max-w-none">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide truncate max-w-[85px] sm:max-w-none">
                 {actualContestSolvers} / {totalStudents}
               </span>
             </div>
@@ -1542,7 +1542,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                           {contestTitle}
                         </div>
-                        <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                        <div className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
                           {s.sessionDate ? `Sun ${s.sessionDate}` : 'Sunday Contest'}
                           {s.status === 'LIVE' && <span className="ml-1.5 text-emerald-500 font-bold">• LIVE</span>}
                         </div>
@@ -1553,7 +1553,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold font-mono ${
                         solversCount > 0
                           ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/70'
-                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500'
+                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300'
                       }`}>
                         {solversCount} Solvers
                       </span>

@@ -705,7 +705,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               {/* Native Search Input */}
               {showSearch && options.length > 3 && (
                 <div className="relative flex items-center">
-                  <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                  <Search className="w-4 h-4 absolute left-3 text-slate-600 dark:text-slate-300 pointer-events-none" />
                   <input
                     ref={searchInputRef}
                     type="text"
@@ -822,7 +822,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               {showSearch && options.length > 3 && (
                 <div className="p-2 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/80 sticky top-0 z-10 backdrop-blur-md">
                   <div className="relative flex items-center">
-                    <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-600 dark:text-slate-300 pointer-events-none" />
                     <input
                       ref={searchInputRef}
                       type="text"

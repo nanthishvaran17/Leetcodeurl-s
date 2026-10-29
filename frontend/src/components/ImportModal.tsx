@@ -391,7 +391,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   ? 'bg-brand-500/15 dark:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-xs' 
                   : step > 1 
                   ? 'text-brand-600 dark:text-brand-400' 
-                  : 'text-slate-400 dark:text-slate-500'
+                  : 'text-slate-600 dark:text-slate-300'
               }`}>
                 <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
                   step >= 1 ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
@@ -407,7 +407,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   ? 'bg-brand-500/15 dark:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-xs' 
                   : step > 2 
                   ? 'text-brand-600 dark:text-brand-400' 
-                  : 'text-slate-400 dark:text-slate-500'
+                  : 'text-slate-600 dark:text-slate-300'
               }`}>
                 <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
                   step >= 2 ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
@@ -423,7 +423,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   ? 'bg-brand-500/15 dark:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-xs' 
                   : step > 3 
                   ? 'text-brand-600 dark:text-brand-400' 
-                  : 'text-slate-400 dark:text-slate-500'
+                  : 'text-slate-600 dark:text-slate-300'
               }`}>
                 <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
                   step >= 3 ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
@@ -439,7 +439,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   ? 'bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-xs' 
                   : step > 4 
                   ? 'text-emerald-600 dark:text-emerald-400' 
-                  : 'text-slate-400 dark:text-slate-500'
+                  : 'text-slate-600 dark:text-slate-300'
               }`}>
                 <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
                   step >= 4 ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'

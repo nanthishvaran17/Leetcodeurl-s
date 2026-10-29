@@ -59,7 +59,7 @@ export const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
       <p className="text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-2">
         You do not have permission to access <strong className="text-slate-700 dark:text-slate-200">{restrictedResource}</strong>.
       </p>
-      <p className="text-sm text-slate-400 dark:text-slate-500 max-w-sm mb-8">
+      <p className="text-sm text-slate-600 dark:text-slate-300 max-w-sm mb-8">
         Your account role (<span className="font-semibold text-brand-500">{roleLabel}</span>) is
         not authorized for this page. If you believe this is an error, contact your system administrator.
       </p>

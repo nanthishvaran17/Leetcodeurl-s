@@ -238,7 +238,7 @@ def apply_master_college_identity(
             pass
 
     # Row 3: Department & Cohort Header (100% Dynamic)
-    if not department or str(department).strip().upper() in ("ALL", "ALL DEPARTMENTS", "NONE", ""):
+    if not department or str(department).strip().upper() in ("ALL", "ALL DEPARTMENTS", "NONE", "", "DEPARTMENT PERFORMANCE SUMMARY", "PERFORMANCE SUMMARY"):
         dept_str = "ALL DEPARTMENTS"
     else:
         dept_str = str(department).strip().upper()
@@ -286,7 +286,7 @@ def apply_master_college_identity(
         dept_full_name = "MECHANICAL ENGINEERING"
     elif dept_clean == "CIVIL":
         dept_full_name = "CIVIL ENGINEERING"
-    elif dept_clean in ("ALL", "ALL DEPARTMENTS", "NONE", ""):
+    elif dept_clean in ("ALL", "ALL DEPARTMENTS", "NONE", "", "DEPARTMENT PERFORMANCE SUMMARY", "PERFORMANCE SUMMARY"):
         dept_full_name = "ALL DEPARTMENTS"
     else:
         dept_full_name = dept_clean
@@ -296,11 +296,15 @@ def apply_master_college_identity(
     elif not show_cohort:
         if dept_full_name == "ALL DEPARTMENTS":
             ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS"
+        elif dept_full_name.startswith("DEPARTMENT"):
+            ws["A3"] = dept_full_name
         else:
             ws["A3"] = f"DEPARTMENT OF {dept_full_name}"
     else:
         if dept_full_name == "ALL DEPARTMENTS" and year_str == "ALL YEARS":
             ws["A3"] = "INSTITUTIONAL MASTER REPORT • ALL DEPARTMENTS"
+        elif dept_full_name.startswith("DEPARTMENT"):
+            ws["A3"] = dept_full_name
         else:
             ws["A3"] = f"DEPARTMENT OF {dept_full_name}"
     ws["A3"].font = FONT_DEPT_HEADER

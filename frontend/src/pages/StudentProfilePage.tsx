@@ -1,7 +1,7 @@
 // million-ignore
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, MoreVertical, PieChart as LucidePieChart, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2, AlertCircle, MoreVertical, PieChart as LucidePieChart, Share2, ChevronRight } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -550,56 +550,77 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   className="relative w-full bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-white/10 shadow-2xl px-4 pt-3 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] space-y-1.5"
                 >
                   {/* Drag Handle */}
-                  <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto mb-4" />
-                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 px-3 pb-1">More Actions</p>
+                  <div className="w-10 h-1 rounded-full bg-slate-300 dark:bg-white/20 mx-auto mb-3" />
+                  
+                  {/* Header: High-Contrast Brand Styled for Eye-Catching Visibility */}
+                  <div className="flex items-center justify-between px-3 pb-2 pt-0.5 border-b border-slate-100 dark:border-white/[0.08] mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-3.5 rounded-full bg-brand-600 dark:bg-brand-400 shadow-xs" />
+                      <p className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        More Actions
+                      </p>
+                    </div>
+                    <span className="text-[9.5px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300 border border-brand-200/60 dark:border-brand-500/20">
+                      Options
+                    </span>
+                  </div>
 
                   <button
                     type="button"
                     onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); setShowEditOverlay(true); }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl active:bg-slate-100 dark:active:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer touch-manipulation min-h-[52px]"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200/70 dark:border-white/[0.08] active:scale-[0.98] transition-all cursor-pointer touch-manipulation min-h-[56px] group"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                      <Edit3 className="w-4 h-4 text-amber-500" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-xs shadow-amber-500/25 flex items-center justify-center shrink-0">
+                        <Edit3 className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">Edit Profile</p>
+                        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal mt-0.5">Modify student details</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold">Edit Profile</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Modify student details</p>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200 transition-colors shrink-0 ml-2" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); handleGenerateCert(); }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl active:bg-slate-100 dark:active:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer touch-manipulation min-h-[52px]"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200/70 dark:border-white/[0.08] active:scale-[0.98] transition-all cursor-pointer touch-manipulation min-h-[56px] group"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center shrink-0">
-                      <Award className="w-4 h-4 text-purple-500" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-xs shadow-purple-500/25 flex items-center justify-center shrink-0">
+                        <Award className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">Get Certificate</p>
+                        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal mt-0.5">Download performance PDF</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold">Get Certificate</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Download performance PDF</p>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200 transition-colors shrink-0 ml-2" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); setShowAuditModal(true); }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl active:bg-slate-100 dark:active:bg-navy-800 text-slate-800 dark:text-slate-100 text-left transition-colors cursor-pointer touch-manipulation min-h-[52px]"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-slate-100/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200/70 dark:border-white/[0.08] active:scale-[0.98] transition-all cursor-pointer touch-manipulation min-h-[56px] group"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center shrink-0">
-                      <FileText className="w-4 h-4 text-emerald-500" />
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xs shadow-emerald-500/25 flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">Audit Log</p>
+                        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-normal mt-0.5">View sync & activity history</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold">Audit Log</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">View sync & activity history</p>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200 transition-colors shrink-0 ml-2" />
                   </button>
 
                   <div className="pt-2">
                     <button
                       type="button"
                       onClick={() => { triggerHaptic('light'); setShowMobileMenu(false); }}
-                      className="w-full py-3.5 rounded-2xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 font-bold text-sm active:bg-slate-200 dark:active:bg-white/[0.1] transition-colors cursor-pointer touch-manipulation"
+                      className="w-full py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-800 dark:text-white font-extrabold text-sm active:scale-[0.98] transition-all cursor-pointer touch-manipulation border border-slate-200/60 dark:border-white/[0.06]"
                     >
                       Cancel
                     </button>
@@ -699,7 +720,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
               <div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Rankings & Activity</h4>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Institutional standing & cadence</p>
+                <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Institutional standing & cadence</p>
               </div>
             </div>
             <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-white/10">
@@ -750,7 +771,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
               <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">
                 +{detail?.weekly_progress || 0}
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 ml-1.5 font-sans">solved</span>
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 ml-1.5 font-sans">solved</span>
               </h3>
             </div>
 
@@ -783,7 +804,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
               <div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Contest Arena</h4>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Global competitive index</p>
+                <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Global competitive index</p>
               </div>
             </div>
           </div>
@@ -817,13 +838,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             {/* Official / Virtual Split */}
             <div className="grid grid-cols-2 gap-3.5">
               <div className="relative bg-slate-50/80 dark:bg-white/[0.03] rounded-2xl p-3.5 border border-slate-200/80 dark:border-white/5 transition-all duration-200 hover:-translate-y-0.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Official Contests</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1">Official Contests</span>
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                   {detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}
                 </h3>
               </div>
               <div className="relative bg-slate-50/80 dark:bg-white/[0.03] rounded-2xl p-3.5 border border-slate-200/80 dark:border-white/5 transition-all duration-200 hover:-translate-y-0.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">Virtual Contests</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1">Virtual Contests</span>
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                   {detail?.stats?.virtual_contests || 0}
                 </h3>
@@ -839,7 +860,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           <SkillRadarChart totalSolved={detail?.stats?.total_solved || 0} />
         ) : (
           <div className="h-[350px] bg-slate-100/50 dark:bg-navy-900/50 rounded-3xl animate-pulse flex items-center justify-center">
-            <span className="text-slate-400 font-bold text-xs">Loading Radar...</span>
+            <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">Loading Radar...</span>
           </div>
         )}
         <IDCardGenerator
@@ -883,7 +904,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Difficulty Breakdown</h3>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Problem composition spectrum</p>
+                <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Problem composition spectrum</p>
               </div>
             </div>
             <span className="text-[11px] font-mono font-black text-slate-900 dark:text-white px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
@@ -914,7 +935,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </ResponsiveContainer>
             ) : (
               <div className="w-full h-full bg-slate-100/50 dark:bg-navy-900/50 rounded-full animate-pulse flex items-center justify-center scale-75">
-                <span className="text-slate-400 font-bold text-xs">Loading Breakdown...</span>
+                <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">Loading Breakdown...</span>
               </div>
             )}
           </div>
@@ -946,7 +967,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">AI Focus Recommendation</h3>
-                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Personalized algorithmic guidance</p>
+                <p className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Personalized algorithmic guidance</p>
               </div>
             </div>
             {insights && (
@@ -959,7 +980,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           {insights ? (
             <div className="space-y-3.5 text-xs relative z-10">
               <div>
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Recommended Focus Topics</span>
+                <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">Recommended Focus Topics</span>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {insights.focus_areas.map((area: string, i: number) => (
                     <span key={i} className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800/80 shadow-2xs">
@@ -974,14 +995,14 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center text-xs font-medium text-slate-400">Loading topic insights...</div>
+            <div className="p-8 text-center text-xs font-medium text-slate-600 dark:text-slate-300">Loading topic insights...</div>
           )}
         </div>
       </div>
       </>
     )}
 
-      <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading view module...</div>}>
+      <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-600 dark:text-slate-300 animate-pulse">Loading view module...</div>}>
         {activeTab === 'analytics' && (
           <IndividualAnalyticsDashboard studentId={resolveTargetId()} />
         )}

@@ -583,28 +583,78 @@ def export_weekly_performance_pdf(dataset: dict) -> bytes:
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]
 
+        p_sum_tot = p_sum_ver = p_sum_tot_solved = p_sum_ab500 = p_sum_250_500 = p_sum_q4 = p_sum_q3 = p_sum_q2 = p_sum_q1 = 0
         for d_i, d in enumerate(dept_summaries, 1):
             d_cats = d.get("categories") or {}
             d_cw = d.get("current_week") or {}
             d_metrics = d.get("metrics") or {}
+
+            t_stud = int(d.get("total_students", 0) or 0)
+            v_stud = int(d_metrics.get("verified_students") or d_metrics.get("verified") or t_stud)
+            t_slv = int(d_metrics.get("total_solved", 0) or 0)
+            
+            avg_s = d_metrics.get("avg_solved") if d_metrics.get("avg_solved") is not None else d_metrics.get("average_solved")
+            if (avg_s is None or avg_s == 0) and t_stud > 0 and t_slv > 0:
+                avg_s = round(t_slv / t_stud, 1)
+            elif avg_s is None:
+                avg_s = 0.0
+
+            c_ab500 = int(d_cats.get("Above 500", 0) or 0)
+            c_250_500 = int(d_cats.get("250 - 500") or d_cats.get("250–500", 0) or 0)
+            cq4 = int(d_cw.get("q4", 0) or 0)
+            cq3 = int(d_cw.get("q3", 0) or 0)
+            cq2 = int(d_cw.get("q2", 0) or 0)
+            cq1 = int(d_cw.get("q1", 0) or 0)
+
+            p_sum_tot += t_stud
+            p_sum_ver += v_stud
+            p_sum_tot_solved += t_slv
+            p_sum_ab500 += c_ab500
+            p_sum_250_500 += c_250_500
+            p_sum_q4 += cq4
+            p_sum_q3 += cq3
+            p_sum_q2 += cq2
+            p_sum_q1 += cq1
+
             row_dept = [
                 Paragraph(str(d_i), cell_body),
                 Paragraph(f"<b>{d.get('department') or d.get('dept') or ''}</b>", cell_body_left),
                 Paragraph(str(d.get("coordinator") or "—"), cell_body_left),
-                Paragraph(str(d.get("total_students", 0)), cell_body_bold),
-                Paragraph(str(d_metrics.get("verified_students", d.get("total_students", 0))), cell_body),
-                Paragraph(str(d_metrics.get("average_solved", 0)), cell_body),
-                Paragraph(str(d_metrics.get("total_solved", 0)), cell_body),
-                Paragraph(str(d_cats.get("Above 500", 0)), cell_body),
-                Paragraph(str(d_cats.get("250 - 500") or d_cats.get("250–500", 0)), cell_body),
-                Paragraph(str(d_cw.get("q4", 0)), cell_body_bold),
-                Paragraph(str(d_cw.get("q3", 0)), cell_body_bold),
-                Paragraph(str(d_cw.get("q2", 0)), cell_body_bold),
-                Paragraph(str(d_cw.get("q1", 0)), cell_body_bold),
+                Paragraph(str(t_stud), cell_body_bold),
+                Paragraph(str(v_stud), cell_body),
+                Paragraph(str(round(avg_s, 1) if isinstance(avg_s, float) else avg_s), cell_body),
+                Paragraph(str(t_slv), cell_body),
+                Paragraph(str(c_ab500), cell_body),
+                Paragraph(str(c_250_500), cell_body),
+                Paragraph(str(cq4), cell_body_bold),
+                Paragraph(str(cq3), cell_body_bold),
+                Paragraph(str(cq2), cell_body_bold),
+                Paragraph(str(cq1), cell_body_bold),
             ]
             t3_data.append(row_dept)
             bg = colors.white if d_i % 2 == 1 else colors.HexColor("#F8FAFC")
             t3_style.append(('BACKGROUND', (0, d_i), (-1, d_i), bg))
+
+        if dept_summaries:
+            p_overall_avg = round(p_sum_tot_solved / p_sum_tot, 1) if p_sum_tot > 0 else 0.0
+            tot_row_idx = len(t3_data)
+            row_tot = [
+                Paragraph("", cell_body),
+                Paragraph("<b>TOTAL</b>", cell_body_bold),
+                Paragraph("<b>INSTITUTIONAL SUMMARY</b>", cell_body_left),
+                Paragraph(f"<b>{p_sum_tot}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_ver}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_overall_avg}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_tot_solved}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_ab500}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_250_500}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_q4}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_q3}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_q2}</b>", cell_body_bold),
+                Paragraph(f"<b>{p_sum_q1}</b>", cell_body_bold),
+            ]
+            t3_data.append(row_tot)
+            t3_style.append(('BACKGROUND', (0, tot_row_idx), (-1, tot_row_idx), colors.HexColor("#E2E8F0")))
 
         table_3 = Table(t3_data, colWidths=w3_cols)
         table_3.setStyle(TableStyle(t3_style))

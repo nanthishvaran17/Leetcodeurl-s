@@ -422,7 +422,7 @@ const EmptyStateSuggestions: React.FC<{
             >
               <Icon className={`w-3.5 h-3.5 ${s.color} mb-1.5`} />
               <div className="text-[11px] font-bold text-slate-800 dark:text-white leading-tight">{s.label}</div>
-              <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5">{s.desc}</div>
+              <div className="text-[10px] text-slate-600 dark:text-slate-300 leading-tight mt-0.5">{s.desc}</div>
             </button>
           );
         })}

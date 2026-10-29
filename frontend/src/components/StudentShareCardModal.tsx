@@ -593,7 +593,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
           </div>
 
           {/* Quick Notice */}
-          <p className="text-[11px] text-center text-slate-400 dark:text-slate-500">
+          <p className="text-[11px] text-center text-slate-600 dark:text-slate-300">
             Tap below to save this high-resolution badge to your phone or share directly on WhatsApp Status.
           </p>
         </div>

@@ -678,7 +678,7 @@ export const StaffManagement: React.FC = () => {
                             className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
                             title={`Department: ${deptName}`}
                           >
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                            <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-0.5">
                               <Building2 className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Dept
                             </span>
                             <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 truncate w-full uppercase">
@@ -691,7 +691,7 @@ export const StaffManagement: React.FC = () => {
                             className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
                             title={`Institutional ID: ${instId}`}
                           >
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                            <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-0.5">
                               <KeyRound className="w-2.5 h-2.5 text-slate-400 shrink-0" /> Staff ID
                             </span>
                             <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 truncate w-full">
@@ -717,7 +717,7 @@ export const StaffManagement: React.FC = () => {
                               className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
                               title={`Scope: ${roleName}`}
                             >
-                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1 mb-0.5">
+                              <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-0.5">
                                 <Shield className="w-2.5 h-2.5 text-slate-400 shrink-0" /> Scope
                               </span>
                               <span className="text-[11px] font-black text-slate-600 dark:text-slate-300 truncate w-full uppercase">
@@ -907,7 +907,7 @@ export const StaffManagement: React.FC = () => {
                                 <span>{staff.assigned_count || 0} {(staff.assigned_count || 0) === 1 ? 'Mentee' : 'Mentees'}</span>
                               </div>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-navy-900/50 border border-slate-200/60 dark:border-navy-800 font-mono" title="Assigned mentees not applicable for leadership / executive roles">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-navy-900/50 border border-slate-200/60 dark:border-navy-800 font-mono" title="Assigned mentees not applicable for leadership / executive roles">
                                 —
                               </span>
                             )}

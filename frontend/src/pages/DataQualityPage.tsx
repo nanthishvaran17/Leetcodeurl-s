@@ -543,7 +543,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {/* Status Tile */}
                       <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
                           Audit Status
                         </span>
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full font-black text-[10px] border ${statusCfg.bg}`}>
@@ -554,7 +554,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
                       {/* Handle Tile */}
                       <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
                           LeetCode Profile
                         </span>
                         {item.username ? (

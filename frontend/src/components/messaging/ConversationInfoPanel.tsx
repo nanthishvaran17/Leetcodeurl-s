@@ -159,7 +159,7 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
                     ID: {profile.institutional_id}
                   </p>
                 )}
-                <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
                   Nandha Engineering College
                 </p>
               </div>
@@ -185,7 +185,7 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
               transition={{ delay: 0.05 }}
               className="p-4 rounded-2xl bg-white dark:bg-navy-900/90 border border-slate-200/60 dark:border-slate-800/60 shadow-sm space-y-3"
             >
-              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 Institutional Unit
               </h4>
               <div className="space-y-2">
@@ -216,7 +216,7 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
                 className="p-4 rounded-2xl bg-white dark:bg-navy-900/90 border border-slate-200/60 dark:border-slate-800/60 shadow-sm space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                     <Trophy className="w-3.5 h-3.5 text-[#ffa116]" />
                     LeetCode Analytics
                   </h4>
@@ -288,7 +288,7 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
               transition={{ delay: 0.15 }}
               className="p-4 rounded-2xl bg-white dark:bg-navy-900/90 border border-slate-200/60 dark:border-slate-800/60 shadow-sm space-y-3"
             >
-              <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 Contact & Communication
               </h4>
               <div className="space-y-2">

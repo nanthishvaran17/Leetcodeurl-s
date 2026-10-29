@@ -146,7 +146,7 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
               {n.title}
             </h4>
             <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">
+              <span className="text-[10px] text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
                 {timeAgo(n.createdAt)}
               </span>
               <button
