@@ -94,6 +94,71 @@ def parse_session_date(date_str: str) -> Optional[datetime.date]:
             pass
     return None
 
+@router.get("/submissions/{submission_id}/code")
+def get_submission_code(submission_id: str):
+    """
+    Attempts to fetch authoritative code for a contest submission from LeetCode GraphQL.
+    Uses LEETCODE_SESSION if available in environment/database.
+    """
+    import os
+    import httpx
+    session_cookie = os.environ.get("LEETCODE_SESSION", "").strip()
+    csrf_token = os.environ.get("LEETCODE_CSRF", "").strip()
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://leetcode.com/",
+    }
+    cookies = {}
+    if session_cookie:
+        cookies["LEETCODE_SESSION"] = session_cookie
+    if csrf_token:
+        cookies["csrftoken"] = csrf_token
+        headers["x-csrftoken"] = csrf_token
+
+    try:
+        sub_id_int = int(submission_id)
+    except ValueError:
+        return {"status": "error", "message": "Invalid submission ID"}
+
+    query = """
+    query submissionDetails($submissionId: Int!) {
+      submissionDetails(submissionId: $submissionId) {
+        code
+        timestamp
+        statusCode
+        lang {
+          name
+          verboseName
+        }
+      }
+    }
+    """
+    try:
+        with httpx.Client(timeout=10) as client:
+            resp = client.post(
+                "https://leetcode.com/graphql",
+                json={"query": query, "variables": {"submissionId": sub_id_int}},
+                headers=headers,
+                cookies=cookies
+            )
+            if resp.status_code == 200:
+                data = resp.json().get("data", {}).get("submissionDetails")
+                if data and data.get("code"):
+                    return {
+                        "status": "success",
+                        "code": data.get("code"),
+                        "lang": (data.get("lang") or {}).get("verboseName") or (data.get("lang") or {}).get("name") or "code",
+                        "timestamp": data.get("timestamp")
+                    }
+    except Exception as e:
+        logger.warning(f"[SUBMISSION_CODE] Error fetching submission {submission_id}: {e}")
+
+    return {
+        "status": "requires_auth",
+        "message": "Direct source code extraction requires active LeetCode session authorization. View on official contest leaderboard or submission URL."
+    }
+
 @router.get("/verification-windows")
 def list_verification_windows(db: Session = Depends(get_db)):
     """

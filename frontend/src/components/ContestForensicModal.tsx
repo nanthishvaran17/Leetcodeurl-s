@@ -1,3 +1,4 @@
+import api from '../services/api';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
@@ -51,6 +52,25 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+  const [fetchedCodes, setFetchedCodes] = useState<Record<string, { code: string; lang: string } | null>>({});
+  const [fetchingCodeId, setFetchingCodeId] = useState<string | null>(null);
+
+  const fetchCodeForQuestion = async (qId: string, subId: string | number) => {
+    if (!subId || fetchedCodes[qId] !== undefined) return;
+    try {
+      setFetchingCodeId(qId);
+      const res = await api.get(`/contests/submissions/${subId}/code`);
+      if (res.data && res.data.status === 'success' && res.data.code) {
+        setFetchedCodes(prev => ({ ...prev, [qId]: { code: res.data.code, lang: res.data.lang } }));
+      } else {
+        setFetchedCodes(prev => ({ ...prev, [qId]: null }));
+      }
+    } catch {
+      setFetchedCodes(prev => ({ ...prev, [qId]: null }));
+    } finally {
+      setFetchingCodeId(null);
+    }
+  };
 
   if (typeof document === 'undefined') return null;
 
@@ -788,7 +808,13 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                         >
                           {/* Clickable Header Row */}
                           <div
-                            onClick={() => setExpandedQuestionId(isExpanded ? null : q.id)}
+                            onClick={() => {
+                              const next = isExpanded ? null : q.id;
+                              setExpandedQuestionId(next);
+                              if (next && (q as any).submissionId) {
+                                fetchCodeForQuestion(q.id, (q as any).submissionId);
+                              }
+                            }}
                             className="p-3 sm:p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none active:bg-black/5 dark:active:bg-white/5 transition-colors"
                             role="button"
                             tabIndex={0}
@@ -954,41 +980,94 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                 )}
                               </div>
 
-                              {/* Authentic Code Action Links */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {isSolved ? (
+                              {/* In-Modal Direct Code Viewer (If LeetCode Session Active) */}
+                              {fetchingCodeId === q.id && (
+                                <div className="p-3 rounded-xl bg-slate-900 text-slate-300 text-xs flex items-center justify-center gap-2">
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                                  <span>Retrieving verified submission code from LeetCode...</span>
+                                </div>
+                              )}
+
+                              {fetchedCodes[q.id]?.code && (
+                                <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-950 p-3 space-y-2">
+                                  <div className="flex items-center justify-between text-xs text-slate-300">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono font-bold text-emerald-400 uppercase text-[11px]">
+                                        {fetchedCodes[q.id]?.lang || 'Code'}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-mono">
+                                        Sub #{(q as any).submissionId}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopy(fetchedCodes[q.id]!.code, `code_${q.id}`)}
+                                      className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-white flex items-center gap-1 transition"
+                                    >
+                                      {copiedField === `code_${q.id}` ? (
+                                        <Check className="w-3 h-3 text-emerald-400" />
+                                      ) : (
+                                        <Copy className="w-3 h-3" />
+                                      )}
+                                      <span>{copiedField === `code_${q.id}` ? 'Copied' : 'Copy Code'}</span>
+                                    </button>
+                                  </div>
+                                  <pre className="text-[11px] font-mono text-slate-200 overflow-x-auto max-h-64 p-2.5 bg-slate-900/90 rounded border border-slate-800 leading-relaxed select-text">
+                                    <code>{fetchedCodes[q.id]!.code}</code>
+                                  </pre>
+                                </div>
+                              )}
+
+                              {/* Authentic Code Action Links & Contest Leaderboard Deep-Link */}
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {/* 1. Official Contest Ranking Page (Where LeetCode Shows Code Popup!) */}
                                   <a
-                                    href={submissionUrl}
+                                    href={contestSlug ? `https://leetcode.com/contest/${contestSlug}/ranking/?region=global_v2` : 'https://leetcode.com/contest/'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 active:scale-95 transition-all text-center"
+                                    className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-sm shadow-indigo-600/20 active:scale-95 transition-all text-center"
                                   >
-                                    <Code2 className="w-3.5 h-3.5 shrink-0" />
-                                    <span>{(q as any).submissionId ? 'View Authentic Code on LeetCode ↗' : 'View Verified Solve on LeetCode ↗'}</span>
+                                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                    <span>View on Contest Leaderboard (Code Popup) ↗</span>
                                   </a>
-                                ) : (
-                                  <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                                    <span>No Code Submitted (Skipped)</span>
-                                  </div>
-                                )}
 
+                                  {/* 2. Direct Submission URL */}
+                                  {isSolved ? (
+                                    <a
+                                      href={submissionUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 active:scale-95 transition-all text-center"
+                                    >
+                                      <Code2 className="w-3.5 h-3.5 shrink-0" />
+                                      <span>{(q as any).submissionId ? `Open Submission #${(q as any).submissionId} ↗` : 'Open Verified Solve on LeetCode ↗'}</span>
+                                    </a>
+                                  ) : (
+                                    <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-400 dark:text-slate-500 text-xs font-semibold">
+                                      <span>No Code Submitted (Skipped)</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Problem Statement Link */}
                                 <a
                                   href={problemUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-100 font-bold text-xs transition-all border border-slate-200 dark:border-navy-700 text-center"
+                                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition-all border border-slate-200 dark:border-navy-700 text-center"
                                 >
-                                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                                  <span>Open Problem Statement ↗</span>
+                                  <ExternalLink className="w-3 h-3 shrink-0" />
+                                  <span>Open Problem Description on LeetCode ↗</span>
                                 </a>
                               </div>
 
-                              {/* Security & Anti-Dummy Transparency Notice */}
-                              <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-[10px] text-indigo-900 dark:text-indigo-200 leading-relaxed flex items-start gap-2">
-                                <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                              {/* Leaderboard Code Popup Guide */}
+                              <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-[10.5px] text-emerald-950 dark:text-emerald-200 leading-relaxed flex items-start gap-2">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                                 <div>
-                                  <span className="font-bold">Authentic Telemetry Protocol: </span>
-                                  LeetCode strictly protects raw source code under private user session credentials to prevent contest leaks. We do not inject fake or dummy code. Tap <b>"View Authentic Code on LeetCode ↗"</b> above to inspect the student's authentic submitted code, runtime execution graphs, and test results directly on LeetCode.
+                                  <span className="font-bold">How to view code on LeetCode Leaderboard: </span>
+                                  Click <b>"View on Contest Leaderboard ↗"</b> above, search for <b>@{record.leetcode_username}</b>, and click on their <b>{q.id} submission timestamp</b> in the table. LeetCode will open an official pop-up modal displaying their exact submitted code!
                                 </div>
                               </div>
                             </div>
