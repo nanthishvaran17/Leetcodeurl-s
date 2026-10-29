@@ -101,7 +101,12 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
               className="relative mb-6 flex items-center justify-center"
             >
               {/* Outer Golden/Cyan Aura Halo */}
-              <div className="absolute -inset-4 rounded-[36px] bg-gradient-to-tr from-amber-300/30 via-sky-300/25 to-indigo-300/20 blur-xl opacity-75 animate-pulse" />
+              {/* Outer Ambient Rotating Light Halo */}
+              <motion.div 
+                animate={{ rotate: -360 }}
+                transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
+                className="absolute -inset-5 rounded-full bg-gradient-to-tr from-sky-400/30 via-amber-300/35 to-indigo-400/25 blur-xl opacity-80 pointer-events-none" 
+              />
 
               {/* White Ceramic Jewel Card */}
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[30px] bg-white border border-slate-200/90 p-3 shadow-[0_20px_45px_rgba(0,43,73,0.12),0_4px_12px_rgba(0,0,0,0.04)] flex items-center justify-center overflow-hidden">
@@ -114,9 +119,15 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
                   }}
                 />
 
-                <img
+                <motion.img
                   src="/round_logo.png"
                   alt="Nandha 25th Silver Jubilee Emblem"
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
                   className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_10px_rgba(0,43,73,0.15)]"
                   onError={(e: any) => {
                     e.currentTarget.onerror = null;
