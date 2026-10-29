@@ -1226,6 +1226,16 @@ export const App: React.FC = () => {
         />
       )}
 
+      {/* Floating Presentation Shield Active Pill */}
+      {isPresentationShieldOn && (
+        <div className="fixed top-14 right-3.5 z-[100060] pointer-events-none animate-fade-in">
+          <div className="px-2.5 py-1 rounded-full bg-amber-500/95 text-navy-950 font-black text-[9.5px] tracking-wider uppercase shadow-md flex items-center gap-1.5 backdrop-blur-md border border-amber-300">
+            <span className="w-2 h-2 rounded-full bg-navy-950 animate-ping" />
+            <span>Shield Active: Projector Mode</span>
+          </div>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <Navbar
         currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
