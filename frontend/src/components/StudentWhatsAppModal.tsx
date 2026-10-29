@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageCircle, X, Send, Copy, Check, Edit3, Globe } from 'lucide-react';
+import { MessageCircle, X, Send, Copy, Check, Edit3, Globe, Mail } from 'lucide-react';
 import { FacultyActionItem } from '../services/intelligenceService';
 
 export interface WhatsAppTemplate {
@@ -159,6 +159,9 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
   const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
   const hasValidPhone = cleanPhone && cleanPhone.length >= 10;
 
+  // Student institutional or personal email
+  const studentEmail = (student as any).email || (student as any).student_email || (student.reg_no ? `${student.reg_no.toLowerCase().trim()}@nandhaengg.org` : '');
+
   const handleSendWhatsApp = () => {
     const encoded = encodeURIComponent(editableMessage);
     if (hasValidPhone) {
@@ -166,6 +169,14 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
     } else {
       window.open(`https://wa.me/?text=${encoded}`, '_blank');
     }
+  };
+
+  const handleSendEmail = () => {
+    const tpl = WHATSAPP_TEMPLATES.find(t => t.id === selectedTemplateId) || WHATSAPP_TEMPLATES[0];
+    const subject = encodeURIComponent(`[Nandha Engineering College] LeetCode Mentoring: ${lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}`);
+    const body = encodeURIComponent(editableMessage);
+    const targetEmail = studentEmail || '';
+    window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
   };
 
   const handleCopyMessage = () => {
@@ -344,14 +355,26 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
             Cancel
           </button>
 
-          <button
-            type="button"
-            onClick={handleSendWhatsApp}
-            className="flex-1 sm:flex-initial min-h-[46px] px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
-          >
-            <MessageCircle size={18} className="stroke-[2.5]" />
-            <span>Send via WhatsApp</span>
-          </button>
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <button
+              type="button"
+              onClick={handleSendEmail}
+              className="px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title={`Send email to ${studentEmail}`}
+            >
+              <Mail size={15} />
+              <span>Send Email</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendWhatsApp}
+              className="flex-1 sm:flex-initial min-h-[46px] px-5 sm:px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+            >
+              <MessageCircle size={18} className="stroke-[2.5]" />
+              <span>Send via WhatsApp</span>
+            </button>
+          </div>
         </div>
 
       </div>

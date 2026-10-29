@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   X, MessageCircle, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
   Download, Users, Sparkles, Smartphone, CheckCircle2, RotateCcw, Edit3,
-  Phone, Send, AlertTriangle, CheckCircle, Search
+  Phone, Send, AlertTriangle, CheckCircle, Search, Mail
 } from 'lucide-react';
 import { FacultyActionItem } from '../services/intelligenceService';
 import { triggerHaptic } from '../utils/haptics';
@@ -30,6 +30,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   const [editedCustomMessage, setEditedCustomMessage] = useState<string>('');
   const [copiedNumbers, setCopiedNumbers] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<boolean>(false);
+  const [copiedEmails, setCopiedEmails] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Auto-hide MobileBottomNav while modal is open
@@ -87,6 +88,13 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   }, [currentStudent, selectedTemplateId, lang, customText]);
 
   // Clean phone numbers
+  // Clean student email list for BCC
+  const allStudentEmails = useMemo(() => {
+    return selectedStudents
+      .map(s => (s as any).email || (s as any).student_email || (s.reg_no ? `${s.reg_no.toLowerCase().trim()}@nandhaengg.org` : ''))
+      .filter(Boolean) as string[];
+  }, [selectedStudents]);
+
   const allPhoneNumbersFormatted = useMemo(() => {
     return selectedStudents
       .map(s => {
@@ -150,6 +158,42 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     } else {
       window.open(`https://wa.me/?text=${encoded}`, '_blank');
     }
+  };
+
+  const handleSendEmailCurrent = () => {
+    if (!currentStudent) return;
+    triggerHaptic('success');
+    const tpl = WHATSAPP_TEMPLATES.find(t => t.id === selectedTemplateId) || WHATSAPP_TEMPLATES[0];
+    const subject = encodeURIComponent(`[Nandha Engineering College] LeetCode Mentoring: ${lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}`);
+    const finalMsg = isEditingMessage && editedCustomMessage ? editedCustomMessage : formatMessageForStudent(currentStudent);
+    const body = encodeURIComponent(finalMsg);
+    const email = (currentStudent as any).email || (currentStudent as any).student_email || (currentStudent.reg_no ? `${currentStudent.reg_no.toLowerCase().trim()}@nandhaengg.org` : '');
+    
+    setSentStudentIds(prev => new Set(prev).add(currentStudent.id));
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+
+    if (currentIndex < totalStudents - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setIsEditingMessage(false);
+    }
+  };
+
+  const handleCopyEmails = () => {
+    if (allStudentEmails.length === 0) return;
+    triggerHaptic('selection');
+    navigator.clipboard.writeText(allStudentEmails.join(', '));
+    setCopiedEmails(true);
+    setTimeout(() => setCopiedEmails(false), 2500);
+  };
+
+  const handleOpenBccMailClient = () => {
+    if (allStudentEmails.length === 0) return;
+    triggerHaptic('selection');
+    const tpl = WHATSAPP_TEMPLATES.find(t => t.id === selectedTemplateId) || WHATSAPP_TEMPLATES[0];
+    const subject = encodeURIComponent(`[Nandha Engineering College] LeetCode Mentoring Announcement: ${lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}`);
+    const body = encodeURIComponent(formatBroadcastMessage());
+    const bccList = allStudentEmails.join(',');
+    window.open(`mailto:?bcc=${encodeURIComponent(bccList)}&subject=${subject}&body=${body}`, '_blank');
   };
 
   const handleCopyNumbers = () => {
@@ -384,17 +428,25 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                       <p className="text-xs font-mono font-bold text-slate-500 truncate">
                         {currentStudent.reg_no} &bull; {currentStudent.department_code} &bull; {currentStudent.year_level}
                       </p>
-                      <p className="text-[11.5px] font-bold text-slate-600 dark:text-slate-300 mt-1 flex items-center gap-1.5 flex-wrap">
-                        <span>Phone:</span>
-                        <strong className="font-mono text-emerald-600 dark:text-emerald-400">
-                          {hasValidPhone ? `+${cleanCurrentPhone}` : (currentStudent.phone_number || 'No Phone on Record')}
-                        </strong>
-                        {!hasValidPhone && (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 font-medium">
-                            Share Sheet Fallback
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-[11.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 flex-wrap">
+                          <span>Phone:</span>
+                          <strong className="font-mono text-emerald-600 dark:text-emerald-400">
+                            {hasValidPhone ? `+${cleanCurrentPhone}` : (currentStudent.phone_number || 'No Phone on Record')}
+                          </strong>
+                          {!hasValidPhone && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 font-medium">
+                              Share Sheet Fallback
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-[11.5px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                          <span>Email:</span>
+                          <span className="font-mono text-indigo-600 dark:text-indigo-400 text-xs">
+                            {(currentStudent as any).email || (currentStudent.reg_no ? `${currentStudent.reg_no.toLowerCase().trim()}@nandhaengg.org` : 'N/A')}
                           </span>
-                        )}
-                      </p>
+                        </p>
+                      </div>
                     </div>
 
                     <div className="text-right shrink-0">
@@ -438,12 +490,22 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                     )}
                   </div>
 
-                  {/* Primary 1-Tap Action Button */}
-                  <div className="pt-1">
+                  {/* Primary 1-Tap Action Buttons (WhatsApp + Email) */}
+                  <div className="pt-1 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSendEmailCurrent}
+                      className="min-h-[48px] px-3.5 sm:px-4 rounded-xl border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 active:scale-95 text-indigo-700 dark:text-indigo-300 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Send via Email and advance to next student"
+                    >
+                      <Mail size={16} />
+                      <span className="hidden sm:inline">Send</span> Email &rarr;
+                    </button>
+
                     <button
                       type="button"
                       onClick={handleSendCurrentAndNext}
-                      className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+                      className="flex-1 min-h-[48px] py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
                     >
                       <MessageCircle size={18} className="stroke-[2.5]" />
                       <span>Send WhatsApp &amp; Next Student &rarr;</span>
@@ -621,18 +683,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                   </button>
                 </div>
 
-                {/* Direct WhatsApp Web Shortcut */}
-                <div className="pt-1">
-                  <a
-                    href="https://web.whatsapp.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                  >
-                    <ExternalLink size={15} />
-                    <span>3. Open WhatsApp Web / Desktop &rarr;</span>
-                  </a>
-                </div>
+
 
                 {/* Comma-separated Phone Numbers Box */}
                 <div className="space-y-1 pt-1">
