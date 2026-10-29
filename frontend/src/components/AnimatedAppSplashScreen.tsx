@@ -8,65 +8,50 @@ interface AnimatedAppSplashScreenProps {
 }
 
 /**
- * World-Class Production-Grade Native App Launch Screen
- * Crafted to the aesthetic standards of Apple iOS, Linear, and Stripe.
- * Features:
- * - Real asset pre-flight verification
- * - Dynamic SVG specular light sweep across institutional insignia
- * - Subtle Apple-tuned spring physics & haptic sync
- * - Zero cliché buzzwords — authentic, high-precision typography
- * - Seamless cinematic expand-and-dissolve into active viewport
+ * Trending World-Class Ultra-Clean Light-Theme Launch Screen
+ * Modeled after Apple iOS, Swiggy, Cred (Light), and Stripe.
+ * Pure luminous porcelain backdrop, vibrant institutional insignia,
+ * and physics-based fluid spring animations.
  */
 export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = ({
   onComplete,
-  minDurationMs = 1100
+  minDurationMs = 1150
 }) => {
-  const [statusText, setStatusText] = useState('AUTHENTICATING');
-  const [progress, setProgress] = useState(15);
+  const [statusText, setStatusText] = useState('Connecting to Campus Roster...');
+  const [progress, setProgress] = useState(25);
   const [isReadyToExit, setIsReadyToExit] = useState(false);
-  const startTimeRef = useRef(Date.now());
 
   useEffect(() => {
-    // 1. Initial subtle haptic vibration upon window mount
+    // 1. Initial micro-haptic upon app mount
     triggerHaptic('light');
 
-    // 2. Preload primary institutional assets in parallel
-    const preloadPromise = new Promise<void>((resolve) => {
-      const logoImg = new Image();
-      logoImg.src = '/nec_25_years_logo_transparent.png';
-      logoImg.onload = () => resolve();
-      logoImg.onerror = () => resolve();
-      // Safeguard timeout in case of slow network
-      setTimeout(resolve, 800);
-    });
+    // 2. Asset pre-flight: ensure logo is pre-cached
+    const preloadImg = new Image();
+    preloadImg.src = '/round_logo.png';
 
-    const timer1 = setTimeout(() => {
-      setStatusText('SYNCHRONIZING');
-      setProgress(68);
-    }, 400);
+    const t1 = setTimeout(() => {
+      setStatusText('Syncing Contest Forensics...');
+      setProgress(72);
+    }, 420);
 
-    const timer2 = setTimeout(() => {
-      setStatusText('CONNECTED');
+    const t2 = setTimeout(() => {
+      setStatusText('Workspace Ready');
       setProgress(100);
       triggerHaptic('selection');
     }, 850);
 
-    // 3. Coordinate minimum display threshold with asset preload
-    Promise.all([
-      preloadPromise,
-      new Promise((r) => setTimeout(r, minDurationMs))
-    ]).then(() => {
-      triggerHaptic('light');
+    const tExit = setTimeout(() => {
       setIsReadyToExit(true);
+      triggerHaptic('light');
       if (onComplete) {
-        // Allow exit animation to complete before removing from DOM
-        setTimeout(onComplete, 450);
+        setTimeout(onComplete, 400);
       }
-    });
+    }, minDurationMs);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(tExit);
     };
   }, [minDurationMs, onComplete]);
 
@@ -74,138 +59,139 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
     <AnimatePresence>
       {!isReadyToExit && (
         <motion.div
-          key="apple-tier-splash-screen"
+          key="trending-light-splash-screen"
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            scale: 1.08,
-            filter: 'blur(12px)',
+            scale: 1.05,
             transition: {
-              duration: 0.42,
-              ease: [0.16, 1, 0.3, 1] // Apple Spring deceleration curve
+              duration: 0.38,
+              ease: [0.16, 1, 0.3, 1] // Apple Spring deceleration
             }
           }}
-          className="fixed inset-0 z-[100099] flex flex-col items-center justify-between bg-[#030612] text-white select-none overflow-hidden touch-none"
+          className="fixed inset-0 z-[100099] flex flex-col items-center justify-between bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden touch-none"
         >
-          {/* Subtle Background Organic Ambient Atmosphere */}
+          {/* Subtle Ambient Light Gradients (Clean Pastel Atmosphere) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {/* Luminous Top Arc */}
-            <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[540px] h-[320px] bg-gradient-to-b from-indigo-500/12 via-brand-500/06 to-transparent rounded-full blur-[100px]" />
+            {/* Luminous Top Arc - Soft Nandha Cyan */}
+            <div className="absolute -top-36 left-1/2 -translate-x-1/2 w-[600px] h-[340px] bg-gradient-to-b from-sky-400/15 via-blue-500/08 to-transparent rounded-full blur-[90px]" />
             
-            {/* Ambient Radial Depth */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] bg-radial from-indigo-600/10 via-teal-500/05 to-transparent rounded-full blur-[90px]" />
+            {/* Ambient Golden Warmth Center Accent */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] bg-gradient-to-tr from-amber-400/10 via-indigo-400/08 to-transparent rounded-full blur-[80px]" />
 
-            {/* Microscopic Grid Matrix (Linear / Stripe signature depth) */}
+            {/* Microscopic Studio Dot Matrix */}
             <div 
-              className="absolute inset-0 opacity-[0.03] pointer-events-none"
+              className="absolute inset-0 opacity-[0.045] pointer-events-none"
               style={{
-                backgroundImage: 'radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)',
+                backgroundImage: 'radial-gradient(circle at 1px 1px, #002B49 1px, transparent 0)',
                 backgroundSize: '24px 24px'
               }}
             />
           </div>
 
-          {/* Top Bar Spacer */}
-          <div className="w-full pt-10 px-8 flex items-center justify-between opacity-40">
-            <span className="text-[9px] font-mono tracking-[0.28em] text-slate-400 uppercase font-semibold">
-              NEC • SECURE
-            </span>
-            <div className="flex items-center space-x-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[9px] font-mono tracking-[0.2em] text-emerald-400/90 font-bold">
-                LIVE
+          {/* Top Bar Status */}
+          <div className="w-full pt-10 sm:pt-12 px-6 sm:px-10 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/40" />
+              <span className="text-[10px] font-mono tracking-[0.22em] text-slate-500 font-bold uppercase">
+                NEC TELEMETRY
               </span>
             </div>
+            <span className="text-[9.5px] font-mono tracking-[0.24em] text-sky-700 font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200/80 shadow-2xs">
+              AUTONOMOUS
+            </span>
           </div>
 
-          {/* Centerpiece: Handcrafted Glass Medallion & Insignia */}
-          <div className="relative z-10 flex flex-col items-center px-6 -mt-8">
-            {/* The Insignia Disc */}
+          {/* Centerpiece: Clean White Ceramic Jewel Emblem */}
+          <div className="relative z-10 flex flex-col items-center px-6 -mt-4 text-center">
+            {/* Floating Insignia Tile */}
             <motion.div
-              initial={{ scale: 0.92, opacity: 0, y: 10 }}
+              initial={{ scale: 0.88, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              className="relative mb-7 flex items-center justify-center"
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mb-6 flex items-center justify-center"
             >
-              {/* Subtle Conic Lens Flare Ring */}
-              <div 
-                className="absolute -inset-2.5 rounded-[32px] opacity-40 blur-[1px] pointer-events-none"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(99,102,241,0.25) 50%, rgba(20,184,166,0.2) 100%)'
-                }}
-              />
+              {/* Outer Golden/Cyan Aura Halo */}
+              <div className="absolute -inset-4 rounded-[36px] bg-gradient-to-tr from-amber-300/30 via-sky-300/25 to-indigo-300/20 blur-xl opacity-75 animate-pulse" />
 
-              {/* Glass Lens Case */}
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-[#070D1F]/90 border border-white/[0.12] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_0_rgba(255,255,255,0.22)] backdrop-blur-2xl flex items-center justify-center overflow-hidden">
+              {/* White Ceramic Jewel Card */}
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[30px] bg-white border border-slate-200/90 p-3 shadow-[0_20px_45px_rgba(0,43,73,0.12),0_4px_12px_rgba(0,0,0,0.04)] flex items-center justify-center overflow-hidden">
                 {/* 45-degree Specular Light Reflection Sweep */}
                 <div 
-                  className="absolute inset-0 pointer-events-none opacity-20"
+                  className="absolute inset-0 pointer-events-none opacity-30"
                   style={{
-                    background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.6) 50%, transparent 65%)',
-                    animation: 'sheenSweep 3.2s ease-in-out infinite'
+                    background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.9) 50%, transparent 65%)',
+                    animation: 'sheenSweep 3s ease-in-out infinite'
                   }}
                 />
 
                 <img
-                  src="/nec_25_years_logo_transparent.png"
-                  alt="Nandha 25 Years Silver Jubilee Insignia"
-                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
-                  style={{ imageRendering: '-webkit-optimize-contrast' }}
+                  src="/round_logo.png"
+                  alt="Nandha 25th Silver Jubilee Emblem"
+                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_10px_rgba(0,43,73,0.15)]"
                   onError={(e: any) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/nandha_emblem_white_transparent.png';
+                    e.currentTarget.src = '/nec_25_years_logo.png';
                   }}
                 />
               </div>
             </motion.div>
 
-            {/* Institutional Brand Identity */}
+            {/* Typography & Identity */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="text-center space-y-2"
+              transition={{ duration: 0.5, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-1.5"
             >
-              <h1 className="text-xl sm:text-2xl font-black tracking-[0.16em] uppercase font-sans text-white/95">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50/80 border border-sky-200/60 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#006A94]" />
+                <span className="text-[10.5px] font-bold text-[#006A94] tracking-wider uppercase">
+                  Nandha Engineering College
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight font-display text-[#002B49] uppercase">
                 NANDHA INTELLIGENCE
               </h1>
 
-              <div className="flex items-center justify-center space-x-2 text-[10.5px] font-mono tracking-[0.22em] text-slate-400 font-medium uppercase">
-                <span>INSTITUTIONAL PLATFORM</span>
-                <span className="w-1 h-1 rounded-full bg-slate-600" />
-                <span className="text-slate-300">AUTONOMOUS</span>
-              </div>
+              <p className="text-xs text-slate-500 font-semibold tracking-wide">
+                Competitive Programming Forensics &amp; Roster Platform
+              </p>
             </motion.div>
 
-            {/* Minimalist Apple-Style Progress Thread */}
+            {/* Trending Modern Status Capsule (Swiggy / Apple style) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.25, duration: 0.4 }}
-              className="mt-9 flex flex-col items-center space-y-2.5 w-44"
+              transition={{ delay: 0.25, duration: 0.35 }}
+              className="mt-8 flex flex-col items-center space-y-3"
             >
-              {/* Hairline Rail */}
-              <div className="w-full h-[2px] bg-white/[0.08] rounded-full overflow-hidden relative">
+              {/* Progress Rail */}
+              <div className="w-48 h-1 bg-slate-200/80 rounded-full overflow-hidden relative shadow-inner">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-brand-400 via-indigo-300 to-teal-300 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]"
-                  initial={{ width: '10%' }}
+                  className="h-full bg-gradient-to-r from-[#006A94] via-indigo-500 to-teal-400 rounded-full"
+                  initial={{ width: '15%' }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
 
-              {/* Status Token */}
-              <div className="flex items-center space-x-1.5 text-[9.5px] font-mono tracking-[0.28em] text-slate-400 font-semibold uppercase">
-                <span>{statusText}</span>
+              {/* Status Capsule Pill */}
+              <div className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-ping" />
+                <span className="text-[10px] font-mono font-bold text-slate-700 tracking-wider">
+                  {statusText}
+                </span>
               </div>
             </motion.div>
           </div>
 
-          {/* Bottom Precision Sub-Footer */}
-          <div className="w-full pb-8 px-6 text-center">
-            <p className="text-[10px] font-mono tracking-[0.24em] text-slate-500 uppercase font-medium">
-              NANDHA ENGINEERING COLLEGE • ERODE
-            </p>
+          {/* Bottom Accreditation Badge */}
+          <div className="w-full pb-8 sm:pb-10 px-6 text-center">
+            <span className="text-[9.5px] font-mono tracking-[0.25em] text-slate-400 font-bold uppercase">
+              AN AUTONOMOUS INSTITUTION • AFFILIATED TO ANNA UNIVERSITY
+            </span>
           </div>
         </motion.div>
       )}
