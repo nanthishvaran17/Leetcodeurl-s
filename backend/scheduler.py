@@ -126,6 +126,16 @@ def apscheduler_listener(event):
 scheduler.add_listener(apscheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
 
 
+def get_setting_value(db, key: str, default: str = "true") -> str:
+    """Safely retrieves dynamic AdminSettings configuration from database."""
+    try:
+        from backend.models import AdminSettingsModel
+        row = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == key).first()
+        return str(row.value).strip().lower() if row and row.value is not None else default.lower()
+    except Exception:
+        return default.lower()
+
+
 @with_global_lock('sunday_0745_reminder_job', timeout_minutes=15)
 async def sunday_0745_reminder_job():
     """
@@ -163,9 +173,12 @@ async def sunday_start_job():
     """
     Scheduled for Sunday 8:00 AM IST: Baseline snapshot and live student synchronization.
     """
-    logger.info("[SCHEDULER] Sunday 08:00 AM IST: Autopilot Phase 2 Baseline Snapshot & LIVE Mode Start...")
     db = SessionLocal()
     try:
+        if get_setting_value(db, "ENABLE_AUTO_SUNDAY_SESSION", "true") not in ("true", "1"):
+            logger.info("[SCHEDULER] Sunday 08:00 AM IST: Skipped (ENABLE_AUTO_SUNDAY_SESSION is toggled OFF).")
+            return
+        logger.info("[SCHEDULER] Sunday 08:00 AM IST: Autopilot Phase 2 Baseline Snapshot & LIVE Mode Start...")
         res = await sunday_autopilot.phase_2_baseline_0800(db)
         logger.info(f"[SCHEDULER] Sunday 08:00 AM Baseline Completed: {res}")
     except Exception as e:
@@ -193,6 +206,8 @@ async def sunday_live_monitoring_job():
     if now_ist.weekday() == 6 and (datetime.time(8, 0, 0) <= now_ist.time() <= datetime.time(9, 30, 0)):
         db = SessionLocal()
         try:
+            if get_setting_value(db, "ENABLE_AUTO_SUNDAY_SESSION", "true") not in ("true", "1"):
+                return
             await sunday_autopilot.phase_3_live_monitoring_cycle(db)
         except Exception as e:
             logger.debug(f"[SCHEDULER] Live polling tick note: {e}")
@@ -225,9 +240,12 @@ async def sunday_0935_report_job():
     """
     Scheduled for Sunday 9:35 AM IST: Multi-Format Report Generation (Master Excel, PDF, Word, Depts).
     """
-    logger.info("[SCHEDULER] Sunday 09:35 AM IST: Autopilot Phase 5 Report Generation...")
     db = SessionLocal()
     try:
+        if get_setting_value(db, "AUTO_REPORT_GENERATION", "true") not in ("true", "1"):
+            logger.info("[SCHEDULER] Sunday 09:35 AM: Skipped (AUTO_REPORT_GENERATION is toggled OFF).")
+            return
+        logger.info("[SCHEDULER] Sunday 09:35 AM IST: Autopilot Phase 5 Report Generation...")
         import asyncio
         res = await asyncio.to_thread(sunday_autopilot.phase_5_report_generation_0935, db)
         logger.info(f"[SCHEDULER] Sunday 09:35 AM Report Generation Completed: {res}")
@@ -241,9 +259,13 @@ async def sunday_0940_email_job():
     """
     Scheduled for Sunday 9:40 AM IST: Idempotent Email Dispatch & Role-Based Notification Summaries (Faculty, HOD, Principal).
     """
-    logger.info("[SCHEDULER] Sunday 09:40 AM IST: Autopilot Phase 6 Email & Notification Dispatch...")
     db = SessionLocal()
     try:
+        auto_email = get_setting_value(db, "AUTO_DISPATCH_REPORTS", "true") in ("true", "1") or get_setting_value(db, "AUTO_EMAIL_AFTER_FINALIZE", "true") in ("true", "1")
+        if not auto_email:
+            logger.info("[SCHEDULER] Sunday 09:40 AM: Skipped (AUTO_DISPATCH_REPORTS is toggled OFF).")
+            return
+        logger.info("[SCHEDULER] Sunday 09:40 AM IST: Autopilot Phase 6 Email & Notification Dispatch...")
         import asyncio
         res = await asyncio.to_thread(sunday_autopilot.phase_6_email_dispatch_0940, db)
         logger.info(f"[SCHEDULER] Sunday 09:40 AM Email Dispatch Completed: {res}")
@@ -263,10 +285,13 @@ async def daily_faculty_performance_job():
     Calculates real-time performance metrics for all assigned active students per Faculty
     and dispatches short, professional daily summaries.
     """
-    today_str = datetime.datetime.now(tz=IST).strftime("%Y-%m-%d")
-    logger.info(f"[DAILY_FACULTY_INTELLIGENCE] job_started date={today_str}")
     db = SessionLocal()
     try:
+        if get_setting_value(db, "AUTO_DAILY_FACULTY_BRIEFING", "true") not in ("true", "1"):
+            logger.info("[SCHEDULER] Daily Faculty Briefing skipped (toggled OFF in Settings).")
+            return
+        today_str = datetime.datetime.now(tz=IST).strftime("%Y-%m-%d")
+        logger.info(f"[DAILY_FACULTY_INTELLIGENCE] job_started date={today_str}")
         from backend.services.automatic_notification_engine import AutomaticNotificationEngine
         res = AutomaticNotificationEngine.run_daily_faculty_performance_job(db)
         logger.info(f"[DAILY_FACULTY_INTELLIGENCE] job_completed date={today_str} dispatched={res.get('dispatched', 0)} skipped={res.get('skipped', 0)}")
@@ -412,9 +437,12 @@ async def saturday_2135_biweekly_contest_job():
     Scheduled for Saturday 09:35 PM IST (Biweekly Contest night):
     Triggers live contest results sync & finalization for the Biweekly Contest.
     """
-    logger.info("[SCHEDULER] Saturday 09:35 PM IST: Executing Biweekly Contest Live Sync & Finalization...")
     db = SessionLocal()
     try:
+        if get_setting_value(db, "ENABLE_AUTO_BIWEEKLY_CONTEST", "true") not in ("true", "1"):
+            logger.info("[SCHEDULER] Saturday Biweekly Contest skipped (ENABLE_AUTO_BIWEEKLY_CONTEST toggled OFF).")
+            return
+        logger.info("[SCHEDULER] Saturday 09:35 PM IST: Executing Biweekly Contest Live Sync & Finalization...")
         from backend.services.contest_discovery import discover_biweekly_contest_metadata
         from backend.models import WeeklySession
         meta = discover_biweekly_contest_metadata()
@@ -456,9 +484,12 @@ async def daily_auto_refresh_job():
     """
     Scheduled daily: Auto-syncs live LeetCode stats for all active students.
     """
-    logger.info("Executing Scheduled Job: Daily Live Stats Sync with LeetCode...")
     db = SessionLocal()
     try:
+        if get_setting_value(db, "ENABLE_DAILY_SOLVE_SYNC", "true") not in ("true", "1"):
+            logger.info("[SCHEDULER] Daily Student Solve Sync skipped (ENABLE_DAILY_SOLVE_SYNC toggled OFF).")
+            return
+        logger.info("Executing Scheduled Job: Daily Live Stats Sync with LeetCode...")
         start_full_sync_job(db, triggered_by="scheduler_daily_refresh")
         logger.info("Daily Live Stats Sync triggered successfully.")
     except Exception as e:
@@ -468,29 +499,64 @@ async def daily_auto_refresh_job():
 
 @with_global_lock('daily_db_cleanup_job', timeout_minutes=15)
 async def daily_db_cleanup_job():
-    """Scheduled daily at 03:00 AM IST: Cleans up old logs and notifications older than 14 days."""
-    logger.info("[SCHEDULER] 03:00 AM IST: Executing Database Cleanup Job (14 days retention)...")
+    """
+    Scheduled daily at 03:00 AM IST:
+    Cleans up old logs and notifications older than retention days, and prunes expired snapshots.
+    Compatible across SQLite and PostgreSQL.
+    """
+    logger.info("[SCHEDULER] 03:00 AM IST: Executing Database Cleanup & Backup Pruning Job...")
     db = SessionLocal()
     try:
-        from sqlalchemy import text
-        cleanup_queries = [
-            "DELETE FROM notification_records WHERE created_at < NOW() - INTERVAL '14 days';",
-            "DELETE FROM email_queue_items WHERE created_at < NOW() - INTERVAL '14 days';",
-            "DELETE FROM submission_log WHERE created_at < NOW() - INTERVAL '14 days';",
-            "DELETE FROM scheduled_job_executions WHERE scheduled_at < NOW() - INTERVAL '14 days';",  # type: ignore
-            "DELETE FROM admin_audit_logs WHERE event_timestamp < NOW() - INTERVAL '14 days';",
-            "DELETE FROM email_deliveries WHERE sent_at < NOW() - INTERVAL '14 days';",
-            "DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '14 days';"
+        retention_days_str = get_setting_value(db, "BACKUP_RETENTION", "14")
+        try:
+            retention_days = int(retention_days_str)
+        except ValueError:
+            retention_days = 14
+
+        cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=retention_days)
+        cutoff_iso = cutoff.isoformat()
+
+        table_date_cols = [
+            ("notification_records", "created_at"),
+            ("email_queue_items", "created_at"),
+            ("submission_log", "created_at"),
+            ("scheduled_job_executions", "scheduled_at"),
+            ("admin_audit_logs", "event_timestamp"),
+            ("email_deliveries", "sent_at"),
+            ("audit_logs", "created_at")
         ]
+
         total_deleted = 0
-        for q in cleanup_queries:
+        from sqlalchemy import text
+        for tbl, col in table_date_cols:
             try:
-                res = db.execute(text(q))
-                total_deleted += res.rowcount  # type: ignore
+                res = db.execute(
+                    text(f"DELETE FROM {tbl} WHERE {col} < :cutoff"),
+                    {"cutoff": cutoff_iso}
+                )
+                total_deleted += res.rowcount or 0
             except Exception as ex:
-                logger.warning(f"[SCHEDULER] Cleanup query failed: {ex}")
+                logger.debug(f"[SCHEDULER] Cleanup query for {tbl} note: {ex}")
         db.commit()
-        logger.info(f"[SCHEDULER] Database Cleanup complete. Deleted ~{total_deleted} old records.")
+        logger.info(f"[SCHEDULER] Database log cleanup complete. Deleted ~{total_deleted} old records exceeding {retention_days} days.")
+
+        # Automated Snapshot & Backup Pruning
+        auto_prune = get_setting_value(db, "AUTO_PRUNE_BACKUPS", "true") in ("true", "1")
+        if auto_prune:
+            from backend.backup_manager import BACKUP_DIR
+            if os.path.exists(BACKUP_DIR):
+                prune_cutoff_ts = (datetime.datetime.now() - datetime.timedelta(days=retention_days)).timestamp()
+                pruned_count = 0
+                for fname in os.listdir(BACKUP_DIR):
+                    fpath = os.path.join(BACKUP_DIR, fname)
+                    if os.path.isfile(fpath) and os.path.getmtime(fpath) < prune_cutoff_ts:
+                        try:
+                            os.remove(fpath)
+                            pruned_count += 1
+                        except Exception as rm_err:
+                            logger.warning(f"[SCHEDULER] Could not prune old backup {fname}: {rm_err}")
+                if pruned_count > 0:
+                    logger.info(f"[SCHEDULER] Pruned {pruned_count} old backup file(s) exceeding {retention_days} days retention.")
     except Exception as e:
         db.rollback()
         logger.error(f"[SCHEDULER] Error in daily_db_cleanup_job: {e}")
