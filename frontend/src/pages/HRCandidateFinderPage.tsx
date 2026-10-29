@@ -2563,22 +2563,22 @@ export const HRCandidateFinderPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Export Actions — Balanced Full-Width Grid on Mobile, Flex on Desktop */}
-          <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-2 shrink-0">
+          {/* Export Actions — Stacked One-by-One on Mobile, Flex Row on Desktop */}
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-2 shrink-0">
             <button 
               onClick={openManagementReportPreview} 
               disabled={isLoadingReport}
-              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-7 px-3 rounded-xl sm:rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 sm:h-7 px-4 rounded-xl sm:rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-98 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50"
             >
-              <Eye className={`w-3.5 h-3.5 shrink-0 ${isLoadingReport ? 'animate-spin' : ''}`} />
-              <span className="truncate">{isLoadingReport ? 'Opening...' : 'Management Report'}</span>
+              <Eye className={`w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0 ${isLoadingReport ? 'animate-spin' : ''}`} />
+              <span>{isLoadingReport ? 'Opening Report...' : 'Open Management Report'}</span>
             </button>
             <button 
               onClick={exportToExcel} 
-              className="inline-flex items-center justify-center gap-1.5 h-10 sm:h-7 px-3 rounded-xl sm:rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-emerald-600/20 transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 sm:h-7 px-4 rounded-xl sm:rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-98 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-emerald-600/20 transition-all cursor-pointer"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Excel Export</span>
+              <FileSpreadsheet className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
+              <span>Export Candidates (Excel)</span>
             </button>
           </div>
         </div>
