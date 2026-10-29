@@ -2592,3 +2592,14 @@ body.presentation-shield-active input[type="email"]:hover {
 [data-accent="rose"] .border-brand-400 {
   border-color: #F43F5E !important;
 }
+
+
+/* Apple & Stripe Specular Light Sweep Animation for Brand Insignia */
+@keyframes sheenSweep {
+  0% {
+    transform: translateX(-150%) rotate(25deg);
+  }
+  40%, 100% {
+    transform: translateX(200%) rotate(25deg);
+  }
+}
