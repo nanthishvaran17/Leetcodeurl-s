@@ -2018,7 +2018,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
         ? 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-emerald-500/40 shadow-emerald-500/10'
-        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.08] shadow-glass-dark'
+        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.09] shadow-[0_20px_50px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.15)]'
         }`}>
         {/* Ambient Radial Mesh Glow */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
@@ -2090,7 +2090,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <>
                   <span className="text-slate-500">•</span>
                   <span className="text-slate-400">
-                    Last synced: {sessionMetrics?.last_synced || 'Not synced yet'}
+                    Last synced: {sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate || 'Live'}
                   </span>
                 </>
               )}
@@ -2844,7 +2844,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xl space-y-3 sm:space-y-5 no-print mb-8 sm:mb-12`}>
+          <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-8 sm:mb-12`}>
         {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           {/* Mobile Filter Scope Bar */}

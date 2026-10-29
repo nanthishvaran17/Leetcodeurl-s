@@ -60,18 +60,20 @@ def _build_q_timing(r: Any) -> Dict[str, Any]:
 
         status = "SOLVED" if q_bin else "NOT_SOLVED"
 
+        q_lang = getattr(r, f"q{q_idx}_lang", None)
+        q_sub_id = getattr(r, f"q{q_idx}_sub_id", None)
         if obs_sec and obs_sec > 1:
             h = obs_sec // 3600; m = (obs_sec % 3600) // 60; s = obs_sec % 60
             display = f"{h}h {m}m {s}s" if h > 0 else f"{m}m {s}s"
-            result[f"q{q_idx}"] = {"status": status, "seconds": obs_sec, "source": SOURCE_OBSERVED_LIVE, "method": "LIVE_ACTIVITY_TELEMETRY", "confidence": "HIGH", "display": display, "approximate": False}
+            result[f"q{q_idx}"] = {"status": status, "seconds": obs_sec, "source": SOURCE_OBSERVED_LIVE, "method": "LIVE_ACTIVITY_TELEMETRY", "confidence": "HIGH", "display": display, "approximate": False, "lang": q_lang, "submission_id": q_sub_id}
         elif est_sec and est_sec > 0:
             h = est_sec // 3600; m = (est_sec % 3600) // 60; s = est_sec % 60
             display = f"~{h}h {m}m" if h > 0 else f"~{m}m"
-            result[f"q{q_idx}"] = {"status": status, "seconds": est_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "DYNAMIC_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True}
+            result[f"q{q_idx}"] = {"status": status, "seconds": est_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "DYNAMIC_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True, "lang": q_lang, "submission_id": q_sub_id}
         elif q_bin == 1:
-            result[f"q{q_idx}"] = {"status": "SOLVED", "seconds": None, "source": "TELEMETRY_PENDING", "method": None, "confidence": "NONE", "display": "—", "approximate": False}
+            result[f"q{q_idx}"] = {"status": "SOLVED", "seconds": None, "source": "TELEMETRY_PENDING", "method": None, "confidence": "NONE", "display": "—", "approximate": False, "lang": q_lang, "submission_id": q_sub_id}
         else:
-            result[f"q{q_idx}"] = {"status": "NOT_SOLVED", "seconds": None, "source": SOURCE_UNAVAILABLE, "method": None, "confidence": "NONE", "display": None, "approximate": False}
+            result[f"q{q_idx}"] = {"status": "NOT_SOLVED", "seconds": None, "source": SOURCE_UNAVAILABLE, "method": None, "confidence": "NONE", "display": None, "approximate": False, "lang": None, "submission_id": None}
 
     result["timing_confidence"] = getattr(r, "timing_confidence", "MEDIUM") or "MEDIUM"
     result["calculation_version"] = getattr(r, "timing_calculation_version", "v1.0") or "v1.0"
@@ -1917,7 +1919,7 @@ def _run_sync_in_background(session_id: int):
         else:
             logger.info(f"Starting universal official LeetCode ranking sync for Contest {c_name} (Session {session_id})")
             from backend.services.official_contest_ranking_service import OfficialContestRankingService
-            OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db)
+            OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db, force_live=True)
 
             _CONTEST_RAM_CACHE.clear()
             from backend.cache import cache

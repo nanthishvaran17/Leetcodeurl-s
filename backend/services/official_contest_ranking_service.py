@@ -45,7 +45,8 @@ class OfficialContestRankingService:
         session_id: int, 
         db: Optional[Session] = None, 
         max_pages: int = 1200,
-        concurrency: int = 25
+        concurrency: int = 25,
+        force_live: bool = False
     ) -> Dict[str, Any]:
         close_db_on_exit = False
         if db is None:
@@ -67,7 +68,7 @@ class OfficialContestRankingService:
             cached_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), cached_filename)
             scanned_data: Dict[str, Any] = {}
 
-            if os.path.exists(cached_path):
+            if not force_live and os.path.exists(cached_path):
                 try:
                     with open(cached_path, "r", encoding="utf-8") as f:
                         scanned_data = json.load(f)
@@ -127,7 +128,8 @@ class OfficialContestRankingService:
     def scan_and_sync_contest_sync(
         cls,
         session_id: int,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
+        force_live: bool = False
     ) -> Dict[str, Any]:
         """Synchronous wrapper for schedulers, autopilot, and background threads."""
         try:
@@ -135,11 +137,11 @@ class OfficialContestRankingService:
             if loop.is_running():
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
-                    return pool.submit(asyncio.run, cls.scan_and_sync_contest(session_id, db)).result()
+                    return pool.submit(asyncio.run, cls.scan_and_sync_contest(session_id, db, force_live=force_live)).result()
             else:
-                return loop.run_until_complete(cls.scan_and_sync_contest(session_id, db))
+                return loop.run_until_complete(cls.scan_and_sync_contest(session_id, db, force_live=force_live))
         except RuntimeError:
-            return asyncio.run(cls.scan_and_sync_contest(session_id, db))
+            return asyncio.run(cls.scan_and_sync_contest(session_id, db, force_live=force_live))
 
     @classmethod
     async def scan_live_leetcode_ranking(
@@ -405,11 +407,12 @@ class OfficialContestRankingService:
               startTime
             }
           }
-          recentAcSubmissionList(username: $username, limit: 30) {
+          recentAcSubmissionList(username: $username, limit: 50) {
             id
             title
             titleSlug
             timestamp
+            lang
           }
         }
         """
@@ -450,16 +453,24 @@ class OfficialContestRankingService:
 
                                 q_solves = [0, 0, 0, 0]
                                 q_secs = [None, None, None, None]
+                                q_langs = [None, None, None, None]
+                                q_sub_ids = [None, None, None, None]
+                                q_timestamps = [None, None, None, None]
 
                                 for sub in subs:
                                     ts = int(sub.get("timestamp") or 0)
                                     s_slug = (sub.get("titleSlug") or sub.get("title") or "").strip().lower()
+                                    sub_lang = (sub.get("lang") or "").strip()
+                                    sub_id = str(sub.get("id") or "").strip()
                                     if s_slug in q_slugs:
                                         idx = q_slugs.index(s_slug)
                                         # Strict contest window match (with 5-minute queue grace)
                                         if contest_start_ts - 60 <= ts <= contest_end_ts + 300:
                                             q_solves[idx] = 1
                                             q_secs[idx] = max(0, ts - contest_start_ts)
+                                            q_langs[idx] = sub_lang
+                                            q_sub_ids[idx] = sub_id
+                                            q_timestamps[idx] = ts
 
                                 # If hist shows attended and solves, but recent subs pushed off list
                                 if is_attended and sum(q_solves) == 0 and hist_solved > 0:
@@ -501,7 +512,31 @@ class OfficialContestRankingService:
                                         "q1_observed_seconds": q_secs[0],
                                         "q2_observed_seconds": q_secs[1],
                                         "q3_observed_seconds": q_secs[2],
-                                        "q4_observed_seconds": q_secs[3]
+                                        "q4_observed_seconds": q_secs[3],
+                                        "q1_lang": q_langs[0],
+                                        "q2_lang": q_langs[1],
+                                        "q3_lang": q_langs[2],
+                                        "q4_lang": q_langs[3],
+                                        "q1_sub_id": q_sub_ids[0],
+                                        "q2_sub_id": q_sub_ids[1],
+                                        "q3_sub_id": q_sub_ids[2],
+                                        "q4_sub_id": q_sub_ids[3],
+                                        "q1_timestamp": q_timestamps[0],
+                                        "q2_timestamp": q_timestamps[1],
+                                        "q3_timestamp": q_timestamps[2],
+                                        "q4_timestamp": q_timestamps[3],
+                                        "solve_timeline": [
+                                            {
+                                                "question_index": i + 1,
+                                                "question_slug": q_slugs[i] if i < len(q_slugs) else None,
+                                                "solved": q_solves[i],
+                                                "seconds": q_secs[i],
+                                                "timestamp": q_timestamps[i],
+                                                "lang": q_langs[i],
+                                                "submission_id": q_sub_ids[i]
+                                            }
+                                            for i in range(4) if q_solves[i] == 1
+                                        ]
                                     }
                                 return
                             elif resp.status_code in (429, 403):
@@ -605,6 +640,8 @@ class OfficialContestRankingService:
                 wpr.contest_score = data.get("score", 0)
                 wpr.contest_rank = data.get("rank")
                 wpr.finish_time = str(data.get("finish_time")) if data.get("finish_time") else None
+                wpr.solve_timeline = data.get("solve_timeline")
+                wpr.evidence_json = json.dumps(data, ensure_ascii=False)
                 public_count += 1
                 dept_code = str(wpr.dept or "OTHER").upper()
                 dept_counts[dept_code] = dept_counts.get(dept_code, 0) + 1

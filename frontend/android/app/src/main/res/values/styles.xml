@@ -13,10 +13,16 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Seamless Edge-to-Edge Theme Integration (#060813) -->
+        <item name="android:statusBarColor">#060813</item>
+        <item name="android:navigationBarColor">#060813</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
-
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="android:statusBarColor">#060813</item>
+        <item name="android:navigationBarColor">#060813</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

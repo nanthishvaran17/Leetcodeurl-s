@@ -176,7 +176,7 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
         className={`w-12 h-1.5 sm:w-14 sm:h-1.5 rounded-full shadow-2xs group-hover:scale-110 active:scale-95 transition-all duration-150 ${
           pillClassName
             ? pillClassName
-            : 'bg-slate-300 dark:bg-slate-600 group-hover:bg-slate-400 dark:group-hover:bg-slate-500'
+            : 'bg-slate-300 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-500'
         } ${isPressed ? 'scale-95 opacity-80' : ''}`}
       />
     </div>

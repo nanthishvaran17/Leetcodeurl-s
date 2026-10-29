@@ -1,9 +1,11 @@
-// Import Firebase scripts
+// Firebase Cloud Messaging Service Worker for Nandha LeetCode Intelligence Platform
+// Supports background push notifications, heads-up banners, vibration patterns, and deep link navigation.
+
 importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.9.0/firebase-messaging-compat.js');
 
-// Must match the config in your firebase.ts exactly
-const firebaseConfig = {
+// Default institutional Firebase credentials
+let firebaseConfig = {
   apiKey: "AIzaSyAsP9hOeAxrIO5hbmlrPhmGa3p1vv-1Jek",
   authDomain: "leetcode-student-data.firebaseapp.com",
   projectId: "leetcode-student-data",
@@ -12,24 +14,48 @@ const firebaseConfig = {
   appId: "1:384483144435:web:bcc3284e79ed3ac5323d86",
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Check for dynamic URL query parameters passed during registration
+try {
+  if (self.location && self.location.search) {
+    const urlParams = new URLSearchParams(self.location.search);
+    const qApiKey = urlParams.get('apiKey');
+    if (qApiKey) {
+      firebaseConfig = {
+        apiKey: qApiKey,
+        authDomain: urlParams.get('authDomain') || firebaseConfig.authDomain,
+        projectId: urlParams.get('projectId') || firebaseConfig.projectId,
+        storageBucket: urlParams.get('storageBucket') || firebaseConfig.storageBucket,
+        messagingSenderId: urlParams.get('messagingSenderId') || firebaseConfig.messagingSenderId,
+        appId: urlParams.get('appId') || firebaseConfig.appId,
+      };
+    }
+  }
+} catch (e) {
+  console.warn('[firebase-messaging-sw.js] Could not parse query params:', e);
+}
+
+// Initialize Firebase App in service worker scope
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 // Initialize Firebase Messaging
 const messaging = firebase.messaging();
 
-// Handle background messages
+// Handle Background Push Messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
   const notificationTitle = payload.notification?.title || payload.data?.title || 'LeetCode Intelligence Alert';
   const notificationBody = payload.notification?.body || payload.data?.body || payload.data?.message || 'New update received.';
-  
+  const actionRoute = payload.data?.actionRoute || payload.data?.action_route || payload.data?.route || payload.fcmOptions?.link || '/dashboard';
+  const notificationId = payload.data?.notificationId || payload.data?.tag || ('notif_' + Date.now());
+
   const notificationOptions = {
     body: notificationBody,
-    icon: '/nec_25_logo.png',
-    badge: '/nec_25_logo.png',
-    vibrate: [200, 100, 200, 100, 200], // Phone vibration pattern (like WhatsApp/SMS)
+    icon: '/round_logo.png',
+    badge: '/favicon-32x32.png',
+    vibrate: [200, 100, 200, 100, 200], // Phone vibration pattern
     requireInteraction: true,           // Keeps notification visible on lock screen/desktop
     silent: false,                      // Ensures audio chime & vibration trigger
     actions: [
@@ -37,9 +63,12 @@ messaging.onBackgroundMessage((payload) => {
       { action: 'dismiss', title: 'Dismiss' }
     ],
     data: {
-      url: payload.data?.action_route || payload.data?.actionRoute || payload.fcmOptions?.link || '/',
+      url: actionRoute,
+      actionRoute: actionRoute,
+      notificationId: notificationId,
+      ...payload.data
     },
-    tag: payload.data?.notificationId || payload.data?.tag || ('notif_' + Date.now()),
+    tag: notificationId,
     renotify: true,
   };
 
@@ -50,7 +79,7 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Handle notification click (Deep linking)
+// Handle notification click (Deep linking & client window focus)
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
   if (event.action === 'dismiss') {
@@ -81,18 +110,33 @@ self.addEventListener('notificationclick', function (event) {
     return;
   }
 
-  const targetUrl = notificationData.url || '/';
+  const targetUrl = notificationData.actionRoute || notificationData.url || '/dashboard';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there is already a window/tab open with the target URL
+      // Focus existing window matching target URL if available
       for (let i = 0; i < windowClients.length; i++) {
         const client = windowClients[i];
-        if (client.url.includes(targetUrl) && 'focus' in client) {
+        if (client.url && client.url.includes(targetUrl) && 'focus' in client) {
           return client.focus();
         }
       }
-      // If no window is open, open a new one
+      // Alternatively focus any open application window and post navigate message
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if ('focus' in client) {
+          client.focus();
+          if (client.postMessage) {
+            client.postMessage({
+              type: 'NAVIGATE_TO_ROUTE',
+              route: targetUrl,
+              data: notificationData
+            });
+          }
+          return;
+        }
+      }
+      // If no window is open, launch a new window
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }
@@ -101,14 +145,13 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // PWA Service Worker Core Lifecycle & Caching
-const CACHE_NAME = 'nec-leetcode-pwa-v1';
+const CACHE_NAME = 'nec-leetcode-pwa-v2';
 const STATIC_ASSETS = [
   '/',
   '/site.webmanifest',
+  '/round_logo.png',
   '/favicon.png',
-  '/nec_25_logo.png',
-  '/pwa-192x192.png',
-  '/pwa-512x512.png',
+  '/favicon-32x32.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -137,12 +180,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip API calls, web socket connections, and chrome-extension schemes
+  // Skip API calls, web socket connections, and non-http schemes
   if (url.pathname.startsWith('/api') || url.pathname.startsWith('/ws') || !url.protocol.startsWith('http')) {
     return;
   }
 
-  // Network-first strategy for seamless updates with offline reliability
   event.respondWith(
     fetch(event.request)
       .then((response) => {

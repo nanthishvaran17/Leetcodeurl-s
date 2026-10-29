@@ -15,7 +15,8 @@ import {
   Check,
   UserX,
   Award,
-  ChevronDown
+  ChevronDown,
+  Code2
 } from 'lucide-react';
 import {
   ParticipationRecord,
@@ -417,6 +418,8 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
               // Clean title so it doesn't duplicate "Q1:"
               let rawTitle = qTitleMap[qIdx] || `Problem ${qIdx}`;
               rawTitle = rawTitle.replace(/^Q\d+:\s*/i, '');
+              const qLang = qTiming?.lang || (record as any)[`${qKey}_lang`];
+              const qSubId = qTiming?.submission_id || (record as any)[`${qKey}_sub_id`];
 
               return {
                 id: `Q${qIdx}`,
@@ -429,6 +432,8 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 timeDisplay,
                 qSec,
                 clockTime,
+                lang: qLang || null,
+                submissionId: qSubId || null,
                 attempts: isSolvedQ ? '1+ Submissions (AC)' : 'Unattempted',
                 status: isSolvedQ ? 'SOLVED' : 'SKIPPED'
               };
@@ -802,8 +807,19 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                               <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                                 {q.title}
                               </h4>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                              <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-bold flex-wrap">
                                 <span>{q.attempts}</span>
+                                {(q as any).lang && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono text-[9.5px] font-bold uppercase">
+                                    <Code2 className="w-2.5 h-2.5" />
+                                    {(q as any).lang}
+                                  </span>
+                                )}
+                                {(q as any).submissionId && (
+                                  <span className="text-[9.5px] font-mono text-slate-400 dark:text-slate-500">
+                                    • Sub #{(q as any).submissionId}
+                                  </span>
+                                )}
                                 {q.timingSource && (
                                   <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">
                                     • {q.timingSource === 'OBSERVED_LIVE' ? 'Live Telemetry' : 'Weighted Estimate'}

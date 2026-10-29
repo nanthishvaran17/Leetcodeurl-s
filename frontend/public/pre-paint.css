@@ -1,7 +1,11 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden;background-color:#F5F9FC}
+html.dark,html.dark body,html.dark #root,.dark,.dark body,.dark #root{background-color:#060813 !important}
 #root{display:flex;flex-direction:column}
+html.dark #root,.dark #root{background-color:transparent !important}
 .mobile-pre-branding{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 16px 8px;text-align:center}
 .mobile-pre-logo{width:70px;height:70px;border-radius:50%;object-fit:cover;margin-bottom:8px}
 .mobile-pre-title{font-family:Inter,system-ui,sans-serif;font-weight:800;font-size:22px;color:#002B49;margin:4px 0 2px;letter-spacing:-0.02em}
+.dark .mobile-pre-title,html.dark .mobile-pre-title{color:#F8FAFC !important}
 .mobile-pre-sub{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#475569;margin:0}
+.dark .mobile-pre-sub,html.dark .mobile-pre-sub{color:#94A3B8 !important}

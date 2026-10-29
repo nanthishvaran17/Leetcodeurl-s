@@ -7,7 +7,7 @@ import {
   Clock, Bell, Download, Award, BookOpen, MapPin, RefreshCw,
   Check, Smartphone, Globe, Lock, Share2, GraduationCap,
   Briefcase, Link as LinkIcon, FileText, Send, Printer,
-  QrCode, ExternalLink, Terminal, Activity, Edit3, CheckSquare,
+  QrCode, ExternalLink, Terminal, Activity, Edit3, CheckSquare, Plus, Square,
   AlertTriangle, Sliders, ShieldX, Copy, CheckCheck,
   RotateCw, RefreshCcw, Volume2, VolumeX, Sparkles, Search, UploadCloud,
   Fingerprint, MessageSquare, Compass, Cpu, Palette, ChevronRight, ChevronDown,
@@ -801,6 +801,101 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     } else if (tone === 'none') {
       notify.info('Silent / Mute Mode Selected', 'Notifications will arrive silently without any sound.', { category: 'AUDIO', duration: 3000 });
     }
+  };
+
+  // Executive Institutional Workstation Preferences & Plan Settings
+  const [accentColor, setAccentColor] = useState<string>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_accent_color')) || 'indigo';
+  });
+  const [uiDensity, setUiDensity] = useState<'compact' | 'standard' | 'comfortable'>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_ui_density') as any) || 'standard';
+  });
+  const [aiModelMode, setAiModelMode] = useState<'flash' | 'pro'>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_ai_model_mode') as any) || 'flash';
+  });
+  const [liveSyncInterval, setLiveSyncInterval] = useState<number>(() => {
+    return (typeof window !== 'undefined' && Number(localStorage.getItem('nec_live_sync_interval'))) || 30;
+  });
+  const [autoVerifyContest, setAutoVerifyContest] = useState<boolean>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_auto_verify_contest') !== 'false');
+  });
+  const [autoSundayReports, setAutoSundayReports] = useState<boolean>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_auto_sunday_reports') !== 'false');
+  });
+  const [presentationShield, setPresentationShield] = useState<boolean>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_presentation_shield') === 'true');
+  });
+  const [hapticEnabled, setHapticEnabled] = useState<boolean>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_haptics_enabled') !== 'false');
+  });
+  const [defaultLandingTab, setDefaultLandingTab] = useState<string>(() => {
+    return (typeof window !== 'undefined' && localStorage.getItem('nec_default_landing_tab')) || 'dashboard';
+  });
+
+  interface PlannerTask {
+    id: string;
+    text: string;
+    completed: boolean;
+    priority: 'urgent' | 'high' | 'normal';
+    badge?: string;
+  }
+
+  const defaultPlannerTasks: PlannerTask[] = [
+    { id: 't1', text: 'Sync Weekly Contest authentic rankings & live finish timings', completed: true, priority: 'urgent', badge: 'WC LIVE' },
+    { id: 't2', text: 'Verify 686 enrolled student profiles across all departments', completed: true, priority: 'high', badge: 'ROSTER' },
+    { id: 't3', text: 'Compile & Export 17 Executive Departmental Reports', completed: false, priority: 'urgent', badge: 'REPORTS' },
+    { id: 't4', text: 'Audit inactive student profiles with 5+ days dormancy', completed: false, priority: 'high', badge: 'AUDIT' },
+    { id: 't5', text: 'Stage Weekly Directives for Department HODs & Staff Mentors', completed: false, priority: 'normal', badge: 'HOD HUB' }
+  ];
+
+  const [plannerTasks, setPlannerTasks] = useState<PlannerTask[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('nec_institutional_planner_tasks');
+        if (stored) return JSON.parse(stored);
+      }
+    } catch {}
+    return defaultPlannerTasks;
+  });
+  const [newPlannerInput, setNewPlannerInput] = useState('');
+
+  const handleToggleTask = (taskId: string) => {
+    setPlannerTasks(prev => {
+      const updated = prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+      try { localStorage.setItem('nec_institutional_planner_tasks', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    playChimeSound();
+    triggerHaptic('selection');
+  };
+
+  const handleAddTask = (textToAdd?: string) => {
+    const text = (textToAdd || newPlannerInput).trim();
+    if (!text) return;
+    const newTask: PlannerTask = {
+      id: 'task_' + Date.now(),
+      text,
+      completed: false,
+      priority: 'high',
+      badge: 'ACTION'
+    };
+    setPlannerTasks(prev => {
+      const updated = [newTask, ...prev];
+      try { localStorage.setItem('nec_institutional_planner_tasks', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    setNewPlannerInput('');
+    playChimeSound();
+    triggerHaptic('success');
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setPlannerTasks(prev => {
+      const updated = prev.filter(t => t.id !== taskId);
+      try { localStorage.setItem('nec_institutional_planner_tasks', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    triggerHaptic('warning');
   };
 
   // Mobile profile sub-section filter & accordion states for authentic app ergonomics
@@ -3523,7 +3618,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       {/* 1. MASTER SETTINGS HUB (Mockup "After: New Professional UI") - MOBILE ONLY */}
       {/* ========================================================================= */}
       {activeTab === 'menu' && (
-        <div className="lg:hidden space-y-4 max-w-2xl mx-auto animate-fade-in pb-32 sm:pb-20">
+        <div className="lg:hidden space-y-4 w-full max-w-2xl mx-auto animate-fade-in pb-32 sm:pb-20">
           {/* Header Bar matching mockup: Left arrow, "Settings", Subtitle */}
           <div className="flex items-center gap-3 pt-1 pb-2">
             {onBack && (
@@ -3839,7 +3934,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       {/* ========================================================================= */}
       <div className={`${activeTab === 'menu' ? 'hidden lg:block' : 'block'} w-full`}>
         {/* DESKTOP CONTAINER: Aligns Top Header and 2-Column Body to the exact same width with zero clipping */}
-        <div className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1360px] mx-auto px-0 sm:px-6 lg:px-8">
           
           {/* DESKTOP TOP HEADER BAR */}
           <div className="hidden lg:flex items-center justify-between pb-5 mb-6 border-b border-slate-200/90 dark:border-navy-800/80">
@@ -3899,7 +3994,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
           </div>
 
           {/* WORKSPACE LAYOUT: Flex row on Desktop (w-[320px] sidebar + flex-1 right content) */}
-          <div className="max-w-2xl mx-auto lg:max-w-none lg:flex lg:flex-row lg:gap-8 items-start">
+          <div className="w-full max-w-2xl mx-auto lg:max-w-none lg:flex lg:flex-row lg:gap-8 items-start">
 
             {/* DESKTOP-ONLY LEFT NAVIGATION SIDEBAR */}
             <div className="hidden lg:block lg:w-[320px] xl:w-[340px] shrink-0 sticky top-6 space-y-4">
@@ -4069,7 +4164,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="space-y-4 flex-1 min-w-0 w-full animate-fade-in pb-48 lg:pb-24">
 
             {/* Mobile Header Bar: Sticky top bar with Back, Title, Reset & Save (HIDDEN ON DESKTOP) */}
-            <div className="lg:hidden sticky top-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl flex items-center justify-between gap-2 pt-2.5 pb-2.5 px-3.5 -mx-4 -mt-2 mb-3 border-b border-slate-200/80 dark:border-navy-800 shadow-xs">
+            <div className="lg:hidden flex items-center justify-between gap-2.5 pt-1 pb-2 px-1 mb-2">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <button
                   type="button"
@@ -6422,22 +6517,57 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         )}
 
         {/* ========================================================================= */}
-        {/* CATEGORY E: APP PREFERENCES — Appearance, Languages & Notes */}
+        {/* CATEGORY E: APP PREFERENCES — Executive Institutional Workstation */}
         {/* ========================================================================= */}
         {effectiveTab === 'preferences' && (
-          <div className="space-y-4 sm:space-y-5 animate-fade-in">
-            {/* 1. Theme Selection Card */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="space-y-4 sm:space-y-6 animate-fade-in">
+            {/* 1. Executive Workstation Live Metric Header */}
+            <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-navy-950 to-indigo-950 text-white border border-brand-500/30 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                    <Sliders className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm sm:text-base font-black tracking-tight text-white font-display">
+                        Institutional Workstation &amp; Engine
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 whitespace-nowrap">
+                        ACTIVE PRODUCTION PLAN
+                      </span>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-slate-300 font-medium mt-0.5 truncate">
+                      Nandha Engineering College • Autonomous Institutional Telemetry &amp; Intelligence
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between sm:justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 shrink-0">
+                  <div className="flex flex-col sm:items-end">
+                    <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Official Timezone</span>
+                    <span className="text-xs font-mono font-bold text-brand-300 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-brand-400" />
+                      Asia/Kolkata (IST • UTC+05:30)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Visual Atmosphere, Theme & Accent Hue */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-slate-100 dark:border-navy-800/80 pb-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60 shadow-2xs">
                     <Palette className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                      Appearance &amp; Color Theme
+                      Appearance &amp; Theme Atmosphere
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Personalize your portal contrast and visual atmosphere</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Personalize visual theme and UI layout density</p>
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center">
@@ -6447,290 +6577,501 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* Desktop 3-Card Interactive Theme Visualizer */}
-              <div className="hidden lg:grid grid-cols-3 gap-3.5 pt-1">
-                {/* Light Card */}
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
-                    themeMode === 'light'
-                      ? 'border-brand-500 bg-brand-50/20 dark:bg-brand-950/30 shadow-md shadow-brand-500/10 ring-2 ring-brand-500/30'
-                      : 'border-slate-200/80 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
-                  }`}
-                >
-                  <div className="h-20 rounded-xl bg-gradient-to-br from-white via-slate-50 to-slate-100 border border-slate-200/80 p-2.5 flex flex-col justify-between shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <div className="w-5 h-5 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shadow-2xs">
-                        <Sun className="w-3 h-3 stroke-[2.5]" />
-                      </div>
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="w-12 h-1.5 rounded-full bg-slate-300" />
-                      <div className="w-20 h-1.5 rounded-full bg-brand-400" />
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">Daylight Bright</h4>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Clean high-contrast theme</p>
-                    </div>
-                    {themeMode === 'light' && (
-                      <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px]">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </div>
-                </motion.div>
-
-                {/* Dark Card */}
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setTheme('dark'); setThemeMode('dark'); triggerHaptic('selection'); }}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
-                    themeMode === 'dark'
-                      ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/30 shadow-md shadow-indigo-500/10 ring-2 ring-indigo-500/30'
-                      : 'border-slate-200/80 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
-                  }`}
-                >
-                  <div className="h-20 rounded-xl bg-gradient-to-br from-slate-950 via-navy-900 to-indigo-950 border border-navy-700 p-2.5 flex flex-col justify-between shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <div className="w-5 h-5 rounded-lg bg-indigo-900/80 text-indigo-400 flex items-center justify-center shadow-2xs">
-                        <Moon className="w-3 h-3 stroke-[2.5]" />
-                      </div>
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 rounded-full bg-navy-700" />
-                        <span className="w-2 h-2 rounded-full bg-navy-700" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="w-12 h-1.5 rounded-full bg-navy-700" />
-                      <div className="w-20 h-1.5 rounded-full bg-indigo-500" />
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">Midnight Dark</h4>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Deep OLED contrast</p>
-                    </div>
-                    {themeMode === 'dark' && (
-                      <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </div>
-                </motion.div>
-
-                {/* System Card */}
-                <motion.div
-                  whileHover={{ y: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setSystemTheme(); setThemeMode('system'); triggerHaptic('selection'); }}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
-                    themeMode === 'system'
-                      ? 'border-blue-500 bg-blue-50/20 dark:bg-blue-950/30 shadow-md shadow-blue-500/10 ring-2 ring-blue-500/30'
-                      : 'border-slate-200/80 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
-                  }`}
-                >
-                  <div className="h-20 rounded-xl bg-gradient-to-r from-slate-100 via-slate-200 to-navy-950 border border-slate-300 dark:border-navy-700 p-2.5 flex flex-col justify-between shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <div className="w-5 h-5 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center shadow-2xs">
-                        <Monitor className="w-3 h-3 stroke-[2.5]" />
-                      </div>
-                      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/50 text-slate-700 dark:text-slate-300">AUTO</span>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="w-16 h-1.5 rounded-full bg-blue-400" />
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">System Auto</h4>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Follows device appearance</p>
-                    </div>
-                    {themeMode === 'system' && (
-                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </span>
-                    )}
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Mobile 3-Segment Switcher (PRESERVED FOR MOBILE) */}
-              <div className="lg:hidden p-1 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 grid grid-cols-3 gap-1">
+              {/* 3-Segment Theme Switcher */}
+              <div className="p-1 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 grid grid-cols-3 gap-1">
                 <button
                   type="button"
                   onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
-                  className={`py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'light'
-                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                      ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
-                  <Sun className={`w-3.5 h-3.5 ${themeMode === 'light' ? 'text-amber-500 stroke-[2.5]' : ''}`} />
-                  <span>Light</span>
+                  <Sun className={`w-4 h-4 ${themeMode === 'light' ? 'text-amber-500 stroke-[2.5]' : ''}`} />
+                  <span>Light Daylight</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => { setTheme('dark'); setThemeMode('dark'); triggerHaptic('selection'); }}
-                  className={`py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'dark'
-                      ? 'bg-navy-900 text-white shadow-xs border border-navy-700'
+                      ? 'bg-navy-900 text-white shadow-sm border border-navy-700'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
-                  <Moon className={`w-3.5 h-3.5 ${themeMode === 'dark' ? 'text-indigo-400 stroke-[2.5]' : ''}`} />
-                  <span>Dark</span>
+                  <Moon className={`w-4 h-4 ${themeMode === 'dark' ? 'text-indigo-400 stroke-[2.5]' : ''}`} />
+                  <span>Midnight Dark</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => { setSystemTheme(); setThemeMode('system'); triggerHaptic('selection'); }}
-                  className={`py-2 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'system'
-                      ? 'bg-white dark:bg-navy-900 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-navy-700'
+                      ? 'bg-white dark:bg-navy-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-navy-700'
                       : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
-                  <Monitor className={`w-3.5 h-3.5 ${themeMode === 'system' ? 'text-blue-500 stroke-[2.5]' : ''}`} />
-                  <span>System</span>
+                  <Monitor className={`w-4 h-4 ${themeMode === 'system' ? 'text-blue-500 stroke-[2.5]' : ''}`} />
+                  <span>System Auto</span>
                 </button>
               </div>
-            </div>
 
-            {/* 2. Languages Selection */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60">
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                      Language Preferences
-                    </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Multilingual communication skills</p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
-                  {selectedLanguages.length} Selected
+              {/* Accent Color Palette Selector */}
+              <div className="pt-2">
+                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                  Institutional Accent Color
                 </span>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {AVAILABLE_LANGUAGES.map(lang => {
-                  const isSelected = selectedLanguages.includes(lang);
-                  return (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {[
+                    { id: 'indigo', label: 'NEC Indigo', hex: '#4F46E5', desc: 'Core Standard' },
+                    { id: 'emerald', label: 'Emerald Campus', hex: '#10B981', desc: 'Growth & Vigor' },
+                    { id: 'violet', label: 'Cyber Violet', hex: '#8B5CF6', desc: 'Intelligence' },
+                    { id: 'amber', label: 'Electric Amber', hex: '#F59E0B', desc: 'Active Alert' },
+                    { id: 'rose', label: 'Crimson Rose', hex: '#F43F5E', desc: 'High Impact' },
+                  ].map(acc => (
                     <button
-                      key={lang}
+                      key={acc.id}
                       type="button"
-                      onClick={() => handleToggleLanguage(lang)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${isSelected
-                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20'
-                          : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
-                        }`}
+                      onClick={() => {
+                        setAccentColor(acc.id);
+                        try { localStorage.setItem('nec_accent_color', acc.id); } catch {}
+                        triggerHaptic('selection');
+                      }}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
+                        accentColor === acc.id
+                          ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
+                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300'
+                      }`}
                     >
-                      <span>{lang}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: acc.hex }} />
+                        {accentColor === acc.id && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[3]" />}
+                      </div>
+                      <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">{acc.label}</div>
+                      <div className="text-[9.5px] text-slate-400 truncate">{acc.desc}</div>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* 3. Personal Notes & Scratchpad */}
-            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-3.5">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60">
-                    <Edit3 className="w-5 h-5" />
+            {/* 3. AI Copilot & Real-Time Intelligence Engine Configuration */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs">
+                    <Cpu className="w-5 h-5" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                      Personal Notes &amp; Scratchpad
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      AI &amp; Contest Telemetry Engine
                     </h3>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Secure local workspace</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Model precision, polling cadence &amp; automated verification</p>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {notesSaveStatus === 'saving' ? 'Saving...' : 'Auto-Saved'}
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30">
+                  GEN-AI SYNC
                 </span>
               </div>
 
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                Quick personal notes, problem set ideas, or contest reminders (saved locally on your device).
-              </p>
-
-              {/* Quick Task Template Injectors */}
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleInsertNoteTemplate('• Review Weekly Contest solving roster')}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
-                >
-                  + Contest Roster
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInsertNoteTemplate('• Prepare Data Structures lab problem set')}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
-                >
-                  + Lab Problem Set
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInsertNoteTemplate('• Follow up on pending mentees submissions')}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
-                >
-                  + Mentee Submissions
-                </button>
-              </div>
-
-              <div className="relative">
-                <textarea
-                  rows={4}
-                  value={facultyNotes}
-                  onChange={e => handleFacultyNotesChange(e.target.value)}
-                  placeholder="Type personal faculty notes here..."
-                  className="w-full p-3.5 pb-10 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none font-mono transition-all"
-                />
-                <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
+              {/* AI Precision Mode Selector */}
+              <div>
+                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                  AI Analytical Model Mode
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <button
                     type="button"
-                    onClick={handleCopyNotes}
-                    className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:text-brand-600 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
-                    title="Copy notes to clipboard"
+                    onClick={() => {
+                      setAiModelMode('flash');
+                      try { localStorage.setItem('nec_ai_model_mode', 'flash'); } catch {}
+                      triggerHaptic('selection');
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      aiModelMode === 'flash'
+                        ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/40 ring-2 ring-indigo-500/20'
+                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50'
+                    }`}
                   >
-                    <Copy className="w-3 h-3" />
-                    <span>Copy</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <span className="text-xs font-black text-slate-900 dark:text-white">Gemini 2.5 Flash</span>
+                      </div>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">RECOMMENDED</span>
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">Ultra-low latency live sync, instant solver verification and real-time streaming queries.</p>
                   </button>
-                  {facultyNotes && (
-                    <button
-                      type="button"
-                      onClick={handleClearNotes}
-                      className="px-2 py-1 rounded-md text-[10px] font-black bg-white dark:bg-navy-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
-                      title="Clear notes"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>Clear</span>
-                    </button>
-                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAiModelMode('pro');
+                      try { localStorage.setItem('nec_ai_model_mode', 'pro'); } catch {}
+                      triggerHaptic('selection');
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      aiModelMode === 'pro'
+                        ? 'border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/40 ring-2 ring-indigo-500/20'
+                        : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <Cpu className="w-4 h-4 text-purple-500" />
+                        <span className="text-xs font-black text-slate-900 dark:text-white">Gemini 2.5 Pro Engine</span>
+                      </div>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400">DEEP REASONING</span>
+                    </div>
+                    <p className="text-[10.5px] text-slate-500 dark:text-slate-400">Deep structural anomaly scanning, cross-department ranking correlation &amp; complex reports.</p>
+                  </button>
                 </div>
               </div>
+
+              {/* Contest Live Sync Interval Cadence */}
+              <div className="pt-2">
+                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                  Contest Live-Sync Polling Cadence
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { sec: 15, label: '15 Seconds', desc: 'Contest Window Only', badge: 'HIGH REALTIME' },
+                    { sec: 30, label: '30 Seconds', desc: 'Balanced Performance', badge: 'DEFAULT' },
+                    { sec: 60, label: '60 Seconds', desc: 'Low Data Usage', badge: 'ECO MODE' },
+                  ].map(cad => (
+                    <button
+                      key={cad.sec}
+                      type="button"
+                      onClick={() => {
+                        setLiveSyncInterval(cad.sec);
+                        try { localStorage.setItem('nec_live_sync_interval', String(cad.sec)); } catch {}
+                        triggerHaptic('selection');
+                      }}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
+                        liveSyncInterval === cad.sec
+                          ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
+                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">{cad.label}</div>
+                      <div className="text-[9.5px] text-slate-400 mt-0.5">{cad.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Automation Toggles */}
+              <div className="pt-2 space-y-2.5 border-t border-slate-100 dark:border-navy-800/80">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                  <div className="min-w-0 pr-3">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">Auto-Verify Contest Solvers</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Authenticates finish timestamps against LeetCode GQL engine automatically</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !autoVerifyContest;
+                      setAutoVerifyContest(next);
+                      try { localStorage.setItem('nec_auto_verify_contest', String(next)); } catch {}
+                      triggerHaptic('selection');
+                    }}
+                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${autoVerifyContest ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-navy-700'}`}
+                  >
+                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${autoVerifyContest ? 'left-5.5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                  <div className="min-w-0 pr-3">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">Sunday 10:00 AM Master Reports Auto-Staging</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Auto-generates all 17 Executive Department Excel &amp; PDF reports following contest closing</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !autoSundayReports;
+                      setAutoSundayReports(next);
+                      try { localStorage.setItem('nec_auto_sunday_reports', String(next)); } catch {}
+                      triggerHaptic('selection');
+                    }}
+                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${autoSundayReports ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-navy-700'}`}
+                  >
+                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${autoSundayReports ? 'left-5.5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Presentation Shield & Workstation Privacy Controls */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                      Presentation &amp; Privacy Shield
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Smartboard projection safeguards and tactile audio settings</p>
+                  </div>
+                </div>
+                {presentationShield && (
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                    SHIELD ACTIVE
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2.5">
+                {/* Classroom / Auditorium Mode */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                  <div className="min-w-0 pr-3">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <EyeOff className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                      Auditorium &amp; Projector Presentation Mode
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Blurs sensitive student phone numbers &amp; personal email IDs when presenting on projector / smartboard screens</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !presentationShield;
+                      setPresentationShield(next);
+                      try { localStorage.setItem('nec_presentation_shield', String(next)); } catch {}
+                      triggerHaptic('selection');
+                    }}
+                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${presentationShield ? 'bg-brand-600' : 'bg-slate-300 dark:bg-navy-700'}`}
+                  >
+                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${presentationShield ? 'left-5.5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                {/* Tactile Haptics */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800">
+                  <div className="min-w-0 pr-3">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
+                      Tactile Spring Haptics (Mobile &amp; Tablet)
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">Provides physical micro-vibration feedback when tapping interactive controls &amp; toggles</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !hapticEnabled;
+                      setHapticEnabled(next);
+                      try { localStorage.setItem('nec_haptics_enabled', String(next)); } catch {}
+                      triggerHaptic('selection');
+                    }}
+                    className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${hapticEnabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-navy-700'}`}
+                  >
+                    <span className={`w-5 h-5 rounded-full bg-white block transition-transform absolute top-0.5 ${hapticEnabled ? 'left-5.5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Interactive Institutional Task Board & Contest Action Plan */}
+            <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800/80 pb-3 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400 flex items-center justify-center shrink-0 border border-fuchsia-200/60 dark:border-fuchsia-800/60 shadow-2xs">
+                    <CheckSquare className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider font-display">
+                      Institutional Action Plan &amp; Tasks
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Weekly contest milestones, verification checks &amp; reminders</p>
+                  </div>
+                </div>
+
+                {/* Live Progress Pill */}
+                {(() => {
+                  const completedCount = plannerTasks.filter(t => t.completed).length;
+                  const total = plannerTasks.length;
+                  const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 sm:w-24 bg-slate-100 dark:bg-navy-950 rounded-full h-2 overflow-hidden border border-slate-200 dark:border-navy-800">
+                        <div
+                          className="bg-gradient-to-r from-brand-500 to-emerald-500 h-full transition-all duration-300"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-[10.5px] font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {completedCount}/{total} ({pct}%)
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Quick Template Task Injectors */}
+              <div className="flex flex-wrap gap-1.5 items-center">
+                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mr-1">Quick Add:</span>
+                <button
+                  type="button"
+                  onClick={() => handleAddTask('Sync Weekly Contest 526 Solvers Roster')}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                >
+                  + Contest 526 Roster
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddTask('Export All 17 Executive Department Reports')}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                >
+                  + 17 Master Reports
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddTask('Follow up with inactive students (< 1 problem solved)')}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 cursor-pointer active:scale-95 transition-all"
+                >
+                  + Inactive Follow-up
+                </button>
+              </div>
+
+              {/* Interactive Task Checklist */}
+              <div className="space-y-2 pt-1">
+                {plannerTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all select-none ${
+                      task.completed
+                        ? 'bg-slate-50/60 dark:bg-navy-950/40 border-slate-200/60 dark:border-navy-800/60 opacity-75'
+                        : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-800 shadow-2xs hover:border-brand-500/40'
+                    }`}
+                  >
+                    <div
+                      onClick={() => handleToggleTask(task.id)}
+                      className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                    >
+                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-colors border ${
+                        task.completed
+                          ? 'bg-emerald-500 border-emerald-500 text-white'
+                          : 'border-slate-300 dark:border-navy-700 hover:border-brand-500'
+                      }`}>
+                        {task.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className={`text-xs font-bold block truncate ${
+                          task.completed
+                            ? 'line-through text-slate-400 dark:text-slate-500'
+                            : 'text-slate-800 dark:text-slate-200'
+                        }`}>
+                          {task.text}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {task.badge && (
+                        <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${
+                          task.priority === 'urgent'
+                            ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                            : task.priority === 'high'
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                            : 'bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400'
+                        }`}>
+                          {task.badge}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                        title="Delete task"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Custom Task Input */}
+              <div className="pt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newPlannerInput}
+                  onChange={e => setNewPlannerInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTask(); } }}
+                  placeholder="Add custom institutional action item..."
+                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddTask()}
+                  className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all shadow-sm shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Task</span>
+                </button>
+              </div>
+
+              {/* Expandable Quick Notes Textarea */}
+              <div className="pt-3 border-t border-slate-100 dark:border-navy-800/80">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                    Quick Scratchpad &amp; Offline Notes
+                  </span>
+                  <span className="text-[9.5px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                    AUTO-SAVED LOCALLY
+                  </span>
+                </div>
+                <div className="relative">
+                  <textarea
+                    rows={3}
+                    value={facultyNotes}
+                    onChange={e => handleFacultyNotesChange(e.target.value)}
+                    placeholder="Quick notes, contest reminders, or student observations..."
+                    className="w-full p-3 pb-9 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-medium text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-none font-mono"
+                  />
+                  <div className="absolute bottom-2 right-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handleCopyNotes}
+                      className="px-2 py-1 rounded text-[10px] font-bold bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:text-brand-600 flex items-center gap-1 cursor-pointer active:scale-95"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </button>
+                    {facultyNotes && (
+                      <button
+                        type="button"
+                        onClick={handleClearNotes}
+                        className="px-2 py-1 rounded text-[10px] font-bold bg-white dark:bg-navy-900 text-rose-600 hover:bg-rose-50 border border-rose-200 flex items-center gap-1 cursor-pointer active:scale-95"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Clear</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Institutional Accreditation & Compliance Badge */}
+            <div className="p-3.5 rounded-2xl bg-slate-100/70 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  Nandha Engineering College (Autonomous), Erode • NIRF / NBA Compliant
+                </span>
+              </div>
+              <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                Platform v4.2.0 • Institutional Standard
+              </span>
             </div>
           </div>
         )}
 
-        {/* ========================================================================= */}
         {/* TAB 4: DIGITAL IDENTITY CARD — Authentic Institutional PVC Badge */}
         {/* ========================================================================= */}
         {effectiveTab === 'id_card' && (

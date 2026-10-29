@@ -10,6 +10,23 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Overscroll Behavior & Background Lock for 100% Native Feel */
+html, body, #root {
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+/* Native Touch & Long-Press Selection Lock (Prevents blue selection handles on cards & buttons) */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable="true"], pre, code, .selectable-text {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Eliminate default mobile browser gray highlight on tap */
 * {
   -webkit-tap-highlight-color: transparent !important;
@@ -85,7 +102,7 @@ body {
   min-height: 100%;
   position: relative;
   touch-action: pan-y;
-  overscroll-behavior-y: auto;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -93,6 +110,11 @@ body {
   width: 100%;
   min-height: 100vh;
   position: relative;
+}
+
+.dark #root,
+html.dark #root {
+  background-color: transparent !important;
 }
 
 :root {
@@ -142,10 +164,12 @@ html.dark {
   color-scheme: dark;
 }
 
-.dark body {
+.dark body,
+html.dark body {
   background-color: #060813 !important;
   color: #F8FAFC !important;
   position: relative;
+  isolation: isolate;
 }
 
 /* 60FPS GPU Hardware Accelerated Dark Background (Eliminates Scroll Stutter) */
@@ -153,17 +177,52 @@ html.dark {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
   background-color: #060813;
   background-image: 
-    radial-gradient(rgba(99, 102, 241, 0.12) 1.2px, transparent 1.2px),
-    radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.18) 0px, transparent 55%),
-    radial-gradient(ellipse at 85% 5%, rgba(56, 189, 248, 0.14) 0px, transparent 50%),
-    radial-gradient(ellipse at 50% 95%, rgba(16, 185, 129, 0.08) 0px, transparent 55%);
+    radial-gradient(rgba(99, 102, 241, 0.14) 1.2px, transparent 1.2px),
+    radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.22) 0px, transparent 55%),
+    radial-gradient(ellipse at 85% 5%, rgba(56, 189, 248, 0.18) 0px, transparent 50%),
+    radial-gradient(ellipse at 50% 95%, rgba(16, 185, 129, 0.10) 0px, transparent 55%);
   background-size: 28px 28px, 100% 100%, 100% 100%, 100% 100%;
   transform: translate3d(0, 0, 0);
   will-change: transform;
+}
+
+/* 1000/10 Organic Cosmic Breathing Animation */
+@keyframes cosmicBreathing {
+  0%, 100% {
+    opacity: 0.88;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02) translate3d(0, -4px, 0);
+  }
+}
+
+/* 1000/10 Layered Cyber Aurora Ambient Glow */
+.dark body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(circle at 95% 35%, rgba(56, 189, 248, 0.12), transparent 50%),
+    radial-gradient(circle at 5% 75%, rgba(16, 185, 129, 0.10), transparent 55%);
+  opacity: 0.95;
+  transform: translate3d(0, 0, 0);
+  animation: cosmicBreathing 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 1000/10 Electric Indigo Text Selection in Dark Mode */
+.dark ::selection {
+  background-color: rgba(99, 102, 241, 0.45) !important;
+  color: #FFFFFF !important;
 }
 
 /* ==========================================================================
@@ -1491,6 +1550,19 @@ html.dark {
   box-shadow: 0 2px 8px -2px rgba(217, 119, 6, 0.25), 0 0 0 1px rgba(217, 119, 6, 0.35);
 }
 
+/* 100/10 Holographic Podium Auras in Dark Mode */
+.dark .gold-aura {
+  box-shadow: 0 8px 30px -4px rgba(245, 158, 11, 0.35), 0 0 20px -2px rgba(245, 158, 11, 0.3), inset 0 1px 0 0 rgba(254, 240, 138, 0.4) !important;
+}
+
+.dark .silver-aura {
+  box-shadow: 0 8px 30px -4px rgba(226, 232, 240, 0.28), 0 0 20px -2px rgba(226, 232, 240, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+.dark .bronze-aura {
+  box-shadow: 0 8px 30px -4px rgba(217, 119, 6, 0.32), 0 0 20px -2px rgba(217, 119, 6, 0.22), inset 0 1px 0 0 rgba(251, 146, 60, 0.35) !important;
+}
+
 /* Shimmer Light Reflection */
 @keyframes shimmerBeam {
   0% {
@@ -2192,11 +2264,11 @@ body {
 }
 
 .dark .glass-panel-elevated {
-  background: rgba(13, 19, 34, 0.82);
+  background: linear-gradient(180deg, rgba(15, 22, 40, 0.88) 0%, rgba(9, 13, 24, 0.96) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -2207,8 +2279,8 @@ body {
 
 .dark .glass-panel-elevated:hover {
   transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.7), 0 0 20px -2px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.42);
+  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.75), 0 0 24px -2px rgba(99, 102, 241, 0.24), inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
 }
 
 .glass-pill {
@@ -2299,7 +2371,7 @@ body {
 
 @media (max-width: 768px) {
   html, body {
-    overscroll-behavior-y: auto;
+    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: auto;
   }
@@ -2430,3 +2502,84 @@ body {
 }
 
 
+
+
+/* ==========================================================================
+   DYNAMIC INSTITUTIONAL ACCENTS & PRESENTATION PRIVACY SHIELD
+   ========================================================================== */
+/* 1. Presentation / Projector Privacy Shield */
+body.presentation-shield-active [data-mask-sensitive="true"],
+body.presentation-shield-active .sensitive-contact,
+body.presentation-shield-active [data-sensitive="true"],
+body.presentation-shield-active input[type="tel"],
+body.presentation-shield-active input[type="email"] {
+  filter: blur(5.5px) !important;
+  user-select: none !important;
+  transition: filter 0.2s ease !important;
+  cursor: pointer;
+}
+
+body.presentation-shield-active [data-mask-sensitive="true"]:hover,
+body.presentation-shield-active .sensitive-contact:hover,
+body.presentation-shield-active [data-sensitive="true"]:hover,
+body.presentation-shield-active input[type="tel"]:hover,
+body.presentation-shield-active input[type="email"]:hover {
+  filter: none !important;
+}
+
+/* 2. Institutional Dynamic Accent Themes */
+[data-accent="emerald"] .bg-brand-600,
+[data-accent="emerald"] .bg-brand-500 {
+  background-color: #10B981 !important;
+}
+[data-accent="emerald"] .text-brand-600,
+[data-accent="emerald"] .text-brand-500,
+[data-accent="emerald"] .text-brand-400 {
+  color: #10B981 !important;
+}
+[data-accent="emerald"] .border-brand-500,
+[data-accent="emerald"] .border-brand-400 {
+  border-color: #10B981 !important;
+}
+
+[data-accent="violet"] .bg-brand-600,
+[data-accent="violet"] .bg-brand-500 {
+  background-color: #8B5CF6 !important;
+}
+[data-accent="violet"] .text-brand-600,
+[data-accent="violet"] .text-brand-500,
+[data-accent="violet"] .text-brand-400 {
+  color: #8B5CF6 !important;
+}
+[data-accent="violet"] .border-brand-500,
+[data-accent="violet"] .border-brand-400 {
+  border-color: #8B5CF6 !important;
+}
+
+[data-accent="amber"] .bg-brand-600,
+[data-accent="amber"] .bg-brand-500 {
+  background-color: #F59E0B !important;
+}
+[data-accent="amber"] .text-brand-600,
+[data-accent="amber"] .text-brand-500,
+[data-accent="amber"] .text-brand-400 {
+  color: #F59E0B !important;
+}
+[data-accent="amber"] .border-brand-500,
+[data-accent="amber"] .border-brand-400 {
+  border-color: #F59E0B !important;
+}
+
+[data-accent="rose"] .bg-brand-600,
+[data-accent="rose"] .bg-brand-500 {
+  background-color: #F43F5E !important;
+}
+[data-accent="rose"] .text-brand-600,
+[data-accent="rose"] .text-brand-500,
+[data-accent="rose"] .text-brand-400 {
+  color: #F43F5E !important;
+}
+[data-accent="rose"] .border-brand-500,
+[data-accent="rose"] .border-brand-400 {
+  border-color: #F43F5E !important;
+}

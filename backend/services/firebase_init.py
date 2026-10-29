@@ -96,6 +96,9 @@ def get_firebase_app():
     if not cred:
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         possible_paths = [
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'firebase-key.json'),
+            os.path.join(root_dir, 'firebase-key.json'),
+            os.path.join(os.path.dirname(__file__), 'firebase-key.json'),
             os.path.join(root_dir, 'serviceAccountKey.json'),
             os.path.join(root_dir, 'firebase-service-account.json'),
             os.path.join(os.path.dirname(os.path.dirname(__file__)), 'serviceAccountKey.json'),

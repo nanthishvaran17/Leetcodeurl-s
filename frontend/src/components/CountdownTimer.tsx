@@ -190,22 +190,22 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
       className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 relative overflow-hidden backdrop-blur-xl ${
         isSessionLive
           ? 'bg-white dark:bg-navy-900/95 border-emerald-200/90 dark:border-emerald-600/50 shadow-[0_10px_35px_-8px_rgba(16,185,129,0.15),0_4px_12px_rgba(0,0,0,0.02)]'
-          : 'bg-white dark:bg-navy-900/95 border-slate-200/90 dark:border-navy-700/80 shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12),0_4px_12px_rgba(0,0,0,0.02)]'
+          : 'bg-white dark:bg-navy-900/95 border-slate-200/90 dark:border-white/[0.09] shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12)] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.14)]'
       }`}
     >
-      {/* Soft Pastel Ambient Glow Halos (Clean White Atmosphere) */}
+      {/* Soft Pastel Ambient Glow Halos */}
       <div 
         className={`absolute -top-24 -right-24 w-80 h-80 rounded-full blur-[90px] pointer-events-none transition-all duration-700 ${
           isSessionLive 
-            ? 'bg-emerald-100/70' 
-            : 'bg-indigo-100/60'
+            ? 'bg-emerald-100/70 dark:bg-emerald-500/20' 
+            : 'bg-indigo-100/60 dark:bg-indigo-500/20'
         }`} 
       />
       <div 
         className={`absolute -bottom-24 -left-24 w-80 h-80 rounded-full blur-[90px] pointer-events-none transition-all duration-700 ${
           isSessionLive 
-            ? 'bg-teal-100/60' 
-            : 'bg-blue-100/60'
+            ? 'bg-teal-100/60 dark:bg-teal-500/20' 
+            : 'bg-blue-100/60 dark:bg-sky-500/15'
         }`} 
       />
 

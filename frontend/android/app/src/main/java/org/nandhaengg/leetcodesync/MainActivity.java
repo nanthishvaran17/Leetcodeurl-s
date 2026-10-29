@@ -15,8 +15,25 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(DocumentOpenerPlugin.class);
         super.onCreate(savedInstanceState);
+        configureEdgeToEdgeStatusBar();
         createNotificationChannels();
         handleNotificationAction(getIntent());
+    }
+
+    private void configureEdgeToEdgeStatusBar() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            android.view.Window window = getWindow();
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            
+            // Seamless OLED dark theme match (#060813)
+            int darkThemeColor = android.graphics.Color.parseColor("#060813");
+            window.setStatusBarColor(darkThemeColor);
+            
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                window.setNavigationBarColor(darkThemeColor);
+            }
+        }
     }
 
     private void createNotificationChannels() {
@@ -24,29 +41,29 @@ public class MainActivity extends BridgeActivity {
             android.app.NotificationManager notificationManager = getSystemService(android.app.NotificationManager.class);
             if (notificationManager == null) return;
 
-            // 1. Messages & Chat channel (Urgent Heads-Up 24/7)
-            android.app.NotificationChannel messagesChannel = new android.app.NotificationChannel(
-                "messages_channel",
-                "Messages & Chat",
-                android.app.NotificationManager.IMPORTANCE_HIGH
-            );
-            messagesChannel.setDescription("Real-time direct messages, staff discussions, and student chat alerts");
-            messagesChannel.enableVibration(true);
-            messagesChannel.enableLights(true);
-            messagesChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-            notificationManager.createNotificationChannel(messagesChannel);
+            String[][] channels = {
+                {"messages_channel", "Messages & Chat", "Real-time direct messages, staff discussions, and student chat alerts"},
+                {"account_security", "Account & Security", "Critical security alerts, password changes, and account activity"},
+                {"contest_updates", "Contest Updates", "Live contest alerts, reminders, and contest result announcements"},
+                {"weekly_reports", "Weekly Performance Reports", "Weekly student performance reports and analytical summaries"},
+                {"performance_updates", "Performance Milestones", "Rating changes, milestones, and performance velocity updates"},
+                {"academic_announcements", "Academic Announcements", "Institutional, department, and academic announcements"},
+                {"system_status", "System Status", "Maintenance schedules and system status updates"},
+                {"leetcode_intelligence_channel", "LeetCode General Alerts", "General system alerts, role updates, and real-time announcements"}
+            };
 
-            // 2. Default LeetCode channel
-            android.app.NotificationChannel defaultChannel = new android.app.NotificationChannel(
-                "leetcode_intelligence_channel",
-                "LeetCode General Alerts",
-                android.app.NotificationManager.IMPORTANCE_HIGH
-            );
-            defaultChannel.setDescription("General system alerts, role updates, and real-time announcements");
-            defaultChannel.enableVibration(true);
-            defaultChannel.enableLights(true);
-            defaultChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
-            notificationManager.createNotificationChannel(defaultChannel);
+            for (String[] ch : channels) {
+                android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                    ch[0],
+                    ch[1],
+                    android.app.NotificationManager.IMPORTANCE_HIGH
+                );
+                channel.setDescription(ch[2]);
+                channel.enableVibration(true);
+                channel.enableLights(true);
+                channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 

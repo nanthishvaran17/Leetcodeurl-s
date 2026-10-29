@@ -303,7 +303,9 @@ def _filter_canonical_dataset_in_memory(
         "q4Count": q4,
         "q3Count": q3,
         "q2Count": q2,
-        "q1Count": q1
+        "q1Count": q1,
+        "last_synced": (base_metrics and base_metrics.get("last_synced")) or base_dataset.get("generatedAtIST") or format_ist(now_ist()),
+        "generatedAtIST": (base_metrics and base_metrics.get("last_synced")) or base_dataset.get("generatedAtIST") or format_ist(now_ist())
     }
 
     status_counts = {
@@ -873,6 +875,23 @@ def _build_canonical_contest_dataset_internal(
         v_fin = getattr(v_res, "finish_time", None) if v_res else None
         real_finish_time = p_fin or pw_fin or v_fin or (str(calc_finish_s) if calc_finish_s is not None else None)
 
+        ev_data = {}
+        if p_res and getattr(p_res, "evidence_json", None):
+            try:
+                ev_data = json.loads(p_res.evidence_json) if isinstance(p_res.evidence_json, str) else (p_res.evidence_json or {})
+            except Exception:
+                ev_data = {}
+
+        q1_lang = ev_data.get("q1_lang") if ev_data else None
+        q2_lang = ev_data.get("q2_lang") if ev_data else None
+        q3_lang = ev_data.get("q3_lang") if ev_data else None
+        q4_lang = ev_data.get("q4_lang") if ev_data else None
+        q1_sub = ev_data.get("q1_sub_id") if ev_data else None
+        q2_sub = ev_data.get("q2_sub_id") if ev_data else None
+        q3_sub = ev_data.get("q3_sub_id") if ev_data else None
+        q4_sub = ev_data.get("q4_sub_id") if ev_data else None
+        solve_timeline = getattr(p_res, "solve_timeline", None) or (ev_data.get("solve_timeline") if ev_data else None)
+
         # Temporary timing object wrapper to pass actual observed seconds to _build_q_timing
         class _TimingProxy:
             pass
@@ -893,6 +912,14 @@ def _build_canonical_contest_dataset_internal(
         t_proxy.q2_time_source = "OBSERVED_LIVE" if q2_sec else None
         t_proxy.q3_time_source = "OBSERVED_LIVE" if q3_sec else None
         t_proxy.q4_time_source = "OBSERVED_LIVE" if q4_sec else None
+        t_proxy.q1_lang = q1_lang
+        t_proxy.q2_lang = q2_lang
+        t_proxy.q3_lang = q3_lang
+        t_proxy.q4_lang = q4_lang
+        t_proxy.q1_sub_id = q1_sub
+        t_proxy.q2_sub_id = q2_sub
+        t_proxy.q3_sub_id = q3_sub
+        t_proxy.q4_sub_id = q4_sub
 
         row_item = {
             "s_no": idx,
@@ -930,6 +957,11 @@ def _build_canonical_contest_dataset_internal(
             "q2_observed_seconds": q2_sec,
             "q3_observed_seconds": q3_sec,
             "q4_observed_seconds": q4_sec,
+            "q1_lang": q1_lang,
+            "q2_lang": q2_lang,
+            "q3_lang": q3_lang,
+            "q4_lang": q4_lang,
+            "solve_timeline": solve_timeline,
             "q_timing": __import__("backend.routes.weekly_contests", fromlist=["_build_q_timing"])._build_q_timing(t_proxy) if (is_participant and canon_status == "PUBLIC") else None,
             "total_solved": solved_val,
             "solved": f"{solved_val}/4" if (is_participant and solved_val is not None) else ("0/4" if canon_status == "NOT_ATTENDED" else "—"),

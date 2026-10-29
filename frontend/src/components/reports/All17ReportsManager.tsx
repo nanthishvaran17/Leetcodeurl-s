@@ -162,7 +162,7 @@ export const All17ReportsManager: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 font-sans text-slate-800">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#060813] p-4 font-sans text-slate-800 dark:text-slate-100">
       
       {/* Selector & Export Bar (Hidden on print) */}
       <div className="no-print max-w-[1200px] mx-auto bg-white dark:bg-navy-900 rounded-xl shadow-md p-4 mb-6 border border-slate-200 dark:border-navy-700">

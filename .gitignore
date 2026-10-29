@@ -219,3 +219,9 @@ frontend/public/*.apk
 releases/android/*.apk
 
 
+
+# Firebase Keys & Secrets
+*firebase-key*.json
+backend/firebase-key.json
+firebase-key.json
+contest_*_authentic_*.json
