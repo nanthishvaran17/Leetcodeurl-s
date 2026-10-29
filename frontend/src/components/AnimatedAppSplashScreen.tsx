@@ -89,21 +89,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
             />
           </div>
 
-          {/* Top Bar Status */}
-          <div 
-            className="w-full px-5 sm:px-8 flex items-center justify-between"
-            style={{ paddingTop: 'max(env(safe-area-inset-top, 0px) + 0.75rem, 1.75rem)' }}
-          >
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/40" />
-              <span className="text-[10px] font-mono tracking-[0.22em] text-slate-500 font-bold uppercase">
-                NEC TELEMETRY
-              </span>
-            </div>
-            <span className="text-[9.5px] font-mono tracking-[0.24em] text-sky-700 font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200/80 shadow-2xs">
-              AUTONOMOUS
-            </span>
-          </div>
+          
 
           {/* Centerpiece: Clean White Ceramic Jewel Emblem */}
           <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center w-full max-w-lg my-auto">
