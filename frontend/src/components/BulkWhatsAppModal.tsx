@@ -2,7 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, MessageCircle, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
-  Download, Users, Sparkles, Smartphone, CheckCircle2, RotateCcw, Edit3
+  Download, Users, Sparkles, Smartphone, CheckCircle2, RotateCcw, Edit3,
+  Phone, Send, AlertTriangle, CheckCircle, Search
 } from 'lucide-react';
 import { FacultyActionItem } from '../services/intelligenceService';
 import { triggerHaptic } from '../utils/haptics';
@@ -29,6 +30,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   const [editedCustomMessage, setEditedCustomMessage] = useState<string>('');
   const [copiedNumbers, setCopiedNumbers] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Auto-hide MobileBottomNav while modal is open
   useEffect(() => {
@@ -42,8 +44,8 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     };
   }, [isOpen]);
 
-  const currentStudent = selectedStudents[currentIndex] || selectedStudents[0];
   const totalStudents = selectedStudents.length;
+  const currentStudent = selectedStudents[currentIndex] || selectedStudents[0];
 
   // Active template text based on language
   const activeTemplateText = useMemo(() => {
@@ -67,6 +69,16 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
       .replace(/{next_milestone}/g, nextMilestone);
   };
 
+  // Formatter for broadcast (group/channel context)
+  const formatBroadcastMessage = () => {
+    const defaultName = lang === 'ta' ? 'மாணவர்களே' : 'Students';
+    return activeTemplateText
+      .replace(/{name}/g, defaultName)
+      .replace(/{student_name}/g, defaultName)
+      .replace(/{solved}/g, 'your current')
+      .replace(/{next_milestone}/g, 'your next target');
+  };
+
   // Sync edited message when student, template, or language changes
   useEffect(() => {
     if (currentStudent) {
@@ -85,6 +97,17 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
       })
       .filter(Boolean) as string[];
   }, [selectedStudents]);
+
+  // Filtered students for broadcast roster
+  const filteredStudents = useMemo(() => {
+    if (!searchTerm.trim()) return selectedStudents;
+    const q = searchTerm.toLowerCase();
+    return selectedStudents.filter(s => 
+      (s.student_name || '').toLowerCase().includes(q) ||
+      (s.reg_no || '').toLowerCase().includes(q) ||
+      (s.department_code || '').toLowerCase().includes(q)
+    );
+  }, [selectedStudents, searchTerm]);
 
   if (!isOpen || typeof document === 'undefined') return null;
 
@@ -113,6 +136,22 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     }
   };
 
+  const handleSendIndividualStudent = (student: FacultyActionItem) => {
+    triggerHaptic('success');
+    const rawPhone = (student.phone_number || '').replace(/\D/g, '');
+    const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+    const finalMsg = formatMessageForStudent(student);
+    const encoded = encodeURIComponent(finalMsg);
+
+    setSentStudentIds(prev => new Set(prev).add(student.id));
+
+    if (cleanPhone && cleanPhone.length >= 10) {
+      window.open(`https://wa.me/${cleanPhone}?text=${encoded}`, '_blank');
+    } else {
+      window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    }
+  };
+
   const handleCopyNumbers = () => {
     if (allPhoneNumbersFormatted.length === 0) return;
     triggerHaptic('selection');
@@ -123,18 +162,14 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
 
   const handleCopyMessage = () => {
     triggerHaptic('selection');
-    const sampleMsg = activeTemplateText
-      .replace(/{name}/g, '[Student Name]')
-      .replace(/{student_name}/g, '[Student Name]')
-      .replace(/{solved}/g, '[Solves]');
-    navigator.clipboard.writeText(sampleMsg);
+    navigator.clipboard.writeText(formatBroadcastMessage());
     setCopiedMessage(true);
     setTimeout(() => setCopiedMessage(false), 2500);
   };
 
   const handleExportCSV = () => {
     triggerHaptic('selection');
-    const headers = ['Register Number', 'Student Name', 'Department', 'Year', 'Problems Solved', 'Phone Number', 'Assigned Mentor'];
+    const headers = ['Register Number', 'Student Name', 'Department', 'Year', 'Problems Solved', 'Phone Number', 'Assigned Mentor', 'Outreach Status'];
     const rows = selectedStudents.map(s => [
       `"${s.reg_no || ''}"`,
       `"${s.student_name || ''}"`,
@@ -142,7 +177,8 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
       `"${s.year_level || ''}"`,
       s.total_solved || 0,
       `"${s.phone_number || ''}"`,
-      `"${s.assigned_faculty_name || 'Unassigned'}"`
+      `"${s.assigned_faculty_name || 'Unassigned'}"`,
+      sentStudentIds.has(s.id) ? '"Sent"' : '"Pending"'
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -159,6 +195,10 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     ? editedCustomMessage
     : formatMessageForStudent(currentStudent);
 
+  const rawCurrentPhone = (currentStudent?.phone_number || '').replace(/\D/g, '');
+  const cleanCurrentPhone = rawCurrentPhone.length === 10 ? `91${rawCurrentPhone}` : rawCurrentPhone;
+  const hasValidPhone = cleanCurrentPhone && cleanCurrentPhone.length >= 10;
+
   return createPortal(
     <div
       role="dialog"
@@ -173,7 +213,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
         {/* Mobile Pull Handle */}
         <div className="w-10 h-1.5 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
 
-        {/* Header */}
+        {/* Modal Top Header */}
         <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between shrink-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
@@ -189,7 +229,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                Send 1-tap WhatsApp reminders or broadcast to all students
+                Send mentoring reminders and weekly contest nudges to {totalStudents} students
               </p>
             </div>
           </div>
@@ -210,7 +250,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
             <button
               type="button"
               onClick={() => { triggerHaptic('selection'); setActiveTab('queue'); }}
-              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation ${
                 activeTab === 'queue'
                   ? 'bg-white dark:bg-navy-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -222,7 +262,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
             <button
               type="button"
               onClick={() => { triggerHaptic('selection'); setActiveTab('broadcast'); }}
-              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation ${
                 activeTab === 'broadcast'
                   ? 'bg-white dark:bg-navy-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -295,6 +335,33 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                     </div>
                   </div>
 
+                  {/* Interactive Queue Stepper Pills */}
+                  {totalStudents > 1 && totalStudents <= 25 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto py-1 custom-scrollbar">
+                      {selectedStudents.map((s, idx) => {
+                        const isCurrent = idx === currentIndex;
+                        const isSent = sentStudentIds.has(s.id);
+                        return (
+                          <button
+                            key={s.id || idx}
+                            type="button"
+                            onClick={() => { triggerHaptic('selection'); setCurrentIndex(idx); }}
+                            className={`min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-mono font-black transition-all flex items-center justify-center gap-0.5 cursor-pointer touch-manipulation ${
+                              isCurrent
+                                ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/40 scale-105'
+                                : isSent
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                                : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                            }`}
+                            title={`Jump to ${s.student_name || 'Student'}`}
+                          >
+                            {isSent ? <Check size={11} className="stroke-[3]" /> : idx + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   {/* Progress Line */}
                   <div className="w-full bg-slate-200 dark:bg-navy-800 rounded-full h-1.5 overflow-hidden">
                     <div
@@ -317,8 +384,16 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                       <p className="text-xs font-mono font-bold text-slate-500 truncate">
                         {currentStudent.reg_no} &bull; {currentStudent.department_code} &bull; {currentStudent.year_level}
                       </p>
-                      <p className="text-[11.5px] font-bold text-slate-600 dark:text-slate-300 mt-1">
-                        Phone: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{currentStudent.phone_number || 'Default / Mentor Phone'}</strong>
+                      <p className="text-[11.5px] font-bold text-slate-600 dark:text-slate-300 mt-1 flex items-center gap-1.5 flex-wrap">
+                        <span>Phone:</span>
+                        <strong className="font-mono text-emerald-600 dark:text-emerald-400">
+                          {hasValidPhone ? `+${cleanCurrentPhone}` : (currentStudent.phone_number || 'No Phone on Record')}
+                        </strong>
+                        {!hasValidPhone && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 font-medium">
+                            Share Sheet Fallback
+                          </span>
+                        )}
                       </p>
                     </div>
 
@@ -393,7 +468,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                       <button
                         type="button"
                         onClick={() => { triggerHaptic('selection'); setCurrentIndex(0); setSentStudentIds(new Set()); }}
-                        className="text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-0.5"
+                        className="text-[10px] text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center gap-0.5 cursor-pointer"
                         title="Restart Queue from beginning"
                       >
                         <RotateCcw size={10} /> Reset
@@ -478,17 +553,19 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: BROADCAST LIST MODE (ALL 50+ AT ONCE) */}
+          {/* TAB 2: BROADCAST LIST MODE (ALL AT ONCE) */}
           {activeTab === 'broadcast' && (
             <div className="space-y-4 animate-fade-in">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-3.5">
+                
+                {/* Broadcast Header */}
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <h4 className="font-display font-black text-sm sm:text-base text-slate-900 dark:text-white">
-                      WhatsApp Broadcast List Dispatch
+                      WhatsApp Broadcast Dispatch Center
                     </h4>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Send to all {totalStudents} students in one broadcast list without sending one by one
+                      Dispatch simultaneously to all {totalStudents} students or copy their contacts in 1-click
                     </p>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-xs font-mono font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
@@ -496,13 +573,39 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                   </span>
                 </div>
 
-                {/* Action Shortcuts Grid */}
+                {/* Broadcast Message Preview & Selector */}
+                <div className="p-3.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10.5px] font-black uppercase tracking-wider text-slate-500">
+                      Broadcast Template ({lang === 'ta' ? 'தமிழ்' : 'English'}):
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={selectedTemplateId}
+                        onChange={(e) => setSelectedTemplateId(e.target.value)}
+                        className="text-xs font-bold bg-slate-100 dark:bg-navy-800 border border-slate-300 dark:border-navy-600 rounded-lg px-2 py-1 text-slate-800 dark:text-white"
+                      >
+                        {WHATSAPP_TEMPLATES.map(tpl => (
+                          <option key={tpl.id} value={tpl.id}>
+                            {lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-700 dark:text-slate-300 italic bg-slate-50 dark:bg-navy-900 p-2.5 rounded-lg border border-slate-100 dark:border-navy-800 leading-relaxed font-sans">
+                    &ldquo;{formatBroadcastMessage()}&rdquo;
+                  </p>
+                </div>
+
+                {/* Primary Action Buttons Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                   <button
                     type="button"
                     onClick={handleCopyNumbers}
                     disabled={allPhoneNumbersFormatted.length === 0}
-                    className="min-h-[44px] py-2.5 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 touch-manipulation"
+                    className="min-h-[46px] py-2.5 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 touch-manipulation"
                   >
                     {copiedNumbers ? <Check size={16} /> : <Copy size={16} />}
                     <span>{copiedNumbers ? 'Copied Phone Numbers!' : `1. Copy All ${allPhoneNumbersFormatted.length} Numbers`}</span>
@@ -511,7 +614,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                   <button
                     type="button"
                     onClick={handleCopyMessage}
-                    className="min-h-[44px] py-2.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+                    className="min-h-[46px] py-2.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
                   >
                     {copiedMessage ? <Check size={16} /> : <Copy size={16} />}
                     <span>{copiedMessage ? 'Announcement Copied!' : `2. Copy Message (${lang === 'ta' ? 'தமிழ்' : 'EN'})`}</span>
@@ -524,10 +627,10 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                     href="https://web.whatsapp.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full min-h-[42px] py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                   >
-                    <ExternalLink size={14} />
-                    <span>3. Open WhatsApp Web / Desktop App &rarr;</span>
+                    <ExternalLink size={15} />
+                    <span>3. Open WhatsApp Web / Desktop &rarr;</span>
                   </a>
                 </div>
 
@@ -542,6 +645,70 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                     ) : (
                       <span className="text-slate-400 italic">No phone numbers found for the selected students.</span>
                     )}
+                  </div>
+                </div>
+
+                {/* Student Recipient Roster Table */}
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-navy-800">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Selected Recipient Roster ({totalStudents})
+                    </span>
+                    
+                    {/* Quick Search */}
+                    <div className="relative min-w-[160px]">
+                      <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search student..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-7 pr-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="max-h-44 overflow-y-auto border border-slate-200 dark:border-navy-700 rounded-xl divide-y divide-slate-100 dark:divide-navy-800 custom-scrollbar">
+                    {filteredStudents.map((s, idx) => {
+                      const rawPhone = (s.phone_number || '').replace(/\D/g, '');
+                      const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+                      const hasPhone = cleanPhone && cleanPhone.length >= 10;
+                      const isSent = sentStudentIds.has(s.id);
+
+                      return (
+                        <div key={s.id || idx} className="p-2.5 flex items-center justify-between gap-2 bg-white dark:bg-navy-950 hover:bg-slate-50 dark:hover:bg-navy-900 transition">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                {s.student_name}
+                              </span>
+                              {isSent && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                  SENT
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-slate-400">
+                              {s.reg_no} &bull; {s.department_code} &bull; Solved: {s.total_solved || 0}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-mono text-xs text-slate-600 dark:text-slate-300">
+                              {hasPhone ? `+${cleanPhone}` : <em className="text-slate-400">No phone</em>}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleSendIndividualStudent(s)}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-600 dark:hover:text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                              title="Direct 1-click WhatsApp"
+                            >
+                              <Send size={11} /> Send
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
