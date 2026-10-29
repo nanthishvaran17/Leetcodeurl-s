@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDefe
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
+import { Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -558,44 +558,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, [isUserHod, isUserGlobal, user]);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>(() => initialDeptFilter);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
-
-  // Quick 1-Tap Department List for instant filter switching
-  const quickDeptList = useMemo(() => {
-    const roleClean = (user?.role || '').trim().toLowerCase();
-    const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
-    const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
-    const isGlobal = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
-    const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '';
-
-    if (isStaffMentor) {
-      return [
-        { code: 'ALL', label: 'My Mentees' },
-        ...(userDeptCode ? [{ code: userDeptCode, label: userDeptCode }] : [])
-      ];
-    }
-
-    if (isHod && !isGlobal) {
-      const hodAuthCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
-      const hodDepts = departments.filter(d => hodAuthCodes.includes(d.code.toUpperCase()) || (userDeptCode && d.code.toUpperCase() === userDeptCode.toUpperCase()));
-      return [
-        { code: 'ALL', label: 'All My Depts' },
-        ...hodDepts.map(d => ({ code: d.code, label: d.code }))
-      ];
-    }
-
-    const priorityCodes = ['CSE(CS)', 'CSE(IOT)', 'CSE', 'IT', 'AIDS', 'ECE'];
-    const matched = priorityCodes
-      .map(code => departments.find(d => d.code.toUpperCase() === code.toUpperCase() || d.code.toUpperCase().replace(/\s+/g, '') === code.replace(/\s+/g, '')))
-      .filter(Boolean)
-      .map(d => ({ code: (d as any).code, label: (d as any).code }));
-
-    const result = matched.length >= 3 ? matched : departments.slice(0, 6).map(d => ({ code: d.code, label: d.code }));
-
-    return [
-      { code: 'ALL', label: 'All Depts' },
-      ...result
-    ];
-  }, [user, departments]);
 
   useEffect(() => {
     if (isUserHod && !isUserGlobal) {
@@ -2053,124 +2015,147 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-10 pt-0 animate-fade-in pb-40 sm:pb-32 md:pb-16">
 
-      {/* 1. WORLD-CLASS EXECUTIVE CONTEST COMMAND HERO */}
-      <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 border transition-all duration-300 shadow-xs ${
-        isLive
-          ? 'bg-gradient-to-br from-rose-50/60 via-white to-amber-50/40 dark:from-navy-950 dark:via-slate-900 dark:to-indigo-950/60 border-rose-300/70 dark:border-rose-500/30 shadow-rose-500/5'
-          : 'bg-gradient-to-br from-white via-indigo-50/25 to-slate-50 dark:from-[#0b1220] dark:via-navy-950 dark:to-[#080d19] border-slate-200/90 dark:border-white/[0.08] shadow-sm'
-      }`}>
-        {/* Subtle Ambient Radial Mesh Accent */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-gradient-to-br from-brand-500/10 via-indigo-500/10 to-transparent blur-3xl pointer-events-none" />
+      {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
+      <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
+        ? 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-emerald-500/40 shadow-emerald-500/10'
+        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.09] shadow-[0_20px_50px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.15)]'
+        }`}>
+        {/* Ambient Radial Mesh Glow */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
 
-        {/* Top Row: Left Identity & Right Session Controls */}
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
-          
-          {/* Left: Institutional Title & Status */}
-          <div className="space-y-3 flex-1 min-w-0">
-            {/* Super-Header Badge Row */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold tracking-wide bg-brand-50 text-brand-700 dark:bg-brand-950/70 dark:text-brand-300 border border-brand-200/70 dark:border-brand-800/60">
-                <Building2 className="w-3.5 h-3.5 text-brand-500" />
-                <span>Nandha Engineering College (Autonomous)</span>
-              </span>
-
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+          {/* Left Context Info */}
+          <div className="space-y-2 flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               {isLive ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold tracking-wide bg-rose-50 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                  <span>Live Contest In Progress</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                  <span>LIVE NOW</span>
                 </span>
               ) : isScheduled ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold tracking-wide bg-amber-50 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
-                  <Clock className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Scheduled • Sunday 08:00 AM IST</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1 shadow-sm bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <Clock className="w-3 h-3" />
+                  <span>SCHEDULED</span>
                 </span>
               ) : isFinalizing ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold tracking-wide bg-indigo-50 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 animate-pulse">
-                  <RefreshCw className="w-3 h-3 text-indigo-500 animate-spin" />
-                  <span>Finalizing Rankings</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1 shadow-sm bg-brand-600 text-white animate-pulse">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>FINALIZING</span>
                 </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold tracking-wide bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Official Verified Ledger</span>
+              ) : null}
+
+              {wsSyncState === 'INITIAL_SYNC' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[11px] font-mono font-bold animate-pulse">
+                  <RefreshCw className="w-2.5 h-2.5 text-indigo-400 animate-spin shrink-0" />
+                  <span>INITIAL SYNC</span>
                 </span>
               )}
             </div>
 
-            {/* Main Contest Heading */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/20 border border-white/20">
-                <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight font-display">
-                  {activeSessionObj?.contestName || 'Weekly Contest Intelligence'}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-display tracking-tight text-white uppercase font-black">
+                  {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
+                    <>
+                      MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">{activeSessionObj?.contestName || 'WEEKLY CONTEST'}</span>
+                    </>
+                  ) : (
+                    <>
+                      {activeSessionObj?.contestName || 'WEEKLY CONTEST'} <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">DASHBOARD</span>
+                    </>
+                  )}
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Official Academic Assessment • Sunday Session (08:00 AM – 09:30 AM IST)
-                </p>
+                
+                {user?.role?.toLowerCase() === 'admin (system admin)' && (
+                  <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-black uppercase tracking-wider flex items-center space-x-1 shadow-sm">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Admin</span>
+                  </span>
+                )}
               </div>
+            </div>
+
+            <div className="flex items-center flex-wrap gap-2 text-[11px] text-slate-300 font-bold tracking-wide pt-1.5 border-t border-white/10">
+              <span className="text-indigo-300">
+                {isLive ? (
+                  <>Last Updated: {liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in <NextUpdateTicker initialSec={nextUpdateTicker} />)</>
+                ) : (
+                  <>
+                    <span className="sm:hidden">Filter students by Dept, Year, Status</span>
+                    <span className="hidden sm:inline">Filter students by Department, Academic Year, Name &amp; Status</span>
+                  </>
+                )}
+              </span>
+              {!isLive && activeSessionObj?.status && (
+                <>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-400">
+                    Last synced: {sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate || 'Live'}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Right: High-End Session Switcher & Action Controls */}
-          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-2 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] shadow-2xs shrink-0">
-            {/* Session Selector */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:min-w-[290px]">
+          {/* Right Controls: Unified Responsive Session Selector & Live Monitor Toggle */}
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/[0.06] dark:bg-slate-900/50 p-2 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-md shadow-md shrink-0">
+
+            {/* Session Dropdown Selector with Delete Option */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:min-w-[280px]">
               <div className="min-w-0 flex-1">
                 <GlobalFilter
                   options={displaySessions.map((s) => {
-                    const statusUp = (s.status || '').toUpperCase();
-                    const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
-                    const isScheduled = statusUp.includes('SCHEDULE');
+                  const statusUp = (s.status || '').toUpperCase();
+                  const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
+                  const isScheduled = statusUp.includes('SCHEDULE');
 
-                    let rawDate = s.sessionDate || '';
-                    let formattedDate = rawDate;
-                    if (rawDate.includes('-')) {
-                      const parts = rawDate.split('-');
-                      if (parts.length === 3 && parts[0].length === 4) {
-                        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-                      }
+                  let rawDate = s.sessionDate || '';
+                  let formattedDate = rawDate;
+                  if (rawDate.includes('-')) {
+                    const parts = rawDate.split('-');
+                    if (parts.length === 3 && parts[0].length === 4) {
+                      formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
                     }
+                  }
 
-                    return {
-                      value: String(s.sessionId),
-                      label: `${formattedDate} — ${s.contestName}`,
-                      pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
-                      pillColorClass: isScheduled
-                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                        : (isCompleted
-                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                          : 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'),
-                      hidePill: !s.sessionId
-                    };
+                  return {
+                    value: String(s.sessionId),
+                    label: `${formattedDate} — ${s.contestName}`,
+                    pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
+                    pillColorClass: isScheduled
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : (isCompleted
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                        : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')
+                  };
                   })}
                   value={selectedSessionId ? String(selectedSessionId) : ''}
                   onChange={(val) => handleSelectSession(Number(val))}
-                  icon={<Calendar className="w-4 h-4 text-indigo-500" />}
-                  placeholder="Select Contest Session..."
+                  hideIcon={true}
+                  placeholder="[ Select Session ]"
                   searchPlaceholder="Search contest session..."
                   showSearch={true}
+                  variant="dark"
+                  className="w-full !rounded-xl border border-white/15 !shadow-sm !bg-slate-900/80 hover:!bg-slate-800/90 !text-white text-xs font-bold"
                   dropdownWidth="w-full sm:w-[320px]"
                 />
               </div>
-
+              
               {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && activeSessionObj && (
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 dark:text-rose-400 rounded-xl border border-rose-200 dark:border-rose-900/60 transition-colors shadow-2xs cursor-pointer shrink-0"
+                  className="p-2 sm:p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Live Monitor Button */}
+            {/* Admin Live Monitor Toggle — Responsive Pill Button */}
             {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && (
               <button
-                type="button"
                 onClick={() => {
                   if (!showAdminMonitor) {
                     setShowAdminMonitor(true);
@@ -2184,68 +2169,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className={`flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border active:scale-95 whitespace-nowrap shadow-2xs shrink-0 w-full sm:w-auto ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border active:scale-[0.98] whitespace-nowrap shadow-sm shrink-0 w-full sm:w-auto ${
                   showAdminMonitor
-                    ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
-                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60 hover:scale-[1.02]'
+                    ? 'bg-rose-600/90 hover:bg-rose-600 text-white border-rose-500/50 shadow-rose-900/30'
+                    : 'bg-slate-800/90 hover:bg-slate-800 text-emerald-400 hover:text-white border-emerald-500/30 hover:border-emerald-500/60'
                 }`}
-                title="Toggle Live Contest Telemetry Monitor"
+                title="Toggle Live Contest Monitor"
               >
-                <Activity className={`w-4 h-4 ${showAdminMonitor ? 'text-rose-500' : 'text-emerald-500 animate-pulse'}`} />
+                <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-white' : 'text-emerald-400 animate-pulse'}`} />
                 <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Bottom Metric Strip: 4 Executive KPIs */}
-        <div className="mt-5 pt-4 border-t border-slate-200/70 dark:border-white/[0.08] grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 relative z-10">
-          <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06]">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 flex items-center justify-center shrink-0">
-              <Users className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Total Students</span>
-              <span className="text-sm font-extrabold text-slate-900 dark:text-white">
-                {sessionMetrics?.totalStudents || matrixRows.length || 0}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-emerald-600/70 dark:text-emerald-400/70 tracking-wider block">Official Solvers</span>
-              <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-400">
-                {sessionMetrics?.officialAttended || matrixRows.filter(r => (r.total_solved || r.total_contest_solved || 0) > 0).length || 0}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/30">
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-purple-600/70 dark:text-purple-400/70 tracking-wider block">Sunday Window</span>
-              <span className="text-xs font-extrabold text-purple-700 dark:text-purple-300">
-                08:00 – 09:30 AM
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.06]">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Activity className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Session State</span>
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white capitalize">
-                {isLive ? 'Live Contest' : isScheduled ? 'Scheduled' : 'Finalized'}
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -2416,7 +2350,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
               <div className="min-w-0">
                 <h4 className="text-sm font-black uppercase tracking-wider text-brand-300 flex items-center gap-2 flex-wrap">
-                  <span>Live Contest Operations & Sync Status</span>
+                  <span>Admin Live Contest Operations & Worker Telemetry</span>
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 font-mono border border-emerald-400/40 font-bold shrink-0">
                      ACTIVE SUITE
                   </span>
@@ -2622,7 +2556,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           )}
 
-          {/* Tab 2: Token-Bucket & Rate Limits */}
+          {/* Tab 2: Token-Bucket & Rate Limiter Telemetry */}
           {adminSubTab === 'rate_limiter' && (
             <div className="space-y-4 animate-fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -3281,11 +3215,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
 
-        {/* Row 2: Sleek Multi-Tier Filter Bar (Collapsible on mobile) */}
+        {/* Row 2: Sleek 4-Column Filter Bar (Collapsible on mobile) */}
         <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 items-end">
-          {/* Department Filter (Searchable Dropdown for All Depts) */}
+          {/* Department Filter */}
           {(() => {
             const roleClean = (user?.role || '').trim().toLowerCase();
             const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
@@ -3340,50 +3273,30 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             );
           })()}
 
-          {/* Academic Year Filter — Quick 1-Tap Segmented Control */}
+          {/* Academic Year Filter */}
           {(() => {
-            const normalizedYear = selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
-            const yearList = [
-              { value: 'ALL', label: 'All Years', pill: 'ALL' },
-              { value: 'II',  label: 'II Year',   pill: 'II' },
-              { value: 'III', label: 'III Year',  pill: 'III' },
-              { value: 'IV',  label: 'IV Year',   pill: 'IV' },
+            const yearOptions: GlobalFilterOption[] = [
+              { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' },
+              { value: 'II',  label: 'II Year (2025–2029)', pillText: 'II' },
+              { value: 'III', label: 'III Year (2024–2028)', pillText: 'III' },
+              { value: 'IV',  label: 'IV Year (2023–2027)', pillText: 'IV' },
             ];
+
+            const normalizedYear = selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
 
             return (
               <div className="space-y-1 min-w-0 w-full">
-                <div className="flex items-center justify-between">
-                  <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate flex items-center gap-1">
-                    <GraduationCap className="w-3.5 h-3.5 text-purple-500" />
-                    <span>Academic Year (1-Tap)</span>
-                  </label>
-                  {normalizedYear !== 'ALL' && (
-                    <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400">
-                      {normalizedYear} Active
-                    </span>
-                  )}
-                </div>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-white/95 dark:bg-navy-950/95 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-white/[0.08] h-10 min-h-[40px] sm:h-11 sm:min-h-[44px] items-center shadow-subtle">
-                  {yearList.map((y) => {
-                    const isActive = normalizedYear === y.value;
-                    return (
-                      <button
-                        key={y.value}
-                        type="button"
-                        onClick={() => setSelectedYearFilter(y.value)}
-                        className={`h-full rounded-lg sm:rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95 ${
-                          isActive
-                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs shadow-purple-600/30 font-black'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800'
-                        }`}
-                        title={`Filter by ${y.label}`}
-                      >
-                        <span className="sm:hidden font-mono">{y.pill}</span>
-                        <span className="hidden sm:inline">{y.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+                  Academic Year
+                </label>
+                <GlobalFilter
+                  value={normalizedYear}
+                  onChange={(val) => setSelectedYearFilter(val)}
+                  options={yearOptions}
+                  icon={<GraduationCap className="w-4 h-4 text-brand-500" />}
+                  dropdownWidth="w-64 sm:w-72"
+                  placeholder="All Academic Years"
+                />
               </div>
             );
           })()}
@@ -4390,7 +4303,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Table Legend & Top Quick Pagination */}
               <div className="px-5 py-3 border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] text-xs font-medium backdrop-blur-md">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-300 mr-1">Legend:</span>
+                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Legend:</span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     PUBLIC
