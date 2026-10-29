@@ -26,6 +26,7 @@ import { PullToRefresh } from './components/PullToRefresh';
 import { SwipeHandle } from './components/SwipeHandle';
 import { OfflineIndicatorBanner } from './components/OfflineIndicatorBanner';
 import { warmupPriorityRoutes } from './utils/pagePrefetch';
+import { AnimatedAppSplashScreen } from './components/AnimatedAppSplashScreen';
 
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
@@ -277,6 +278,12 @@ export const App: React.FC = () => {
   }, [isAuthenticated]);
   const queryClient = useQueryClient();
   const { refreshAllData } = useGlobalData();
+  const [showSplashScreen, setShowSplashScreen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const p = window.location.pathname;
+    if (p.startsWith('/admin') || p.startsWith('/verify')) return false;
+    return true;
+  });
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       if (sessionStorage.getItem('admin_login_portal') === 'true' || localStorage.getItem('admin_login_portal') === 'true' || window.location.hash.includes('dev-studio')) {
@@ -1172,6 +1179,11 @@ export const App: React.FC = () => {
     <div className={`overflow-x-clip bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
       activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
+      {/* Signature World-Class App Launch Splash Screen (Airtel / Swiggy / Cred style) */}
+      {showSplashScreen && (
+        <AnimatedAppSplashScreen onComplete={() => setShowSplashScreen(false)} />
+      )}
+
       {/* Top Page Transition Progress Loader */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
