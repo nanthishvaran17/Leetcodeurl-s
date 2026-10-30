@@ -9,35 +9,35 @@
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
 <p align="center">
-  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="https://img.shields.io/static/v1?label=Live%20Platform&message=nandha-leetcode.duckdns.org&color=10B981&style=for-the-badge&logo=google-chrome&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/static/v1?label=Android%20APK&message=v4.1.1%20Release&color=F59E0B&style=for-the-badge&logo=android&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/static/v1?label=Windows%20App&message=v4.1.1%20Setup&color=0078D4&style=for-the-badge&logo=windows11&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/static/v1?label=Release&message=v4.1.1%20Institutional%20Flagship&color=3B82F6&style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="docs/assets/badges/live_platform.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="docs/assets/badges/windows_app.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="docs/assets/badges/release.svg"></a>
 </p>
 
 <p align="center">
-  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="https://img.shields.io/static/v1?label=Developed%20by&message=Nanthish%20%26%20Team&color=7C3AED&style=for-the-badge&logo=codeforces&logoColor=white"></a>
-  <img alt="Mobile 120Hz" src="https://img.shields.io/static/v1?label=Mobile&message=120Hz%20Native%20Physics&color=06B6D4&style=for-the-badge&logo=capacitor&logoColor=white">
-  <img alt="Zero Gap Safe Area" src="https://img.shields.io/static/v1?label=UI%2FUX&message=Zero-Gap%20Safe%20Area&color=10B981&style=for-the-badge&logo=materialdesign&logoColor=white">
+  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="docs/assets/badges/developed_by.svg"></a>
+  <img alt="Mobile 120Hz" src="docs/assets/badges/mobile_120hz.svg">
+  <img alt="Zero Gap Safe Area" src="docs/assets/badges/zero_gap.svg">
 </p>
 
 <p align="center">
-  <img alt="Scale" src="https://img.shields.io/static/v1?label=Scale&message=1500%2B%20Students&color=059669&style=flat-square&logo=googleclassroom&logoColor=white">
-  <img alt="Departments" src="https://img.shields.io/static/v1?label=Departments&message=8%20Engineering%20Branches&color=6366F1&style=flat-square&logo=open-access&logoColor=white">
-  <img alt="Contest Autopilot" src="https://img.shields.io/static/v1?label=Contest%20Autopilot&message=Sunday%2008%3A00%20AM%20IST&color=7C3AED&style=flat-square&logo=temporal&logoColor=white">
-  <img alt="Forensic Depth" src="https://img.shields.io/static/v1?label=Forensics&message=Level%204%20Binary%20Audit&color=DC2626&style=flat-square&logo=shield&logoColor=white">
-  <img alt="Mentoring" src="https://img.shields.io/static/v1?label=Mentoring&message=Faculty%20Action%20Center&color=EA580C&style=flat-square&logo=target&logoColor=white">
-  <img alt="Cross-Platform" src="https://img.shields.io/static/v1?label=Cross-Platform&message=Web%20%7C%20Android%20%7C%20Windows&color=2563EB&style=flat-square&logo=pwa&logoColor=white">
+  <img alt="Scale" src="docs/assets/badges/scale.svg">
+  <img alt="Departments" src="docs/assets/badges/departments.svg">
+  <img alt="Contest Autopilot" src="docs/assets/badges/contest_autopilot.svg">
+  <img alt="Forensics" src="docs/assets/badges/forensics.svg">
+  <img alt="Mentoring" src="docs/assets/badges/mentoring.svg">
+  <img alt="Cross-Platform" src="docs/assets/badges/cross_platform.svg">
 </p>
 
 <p align="center">
-  <img alt="License" src="https://img.shields.io/static/v1?label=License&message=Institutional%20Enterprise&color=000000&style=flat-square">
-  <img alt="Python" src="https://img.shields.io/static/v1?label=Python&message=3.10%20%7C%203.11%20%7C%203.14&color=3776AB&style=flat-square&logo=python&logoColor=white">
-  <img alt="FastAPI" src="https://img.shields.io/static/v1?label=FastAPI&message=0.115%2B&color=009688&style=flat-square&logo=fastapi&logoColor=white">
-  <img alt="React" src="https://img.shields.io/static/v1?label=React&message=18.3&color=61DAFB&style=flat-square&logo=react&logoColor=black">
-  <img alt="TypeScript" src="https://img.shields.io/static/v1?label=TypeScript&message=5.2%2B&color=3178C6&style=flat-square&logo=typescript&logoColor=white">
-  <img alt="PostgreSQL" src="https://img.shields.io/static/v1?label=PostgreSQL&message=16&color=4169E1&style=flat-square&logo=postgresql&logoColor=white">
-  <img alt="Accreditation" src="https://img.shields.io/static/v1?label=Accreditation&message=NBA%20%26%20NAAC%20'A%2B'&color=008080&style=flat-square">
+  <img alt="License" src="docs/assets/badges/license.svg">
+  <img alt="Python" src="docs/assets/badges/python.svg">
+  <img alt="FastAPI" src="docs/assets/badges/fastapi.svg">
+  <img alt="React" src="docs/assets/badges/react.svg">
+  <img alt="TypeScript" src="docs/assets/badges/typescript.svg">
+  <img alt="PostgreSQL" src="docs/assets/badges/postgresql.svg">
+  <img alt="Accreditation" src="docs/assets/badges/accreditation.svg">
 </p>
 
 ### *Every contest tracked. Every solve forensically verified. 1,500+ student engineering careers empowered.*
@@ -397,36 +397,36 @@ In enterprise academic systems, an erroneous mark can damage a student's career.
 <tr>
 <td valign="top">
 
-- ![React](https://img.shields.io/badge/React-18.3-20232A?style=flat-square&logo=react&logoColor=61DAFB) **React 18 & TypeScript 5.2+**
-- ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=flat-square&logo=vite&logoColor=white) **Vite 5** (Ultra-fast HMR)
-- ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) **Tailwind CSS & Custom Design Tokens**
-- ![TanStack](https://img.shields.io/badge/React_Query_v5-FF4154?style=flat-square&logo=react-query&logoColor=white) **TanStack React Query v5**
-- ![Capacitor](https://img.shields.io/badge/Capacitor_7-119EFF?style=flat-square&logo=capacitor&logoColor=white) **Capacitor 7 Native Android App**
-- ![Electron](https://img.shields.io/badge/Electron_30-47848F?style=flat-square&logo=electron&logoColor=white) **Electron Windows Desktop Application**
-- ![Recharts](https://img.shields.io/badge/Recharts-22C55E?style=flat-square&logo=chartdotjs&logoColor=white) **Recharts & Lucide Icons**
+- ![React](docs/assets/badges/tech/tech_react.svg) **React 18 & TypeScript 5.2+**
+- ![Vite](docs/assets/badges/tech/tech_vite.svg) **Vite 5** (Ultra-fast HMR)
+- ![TailwindCSS](docs/assets/badges/tech/tech_tailwind.svg) **Tailwind CSS & Custom Design Tokens**
+- ![TanStack](docs/assets/badges/tech/tech_query.svg) **TanStack React Query v5**
+- ![Capacitor](docs/assets/badges/tech/tech_capacitor.svg) **Capacitor 7 Native Android App**
+- ![Electron](docs/assets/badges/tech/tech_electron.svg) **Electron Windows Desktop Application**
+- ![Recharts](docs/assets/badges/tech/tech_recharts.svg) **Recharts & Lucide Icons**
 - 📱 **Native Drawers & Tactile Haptic Feedback**
 
 </td>
 <td valign="top">
 
-- ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white) **FastAPI High-Speed Async Core**
-- ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white) **Python 3.10+ ASGI Engine**
-- ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white) **SQLAlchemy 2.0 ORM**
-- ![WebSocket](https://img.shields.io/badge/WebSockets-010101?style=flat-square&logo=socketdotio&logoColor=white) **Real-Time WebSocket Mesh**
-- ![APScheduler](https://img.shields.io/badge/APScheduler-4285F4?style=flat-square&logo=google-cloud&logoColor=white) **Multi-Job Cron Daemons**
-- ![Brevo](https://img.shields.io/badge/Brevo_Email_API-0B996F?style=flat-square&logo=maildotru&logoColor=white) **Brevo Transactional Dispatch**
-- ![WhatsApp](https://img.shields.io/badge/WhatsApp_Cloud_API-25D366?style=flat-square&logo=whatsapp&logoColor=white) **Meta WhatsApp Cloud API Agent**
+- ![FastAPI](docs/assets/badges/tech/tech_fastapi.svg) **FastAPI High-Speed Async Core**
+- ![Python](docs/assets/badges/tech/tech_python.svg) **Python 3.10+ ASGI Engine**
+- ![SQLAlchemy](docs/assets/badges/tech/tech_sqlalchemy.svg) **SQLAlchemy 2.0 ORM**
+- ![WebSocket](docs/assets/badges/tech/tech_websockets.svg) **Real-Time WebSocket Mesh**
+- ![APScheduler](docs/assets/badges/tech/tech_apscheduler.svg) **Multi-Job Cron Daemons**
+- ![Brevo](docs/assets/badges/tech/tech_brevo.svg) **Brevo Transactional Dispatch**
+- ![WhatsApp](docs/assets/badges/tech/tech_whatsapp.svg) **Meta WhatsApp Cloud API Agent**
 - 📄 **OpenPyXL (15-Sheet Excel) & ReportLab (PDF)**
 
 </td>
 <td valign="top">
 
-- ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white) **PostgreSQL 16 Primary Database**
-- ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=flat-square&logo=sqlite&logoColor=white) **SQLite WAL Resilience Engine**
-- ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white) **Multi-Stage Docker Containers**
-- ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white) **Nginx SSL & WSS Proxy**
-- ![AWS](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat-square&logo=amazon-aws&logoColor=white) **AWS EC2 Ubuntu 24.04 LTS**
-- ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white) **Automated CI/CD Workflows**
+- ![PostgreSQL](docs/assets/badges/tech/tech_postgresql.svg) **PostgreSQL 16 Primary Database**
+- ![SQLite](docs/assets/badges/tech/tech_sqlite.svg) **SQLite WAL Resilience Engine**
+- ![Docker](docs/assets/badges/tech/tech_docker.svg) **Multi-Stage Docker Containers**
+- ![Nginx](docs/assets/badges/tech/tech_nginx.svg) **Nginx SSL & WSS Proxy**
+- ![AWS](docs/assets/badges/tech/tech_aws.svg) **AWS EC2 Ubuntu 24.04 LTS**
+- ![GitHub Actions](docs/assets/badges/tech/tech_actions.svg) **Automated CI/CD Workflows**
 - 🛡️ **Level-4 Cryptographic Audit Trail**
 
 </td>
