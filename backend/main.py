@@ -1497,22 +1497,51 @@ from fastapi.responses import FileResponse
 @app.api_route("/api/download/apk", methods=["GET", "HEAD"])
 @app.api_route("/download/apk", methods=["GET", "HEAD"])
 def download_android_apk_endpoint():
-    """Redirects to Vercel CDN for high-speed zero-load Android APK package downloads."""
+    """Serves direct high-speed Android APK package downloads with fallback to CDN."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    for apk_path in [
-        os.path.abspath(os.path.join(base_dir, "..", "releases", "android", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
-        os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "nandha-leetcode-tracker-latest.apk")),
-        os.path.abspath(os.path.join(base_dir, "..", "Nandha_LeetCode_Intelligence_v2_latest.apk")),
-    ]:
-        if os.path.exists(apk_path) and os.environ.get("ENVIRONMENT") != "production":
+    candidates = [
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "android", "Nandha_LeetCode_Intelligence_v4.1.1_latest.apk")),
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "android", "Nandha-LeetCode-Tracker-Latest.apk")),
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "android", "nandha-leetcode.apk")),
+        os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "nandha-leetcode.apk")),
+        os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "Nandha-LeetCode-Tracker-Latest.apk")),
+    ]
+    for apk_path in candidates:
+        if os.path.exists(apk_path):
             return FileResponse(
                 path=apk_path,
                 media_type="application/vnd.android.package-archive",
-                filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
+                filename="Nandha_LeetCode_Intelligence_v4.1.1_latest.apk"
             )
             
     return RedirectResponse(
-        url="https://leetcodeurl-s-roan.vercel.app/nandha-leetcode-tracker-latest.apk",
+        url="https://leetcodeurl-s-roan.vercel.app/nandha-leetcode.apk",
+        status_code=307
+    )
+
+
+@app.api_route("/api/download/exe", methods=["GET", "HEAD"])
+@app.api_route("/download/exe", methods=["GET", "HEAD"])
+def download_windows_exe_endpoint():
+    """Serves direct high-speed Windows Desktop Installer (.EXE) downloads with fallback."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "windows", "Nandha_LeetCode_Intelligence_v4.1.1_Setup.exe")),
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "windows", "Nandha_LeetCode_Intelligence_Latest_Setup.exe")),
+        os.path.abspath(os.path.join(base_dir, "..", "releases", "windows", "nandha-leetcode-setup.exe")),
+        os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "Nandha_LeetCode_Intelligence_Latest_Setup.exe")),
+        os.path.abspath(os.path.join(base_dir, "..", "frontend", "public", "nandha-leetcode-setup.exe")),
+    ]
+    for exe_path in candidates:
+        if os.path.exists(exe_path):
+            return FileResponse(
+                path=exe_path,
+                media_type="application/vnd.microsoft.portable-executable",
+                filename="Nandha_LeetCode_Intelligence_v4.1.1_Setup.exe"
+            )
+            
+    return RedirectResponse(
+        url="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest",
         status_code=307
     )
 
