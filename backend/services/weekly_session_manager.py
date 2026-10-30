@@ -890,7 +890,8 @@ def sync_single_historical_session(db: Session, session_id: int):
     ist_tz = zoneinfo.ZoneInfo("Asia/Kolkata")
     c_start_dt = datetime.datetime.combine(dt_base, datetime.time(8, 0, 0), tzinfo=ist_tz)
     c_end_dt = datetime.datetime.combine(dt_base, datetime.time(9, 30, 0), tzinfo=ist_tz)
-    v_end_dt = datetime.datetime.combine(dt_base, datetime.time(23, 59, 59), tzinfo=ist_tz)
+    # Virtual practice window: 09:31 AM to 10:00 PM IST (22:00:00 IST)
+    v_end_dt = datetime.datetime.combine(dt_base, datetime.time(22, 0, 0), tzinfo=ist_tz)
     c_start_ts = int(c_start_dt.timestamp())
     c_end_ts = int(c_end_dt.timestamp())
     v_end_ts = int(v_end_dt.timestamp())
@@ -1140,11 +1141,11 @@ def sync_single_historical_session(db: Session, session_id: int):
                                             "contest_score": score, "contest_rank": None, "contest_rating": None
                                         }
 
-                                # Strategy 3: Virtual Practice Solvers (After 09:30 AM up to 11:59 PM IST)
+                                # Strategy 3: Virtual Practice Solvers (09:31 AM up to 10:00 PM IST)
                                 virtual_subs = []
                                 for sub in subs:
                                     ts = int(sub.get("submission_timestamp") or sub.get("timestamp") or 0)
-                                    if (c_end_ts + 300) < ts <= (v_end_ts + 300):
+                                    if (c_end_ts + 60) <= ts <= v_end_ts:
                                         virtual_subs.append(sub)
 
                                 if virtual_subs:
@@ -1763,12 +1764,33 @@ class SundayLiveContestEngine:
                 db = db_factory()
                 try:
                     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-                    if not session or session.status not in ("LIVE", "SCHEDULED"):
-                        logger.info(f"[SUNDAY_LIVE_ENGINE] Session {session_id} status is '{session.status if session else 'None'}'. Stopping live worker.")
+                    if not session:
+                        logger.error(f"[SUNDAY_LIVE_ENGINE] Session {session_id} not found in DB. Stopping live worker.")
+                        break
+
+                    now_ist = get_current_ist_datetime()
+                    is_sunday_window = (
+                        now_ist.weekday() == 6 and
+                        datetime.time(8, 0, 0) <= now_ist.time() <= datetime.time(9, 35, 0)
+                    )
+
+                    # Auto-heal during official Sunday live contest window
+                    if is_sunday_window:
+                        if session.status != "LIVE":
+                            logger.info(f"[SUNDAY_LIVE_ENGINE] Active Sunday window detected ({now_ist.strftime('%H:%M:%S IST')}). Auto-healing session {session_id} ('{session.status}') -> LIVE.")
+                            session.status = "LIVE"
+                            session.pipeline_state = "LIVE"
+                            session.finalized = False
+                            session.finalized_at = None
+                            session.completed_at = None
+                            db.commit()
+                    elif session.status not in ("LIVE", "SCHEDULED"):
+                        logger.info(f"[SUNDAY_LIVE_ENGINE] Outside live window and session {session_id} status is '{session.status}'. Gracefully concluding live worker.")
                         break
 
                     if session.status == "SCHEDULED":
                         session.status = "LIVE"
+                        session.pipeline_state = "LIVE"
                         db.commit()
 
                     self.active_job_id = f"LIVE-JOB-{session_id}-{int(get_current_ist_datetime().timestamp())}"

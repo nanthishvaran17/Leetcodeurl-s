@@ -645,6 +645,31 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
           {/* Inline Filter Controls - Responsive: Side-by-Side on Mobile & Inline on Desktop */}
           <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+                        {/* College Campus Quick Segmented Pill */}
+            <div className="flex items-center bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0 self-center">
+              {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
+                const isSelected = (filters.college || 'ALL') === col;
+                return (
+                  <button
+                    key={col}
+                    type="button"
+                    onClick={() => filters.setCollege(col)}
+                    className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
+                      isSelected
+                        ? col === 'NCT'
+                          ? 'bg-teal-600 text-white shadow-xs'
+                          : col === 'NEC'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-brand-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {col}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Department Filter */}
             <div className="col-span-1 min-w-0 flex-1 sm:w-52 lg:w-56">
               <GlobalFilter
@@ -682,6 +707,18 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </span>
             ) : (
               <span>Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
+            )}
+
+                        {/* Active College Tag */}
+            {filters.college !== 'ALL' && (
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold border ${
+                filters.college === 'NCT'
+                  ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300'
+                  : 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300'
+              }`}>
+                College: {filters.college}
+                <button type="button" onClick={() => filters.setCollege('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
             )}
 
             {/* Active Department Tag */}

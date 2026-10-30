@@ -37,6 +37,7 @@ export interface AuthUser {
   phone_number?: string | null;
   date_of_birth?: string | null;
   is_2fa_enabled?: boolean;
+  college?: string | null;
   /** HOD multi-department scope: list of department IDs this HOD is authorized to access.
    *  Empty array means global access (for Admin/Principal/Management roles). */
   authorized_department_ids?: number[];
@@ -48,13 +49,31 @@ export interface AuthUser {
 export function isHodRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return r === 'hod' || r === 'department hod' || r === 'department_hod' || r === 'placement coordinator';
+  return r === 'hod' || r === 'department hod' || r === 'department_hod' || r === 'head of department' || r === 'placement coordinator' || r === 'placement officer';
+}
+
+export function isStaffRole(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const r = (user.role || '').trim().toLowerCase();
+  return ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'].includes(r);
 }
 
 export function isGlobalAccessRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management'].includes(r);
+  return ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive'].includes(r);
+}
+
+export function getUserCollege(user: AuthUser | null): 'NEC' | 'NCT' {
+  if (!user) return 'NEC';
+  const c = ((user as any).college || '').trim().toUpperCase();
+  if (c === 'NCT') return 'NCT';
+  if (c === 'NEC') return 'NEC';
+  const instId = (user.institutional_id || '').trim().toUpperCase();
+  if (instId.startsWith('NCT')) return 'NCT';
+  const email = (user.email || '').trim().toLowerCase();
+  if (email.includes('@nct') || email.includes('.nct.')) return 'NCT';
+  return 'NEC';
 }
 
 export interface AuthContextType {

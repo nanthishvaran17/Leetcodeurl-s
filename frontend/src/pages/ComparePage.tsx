@@ -6,6 +6,8 @@ import api, { clearApiCache } from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
 import { getCachedStudents, clearAllStudentCaches } from '../utils/rosterCache';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { useAuth } from '../context/AuthContext';
+import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
 import { deriveYearLevelFromRegNo, normalizeAcademicYear } from '../utils/filterUtils';
 
 export const ComparePage: React.FC = () => {
@@ -24,6 +26,16 @@ export const ComparePage: React.FC = () => {
   const [groupBOpen, setGroupBOpen] = useState<boolean>(false);
   
   const { departments } = useDepartments();
+  const { user } = useAuth();
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const isGlobalAccess = isGlobalAccessRole(user);
+  const [selectedCollege, setSelectedCollege] = useState<'ALL' | 'NEC' | 'NCT'>(() => isGlobalAccess ? 'ALL' : userCollege);
+
+  useEffect(() => {
+    if (!isGlobalAccess && selectedCollege !== userCollege) {
+      setSelectedCollege(userCollege);
+    }
+  }, [isGlobalAccess, userCollege, selectedCollege]);
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
 
@@ -75,7 +87,8 @@ export const ComparePage: React.FC = () => {
     const fetchFullCohort = async () => {
       try {
         const res = await api.get('/students');
-        const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+        const rawList = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+      const list = rawList.filter((s: any) => selectedCollege === 'ALL' || ((s.college || 'NEC') as string).toUpperCase() === selectedCollege);
         if (list.length > 0) {
           const sorted = [...list].sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
           setAllStudents(sorted);
@@ -93,7 +106,7 @@ export const ComparePage: React.FC = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [selectedDept, selectedYear]);
+  }, [selectedCollege, selectedDept, selectedYear]);
 
   // Pull-to-refresh listener: clear caches and reload comparison datasets
   useEffect(() => {
@@ -104,7 +117,7 @@ export const ComparePage: React.FC = () => {
     };
     window.addEventListener('pull_to_refresh', handlePull);
     return () => window.removeEventListener('pull_to_refresh', handlePull);
-  }, [selectedDept, selectedYear]);
+  }, [selectedCollege, selectedDept, selectedYear]);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -452,7 +465,37 @@ export const ComparePage: React.FC = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+
+              {/* College Filter — Admin & Management only */}
+              {isGlobalAccess && (
+                <div>
+                  <label className="block text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">College Campus</label>
+                  <div className="flex items-center bg-white dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-navy-700 shadow-xs h-[44px]">
+                    {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
+                      const isSelected = selectedCollege === col;
+                      return (
+                        <button
+                          key={col}
+                          type="button"
+                          onClick={() => setSelectedCollege(col)}
+                          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${
+                            isSelected
+                              ? col === 'NCT'
+                                ? 'bg-teal-600 text-white shadow-xs'
+                                : col === 'NEC'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'bg-brand-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {col === 'ALL' ? 'All' : col}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               
               {/* Department Filter — Premium Custom Dropdown */}
               <div className="z-20">

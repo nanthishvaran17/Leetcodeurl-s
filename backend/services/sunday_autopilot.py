@@ -609,9 +609,16 @@ class UniversalWeeklyContestAutopilot:
 
         try:
             logger.info("[AUTOPILOT] Phase 4: Finalizing Contest and Reconciling Roster...")
-            session = self._resolve_target_session(db, session_id)
+            session = self._resolve_target_session(db, session_id, allow_future=False)
             if not session:
-                return {"phase": "FINALIZATION", "success": False, "error": "Session not found"}
+                logger.info("[AUTOPILOT] No eligible past or present session found for finalization. Future contests are protected.")
+                return {"phase": "FINALIZATION", "success": False, "error": "No eligible session found for finalization"}
+
+            # Safety Guard: Never finalize a future contest session
+            s_date = self._parse_date_safe(session.session_date)
+            if s_date and s_date > get_current_ist_datetime().date():
+                logger.warning(f"[AUTOPILOT] Aborting finalization: {session.contest_name} ({session.session_date}) is in the future!")
+                return {"phase": "FINALIZATION", "success": False, "error": f"Cannot finalize future contest {session.contest_name}"}
 
             # Immutable snapshot protection: Do not re-finalize an already finalized session
             if session.pipeline_state == "FINALIZED":
@@ -1085,13 +1092,31 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    def _resolve_target_session(self, db: Session, session_id: Optional[int] = None) -> Optional[WeeklySession]:
+    def _parse_date_safe(self, date_str: Optional[str]) -> Optional[datetime.date]:
+        if not date_str:
+            return None
+        s = str(date_str).strip()
+        try:
+            if "." in s:
+                p = s.split(".")
+                return datetime.date(int(p[2]), int(p[1]), int(p[0]))
+            if "-" in s:
+                p = s.split("-")
+                if len(p[0]) == 4:
+                    return datetime.date(int(p[0]), int(p[1]), int(p[2]))
+                return datetime.date(int(p[2]), int(p[1]), int(p[0]))
+        except Exception:
+            pass
+        return None
+
+    def _resolve_target_session(self, db: Session, session_id: Optional[int] = None, allow_future: bool = True) -> Optional[WeeklySession]:
         if session_id:
             return db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
         now_ist = get_current_ist_datetime()
         today_dates = [now_ist.strftime('%d.%m.%Y'), now_ist.strftime('%Y-%m-%d'), now_ist.strftime('%d-%m-%Y')]
+        today_d = now_ist.date()
 
-        # 1. Strictly match today\'s date first
+        # 1. Strictly match today's date first
         sess = db.query(WeeklySession).filter(WeeklySession.session_date.in_(today_dates)).first()
         if sess:
             return sess
@@ -1101,12 +1126,20 @@ class UniversalWeeklyContestAutopilot:
         if sess:
             return sess
 
-        # 3. Match SCHEDULED contest
-        sess = db.query(WeeklySession).filter(WeeklySession.status == 'SCHEDULED').order_by(WeeklySession.id.desc()).first()
-        if sess:
-            return sess
-
-        return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        if allow_future:
+            # 3. Match SCHEDULED contest (for preflight / preparation only)
+            sess = db.query(WeeklySession).filter(WeeklySession.status == 'SCHEDULED').order_by(WeeklySession.id.desc()).first()
+            if sess:
+                return sess
+            return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        else:
+            # 4. For finalization / reconciliation / lock gates: NEVER touch future scheduled contests!
+            all_sessions = db.query(WeeklySession).order_by(WeeklySession.id.desc()).all()
+            for s in all_sessions:
+                s_d = self._parse_date_safe(s.session_date)
+                if s_d and s_d <= today_d:
+                    return s
+            return None
 
     async def resume_or_recover_on_startup(self, db: Optional[Session] = None):
         """

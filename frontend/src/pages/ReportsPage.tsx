@@ -10,6 +10,7 @@ import { SyncStatusModal } from '../components/SyncStatusModal';
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { isGlobalAccessRole, isHodRole, isStaffRole, getUserCollege } from '../services/auth/authTypes';
 import { downloadFromUrl } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { ExportStatus } from '../components/ExportStatus';
@@ -47,22 +48,38 @@ export const ReportsPage: React.FC = () => {
   const [selectedReportType, setSelectedReportType] = useState<string>('WEEKLY_PERFORMANCE');
 
   const userRole = (user?.role || '').trim().toLowerCase();
+  const isGlobalAccess = isGlobalAccessRole(user);
   const isPlacementUser = ['placement', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(userRole);
-  const isHodUser = !isPlacementUser && ['hod', 'department hod', 'department_hod', 'head of department'].includes(userRole);
+  const isHodUser = !isPlacementUser && isHodRole(user);
+  const isStaffUser = isStaffRole(user);
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
+
   const hodDeptDefault = useMemo(() => {
+    if (isStaffUser) {
+      return ((user as any)?.department_code || user?.department || 'ALL').trim();
+    }
     if (!isHodUser) return 'ALL';
     const codes = user?.authorized_department_codes || [];
     if (codes.length > 0) return codes[0];
-    return (user as any)?.department_code || 'ALL';
-  }, [user, isHodUser]);
+    return ((user as any)?.department_code || user?.department || 'ALL').trim();
+  }, [user, isStaffUser, isHodUser]);
 
+  const [selectedCollege, setSelectedCollege] = useState<'ALL' | 'NEC' | 'NCT'>(() => {
+    return isGlobalAccess ? 'ALL' : userCollege;
+  });
   const [selectedDept, setSelectedDept] = useState<string>(() => hodDeptDefault);
 
   useEffect(() => {
-    if (isHodUser && hodDeptDefault !== 'ALL' && (!selectedDept || selectedDept === 'ALL')) {
+    if (!isGlobalAccess && selectedCollege !== userCollege) {
+      setSelectedCollege(userCollege);
+    }
+  }, [isGlobalAccess, userCollege, selectedCollege]);
+
+  useEffect(() => {
+    if ((isHodUser || isStaffUser) && hodDeptDefault !== 'ALL' && (!selectedDept || selectedDept === 'ALL')) {
       setSelectedDept(hodDeptDefault);
     }
-  }, [isHodUser, hodDeptDefault, selectedDept]);
+  }, [isHodUser, isStaffUser, hodDeptDefault, selectedDept]);
 
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
@@ -105,6 +122,7 @@ export const ReportsPage: React.FC = () => {
         const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
         api.post('/reports/generate', {
           report_type: selectedReportType,
+          college: selectedCollege,
           department: effDept,
           year: selectedYear,
           output_scope: selectedOutputScope,
@@ -113,7 +131,7 @@ export const ReportsPage: React.FC = () => {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope, selectedSessionId, isHodUser, hodDeptDefault]);
+  }, [selectedReportType, selectedCollege, selectedDept, selectedYear, selectedOutputScope, selectedSessionId, isHodUser, hodDeptDefault]);
 
   useEffect(() => {
     if (deleteModalItem || showCertModal || activeUniversalPreviewId || showSyncModal) {
@@ -281,6 +299,7 @@ export const ReportsPage: React.FC = () => {
 
   const getActiveFilterQueryParams = (extraParams?: Record<string, string>) => {
     const params = new URLSearchParams();
+    if (selectedCollege && selectedCollege !== 'ALL') params.append('college', selectedCollege);
     const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
     if (effDept && effDept !== 'ALL') params.append('department', effDept);
     if (selectedYear && selectedYear !== 'ALL') params.append('year', selectedYear);
@@ -711,7 +730,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Unified Report Builder Form Controls — Mobile Friendly Responsive Grid */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4.5 p-3.5 sm:p-5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-inner items-start relative ${rptTypeOpen || rptYearOpen || rptSessionOpen ? 'z-[100]' : 'z-20'}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4.5 p-3.5 sm:p-5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-inner items-start relative ${rptTypeOpen || rptYearOpen || rptSessionOpen ? 'z-[100]' : 'z-20'}`}>
 
               {/* 1. Report Type — Premium Dropdown with Custom Colored Badges */}
               <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptTypeOpen ? 'z-[100]' : 'z-[10]'}`}>
@@ -1097,17 +1116,58 @@ export const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Department — Premium Dropdown */}
-              <div className="flex flex-col min-w-0 w-full z-[10]">
-                <PremiumDepartmentSelect
-                  selectedDept={selectedDept}
-                  onChange={setSelectedDept}
-                  label="Department"
-                  className="!w-full"
-                  showAllDepartments={true}
-                  useIdAsValue={false}
-                />
-              </div>
+              {/* College Campus — Admin & Management only */}
+              {isGlobalAccess && (
+                <div className="flex flex-col space-y-1.5 min-w-0 w-full z-[10]">
+                  <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">College Campus</span>
+                  <div className="flex items-center bg-white dark:bg-navy-950 p-1.5 h-12 min-h-[48px] rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm">
+                    {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
+                      const isSelected = selectedCollege === col;
+                      return (
+                        <button
+                          key={col}
+                          type="button"
+                          onClick={() => setSelectedCollege(col)}
+                          className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                            isSelected
+                              ? col === 'NCT'
+                                ? 'bg-teal-600 text-white shadow-xs'
+                                : col === 'NEC'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'bg-brand-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {col === 'ALL' ? 'All' : col}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Department — Premium Dropdown for Admin/HOD, locked for Staff */}
+              {!isStaffUser ? (
+                <div className="flex flex-col min-w-0 w-full z-[10]">
+                  <PremiumDepartmentSelect
+                    selectedDept={selectedDept}
+                    onChange={setSelectedDept}
+                    label="Department"
+                    className="!w-full"
+                    showAllDepartments={!isHodUser}
+                    useIdAsValue={false}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-1.5 min-w-0 w-full z-[10]">
+                  <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Department</span>
+                  <div className="flex items-center gap-2.5 px-3.5 py-2.5 h-12 min-h-[48px] rounded-2xl bg-white dark:bg-navy-950 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm shadow-sm">
+                    <Building2 className="w-4 h-4 text-brand-500" />
+                    <span className="truncate">{selectedDept}</span>
+                    <span className="ml-auto text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400">Assigned</span>
+                  </div>
+                </div>
+              )}
 
               {/* 3. Year / Batch — Premium Dropdown */}
               <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptYearOpen ? 'z-[100]' : 'z-[10]'}`}>

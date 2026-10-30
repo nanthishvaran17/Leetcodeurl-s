@@ -194,7 +194,16 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   const isContestReport = useMemo(() => {
     if (!report) return false;
-    if (rType === 'WEEKLY_PERFORMANCE' || rType === 'WEEKLY_STUDENT_PERFORMANCE' || rType === 'COORDINATOR' || rType === 'COORDINATOR_WEEKLY_PERFORMANCE' || rType === 'WEEKLY_COORDINATOR' || !!report.batch_summaries) return false;
+    if (
+      rType === 'WEEKLY_PERFORMANCE' ||
+      rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
+      rType === 'COORDINATOR' ||
+      rType === 'COORDINATOR_WEEKLY_PERFORMANCE' ||
+      rType === 'WEEKLY_COORDINATOR' ||
+      rType === '12TH_TNEA_CUTOFF_ANALYSIS' ||
+      rType.includes('CUTOFF') ||
+      !!report.batch_summaries
+    ) return false;
     return (
       rType === 'CONTEST_PERFORMANCE' ||
       rType === 'OFFICIAL_CONTEST' ||
@@ -230,6 +239,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       rType === 'FRIDAY_OFFICIAL' ||
       rType === 'OFFICIAL_CONTEST' ||
       rType === 'WEEKLY_CONTEST_INTELLIGENCE'
+    );
+  }, [report, rType]);
+
+  const isCutoffReport = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === '12TH_TNEA_CUTOFF_ANALYSIS' ||
+      rType.includes('CUTOFF') ||
+      (Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0)
     );
   }, [report, rType]);
 
@@ -997,12 +1015,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
     const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
 
-    // 1. Resolve Official Coordinator
+    // 1. Resolve Official Coordinator (only if explicitly present)
     const officialCoordinator = (
       report?.coordinator ||
       report?.academicCoordinator ||
       report?.coordinator_name ||
-      (cleanDept.toLowerCase().includes('iot') ? 'P.Devayani / AP' : 'M. Santhoshkumar, AP / CSE (Cyber Security)')
+      ''
     ).trim();
 
     // 2. Resolve Report Title vs Contest Name
@@ -1031,20 +1049,22 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       resolvedContestName = isWowIntel ? 'Week-on-Week Performance' : 'Weekly LeetCode Contest';
     }
 
-    // Resolve Period / Week (e.g. REP-2026-W43-1793150981 -> Week 43, 2026)
-    const rawRepId = String(report?.report_id || report?.reportId || reportId || '');
-    const weekMatch = rawRepId.match(/(\d{4})[-_]W(\d+)/i) || rawRepId.match(/W(\d+)/i);
-    let periodInfo = '';
-    if (weekMatch) {
-      if (weekMatch.length >= 3 && weekMatch[1] && weekMatch[2]) {
-        periodInfo = `Week ${weekMatch[2]} (${weekMatch[1]})`;
-      } else if (weekMatch[1]) {
-        periodInfo = `Week ${weekMatch[1]}`;
+    // Resolve Direct Contest Date (e.g. 18.10.2026)
+    let resolvedDate = (
+      report?.contest_date ||
+      report?.session_date ||
+      report?.contestDate ||
+      report?.sessionDate ||
+      report?.current_session?.session_date ||
+      report?.report_date ||
+      ''
+    ).toString().trim();
+
+    if (resolvedDate.includes('-') && resolvedDate.length >= 10) {
+      const parts = resolvedDate.split('T')[0].split('-');
+      if (parts.length === 3 && parts[0].length === 4) {
+        resolvedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
       }
-    } else if (report?.reporting_period) {
-      periodInfo = String(report.reporting_period);
-    } else if (report?.session_date) {
-      periodInfo = String(report.session_date);
     }
 
     // 1. Authoritative metrics (Numbers only, NO percentages!)
@@ -1093,16 +1113,33 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     const s1 = Number(solveDist.solved1 ?? report?.metrics?.['1 Q Solved'] ?? contestSummary?.q1 ?? s1Count ?? 0);
     const s0 = Number(solveDist.solved0 ?? report?.metrics?.['0 Q Solved'] ?? contestSummary?.q0 ?? s0Count ?? Math.max(attended - (s4 + s3 + s2 + s1), 0));
 
-    // 2. Single Clean In-Charge / Coordinator Line
-    const rawName = currentUser?.full_name || currentUser?.displayName || currentUser?.name || '';
-    const rawRole = (currentUser?.role || '').toLowerCase();
-    const isStaffOrFaculty = rawRole.includes('faculty') || rawRole.includes('staff') || isStaffUser;
+    // 2. In-Charge / Coordinator Resolution (Role-Aware: Staff -> Staff Name, Coordinator -> Coordinator Name, else omitted)
+    const rawName = (currentUser?.full_name || currentUser?.displayName || currentUser?.name || '').trim();
+    const rawRole = (currentUser?.role || (userSnapshot as any)?.role || '').toLowerCase().trim();
 
-    let inChargeRole = 'Coordinator';
-    let inChargeName = officialCoordinator;
-    if (isStaffOrFaculty && rawName) {
+    const isCoordinatorRole = ['coordinator', 'academic coordinator', 'placement coordinator', 'placement_coordinator'].some(r => rawRole === r || rawRole.includes('coordinator'));
+    const isStaffOrFaculty = !isCoordinatorRole && (['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'mentor', 'tutor'].some(r => rawRole.includes(r)) || isStaffUser);
+    const isHodRole = ['hod', 'department hod', 'department_hod', 'head of department'].some(r => rawRole === r || rawRole.includes('hod'));
+
+    let inChargeRole = '';
+    let inChargeName = '';
+
+    if (isStaffOrFaculty) {
+      // When Staff logs in: show Staff In-Charge with their name only
       inChargeRole = 'Staff In-Charge';
-      inChargeName = rawName.trim();
+      inChargeName = rawName || report?.staff_name || report?.mentor_name || report?.faculty_name || 'Staff Mentor';
+    } else if (isCoordinatorRole) {
+      // ONLY when Coordinator logs in: show Coordinator
+      inChargeRole = 'Coordinator';
+      inChargeName = rawName || officialCoordinator || 'Academic Coordinator';
+    } else if (isHodRole && rawName) {
+      // When HOD logs in: show HOD name
+      inChargeRole = 'HOD';
+      inChargeName = rawName;
+    } else if (isWeeklyPerformance && officialCoordinator) {
+      // Coordinator Weekly Report specific
+      inChargeRole = 'Coordinator';
+      inChargeName = officialCoordinator;
     }
 
     // 3. Compact Batch Rating > 1500 List
@@ -1151,175 +1188,135 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       });
     }
 
-    // 4. Base Header (Compact & Executive)
+    // 4. Base Header (Professional Clean Text, No Emojis)
     let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
       `*Department of ${cleanDept}*\n` +
-      `*LEETCODE PERFORMANCE REPORT*\n` +
-      `• *Report:* ${reportTitle}\n`;
+      `----------------------------------------\n` +
+      `*${reportTitle.toUpperCase()}*\n`;
 
-    if (resolvedContestName) {
-      text += `• *Contest:* ${resolvedContestName}\n`;
+    if (isWowIntel) {
+      const pContest = report?.prevContest || `Contest ${report?.wowSummary?.prevContestNum || ''}`;
+      const cContest = report?.currContest || resolvedContestName || `Contest ${report?.wowSummary?.currContestNum || ''}`;
+      const pDate = report?.prevDate || '';
+      const cDate = report?.currDate || resolvedDate || '';
+      text += `*Current Contest:* ${cContest}${cDate ? ` (${cDate})` : ''}\n`;
+      text += `*Previous Contest:* ${pContest}${pDate ? ` (${pDate})` : ''}\n`;
+    } else if (isFiveWeekTrend || isHistIntel) {
+      const m = report?.metrics || {};
+      const cWindow = m.contestWindow || (Array.isArray(report?.sessionHeaders) && report.sessionHeaders.length > 0 ? `${report.sessionHeaders[0]} - ${report.sessionHeaders[report.sessionHeaders.length - 1]}` : resolvedContestName);
+      if (cWindow) text += `*Contest Window:* ${cWindow}\n`;
+      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
+    } else if (isCutoffReport) {
+      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
+    } else {
+      if (resolvedContestName) text += `*Contest:* ${resolvedContestName}\n`;
+      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
     }
-    if (periodInfo) {
-      text += `• *Period:* ${periodInfo}\n`;
-    }
+
     if (inChargeName) {
-      text += `• *${inChargeRole}:* ${inChargeName}\n`;
+      text += `*${inChargeRole}:* ${inChargeName}\n`;
     }
-    text += `\n`;
+    text += `----------------------------------------\n\n`;
 
-    // -------------------------------------------------------------------------
-    // CLEAN, SIMPLE, QUICK-TO-READ DYNAMIC MESSAGE PER REPORT TYPE
-    // -------------------------------------------------------------------------
-
-    // 1. WEEK-ON-WEEK INTELLIGENCE (WOW)
-    if (rType.includes('WOW') || rType.includes('WEEK_ON_WEEK') || report?.wowSummary) {
+    // Dynamic Report-Specific Format Engine (Clean Text, Zero Emojis)
+    if (isCutoffReport) {
+      text += `*TNEA 12TH CUTOFF BAND PERFORMANCE*\n`;
+      const cBands = (report?.cutoffBandSummary && Array.isArray(report.cutoffBandSummary)) ? report.cutoffBandSummary : [];
+      const validBands = cBands.filter((b: any) => (b.total || 0) > 0);
+      const bandsToUse = validBands.length > 0 ? validBands : cBands;
+      if (bandsToUse.length > 0) {
+        bandsToUse.forEach((b: any) => {
+          const cleanBand = String(b.band || '').replace(/[^\d-]/g, ' - ').replace(/\s+/g, ' ').trim();
+          const pct = b.attendance_pct ? ` (${b.attendance_pct}% active)` : '';
+          const avg = b.avg_solved != null ? ` | Avg: *${b.avg_solved}*` : '';
+          text += `- Cutoff ${cleanBand}: *${b.active_solvers || 0}/${b.total} Active*${pct}${avg}\n`;
+        });
+      }
+      text += `\n*CUTOFF COHORT OVERVIEW*\n` +
+        `- Total Students: *${total}*\n` +
+        `- Active Solvers: *${attended}*\n` +
+        `- Non-Active: *${absent}*\n`;
+    } else if (isWowIntel) {
       const wow = report?.wowSummary || {};
-      const prevCont = report?.prevContest || `Contest ${wow?.prevContestNum ?? 'Previous'}`;
-      const currCont = report?.currContest || report?.contestName || `Contest ${wow?.currContestNum ?? 'Current'}`;
-      const attDelta = Number(wow.attendanceDelta || (wow.currAttendance != null && wow.prevAttendance != null ? wow.currAttendance - wow.prevAttendance : 0));
-      const solvesDelta = Number(wow.solvesDelta || (wow.currTotalSolves != null && wow.prevTotalSolves != null ? wow.currTotalSolves - wow.prevTotalSolves : 0));
+      const pAtt = Number(wow.prevAttendance ?? 0);
+      const cAtt = Number(wow.currAttendance ?? attended);
+      const attDelta = Number(wow.attendanceDelta ?? (cAtt - pAtt));
+      const pSolv = Number(wow.prevTotalSolves ?? 0);
+      const cSolv = Number(wow.currTotalSolves ?? 0);
+      const solvDelta = Number(wow.solvesDelta ?? (cSolv - pSolv));
 
-      text += `Contests: ${prevCont} vs ${currCont}\n\n` +
-        `Total Students: ${wow.totalStudents || total}\n` +
-        `Attended: ${wow.prevAttendance ?? '—'} → ${wow.currAttendance ?? attended} (${attDelta >= 0 ? '+' : ''}${attDelta})\n` +
-        `Total Solves: ${wow.prevTotalSolves ?? '—'} → ${wow.currTotalSolves ?? '—'} (${solvesDelta >= 0 ? '+' : ''}${solvesDelta})\n\n` +
-        `Trajectory:\n` +
-        `Improving: ${wow.improved ?? 0}\n` +
-        `Stable: ${wow.stable ?? 0}\n` +
-        `Declining: ${wow.declined ?? 0}`;
-    }
-    // 2. FIVE-WEEK PERFORMANCE TREND
-    else if (rType.includes('FIVE_WEEK') || rType.includes('BATCH_PERFORMANCE') || isFiveWeekTrend) {
+      text += `*WEEK-ON-WEEK PARTICIPATION & SOLVES*\n` +
+        `- Current Attendance: *${cAtt}*\n` +
+        `- Previous Attendance: *${pAtt}*\n` +
+        `- Attendance Delta: *${attDelta >= 0 ? '+' : ''}${attDelta}*\n` +
+        `- Current Total Solves: *${cSolv}*\n` +
+        `- Previous Total Solves: *${pSolv}*\n` +
+        `- Solves Delta: *${solvDelta >= 0 ? '+' : ''}${solvDelta}*\n\n` +
+        `*STUDENT TRAJECTORY DYNAMICS*\n` +
+        `- Improving: *${wow.improved ?? 0}* students\n` +
+        `- Consistent / Stable: *${wow.stable ?? 0}* students\n` +
+        `- Declining: *${wow.declined ?? 0}* students\n`;
+    } else if (isFiveWeekTrend || isHistIntel) {
       const m = report?.metrics || {};
-      if (m.contestWindow) text += `Window: ${m.contestWindow}\n`;
-      text += `\nTotal Students: ${total}\n` +
-        `Consistent Solvers: ${m.fiveContestConsistentSolvers ?? '—'}\n` +
-        `Total Solves: ${m.total5WeekSolves ?? '—'} | Avg: ${m.average5WeekSolves ?? '—'}\n\n` +
-        `Trajectory:\n` +
-        `Improving: ${m.improvingStudents ?? '—'}\n` +
-        `Stable: ${m.stableStudents ?? '—'}\n` +
-        `Declining: ${m.decliningStudents ?? '—'}\n` +
-        `Follow-up: ${m.followUpStudents ?? '—'}`;
-    }
-    // 3. HISTORICAL CONTEST INTELLIGENCE
-    else if (rType.includes('HISTORICAL') || isHistIntel) {
-      text += `\nTotal Students: ${total}\n` +
-        `Attended: ${attended} | Absent: ${absent}\n` +
-        `Total Solves: ${report?.metrics?.totalSolved ?? conditionStats?.totalSolves ?? '—'}\n` +
-        `Consistent Solvers: ${report?.metrics?.fiveContestConsistentSolvers ?? '—'}`;
-      const formatContestHeader = (h: any) => {
-        if (!h) return '';
-        if (typeof h === 'string') return h;
-        return h.title || h.name || h.label || h.code || h.contest_name || Object.values(h)[0] || '';
-      };
-      const formattedHeaders = report?.sessionHeaders && Array.isArray(report.sessionHeaders)
-        ? report.sessionHeaders.map(formatContestHeader).filter(Boolean)
-        : [];
-      if (formattedHeaders.length > 0) {
-        text += `
-Contests: ${formattedHeaders.join(' → ')}`;
-      }
-    }
-    // 4. 12TH TNEA CUTOFF INTELLIGENCE
-    else if (rType.includes('CUTOFF') || rType.includes('TNEA') || report?.cutoffBandSummary) {
-      text += `\nTotal Students: ${total}\n` +
-        `Attended: ${attended} | Absent: ${absent}\n\n` +
-        `Cutoff Bands (Attended / Total):\n`;
+      const hSum = report?.histSummary || {};
+      const consSolvers = m.fiveContestConsistentSolvers ?? hSum.consistentSolvers ?? 'N/A';
+      const tot5Solv = m.total5WeekSolves ?? 'N/A';
+      const avgSolv = m.average5WeekSolves ?? 'N/A';
 
-      const bands = (report?.cutoffBandSummary && Array.isArray(report.cutoffBandSummary))
-        ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
-        : [];
-      if (bands.length > 0) {
-        bands.forEach((b: any) => {
-          text += `Cutoff ${b.band}: ${b.active_solvers || 0} / ${b.total || 0} (4/4: ${b.solvers_4 || 0})\n`;
+      text += `*5-WEEK PERFORMANCE TRAJECTORY*\n` +
+        `- Total Students Tracked: *${m.totalStudents || total}*\n` +
+        `- 5-Contest Consistent Solvers: *${consSolvers}*\n` +
+        `- Total 5-Week Solves: *${tot5Solv}*\n` +
+        `- Average Solves per Student: *${avgSolv}*\n\n` +
+        `*STUDENT TRAJECTORY DYNAMICS*\n` +
+        `- Improving: *${m.improvingStudents ?? 'N/A'}* students\n` +
+        `- Consistent / Stable: *${m.stableStudents ?? 'N/A'}* students\n` +
+        `- Declining: *${m.decliningStudents ?? 'N/A'}* students\n` +
+        `- Follow-Up Needed: *${m.followUpStudents ?? 'N/A'}* students\n`;
+
+      if (Array.isArray(report?.sessionHeaders) && report.sessionHeaders.length > 0) {
+        text += `\n*CONTEST SESSIONS INCLUDED*\n`;
+        report.sessionHeaders.forEach((h: string) => {
+          text += `- ${h}\n`;
         });
-      } else {
-        text += `All Cutoff Bands mapped and tracked.`;
       }
-    }
-    // 5. PROBLEM DIFFICULTY INTELLIGENCE
-    else if (rType.includes('PROBLEM_DIFFICULTY') || rType.includes('DIFFICULTY')) {
+    } else if (rType.includes('PROBLEM_DIFFICULTY') || rType.includes('DIFFICULTY')) {
       const m = report?.metrics || {};
-      text += `\nTotal Students: ${total} | Active: ${attended}\n` +
-        `Total Solved: ${m.totalSolved ?? conditionStats?.totalSolves ?? 0} | Avg: ${m.averageSolved ?? 0}\n\n` +
-        `Difficulty Breakdown:\n` +
-        `Easy: ${m.easySolved ?? 0}\n` +
-        `Medium: ${m.mediumSolved ?? 0}\n` +
-        `Hard: ${m.hardSolved ?? 0}`;
-    }
-    // 6. CONTEST ATTENDANCE & PARTICIPATION
-    else if (rType.includes('CONTEST_ATTENDANCE')) {
-      text += `Contest: ${resolvedContestName}\n\n` +
-        `Total Students: ${total}\n` +
-        `Attended: ${attended} | Absent: ${absent}\n` +
-        `Solved at least 1: ${s4 + s3 + s2 + s1}`;
-    }
-    // 7. CONTEST PERFORMANCE & RANKING
-    else if (rType.includes('CONTEST_PERFORMANCE_RANKING') || rType.includes('CONTEST_RANKING')) {
-      const m = report?.metrics || {};
-      text += `Contest: ${resolvedContestName}\n\n` +
-        `Total Participants: ${attended}\n` +
-        `Global Ranks (< 20,000): ${m.ranking_20000 ?? 'Available'}\n` +
-        `Highest Rating: ${m.highestRating ?? '—'} | Avg: ${m.averageRating ?? '—'}\n\n` +
-        `Top Solvers:\n` +
-        `4/4 Solved: ${s4}\n` +
-        `3/4 Solved: ${s3}\n` +
-        `2/4 Solved: ${s2}\n` +
-        `1/4 Solved: ${s1}`;
-    }
-    // 8. FACULTY / STAFF CONSOLIDATED
-    else if (rType.includes('FACULTY') && report?.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0) {
-      text += `\nTotal Mentors: ${report.facultySummary.length}\n` +
-        `Total Students: ${total} | Active: ${attended}\n\n` +
-        `Staff Breakdown (Active / Assigned):\n`;
+      text += `*DIFFICULTY BREAKDOWN*\n` +
+        `- Easy Solved: *${m.easySolved ?? 0}*\n` +
+        `- Medium Solved: *${m.mediumSolved ?? 0}*\n` +
+        `- Hard Solved: *${m.hardSolved ?? 0}*\n\n` +
+        `*PARTICIPATION OVERVIEW*\n` +
+        `- Total Enrolled: *${total}*\n` +
+        `- Active Solvers: *${attended}*\n` +
+        `- Non-Active: *${absent}*\n`;
+    } else {
+      // Core Participation Summary
+      text += `*PARTICIPATION OVERVIEW*\n` +
+        `- Total Enrolled: *${total}*\n` +
+        `- Attended: *${attended}*\n` +
+        `- Absent: *${absent}*\n\n`;
 
-      report.facultySummary.forEach((f: any) => {
-        text += `${f.staff_name}: ${f.active_solvers || 0} / ${f.total_assigned || 0} (Avg: ${f.avg_solved || 0})\n`;
-      });
-    }
-    // 9. HOD / PRINCIPAL / MANAGEMENT EXECUTIVE
-    else if (rType.includes('HOD') || rType.includes('PRINCIPAL') || rType.includes('MANAGEMENT')) {
-      text += `\nTotal Students: ${total}\n` +
-        `Attended: ${attended} | Absent: ${absent}\n\n`;
-
-      if (report?.yearSummary && Array.isArray(report.yearSummary)) {
-        text += `Year-Wise (Active / Total):\n`;
-        report.yearSummary.forEach((y: any) => {
-          text += `Year ${y.year}: ${y.active_solvers || 0} / ${y.total || 0} (Solves: ${y.total_solved || 0})\n`;
-        });
-      } else if (report?.departmentSummary && Array.isArray(report.departmentSummary)) {
-        text += `Department-Wise (Active / Total):\n`;
-        report.departmentSummary.forEach((d: any) => {
-          text += `${d.department}: ${d.active_solvers || 0} / ${d.total || 0} (Solves: ${d.total_solved || 0})\n`;
-        });
-      } else {
-        text += `Solved: 4/4: ${s4} | 3/4: ${s3} | 2/4: ${s2} | 1/4: ${s1}`;
-      }
-    }
-    // 10. WEEKLY CONTEST, SUNDAY LIVE, FRIDAY CONTEST, SATURDAY BIWEEKLY, COORDINATOR WEEKLY (DEFAULT)
-    else {
-      text += `• *Total Students:* ${total}\n` +
-        `• *Attended:* ${attended}\n` +
-        `• *Absent / Not Attended:* ${absent}\n\n` +
-        `*Solve Breakdown:*\n` +
-        `• 4/4 Solved: ${s4}\n` +
-        `• 3/4 Solved: ${s3}\n` +
-        `• 2/4 Solved: ${s2}\n` +
-        `• 1/4 Solved: ${s1}\n`;
-
+      // Solve Breakdown
+      text += `*CONTEST SOLVE BREAKDOWN*\n` +
+        `- 4/4 Solved: *${s4}*\n` +
+        `- 3/4 Solved: *${s3}*\n` +
+        `- 2/4 Solved: *${s2}*\n` +
+        `- 1/4 Solved: *${s1}*\n`;
       if (s0 > 0) {
-        text += `• 0/4 Solved: ${s0}\n`;
+        text += `- 0/4 Solved: *${s0}*\n`;
       }
 
       if (batchRatingList.length > 0) {
-        text += `\n*Batch Breakdown:*\n`;
-        batchRatingList.forEach(b => {
-          text += `• ${b.name} — Rating > 1500: ${b.count}\n`;
+        text += `\n*RATING > 1500 BENCHMARK*\n`;
+        batchRatingList.slice(0, 3).forEach(b => {
+          text += `- ${b.name}: *${b.count}*\n`;
         });
       }
     }
 
+    text += `\n----------------------------------------\n` +
+      `*Official report available on Nandha LeetCode Portal*\n\n`;
     const { url, filename, mimeType } = getReportDownloadMeta('excel');
 
     // Clean, direct report text without external URLs
@@ -3718,7 +3715,7 @@ Contests: ${formattedHeaders.join(' → ')}`;
               )}
 
               {/* Cutoff Band Intelligence Table */}
-              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', '12TH_TNEA_CUTOFF_ANALYSIS'].includes(rType) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
+              {!isWeeklyPerformance && (isCutoffReport || ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', '12TH_TNEA_CUTOFF_ANALYSIS'].includes(rType)) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
                 <div className="space-y-3 pt-2">
                   <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
                     <Award className="w-4 h-4 text-rose-500" />
@@ -4150,6 +4147,9 @@ Contests: ${formattedHeaders.join(' → ')}`;
                               <th className="px-4 py-3 text-left print:border-b print:border-black">Student Name</th>
                               <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
                               <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
+                              {isCutoffReport && (
+                                <th className="px-4 py-3 text-center print:border-b print:border-black text-rose-300">12th Cutoff</th>
+                              )}
                               <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
                               <th className="px-4 py-3 text-right print:border-b print:border-black">Medium</th>
                               <th className="px-4 py-3 text-right print:border-b print:border-black">Hard</th>
@@ -4165,6 +4165,11 @@ Contests: ${formattedHeaders.join(' → ')}`;
                                 <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                                 <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                                 <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
+                                {isCutoffReport && (
+                                  <td className="px-4 py-2.5 text-center font-mono font-bold text-rose-700 dark:text-rose-300">
+                                    {s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}
+                                  </td>
+                                )}
                                 <td className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? "—"}</td>
                                 <td className="px-4 py-2.5 text-right text-amber-700 dark:text-amber-300 font-black">{s.medium ?? "—"}</td>
                                 <td className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-300 font-black">{s.hard ?? "—"}</td>

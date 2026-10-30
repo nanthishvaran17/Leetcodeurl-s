@@ -56,6 +56,8 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
     setAcademicYear,
     attendanceStatus,
     setAttendanceStatus,
+    college,
+    setCollege,
     searchQuery,
     setSearchQuery,
     resetFilters,

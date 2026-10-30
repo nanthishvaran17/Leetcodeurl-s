@@ -145,14 +145,16 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Determine scope flags from user role
       const u = getUserSnapshot();
       const role = ((u?.role) || '').trim().toLowerCase();
-      const hodRoles = ['hod', 'department hod', 'department_hod', 'placement coordinator'];
-      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator'];
+      const hodRoles = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator', 'placement officer'];
+      const staffRoles = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'];
+      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator', 'director', 'executive'];
       const isHod = hodRoles.includes(role);
+      const isStaff = staffRoles.includes(role);
       const isGlobal = globalRoles.includes(role);
-      setIsHodScope(isHod);
+      setIsHodScope(isHod || isStaff);
       setIsGlobalAccess(isGlobal);
 
-      if (isHod && !isGlobal) {
+      if ((isHod || isStaff) && !isGlobal) {
         const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
         const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
         const uDeptId = u?.department_id ? Number(u.department_id) : null;
@@ -189,8 +191,8 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setError(err.message || 'Failed to fetch departments');
       const u = getUserSnapshot();
       const role = ((u?.role) || '').trim().toLowerCase();
-      const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(role);
-      if (isHod) {
+      const isRestrictedRole = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator', 'placement officer', 'staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'].includes(role);
+      if (isRestrictedRole) {
         const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
         const uDeptId = u?.department_id ? Number(u.department_id) : null;
         const matched = ALL_DEPARTMENTS_FALLBACK.filter(d => (uDeptId && d.id === uDeptId) || (uDeptCode && d.code === uDeptCode));

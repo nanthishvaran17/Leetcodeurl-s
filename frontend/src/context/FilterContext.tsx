@@ -1,3 +1,4 @@
+import { isGlobalAccessRole, isHodRole, isStaffRole, getUserCollege } from '../services/auth/authTypes';
 import React, { createContext, useContext, useState, useMemo, useCallback, ReactNode } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
@@ -9,6 +10,7 @@ type FilterState = {
   academicYear: string;
   attendanceStatus: string;
   searchQuery: string;
+  college: 'ALL' | 'NEC' | 'NCT';
 };
 
 type FilterContextType = FilterState & {
@@ -16,6 +18,7 @@ type FilterContextType = FilterState & {
   setAcademicYear: (year: string) => void;
   setAttendanceStatus: (status: string) => void;
   setSearchQuery: (query: string) => void;
+  setCollege: (college: 'ALL' | 'NEC' | 'NCT') => void;
   resetFilters: () => void;
   clearOneFilter: (key: keyof FilterState) => void;
   isFilteringActive: boolean;
@@ -24,69 +27,120 @@ type FilterContextType = FilterState & {
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
-/** Returns the HOD-scoped default department filter for the current user.
- *  HOD with 1 dept: that dept code. HOD with 2+ depts: 'MY_DEPARTMENTS'. Others: 'ALL'. */
-function getHodDefaultDepartment(): string {
+/** Returns the scoped default college filter for current user.
+ *  Admin/Management: 'ALL'. Staff/HOD/Student: their college ('NEC' or 'NCT'). */
+function getDefaultCollege(): 'ALL' | 'NEC' | 'NCT' {
   try {
     const raw = localStorage.getItem('user');
     if (!raw) return 'ALL';
     const user = JSON.parse(raw);
-    const role = ((user?.role) || '').trim().toLowerCase();
-    const isHod = role === 'hod' || role === 'department hod' || role === 'department_hod' || role === 'placement coordinator';
-    if (!isHod) return 'ALL';
-    const codes: string[] = user?.authorized_department_codes || [];
-    if (codes.length === 1) return codes[0];
-    if (codes.length > 1) return 'MY_DEPARTMENTS';
-    if (user?.department) return user.department;
-    if (user?.department_code) return user.department_code;
+    if (isGlobalAccessRole(user)) return 'ALL';
+    return getUserCollege(user);
+  } catch {
+    return 'ALL';
+  }
+}
+
+/** Returns the scoped default department filter for current user.
+ *  Staff: their assigned department. HOD: authorized codes / MY_DEPARTMENTS. Admin/Management: 'ALL'. */
+function getDefaultDepartment(): string {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return 'ALL';
+    const user = JSON.parse(raw);
+    if (isGlobalAccessRole(user)) return 'ALL';
+    if (isStaffRole(user)) {
+      return (user?.department_code || user?.department || 'ALL').trim();
+    }
+    if (isHodRole(user)) {
+      const codes: string[] = user?.authorized_department_codes || [];
+      if (codes.length === 1) return codes[0];
+      if (codes.length > 1) return 'MY_DEPARTMENTS';
+      if (user?.department) return user.department;
+      if (user?.department_code) return user.department_code;
+    }
     return 'ALL';
   } catch {
     return 'ALL';
   }
 }
 
-export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const hodDefault = getHodDefaultDepartment();
+function getHodDefaultDepartment(): string {
+  return getDefaultDepartment();
+}
 
-  const [department, setDepartment] = useState(hodDefault);
+export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const defaultCollege = getDefaultCollege();
+  const defaultDept = getDefaultDepartment();
+
+  const [department, setDepartmentState] = useState(defaultDept);
   const [academicYear, setAcademicYear] = useState('ALL');
   const [attendanceStatus, setAttendanceStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [college, setCollegeState] = useState<'ALL' | 'NEC' | 'NCT'>(defaultCollege);
 
-  const hodDefaultDepartment = getHodDefaultDepartment();
+  const hodDefaultDepartment = defaultDept;
+
+  const setCollege = useCallback((newCol: 'ALL' | 'NEC' | 'NCT') => {
+    try {
+      const raw = localStorage.getItem('user');
+      const user = raw ? JSON.parse(raw) : null;
+      if (!isGlobalAccessRole(user)) {
+        setCollegeState(defaultCollege);
+        return;
+      }
+    } catch {}
+    setCollegeState(newCol);
+  }, [defaultCollege]);
+
+  const setDepartment = useCallback((newDept: string) => {
+    try {
+      const raw = localStorage.getItem('user');
+      const user = raw ? JSON.parse(raw) : null;
+      if (isStaffRole(user)) {
+        setDepartmentState(defaultDept);
+        return;
+      }
+    } catch {}
+    setDepartmentState(newDept);
+  }, [defaultDept]);
 
   const resetFilters = useCallback(() => {
-    setDepartment(hodDefaultDepartment);
+    setDepartmentState(defaultDept);
     setAcademicYear('ALL');
     setAttendanceStatus('ALL');
     setSearchQuery('');
-  }, [hodDefaultDepartment]);
+    setCollegeState(defaultCollege);
+  }, [defaultDept, defaultCollege]);
 
   const clearOneFilter = useCallback((key: keyof FilterState) => {
     switch (key) {
-      case 'department': setDepartment(hodDefaultDepartment); break;
+      case 'department': setDepartmentState(defaultDept); break;
       case 'academicYear': setAcademicYear('ALL'); break;
       case 'attendanceStatus': setAttendanceStatus('ALL'); break;
       case 'searchQuery': setSearchQuery(''); break;
+      case 'college': setCollegeState(defaultCollege); break;
     }
-  }, [hodDefaultDepartment]);
+  }, [defaultDept, defaultCollege]);
 
   const isFilteringActive =
-    department !== hodDefaultDepartment ||
+    department !== defaultDept ||
     academicYear !== 'ALL' ||
     attendanceStatus !== 'ALL' ||
-    searchQuery.trim() !== '';
+    searchQuery.trim() !== '' ||
+    college !== defaultCollege;
 
   const ctxValue = useMemo(() => ({
     department, setDepartment,
     academicYear, setAcademicYear,
     attendanceStatus, setAttendanceStatus,
     searchQuery, setSearchQuery,
+    college, setCollege,
     resetFilters,
     clearOneFilter,
     isFilteringActive,
     hodDefaultDepartment
-  }), [department, academicYear, attendanceStatus, searchQuery, resetFilters, clearOneFilter, isFilteringActive, hodDefaultDepartment]);
+  }), [department, academicYear, attendanceStatus, searchQuery, college, resetFilters, clearOneFilter, isFilteringActive, hodDefaultDepartment]);
 
   return (
     <FilterContext.Provider value={ctxValue}>
@@ -132,6 +186,12 @@ export const useFilteredStudents = (): StudentEntity[] => {
 
       if (filters.academicYear !== 'ALL' && !matchesAcademicYear(student as any, filters.academicYear)) continue;
 
+      if (filters.college !== 'ALL') {
+        const studentCollege = ((student as any).college || 'NEC').toUpperCase();
+        if (studentCollege !== filters.college) continue;
+      }
+
+
       if (filters.attendanceStatus !== 'ALL') {
         const s = (student as any).contest_status || 'NOT_ATTENDED';
         if (filters.attendanceStatus === 'PUBLIC_ATTENDED' && s !== 'PUBLIC_ATTENDED') continue;
@@ -152,7 +212,7 @@ export const useFilteredStudents = (): StudentEntity[] => {
       const solvedB = b.stats?.total_solved ?? (b as any).total_solved ?? 0;
       return solvedB - solvedA;
     });
-  }, [storeVersion, allIds, filters.department, filters.academicYear, filters.attendanceStatus, debouncedSearch]);
+  }, [storeVersion, allIds, filters.department, filters.academicYear, filters.attendanceStatus, filters.college, debouncedSearch]);
 
   return filteredStudents;
 };

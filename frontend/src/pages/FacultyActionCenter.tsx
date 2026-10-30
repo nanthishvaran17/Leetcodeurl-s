@@ -754,10 +754,10 @@ const UpdateModal: React.FC<{
             </label>
             <div className="flex flex-wrap gap-2 mt-1">
               {[
-                { label: '📞 Contacted & Reminded', action: 'Spoke directly with student. Encouraged to resume LeetCode practice and attend Sunday contest.', status: 'In Progress' },
-                { label: '🎯 Assigned 2 Easy Problems', action: 'Assigned 2 beginner problems on Arrays/Strings to build confidence.', status: 'In Progress' },
-                { label: '🤝 1-on-1 Mentoring Conducted', action: 'Conducted 1-on-1 session to resolve coding doubts and debug setup issues.', status: 'In Progress' },
-                { label: '✅ Doubts Cleared & On-Track', action: 'Student confirmed setup is working and completed initial assigned tasks.', status: 'Resolved' },
+                { label: 'Contacted & Reminded', action: 'Spoke directly with student. Encouraged to resume LeetCode practice and attend Sunday contest.', status: 'In Progress' },
+                { label: 'Assigned 2 Easy Problems', action: 'Assigned 2 beginner problems on Arrays/Strings to build confidence.', status: 'In Progress' },
+                { label: '1-on-1 Mentoring Conducted', action: 'Conducted 1-on-1 session to resolve coding doubts and debug setup issues.', status: 'In Progress' },
+                { label: 'Doubts Cleared & On-Track', action: 'Student confirmed setup is working and completed initial assigned tasks.', status: 'Resolved' },
               ].map((tmpl, idx) => (
                 <button
                   key={idx}

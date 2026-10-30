@@ -437,12 +437,14 @@ api.get = async function (url: string, config?: any) {
     setCachedData(key, res.data); // Store only data in cache
     return res;
   }).catch(err => {
-      if (axios.isCancel(err)) {
-        console.log(`[Request Cancelled] ${url}`);
+      if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') {
+        // Request was cancelled (e.g. fast tab navigation, debounced search, or component unmount)
+        // STRICT GUARD: Must throw immediately and NEVER broadcast api_network_offline!
+        throw err;
       }
-      // OFFLINE RESILIENCE: If offline or network error, serve last known cached data if available
-      const isNetworkErr = err?.code === 'ERR_NETWORK' || !err?.response || (typeof navigator !== 'undefined' && !navigator.onLine);
-      if (isNetworkErr) {
+      // OFFLINE RESILIENCE: Only trigger offline event if the browser is genuinely offline
+      const isBrowserOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+      if (isBrowserOffline) {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('api_network_offline'));
         }

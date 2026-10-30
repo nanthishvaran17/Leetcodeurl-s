@@ -1483,7 +1483,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 {/* Android App Download */}
                 <a
                   href="/nandha-leetcode.apk"
-                  download="Nandha_LeetCode_Intelligence_v4.1.1_latest.apk"
+                  download="Nandha_LeetCode_Intelligence_v4.1.2_latest.apk"
                   className="p-2.5 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 border border-indigo-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"
                   title="Download Nandha LeetCode Android App (APK)"
                 >
@@ -1494,7 +1494,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
                         <span className="text-[11.5px] font-black text-slate-900 dark:text-white truncate">Android (.APK)</span>
-                        <span className="text-[8.5px] font-black px-1 py-0.1 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v4.1.1</span>
+                        <span className="text-[8.5px] font-black px-1 py-0.1 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">v4.1.2</span>
                       </div>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">Direct APK • 17 MB</p>
                     </div>
@@ -1506,8 +1506,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
                 {/* Windows Desktop App (.EXE) */}
                 <a
-                  href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/download/v4.1.1/Nandha_LeetCode_Intelligence_v4.1.1_Setup.exe"
-                  download="Nandha_LeetCode_Intelligence_v4.1.1_Setup.exe"
+                  href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/download/v4.1.2/Nandha_LeetCode_Intelligence_v4.1.2_Setup.exe"
+                  download="Nandha_LeetCode_Intelligence_v4.1.2_Setup.exe"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-cyan-500/10 to-emerald-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/25 flex items-center justify-between text-left transition-all active:scale-[0.98] group cursor-pointer shadow-xs"

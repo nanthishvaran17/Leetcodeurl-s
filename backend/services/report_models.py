@@ -31,6 +31,12 @@ class StudentRow(BaseModel):
     contest_easy: Optional[int] = 0
     contest_medium: Optional[int] = 0
     contest_hard: Optional[int] = 0
+    contest_solved: Optional[int] = 0
+    q1: Optional[int] = 0
+    q2: Optional[int] = 0
+    q3: Optional[int] = 0
+    q4: Optional[int] = 0
+    attendance_status: Optional[str] = "NOT_ATTENDED"
     contest_rating: Optional[float] = None
     rating: Optional[float] = None
     global_rank: Optional[int] = None

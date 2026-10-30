@@ -201,42 +201,51 @@ def fetch_normalized_students(
     except Exception as ex:
         logger.warning(f"[PUB_ATT_NOTE] {ex}")
 
-    # Precompute session-specific results if a historical session_id is provided
+    # Precompute session-specific results if a session_id is provided, or default to current week session
     session_result_map = {}
     historical_rating_map = {}
-    if session_id and str(session_id).lower() not in ("all", "none", "latest"):
-        try:
+    target_ws = None
+    try:
+        if session_id and str(session_id).lower() not in ("all", "none", "latest"):
             from backend.services.weekly_session_resolver import resolve_target_weekly_session
             target_ws = resolve_target_weekly_session(db, session_id)
-            sess_id_int = target_ws.id if target_ws else (int(session_id) if str(session_id).isdigit() else None)
-            if sess_id_int:
-                from backend.models import WeeklyPublicResult, WeeklyVirtualResult, PreviousWeekParticipationRecord
-                pub_recs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id_int).all()
-                for pr in pub_recs:
-                    session_result_map[pr.student_id] = pr
-                virt_recs = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == sess_id_int).all()
-                for vr in virt_recs:
-                    if vr.student_id not in session_result_map:
-                        session_result_map[vr.student_id] = vr
-                # Augment from authoritative PreviousWeekParticipationRecord
-                pw_recs = db.query(PreviousWeekParticipationRecord).filter(
-                    PreviousWeekParticipationRecord.session_id == sess_id_int,
-                    PreviousWeekParticipationRecord.is_active_version == True
-                ).all()
-                for pw in pw_recs:
-                    cur = session_result_map.get(pw.student_id)
-                    if not cur or getattr(cur, "participation_status", "") in ("PENDING", "UNKNOWN", "DATA_UNAVAILABLE") or (getattr(cur, "total_contest_solved", 0) == 0 and (pw.problems_solved or 0) > 0):
-                        session_result_map[pw.student_id] = pw
-            
-            if target_ws and target_ws.contest_name:
-                from backend.models import LeetCodeContestRatingHistory
-                h_rows = db.query(LeetCodeContestRatingHistory).filter(
-                    LeetCodeContestRatingHistory.contest_name == target_ws.contest_name
-                ).all()
-                for r in h_rows:
-                    historical_rating_map[r.student_id] = r
-        except Exception as ex:
-            logger.warning(f"[SESSION_RESULT_MAP_ERR] {ex}")
+        else:
+            from backend.services.weekly_session_resolver import resolve_weekly_sessions
+            resolved_info = resolve_weekly_sessions(db)
+            target_ws = resolved_info.get("current_week_session")
+            if not target_ws:
+                from backend.models import WeeklySession
+                target_ws = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+        sess_id_int = target_ws.id if target_ws else (int(session_id) if str(session_id or "").isdigit() else None)
+        if sess_id_int:
+            from backend.models import WeeklyPublicResult, WeeklyVirtualResult, PreviousWeekParticipationRecord
+            pub_recs = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id_int).all()
+            for pr in pub_recs:
+                session_result_map[pr.student_id] = pr
+            virt_recs = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == sess_id_int).all()
+            for vr in virt_recs:
+                if vr.student_id not in session_result_map:
+                    session_result_map[vr.student_id] = vr
+            # Augment from authoritative PreviousWeekParticipationRecord
+            pw_recs = db.query(PreviousWeekParticipationRecord).filter(
+                PreviousWeekParticipationRecord.session_id == sess_id_int,
+                PreviousWeekParticipationRecord.is_active_version == True
+            ).all()
+            for pw in pw_recs:
+                cur = session_result_map.get(pw.student_id)
+                if not cur or getattr(cur, "participation_status", "") in ("PENDING", "UNKNOWN", "DATA_UNAVAILABLE") or (getattr(cur, "total_contest_solved", 0) == 0 and (pw.problems_solved or 0) > 0):
+                    session_result_map[pw.student_id] = pw
+
+        if target_ws and target_ws.contest_name:
+            from backend.models import LeetCodeContestRatingHistory
+            h_rows = db.query(LeetCodeContestRatingHistory).filter(
+                LeetCodeContestRatingHistory.contest_name == target_ws.contest_name
+            ).all()
+            for r in h_rows:
+                historical_rating_map[r.student_id] = r
+    except Exception as ex:
+        logger.warning(f"[SESSION_RESULT_MAP_ERR] {ex}")
 
     filtered_students = []
     for s in raw_students:
@@ -351,52 +360,48 @@ def fetch_normalized_students(
         sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else ""
         prim_id = str(getattr(s, "primary_leetcode_id", "") or s.username or "").strip()
 
-        # Session-specific difficulty breakdown vs lifetime fallback
+        # Session-specific contest solve stats
+        q1_val = 0
+        q2_val = 0
+        q3_val = 0
+        q4_val = 0
+        c_solved = 0
         if sess_rec:
-            c_easy = 1 if (getattr(sess_rec, 'q1', False) or str(getattr(sess_rec, 'q1_display', '')).startswith('1')) else 0
-            c_med = (1 if (getattr(sess_rec, 'q2', False) or str(getattr(sess_rec, 'q2_display', '')).startswith('1')) else 0) + (1 if (getattr(sess_rec, 'q3', False) or str(getattr(sess_rec, 'q3_display', '')).startswith('1')) else 0)
-            c_hard = 1 if (getattr(sess_rec, 'q4', False) or str(getattr(sess_rec, 'q4_display', '')).startswith('1')) else 0
+            q1_val = 1 if (getattr(sess_rec, 'q1', False) or str(getattr(sess_rec, 'q1_display', '')).startswith('1')) else 0
+            q2_val = 1 if (getattr(sess_rec, 'q2', False) or str(getattr(sess_rec, 'q2_display', '')).startswith('1')) else 0
+            q3_val = 1 if (getattr(sess_rec, 'q3', False) or str(getattr(sess_rec, 'q3_display', '')).startswith('1')) else 0
+            q4_val = 1 if (getattr(sess_rec, 'q4', False) or str(getattr(sess_rec, 'q4_display', '')).startswith('1')) else 0
             c_solved = getattr(sess_rec, 'total_contest_solved', None)
             if c_solved is None:
                 c_solved = getattr(sess_rec, 'problems_solved', None)
             if c_solved is None:
                 c_solved = getattr(sess_rec, 'questions_solved', None)
             if c_solved is None:
-                c_solved = c_easy + c_med + c_hard
-        elif session_id and str(session_id).lower() not in ("all", "none", "latest"):
-            c_easy = 0
-            c_med = 0
-            c_hard = 0
-            c_solved = 0
-        else:
-            from backend.routes.reports import compute_contest_difficulty_breakdown
-            c_brk = compute_contest_difficulty_breakdown(contest_solved=total_solved)
-            c_easy = c_brk["contest_easy"]
-            c_med = c_brk["contest_medium"]
-            c_hard = c_brk["contest_hard"]
-            c_solved = total_solved
+                c_solved = q1_val + q2_val + q3_val + q4_val
+            c_solved = int(c_solved or 0)
+        c_easy = q1_val
+        c_med = q2_val + q3_val
+        c_hard = q4_val
 
-        if session_id and str(session_id).lower() not in ("all", "none", "latest"):
-            easy = c_easy
-            medium = c_med
-            hard = c_hard
-            total_solved = c_solved
-
-        if session_id and str(session_id).lower() not in ("all", "none", "latest"):
-            if sess_rec:
-                part_st = getattr(sess_rec, 'participation_type', None) or getattr(sess_rec, 'participation_status', None)
-                if part_st in ('PUBLIC', 'ATTENDED', 'PUBLIC_ATTENDED', 'VERIFIED', 'FINALIZED'):
-                    row_status = 'PUBLIC_ATTENDED'
-                elif part_st in ('VIRTUAL', 'VIRTUAL_ATTENDED'):
-                    row_status = 'VIRTUAL_ATTENDED'
-                elif part_st in ('NOT_ATTENDED', 'ABSENT'):
-                    row_status = 'NOT_ATTENDED'
-                else:
-                    row_status = 'PUBLIC_ATTENDED' if (c_solved and c_solved > 0) else ('NOT_ATTENDED' if getattr(s, 'username', None) else 'PENDING_USERNAME')
+        # Authoritative attendance status
+        if sess_rec:
+            part_st = str(getattr(sess_rec, 'participation_type', None) or getattr(sess_rec, 'participation_status', None) or "").upper()
+            if part_st in ('PUBLIC', 'ATTENDED', 'PUBLIC_ATTENDED', 'VERIFIED', 'FINALIZED', 'PUBLIC_LIVE', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'):
+                att_status = 'PUBLIC_ATTENDED'
+            elif part_st in ('VIRTUAL', 'VIRTUAL_ATTENDED', 'VIRTUAL_PRACTICE'):
+                att_status = 'VIRTUAL_ATTENDED'
+            elif part_st in ('NOT_ATTENDED', 'ABSENT'):
+                att_status = 'NOT_ATTENDED'
+            elif c_solved > 0:
+                att_status = 'PUBLIC_ATTENDED'
+            elif not s.username or len(str(s.username).strip()) < 2:
+                att_status = 'PENDING_USERNAME'
             else:
-                row_status = 'NOT_ATTENDED'
+                att_status = 'NOT_ATTENDED'
         else:
-            row_status = "VERIFIED" if is_verified else "UNVERIFIED"
+            att_status = 'PENDING_USERNAME' if (not s.username or len(str(s.username).strip()) < 2) else 'NOT_ATTENDED'
+
+        row_status = att_status if (sess_rec or (session_id and str(session_id).lower() not in ("all", "none"))) else ("VERIFIED" if is_verified else "UNVERIFIED")
 
         rows.append(StudentRow(
             s_no=idx,
@@ -420,6 +425,12 @@ def fetch_normalized_students(
             contest_easy=c_easy,
             contest_medium=c_med,
             contest_hard=c_hard,
+            contest_solved=c_solved,
+            q1=q1_val,
+            q2=q2_val,
+            q3=q3_val,
+            q4=q4_val,
+            attendance_status=att_status,
             contest_rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
             rating=round(effective_rating, 1) if (is_verified and effective_rating is not None) else None,
             global_rank=g_rank,

@@ -11,6 +11,7 @@ import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
+import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
 
@@ -23,7 +24,9 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const { refreshAllData } = useGlobalData();
   const { departments = [], isHodScope, isGlobalAccess } = useDepartments();
   const { user } = useAuth();
-  const isRestrictedHod = isHodScope && !isGlobalAccess;
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const isGlobalUser = isGlobalAccess || isGlobalAccessRole(user);
+  const isRestrictedHod = isHodScope && !isGlobalUser;
 
   const defaultDeptId = useMemo(() => {
     if (isRestrictedHod) {
@@ -88,13 +91,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   const { filteredAndSorted, counts } = useMemo(() => {
     return filterAndSortStudents(allStudents as StudentData[], {
+      college: isGlobalUser ? undefined : userCollege,
       department: selectedDept,
       academicYear: yearLevel,
       nameSearch: deferredNameSearch,
       performanceRange: solvedFilter,
       sortBy: sortBy,
     });
-  }, [allStudents, selectedDept, yearLevel, deferredNameSearch, solvedFilter, sortBy]);
+  }, [allStudents, isGlobalUser, userCollege, selectedDept, yearLevel, deferredNameSearch, solvedFilter, sortBy]);
 
   const totalStudents = counts.total;
 
@@ -373,7 +377,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         {/* Mobile View: Dedicated Sleek Filter Control Bar (< 768px) */}
         <div className="block md:hidden space-y-2.5 pt-2">
           {/* Mobile Name Search */}
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full">
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={nameSearch}
@@ -383,20 +388,17 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               }}
               autoComplete="off"
               spellCheck={false}
-              placeholder="Search name, reg no..."
-              className="w-full h-11 min-h-[44px] bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs font-bold py-2 pl-9 pr-8 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] shadow-xs focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
+              placeholder="Search by name, reg no, username..."
+              className="w-full h-11 min-h-[44px] bg-slate-50/80 dark:bg-navy-950/80 hover:bg-white dark:hover:bg-navy-900 focus:bg-white dark:focus:bg-navy-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-semibold py-2.5 pl-10 pr-10 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
             />
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
-              <Search className="w-4 h-4 stroke-[2.5]" />
-            </div>
             {nameSearch && (
               <button
                 type="button"
                 onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer flex items-center justify-center"
                 title="Clear search"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -526,7 +528,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             <label htmlFor="dept-dashboard-name-search" className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
-            <div className="relative flex items-center">
+            <div className="relative flex items-center w-full">
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 id="dept-dashboard-name-search"
                 type="text"
@@ -538,19 +541,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 autoComplete="off"
                 spellCheck={false}
                 placeholder="Search by name, reg no..."
-                className="w-full h-9 min-h-[36px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-[11px] sm:text-xs font-bold py-1.5 pl-8 pr-7 rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
+                className="w-full h-9 min-h-[36px] bg-slate-50/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs font-semibold py-1.5 pl-10 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 shadow-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
-              </div>
               {nameSearch && (
                 <button
                   type="button"
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 z-10 flex items-center px-2 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-navy-800 cursor-pointer transition-colors flex items-center justify-center"
                   title="Clear search"
                 >
-                  <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>

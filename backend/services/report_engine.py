@@ -170,6 +170,10 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         final_rid = res_data.get("reportId") or res_data.get("report_id") or unique_rid
         res_data["reportId"] = final_rid
         res_data["report_id"] = final_rid
+        if not res_data.get("title") and res_data.get("reportTitle"):
+            res_data["title"] = res_data.get("reportTitle")
+        elif not res_data.get("title"):
+            res_data["title"] = title
         res_data["department"] = config.department or "ALL"
         res_data["deptFilter"] = config.department or "ALL"
         res_data["year"] = config.year or "ALL"
@@ -396,9 +400,10 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             dept_breakdown[d]["verified"] += 1
         t_sol = s.total_solved or 0
         dept_breakdown[d]["total_solved"] += t_sol
+        c_sol = getattr(s, "contest_solved", 0) or 0
         if t_sol > 0:
             dept_breakdown[d]["active_solvers"] += 1
-        if t_sol >= 4:
+        if c_sol >= 4:
             dept_breakdown[d]["solvers_4"] += 1
 
     dept_summary_list = []
@@ -429,9 +434,10 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             year_breakdown[yr_key]["verified"] += 1
         t_sol = s.total_solved or 0
         year_breakdown[yr_key]["total_solved"] += t_sol
+        c_sol = getattr(s, "contest_solved", 0) or 0
         if t_sol > 0:
             year_breakdown[yr_key]["active_solvers"] += 1
-        if t_sol >= 4:
+        if c_sol >= 4:
             year_breakdown[yr_key]["solvers_4"] += 1
 
     year_summary_list = []
@@ -487,7 +493,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         b_active = sum(1 for s in band_students if (s.total_solved or 0) > 0)
         b_not_active = b_total - b_active
         b_solved = sum((s.total_solved or 0) for s in band_students)
-        b_4sol  = sum(1 for s in band_students if (s.total_solved or 0) >= 4)
+        b_4sol  = sum(1 for s in band_students if (getattr(s, "contest_solved", 0) or 0) >= 4)
         
         cutoff_band_breakdown.append({
             "band": band["label"],
@@ -519,9 +525,10 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         faculty_breakdown[key]["total_assigned"] += 1
         t_sol = s.total_solved or 0
         faculty_breakdown[key]["total_solved"] += t_sol
+        c_sol = getattr(s, "contest_solved", 0) or 0
         if t_sol > 0:
             faculty_breakdown[key]["active_solvers"] += 1
-        if t_sol >= 4:
+        if c_sol >= 4:
             faculty_breakdown[key]["solvers_4"] += 1
 
     faculty_summary_list = []
@@ -574,17 +581,14 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
 
     for s in students:
         st = (getattr(s, "status", "") or getattr(s, "attendance_status", "") or getattr(s, "attendance", "") or "").strip().upper()
-        is_part = st in ("PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "PUBLIC", "VIRTUAL", "PUBLIC_LIVE", "VIRTUAL_PRACTICE", "ATTENDED", "VERIFIED", "COMPLETED", "ATTENDED_SOLVED", "ATTENDED_ZERO") or (getattr(s, "contest_solved", None) is not None and getattr(s, "contest_solved", 0) >= 0)
         c_sol = getattr(s, "contest_solved", None)
         if c_sol is None:
-            c_sol = getattr(s, "solved", None)
-        if c_sol is None:
             c_sol = getattr(s, "total_contest_solved", None)
-        if c_sol is None:
-            c_sol = getattr(s, "total_solved", 0) or 0
-        c_sol = int(c_sol or 0)
+        c_sol = int(c_sol or 0) if c_sol is not None else 0
 
-        if is_part or c_sol > 0:
+        is_part = st in ("PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "PUBLIC", "VIRTUAL", "PUBLIC_LIVE", "VIRTUAL_PRACTICE", "ATTENDED", "ATTENDED_SOLVED", "ATTENDED_ZERO") or c_sol > 0
+
+        if is_part:
             if c_sol >= 4:
                 s_4 += 1
             elif c_sol == 3:

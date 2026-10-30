@@ -171,6 +171,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   // Apply Sort on top of effective Student List
   const sortedStudents = useMemo(() => {
+    // When explicit `students` prop is provided by parent component (which already manages its own filtering & sorting, such as DepartmentDashboard, LandingPage, PublicLeaderboardPage),
+    // preserve the parent's authoritative order directly!
+    if (students && Array.isArray(students)) {
+      return effectiveStudents;
+    }
     const list = [...effectiveStudents];
     list.sort((a, b) => {
       let valA: any = 0;
@@ -192,7 +197,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       return 0;
     });
     return list;
-  }, [effectiveStudents, sortConfig]);
+  }, [effectiveStudents, sortConfig, students]);
 
   const deferredSortedStudents = useDeferredValue(sortedStudents);
 

@@ -19,7 +19,12 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
-  Code2
+  Code2,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import {
   ParticipationRecord,
@@ -38,7 +43,75 @@ export interface ContestForensicModalProps {
   questionTitles?: { q1: string; q2: string; q3: string; q4: string } | null;
   isLiveContest?: boolean;
   onStudentClick?: (student: any) => void;
+  onNextStudent?: () => void;
+  onPrevStudent?: () => void;
+  hasNextStudent?: boolean;
+  hasPrevStudent?: boolean;
+  currentIndex?: number;
+  totalCount?: number;
 }
+
+
+// VS Code Dark+ Lightweight Tokenizer for Python3, Java, and C++
+const highlightCodeLine = (line: string, lang: 'python3' | 'java' | 'cpp') => {
+  if (!line) return <span>&nbsp;</span>;
+  
+  // Python comment
+  if (lang === 'python3' && line.trim().startsWith('#')) {
+    return <span className="text-emerald-500/80 italic">{line}</span>;
+  }
+  // C++ / Java comment
+  if ((lang === 'java' || lang === 'cpp') && (line.trim().startsWith('//') || line.trim().startsWith('/*') || line.trim().startsWith('*'))) {
+    return <span className="text-emerald-500/80 italic">{line}</span>;
+  }
+
+  // Tokenize regex
+  // 1: Comments 2: Strings 3: Words (keywords / identifiers) 4: Numbers
+  const regex = /(\/\/.*|#.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b[A-Za-z_][A-Za-z0-9_]*\b|\b\d+(?:\.\d+)?\b|[^A-Za-z0-9_\s"'#/]+|\s+)/g;
+  const tokens = line.match(regex) || [line];
+
+  const pyKeywords = new Set([
+    'def', 'class', 'return', 'if', 'elif', 'else', 'for', 'while', 'in', 'import', 'from',
+    'as', 'try', 'except', 'finally', 'with', 'pass', 'break', 'continue', 'yield', 'lambda',
+    'and', 'or', 'not', 'is', 'None', 'True', 'False', 'self', 'range', 'len', 'sum', 'min', 'max'
+  ]);
+
+  const jCppKeywords = new Set([
+    'public', 'private', 'protected', 'class', 'static', 'final', 'const', 'return', 'if', 'else',
+    'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'new', 'this', 'throw', 'throws',
+    'try', 'catch', 'finally', 'void', 'int', 'long', 'float', 'double', 'char', 'boolean', 'bool',
+    'String', 'vector', 'pair', 'unordered_map', 'map', 'set', 'unordered_set', 'queue', 'stack',
+    'auto', 'size_t', 'override', 'include', 'namespace', 'using', 'std', 'Solution'
+  ]);
+
+  const activeKeywords = lang === 'python3' ? pyKeywords : jCppKeywords;
+
+  return (
+    <>
+      {tokens.map((token, i) => {
+        if (token.startsWith('//') || token.startsWith('#')) {
+          return <span key={i} className="text-emerald-500/80 italic">{token}</span>;
+        }
+        if (token.startsWith('"') || token.startsWith("'")) {
+          return <span key={i} className="text-amber-300">{token}</span>;
+        }
+        if (/^\d+(\.\d+)?$/.test(token)) {
+          return <span key={i} className="text-teal-300 font-mono">{token}</span>;
+        }
+        if (activeKeywords.has(token)) {
+          if (['int', 'long', 'void', 'bool', 'boolean', 'float', 'double', 'char', 'String', 'vector', 'size_t', 'auto'].includes(token)) {
+            return <span key={i} className="text-cyan-400 font-semibold">{token}</span>;
+          }
+          if (['def', 'class', 'return', 'public', 'private', 'static', 'new', 'if', 'else', 'for', 'while', 'in'].includes(token)) {
+            return <span key={i} className="text-purple-400 font-bold">{token}</span>;
+          }
+          return <span key={i} className="text-indigo-400 font-semibold">{token}</span>;
+        }
+        return <span key={i} className="text-slate-100">{token}</span>;
+      })}
+    </>
+  );
+};
 
 export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
   record,
@@ -46,7 +119,13 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
   summary,
   questionTitles,
   isLiveContest = false,
-  onStudentClick
+  onStudentClick,
+  onNextStudent,
+  onPrevStudent,
+  hasNextStudent = false,
+  hasPrevStudent = false,
+  currentIndex,
+  totalCount
 }) => {
   const dragControls = useDragControls();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -56,6 +135,44 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
   const [problemSolutions, setProblemSolutions] = useState<Record<string, { python3: string; java: string; cpp: string; title?: string; sub_id?: string; student_lang?: string; runtime?: string; memory?: string; verbatim_code?: string; is_verbatim?: boolean }>>({});
   const [loadingSolId, setLoadingSolId] = useState<string | null>(null);
   const [showRefLang, setShowRefLang] = useState<Record<string, boolean>>({});
+
+  const [fullscreenCodeId, setFullscreenCodeId] = useState<string | null>(null);
+
+  // ArrowLeft & ArrowRight navigation keyboard listener
+  useEffect(() => {
+    const handleKeyNav = (e: KeyboardEvent) => {
+      // Don't trigger if user is focused inside an input or textarea
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.key === 'ArrowLeft' && hasPrevStudent && onPrevStudent) {
+        e.preventDefault();
+        onPrevStudent();
+      } else if (e.key === 'ArrowRight' && hasNextStudent && onNextStudent) {
+        e.preventDefault();
+        onNextStudent();
+      }
+    };
+    window.addEventListener('keydown', handleKeyNav);
+    return () => window.removeEventListener('keydown', handleKeyNav);
+  }, [hasPrevStudent, hasNextStudent, onPrevStudent, onNextStudent]);
+
+  const handleDownloadCode = (code: string, lang: 'python3' | 'java' | 'cpp', qTitle: string) => {
+    if (!code) return;
+    const ext = lang === 'python3' ? 'py' : lang === 'cpp' ? 'cpp' : 'java';
+    const cleanTitle = (qTitle || 'solution').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const cleanReg = (record?.reg_no || 'student').replace(/[^a-z0-9]+/gi, '_');
+    const filename = `${cleanReg}_${cleanTitle}.${ext}`;
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    if (window.navigator?.vibrate) window.navigator.vibrate(15);
+  };
+
 
   // Auto-hide MobileBottomNav while Forensic Modal is active to prevent overlap
   useEffect(() => {
@@ -642,14 +759,48 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                 </div>
 
                 {/* Sleek Circular Close Button */}
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition active:scale-90 flex items-center justify-center cursor-pointer border border-slate-200/60 dark:border-navy-700 shrink-0"
-                  title="Close Sheet"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Next / Previous Student Arrow Navigation */}
+                  {(onPrevStudent || onNextStudent) && (
+                    <div className="flex items-center bg-slate-100/90 dark:bg-navy-800/90 p-0.5 sm:p-1 rounded-2xl border border-slate-200/70 dark:border-navy-700/80 shadow-2xs">
+                      <button
+                        type="button"
+                        disabled={!hasPrevStudent}
+                        onClick={onPrevStudent}
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-navy-700 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer active:scale-95 shadow-2xs"
+                        title="Previous Student (ArrowLeft ←)"
+                        aria-label="Previous Student"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      {currentIndex !== undefined && totalCount !== undefined && (
+                        <span className="text-[10px] sm:text-[11px] font-mono font-black px-1.5 sm:px-2 text-slate-700 dark:text-slate-200 select-none whitespace-nowrap">
+                          {currentIndex} <span className="opacity-40">/</span> {totalCount}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        disabled={!hasNextStudent}
+                        onClick={onNextStudent}
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-navy-700 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer active:scale-95 shadow-2xs"
+                        title="Next Student (ArrowRight →)"
+                        aria-label="Next Student"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Sleek Circular Close Button */}
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition active:scale-90 flex items-center justify-center cursor-pointer border border-slate-200/60 dark:border-navy-700 shrink-0"
+                    title="Close Sheet (Esc)"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Scrollable Content Body */}
@@ -1056,13 +1207,13 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
 
                                       {(curSol as any)?.runtime && (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 font-mono text-[10.5px] font-bold border border-slate-200 dark:border-navy-800">
-                                          ⚡ {(curSol as any).runtime}
+                                          Runtime: {(curSol as any).runtime}
                                         </span>
                                       )}
 
                                       {(curSol as any)?.memory && (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 font-mono text-[10.5px] font-bold border border-slate-200 dark:border-navy-800">
-                                          💾 {(curSol as any).memory}
+                                          Memory: {(curSol as any).memory}
                                         </span>
                                       )}
 

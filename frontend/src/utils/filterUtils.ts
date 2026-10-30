@@ -600,10 +600,18 @@ export function sortStudents(students: StudentData[], sortBy: SortByKey): Studen
       });
 
     case 'name_asc':
-      return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      return sorted.sort((a, b) => {
+        const nameA = (a.name || (a as any).student_name || '').trim();
+        const nameB = (b.name || (b as any).student_name || '').trim();
+        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+      });
 
     case 'name_desc':
-      return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      return sorted.sort((a, b) => {
+        const nameA = (a.name || (a as any).student_name || '').trim();
+        const nameB = (b.name || (b as any).student_name || '').trim();
+        return nameB.localeCompare(nameA, undefined, { sensitivity: 'base' });
+      });
 
     case 'streak':
       return sorted.sort((a, b) => {

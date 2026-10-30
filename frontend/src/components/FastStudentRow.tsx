@@ -165,7 +165,13 @@ export const FastStudentRow = memo(({
   const totalSolved = (student && isVerified) ? (student.stats?.total_solved ?? 0) : null;
   const isSolver = isVerified && (totalSolved ?? 0) > 0;
 
-  const effectiveCollegeRank = isSolver ? index + 1 : undefined;
+  const collegeRankNum = (student?.college_rank != null && Number(student.college_rank) > 0)
+    ? Number(student.college_rank)
+    : (student?.rank != null && Number(student.rank) > 0)
+      ? Number(student.rank)
+      : undefined;
+
+  const effectiveCollegeRank = collegeRankNum ?? (isSolver ? index + 1 : undefined);
   const isSyncing = syncState === 'fetching' || Boolean(isRefreshing);
 
   const [flashSolved, setFlashSolved] = React.useState(false);
@@ -300,7 +306,11 @@ export const FastStudentRow = memo(({
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono min-w-0 flex-1">
                 <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">{student.reg_no}</span>
                 <span className="shrink-0 text-slate-300 dark:text-slate-600">•</span>
-                <span className="px-1 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-[9.5px] border border-emerald-500/20 shrink-0">
+                <span className={`px-1.5 py-0.5 rounded-md font-bold text-[9.5px] shrink-0 border ${
+                  ((student.college || 'NEC').toUpperCase() === 'NCT')
+                    ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
+                    : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                }`}>
                   {student.college || 'NEC'}
                 </span>
                 <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20 shrink-0 truncate max-w-[130px]">
@@ -460,7 +470,11 @@ export const FastStudentRow = memo(({
 
         {/* 5. Dept / Year */}
         <div className="px-3 text-[11px] font-bold flex items-center justify-start gap-1 self-center my-auto overflow-hidden min-w-0">
-          <span className="text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/40 shrink-0 font-mono">
+          <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 font-mono border ${
+            ((student.college || 'NEC').toUpperCase() === 'NCT')
+              ? 'text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border-teal-200/60 dark:border-teal-800/40'
+              : 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-800/40'
+          }`}>
             {student.college || 'NEC'}
           </span>
           <span className="text-slate-900 dark:text-white truncate font-extrabold">{getDeptCode(student)}</span>

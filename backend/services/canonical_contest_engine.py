@@ -928,6 +928,7 @@ def _build_canonical_contest_dataset_internal(
             "name": name,
             "dept": dept_norm,
             "year": yr_norm,
+            "college": getattr(student, "college", "NEC") or "NEC",
             "username": username,
             "leetcode_username": username,
             "accommodation": getattr(student, "accommodation", "") or "—",

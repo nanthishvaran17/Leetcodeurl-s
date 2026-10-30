@@ -47,6 +47,8 @@ import { DownloadState } from '../services/download/downloadTypes';
 import { normalizeAcademicYear } from '../utils/filterUtils';
 import { ExportStatus } from '../components/ExportStatus';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { useAuth } from '../context/AuthContext';
+import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
 import { GlobalFilter } from '../components/GlobalFilter';
 
 interface StudentIssue {
@@ -122,6 +124,16 @@ export const StudentDataIssuesPage: React.FC = () => {
 
   // Filter States
   const { departments } = useDepartments();
+  const { user } = useAuth();
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const isGlobalAccess = isGlobalAccessRole(user);
+  const [selectedCollege, setSelectedCollege] = useState<string>(() => isGlobalAccess ? 'all' : userCollege);
+
+  useEffect(() => {
+    if (!isGlobalAccess && selectedCollege.toUpperCase() !== userCollege.toUpperCase()) {
+      setSelectedCollege(userCollege);
+    }
+  }, [isGlobalAccess, userCollege, selectedCollege]);
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedIssue, setSelectedIssue] = useState<string>('all');
@@ -166,7 +178,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   // Auto-reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedDept, selectedYear, selectedIssue, searchQuery]);
+  }, [selectedCollege, selectedDept, selectedYear, selectedIssue, searchQuery]);
 
   // Memoized filter options for GlobalFilter
   const deptFilterOptions = useMemo(() => [
@@ -248,7 +260,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   useEffect(() => {
     fetchSummaryData();
     fetchStudentsData();
-  }, [selectedDept, selectedYear, selectedIssue, searchQuery]);
+  }, [selectedCollege, selectedDept, selectedYear, selectedIssue, searchQuery]);
 
   const fetchSummaryData = async () => {
     try {
@@ -268,6 +280,7 @@ export const StudentDataIssuesPage: React.FC = () => {
     try {
       const res = await api.get('/data-issues/students', {
         params: {
+          college: selectedCollege,
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
@@ -276,7 +289,9 @@ export const StudentDataIssuesPage: React.FC = () => {
         }
       });
       if (res.data && res.data.students) {
-        setStudents(res.data.students);
+        const raw = res.data.students;
+        const filtered = raw.filter((s: any) => selectedCollege === 'all' || ((s.college || 'NEC') as string).toUpperCase() === selectedCollege.toUpperCase());
+        setStudents(filtered);
       }
     } catch (err) {
       console.error("Failed to fetch students issues list:", err);
@@ -302,7 +317,7 @@ export const StudentDataIssuesPage: React.FC = () => {
     };
     window.addEventListener('pull_to_refresh', handlePull);
     return () => window.removeEventListener('pull_to_refresh', handlePull);
-  }, [selectedDept, selectedYear, selectedIssue, searchQuery]);
+  }, [selectedCollege, selectedDept, selectedYear, selectedIssue, searchQuery]);
 
   // Copy canonical URL to clipboard
   const handleCopyUrl = (student: StudentIssue) => {
@@ -680,13 +695,14 @@ export const StudentDataIssuesPage: React.FC = () => {
             <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">
               Filter &amp; Search Ledger
             </h3>
-            {(selectedDept !== 'all' || selectedYear !== 'all' || selectedIssue !== 'all' || searchQuery) && (
+            {(selectedCollege !== 'all' || selectedDept !== 'all' || selectedYear !== 'all' || selectedIssue !== 'all' || searchQuery) && (
               <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0" />
             )}
           </div>
 
           <button
             onClick={() => {
+              setSelectedCollege('all');
               setSelectedDept('all');
               setSelectedYear('all');
               setSelectedIssue('all');
@@ -699,8 +715,41 @@ export const StudentDataIssuesPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Department and Academic Year Pill Selectors (1-Tap Fast Filter) */}
+        {/* College, Department, and Academic Year Pill Selectors (1-Tap Fast Filter) */}
         <div className="flex flex-col gap-2 pt-0.5 pb-1">
+          {/* COLLEGE PILLS */}
+          {/* College Selector — Admin & Management only */}
+          {isGlobalAccess && (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+              <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">College:</span>
+              {[
+                { id: 'all', label: 'All Colleges' },
+                { id: 'NEC', label: 'NEC (Nandha Engineering)' },
+                { id: 'NCT', label: 'NCT (Nandha Tech)' }
+              ].map(c => {
+                const isSelected = selectedCollege.toLowerCase() === c.id.toLowerCase();
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCollege(c.id)}
+                    className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? c.id === 'NCT'
+                          ? 'bg-teal-600 text-white shadow-xs'
+                          : c.id === 'NEC'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* DEPT PILLS */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
             <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
@@ -1709,7 +1758,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-1">
                   <div className="text-slate-500 dark:text-slate-400">Active Preset Configuration:</div>
                   <div className="font-bold text-slate-900 dark:text-white">
-                    Dept: {getPresetFilterLabel(selectedDept, deptFilterOptions, 'All Departments')} • Year: {getPresetFilterLabel(selectedYear, yearFilterOptions, 'All Academic Years')} • Issue: {getPresetFilterLabel(selectedIssue, issueFilterOptions, 'All Categories')}
+                    College: {selectedCollege.toUpperCase()} • Dept: {getPresetFilterLabel(selectedDept, deptFilterOptions, 'All Departments')} • Year: {getPresetFilterLabel(selectedYear, yearFilterOptions, 'All Academic Years')} • Issue: {getPresetFilterLabel(selectedIssue, issueFilterOptions, 'All Categories')}
                   </div>
                 </div>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { 
   ShieldCheck, CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
   Layers, Search, FileText, AlertCircle, ExternalLink, Clock,
@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
+import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
 import { useDepartments } from '../contexts/DepartmentContext';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -69,12 +71,22 @@ interface DataQualityPageProps {
 export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab, onSelectStudent }) => {
   const { notify } = useNotification();
   const { departments } = useDepartments();
+  const { user } = useAuth();
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const isGlobalAccess = isGlobalAccessRole(user);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [lastAuditTime, setLastAuditTime] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCollege, setSelectedCollege] = useState<'ALL' | 'NEC' | 'NCT'>(() => isGlobalAccess ? 'ALL' : userCollege);
+
+  useEffect(() => {
+    if (!isGlobalAccess && selectedCollege !== userCollege) {
+      setSelectedCollege(userCollege);
+    }
+  }, [isGlobalAccess, userCollege, selectedCollege]);
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<any | null>(null);
@@ -91,11 +103,11 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, filterCategory, selectedDept, selectedYear]);
+  }, [searchQuery, filterCategory, selectedCollege, selectedDept, selectedYear]);
 
   useEffect(() => {
     fetchQualityData(false);
-  }, [selectedDept, selectedYear]);
+  }, [selectedCollege, selectedDept, selectedYear]);
 
   // Pull-to-refresh listener: re-run quality audit
   useEffect(() => {
@@ -104,7 +116,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
     };
     window.addEventListener('pull_to_refresh', handlePull);
     return () => window.removeEventListener('pull_to_refresh', handlePull);
-  }, [selectedDept, selectedYear]);
+  }, [selectedCollege, selectedDept, selectedYear]);
 
   const fetchQualityData = async (force: boolean = false) => {
     if (force) {
@@ -117,6 +129,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
     try {
       const res = await api.get('/analytics/data-quality', {
         params: {
+          college: selectedCollege,
           dept: selectedDept,
           year: selectedYear,
           ...(force ? { force_refresh: true } : {})
@@ -256,7 +269,22 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
       {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar */}
       <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5 sm:gap-4 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-5 flex-1 w-full max-w-3xl min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5 flex-1 w-full max-w-4xl min-w-0">
+          {/* College Campus Filter — Admin & Management only */}
+          {isGlobalAccess && (
+            <GlobalFilter
+              label="College Campus"
+              value={selectedCollege}
+              onChange={(val) => setSelectedCollege(val as 'ALL' | 'NEC' | 'NCT')}
+              dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
+              options={[
+                { value: "ALL", label: "All Colleges", pillText: "ALL" },
+                { value: "NEC", label: "Nandha Engineering College (NEC)", pillText: "NEC" },
+                { value: "NCT", label: "Nandha College of Technology (NCT)", pillText: "NCT" }
+              ]}
+            />
+          )}
+
           {/* Department Filter */}
           <PremiumDepartmentSelect
             selectedDept={selectedDept}
@@ -283,10 +311,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
           />
         </div>
 
-        {(selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
+        {((isGlobalAccess ? selectedCollege !== 'ALL' : false) || selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
           <button
             type="button"
-            onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); }}
+            onClick={() => { setSelectedCollege(isGlobalAccess ? 'ALL' : userCollege); setSelectedDept('ALL'); setSelectedYear('ALL'); }}
             className="text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-2 min-h-[38px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />

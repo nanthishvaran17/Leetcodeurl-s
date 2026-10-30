@@ -14,10 +14,13 @@ import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel, normalizeYear } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';
+import { getUserCollege } from '../services/auth/authTypes';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { triggerHaptic } from '../utils/haptics';
+import { playContestAlertChime, playCelebrationChime } from '../utils/audioChime';
+import { triggerConfetti } from '../utils/confettiCelebration';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 import { normalizeDepartment } from '../utils/filterUtils';
@@ -542,6 +545,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const userRoleClean = (user?.role || '').trim().toLowerCase();
   const isUserHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRoleClean);
   const isUserGlobal = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(userRoleClean);
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
   const initialDeptFilter = useMemo(() => {
     if (isUserHod && !isUserGlobal) {
       const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
@@ -556,6 +560,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
     return 'ALL';
   }, [isUserHod, isUserGlobal, user]);
+  const [selectedCollegeFilter, setSelectedCollegeFilter] = useState<'ALL' | 'NEC' | 'NCT'>(() => {
+    return isUserGlobal ? 'ALL' : userCollege;
+  });
+
+  useEffect(() => {
+    if (!isUserGlobal && selectedCollegeFilter !== userCollege) {
+      setSelectedCollegeFilter(userCollege);
+    }
+  }, [isUserGlobal, userCollege, selectedCollegeFilter]);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>(() => initialDeptFilter);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
 
@@ -955,6 +968,36 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       setIsPerformingAdminAction(false);
     }
   };
+
+
+  // Sunday Live Contest Milestone & Snapshot Autopilot Alert System
+  const alertedMilestonesRef = useRef<Set<number>>(new Set());
+  const snapshotAlertFiredRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (!matrixRows || matrixRows.length === 0) return;
+    const solvers = matrixRows.filter(r => (Number(r.total_contest_solved ?? r.total_solved) > 0)).length;
+    const milestones = [25, 50, 75, 100, 150, 200, 300, 400, 500];
+
+    for (const m of milestones) {
+      if (solvers >= m && !alertedMilestonesRef.current.has(m)) {
+        alertedMilestonesRef.current.add(m);
+        try { playContestAlertChime(); } catch (_) {}
+        if (m >= 50) {
+          try { triggerConfetti(); } catch (_) {}
+        }
+        setNotification({
+          isOpen: true,
+          type: 'success',
+          title: `Contest Milestone: ${m}+ Solvers!`,
+          message: `Phenomenal performance! ${solvers} students have solved problems in this Sunday Contest session.`
+        });
+        break;
+      }
+    }
+  }, [matrixRows]);
+
+
 
   // Student Edit / Delete state
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
@@ -1418,7 +1461,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const yearParam = encodeURIComponent(selectedYearFilter || 'ALL');
     const attParam = encodeURIComponent(selectedAttendanceFilter || 'ALL');
     const url = `/reports/download-contest-single-sheet?session_id=${selectedSessionId}&format=${format}&dept=${deptParam}&year=${yearParam}&attendance=${attParam}`;
-    const selSession = sessionsList.find(s => s.sessionId === selectedSessionId) || activeSessionObj;
+    const selSession = sessionsList.find(s => Number(s.sessionId) === Number(selectedSessionId)) || currentSession;
 
     const contestName = selSession?.contestName || 'Weekly Contest';
     const match = contestName.match(/\d+/);
@@ -1696,7 +1739,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Memoized Dynamic Statistics Calculation with Fast Tiered Fallback
   const stats = useMemo(() => {
-    const isScopeActive = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
+    const isScopeActive = (isUserGlobal ? selectedCollegeFilter !== 'ALL' : false) || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
 
     let calcAttended = 0;
     let calcVirtual = 0;
@@ -1912,6 +1955,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
       const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED' || (!isAttended && !isError);
 
+      if (selectedCollegeFilter !== 'ALL') {
+        const studentCollege = ((r.college || 'NEC') as string).toUpperCase();
+        if (studentCollege !== selectedCollegeFilter) return false;
+      }
       if (selectedDeptFilter !== 'ALL') {
         const filterNorm = normalizeDepartment(selectedDeptFilter);
         const studentNorm = normalizeDepartment(r.dept || r.department || r.department_code || r.department_id);
@@ -1930,7 +1977,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       return true;
     });
-  }, [matrixRows, allSessionRows, cachedStudents, selectedAttendanceFilter, selectedDeptFilter, selectedYearFilter]);
+  }, [matrixRows, allSessionRows, cachedStudents, selectedAttendanceFilter, selectedCollegeFilter, selectedDeptFilter, selectedYearFilter]);
 
   // Handle Sort Click
   const handleSort = (key: string) => {
@@ -1974,6 +2021,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     return !status.includes('SCHEDULE');
   });
   const activeSessionObj = displaySessions.find(s => Number(s.sessionId) === Number(selectedSessionId)) || currentSession;
+
+  useEffect(() => {
+    if (activeSessionObj?.status === 'COMPLETED' || activeSessionObj?.status === 'ARCHIVED') {
+      if (!snapshotAlertFiredRef.current) {
+        snapshotAlertFiredRef.current = true;
+        try { playCelebrationChime(); } catch (_) {}
+      }
+    }
+  }, [activeSessionObj?.status]);
   const statusColor = activeSessionObj?.status === 'LIVE' ? 'bg-emerald-500 text-white animate-pulse' :
     activeSessionObj?.status === 'FINALIZED' ? 'bg-indigo-600 text-white' : 'bg-amber-500 text-white';
 
@@ -2863,9 +2919,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all shadow-2xs touch-manipulation active:scale-95"
             >
               <span>{showMobileContestFilters ? 'Hide Filters' : 'Filter Options'}</span>
-              {([selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
+              {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
                 <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center">
-                  {[selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length}
+                  {[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length}
                 </span>
               )}
               <ChevronDown size={13} className={`transition-transform duration-200 ${showMobileContestFilters ? 'rotate-180' : ''}`} />
@@ -3215,9 +3271,34 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
 
-        {/* Row 2: Sleek 4-Column Filter Bar (Collapsible on mobile) */}
+        {/* Row 2: Sleek 5-Column Filter Bar (Collapsible on mobile) */}
         <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 items-end">
+          {/* College Campus Filter — Admin & Management only */}
+          {isUserGlobal && (() => {
+            const collegeOptions: GlobalFilterOption[] = [
+              { value: 'ALL', label: 'All Colleges', pillText: 'ALL' },
+              { value: 'NEC', label: 'Nandha Engineering (NEC)', pillText: 'NEC' },
+              { value: 'NCT', label: 'Nandha Tech (NCT)', pillText: 'NCT' },
+            ];
+
+            return (
+              <div className="space-y-1 min-w-0 w-full">
+                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+                  College Campus
+                </label>
+                <GlobalFilter
+                  value={selectedCollegeFilter}
+                  onChange={(val) => setSelectedCollegeFilter(val as 'ALL' | 'NEC' | 'NCT')}
+                  options={collegeOptions}
+                  icon={<Building2 className="w-4 h-4 text-teal-500" />}
+                  dropdownWidth="w-64 sm:w-72"
+                  placeholder="All Colleges"
+                />
+              </div>
+            );
+          })()}
+
           {/* Department Filter */}
           {(() => {
             const roleClean = (user?.role || '').trim().toLowerCase();
@@ -3337,20 +3418,21 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <button
               type="button"
               onClick={() => {
-                setSelectedDeptFilter('ALL');
+                setSelectedCollegeFilter(isUserGlobal ? 'ALL' : userCollege);
+                setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
                 setSelectedYearFilter('ALL');
                 setSelectedAttendanceFilter('ALL');
                 setSearchTerm('');
                 setDebouncedSearchTerm('');
               }}
               className={`w-full h-10 min-h-[40px] flex items-center justify-center space-x-2 px-4 rounded-xl text-xs font-black border transition-all cursor-pointer active:scale-95 shadow-xs ${
-                (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                (selectedCollegeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
                   ? 'bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 ring-1 ring-rose-500/20'
                   : 'bg-slate-50 dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-navy-700 hover:border-slate-300'
               }`}
             >
               <RotateCcw className={`w-3.5 h-3.5 ${
-                (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                (selectedCollegeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
                   ? 'text-rose-600 dark:text-rose-400'
                   : 'text-slate-400'
               }`} />
@@ -3360,9 +3442,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
 
         {/* Mobile Active Filter Chips */}
-        {([selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
+        {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
           <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
             <span className="text-[10px] font-extrabold uppercase text-slate-400">Active:</span>
+            {isUserGlobal && selectedCollegeFilter !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                College: {selectedCollegeFilter}
+                <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
+              </span>
+            )}
             {selectedDeptFilter !== 'ALL' && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
                 Dept: {selectedDeptFilter}

@@ -31,6 +31,7 @@ export interface StudentEntity {
   contest_global_ranking?: number | null;
   public_profile_ranking?: number | null;
   global_rank?: number | null;
+  college?: string;
   college_rank?: number;
   dept_rank?: number;
   year_rank?: number;

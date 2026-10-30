@@ -39,6 +39,7 @@ import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
 import { useAuth } from '../context/AuthContext';
+import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
 import { downloadManager } from '../services/download/downloadManager';
 const ContestForensicModal = lazy(() => import('./ContestForensicModal').then(m => ({ default: m.ContestForensicModal })));
 import { playNotificationChime, playCelebrationChime } from '../utils/audioChime';
@@ -76,6 +77,7 @@ export interface ParticipationRecord {
   reg_no: string;
   department_name: string | null;
   department?: string | null;
+  college?: string;
   year_level: string | null;
   participation_type: 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME';
   official_rank: number | null;
@@ -541,6 +543,15 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [error, setError] = useState<string | null>(null);
   const [questionTitles, setQuestionTitles] = useState<{q1: string, q2: string, q3: string, q4: string} | null>(null);
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
+  const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const isGlobalAccess = isGlobalAccessRole(user);
+  const [selectedCollegeFilter, setSelectedCollegeFilter] = useState<'ALL' | 'NEC' | 'NCT'>(() => isGlobalAccess ? 'ALL' : userCollege);
+
+  useEffect(() => {
+    if (!isGlobalAccess && selectedCollegeFilter !== userCollege) {
+      setSelectedCollegeFilter(userCollege);
+    }
+  }, [isGlobalAccess, userCollege, selectedCollegeFilter]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
@@ -723,7 +734,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         if (forceSync) {
           const keys = Object.keys(localStorage);
           for (const k of keys) {
-            if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v33')) {
+            if (k.startsWith('cache_prev_panel_') && !k.endsWith('_v34')) {
               localStorage.removeItem(k);
             }
           }
@@ -731,17 +742,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         if (isFacultyRole) {
           localStorage.removeItem(`cache_prev_panel_${latestSessionId}`);
         }
-        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v33`;
+        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v34`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v33' && parsed.summary) {
+          if (parsed.v === 'v34' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           } else {
             localStorage.removeItem(localKey);
           }
-          if (parsed.v === 'v33' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+          if (parsed.v === 'v34' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
             const safeRecords = parsed.records;
             setRecords(safeRecords);
           }
@@ -942,6 +953,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             student_name: row.name || row.student_name || row.studentName || 'Student',
             reg_no: row.reg_no || row.register_number || row.regNo || '',
             department_name: row.dept || row.department || row.department_name || 'CSE',
+            college: row.college || 'NEC',
             year_level: row.year || row.year_level || '',
             participation_type: isMissingHandle ? 'MISSING_LEETCODE_USERNAME'
               : (finalSolved > 0) ? (pStatusStr.includes('VIRTUAL') ? 'VIRTUAL' : 'PUBLIC')
@@ -990,8 +1002,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 }
               : summaryData;
 
-            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v33`, JSON.stringify({
-              v: 'v33',
+            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v34`, JSON.stringify({
+              v: 'v34',
               summary: {
                 session_id: scopedSummary.sessionId,
                 contest_slug: scopedSummary.contestId || `weekly-contest-${scopedSummary.contestNumber}`,
@@ -1304,7 +1316,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   // Reset page to 1 whenever active filters change
   useEffect(() => {
     setPage(1);
-  }, [selectedTypeFilter, selectedDeptFilter, selectedYearFilter, searchTerm]);
+  }, [selectedTypeFilter, selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, searchTerm]);
 
   const filteredRecords = useMemo(() => {
     const isTypeAll = selectedTypeFilter === 'ALL';
@@ -1317,6 +1329,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     const hasSearch = query !== '';
 
     return records.filter((r) => {
+
+      if (selectedCollegeFilter !== 'ALL') {
+        const studentCollege = ((r as any).college || 'NEC').toUpperCase().trim();
+        if (studentCollege !== selectedCollegeFilter) return false;
+      }
       if (!isTypeAll) {
         if (getParticipationCategory(r) !== selectedTypeFilter) return false;
       }
@@ -1347,7 +1364,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
       return true;
     });
-  }, [records, selectedTypeFilter, selectedDeptFilter, selectedYearFilter, deferredSearchTerm, isFacultyRole]);
+  }, [records, selectedTypeFilter, selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, deferredSearchTerm, isFacultyRole]);
 
   // Dynamically calculate metrics directly from real-time records state
   const dynamicMetrics = useMemo(() => {
@@ -1360,6 +1377,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       TOTAL_STUDENTS: 0,
     };
     records.forEach(r => {
+      if (selectedCollegeFilter !== 'ALL') {
+        const studentCollege = ((r as any).college || 'NEC').toUpperCase().trim();
+        if (studentCollege !== selectedCollegeFilter) return;
+      }
       if (selectedDeptFilter !== 'ALL') {
         const info = getDeptInfo(r.department_name || '');
         const dName = (r.department_name || '').toUpperCase().trim();
@@ -1390,7 +1411,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       return summary.metrics;
     }
     return counts;
-  }, [records, summary?.metrics, selectedDeptFilter, selectedYearFilter, isFacultyRole]);
+  }, [records, summary?.metrics, selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, isFacultyRole]);
 
   if (loading && !summary) {
     return (
@@ -1637,6 +1658,36 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
           {/* Department and Academic Year Selector Boxes */}
           <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                        {/* College Campus Segmented Pill — Admin & Management only */}
+            {isGlobalAccess && (
+              <div className="col-span-2 sm:col-span-1 flex items-center bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-center">
+                {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
+                  const isSelected = selectedCollegeFilter === col;
+                  return (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setSelectedCollegeFilter(col);
+                      }}
+                      className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
+                        isSelected
+                          ? col === 'NCT'
+                            ? 'bg-teal-600 text-white shadow-xs'
+                            : col === 'NEC'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-brand-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {col}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* 1. Department Box */}
             {(() => {
               const currentObj = deptOptions.find(o => o.value === selectedDeptFilter) || deptOptions[0];
@@ -2107,6 +2158,23 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         {/* Sub-strip: Active Filter Tags & Count Display */}
         <div className="flex items-center justify-between gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800/80 text-xs">
           <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Active College Filter Chip */}
+            {isGlobalAccess && selectedCollegeFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setSelectedCollegeFilter('ALL')}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-black border transition cursor-pointer ${
+                  selectedCollegeFilter === 'NCT'
+                    ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/30 hover:bg-teal-500/20'
+                    : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/20'
+                }`}
+                title="Clear college filter"
+              >
+                <span>College: {selectedCollegeFilter}</span>
+                <X className="w-3 h-3" />
+              </button>
+            )}
+
             {/* Active Status Filter Chip */}
             {selectedTypeFilter !== 'ALL' && (
               <button
@@ -2543,14 +2611,31 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       {/* CONTEST FORENSICS & TELEMETRY DETAIL MODAL */}
       {selectedForensicRecord && (
         <Suspense fallback={null}>
-          <ContestForensicModal
-            record={selectedForensicRecord}
-            onClose={() => setSelectedForensicRecord(null)}
-            summary={summary}
-            questionTitles={questionTitles}
-            isLiveContest={isLiveContest}
-            onStudentClick={onStudentClick}
-          />
+          {(() => {
+            const currentForensicIdx = filteredRecords.findIndex(r => 
+              (r.reg_no && r.reg_no === selectedForensicRecord.reg_no) || 
+              (r.student_id && r.student_id === selectedForensicRecord.student_id)
+            );
+            const hasPrev = currentForensicIdx > 0;
+            const hasNext = currentForensicIdx >= 0 && currentForensicIdx < filteredRecords.length - 1;
+
+            return (
+              <ContestForensicModal
+                record={selectedForensicRecord}
+                onClose={() => setSelectedForensicRecord(null)}
+                summary={summary}
+                questionTitles={questionTitles}
+                isLiveContest={isLiveContest}
+                onStudentClick={onStudentClick}
+                currentIndex={currentForensicIdx >= 0 ? currentForensicIdx + 1 : undefined}
+                totalCount={filteredRecords.length}
+                hasPrevStudent={hasPrev}
+                hasNextStudent={hasNext}
+                onPrevStudent={() => hasPrev && setSelectedForensicRecord(filteredRecords[currentForensicIdx - 1])}
+                onNextStudent={() => hasNext && setSelectedForensicRecord(filteredRecords[currentForensicIdx + 1])}
+              />
+            );
+          })()}
         </Suspense>
       )}
 
@@ -2704,7 +2789,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                   {/* Quick Notice Templates */}
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      ⚡ Quick Reminder Templates
+                      Quick Reminder Templates
                     </label>
                     <div className="flex flex-wrap gap-1.5">
                       <button
@@ -2715,7 +2800,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         }}
                         className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900 transition cursor-pointer"
                       >
-                        ⚡ Live Contest Alert
+                        Live Contest Alert
                       </button>
                       <button
                         type="button"
@@ -2725,7 +2810,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         }}
                         className="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[11px] font-bold hover:bg-purple-100 dark:hover:bg-purple-900 transition cursor-pointer"
                       >
-                        📋 Remedial Practice
+                        Remedial Practice
                       </button>
                       <button
                         type="button"
@@ -2735,7 +2820,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         }}
                         className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 dark:hover:bg-rose-900 transition cursor-pointer"
                       >
-                        🏛️ HOD Formal Notice
+                        HOD Formal Notice
                       </button>
                     </div>
                   </div>

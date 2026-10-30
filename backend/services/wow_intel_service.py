@@ -61,7 +61,12 @@ def build_wow_intel_report(db, config, current_user=None) -> Dict[str, Any]:
                 else:
                     d_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d").date()
                 if d_obj <= limit_date:
-                    valid_sessions.append(s)
+                    cnt = db.query(WeeklyPublicResult).filter(
+                        WeeklyPublicResult.session_id == s.id,
+                        WeeklyPublicResult.participation_status.in_(['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL', 'PUBLIC_LIVE', 'ATTENDED_ZERO', 'ATTENDED_SOLVED'])
+                    ).count()
+                    if cnt > 0:
+                        valid_sessions.append(s)
             except Exception:
                 pass
                 
