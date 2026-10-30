@@ -9,35 +9,35 @@
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
 <p align="center">
-  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logo=google-chrome&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/Android_APK-v4.1.1_Release-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/badge/Windows_App-v4.1.1_Setup-0078D4?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/Release-v4.1.1_Institutional_Flagship-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="https://img.shields.io/static/v1?label=Live%20Platform&message=nandha-leetcode.duckdns.org&color=10B981&style=for-the-badge&logo=google-chrome&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/static/v1?label=Android%20APK&message=v4.1.1%20Release&color=F59E0B&style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/static/v1?label=Windows%20App&message=v4.1.1%20Setup&color=0078D4&style=for-the-badge&logo=windows11&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/static/v1?label=Release&message=v4.1.1%20Institutional%20Flagship&color=3B82F6&style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="https://img.shields.io/badge/Developed_by-Nanthish_%26_Team-7C3AED?style=for-the-badge&logo=codeforces&logoColor=white"></a>
-  <img alt="Mobile 120Hz" src="https://img.shields.io/badge/Mobile-120Hz_Native_Physics-06B6D4?style=for-the-badge&logo=capacitor&logoColor=white">
-  <img alt="Zero Gap Safe Area" src="https://img.shields.io/badge/UI%2FUX-Zero--Gap_Safe_Area-10B981?style=for-the-badge&logo=materialdesign&logoColor=white">
+  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="https://img.shields.io/static/v1?label=Developed%20by&message=Nanthish%20%26%20Team&color=7C3AED&style=for-the-badge&logo=codeforces&logoColor=white"></a>
+  <img alt="Mobile 120Hz" src="https://img.shields.io/static/v1?label=Mobile&message=120Hz%20Native%20Physics&color=06B6D4&style=for-the-badge&logo=capacitor&logoColor=white">
+  <img alt="Zero Gap Safe Area" src="https://img.shields.io/static/v1?label=UI%2FUX&message=Zero-Gap%20Safe%20Area&color=10B981&style=for-the-badge&logo=materialdesign&logoColor=white">
 </p>
 
 <p align="center">
-  <img alt="Scale" src="https://img.shields.io/badge/Scale-1500%2B_Students-059669?style=flat-square&logo=googleclassroom&logoColor=white">
-  <img alt="Departments" src="https://img.shields.io/badge/Departments-8_Engineering_Branches-6366F1?style=flat-square&logo=open-access&logoColor=white">
-  <img alt="Contest Autopilot" src="https://img.shields.io/badge/Contest_Autopilot-Sunday_08%3A00_AM_IST-7C3AED?style=flat-square&logo=temporal&logoColor=white">
-  <img alt="Forensic Depth" src="https://img.shields.io/badge/Forensics-Level_4_Binary_Audit-DC2626?style=flat-square&logo=shield&logoColor=white">
-  <img alt="Mentoring" src="https://img.shields.io/badge/Mentoring-Faculty_Action_Center-EA580C?style=flat-square&logo=target&logoColor=white">
-  <img alt="Cross-Platform" src="https://img.shields.io/badge/Cross--Platform-Web_%7C_Android_%7C_Windows-2563EB?style=flat-square&logo=pwa&logoColor=white">
+  <img alt="Scale" src="https://img.shields.io/static/v1?label=Scale&message=1500%2B%20Students&color=059669&style=flat-square&logo=googleclassroom&logoColor=white">
+  <img alt="Departments" src="https://img.shields.io/static/v1?label=Departments&message=8%20Engineering%20Branches&color=6366F1&style=flat-square&logo=open-access&logoColor=white">
+  <img alt="Contest Autopilot" src="https://img.shields.io/static/v1?label=Contest%20Autopilot&message=Sunday%2008%3A00%20AM%20IST&color=7C3AED&style=flat-square&logo=temporal&logoColor=white">
+  <img alt="Forensic Depth" src="https://img.shields.io/static/v1?label=Forensics&message=Level%204%20Binary%20Audit&color=DC2626&style=flat-square&logo=shield&logoColor=white">
+  <img alt="Mentoring" src="https://img.shields.io/static/v1?label=Mentoring&message=Faculty%20Action%20Center&color=EA580C&style=flat-square&logo=target&logoColor=white">
+  <img alt="Cross-Platform" src="https://img.shields.io/static/v1?label=Cross-Platform&message=Web%20%7C%20Android%20%7C%20Windows&color=2563EB&style=flat-square&logo=pwa&logoColor=white">
 </p>
 
 <p align="center">
-  <img alt="License" src="https://img.shields.io/badge/License-Institutional_Enterprise-black?style=flat-square">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.10_%7C_3.11_%7C_3.14-3776AB?style=flat-square&logo=python&logoColor=white">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square&logo=fastapi&logoColor=white">
-  <img alt="React" src="https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.2%2B-3178C6?style=flat-square&logo=typescript&logoColor=white">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white">
-  <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA_%26_NAAC_%27A%2B%27-teal?style=flat-square">
+  <img alt="License" src="https://img.shields.io/static/v1?label=License&message=Institutional%20Enterprise&color=000000&style=flat-square">
+  <img alt="Python" src="https://img.shields.io/static/v1?label=Python&message=3.10%20%7C%203.11%20%7C%203.14&color=3776AB&style=flat-square&logo=python&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/static/v1?label=FastAPI&message=0.115%2B&color=009688&style=flat-square&logo=fastapi&logoColor=white">
+  <img alt="React" src="https://img.shields.io/static/v1?label=React&message=18.3&color=61DAFB&style=flat-square&logo=react&logoColor=black">
+  <img alt="TypeScript" src="https://img.shields.io/static/v1?label=TypeScript&message=5.2%2B&color=3178C6&style=flat-square&logo=typescript&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/static/v1?label=PostgreSQL&message=16&color=4169E1&style=flat-square&logo=postgresql&logoColor=white">
+  <img alt="Accreditation" src="https://img.shields.io/static/v1?label=Accreditation&message=NBA%20%26%20NAAC%20'A%2B'&color=008080&style=flat-square">
 </p>
 
 ### *Every contest tracked. Every solve forensically verified. 1,500+ student engineering careers empowered.*
