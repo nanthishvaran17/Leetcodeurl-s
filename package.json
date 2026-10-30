@@ -1,6 +1,6 @@
 {
   "name": "college-leetcode-tracker",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "private": true,
   "scripts": {
     "build": "cd frontend && npm install && npm run build"

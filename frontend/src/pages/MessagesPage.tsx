@@ -564,8 +564,12 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
       if (data?.success) {
         setMessages(prev => prev.map(m => m.messageId === messageId ? data.message : m));
+      } else {
+        notify.error('Edit Failed', data?.error || 'Could not edit message.');
       }
-    } catch (err) {}
+    } catch (err: any) {
+      notify.error('Edit Error', err.response?.data?.detail || err.message || 'Failed to edit message.');
+    }
   };
 
   const handleDeleteMessage = async (messageId: string, mode: 'FOR_ME' | 'FOR_EVERYONE') => {
@@ -578,8 +582,12 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         } else {
           setMessages(prev => prev.filter(m => m.messageId !== messageId));
         }
+      } else {
+        notify.error('Delete Failed', data?.error || 'Could not delete message.');
       }
-    } catch (err) {}
+    } catch (err: any) {
+      notify.error('Delete Error', err.response?.data?.detail || err.message || 'Failed to delete message.');
+    }
   };
 
   const handleDeleteConversation = async (conversationId: string) => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { RefreshCw, ArrowDown, Check } from 'lucide-react';
 
 interface PullToRefreshProps {
@@ -41,6 +42,13 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   children,
   disabled = false
 }) => {
+  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+
+  // On native mobile app (Capacitor), let native WebView handle 120Hz momentum scrolling freely without touch interception
+  if (disabled || isNative) {
+    return <>{children}</>;
+  }
+
   const [pullDistance, setPullDistance] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isThresholdReached, setIsThresholdReached] = useState<boolean>(false);
@@ -105,8 +113,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // Deadzone: only activate pull if user has pulled downward at least 14px with clear downward intent
-    if (deltaY > 14 && deltaY > Math.abs(deltaX) * 1.5) {
+    // Deadzone: only activate pull if user has pulled downward at least 24px with clear vertical intent
+    if (deltaY > 24 && deltaY > Math.abs(deltaX) * 2) {
       if (e.cancelable) {
         e.preventDefault();
       }
@@ -141,8 +149,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       }
     }
 
-    // Only allow pull-to-refresh if the page and container are at the very top (scrollY === 0)
-    if (isScrolledDown(e.target)) {
+    const winY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if (winY > 1 || isScrolledDown(e.target)) {
       isPullingRef.current = false;
       detachTouchMove();
       return;

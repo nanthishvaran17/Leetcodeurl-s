@@ -44,14 +44,23 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
       setIsReadyToExit(true);
       triggerHaptic('light');
       if (onComplete) {
-        setTimeout(onComplete, 400);
+        setTimeout(onComplete, 350);
       }
     }, minDurationMs);
+
+    // Hard fallback: never allow splash screen to trap user touches if animation or timer lags
+    const hardSafety = setTimeout(() => {
+      setIsReadyToExit(true);
+      if (onComplete) {
+        onComplete();
+      }
+    }, Math.max(minDurationMs + 450, 1600));
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(tExit);
+      clearTimeout(hardSafety);
     };
   }, [minDurationMs, onComplete]);
 
@@ -69,7 +78,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
               ease: [0.16, 1, 0.3, 1] // Apple Spring deceleration
             }
           }}
-          className="fixed inset-0 z-[100099] flex flex-col items-center justify-center bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden touch-none"
+          className={`fixed inset-0 z-[100099] flex flex-col items-center justify-center bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden ${isReadyToExit ? 'pointer-events-none opacity-0' : 'touch-none'}`}
         >
           {/* Subtle Ambient Light Gradients (Clean Pastel Atmosphere) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">

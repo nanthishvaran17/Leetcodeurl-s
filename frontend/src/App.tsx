@@ -1176,7 +1176,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className={`overflow-x-clip bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
+    <div className={`overflow-x-hidden bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
       activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
       {/* Signature World-Class App Launch Splash Screen (Airtel / Swiggy / Cred style) */}
@@ -1211,14 +1211,7 @@ export const App: React.FC = () => {
       {/* Native Offline & Cached Roster Indicator Banner */}
       <OfflineIndicatorBanner />
 
-      {/* Mobile Left Edge Swipe Hit Strip */}
-      {!isSidebarOpen && isAuthenticated && (
-        <div 
-          id="mobile-edge-swipe-guard" 
-          className="fixed left-0 top-14 bottom-24 w-6 z-40 pointer-events-auto touch-pan-x"
-          aria-hidden="true" 
-        />
-      )}
+      {/* Mobile Left Edge Swipe Guard Removed to Prevent Vertical Scroll Lock */}
 
       {/* Floating Presentation Shield Active Pill */}
       {isPresentationShieldOn && (
@@ -1243,7 +1236,7 @@ export const App: React.FC = () => {
       <div className={`w-full max-w-full mx-auto relative flex flex-col ${
         activeTab === 'messages'
           ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-3.5 sm:pt-4 pb-32 sm:pb-6 px-2.5 sm:px-4 max-w-full'
+          : 'pt-3.5 sm:pt-4 pb-36 sm:pb-6 px-2.5 sm:px-4 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}

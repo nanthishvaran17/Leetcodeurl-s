@@ -4,10 +4,10 @@
 
 /* Strictly prevent horizontal overflow while preserving fluid 120Hz vertical scroll momentum */
 html {
-  overflow-x: clip;
-  overflow-y: auto;
+  overflow-x: hidden;
   max-width: 100%;
   width: 100%;
+  min-height: 100%;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
@@ -15,12 +15,7 @@ html {
 /* Overscroll Behavior & Background Lock */
 html, body, #root {
   overscroll-behavior-x: none;
-}
-
-@media (max-width: 1023px) {
-  html, body, #root {
-    overscroll-behavior-y: contain;
-  }
+  overscroll-behavior-y: auto;
 }
 
 /* Native Touch Selection Lock on Mobile (Preserved text selection on desktop) */
@@ -105,13 +100,11 @@ body:has(.modal-backdrop) nav[aria-label="Mobile Bottom Island Navigation"] {
 }
 
 body {
-  overflow-x: clip;
-  overflow-y: auto;
+  overflow-x: hidden;
   max-width: 100%;
   width: 100%;
   min-height: 100%;
   position: relative;
-  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -2380,7 +2373,6 @@ body {
 
 @media (max-width: 768px) {
   html, body {
-    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: auto;
   }
@@ -2476,8 +2468,6 @@ body {
 
   html, body {
     -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
-    overscroll-behavior-y: auto !important;
   }
 
   /* Disable layout-recalculation scroll hitches from content-visibility during fast mobile scrolling */

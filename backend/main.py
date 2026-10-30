@@ -807,7 +807,6 @@ async def health_check(request: Request):
         "version": "2.6.3"
     }
 
-@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 @app.api_route("/api", methods=["GET", "HEAD"], include_in_schema=False)
 async def root_page():
     html_content = """
@@ -857,9 +856,7 @@ async def root_page():
     """
     return HTMLResponse(content=html_content)
 
-@app.get("/api/download/apk", include_in_schema=False)
 @app.get("/api/download/latest-apk", include_in_schema=False)
-@app.get("/download/apk", include_in_schema=False)
 def direct_download_latest_apk():
     """Direct alias endpoint to download the latest compiled Android APK package."""
     import glob
@@ -870,7 +867,11 @@ def direct_download_latest_apk():
     if not apk_files:
         apk_files = glob.glob("Nandha_LeetCode_Intelligence_*.apk")
     if not apk_files:
-        return JSONResponse(status_code=404, content={"error": "APK package file not found on server."})
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(
+            url="https://leetcodeurl-s-roan.vercel.app/nandha-leetcode-tracker-latest.apk",
+            status_code=307
+        )
 
     apk_files.sort(key=lambda f: os.path.getmtime(f), reverse=True)
     latest_apk = apk_files[0]
