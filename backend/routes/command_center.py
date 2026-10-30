@@ -1728,6 +1728,11 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             User.role.ilike("%Coordinator%")
         ),
         ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%"),
+        ~User.username.ilike("%_p930"),
         User.is_active == True
     ).group_by(User.department_id).all()
     faculty_counts = {dept_id: count for dept_id, count in faculty_counts_query}
@@ -1864,6 +1869,11 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
             User.role.ilike("%Coordinator%")
         ),
         ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
+        ~User.username.ilike("test_%"),
+        ~User.username.ilike("dummy_%"),
+        ~User.username.ilike("sec_test_%"),
+        ~User.username.ilike("hardening_%"),
+        ~User.username.ilike("%_p930"),
         User.is_active == True
     ).all()
 

@@ -71,113 +71,75 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
     }
   };
 
-  // Enriched staff list with missing staff check
-  const enrichedStaffList = useMemo(() => {
-    if (!details?.staff_list) return [];
-    const list = [...details.staff_list];
-    const code = (department?.department_code || '').toUpperCase();
-    if (code.includes('CS')) {
-      const hasSathish = list.some(s => s.name.toLowerCase().includes('sathish'));
-      if (!hasSathish) {
-        list.push({
-          id: 9991,
-          name: 'Mr.P.Sathish',
-          username: 'sathish.p',
-          email: 'sathish.p@nandhaengg.org',
-          assigned_count: 21,
-          active_students: 21,
-          completed_students: 21,
-          completion_rate: 100,
-          total_solved: 2450,
-          avg_solved: 116.7,
-          students: []
-        });
-      }
-    }
-    return list;
-  }, [details?.staff_list, department?.department_code]);
+  // Staff list directly from database details
+  const staffList = useMemo(() => {
+    return details?.staff_list || [];
+  }, [details?.staff_list]);
 
   const filteredStaff = useMemo(() => {
-    if (!enrichedStaffList.length) return [];
-    if (!staffSearch.trim()) return enrichedStaffList;
+    if (!staffList.length) return [];
+    if (!staffSearch.trim()) return staffList;
     const q = staffSearch.toLowerCase();
-    return enrichedStaffList.filter(s =>
+    return staffList.filter(s =>
       s.name.toLowerCase().includes(q) ||
       s.username.toLowerCase().includes(q) ||
       (s.email && s.email.toLowerCase().includes(q))
     );
-  }, [enrichedStaffList, staffSearch]);
+  }, [staffList, staffSearch]);
 
   const resolvedRank = useMemo(() => {
     if (department?.rank && Number(department.rank) > 0) return department.rank;
-    const code = (department?.department_code || '').toUpperCase();
-    if (code.includes('CS')) return 1;
-    if (code.includes('IOT')) return 2;
-    if (code.includes('IT')) return 3;
-    return 1;
+    return '-';
   }, [department]);
 
   const resolvedEngagement = useMemo(() => {
     if (department?.coding_engagement && department.coding_engagement !== 'N/A') {
       return department.coding_engagement;
     }
-    const total = department?.student_count || 159;
-    const active = department?.active_count || (total > 2 ? total - 2 : total);
-    return `${Math.round((active / Math.max(1, total)) * 100)}%`;
+    const total = department?.student_count || 0;
+    const active = department?.active_count || 0;
+    if (total <= 0) return '0%';
+    return `${Math.round((active / total) * 100)}%`;
   }, [department]);
 
   const resolvedStudentCount = useMemo(() => {
     if (department?.student_count && Number(department.student_count) > 0) return department.student_count;
-    if (enrichedStaffList.length > 0) {
-      const assigned = enrichedStaffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
+    if (staffList.length > 0) {
+      const assigned = staffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
       if (assigned > 0) return assigned;
     }
-    const code = (department?.department_code || '').toUpperCase();
-    if (code.includes('CS')) return 159;
-    if (code.includes('IOT')) return 47;
-    return 100;
-  }, [department?.student_count, department?.department_code, enrichedStaffList]);
+    return 0;
+  }, [department?.student_count, staffList]);
 
   const resolvedActiveCount = useMemo(() => {
     if (department?.active_count && Number(department.active_count) > 0) return department.active_count;
-    return Math.max(0, resolvedStudentCount - 2);
-  }, [department?.active_count, resolvedStudentCount]);
+    return 0;
+  }, [department?.active_count]);
 
   const resolvedCompletion = useMemo(() => {
     if (department?.completion_rate && Number(department.completion_rate) > 0) return department.completion_rate;
-    if (enrichedStaffList.length > 0) {
-      const sum = enrichedStaffList.reduce((acc, s) => acc + (s.completion_rate || 0), 0);
-      return Math.round((sum / enrichedStaffList.length) * 10) / 10;
+    if (staffList.length > 0) {
+      const sum = staffList.reduce((acc, s) => acc + (s.completion_rate || 0), 0);
+      return Math.round((sum / staffList.length) * 10) / 10;
     }
-    const code = (department?.department_code || '').toUpperCase();
-    if (code.includes('CS')) return 98.7;
-    if (code.includes('IOT')) return 83.6;
-    return 90;
-  }, [department?.completion_rate, department?.department_code, enrichedStaffList]);
+    return 0;
+  }, [department?.completion_rate, staffList]);
 
   const resolvedAvgSolved = useMemo(() => {
     if (department?.avg_solved && Number(department.avg_solved) > 0) return department.avg_solved;
-    if (enrichedStaffList && enrichedStaffList.length > 0) {
-      const tot = enrichedStaffList.reduce((acc, s) => acc + (s.total_solved || 0), 0);
-      const assigned = enrichedStaffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
+    if (staffList && staffList.length > 0) {
+      const tot = staffList.reduce((acc, s) => acc + (s.total_solved || 0), 0);
+      const assigned = staffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
       if (assigned > 0) return Math.round(tot / assigned);
     }
-    return 39;
-  }, [department?.avg_solved, enrichedStaffList]);
+    return 0;
+  }, [department?.avg_solved, staffList]);
 
   if (!department || typeof document === 'undefined') return null;
 
   return createPortal(
     <AnimatePresence>
       <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end p-0">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl"
-          onClick={onClose}
-        />
-
         <motion.div
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -316,7 +278,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                     Mentorship Team
                   </span>
                   <span className="font-mono font-black text-sm text-indigo-600 dark:text-indigo-400">
-                    {enrichedStaffList.length || details.staff_list?.length || 0} Faculty Mentors
+                    {staffList.length} Faculty Mentors
                   </span>
                 </div>
               </div>
@@ -333,7 +295,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                   }`}
               >
                 <Users size={14} />
-                <span>Faculty Mentors ({enrichedStaffList.length || details?.staff_list?.length || 0})</span>
+                <span>Faculty Mentors ({staffList.length})</span>
               </button>
               <button
                 type="button"
@@ -385,7 +347,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                         />
                       </div>
                       <span className="text-xs font-bold text-slate-500 shrink-0 font-mono">
-                        Showing {filteredStaff.length} / {enrichedStaffList.length || details.staff_list?.length || 0} Staff
+                        Showing {filteredStaff.length} / {staffList.length} Staff
                       </span>
                     </div>
 
