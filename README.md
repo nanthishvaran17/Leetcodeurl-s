@@ -9,35 +9,35 @@
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
 <p align="center">
-  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v4.1.1_Release-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/badge/💻_Windows_App-v4.1.1_Setup-0078D4?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v4.1.1_Institutional_Flagship-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logo=google-chrome&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/Android_APK-v4.1.1_Release-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/badge/Windows_App-v4.1.1_Setup-0078D4?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/Release-v4.1.1_Institutional_Flagship-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="https://img.shields.io/badge/Developed%20by-Nanthish%20%26%20Team-7C3AED?style=for-the-badge&logo=codeforces&logoColor=white"></a>
-  <img alt="Mobile 120Hz" src="https://img.shields.io/badge/Mobile-120Hz%20Native%20Momentum-06B6D4?style=for-the-badge&logo=capacitor&logoColor=white">
-  <img alt="Zero Gap Safe Area" src="https://img.shields.io/badge/UI%2FUX-Zero--Gap%20Safe%20Area-10B981?style=for-the-badge&logo=materialdesign&logoColor=white">
+  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="https://img.shields.io/badge/Developed_by-Nanthish_%26_Team-7C3AED?style=for-the-badge&logo=codeforces&logoColor=white"></a>
+  <img alt="Mobile 120Hz" src="https://img.shields.io/badge/Mobile-120Hz_Native_Physics-06B6D4?style=for-the-badge&logo=capacitor&logoColor=white">
+  <img alt="Zero Gap Safe Area" src="https://img.shields.io/badge/UI%2FUX-Zero--Gap_Safe_Area-10B981?style=for-the-badge&logo=materialdesign&logoColor=white">
 </p>
 
 <p align="center">
-  <img alt="Scale" src="https://img.shields.io/badge/Scale-1%2C500%2B%20Students-059669?style=flat-square&logo=googleclassroom&logoColor=white">
-  <img alt="Departments" src="https://img.shields.io/badge/Departments-8%20Engineering%20Branches-6366F1?style=flat-square&logo=open-access&logoColor=white">
-  <img alt="Contest Autopilot" src="https://img.shields.io/badge/Contest%20Autopilot-Sunday%2008%3A00%20AM%20IST-7C3AED?style=flat-square&logo=temporal&logoColor=white">
-  <img alt="Forensic Depth" src="https://img.shields.io/badge/Forensics-Level%204%20Binary%20Audit-DC2626?style=flat-square&logo=shield&logoColor=white">
-  <img alt="Mentoring" src="https://img.shields.io/badge/Mentoring-Faculty%20Action%20Center-EA580C?style=flat-square&logo=target&logoColor=white">
-  <img alt="Cross-Platform" src="https://img.shields.io/badge/Cross--Platform-Web%20%7C%20Android%20%7C%20Windows%20%7C%20Kiosk-2563EB?style=flat-square&logo=pwa&logoColor=white">
+  <img alt="Scale" src="https://img.shields.io/badge/Scale-1500%2B_Students-059669?style=flat-square&logo=googleclassroom&logoColor=white">
+  <img alt="Departments" src="https://img.shields.io/badge/Departments-8_Engineering_Branches-6366F1?style=flat-square&logo=open-access&logoColor=white">
+  <img alt="Contest Autopilot" src="https://img.shields.io/badge/Contest_Autopilot-Sunday_08%3A00_AM_IST-7C3AED?style=flat-square&logo=temporal&logoColor=white">
+  <img alt="Forensic Depth" src="https://img.shields.io/badge/Forensics-Level_4_Binary_Audit-DC2626?style=flat-square&logo=shield&logoColor=white">
+  <img alt="Mentoring" src="https://img.shields.io/badge/Mentoring-Faculty_Action_Center-EA580C?style=flat-square&logo=target&logoColor=white">
+  <img alt="Cross-Platform" src="https://img.shields.io/badge/Cross--Platform-Web_%7C_Android_%7C_Windows-2563EB?style=flat-square&logo=pwa&logoColor=white">
 </p>
 
 <p align="center">
-  <img alt="License" src="https://img.shields.io/badge/License-Institutional%20Enterprise-black?style=flat-square">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.14-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-Institutional_Enterprise-black?style=flat-square">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.10_%7C_3.11_%7C_3.14-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?style=flat-square&logo=fastapi&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.2%2B-3178C6?style=flat-square&logo=typescript&logoColor=white">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white">
-  <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA%20%26%20NAAC%20'A%2B'-teal?style=flat-square">
+  <img alt="Accreditation" src="https://img.shields.io/badge/Accreditation-NBA_%26_NAAC_%27A%2B%27-teal?style=flat-square">
 </p>
 
 ### *Every contest tracked. Every solve forensically verified. 1,500+ student engineering careers empowered.*
@@ -397,9 +397,9 @@ In enterprise academic systems, an erroneous mark can damage a student's career.
 <tr>
 <td valign="top">
 
-- ![React](https://img.shields.io/badge/React_18.3-20232A?style=flat-square&logo=react&logoColor=61DAFB) **React 18 & TypeScript 5.2+**
-- ![Vite](https://img.shields.io/badge/Vite_5.4-646CFF?style=flat-square&logo=vite&logoColor=white) **Vite 5** (Ultra-fast HMR)
-- ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) **Tailwind CSS & Custom Design Tokens**
+- ![React](https://img.shields.io/badge/React-18.3-20232A?style=flat-square&logo=react&logoColor=61DAFB) **React 18 & TypeScript 5.2+**
+- ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=flat-square&logo=vite&logoColor=white) **Vite 5** (Ultra-fast HMR)
+- ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) **Tailwind CSS & Custom Design Tokens**
 - ![TanStack](https://img.shields.io/badge/React_Query_v5-FF4154?style=flat-square&logo=react-query&logoColor=white) **TanStack React Query v5**
 - ![Capacitor](https://img.shields.io/badge/Capacitor_7-119EFF?style=flat-square&logo=capacitor&logoColor=white) **Capacitor 7 Native Android App**
 - ![Electron](https://img.shields.io/badge/Electron_30-47848F?style=flat-square&logo=electron&logoColor=white) **Electron Windows Desktop Application**
@@ -409,9 +409,9 @@ In enterprise academic systems, an erroneous mark can damage a student's career.
 </td>
 <td valign="top">
 
-- ![FastAPI](https://img.shields.io/badge/FastAPI_0.115-009688?style=flat-square&logo=fastapi&logoColor=white) **FastAPI High-Speed Async Core**
-- ![Python](https://img.shields.io/badge/Python_3.10+-3776AB?style=flat-square&logo=python&logoColor=white) **Python 3.10+ ASGI Engine**
-- ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy_2.0-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white) **SQLAlchemy 2.0 ORM**
+- ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white) **FastAPI High-Speed Async Core**
+- ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white) **Python 3.10+ ASGI Engine**
+- ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white) **SQLAlchemy 2.0 ORM**
 - ![WebSocket](https://img.shields.io/badge/WebSockets-010101?style=flat-square&logo=socketdotio&logoColor=white) **Real-Time WebSocket Mesh**
 - ![APScheduler](https://img.shields.io/badge/APScheduler-4285F4?style=flat-square&logo=google-cloud&logoColor=white) **Multi-Job Cron Daemons**
 - ![Brevo](https://img.shields.io/badge/Brevo_Email_API-0B996F?style=flat-square&logo=maildotru&logoColor=white) **Brevo Transactional Dispatch**
@@ -421,11 +421,11 @@ In enterprise academic systems, an erroneous mark can damage a student's career.
 </td>
 <td valign="top">
 
-- ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-4169E1?style=flat-square&logo=postgresql&logoColor=white) **PostgreSQL 16 Primary Database**
-- ![SQLite](https://img.shields.io/badge/SQLite_WAL-003B57?style=flat-square&logo=sqlite&logoColor=white) **SQLite WAL Resilience Engine**
-- ![Docker](https://img.shields.io/badge/Docker_Compose-2496ED?style=flat-square&logo=docker&logoColor=white) **Multi-Stage Docker Containers**
-- ![Nginx](https://img.shields.io/badge/Nginx_Reverse_Proxy-009639?style=flat-square&logo=nginx&logoColor=white) **Nginx SSL & WSS Proxy**
-- ![AWS](https://img.shields.io/badge/AWS_EC2_Ubuntu-FF9900?style=flat-square&logo=amazon-aws&logoColor=white) **AWS EC2 Ubuntu 24.04 LTS**
+- ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white) **PostgreSQL 16 Primary Database**
+- ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=flat-square&logo=sqlite&logoColor=white) **SQLite WAL Resilience Engine**
+- ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white) **Multi-Stage Docker Containers**
+- ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white) **Nginx SSL & WSS Proxy**
+- ![AWS](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat-square&logo=amazon-aws&logoColor=white) **AWS EC2 Ubuntu 24.04 LTS**
 - ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white) **Automated CI/CD Workflows**
 - 🛡️ **Level-4 Cryptographic Audit Trail**
 
