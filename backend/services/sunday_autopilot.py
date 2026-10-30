@@ -143,7 +143,10 @@ class UniversalWeeklyContestAutopilot:
             upcoming_sunday = get_upcoming_sunday_date(now_ist)
             meta = discover_contest_metadata(upcoming_sunday)
             active_students = db.query(Student).filter(
-                (Student.is_active == True) | (Student.is_active.is_(None))
+                (Student.is_active == True) | (Student.is_active.is_(None)),
+                Student.username.isnot(None),
+                Student.username != "",
+                ~Student.username.in_(["USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE"])
             ).count()
 
             healthy = active_students > 0 and meta.get("status") != "DISCOVERY_FAILED"
@@ -1238,6 +1241,10 @@ class SundayAutopilotCoordinator:
     @classmethod
     def phase_8_prepare_next_contest(cls, db: Optional[Session] = None) -> Dict[str, Any]:
         return weekly_contest_autopilot.phase_8_prepare_next_contest(db)
+
+    @classmethod
+    def evaluate_final_lock_readiness_gate(cls, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        return weekly_contest_autopilot.evaluate_final_lock_readiness_gate(session_id, db)
 
     @classmethod
     def phase_8_prepare_next_contest_2205(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
