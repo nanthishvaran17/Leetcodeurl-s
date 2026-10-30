@@ -10,9 +10,15 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Web App" src="https://img.shields.io/badge/🌐_Live_Platform-nandha--leetcode.duckdns.org-10B981?style=for-the-badge&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v4.0.0_Download-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/badge/💻_Windows_App-v4.0.0_Setup-0078D4?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v4.0.0_Institutional_Flagship-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="https://img.shields.io/badge/📱_Android_APK-v4.1.1_Release-F59E0B?style=for-the-badge&logo=android&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="https://img.shields.io/badge/💻_Windows_App-v4.1.1_Setup-0078D4?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/🏷️_Release-v4.1.1_Institutional_Flagship-3B82F6?style=for-the-badge&logo=github&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <a href="#-developed-by-nanthish--team"><img alt="Developed by Nanthish & Team" src="https://img.shields.io/badge/Developed%20by-Nanthish%20%26%20Team-7C3AED?style=for-the-badge&logo=codeforces&logoColor=white"></a>
+  <img alt="Mobile 120Hz" src="https://img.shields.io/badge/Mobile-120Hz%20Native%20Momentum-06B6D4?style=for-the-badge&logo=capacitor&logoColor=white">
+  <img alt="Zero Gap Safe Area" src="https://img.shields.io/badge/UI%2FUX-Zero--Gap%20Safe%20Area-10B981?style=for-the-badge&logo=materialdesign&logoColor=white">
 </p>
 
 <p align="center">
@@ -46,7 +52,7 @@
 
 | Module | Description | Operational Status |
 |:---|:---|:---:|
-| [🌟 Executive Overview](#-executive-overview) | Institutional analytics paradigm & collegiate scale | `Flagship v4.0.0` |
+| [🌟 Executive Overview](#-executive-overview) | Institutional analytics paradigm & collegiate scale | `Flagship v4.1.1` |
 | [⚡ Sunday Contest Autopilot](#-autonomous-sunday-contest-engine) | 4-phase hands-free contest telemetry pipeline | `100% Autonomous` |
 | [🔬 Level 4 Forensic Verification](#-level-4-forensic-verification-engine) | Strict Q1-Q4 binary solve timestamps & tamper audit | `Forensic Proof` |
 | [🎯 Faculty Action Center](#-faculty-action-center--student-intervention) | Early-warning student intervention & mentoring matrix | `Active Mentoring` |
@@ -285,12 +291,20 @@ Higher education regulatory bodies (NBA Criteria 2 & 5, NAAC, NIRF) demand verif
 
 ## 📱 Cross-Platform Native Ecosystem
 
-| Platform | Technology | Features |
-|---|---|---|
-| **Web Application** | React 18, Vite 5, Tailwind CSS | Ultra-fast HMR, dark/light themes, reactive keyboard shortcuts, responsive layout |
-| **Android Native App** | Capacitor 7, Android SDK, Gradle | Native bottom navigation, tactile haptic feedback, offline caching, push notifications |
-| **Windows Desktop App** | Electron 30, NSIS Installer | Native desktop notifications, system tray presence, automatic local synchronization |
-| **4K Campus Kiosk** | Pure CSS Animation, Full-screen Mode | Designed for reception area Smart TVs, real-time cycling of student podiums and highlights |
+The platform delivers a cohesive, low-latency client experience across every institutional screen:
+
+| Platform | Technology | Flagship Features & Engineering Highlights | Status |
+|---|---|---|:---:|
+| **Android Native App** | Capacitor 7, Android SDK, Gradle | **120Hz Native Momentum Scrolling**, Zero-Gap Adaptive Safe Area, Biometric Authentication, Dynamic APK In-App Downloader, Tactile Haptics | `v4.1.1 Stable` |
+| **Windows Desktop App** | Electron 30, NSIS Installer, SQLite WAL | Desktop tray presence, hardware-accelerated charting, automated background database synchronization | `v4.1.1 Setup` |
+| **Progressive Web App** | React 18, Vite 5, Tailwind CSS | Sub-100ms route transitions, dark/light OLED theme switching, keyboard shortcuts (`Ctrl+K`), responsive mobile drawers | `Production` |
+| **4K Reception Kiosk** | Pure CSS Animation, WebSocket Mesh | Designed for campus reception Smart TVs, hands-free auto-rotating student podiums, live contest countdowns | `Live Display` |
+
+### 🚀 What's New in v4.1.1 Native Mobile:
+* **⚡ 120Hz Hardware-Accelerated Momentum Scrolling:** Eliminated gesture freezing and scroll deadlocks across native Android devices by untangling JS event loops and leveraging direct GPU momentum physics.
+* **📐 Pixel-Perfect Zero-Gap Safe Area Architecture:** Solved awkward camera cutout/Dynamic Island gaps by dynamically binding CSS viewport environment insets (`env(safe-area-inset-top)` and `env(safe-area-inset-bottom)`) directly into individual view components rather than forcing rigid global page offsets.
+* **📥 Instant Institutional APK Sync:** One-click dynamic package installer from `/download/apk` with automated version compatibility validation.
+* **🛡️ Smart Session Resilience:** Biometric device credential caching with graceful offline token refresh.
 
 ---
 
@@ -491,27 +505,64 @@ Pre-configured production scripts in the [scripts/](scripts/) directory:
 
 ---
 
-## 👥 Institutional Leadership
+## 👥 Institutional Leadership & Engineering Credits
 
 <div align="center">
+
+# 🏆 Developed by Nanthish & Team
+### Institutional Software Engineering & Forensic Analytics Initiative
 
 **Nandha Engineering College (Autonomous)**  
 *Established in 2001 • Celebrating 25 Years of Educational Excellence*  
-Erode - Perundurai Main Road, Vaikkaalmedu, Erode, Tamil Nadu 638052
+Erode - Perundurai Main Road, Vaikkaalmedu, Erode, Tamil Nadu 638052, India  
+*Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
-**Platform Architecture & Lead Engineering:**  
-**Nanthish S** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
-*Department of Computer Science and Engineering*
+<br/>
 
-</div>
+<table align="center" width="90%">
+<thead>
+<tr>
+<th width="30%" align="center">🚀 Engineering Pillar</th>
+<th width="35%" align="left">👤 Lead Contributors</th>
+<th width="35%" align="left">🎯 Core Responsibilities & Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><b>Chief Systems Architecture & Lead Engineering</b></td>
+<td><b>Nanthish S</b><br/>(<a href="https://github.com/nanthishvaran17">@nanthishvaran17</a>)</td>
+<td>Overall platform conception, full-stack microservices architecture, FastAPI backend design, LeetCode ingestion pipeline, Level 4 forensic engine, database triggers, and deployment daemons.</td>
+</tr>
+<tr>
+<td align="center"><b>Mobile & Cross-Platform Engineering</b></td>
+<td><b>Nanthish & Core Mobile Team</b></td>
+<td>Capacitor 7 Android architecture, 120Hz native touch gesture optimization, zero-gap safe area viewport layouts, and Electron Windows desktop distribution.</td>
+</tr>
+<tr>
+<td align="center"><b>Contest Forensics & Data Intelligence</b></td>
+<td><b>Forensic Analytics & Testing Cell</b></td>
+<td>Level 4A/B/C timestamp binary verification algorithms, anti-falsification rules, 15-Sheet OpenPyXL automated report generators, and cryptographic audit hashing.</td>
+</tr>
+<tr>
+<td align="center"><b>Institutional Governance & UX Design</b></td>
+<td><b>Academic Operations & Mentorship Team</b></td>
+<td>HOD Command Center 2.0 multi-tenant isolation, Faculty Action Center 4-tier matrix, Emerald Vault 25-Year Smart PVC ID card design, and NAAC/NBA dossier automation.</td>
+</tr>
+</tbody>
+</table>
+
+<br/>
+
+### 🏛️ Institutional Patronage & Academic Advisory
+* **Governing Body & Principal:** Nandha Engineering College (Autonomous)
+* **Academic Leadership:** Department of Computer Science and Engineering & Allied Engineering Branches (IT, ECE, EEE, AI&DS, CSBS, CSE-CS, CSE-IoT)
+* **Faculty Mentorship Cell:** Continuous Internal Evaluation (CIE) Coordinators & Competitive Programming Faculty Mentors
 
 ---
 
-<div align="center">
+### 🟢 NANDHA LEETCODE INTELLIGENCE • v4.1.1
+**1,500+ Active Students • 8 Engineering Departments • One Authoritative Institutional Truth**
 
-### 🟢 NANDHA LEETCODE INTELLIGENCE
-**1,500+ Students • 8 Departments • One Institutional Truth**
-
-*Crafted with precision for the students, faculty mentors, and academic leadership of Nandha Engineering College.*
+*Conceived, architected, and continuously developed with institutional pride by **Nanthish & Team** for the students, faculty mentors, and academic leadership of Nandha Engineering College.*
 
 </div>
