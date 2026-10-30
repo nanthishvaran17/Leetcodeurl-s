@@ -27,6 +27,7 @@ import { SwipeHandle } from './components/SwipeHandle';
 import { OfflineIndicatorBanner } from './components/OfflineIndicatorBanner';
 import { warmupPriorityRoutes } from './utils/pagePrefetch';
 import { AnimatedAppSplashScreen } from './components/AnimatedAppSplashScreen';
+import { useEscapeKey } from './hooks/useEscapeKey';
 
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
@@ -344,6 +345,17 @@ export const App: React.FC = () => {
   const [aiInitialQuery, setAiInitialQuery] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMobileFilterDrawer, setShowMobileFilterDrawer] = useState(false);
+
+  useEscapeKey(() => {
+    if (showExitConfirmModal) { setShowExitConfirmModal(false); return; }
+    if (showShareModal) { setShowShareModal(false); return; }
+    if (showMobileFilterDrawer) { setShowMobileFilterDrawer(false); return; }
+    if (showShortcutsModal) { setShowShortcutsModal(false); return; }
+    if (showAlertCenterModal) { setShowAlertCenterModal(false); return; }
+    if (showImportModal) { setShowImportModal(false); return; }
+    if (showLoginModal) { setShowLoginModal(false); return; }
+    if (selectedStudent) { setSelectedStudent(null); return; }
+  }, Boolean(showExitConfirmModal || showShareModal || showMobileFilterDrawer || showShortcutsModal || showAlertCenterModal || showImportModal || showLoginModal || selectedStudent));
 
   const handleCloseCommandPalette = useCallback(() => {
     setShowCommandPalette(false);
@@ -688,7 +700,7 @@ export const App: React.FC = () => {
 
   // Native Edge Swipe to Open Sidebar (Left-to-Right swipe) & Swipe Left to Close on Mobile
   useEffect(() => {
-    if (typeof window === 'undefined' || !isAuthenticated) return;
+    if (typeof window === 'undefined') return;
 
     let startX = 0;
     let startY = 0;
@@ -703,7 +715,7 @@ export const App: React.FC = () => {
         if (
           ['input', 'textarea', 'select'].includes(tag) ||
           target.getAttribute('role') === 'slider' ||
-          target.closest('input, textarea, select, [role="slider"]')
+          target.closest('input, textarea, select, [role="slider"], .no-drawer-swipe')
         ) {
           isTracking = false;
           return;
@@ -711,14 +723,15 @@ export const App: React.FC = () => {
       }
 
       if (!isSidebarOpen) {
-        // Strict edge zone on mobile: within 28px from the very left edge of the screen
-        if (clientX <= 28) {
+        // Generous left-edge zone on mobile: within first 65px or 18% of screen width
+        const edgeThreshold = Math.min(65, Math.max(45, window.innerWidth * 0.18));
+        if (clientX <= edgeThreshold) {
           startX = clientX;
           startY = clientY;
           isTracking = true;
         }
       } else {
-        // Sidebar is open: allow swiping left from the drawer body to close
+        // Sidebar is open: allow swiping left from anywhere to close
         startX = clientX;
         startY = clientY;
         isTracking = true;
@@ -731,15 +744,15 @@ export const App: React.FC = () => {
       const absDeltaX = Math.abs(currentDeltaX);
       const absDeltaY = Math.abs(clientY - startY);
 
-      // If user is scrolling vertically, cancel immediately so normal vertical page scroll is butter smooth
-      if (absDeltaY > 10 && absDeltaY > absDeltaX) {
+      // Only cancel if vertical scrolling is distinctly dominant
+      if (absDeltaY > 25 && absDeltaY > absDeltaX * 1.3) {
         isTracking = false;
         return;
       }
 
       if (!isSidebarOpen) {
-        // Quick 30px right swipe opens drawer
-        if (currentDeltaX >= 30 && currentDeltaX > absDeltaY * 1.5) {
+        // Natural 35px rightward swipe opens drawer smoothly
+        if (currentDeltaX >= 35 && currentDeltaX > absDeltaY * 1.1) {
           setIsSidebarOpen(true);
           isTracking = false;
           if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
@@ -747,8 +760,8 @@ export const App: React.FC = () => {
           }
         }
       } else {
-        // 30px left swipe closes drawer
-        if (currentDeltaX <= -30 && absDeltaX > absDeltaY * 1.5) {
+        // 35px leftward swipe closes drawer
+        if (currentDeltaX <= -35 && absDeltaX > absDeltaY * 1.1) {
           setIsSidebarOpen(false);
           isTracking = false;
           if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
@@ -785,7 +798,7 @@ export const App: React.FC = () => {
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [isAuthenticated, isSidebarOpen]);
+  }, [isAuthenticated, isSidebarOpen, activeTab]);
 
 
 
@@ -804,12 +817,7 @@ export const App: React.FC = () => {
 
   const handleGlobalPullToRefresh = useCallback(async () => {
     try {
-      // 1. Purge all in-memory, session, and local storage caches
-      clearApiCache();
-      clearAllStudentCaches();
-      clearContestCache();
-
-      // 2. Fetch fresh global summary and trigger TanStack query refetches across all active views
+      // 1. Fetch fresh global summary and background-revalidate queries without destructive cache clearing to prevent layout flicker
       await Promise.allSettled([
         fetchSummary(),
         refreshAllData ? refreshAllData(true) : Promise.resolve(),
@@ -1128,31 +1136,39 @@ export const App: React.FC = () => {
   // Full-screen login for unauthenticated users
   if (!isAuthenticated) {
     return (
-      <Suspense fallback={<PageSkeleton />}>
-        <LoginPage
-          onSuccess={() => {
-            // Role-aware redirect after login.
-            // IMPORTANT: user state from useAuth() is async — it hasn't updated yet here.
-            // Read role directly from localStorage where AuthContext writes it synchronously.
-            let localRoleClean = '';
-            try {
-              const stored = localStorage.getItem('user');
-              if (stored) {
-                const parsed = JSON.parse(stored);
-                localRoleClean = (parsed?.role || '').trim().toLowerCase();
-              }
-            } catch (_e) {}
-            // Fallback to context if localStorage not yet written
-            if (!localRoleClean) localRoleClean = (user?.role || '').trim().toLowerCase();
+      <>
+        {showSplashScreen && (
+          <AnimatedAppSplashScreen onComplete={() => setShowSplashScreen(false)} />
+        )}
+        <Suspense fallback={<PageSkeleton />}>
+          <LoginPage
+            onSuccess={() => {
+              // Ensure splash screen never triggers after entering login credentials
+              setShowSplashScreen(false);
 
-            if (['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(localRoleClean)) {
-              setActiveTab('faculty-action-center');
-            } else {
-              setActiveTab('dashboard');
-            }
-          }}
-        />
-      </Suspense>
+              // Role-aware redirect after login.
+              // IMPORTANT: user state from useAuth() is async — it hasn't updated yet here.
+              // Read role directly from localStorage where AuthContext writes it synchronously.
+              let localRoleClean = '';
+              try {
+                const stored = localStorage.getItem('user');
+                if (stored) {
+                  const parsed = JSON.parse(stored);
+                  localRoleClean = (parsed?.role || '').trim().toLowerCase();
+                }
+              } catch (_e) {}
+              // Fallback to context if localStorage not yet written
+              if (!localRoleClean) localRoleClean = (user?.role || '').trim().toLowerCase();
+
+              if (['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(localRoleClean)) {
+                setActiveTab('faculty-action-center');
+              } else {
+                setActiveTab('dashboard');
+              }
+            }}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -1240,7 +1256,7 @@ export const App: React.FC = () => {
       }`}>
         
         {/* Slide-out Sidebar Drawer */}
-        {isAuthenticated && (
+        {(isAuthenticated || activeTab === 'public') && (
           <Sidebar 
             activeTab={activeTab} 
             setActiveTab={(tab) => {

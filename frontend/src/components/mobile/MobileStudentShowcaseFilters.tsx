@@ -20,11 +20,16 @@ import {
 } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { DropdownOption } from '../CustomDropdown';
+import { normalizeDepartment, normalizeAcademicYear } from '../../utils/filterUtils';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 export interface MobileStudentShowcaseFiltersProps {
   isOpen: boolean;
   onClose: () => void;
-  initialTab?: 'all' | 'department' | 'year' | 'performance' | 'sort';
+  initialTab?: 'all' | 'college' | 'department' | 'year' | 'performance' | 'sort';
+  selectedCollege?: string;
+  onSelectCollege?: (val: string) => void;
+  collegeOptions?: DropdownOption[];
   selectedDept: string;
   onSelectDept: (val: string) => void;
   yearLevel: string;
@@ -54,6 +59,9 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
   isOpen,
   onClose,
   initialTab = 'all',
+  selectedCollege = 'all',
+  onSelectCollege,
+  collegeOptions = [],
   selectedDept,
   onSelectDept,
   yearLevel,
@@ -71,10 +79,11 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
   onReset,
   isFacultyRole = false
 }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'department' | 'year' | 'performance' | 'sort'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'college' | 'department' | 'year' | 'performance' | 'sort'>('all');
   const [deptSearchQuery, setDeptSearchQuery] = useState('');
 
   useScrollLock(isOpen);
+  useEscapeKey(onClose, isOpen);
 
   useEffect(() => {
     if (isOpen) {
@@ -86,6 +95,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    if (selectedCollege !== 'all') count++;
     if (selectedDept !== 'all') count++;
     if (yearLevel !== 'all') count++;
     if (solvedFilter !== 'all') count++;
@@ -202,6 +212,22 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
               >
                 Overview
               </button>
+              {collegeOptions.length > 0 && (
+                <button
+                  onClick={() => setActiveTab('college')}
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all shrink-0 ${
+                    activeTab === 'college'
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : selectedCollege !== 'all'
+                      ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <Building2 className="w-3 h-3" />
+                  <span>College</span>
+                  {selectedCollege !== 'all' && <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />}
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('department')}
                 className={`flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all shrink-0 ${
@@ -262,6 +288,59 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
 
             {/* Scrollable Body */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+              {/* 0. COLLEGE FILTER */}
+              {(activeTab === 'all' || activeTab === 'college') && collegeOptions.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                      <span>College Filter</span>
+                    </label>
+                    {selectedCollege !== 'all' && (
+                      <button
+                        onClick={() => onSelectCollege?.('all')}
+                        className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                      >
+                        Reset College
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {collegeOptions.map((opt) => {
+                      const isSelected = selectedCollege.toLowerCase() === opt.value.toLowerCase();
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => onSelectCollege?.(opt.value)}
+                          className={`p-2.5 rounded-2xl text-left border transition-all active:scale-95 cursor-pointer flex items-center justify-between space-x-2 ${
+                            isSelected
+                              ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20'
+                              : 'bg-slate-100 dark:bg-navy-900 border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <span className="font-extrabold text-xs block truncate">{opt.label}</span>
+                            {opt.badge && (
+                              <span className={`text-[10px] font-semibold ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
+                                {opt.badge}
+                              </span>
+                            )}
+                          </div>
+                          {opt.count !== undefined && (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                              isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400'
+                            }`}>
+                              {opt.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* 1. DEPARTMENT FILTER */}
               {(activeTab === 'all' || activeTab === 'department') && (
                 <div className="space-y-3">
@@ -295,8 +374,10 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
 
                   <div className="grid grid-cols-2 gap-2">
                     {deptList.map((dept) => {
-                      const isSelected = selectedDept.toLowerCase() === dept.value.toLowerCase() ||
-                        (selectedDept === 'all' && dept.value === 'all');
+                      const isSelected = 
+                        (selectedDept === 'all' && dept.value === 'all') ||
+                        selectedDept.toLowerCase() === dept.value.toLowerCase() ||
+                        normalizeDepartment(selectedDept) === normalizeDepartment(dept.value);
                       return (
                         <button
                           key={dept.value}
@@ -363,7 +444,10 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
 
                   <div className="grid grid-cols-2 gap-2">
                     {yearOptions.map((opt) => {
-                      const isSelected = yearLevel === opt.value;
+                      const isSelected = 
+                        (yearLevel === 'all' && opt.value === 'all') ||
+                        yearLevel === opt.value ||
+                        normalizeAcademicYear(yearLevel) === normalizeAcademicYear(opt.value);
                       return (
                         <button
                           key={opt.value}

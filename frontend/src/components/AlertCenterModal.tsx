@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { getSystemAlerts, markAlertRead, markAlertResolve, SystemAlertItem } from '../services/intelligenceService';
 import { SwipeHandle } from './SwipeHandle';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface AlertCenterModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AlertCenterModalProps {
 
 export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onClose, onNavigate }) => {
   const [alerts, setAlerts] = useState<SystemAlertItem[]>([]);
+  useEscapeKey(onClose, isOpen);
   const [loading, setLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<string>('ALL');
 

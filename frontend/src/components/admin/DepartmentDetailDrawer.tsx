@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronUp, Search, Award, ShieldCheck
 } from 'lucide-react';
 import { SwipeHandle } from '../SwipeHandle';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { getDepartmentIntelligenceDetails, DepartmentIntelligenceDetails, DeptBenchmark } from '../../services/commandCenterService';
 
 interface DepartmentDetailDrawerProps {
@@ -21,28 +22,39 @@ const CANONICAL_DEPT_HOD: Record<string, string> = {
   CSE: 'Dr. S. Prabhu',
 };
 
-const resolveDepartmentHODName = (deptCode?: string, rawName?: string) => {
-  const code = (deptCode || '').toUpperCase().trim();
-  if (code.includes('IOT')) return 'Dr. S. Karthikeyan';
-  if (code.includes('IT')) return 'Dr. M. Senthilkumar';
-  if (code.includes('CS')) return 'Dr. S. Prabhu';
+const resolveDepartmentHODName = (deptCode?: string, rawName?: string, deptName?: string) => {
+  // 1. PRIORITY: Genuine assigned HOD user returned by backend from database
   const raw = (rawName || '').trim();
   const isCoordinator = /santhoshkumar|devayani|sivakumar/i.test(raw);
   if (raw && !isCoordinator && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
     return raw;
   }
-  return CANONICAL_DEPT_HOD[code] || raw || (deptCode ? `HOD (${deptCode})` : 'Head of Department');
+  // 2. FALLBACK: Only if no genuine HOD is assigned in the database
+  const code = (deptCode || '').toUpperCase().trim();
+  const name = (deptName || '').toUpperCase().trim();
+  if (code.includes('IOT') || name.includes('IOT')) return 'Dr. S. Karthikeyan';
+  if (code.includes('CYBER') || name.includes('CYBER') || code.includes('(CS)') || code === 'CSE(CS)' || code === 'CSE') return 'Dr. S. Prabhu';
+  if (code === 'IT' || name.includes('INFORMATION')) return 'Dr. M. Senthilkumar';
+  return deptCode ? `HOD (${deptCode})` : 'Head of Department';
 };
 
-const resolveDepartmentHODEmail = (deptCode?: string, rawEmail?: string) => {
+const resolveDepartmentHODEmail = (deptCode?: string, rawEmail?: string, deptName?: string) => {
+  // 1. PRIORITY: Genuine assigned HOD email returned by backend from database
+  const raw = (rawEmail || '').trim();
+  if (raw && !raw.includes('example.com') && raw !== 'hod@nandha.edu.in' && raw !== 'hod@nandhaengg.org') {
+    return raw;
+  }
+  // 2. FALLBACK: Only if no email assigned in the database
   const code = (deptCode || '').toUpperCase().trim();
-  if (code.includes('IOT')) return 'hod.cseiot@nandhaengg.org';
-  if (code.includes('IT')) return 'hod.it@nandhaengg.org';
-  if (code.includes('CS')) return 'prabhu.s@nandhaengg.org';
-  return rawEmail || 'hod@nandhaengg.org';
+  const name = (deptName || '').toUpperCase().trim();
+  if (code.includes('IOT') || name.includes('IOT')) return 'hod.cseiot@nandhaengg.org';
+  if (code.includes('CYBER') || name.includes('CYBER') || code.includes('(CS)') || code === 'CSE(CS)' || code === 'CSE') return 'prabhu.s@nandhaengg.org';
+  if (code === 'IT' || name.includes('INFORMATION')) return 'hod.it@nandhaengg.org';
+  return raw || 'hod@nandhaengg.org';
 };
 
 export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ department, onClose }) => {
+  useEscapeKey(onClose, Boolean(department));
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<DepartmentIntelligenceDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -266,10 +278,10 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       </span>
                     </div>
                     <h3 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
-                      {resolveDepartmentHODName(department.department_code, details.hod.name)}
+                      {resolveDepartmentHODName(department.department_code, details.hod.name, department.department_name)}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                      <Mail size={12} /> {resolveDepartmentHODEmail(department.department_code, details?.hod?.email)}
+                      <Mail size={12} /> {resolveDepartmentHODEmail(department.department_code, details?.hod?.email, department.department_name)}
                     </p>
                   </div>
                 </div>

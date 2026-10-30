@@ -94,47 +94,57 @@ def parse_session_date(date_str: str) -> Optional[datetime.date]:
             pass
     return None
 
-@router.get("/submissions/{submission_id}/code")
-def get_submission_code(submission_id: str):
+def fetch_leetcode_verbatim_code(sub_id: str):
     """
-    Attempts to fetch authoritative code for a contest submission from LeetCode GraphQL.
-    Uses LEETCODE_SESSION if available in environment/database.
+    Fetches 100% authentic verbatim submission code from LeetCode official API.
     """
     import os
     import httpx
     session_cookie = os.environ.get("LEETCODE_SESSION", "").strip()
+    cf_clearance = os.environ.get("LEETCODE_CF_CLEARANCE", "").strip()
     csrf_token = os.environ.get("LEETCODE_CSRF", "").strip()
-    
+
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://leetcode.com/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Referer": "https://leetcode.com/contest/",
+        "Accept": "application/json, text/plain, */*",
+        "x-csrftoken": csrf_token or "EWmjwXVUeX84093oyY5WVIw8NmuLb8Wa"
     }
     cookies = {}
     if session_cookie:
         cookies["LEETCODE_SESSION"] = session_cookie
+    if cf_clearance:
+        cookies["cf_clearance"] = cf_clearance
     if csrf_token:
         cookies["csrftoken"] = csrf_token
-        headers["x-csrftoken"] = csrf_token
+
+    clean_sub_id = str(sub_id).strip()
+    url = f"https://leetcode.com/api/submissions/{clean_sub_id}/"
+    try:
+        with httpx.Client(timeout=10, follow_redirects=True) as client:
+            resp = client.get(url, headers=headers, cookies=cookies)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data and data.get("code"):
+                    return data.get("code"), data.get("lang"), data.get("contest_submission")
+    except Exception as e:
+        logger.warning(f"[SUBMISSION_CODE] REST error fetching submission {sub_id}: {e}")
 
     try:
-        sub_id_int = int(submission_id)
-    except ValueError:
-        return {"status": "error", "message": "Invalid submission ID"}
-
-    query = """
-    query submissionDetails($submissionId: Int!) {
-      submissionDetails(submissionId: $submissionId) {
-        code
-        timestamp
-        statusCode
-        lang {
-          name
-          verboseName
+        sub_id_int = int(clean_sub_id)
+        query = """
+        query submissionDetails($submissionId: Int!) {
+          submissionDetails(submissionId: $submissionId) {
+            code
+            timestamp
+            statusCode
+            lang {
+              name
+              verboseName
+            }
+          }
         }
-      }
-    }
-    """
-    try:
+        """
         with httpx.Client(timeout=10) as client:
             resp = client.post(
                 "https://leetcode.com/graphql",
@@ -145,14 +155,28 @@ def get_submission_code(submission_id: str):
             if resp.status_code == 200:
                 data = resp.json().get("data", {}).get("submissionDetails")
                 if data and data.get("code"):
-                    return {
-                        "status": "success",
-                        "code": data.get("code"),
-                        "lang": (data.get("lang") or {}).get("verboseName") or (data.get("lang") or {}).get("name") or "code",
-                        "timestamp": data.get("timestamp")
-                    }
+                    lang_name = (data.get("lang") or {}).get("verboseName") or (data.get("lang") or {}).get("name") or "code"
+                    return data.get("code"), lang_name, None
     except Exception as e:
-        logger.warning(f"[SUBMISSION_CODE] Error fetching submission {submission_id}: {e}")
+        logger.warning(f"[SUBMISSION_CODE] Error fetching submission {sub_id} via GraphQL: {e}")
+
+    return None, None, None
+
+
+@router.get("/submissions/{submission_id}/code")
+def get_submission_code(submission_id: str):
+    """
+    Attempts to fetch authoritative verbatim code for a contest submission from LeetCode.
+    """
+    code, lang, c_sub = fetch_leetcode_verbatim_code(submission_id)
+    if code:
+        return {
+            "status": "success",
+            "code": code,
+            "lang": lang,
+            "submission_id": str(submission_id),
+            "contest_submission": c_sub
+        }
 
     return {
         "status": "requires_auth",
@@ -180,6 +204,32 @@ def get_problem_solution(
     memory_disp = None
     status_disp = "Accepted"
     verbatim_code = None
+
+    # 0. Check pre-cached authentic verbatim code in ContestSubmissionCode table
+    if username:
+        try:
+            from backend.models import Student, ContestSubmissionCode
+            clean_user = username.strip().lower()
+            clean_slug = slug.strip().lower()
+            st_match = db.query(Student).filter(
+                (Student.username.ilike(clean_user)) | 
+                (Student.primary_leetcode_id.ilike(clean_user))
+            ).first()
+            if st_match:
+                cached_code_row = db.query(ContestSubmissionCode).filter(
+                    ContestSubmissionCode.student_id == st_match.id,
+                    (ContestSubmissionCode.problem_slug == clean_slug) | (ContestSubmissionCode.problem_slug.like(f"%{clean_slug}%"))
+                ).order_by(ContestSubmissionCode.id.desc()).first()
+
+                if cached_code_row and cached_code_row.code and "return true" not in cached_code_row.code:
+                    verbatim_code = cached_code_row.code
+                    detected_lang = (cached_code_row.lang or detected_lang or "java").lower()
+                    student_sub_id = cached_code_row.submission_id or student_sub_id
+                    runtime_disp = cached_code_row.runtime_display or runtime_disp
+                    memory_disp = cached_code_row.memory_display or memory_disp
+                    status_disp = cached_code_row.status_display or "Accepted"
+        except Exception as e:
+            logger.debug(f"[PROBLEM_SOLUTION] Cached code lookup error: {e}")
 
     # 1. Lookup student and their submission in verified local database
     if username:
@@ -244,50 +294,39 @@ def get_problem_solution(
         except Exception:
             pass
 
-    # 3. If sub_id is present and LEETCODE_SESSION is configured, attempt to fetch verbatim code
+    # 3. If sub_id is present, fetch 100% authentic verbatim code from LeetCode API
     if student_sub_id:
         try:
-            sub_id_int = int(str(student_sub_id).strip())
-            session_cookie = os.environ.get("LEETCODE_SESSION")
-            if session_cookie:
-                import httpx
-                sub_query = """
-                query submissionDetails($submissionId: Int!) {
-                  submissionDetails(submissionId: $submissionId) {
-                    code
-                    lang {
-                      name
-                      verboseName
-                    }
-                  }
-                }
-                """
-                with httpx.Client(timeout=8) as client:
-                    resp = client.post(
-                        "https://leetcode.com/graphql",
-                        json={"query": sub_query, "variables": {"submissionId": sub_id_int}},
-                        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://leetcode.com"},
-                        cookies={"LEETCODE_SESSION": session_cookie}
-                    )
-                    if resp.status_code == 200:
-                        s_data = resp.json().get("data", {}).get("submissionDetails")
-                        if s_data and s_data.get("code"):
-                            verbatim_code = s_data.get("code")
-                            if s_data.get("lang"):
-                                detected_lang = (s_data["lang"].get("verboseName") or s_data["lang"].get("name") or detected_lang).lower()
+            v_code, v_lang, _ = fetch_leetcode_verbatim_code(student_sub_id)
+            if v_code:
+                verbatim_code = v_code
+                if v_lang:
+                    detected_lang = v_lang.strip().lower()
         except Exception as e:
-            logger.debug(f"[PROBLEM_SOLUTION] Verbatim code fetch error: {e}")
+            logger.warning(f"[PROBLEM_SOLUTION] Verbatim code fetch error: {e}")
 
-    # Standardize detected_lang to one of: 'java', 'python3', 'cpp'
-    normalized_lang = "java"
+    # Standardize detected_lang to authentic student solved language
+    normalized_lang = detected_lang or "java"
     if detected_lang:
-        dl = detected_lang.lower()
+        dl = detected_lang.lower().strip()
         if "python" in dl or "py" in dl:
             normalized_lang = "python3"
         elif "c++" in dl or "cpp" in dl:
             normalized_lang = "cpp"
         elif "java" in dl:
             normalized_lang = "java"
+        elif "javascript" in dl or dl == "js":
+            normalized_lang = "javascript"
+        elif "typescript" in dl or dl == "ts":
+            normalized_lang = "typescript"
+        elif "c#" in dl or "csharp" in dl:
+            normalized_lang = "csharp"
+        elif "rust" in dl:
+            normalized_lang = "rust"
+        elif "go" in dl or "golang" in dl:
+            normalized_lang = "go"
+        elif dl == "c":
+            normalized_lang = "c"
         else:
             normalized_lang = dl
 
@@ -3969,3 +4008,25 @@ async def trigger_friday_official_rating_sync(
 
 
 
+
+@router.post("/sessions/{session_id}/sync-codes")
+def sync_session_codes(
+    session_id: int,
+    background_tasks: BackgroundTasks,
+    force: bool = Query(False),
+    db: Session = Depends(get_db)
+):
+    """
+    Triggers automated background sync of 100% real verbatim code for all students in a session.
+    """
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    from backend.services.auto_code_sync_service import sync_contest_submission_codes_for_session
+    background_tasks.add_task(sync_contest_submission_codes_for_session, session_id, force_refresh=force)
+    return {
+        "status": "queued",
+        "session_id": session_id,
+        "message": f"100% Real Verbatim Code sync initiated for {session.contest_name or session.session_code}"
+    }

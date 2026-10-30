@@ -374,7 +374,12 @@ export const getPillText = (opt: GlobalFilterOption | undefined) => {
   if (!opt) return 'ALL';
   if (opt.pillText) return opt.pillText;
   if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'ALL';
-  if (opt.value.length <= 6) return opt.value.toUpperCase();
+  const valUpper = opt.value.toUpperCase();
+  const labelUpper = (opt.label || '').toUpperCase();
+  if (valUpper.includes('CSE(CS)') || valUpper === 'CS' || labelUpper.includes('CYBER')) return 'CSE(CS)';
+  if (valUpper.includes('CSE(IOT)') || valUpper.includes('IOT') || labelUpper.includes('INTERNET')) return 'CSE(IOT)';
+  if (valUpper === 'IT' || labelUpper.includes('INFORMATION TECHNOLOGY')) return 'IT';
+  if (opt.value.length <= 7) return opt.value.toUpperCase();
   return opt.value.substring(0, 3).toUpperCase();
 };
 
@@ -418,7 +423,11 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     maxHeight: 380
   });
 
-  const selectedOption = options.find((opt) => opt.value === value) || options[0];
+  const selectedOption = options.find((opt) => 
+    opt.value === value || 
+    opt.value?.toUpperCase() === value?.toUpperCase() ||
+    (opt.value && value && opt.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
+  ) || options[0];
 
   // Reset search on close
   useEffect(() => {
@@ -657,6 +666,9 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
         {/* MOBILE BOTTOM SHEET PORTAL (< 768px / Touch devices) */}
         {isOpen && isMobile && createPortal(
           <div 
+            role="dialog"
+            aria-modal="true"
+            data-modal-active="true"
             className="fixed inset-0 z-[999999] flex flex-col justify-end bg-slate-950/60 backdrop-blur-sm p-0 animate-fade-in"
             onClick={() => setIsOpen(false)}
           >

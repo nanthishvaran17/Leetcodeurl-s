@@ -9,6 +9,7 @@ import { Conversation } from './ConversationList';
 import { getApiUrl } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 export type ChatWallpaper = 'default' | 'emerald' | 'stealth' | 'cyber' | 'indigo' | 'doodle';
 
@@ -310,6 +311,18 @@ export const ChatWindow: React.FC<Props> = ({
   const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+
+  useEscapeKey(() => {
+    if (activeMenuMessageId) {
+      setActiveMenuMessageId(null);
+    } else if (replyingToMessage) {
+      setReplyingToMessage(null);
+    } else if (editingMessage) {
+      setEditingMessage(null);
+    } else if (selectedFile) {
+      setSelectedFile(null);
+    }
+  }, Boolean(activeMenuMessageId || replyingToMessage || editingMessage || selectedFile));
 
   // Typing debounce timer
   const typingTimerRef = useRef<any>(null);
@@ -1317,7 +1330,7 @@ export const ChatWindow: React.FC<Props> = ({
               placeholder={editingMessage ? "Update message..." : "Type a message..."}
               value={inputText}
               onChange={handleInputChange}
-              className="flex-1 px-1.5 sm:px-2 bg-transparent text-xs sm:text-sm md:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
+              className="flex-1 px-1.5 sm:px-2 bg-transparent border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none text-xs sm:text-sm md:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium min-w-0 chat-input"
             />
 
             {/* Send Button — inside the pill on the right */}

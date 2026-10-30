@@ -10,6 +10,7 @@ import {
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
 import { StaffActivityLogsModal } from './StaffActivityLogsModal';
 
@@ -26,6 +27,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   staff, onClose, onSuccess, departments, staffList, notify 
 }) => {
   const storeVersion = useStudentStoreVersion();
+  useEscapeKey(onClose);
   const [showLogsModal, setShowLogsModal] = useState<boolean>(false);
   // const navigate = useNavigate();
   const [assignedSections, setAssignedSections] = useState('');

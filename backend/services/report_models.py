@@ -38,6 +38,7 @@ class StudentRow(BaseModel):
     category: str = "0 Solved"
     status: str = "UNVERIFIED"
     accommodation: Optional[str] = ""
+    gender: Optional[str] = ""
     twelfth_cutoff: Optional[float] = None
     cutoff: Optional[float] = None
     contests_attended: Optional[int] = 0

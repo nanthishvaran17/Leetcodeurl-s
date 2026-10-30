@@ -100,8 +100,8 @@ export class LiveEventRouter {
     incomingVersion?: number
   ) {
     const idStr = String(studentId);
-    this.queryClient.setQueryData(
-      ['students', 'canonical'],
+    this.queryClient.setQueriesData(
+      { queryKey: ['students', 'canonical'] },
       (prev: any[] | undefined) => {
         if (!prev) return prev;
 
@@ -151,8 +151,8 @@ export class LiveEventRouter {
    * Used when STUDENT_CREATED arrives via WebSocket.
    */
   private addToCanonicalCache(student: any) {
-    this.queryClient.setQueryData(
-      ['students', 'canonical'],
+    this.queryClient.setQueriesData(
+      { queryKey: ['students', 'canonical'] },
       (prev: any[] | undefined) => {
         if (!prev) return prev;
         const exists = prev.some(s => String(s.id) === String(student.id));
@@ -168,8 +168,8 @@ export class LiveEventRouter {
    */
   private removeFromCanonicalCache(studentId: string | number) {
     const idStr = String(studentId);
-    this.queryClient.setQueryData(
-      ['students', 'canonical'],
+    this.queryClient.setQueriesData(
+      { queryKey: ['students', 'canonical'] },
       (prev: any[] | undefined) => {
         if (!prev) return prev;
         const next = prev.filter(s => String(s.id) !== idStr);
@@ -215,16 +215,17 @@ export class LiveEventRouter {
         case 'leaderboard_update': // legacy support
           if (effectiveId) {
             const student = studentLiveStore.getStudent(effectiveId);
+            const patchData = data || changes || {};
             
             // 1. Patch the live store (O(1) — only re-renders the changed row)
             studentLiveStore.updateStudent(effectiveId, {
-              ...changes,
+              ...patchData,
               version
             });
 
             // 2. ALSO patch React Query canonical cache (keeps RQ as source of truth)
             // Without this, SYNC_COMPLETE reconcile would overwrite WS updates with stale RQ data
-            this.patchCanonicalStudent(effectiveId, changes || {}, version);
+            this.patchCanonicalStudent(effectiveId, patchData, version);
 
             shouldInvalidateDashboards = true;
             if (student && student.department_id) {

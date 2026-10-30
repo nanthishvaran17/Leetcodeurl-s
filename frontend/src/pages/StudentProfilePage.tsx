@@ -27,6 +27,7 @@ interface StudentProfilePageProps {
 
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 // triggerDownload used by downloadManager internally
 import { downloadManager } from '../services/download/downloadManager';
 
@@ -46,6 +47,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [showEditOverlay, setShowEditOverlay] = useState(false);
   const [showAuditModal, setShowAuditModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  useEscapeKey(() => {
+    if (showMobileMenu) {
+      setShowMobileMenu(false);
+    } else if (onBack) {
+      onBack();
+    }
+  }, Boolean(showMobileMenu || onBack));
   const [isChartsReady, setIsChartsReady] = useState(false);
 
   const [isPending, startTransition] = useTransition();

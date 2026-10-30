@@ -135,7 +135,7 @@ def test_07_virtual_contest_isolation():
         contest_problems=["find-special-substring-of-length-k"],
         raw_data=raw_data
     )
-    assert eval_res["solved_count"] == 0
+    assert eval_res["verified_solved_count"] == 0
     assert eval_res["status_badge"] == " YELLOW"
 
 
@@ -148,7 +148,7 @@ def test_08_api_empty_response():
         contest_problems=["find-special-substring-of-length-k"],
         raw_data={}
     )
-    assert eval_res["solved_count"] == 0
+    assert eval_res["verified_solved_count"] == 0
     assert eval_res["status_badge"] == " RED"
     assert eval_res["verified_solved_count"] == 0
 
@@ -269,7 +269,7 @@ def test_13_malformed_graphql_response():
         contest_problems=["find-special-substring-of-length-k"],
         raw_data={"malformed": True}
     )
-    assert eval_res["solved_count"] == 0
+    assert eval_res["verified_solved_count"] == 0
     assert eval_res["verified_solved_count"] == 0
 
 

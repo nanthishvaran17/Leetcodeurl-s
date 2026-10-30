@@ -9,7 +9,7 @@ html {
   width: 100%;
   min-height: 100%;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 /* Overscroll Behavior & Background Lock */
@@ -350,13 +350,100 @@ html.dark body {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* AI Form Controls, Inputs & Select Dropdowns */
-.dark input:not([type="checkbox"]):not([type="radio"]),
-.dark select,
-.dark textarea {
-  background-color: rgba(10, 14, 26, 0.95) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #F8FAFC !important;
+/* Universal Protection: Prevent ugly square outlines, borders, and dark backgrounds on all transparent, borderless, chat & pill inputs */
+input[class*="bg-transparent"],
+textarea[class*="bg-transparent"],
+input[class*="border-none"],
+textarea[class*="border-none"],
+input[class*="border-0"],
+textarea[class*="border-0"],
+input[class*="border-transparent"],
+textarea[class*="border-transparent"],
+input[class*="outline-none"],
+textarea[class*="outline-none"],
+input[class*="focus:outline-none"],
+textarea[class*="focus:outline-none"],
+input.chat-input,
+textarea.chat-input,
+.chat-input,
+.borderless-input,
+.dark input[class*="bg-transparent"],
+.dark textarea[class*="bg-transparent"],
+.dark input[class*="border-none"],
+.dark textarea[class*="border-none"],
+.dark input[class*="border-0"],
+.dark textarea[class*="border-0"],
+.dark input[class*="border-transparent"],
+.dark textarea[class*="border-transparent"],
+.dark input[class*="outline-none"],
+.dark textarea[class*="outline-none"],
+.dark input[class*="focus:outline-none"],
+.dark textarea[class*="focus:outline-none"],
+.dark input.chat-input,
+.dark textarea.chat-input,
+.dark .chat-input,
+.dark .borderless-input {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[class*="bg-transparent"]:focus,
+textarea[class*="bg-transparent"]:focus,
+input[class*="border-none"]:focus,
+textarea[class*="border-none"]:focus,
+input[class*="border-0"]:focus,
+textarea[class*="border-0"]:focus,
+input[class*="border-transparent"]:focus,
+textarea[class*="border-transparent"]:focus,
+input[class*="outline-none"]:focus,
+textarea[class*="outline-none"]:focus,
+input[class*="focus:outline-none"]:focus,
+textarea[class*="focus:outline-none"]:focus,
+input.chat-input:focus,
+textarea.chat-input:focus,
+.chat-input:focus,
+.borderless-input:focus,
+.dark input[class*="bg-transparent"]:focus,
+.dark textarea[class*="bg-transparent"]:focus,
+.dark input[class*="border-none"]:focus,
+.dark textarea[class*="border-none"]:focus,
+.dark input[class*="border-0"]:focus,
+.dark textarea[class*="border-0"]:focus,
+.dark input[class*="border-transparent"]:focus,
+.dark textarea[class*="border-transparent"]:focus,
+.dark input[class*="outline-none"]:focus,
+.dark textarea[class*="outline-none"]:focus,
+.dark input[class*="focus:outline-none"]:focus,
+.dark textarea[class*="focus:outline-none"]:focus,
+.dark input.chat-input:focus,
+.dark textarea.chat-input:focus,
+.dark .chat-input:focus,
+.dark .borderless-input:focus {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* AI Form Controls, Standard Inputs & Select Dropdowns (Excludes transparent, chat, and borderless inputs) */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input),
+.dark select:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="outline-none"]):not(.borderless-input),
+.dark textarea:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input) {
+  background-color: rgba(10, 14, 26, 0.95);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #F8FAFC;
 }
 
 .dark select option {
@@ -364,16 +451,16 @@ html.dark body {
   color: #F8FAFC !important;
 }
 
-.dark input:not([type="checkbox"]):not([type="radio"]):focus,
-.dark select:focus,
-.dark textarea:focus {
-  border-color: rgba(99, 102, 241, 0.7) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 0 16px rgba(99, 102, 241, 0.2) !important;
+.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input):focus,
+.dark select:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="outline-none"]):not(.borderless-input):focus,
+.dark textarea:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input):focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 0 16px rgba(99, 102, 241, 0.2);
 }
 
 .dark input::placeholder,
 .dark textarea::placeholder {
-  color: #64748B !important;
+  color: #64748B;
 }
 
 /* AI Table Elements & Sticky Headers */
@@ -698,7 +785,7 @@ html.dark body {
 
   html {
     font-size: 16.5px;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     scroll-padding-top: 5rem;
     scrollbar-gutter: stable;
     text-rendering: optimizeSpeed;
@@ -980,9 +1067,8 @@ html.global-scroll-lock {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   position: relative;
-  will-change: scroll-position;
   transform: translateZ(0);
 }
 
@@ -1038,9 +1124,8 @@ html.dark {
 }
 
 .card-ai-control {
-  content-visibility: auto;
-  contain-intrinsic-size: 380px;
-  will-change: transform;
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
   transform: translateZ(0);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1498,12 +1583,9 @@ html.dark {
 @keyframes stagedEntrance {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
-
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -2234,7 +2316,10 @@ body {
 }
 
 
-.responsive-table-container, .student-card { content-visibility: auto; contain-intrinsic-size: 150px; }
+.responsive-table-container, .student-card {
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
+}
 
 /* ========================================================
    2026 NEXT-GEN DESIGN SYSTEM UTILITIES
@@ -2398,14 +2483,14 @@ body {
 
 /* 60FPS Silky Smooth Candidate Cards Hardware Acceleration */
 .smooth-scroll-card {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 280px;
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
   touch-action: pan-x pan-y;
 }
 
 .smooth-scroll-compact-card {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 64px;
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
   touch-action: pan-x pan-y;
 }
 
@@ -2489,14 +2574,14 @@ body {
 }
 
 .content-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 400px;
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
 }
 
 /* Only enable global smooth scroll on non-touch devices with fine pointers to eliminate touch drag lag */
 @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
 }
 

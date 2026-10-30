@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock, KeyRound, Loader2, Eye, Users, ChevronRight } from 'lucide-react';
+import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, AlertCircle, ArrowRight, Building2, GraduationCap, Award, Key, Mail, User, Calendar, Check, X, Trash2, Phone, Briefcase, Activity, ShieldAlert, FileText, Database, Lock, KeyRound, Loader2, Eye, Users, ChevronRight, Copy } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,7 @@ import { CreateStaffModal } from './CreateStaffModal';
 import { EditStaffModal } from './EditStaffModal';
 import { StaffDetailDrawer } from './StaffDetailDrawer';
 import { isRoleEligibleForMentees } from '../../utils/staffRoleUtils';
+import { copyToClipboard } from '../../utils/clipboard';
 
 let cachedStaffList: any[] | null = null;
 
@@ -41,6 +42,25 @@ export const StaffManagement: React.FC = () => {
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role?.toLowerCase() === 'super admin';
   const [previewingPhoto, setPreviewingPhoto] = useState<{ url: string; name: string; role?: string; id?: string } | null>(null);
+  const [copiedStaffName, setCopiedStaffName] = useState<string | null>(null);
+
+  const handleCopyStaffName = async (name: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!name) return;
+    const ok = await copyToClipboard(name);
+    if (ok) {
+      setCopiedStaffName(name);
+      notify.success('Copied to Clipboard', `Staff name: "${name}"`, { category: 'ADMIN', duration: 2000 });
+      setTimeout(() => {
+        setCopiedStaffName(prev => (prev === name ? null : prev));
+      }, 2000);
+    } else {
+      notify.error('Copy Failed', 'Unable to copy to clipboard', { category: 'ADMIN' });
+    }
+  };
 
   const handleOpenEditModal = (staff: any) => {
     if (staff) {
@@ -613,14 +633,26 @@ export const StaffManagement: React.FC = () => {
                             </div>
 
                             {/* Name + Role Pill */}
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4
-                                  className="font-bold text-sm text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
+                                  className="font-bold text-sm text-slate-900 dark:text-white leading-tight truncate select-text cursor-text"
                                   title={staff.full_name || staff.username}
                                 >
                                   {staff.full_name || staff.username}
                                 </h4>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleCopyStaffName(staff.full_name || staff.username, e)}
+                                  className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                                  title="Copy Staff Name"
+                                >
+                                  {copiedStaffName === (staff.full_name || staff.username) ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
                                 {isRoot && (
                                   <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
                                     ROOT
@@ -847,7 +879,19 @@ export const StaffManagement: React.FC = () => {
                               </div>
                               <div className="min-w-0">
                                 <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 text-sm">
-                                  <span className="truncate">{staff.full_name || staff.username}</span>
+                                  <span className="truncate select-text">{staff.full_name || staff.username}</span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleCopyStaffName(staff.full_name || staff.username, e)}
+                                    className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                                    title="Copy Staff Name"
+                                  >
+                                    {copiedStaffName === (staff.full_name || staff.username) ? (
+                                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                    ) : (
+                                      <Copy className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
                                   {staff.role === 'Super Admin' && (
                                     <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30">
                                       ROOT
@@ -1014,7 +1058,7 @@ export const StaffManagement: React.FC = () => {
       {createPortal(
         <>
           {showCancelConfirm && (
-            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
+            <GlobalModalBackdrop isOpen={true} onClose={() => setShowCancelConfirm(false)} className="flex items-center justify-center p-4">
               <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 p-6 text-center space-y-5">
                 <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
                   <UserX className="w-7 h-7" />
@@ -1045,7 +1089,7 @@ export const StaffManagement: React.FC = () => {
 
           {/* Centered Create Staff Account Confirmation Modal */}
           {showConfirmCreate && (
-            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
+            <GlobalModalBackdrop isOpen={true} onClose={() => !submitting && setShowConfirmCreate(false)} className="flex items-center justify-center p-4">
               <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-indigo-200/50 dark:border-indigo-900/40 p-6 text-center space-y-5">
                 <div className="w-16 h-16 bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-brand-500/20">
                   <UserPlus className="w-8 h-8" />
@@ -1125,7 +1169,7 @@ export const StaffManagement: React.FC = () => {
       )}
 
           {deletingStaff && (
-            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
+            <GlobalModalBackdrop isOpen={true} onClose={() => !isDeleting && setDeletingStaff(null)} className="flex items-center justify-center p-4">
               <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-rose-200/80 dark:border-rose-900/60 p-6 text-center space-y-5">
                 <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
                   <Trash2 className="w-8 h-8" />

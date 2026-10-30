@@ -60,6 +60,25 @@ export const useGlobalKeyboardShortcuts = ({
       // If user is typing inside text input, ignore global navigation & modal shortcuts
       if (isInput) return;
 
+      // Check if user has active text selected or highlighted (e.g. copying text like staff name)
+      const hasTextSelection = typeof window !== 'undefined' && Boolean(window.getSelection()?.toString().trim());
+
+      // Check if any modal dialog or backdrop is currently open
+      const isModalOpen = typeof document !== 'undefined' && Boolean(
+        document.querySelector('[aria-modal="true"], [role="dialog"], .fixed.inset-0')
+      );
+
+      // If text is selected or a modal is open, avoid hijacking keystrokes that might conflict with copying or modal interaction
+      if (hasTextSelection) {
+        // Allow native copying (Ctrl+C / Cmd+C) without triggering any custom navigation or shortcuts
+        return;
+      }
+
+      // When a modal dialog is actively open, don't trigger global background shortcuts (like ? guide, search, sidebar toggle, or theme toggle)
+      if (isModalOpen) {
+        return;
+      }
+
       // --- 2. HELP / SHORTCUTS GUIDE (?) ---
       if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
@@ -136,7 +155,8 @@ export const useGlobalKeyboardShortcuts = ({
         else if (key === 'f') targetTab = 'faculty-action-center';
         else if (key === 'm') targetTab = 'hod-command-center';
         else if (key === 'w') targetTab = 'weekly-contest';
-        else if (key === 's') targetTab = 'system-health'; else if (key === 'n') {
+        else if (key === 's') targetTab = 'system-health';
+        else if (key === 'n') {
           e.preventDefault();
           if (onToggleNotifications) {
             onToggleNotifications();

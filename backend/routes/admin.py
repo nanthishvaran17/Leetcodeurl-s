@@ -1077,17 +1077,34 @@ def create_staff_user(
     except Exception as _notif_err:
         pass
 
+    from backend.cache import cache
+    cache.clear()
+
+    dept_display = dept_name
+    all_dept_codes = [dept_name] if dept_name != "N/A" else ["INSTITUTIONAL"]
+
     return {
         "success": True,
         "message": f"Staff account for '{staff_user.full_name}' created successfully.",
         "staff": {
             "id": staff_user.id,
-            "institutional_id": staff_user.institutional_id,
+            "institutional_id": staff_user.institutional_id or f"NEC-STAFF-{staff_user.id:03d}",
+            "full_name": staff_user.full_name or staff_user.username,
             "username": staff_user.username,
             "email": staff_user.email,
+            "phone_number": staff_user.phone_number or "",
+            "designation": staff_user.designation or "",
+            "date_of_birth": staff_user.date_of_birth or "",
             "role": staff_user.role,
             "department_id": staff_user.department_id,
-            "is_active": staff_user.is_active
+            "hod_department_ids": payload.hod_department_ids or [],
+            "departments": all_dept_codes,
+            "department": dept_display,
+            "academic_year": staff_user.academic_year or "",
+            "mentoring_role": staff_user.mentoring_role or "",
+            "is_active": staff_user.is_active,
+            "profile_photo": getattr(staff_user, "profile_photo", None) or "",
+            "assigned_count": 0
         }
     }
 

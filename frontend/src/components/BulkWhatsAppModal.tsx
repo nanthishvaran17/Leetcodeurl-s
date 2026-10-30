@@ -8,6 +8,7 @@ import {
 import { FacultyActionItem } from '../services/intelligenceService';
 import { triggerHaptic } from '../utils/haptics';
 import { WHATSAPP_TEMPLATES } from './StudentWhatsAppModal';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface BulkWhatsAppModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   selectedStudents
 }) => {
   const [activeTab, setActiveTab] = useState<'queue' | 'broadcast'>('queue');
+  useEscapeKey(onClose, isOpen);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('practice_nudge');
   const [lang, setLang] = useState<'en' | 'ta'>('en');
   const [customText, setCustomText] = useState<string>(WHATSAPP_TEMPLATES[WHATSAPP_TEMPLATES.length - 1].text);

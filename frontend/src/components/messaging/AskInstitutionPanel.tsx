@@ -5,6 +5,7 @@ import { downloadManager } from '../../services/download/downloadManager';
 import { CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft, History, Plus, Trash2, X, Maximize2, Minimize2, MoreVertical, Share2, Archive, MessageSquare, Check, Copy, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface ActionTrigger {
   label: string;
@@ -411,13 +412,16 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
+      if (e.key === 'Escape') {
+        if (deletingChatId) { setDeletingChatId(null); return; }
+        if (openMenuChatId) { setOpenMenuChatId(null); return; }
+        if (isFullscreen) { setIsFullscreen(false); return; }
+        if (onBack) { onBack(); return; }
       }
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [isFullscreen]);
+  }, [isFullscreen, deletingChatId, openMenuChatId, onBack]);
 
   const activeChatsList = storedChats.filter(c => !c.archived);
   const archivedChatsList = storedChats.filter(c => c.archived);
@@ -929,7 +933,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
                 disabled={loading}
                 placeholder="Ask anything about students, performance, or reports... (Enter to send, Shift+Enter for newline)"
                 aria-label="Ask institution intelligence"
-                className="flex-1 bg-transparent text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium min-h-[38px] max-h-[120px] focus:outline-none resize-none placeholder-slate-400 dark:placeholder-slate-500 py-2 leading-relaxed"
+                className="flex-1 bg-transparent border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium min-h-[38px] max-h-[120px] resize-none placeholder-slate-400 dark:placeholder-slate-500 py-2 leading-relaxed chat-input"
                 rows={1}
               />
               <button

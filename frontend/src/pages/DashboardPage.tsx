@@ -29,6 +29,7 @@ import {
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 import { studentLiveStore } from '../stores/studentLiveStore';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -58,6 +59,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   // Dynamic Weekly Contest Selection State (Allows switching between WC 525, 524, 523, 515, etc.)
   const [selectedContestSessionId, setSelectedContestSessionId] = useState<number | null>(null);
   const [showContestPicker, setShowContestPicker] = useState<boolean>(false);
+  useEscapeKey(() => setShowContestPicker(false), showContestPicker);
 
   // Principal Executive Department & HOD Directives State
   const [commandCenterDepts, setCommandCenterDepts] = useState<DepartmentRecord[]>([]);
@@ -70,14 +72,26 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     CSE: 'Dr. S. Prabhu',
   };
 
-  const resolveDepartmentHODName = (dept: { code?: string; hod_name?: string }) => {
-    const code = (dept.code || '').toUpperCase().trim();
+  const resolveDepartmentHODName = (dept: { code?: string; name?: string; hod_name?: string }) => {
+    // 1. PRIORITY: Genuine assigned HOD user returned by backend from database
     const raw = (dept.hod_name || '').trim();
     const isCoordinator = /santhoshkumar|devayani|sivakumar/i.test(raw);
-    if (raw && !isCoordinator && !raw.startsWith('HOD (')) {
+    if (raw && !isCoordinator && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
       return raw;
     }
-    return CANONICAL_DEPT_HOD[code] || raw || (dept.code ? `HOD (${dept.code})` : 'Head of Department');
+    // 2. FALLBACK: Only if no genuine HOD is assigned in the database
+    const code = (dept.code || '').toUpperCase().trim();
+    const name = (dept.name || '').toUpperCase().trim();
+    if (code.includes('IOT') || name.includes('IOT')) {
+      return 'Dr. S. Karthikeyan';
+    }
+    if (code.includes('CYBER') || name.includes('CYBER') || code.includes('(CS)') || code === 'CSE(CS)' || code === 'CSE') {
+      return 'Dr. S. Prabhu';
+    }
+    if (code === 'IT' || name.includes('INFORMATION')) {
+      return 'Dr. M. Senthilkumar';
+    }
+    return dept.code ? `HOD (${dept.code})` : 'Head of Department';
   };
 
   const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
@@ -919,7 +933,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       {/* 2.5. PRINCIPAL EXECUTIVE: INSTITUTIONAL DEPARTMENTS & HOD LEADERSHIP */}
       {isPrincipal && commandCenterDepts.length > 0 && (
-        <div className="stagger-3 content-auto relative overflow-hidden rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 space-y-5">
+        <div className="stagger-3 relative overflow-hidden rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 space-y-5">
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-navy-800">
             <div>
@@ -1020,7 +1034,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       )}
 
       {/* REAL-TIME GROWTH & DELTA ENGINE */}
-      <div className="stagger-4 content-auto relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 mt-4 sm:mt-6">
+      <div className="stagger-4 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 p-4 sm:p-7 md:p-8 shadow-sm border border-slate-200/90 dark:border-navy-700 mt-4 sm:mt-6">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
           <div className="space-y-1.5 sm:space-y-2.5 min-w-0 flex-1">
             <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-[11px] font-black tracking-wider uppercase">
@@ -1185,7 +1199,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 7. DEPARTMENT PERFORMANCE MATRIX */}
-      <div className="stagger-6 content-auto glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
+      <div className="stagger-6 glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800 pb-3">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
@@ -1412,7 +1426,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 8. TOP COLLEGE LEADERBOARD (PREVIEW) */}
-      <div className="stagger-7 content-auto space-y-4 mt-6">
+      <div className="stagger-7 space-y-4 mt-6">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
             <Award className="w-4 h-4 text-amber-500" />

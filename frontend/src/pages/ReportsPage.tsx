@@ -15,6 +15,7 @@ import { downloadManager } from '../services/download/downloadManager';
 import { ExportStatus } from '../components/ExportStatus';
 import { DownloadState } from '../services/download/downloadTypes';
 import { useKeyboardContext } from '../context/KeyboardContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SwipeHandle } from '../components/SwipeHandle';
 
 export const ReportsPage: React.FC = () => {
@@ -90,6 +91,12 @@ export const ReportsPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
+  useEscapeKey(() => {
+    if (deleteModalItem) { setDeleteModalItem(null); return; }
+    if (showCertModal) { setShowCertModal(false); return; }
+    if (activeUniversalPreviewId) { setActiveUniversalPreviewId(null); return; }
+    if (showSyncModal) { setShowSyncModal(false); return; }
+  }, Boolean(deleteModalItem || showCertModal || activeUniversalPreviewId || showSyncModal));
 
   // Background pre-fetch warm-up on filter change for instant (< 1ms) dataset generation
   useEffect(() => {

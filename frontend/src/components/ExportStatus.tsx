@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileSpreadsheet, CheckCircle2, AlertTriangle, X, RefreshCw, Loader2 } from 'lucide-react';
 import { DownloadState } from '../services/download/downloadTypes';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface ExportStatusProps {
   state: DownloadState | null;
@@ -10,6 +11,7 @@ interface ExportStatusProps {
 }
 
 export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onClose }) => {
+  useEscapeKey(onClose, Boolean(onClose && state && state.status !== 'IDLE'));
   if (!state || state.status === 'IDLE') return null;
 
   const isFailed = state.status === 'FAILED';

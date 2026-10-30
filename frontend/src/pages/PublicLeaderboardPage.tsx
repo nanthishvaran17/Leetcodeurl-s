@@ -130,10 +130,10 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   ];
 
   return (
-    <div className="space-y-8 pb-12 animate-slide-right">
+    <div className="space-y-6 sm:space-y-8 pb-36 sm:pb-16 animate-slide-right">
 
       {/* HERO BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-8 md:p-10 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 md:p-10 shadow-lg border border-brand-500/30">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl" />
@@ -368,8 +368,12 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               icon={<Building2 className="w-5 h-5" />}
               dropdownWidth="w-72"
               options={[
-                { value: 'ALL', label: 'All Departments' },
-                ...departments.map(d => ({ value: d.code, label: d.name }))
+                { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
+                ...departments.map(d => ({ 
+                  value: d.code, 
+                  label: d.name,
+                  pillText: d.pillText || (d.code === 'CSE(CS)' ? 'CSE(CS)' : d.code === 'CSE(IOT)' ? 'CSE(IOT)' : d.code)
+                }))
               ]}
             />
           </div>
@@ -424,57 +428,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       </div>
 
       {/* FULL LEADERBOARD TABLE */}
-      <LeaderboardTable students={filtered} onSelectStudent={onSelectStudent} />
-
-      {/* SERVER PAGINATION */}
-      {total > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-slate-200 dark:border-navy-700 shadow-xl">
-          <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 min-w-0 break-words text-center sm:text-left">
-            Showing <span className="text-slate-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-slate-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-slate-900 dark:text-white font-black">{total}</span> students
-          </div>
-          
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-            <GlobalFilter
-              value={limit.toString()}
-              onChange={val => {
-                setLimit(Number(val));
-                setPage(1);
-              }}
-              icon={<LayoutList className="w-4 h-4" />}
-              dropdownWidth="w-48"
-              options={[
-                { value: "50", label: "50 per page" },
-                { value: "100", label: "100 per page" },
-                { value: "200", label: "200 per page" }
-              ]}
-            />
-
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-xl border border-slate-200 dark:border-navy-700">
-              <button
-                type="button"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation"
-                aria-label="Previous Page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="px-3 text-sm font-black text-slate-700 dark:text-slate-200 min-w-[3rem] text-center select-none font-mono">
-                {page} / {totalPages}
-              </div>
-              <button
-                type="button"
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors flex items-center justify-center cursor-pointer active:scale-95 touch-manipulation"
-                aria-label="Next Page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LeaderboardTable students={filteredAndSorted} onSelectStudent={onSelectStudent} />
 
     </div>
   );

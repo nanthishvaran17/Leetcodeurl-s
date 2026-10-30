@@ -8,7 +8,7 @@ interface PullToRefreshProps {
   disabled?: boolean;
 }
 
-const PULL_THRESHOLD = 52;
+const PULL_THRESHOLD = 68;
 const MAX_PULL_DISTANCE = 88;
 
 /**
@@ -160,7 +160,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const touchX = e.touches[0]?.clientX || 0;
 
     // Only trigger if touch starts in the top area of the screen (top 200px)
-    if (touchY > 200) {
+    if (touchY > 100) {
       isPullingRef.current = false;
       detachTouchMove();
       return;
@@ -309,10 +309,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       )}
 
       {/* Page Content with Native Elastic Pull Feedback on Touch */}
-      <div
-        className="w-full min-h-full flex-1 flex flex-col transition-transform duration-100 ease-out"
-        style={pullDistance > 0 && !isRefreshing ? { transform: `translate3d(0, ${pullDistance * 0.28}px, 0)` } : undefined}
-      >
+      <div className="w-full min-h-full flex-1 flex flex-col">
         {children}
       </div>
     </div>

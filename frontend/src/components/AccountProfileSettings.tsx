@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
 import { dispatchPortalNotification } from '../context/GlobalNotificationContext';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SwipeHandle } from './SwipeHandle';
 import { DynamicQRCode } from './DynamicQRCode';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -30,6 +31,7 @@ import { startRegistration, browserSupportsWebAuthn } from '@simplewebauthn/brow
 import { Capacitor } from '@capacitor/core';
 import { downloadManager } from '../services/download/downloadManager';
 import { triggerHaptic } from '../utils/haptics';
+import { copyToClipboard } from '../utils/clipboard';
 
 const getCroppedImg = (imageSrc: string, pixelCrop: any): Promise<string> => {
   const canvas = document.createElement('canvas');
@@ -728,6 +730,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
 };
 
 export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+  useEscapeKey(onBack, Boolean(onBack));
   const { user, logout } = useAuth();
   const { theme, setTheme, setSystemTheme } = useTheme();
   const { notify } = useNotification();
@@ -1050,6 +1053,26 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const [disable2FACode, setDisable2FACode] = useState<string>('');
   const [isDisabling2FA, setIsDisabling2FA] = useState<boolean>(false);
   const [disable2FAError, setDisable2FAError] = useState<string | null>(null);
+
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopyField = async (text: string, fieldName: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!text) return;
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedField(fieldName);
+      notify.success(`${fieldName} Copied`, text, { category: 'ADMIN', duration: 2000 });
+      setTimeout(() => {
+        setCopiedField(prev => (prev === fieldName ? null : prev));
+      }, 2000);
+    } else {
+      notify.error('Copy Failed', 'Unable to copy text to clipboard', { category: 'ADMIN' });
+    }
+  };
 
   // Native Mobile Biometrics State (Capacitor Android / iOS)
   const [isNativeMobile, setIsNativeMobile] = useState<boolean>(false);
@@ -3669,9 +3692,21 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             {/* Profile Credentials */}
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate select-text">
                   {fullName || user?.username || 'nanthishvaran17'}
                 </h2>
+                <button
+                  type="button"
+                  onClick={(e) => handleCopyField(fullName || user?.username || 'nanthishvaran17', 'Full Name', e)}
+                  className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                  title="Copy Name"
+                >
+                  {copiedField === 'Full Name' ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
                 <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/70">
                   {roleName?.toUpperCase() || 'ADMIN'}
                 </span>
@@ -4022,9 +4057,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight truncate">
-                      {fullName || user?.username || 'nanthishvaran17'}
-                    </h2>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight truncate select-text">
+                        {fullName || user?.username || 'nanthishvaran17'}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyField(fullName || user?.username || 'nanthishvaran17', 'Full Name', e)}
+                        className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                        title="Copy Name"
+                      >
+                        {copiedField === 'Full Name' ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 mt-0.5 flex-wrap">
                       <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/70">
                         {roleName?.toUpperCase() || 'ADMIN'}
@@ -4552,10 +4601,22 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     {!expandedCards.contact && (
                       <div
                         onClick={() => toggleCard('contact')}
-                        className="flex items-center justify-between pt-1 cursor-pointer group select-none"
+                        className="flex items-center justify-between pt-1 cursor-pointer group"
                       >
-                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%]">
-                          <span className="text-slate-900 dark:text-white font-black">{fullName || user?.username || 'Staff Member'}</span>
+                        <div className="truncate text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[78%] flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-slate-900 dark:text-white font-black select-text">{fullName || user?.username || 'Staff Member'}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopyField(fullName || user?.username || 'Staff Member', 'Name', e)}
+                            className="p-0.5 rounded text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                            title="Copy Name"
+                          >
+                            {copiedField === 'Name' ? (
+                              <Check className="w-3 h-3 text-emerald-500" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
                           {phoneNumber && <span className="text-slate-600 dark:text-slate-300 font-mono"> • {phoneNumber}</span>}
                           {officeLocation && <span className="text-slate-600 dark:text-slate-300"> • {officeLocation}</span>}
                         </div>
@@ -7260,9 +7321,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       </div>
 
                       <div className="space-y-1 min-w-0 flex-1 overflow-hidden">
-                        <h3 className="text-sm sm:text-lg font-black text-white truncate tracking-tight" title={fullName || user?.username || 'Nanthishvaran S'}>
-                          {fullName || user?.username || 'Nanthishvaran S'}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm sm:text-lg font-black text-white truncate tracking-tight select-text" title={fullName || user?.username || 'Nanthishvaran S'}>
+                            {fullName || user?.username || 'Nanthishvaran S'}
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopyField(fullName || user?.username || 'Nanthishvaran S', 'Name', e)}
+                            className="p-1 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                            title="Copy Name"
+                          >
+                            {copiedField === 'Name' ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
                         <p className="text-xs font-extrabold text-amber-300 truncate" title={designation || (rawRole.includes('admin') ? 'Administrator' : 'Faculty Member')}>
                           {designation || (rawRole.includes('admin') ? 'Administrator' : 'Faculty Member')}
                         </p>

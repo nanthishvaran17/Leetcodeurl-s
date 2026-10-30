@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useDeferredValue, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useDebounce } from '../hooks/useDebounce';
 import { triggerHaptic } from '../utils/haptics';
@@ -40,7 +40,7 @@ import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
 import { useAuth } from '../context/AuthContext';
 import { downloadManager } from '../services/download/downloadManager';
-import { ContestForensicModal } from './ContestForensicModal';
+const ContestForensicModal = lazy(() => import('./ContestForensicModal').then(m => ({ default: m.ContestForensicModal })));
 import { playNotificationChime, playCelebrationChime } from '../utils/audioChime';
 import { triggerCelebration, triggerConfetti } from '../utils/confettiCelebration';
 
@@ -376,6 +376,120 @@ export const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: str
   return '—';
 };
 
+export const formatParticipantEntryTime = (
+  r: ParticipationRecord,
+  contestTitle?: string
+): { time: string; subtext: string; fullClockTime?: string } => {
+  if (r.participation_type === 'NOT_PARTICIPATED') {
+    return { time: 'DID NOT JOIN', subtext: 'No window activity' };
+  }
+
+  // 1. Explicit participant_entry_time if present
+  if ((r as any).participant_entry_time) {
+    const raw = (r as any).participant_entry_time;
+    try {
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        const istMs = d.getTime() + (5.5 * 3600 * 1000);
+        const istDate = new Date(istMs);
+        const h24 = istDate.getUTCHours();
+        const m = istDate.getUTCMinutes();
+        const s = istDate.getUTCSeconds();
+        const dispH = h24 % 12 === 0 ? 12 : h24 % 12;
+        const ampm = h24 >= 12 ? 'PM' : 'AM';
+        const padH = dispH.toString().padStart(2, '0');
+        const padM = m.toString().padStart(2, '0');
+        const padS = s.toString().padStart(2, '0');
+        return {
+          time: `${padH}:${padM} ${ampm} IST`,
+          fullClockTime: `${padH}:${padM}:${padS} ${ampm} IST`,
+          subtext: (r as any).participant_entry_time_source || 'Verified Entry Time'
+        };
+      }
+    } catch {
+      // fallback
+    }
+  }
+
+  if (r.participation_type === 'VIRTUAL') {
+    return { time: 'VIRTUAL ENTRY', subtext: 'Self-Paced Practice' };
+  }
+
+  // 2. Derive authentic first recorded activity from earliest solved question
+  const startInfo = getStartTimeInfo(contestTitle || r.contest_title || r.contest_slug);
+  const obsList: { qIdx: number; sec: number }[] = [];
+
+  for (let i = 1; i <= 4; i++) {
+    const v = (r as any)[`q${i}_observed_seconds`];
+    if (v != null && !isNaN(Number(v)) && Number(v) > 0) {
+      obsList.push({ qIdx: i, sec: Number(v) });
+    }
+  }
+
+  // Check q_timing object
+  const qt = (r as any).q_timing;
+  if (qt && typeof qt === 'object') {
+    for (let i = 1; i <= 4; i++) {
+      const qItem = qt[`q${i}`];
+      if (qItem && typeof qItem === 'object') {
+        if (typeof qItem.seconds === 'number' && qItem.seconds > 0) {
+          if (!obsList.some(o => o.qIdx === i)) {
+            obsList.push({ qIdx: i, sec: qItem.seconds });
+          }
+        }
+      }
+    }
+  }
+
+  // Check question direct times
+  for (let i = 1; i <= 4; i++) {
+    const qtDirect = (r as any)[`q${i}_time`];
+    if (qtDirect) {
+      const s = String(qtDirect).trim();
+      if (/^\d+$/.test(s)) {
+        const secVal = parseInt(s, 10) * 60;
+        if (!obsList.some(o => o.qIdx === i)) {
+          obsList.push({ qIdx: i, sec: secVal });
+        }
+      }
+    }
+  }
+
+  if (obsList.length > 0) {
+    // Sort ascending to get earliest solve
+    obsList.sort((a, b) => a.sec - b.sec);
+    const earliest = obsList[0];
+
+    const totalSec = (startInfo.hour24 * 3600 + startInfo.minute * 60) + earliest.sec;
+    const h24 = Math.floor(totalSec / 3600) % 24;
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const dispH = h24 % 12 === 0 ? 12 : h24 % 12;
+    const ampm = h24 >= 12 ? 'PM' : 'AM';
+    const padH = dispH.toString().padStart(2, '0');
+    const padM = m.toString().padStart(2, '0');
+    const padS = s.toString().padStart(2, '0');
+
+    const durationMin = Math.floor(earliest.sec / 60);
+    const durationSec = earliest.sec % 60;
+    const durationStr = durationMin > 0 
+      ? (durationSec > 0 ? `${durationMin}m ${durationSec}s` : `${durationMin}m`)
+      : `${durationSec}s`;
+
+    return {
+      time: `${padH}:${padM} ${ampm} IST`,
+      fullClockTime: `${padH}:${padM}:${padS} ${ampm} IST`,
+      subtext: `1st AC: Q${earliest.qIdx} (${durationStr})`
+    };
+  }
+
+  // 3. Fallback for public participant with no solves
+  return {
+    time: startInfo.formatted,
+    subtext: 'Live Window (No AC)'
+  };
+};
+
 export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick, sessionId }) => {
   const { user } = useAuth();
   const isFacultyRole = useMemo(() => {
@@ -460,8 +574,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   // Handle Escape key & body scroll lock/unlock for forensic modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedForensicRecord) {
-        setSelectedForensicRecord(null);
+      if (e.key === 'Escape') {
+        if (selectedForensicRecord) {
+          setSelectedForensicRecord(null);
+        } else {
+          setDeptDropdownOpen(false);
+          setYearDropdownOpen(false);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -2422,14 +2541,18 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       )}
 
       {/* CONTEST FORENSICS & TELEMETRY DETAIL MODAL */}
-      <ContestForensicModal
-        record={selectedForensicRecord}
-        onClose={() => setSelectedForensicRecord(null)}
-        summary={summary}
-        questionTitles={questionTitles}
-        isLiveContest={isLiveContest}
-        onStudentClick={onStudentClick}
-      />
+      {selectedForensicRecord && (
+        <Suspense fallback={null}>
+          <ContestForensicModal
+            record={selectedForensicRecord}
+            onClose={() => setSelectedForensicRecord(null)}
+            summary={summary}
+            questionTitles={questionTitles}
+            isLiveContest={isLiveContest}
+            onStudentClick={onStudentClick}
+          />
+        </Suspense>
+      )}
 
       {/* HOD / ADMIN ABSENTEE BROADCAST STUDIO MODAL */}
       <AnimatePresence>

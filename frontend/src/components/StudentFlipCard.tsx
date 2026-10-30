@@ -205,9 +205,14 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <span>Unranked</span>
               )}
             </span>
-            <span className="font-bold text-[10.5px] tracking-wider uppercase text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.05] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/10 shadow-2xs font-mono">
-              {formatDepartmentCode(student.department) || deriveDepartmentFromRegNo(student.reg_no) || (typeof student.department === 'string' ? student.department : student.department?.code) || 'DEPT'}
-            </span>
+            <div className="flex items-center space-x-1.5">
+              <span className="font-bold text-[9.5px] tracking-wider uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40 shadow-2xs font-mono">
+                {student.college || 'NEC'}
+              </span>
+              <span className="font-bold text-[10.5px] tracking-wider uppercase text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.05] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/10 shadow-2xs font-mono">
+                {formatDepartmentCode(student.department) || deriveDepartmentFromRegNo(student.reg_no) || (typeof student.department === 'string' ? student.department : student.department?.code) || 'DEPT'}
+              </span>
+            </div>
           </div>
 
           {/* Card Center: Avatar & Student Details */}

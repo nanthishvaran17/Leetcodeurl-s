@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, ExternalLink, Trophy, RefreshCw } from 'lucide-react';
 import api, { clearApiCache } from '../services/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { studentLiveStore } from '../stores/studentLiveStore';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -339,6 +341,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   onSaveSuccess
 }) => {
   const { notify } = useNotification();
+  const queryClient = useQueryClient();
   
   const [canClose, setCanClose] = useState(false);
   useEffect(() => {
@@ -365,6 +368,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [emailStatus, setEmailStatus] = useState('');
   const [allocation, setAllocation] = useState('none');
   const [accommodation, setAccommodation] = useState('Day Scholar');
+  const [gender, setGender] = useState('Male');
   const [twelfthCutoff, setTwelfthCutoff] = useState('');
 
   const [secondaryAccounts, setSecondaryAccounts] = useState<SecondaryAccountItem[]>([]);
@@ -430,6 +434,19 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     const initEmailStatus = stData.email_status || 'pending';
     const initAlloc = stData.allocation || 'none';
     const initAccomm = stData.accommodation || stData.accommodation_type || 'Day Scholar';
+    const rawGender = String(stData.gender || '').trim().toUpperCase();
+    let initGender = 'Male';
+    if (rawGender === 'FEMALE' || rawGender === 'F' || rawGender === 'GIRL') {
+      initGender = 'Female';
+    } else if (rawGender === 'MALE' || rawGender === 'M' || rawGender === 'BOY') {
+      initGender = 'Male';
+    } else if (rawGender) {
+      initGender = stData.gender;
+    } else {
+      const nameUpper = String(initName || '').toUpperCase();
+      const femaleKeywords = ["SHREE", "DEVI", "PRIYA", "SRI", "DHARSHINI", "VARSHINI", "JANANI", "SOWMIYA", "SHARMILA", "POOMITHA", "RITHIKA", "RITHANIKA", "KIRUTHIKAA", "AMRUTHA", "DHANUSHYA", "HARDIKA", "INIYA", "LAKSANA", "NETHRA", "NIVETHYTHA", "NIVETHA", "PRITHIKA", "RADHISRI", "SUPRIYA", "VEDHASREE", "YAZHINI", "GAYATHRI", "KAVYA", "SNEHA", "SWETHA", "NANDHINI", "ABINAYA", "KEERTHANA", "PAVITHRA", "ANANYA", "DEEPIKA", "ARCHANA", "HARINI", "MONISHA", "SANDHIYA", "SUBHASHINI", "SUBASHREE", "BHUVANESHWARI", "SOUNDARYA", "AISWARYA", "AISHWARYA", "MEENA", "KARTHIKA", "DIVYA", "POOJA", "MADHUMITHA", "MITHRA", "SWATHI", "THANANYA", "SUSHMITHA", "LAVANYA", "HEMA", "PREETHI", "RESHMA", "SARANYA", "SUJITHA", "SUGANYA", "RAMYA", "REVATHI", "GOWRI", "PRIYADHARSHINI", "AARATHANA", "AARSIKA", "SAHANAJ", "SURUTHI", "SUSITHA", "GOWRIPRIYA", "JAYASRI", "JEEVITHA", "PRADEEPA", "THARANYA", "SUVATHI", "KANISHAA", "KANISKA", "JANARANSHINI", "MOWNAVARTHINI", "SRIVIDHYA", "STEFFY", "SUBITHA", "ABIRAMI", "CHRISTINA", "SHRUTI"];
+      initGender = femaleKeywords.some(k => nameUpper.includes(k)) ? 'Female' : 'Male';
+    }
     const initCutoff = stData.twelfth_cutoff ?? stData.twelfthCutoff ?? stData.cutoff ?? '';
     const formattedCutoff = (initCutoff !== '' && initCutoff !== null && initCutoff !== undefined) ? String(initCutoff) : '';
 
@@ -469,6 +486,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     setEmailStatus(initEmailStatus);
     setAllocation(initAlloc);
     setAccommodation(initAccomm);
+    setGender(initGender);
     setTwelfthCutoff(formattedCutoff);
     setSecondaryAccounts(initSecAccounts);
 
@@ -505,6 +523,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       institutionalEmail: initInstEmail,
       allocation: initAlloc,
       accommodation: initAccomm,
+      gender: initGender,
       twelfthCutoff: formattedCutoff,
       secondaryAccounts: JSON.stringify(initSecAccounts)
     };
@@ -555,10 +574,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       institutionalEmail !== init.institutionalEmail ||
       allocation !== init.allocation ||
       accommodation !== init.accommodation ||
+      gender !== init.gender ||
       twelfthCutoff !== init.twelfthCutoff ||
       JSON.stringify(secondaryAccounts) !== init.secondaryAccounts
     );
-  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, accommodation, twelfthCutoff, secondaryAccounts]);
+  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, accommodation, gender, twelfthCutoff, secondaryAccounts]);
 
 
   const handleAddSecondaryAccount = (e?: React.MouseEvent) => {
@@ -791,6 +811,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         institutional_email: institutionalEmail.trim() || undefined,
         allocation: allocation !== 'none' ? allocation : null,
         accommodation: accommodation,
+        gender: gender,
         twelfth_cutoff: twelfthCutoff ? parseFloat(twelfthCutoff) : null,
         secondary_leetcode_id: formattedSecondary[0]?.leetcode_username || null,
         secondary_accounts: formattedSecondary,
@@ -802,11 +823,32 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
       notify.success('Student Record Updated', `Changes for ${trimmedName} saved successfully.`, { category: 'STUDENT EDIT' });
 
+      // 1. Immediately patch studentLiveStore so every row/card/table on the page reflects the new data
+      if (updated && updated.id) {
+        studentLiveStore.updateStudent(updated.id, updated);
+      }
+
+      // 2. Clear API client cache & roster caches
       clearApiCache();
       import('../utils/rosterCache').then(m => m.clearAllStudentCaches()).catch(() => {});
       localStorage.removeItem('nec_leetcode_students_cache');
+
+      // 3. Invalidate & update React Query across all roles
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      queryClient.invalidateQueries({ queryKey: ['students-master'] });
+      queryClient.invalidateQueries({ queryKey: ['student'] });
+      queryClient.setQueriesData({ queryKey: ['students', 'canonical'] }, (oldData: any) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.map((s: any) => s.id === updated.id ? { ...s, ...updated } : s);
+        }
+        return oldData;
+      });
+
+      // 4. Dispatch global sync events
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
       window.dispatchEvent(new CustomEvent('student_updated', { detail: updated }));
+      window.dispatchEvent(new CustomEvent('roster_updated', { detail: updated }));
 
       if (onSaveSuccess) onSaveSuccess(updated);
       onClose();
@@ -1026,7 +1068,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3.5">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     12th Cut-off Score
@@ -1042,6 +1084,19 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
                   />
                 </div>
+                <CustomDropdown
+                  id="edit-student-gender-select"
+                  label="Gender"
+                  labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
+                  menuWidthClass="w-full min-w-full"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
+                  options={[
+                    { value: "Male", label: "Male", badge: "MALE", badgeColor: "bg-blue-500/10 text-blue-600 border border-blue-500/20" },
+                    { value: "Female", label: "Female", badge: "FEMALE", badgeColor: "bg-pink-500/10 text-pink-600 border border-pink-500/20" }
+                  ]}
+                  value={gender}
+                  onChange={(val) => setGender(val)}
+                />
                 <CustomDropdown
                   id="edit-student-accommodation-select"
                   label="Accommodation Type"

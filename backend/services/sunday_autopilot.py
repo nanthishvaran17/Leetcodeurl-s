@@ -656,6 +656,14 @@ class UniversalWeeklyContestAutopilot:
             except Exception as _sync_err:
                 logger.warning(f"[AUTOPILOT_FINALIZATION] Ranking scan note: {_sync_err}")
 
+            # Auto-Sync 100% Real Verbatim Code for all solved students (Count + Time + Code)
+            try:
+                from backend.services.auto_code_sync_service import sync_contest_submission_codes_for_session
+                logger.info(f"[AUTOPILOT] Auto-syncing 100% Real Verbatim Code for session {session.id}...")
+                sync_contest_submission_codes_for_session(session.id, db, concurrency=10)
+            except Exception as _code_sync_err:
+                logger.warning(f"[AUTOPILOT_FINALIZATION] Auto code sync note: {_code_sync_err}")
+
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="POST_CONTEST_SYNC"
             )

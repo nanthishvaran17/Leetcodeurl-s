@@ -271,20 +271,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# GZip Compression Middleware (speeds up all JSON/CSS/JS responses by 70-85%)
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-# HTTP Security Headers & Cache-Control Middleware (Lighthouse Best Practices 100/100)
-@app.middleware("http")
-async def add_security_headers_middleware(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
-    if request.url.path.startswith("/assets/"):
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-    return response
+# Note: Primary GZipMiddleware and Security Headers are registered at line 974+
 
 # ARD (Agentic Resource Discovery 1.0) Manifest Endpoints for 4/4 Agentic Browsing Score
 AI_CATALOG_DATA = {

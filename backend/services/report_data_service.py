@@ -426,6 +426,7 @@ def fetch_normalized_students(
             category=category,
             status=row_status,
             accommodation=getattr(s, 'accommodation', '') or '',
+            gender=getattr(s, 'gender', '') or '',
             twelfth_cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None,
             cutoff=float(s.twelfth_cutoff) if (hasattr(s, 'twelfth_cutoff') and s.twelfth_cutoff is not None) else None,
             contests_attended=att_count,

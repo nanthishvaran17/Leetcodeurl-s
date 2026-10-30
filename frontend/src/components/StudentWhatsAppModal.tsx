@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageCircle, X, Send, Copy, Check, Edit3, Globe, Mail } from 'lucide-react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { FacultyActionItem } from '../services/intelligenceService';
 
 export interface WhatsAppTemplate {
@@ -118,6 +119,7 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
   student
 }) => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('practice_nudge');
+  useEscapeKey(onClose, isOpen);
   const [lang, setLang] = useState<'en' | 'ta'>('en');
   const [editableMessage, setEditableMessage] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);

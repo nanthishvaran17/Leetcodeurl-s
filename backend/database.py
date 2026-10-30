@@ -695,6 +695,10 @@ def _run_sqlite_specific_migrations(conn):
             conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN accommodation VARCHAR(50)"))
             conn.commit()
             print("[DB Migration] Added students column: accommodation")
+        if "gender" not in st_cols:
+            conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN gender VARCHAR(20)"))
+            conn.commit()
+            print("[DB Migration] Added students column: gender")
         if "twelfth_cutoff" not in st_cols:
             conn.execute(sqlalchemy.text("ALTER TABLE students ADD COLUMN twelfth_cutoff FLOAT"))
             conn.commit()

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, RefreshCw, ExternalLink, ShieldAlert, UserCheck } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface FailedStudentItem {
   student_id: number;
@@ -29,6 +30,7 @@ interface FailedSyncModalProps {
 
 export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClose }) => {
   const { notify } = useNotification();
+  useEscapeKey(onClose, isOpen);
   const [failedStudents, setFailedStudents] = useState<FailedStudentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [retryingId, setRetryingId] = useState<number | null>(null);

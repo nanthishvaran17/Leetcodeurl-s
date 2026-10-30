@@ -1,8 +1,11 @@
 import React from 'react';
 import { X, Filter, RotateCcw, Check, Search } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
+import { useDepartments } from '../context/DepartmentContext';
+import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { SwipeHandle } from './SwipeHandle';
 import { triggerHaptic } from '../utils/haptics';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface MobileFilterDrawerProps {
   isOpen: boolean;
@@ -13,19 +16,39 @@ interface MobileFilterDrawerProps {
 export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   isOpen,
   onClose,
-  departments = [
-    { code: 'ALL', name: 'All Departments' },
-    { code: 'CSE', name: 'Computer Science' },
-    { code: 'ECE', name: 'Electronics & Comm.' },
-    { code: 'EEE', name: 'Electrical & Electronics' },
-    { code: 'MECH', name: 'Mechanical Engg.' },
-    { code: 'CIVIL', name: 'Civil Engg.' },
-    { code: 'IT', name: 'Information Tech.' },
-    { code: 'AIDS', name: 'AI & Data Science' },
-    { code: 'AIML', name: 'AI & Machine Learning' },
-    { code: 'CYBER', name: 'Cyber Security' }
-  ]
+  departments: propDepartments
 }) => {
+  useEscapeKey(onClose, isOpen);
+  const { departments: ctxDepartments = [] } = useDepartments();
+  const rawDepartments = (propDepartments && propDepartments.length > 0) ? propDepartments : ctxDepartments;
+
+  const departments = React.useMemo(() => {
+    const list: Array<{ code: string; name: string }> = [{ code: 'ALL', name: 'All Departments' }];
+    const seen = new Set<string>(['ALL']);
+
+    if (rawDepartments && rawDepartments.length > 0) {
+      rawDepartments.forEach((d: any) => {
+        const c = (d.code || d.department_code || '').trim();
+        const n = (d.name || d.department_name || c).trim();
+        if (!c || seen.has(c.toUpperCase())) return;
+        seen.add(c.toUpperCase());
+        list.push({ code: c, name: n });
+      });
+    }
+
+    const core = [
+      { code: 'CSE(CS)', name: 'Computer Science & Engineering (Cyber Security)' },
+      { code: 'CSE(IOT)', name: 'Computer Science & Engineering (IoT)' },
+      { code: 'IT', name: 'Information Technology' }
+    ];
+    for (const c of core) {
+      if (!seen.has(c.code.toUpperCase())) {
+        seen.add(c.code.toUpperCase());
+        list.push(c);
+      }
+    }
+    return list;
+  }, [rawDepartments]);
   const {
     department,
     setDepartment,
@@ -43,10 +66,10 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
   const years = [
     { id: 'ALL', label: 'All Years' },
-    { id: '1st Year', label: '1st Year (I)' },
-    { id: '2nd Year', label: '2nd Year (II)' },
-    { id: '3rd Year', label: '3rd Year (III)' },
-    { id: '4th Year', label: '4th Year (IV)' }
+    { id: '1', label: '1st Year (I)' },
+    { id: '2', label: '2nd Year (II)' },
+    { id: '3', label: '3rd Year (III)' },
+    { id: '4', label: '4th Year (IV)' }
   ];
 
   const syncStatuses = [
@@ -165,7 +188,9 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             </label>
             <div className="flex flex-wrap gap-2">
               {departments.map((dept) => {
-                const isSelected = department === dept.code;
+                const isSelected = 
+                  (dept.code === 'ALL' && (department === 'ALL' || !department || department === 'all')) ||
+                  normalizeDepartment(department) === normalizeDepartment(dept.code);
                 return (
                   <button
                     key={dept.code}
@@ -192,7 +217,9 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             </label>
             <div className="grid grid-cols-2 gap-2">
               {years.map((y) => {
-                const isSelected = academicYear === y.id;
+                const isSelected = 
+                  (y.id === 'ALL' && (academicYear === 'ALL' || !academicYear || academicYear === 'all')) ||
+                  normalizeAcademicYear(academicYear) === normalizeAcademicYear(y.id);
                 return (
                   <button
                     key={y.id}

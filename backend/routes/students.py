@@ -285,8 +285,11 @@ async def get_leaderboard_fast(
                     "year_level": st.year_level,
                     "department_id": st.department_id,
                     "department": {"id": st.department.id, "name": st.department.name, "code": st.department.code} if st.department else None,
+                    "allocation": getattr(st, "allocation", None),
                     "accommodation": st.accommodation,
+                    "gender": st.gender,
                     "twelfth_cutoff": st.twelfth_cutoff,
+                    "college": getattr(st, "college", None) or "NEC",
                     "sync_state": sync_state,
                     "version": st.version,
                     "profile_url": f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None,
@@ -387,8 +390,8 @@ async def get_students(
             raw_d = dept_val.strip().upper()
             if raw_d not in ("ALL", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", ""):
                 dept_lookup = {
-                    "CSE(CS)": 1, "CS": 1, "CYBER": 1, "CYBER SECURITY": 1,
-                    "CSE(IOT)": 2, "IOT": 2, "INTERNET OF THINGS": 2,
+                    "CSE(CS)": 1, "CS": 1, "CYBER": 1, "CYBER SECURITY": 1, "CSE_CS": 1, "CSE-CS": 1, "CSE (CS)": 1,
+                    "CSE(IOT)": 2, "IOT": 2, "INTERNET OF THINGS": 2, "CSE_IOT": 2, "CSE-IOT": 2, "CSE (IOT)": 2,
                     "IT": 4, "INFORMATION TECHNOLOGY": 4,
                     "CSE": 5, "AIDS": 10, "ECE": 12, "AGRI": 17, "MECH": 18, "CIVIL": 19, "EEE": 20
                 }
@@ -573,6 +576,33 @@ async def get_students(
                     pass
             return b if isinstance(b, list) else []
 
+        # Fail-safe dynamic ranks pre-computed ONCE for all active students (O(1) lookup in loop)
+        all_active_rows_main = db.query(Student.id, Student.department_id, LeetCodeProfileStats.total_solved)\
+            .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+            .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+            .order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc()).all()
+
+        dyn_college_ranks: dict = {}
+        dyn_dept_ranks: dict = {}
+        d_counters: dict = {}
+
+        c_rank_cursor = 1
+        for idx_s, (s_id, d_id, t_solved) in enumerate(all_active_rows_main):
+            val_solved = t_solved or 0
+            if val_solved <= 0:
+                continue
+            if idx_s > 0:
+                prev_solved = all_active_rows_main[idx_s - 1][2] or 0
+                if val_solved < prev_solved:
+                    c_rank_cursor = idx_s + 1
+            else:
+                c_rank_cursor = 1
+            dyn_college_ranks[s_id] = c_rank_cursor
+
+            if d_id:
+                d_counters[d_id] = d_counters.get(d_id, 0) + 1
+                dyn_dept_ranks[s_id] = d_counters[d_id]
+
         results = []
         for st in students:
             st_out = StudentListOut.model_validate(st)
@@ -648,32 +678,7 @@ async def get_students(
                 st_out.longest_streak = st.stats.max_streak
                 st_out.total_active_days = st.stats.active_days or 0
 
-            # Fail-safe dynamic ranks for all active students
-            all_active_rows_main = db.query(Student.id, Student.department_id, LeetCodeProfileStats.total_solved)\
-                .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-                .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
-                .order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc()).all()
-
-            dyn_college_ranks: dict = {}
-            dyn_dept_ranks: dict = {}
-            d_counters: dict = {}
-
-            c_rank_cursor = 1
-            for idx_s, (s_id, d_id, t_solved) in enumerate(all_active_rows_main):
-                val_solved = t_solved or 0
-                if val_solved <= 0:
-                    continue
-                if idx_s > 0:
-                    prev_solved = all_active_rows_main[idx_s - 1][2] or 0
-                    if val_solved < prev_solved:
-                        c_rank_cursor = idx_s + 1
-                else:
-                    c_rank_cursor = 1
-                dyn_college_ranks[s_id] = c_rank_cursor
-
-                if d_id:
-                    d_counters[d_id] = d_counters.get(d_id, 0) + 1
-                    dyn_dept_ranks[s_id] = d_counters[d_id]
+            # Pre-computed dyn_college_ranks and dyn_dept_ranks used directly via O(1) dict lookup
 
             latest_prog = prog_map.get(st.id)
             if latest_prog:
@@ -829,7 +834,7 @@ async def get_students(
             db.close()
 
     if not current_user or role_clean in ("admin", "super admin", "super_admin", "hod"):
-        return await cache.async_get_or_compute(cache_key, _compute, ttl_seconds=60, stale_ttl_seconds=300)
+        return await cache.async_get_or_compute(cache_key, _compute, ttl_seconds=60, stale_ttl_seconds=300, tags=["students", "leaderboard"])
     else:
         return _compute()
 
@@ -849,8 +854,8 @@ def download_sample_student_excel():
     ws.title = "Students"  # type: ignore
     ws.sheet_view.showGridLines = True  # type: ignore
 
-    headers = ["REG NO", "NAME", "DEPT", "YEAR", "BATCH", "ACCOMMODATION", "12TH CUT-OFF", "EMAIL", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
-    col_widths = [18, 28, 14, 10, 14, 16, 14, 25, 45, 45]
+    headers = ["REG NO", "NAME", "COLLEGE", "DEPT", "YEAR", "BATCH", "ACCOMMODATION", "12TH CUT-OFF", "EMAIL", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
+    col_widths = [18, 28, 14, 14, 10, 14, 16, 14, 25, 45, 45]
 
     navy_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     font_header = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
@@ -875,12 +880,12 @@ def download_sample_student_excel():
     ws.row_dimensions[1].height = 26  # type: ignore
 
     sample_rows = [
-        ["732223CS001", "DINESH R", "CSE(CS)", "IV Year", "2023-2027", "Hostel", 189.5, "dinesh.cs23@college.edu", "https://leetcode.com/u/dinesh_cs/", ""],
-        ["732224CS002", "AJAY A", "CSE(CS)", "III Year", "2024-2028", "Hostel", 182.5, "ajay.cs24@college.edu", "https://leetcode.com/u/ajay_cs/", ""],
-        ["732224CI001", "BHARATH K", "CSE(IOT)", "III Year", "2024-2028", "Day Scholar", 188.0, "bharath.iot24@college.edu", "https://leetcode.com/u/bharath_iot/", ""],
-        ["732225IT015", "KAVYA S", "IT", "II Year", "2025-2029", "Day Scholar", 176.0, "kavya.it25@college.edu", "https://leetcode.com/u/kavya_it/", ""],
-        ["732226EC008", "MANO B", "ECE", "I Year", "2026-2030", "Hostel", 184.0, "mano.ec26@college.edu", "https://leetcode.com/u/mano_ece/", ""],
-        ["732224AI012", "NIVETHA P", "AIDS", "III Year", "2024-2028", "Hostel", 191.0, "nivetha.ai24@college.edu", "https://leetcode.com/u/nivetha_ai/", ""],
+        ["732223CS001", "DINESH R", "NEC", "CSE(CS)", "IV Year", "2023-2027", "Hostel", 189.5, "dinesh.cs23@college.edu", "https://leetcode.com/u/dinesh_cs/", ""],
+        ["732224CS002", "AJAY A", "NEC", "CSE(CS)", "III Year", "2024-2028", "Hostel", 182.5, "ajay.cs24@college.edu", "https://leetcode.com/u/ajay_cs/", ""],
+        ["732224CI001", "BHARATH K", "NCT", "CSE(IOT)", "III Year", "2024-2028", "Day Scholar", 188.0, "bharath.iot24@college.edu", "https://leetcode.com/u/bharath_iot/", ""],
+        ["732225IT015", "KAVYA S", "NCT", "IT", "II Year", "2025-2029", "Day Scholar", 176.0, "kavya.it25@college.edu", "https://leetcode.com/u/kavya_it/", ""],
+        ["732226EC008", "MANO B", "NEC", "ECE", "I Year", "2026-2030", "Hostel", 184.0, "mano.ec26@college.edu", "https://leetcode.com/u/mano_ece/", ""],
+        ["732224AI012", "NIVETHA P", "NEC", "AIDS", "III Year", "2024-2028", "Hostel", 191.0, "nivetha.ai24@college.edu", "https://leetcode.com/u/nivetha_ai/", ""],
     ]
 
     for row_idx, r_data in enumerate(sample_rows, start=2):
@@ -1132,6 +1137,7 @@ def create_student(
         codeforces_username=student_in.codeforces_username,
         hackerrank_username=student_in.hackerrank_username,
         accommodation=student_in.accommodation,
+        gender=student_in.gender.capitalize() if getattr(student_in, 'gender', None) else None,
         twelfth_cutoff=student_in.twelfth_cutoff
     )
     db.add(student)
@@ -1323,6 +1329,7 @@ class StudentUpdateSchema(BaseModel):
     institutional_email: Optional[str] = None
     allocation: Optional[str] = None
     accommodation: Optional[str] = None
+    gender: Optional[str] = None
     twelfth_cutoff: Optional[float] = None
 
 
@@ -1437,6 +1444,12 @@ def update_student(
             changes_made['accommodation'] = new_acc or "None"
             student.accommodation = new_acc  # type: ignore
 
+    if payload.gender is not None:
+        clean_gender = payload.gender.strip().capitalize() if payload.gender.strip() else None
+        if student.gender != clean_gender:
+            changes_made['gender'] = clean_gender or "None"
+            student.gender = clean_gender  # type: ignore
+
     if payload.twelfth_cutoff is not None:
         if student.twelfth_cutoff != payload.twelfth_cutoff:
             changes_made['twelfth_cutoff'] = payload.twelfth_cutoff
@@ -1549,9 +1562,34 @@ def update_student(
     # Commit updated URL/username to DB first before starting fetch (Requirement 17)
     db.commit()
     db.refresh(student)
+    
+    full_updated_data = {
+        "id": student.id,
+        "name": student.name,
+        "reg_no": student.reg_no,
+        "department_id": student.department_id,
+        "department": {"id": student.department.id, "name": student.department.name, "code": student.department.code} if student.department else None,
+        "year_level": student.year_level,
+        "section_id": student.section_id,
+        "section": student.section.name if student.section else None,
+        "username": student.username,
+        "leetcode_url": student.leetcode_url,
+        "profile_url": student.leetcode_url,
+        "email": student.email,
+        "institutional_email": student.institutional_email,
+        "allocation": student.allocation,
+        "accommodation": student.accommodation,
+        "twelfth_cutoff": student.twelfth_cutoff,
+        "is_active": student.is_active,
+        "version": getattr(student, 'version', 1)
+    }
+
     connection_manager.broadcast_sync({
         'type': 'STUDENT_UPDATED',
         'student_id': student.id,
+        'entityId': student.id,
+        'changes': full_updated_data,
+        'data': full_updated_data,
         'version': getattr(student, 'version', 1)
     })
 
@@ -1628,6 +1666,7 @@ def update_student(
 
     background_tasks.add_task(_bg_post_update_processing)
     cache.invalidate_tag("students")
+    cache.invalidate_tag("leaderboard")
 
     st_out = StudentOut.model_validate(student)
     from backend.schemas import SecondaryAccountOut

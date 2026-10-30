@@ -125,6 +125,14 @@ const MAPPING_DROPDOWN_OPTIONS: DropdownOption[] = [
     icon: FileSpreadsheet
   },
   {
+    value: 'college',
+    label: 'COLLEGE / INSTITUTION',
+    sublabel: 'College name e.g. NEC, NCT',
+    badge: 'OPTIONAL',
+    badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    icon: Building2
+  },
+  {
     value: 'exclude',
     label: 'Exclude Column',
     sublabel: 'Explicitly mark column as excluded',

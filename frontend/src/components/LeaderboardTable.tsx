@@ -54,6 +54,7 @@ export interface StudentData {
   institutional_email?: string;
   email_status?: string;
   batch?: string;
+  college?: string;
   total_solved?: number | null;
   easy_solved?: number | null;
   medium_solved?: number | null;
@@ -221,7 +222,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   }, []);
 
 
-  const isServerPaginated = serverTotalCount !== undefined && !isFilteringActive;
+  const isServerPaginated = serverTotalCount !== undefined;
 
   // Ultra-Fast Paginated Table Viewport Rendering
   const [currentPage, setCurrentPage] = useState(serverPage || 1);
@@ -231,18 +232,13 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     if (isServerPaginated) {
       if (serverPage) setCurrentPage(serverPage);
       if (serverPageSize) setPageSize(String(serverPageSize) as any);
-    } else {
-      // If filtering is active or data is local, ensure we're on a valid page
-      setCurrentPage(1);
     }
-  }, [isServerPaginated, serverPage, serverPageSize, isFilteringActive]);
+  }, [isServerPaginated, serverPage, serverPageSize]);
 
   const totalPages = useMemo(() => {
     if (isServerPaginated) {
-      if (pageSize === '200') return 1;
       return Math.ceil((serverTotalCount || 0) / Number(pageSize)) || 1;
     }
-    if (pageSize === '200') return Math.ceil(deferredSortedStudents.length / 200) || 1;
     return Math.ceil(deferredSortedStudents.length / Number(pageSize)) || 1;
   }, [deferredSortedStudents.length, pageSize, isServerPaginated, serverTotalCount]);
 
@@ -254,12 +250,18 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   }, [totalPages, currentPage]);
 
   const paginatedStudents = useMemo(() => {
-    if (isServerPaginated) return effectiveStudents; // The server already paginated them!
+    if (isServerPaginated) return deferredSortedStudents; // The server already paginated them!
 
     const size = Number(pageSize);
     const start = (currentPage - 1) * size;
     return deferredSortedStudents.slice(start, start + size);
-  }, [deferredSortedStudents, effectiveStudents, currentPage, pageSize, isServerPaginated]);
+  }, [deferredSortedStudents, currentPage, pageSize, isServerPaginated]);
+
+  const totalSolvers = isServerPaginated ? (serverTotalCount ?? effectiveStudents.length) : deferredSortedStudents.length;
+  const startSolver = totalSolvers === 0 ? 0 : (currentPage - 1) * Number(pageSize) + 1;
+  const endSolver = isServerPaginated
+    ? Math.min((currentPage - 1) * Number(pageSize) + effectiveStudents.length, totalSolvers)
+    : Math.min(currentPage * Number(pageSize), totalSolvers);
 
   // Ultra-Fast 60/120 FPS Progressive Chunk Rendering
   const [renderedCount, setRenderedCount] = useState<number>(25);
@@ -735,15 +737,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       </div>
 
       {/* Sleek Ultra-Fast Pagination Bar */}
-      {effectiveStudents.length > 0 && (
+      {totalSolvers > 0 && (
         <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4 p-4 mt-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm w-full overflow-hidden mb-24 md:mb-0">
           <div className="flex items-center justify-center w-full sm:w-auto space-x-2 text-center sm:text-left min-w-0">
-            <span className="min-w-0 break-words">Showing <strong className="text-slate-900 dark:text-white font-extrabold">{(currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
+            <span className="min-w-0 break-words">Showing <strong className="text-slate-900 dark:text-white font-extrabold">{startSolver}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{endSolver}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{totalSolvers}</strong> solvers</span>
           </div>
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4 w-full sm:w-auto">
             {/* Rows Per Page Selector */}
-            {effectiveStudents.length > 25 && (
+            {totalSolvers > 25 && (
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Per Page:</span>
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
@@ -818,13 +820,23 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         student={editingStudent}
         onClose={() => setEditingStudent(null)}
         onSaveSuccess={(updated) => {
+          if (updated && updated.id) {
+            studentLiveStore.updateStudent(updated.id, updated);
+          }
           queryClient.invalidateQueries({ queryKey: ['students'] });
+          queryClient.invalidateQueries({ queryKey: ['students-master'] });
           queryClient.setQueriesData({ queryKey: ['students'] }, (oldData: any) => {
-            if (!oldData || !oldData.items) return oldData;
-            return {
-              ...oldData,
-              items: oldData.items.map((s: any) => s.id === updated.id ? { ...s, ...updated } : s)
-            };
+            if (!oldData) return oldData;
+            if (Array.isArray(oldData)) {
+              return oldData.map((s: any) => s.id === updated.id ? { ...s, ...updated } : s);
+            }
+            if (oldData.items && Array.isArray(oldData.items)) {
+              return {
+                ...oldData,
+                items: oldData.items.map((s: any) => s.id === updated.id ? { ...s, ...updated } : s)
+              };
+            }
+            return oldData;
           });
 
           if (onUpdateStudent) {

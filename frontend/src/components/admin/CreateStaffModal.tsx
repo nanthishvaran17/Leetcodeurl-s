@@ -4,12 +4,14 @@ import {
   X, Briefcase, ChevronRight, ChevronLeft, Hash, Mail, Phone, Calendar,
   Search, RefreshCw, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown,
   Lock, AlertTriangle, ArrowRight, UploadCloud, FileText, CheckCircle2, ShieldCheck,
-  Camera, Trash2, Image as ImageIcon
+  Camera, Trash2, Image as ImageIcon, Copy
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
+import { copyToClipboard } from '../../utils/clipboard';
 
 interface CreateStaffModalProps {
   onClose: () => void;
@@ -23,8 +25,10 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   onClose, onSuccess, departments, staffList, notify
 }) => {
   const storeVersion = useStudentStoreVersion();
+  useEscapeKey(onClose);
   const [activeStep, setActiveStep] = useState<number>(1);
   const [createdStaffSummary, setCreatedStaffSummary] = useState<any | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Helper map for Academic Years -> Year designation & styling
   const getAcademicYearMeta = (y: string) => {
@@ -487,7 +491,16 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
       };
 
       const res = await api.post('/admin/staff', payload);
-      const createdStaff = res.data?.staff || payload;
+      const serverStaff = res.data?.staff || {};
+      const createdStaff = {
+        ...payload,
+        ...serverStaff,
+        profile_photo: serverStaff.profile_photo || payload.profile_photo || profilePhotoPreview || '',
+        full_name: serverStaff.full_name || payload.full_name || payload.username,
+        department: serverStaff.department || (departments.find(d => String(d.id) === String(payload.department_id))?.code) || 'INSTITUTIONAL',
+        departments: serverStaff.departments || [(departments.find(d => String(d.id) === String(payload.department_id))?.code) || 'INSTITUTIONAL'],
+        assigned_count: 0
+      };
 
       setCreatedStaffSummary(createdStaff);
       notify.success(`Staff account '${formData.username}' created successfully!`, '', { category: 'ADMIN' });
@@ -514,7 +527,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
   return (
     <GlobalModalBackdrop isOpen={true} onClose={onClose} zIndex={100000} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/75 backdrop-blur-md overflow-hidden">
-      <div className="bg-white dark:bg-navy-950 rounded-t-[2.25rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+      <div className="bg-white dark:bg-navy-950 rounded-t-[2.25rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up select-text" onClick={(e) => e.stopPropagation()}>
 
         {/* MOBILE DRAG PULL HANDLE */}
         <div className="sm:hidden pt-2.5 pb-1 flex justify-center bg-slate-900 cursor-pointer" onClick={onClose}>
@@ -569,9 +582,22 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         {/* SUCCESS CONFIRMATION STATE OVERLAY */}
         {createdStaffSummary ? (
           <div className="flex-1 p-8 sm:p-12 overflow-y-auto flex flex-col items-center justify-center text-center space-y-6 bg-slate-50/50 dark:bg-navy-950/40">
-            <div className="w-20 h-20 rounded-3xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 animate-bounce-short">
-              <CheckCircle2 className="w-10 h-10" />
-            </div>
+            {createdStaffSummary.profile_photo ? (
+              <div className="relative">
+                <img
+                  src={createdStaffSummary.profile_photo}
+                  alt={createdStaffSummary.full_name || createdStaffSummary.username}
+                  className="w-20 h-20 rounded-3xl object-cover border-4 border-emerald-500 shadow-xl shadow-emerald-500/20"
+                />
+                <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md border-2 border-white dark:border-navy-950">
+                  <CheckCircle2 className="w-4 h-4" />
+                </span>
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-3xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 animate-bounce-short">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+            )}
 
             <div className="max-w-md space-y-2">
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">Account Created Successfully</h3>
@@ -581,18 +607,78 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             </div>
 
             {/* Non-sensitive details card */}
-            <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-5 border border-slate-300 dark:border-navy-700 text-left space-y-3 shadow-md">
+            <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-5 border border-slate-300 dark:border-navy-700 text-left space-y-3 shadow-md select-text" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-200 dark:border-navy-800 text-xs">
                 <span className="text-slate-700 dark:text-slate-300 font-extrabold">Staff Member Name:</span>
-                <span className="font-black text-slate-900 dark:text-white">{createdStaffSummary.full_name || createdStaffSummary.username}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-slate-900 dark:text-white select-text">{createdStaffSummary.full_name || createdStaffSummary.username}</span>
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const success = await copyToClipboard(createdStaffSummary.full_name || createdStaffSummary.username);
+                      if (success) {
+                        setCopiedField('name');
+                        notify?.success('Copied to clipboard', 'Staff name copied successfully');
+                        setTimeout(() => setCopiedField(null), 2000);
+                      }
+                    }}
+                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-brand-500 transition-colors cursor-pointer select-none"
+                    title="Copy staff name"
+                    aria-label="Copy staff name"
+                  >
+                    {copiedField === 'name' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-200 dark:border-navy-800 text-xs">
                 <span className="text-slate-700 dark:text-slate-300 font-extrabold">Username:</span>
-                <span className="font-mono font-black text-brand-600 dark:text-brand-400">{createdStaffSummary.username}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-black text-brand-600 dark:text-brand-400 select-text">{createdStaffSummary.username}</span>
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const success = await copyToClipboard(createdStaffSummary.username);
+                      if (success) {
+                        setCopiedField('username');
+                        notify?.success('Copied to clipboard', 'Staff username copied successfully');
+                        setTimeout(() => setCopiedField(null), 2000);
+                      }
+                    }}
+                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-brand-500 transition-colors cursor-pointer select-none"
+                    title="Copy username"
+                    aria-label="Copy username"
+                  >
+                    {copiedField === 'username' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-200 dark:border-navy-800 text-xs">
                 <span className="text-slate-700 dark:text-slate-300 font-extrabold">Official Email:</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100">{createdStaffSummary.email}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 dark:text-slate-100 select-text">{createdStaffSummary.email}</span>
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const success = await copyToClipboard(createdStaffSummary.email);
+                      if (success) {
+                        setCopiedField('email');
+                        notify?.success('Copied to clipboard', 'Official email copied successfully');
+                        setTimeout(() => setCopiedField(null), 2000);
+                      }
+                    }}
+                    className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-brand-500 transition-colors cursor-pointer select-none"
+                    title="Copy official email"
+                    aria-label="Copy official email"
+                  >
+                    {copiedField === 'email' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-200 dark:border-navy-800 text-xs">
                 <span className="text-slate-700 dark:text-slate-300 font-extrabold">Institutional Role:</span>
@@ -1097,10 +1183,10 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           const takenStaff = uLower ? (staffList || []).find((s: any) => (s.username || '').toLowerCase().trim() === uLower) : null;
                           if (takenStaff) {
                             return (
-                              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-[11px] font-extrabold flex items-center justify-between gap-2 mt-1.5 animate-scale-in">
-                                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-[11px] font-extrabold flex items-center justify-between gap-2 mt-1.5 animate-scale-in select-text" onClick={(e) => e.stopPropagation()}>
+                                <span className="flex items-center gap-1.5 min-w-0 truncate select-text">
                                   <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
-                                  <span className="truncate">Username '@{formData.username}' is already allocated to <strong>{takenStaff.full_name || takenStaff.username}</strong></span>
+                                  <span className="truncate select-text">Username '@{formData.username}' is already allocated to <strong className="select-text font-black">{takenStaff.full_name || takenStaff.username}</strong></span>
                                 </span>
                                 <button
                                   type="button"

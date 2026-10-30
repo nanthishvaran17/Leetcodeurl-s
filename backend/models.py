@@ -88,8 +88,10 @@ class Student(Base):
     hackerrank_username = Column(String(100), nullable=True)
     
     allocation = Column(String(50), nullable=True, index=True) # 0.25, etc.
+    college = Column(String(100), default="NEC", nullable=True, index=True) # e.g. NEC, NCT
     
     accommodation = Column(String(50), nullable=True, index=True) # Hostel, Day Scholar
+    gender = Column(String(20), nullable=True, index=True) # Male, Female, Other
     twelfth_cutoff = Column(Float, nullable=True, index=True) # 12th standard cutoff mark (e.g. 141.0, 185.0)
     
     is_active = Column(Boolean, default=True, index=True)
@@ -3609,3 +3611,43 @@ class InstitutionLead(Base):
     pitch_sent_at = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+
+
+class ContestSubmissionCode(Base):
+    """
+    Authoritative Weekly Contest Verbatim Code Repository.
+    Stores 100% genuine, verbatim source code submitted by students for each contest problem.
+    Automatically synced during weekly contests (Count, Time, Code).
+    """
+    __tablename__ = "contest_submission_codes"
+    __table_args__ = (
+        UniqueConstraint("session_id", "student_id", "q_idx", name="uq_contest_sub_code_session_student_q"),
+        Index("ix_contest_sub_codes_lookup", "session_id", "student_id", "q_idx"),
+        Index("ix_contest_sub_codes_slug", "session_id", "problem_slug"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    reg_no = Column(String(50), nullable=True, index=True)
+    username = Column(String(100), nullable=True, index=True)
+
+    q_idx = Column(Integer, nullable=False) # 1, 2, 3, 4
+    problem_slug = Column(String(255), nullable=False)
+    submission_id = Column(String(100), nullable=True, index=True) # Official LeetCode submission ID
+    contest_submission_id = Column(String(100), nullable=True)
+
+    lang = Column(String(50), nullable=True) # java, python3, cpp, c, etc.
+    code = Column(Text, nullable=False) # 100% verbatim submitted code
+
+    runtime_display = Column(String(50), nullable=True)
+    memory_display = Column(String(50), nullable=True)
+    time_seconds = Column(Integer, nullable=True)
+    status_display = Column(String(50), default="Accepted")
+
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+    session = relationship("WeeklySession", backref="submission_codes")
+    student = relationship("Student", backref="contest_codes")

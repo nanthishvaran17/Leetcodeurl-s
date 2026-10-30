@@ -206,6 +206,8 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
             raw_sec_lc = _get_val("sec_leetcode_url")
             raw_section = _get_val("section")
             raw_batch = _get_val("batch")
+            raw_college = _get_val("college")
+            norm_college = raw_college.strip().upper() if raw_college else "NEC"
             raw_cutoff = _get_val("twelfth_cutoff") or _get_val("cutoff")
             norm_cutoff = None
             if raw_cutoff:
@@ -724,6 +726,7 @@ def commit_smart_excel_import(
                             secondary_leetcode_id=sec_username,
                             secondary_status="approved" if sec_username else "none",
                             leetcode_url=lc_url,
+                            college=norm_college,
                             batch=norm_batch,
                             twelfth_cutoff=norm_cutoff,
                             is_active=True
@@ -778,6 +781,9 @@ def commit_smart_excel_import(
                             has_changes = True
                         if norm_cutoff is not None and getattr(existing_st, "twelfth_cutoff", None) != norm_cutoff:
                             setattr(existing_st, "twelfth_cutoff", norm_cutoff)
+                            has_changes = True
+                        if raw_college and str(getattr(existing_st, "college", "") or "") != norm_college:
+                            setattr(existing_st, "college", norm_college)
                             has_changes = True
 
                         if has_changes:

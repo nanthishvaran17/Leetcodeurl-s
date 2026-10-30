@@ -19,7 +19,9 @@ import { useDepartments } from '../contexts/DepartmentContext';
 import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
 import { useFilters } from '../context/FilterContext';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
+import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 
 // Validation state machine 
 type LcValidationState =
@@ -197,6 +199,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [institutionalEmail, setInstitutionalEmail] = useState('');
   const [cutOffScore, setCutOffScore] = useState('');
   const [accommodationType, setAccommodationType] = useState('Day Scholar');
+  const [gender, setGender] = useState('Male');
   const [leetcodeUrl, setLeetcodeUrl] = useState('');
 
   // LeetCode validation state (per-modal; cleared on open/close)
@@ -228,14 +231,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         if (allDepts.length > 0) {
           const found = allDepts.find((d: any) => 
             (d.code || d.department_code || '').toUpperCase() === filters.department.toUpperCase() || 
-            (d.name || d.department_name || '').toUpperCase() === filters.department.toUpperCase()
+            (d.name || d.department_name || '').toUpperCase() === filters.department.toUpperCase() ||
+            normalizeDepartment(d) === normalizeDepartment(filters.department)
           );
           if (found) deptIdToUse = found.id || found.department_id;
         }
         if (!deptIdToUse) {
           const deptMap: Record<string, number> = {
-            'CSE(CS)': 1, 'CS': 1, 'CYBER': 1,
-            'CSE(IOT)': 2, 'IOT': 2,
+            'CSE(CS)': 1, 'CS': 1, 'CYBER': 1, 'CSE_CS': 1, 'CYBER SECURITY': 1,
+            'CSE(IOT)': 2, 'IOT': 2, 'CSE_IOT': 2,
             'IT': 4,
             'CSE': 5,
             'AIDS': 10,
@@ -246,13 +250,19 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             'EEE': 20
           };
           deptIdToUse = deptMap[filters.department.toUpperCase()];
+          if (!deptIdToUse) {
+            const norm = normalizeDepartment(filters.department);
+            if (norm === 'cse_cs') deptIdToUse = 1;
+            else if (norm === 'cse_iot') deptIdToUse = 2;
+            else if (norm === 'it') deptIdToUse = 4;
+          }
         }
         if (deptIdToUse) params.dept_id = deptIdToUse;
         params.department = filters.department;
       }
       
       if (filters.academicYear && filters.academicYear !== 'ALL') {
-        params.year_level = filters.academicYear;
+        params.year_level = normalizeAcademicYear(filters.academicYear);
       }
       
       const res = await api.get('/students', { params });
@@ -397,6 +407,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   };
 
   useScrollLock(showAddModal);
+  useEscapeKey(handleCloseAddModal, showAddModal);
 
   useEffect(() => {
     if (!showAddModal) return;
@@ -429,6 +440,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         email: email || undefined,
         institutional_email: institutionalEmail || undefined,
         accommodation: accommodationType,
+        gender: gender,
         twelfth_cutoff: cutOffScore ? parseFloat(cutOffScore) : null,
         leetcode_url: finalUrl
       });
@@ -442,6 +454,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       setRegNo(''); setName(''); setLeetcodeUrl('');
       setEmail(''); setInstitutionalEmail(''); setCutOffScore('');
       setAccommodationType('DAY SCHOLAR');
+      setGender('Male');
       setLcValidation({ status: 'idle' });
       queryClient.invalidateQueries({ queryKey: ['students-master'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
@@ -780,7 +793,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   }}
                   dropdownWidth="w-48"
                   options={[
-                    { value: "20", label: "20 per page" },
+                    { value: "25", label: "25 per page" },
                     { value: "50", label: "50 per page" },
                     { value: "100", label: "100 per page" },
                     { value: "200", label: "200 per page" }
@@ -958,7 +971,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">12th Cut-off Score</label>
                     <input
@@ -968,6 +981,20 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                       onChange={(e) => setCutOffScore(e.target.value)}
                       placeholder="e.g. 185.50"
                       className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Gender</label>
+                    <GlobalFilter
+                      value={gender}
+                      onChange={(val) => setGender(val)}
+                      dropdownWidth="w-full"
+                      options={[
+                        { value: "Male", label: "Male", pillText: "MALE" },
+                        { value: "Female", label: "Female", pillText: "FEMALE" }
+                      ]}
+                      icon={<User className="w-4 h-4 text-blue-400" />}
+                      placeholder="Select Gender"
                     />
                   </div>
                   <div>

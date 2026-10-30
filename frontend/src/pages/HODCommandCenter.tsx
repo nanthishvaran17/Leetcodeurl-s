@@ -19,6 +19,7 @@ import { CustomDropdown } from '../components/CustomDropdown';
 import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
 import { PerformanceChart } from '../components/PerformanceChart';
 import { useKeyboardContext } from '../context/KeyboardContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -1405,6 +1406,20 @@ export const HODCommandCenter: React.FC = () => {
  showAIModal || showWhatIfModal || confirmUnassignTarget ||
  selectedYearBenchmark || selectedSkillGap
  );
+
+ useEscapeKey(() => {
+   if (confirmUnassignTarget) { setConfirmUnassignTarget(null); return; }
+   if (showWhatIfModal) { setShowWhatIfModal(false); return; }
+   if (showAIModal) { setShowAIModal(false); return; }
+   if (showReportHubModal) { setShowReportHubModal(false); return; }
+   if (showMethodologyModal) { setShowMethodologyModal(false); return; }
+   if (showStaffAllocationModal) { setShowStaffAllocationModal(false); return; }
+   if (selectedSkillGap) { setSelectedSkillGap(null); return; }
+   if (selectedYearBenchmark) { setSelectedYearBenchmark(null); return; }
+   if (selectedDeptIntelligence) { setSelectedDeptIntelligence(null); return; }
+   if (selectedStaffDetail) { setSelectedStaffDetail(null); return; }
+   if (selectedStudentDetail) { setSelectedStudentDetail(null); return; }
+ }, isAnyModalOrDrawerOpen);
 
  useEffect(() => {
  if (isAnyModalOrDrawerOpen) {

@@ -6,6 +6,7 @@ Multi-Dimensional Scoping • Staff Allocation Manager • Dedicated Reports •
 """
 
 import datetime
+import time
 import secrets
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
@@ -30,12 +31,20 @@ def _is_real_dept(dept_code: Optional[str]) -> bool:
         return True
     return is_production_department(dept_code)
 
+_SUNDAY_SESSION_CACHE = {"session_id": None, "expires_at": 0.0}
+
 def _get_active_or_latest_sunday_session(db: Session) -> Optional[WeeklySession]:
     """
-    Finds the authoritative Sunday Weekly Contest session.
-    Prioritizes LIVE / active session if currently happening, or the most recent finalized/completed
-    weekly contest session that contains actual verified student participation records.
+    Finds the authoritative Sunday Weekly Contest session with a 60-second in-memory cache
+    to avoid repeated sequential database scans on high-traffic dashboards.
     """
+    now = time.time()
+    cached_id = _SUNDAY_SESSION_CACHE.get("session_id")
+    if cached_id and now < _SUNDAY_SESSION_CACHE.get("expires_at", 0):
+        sess = db.query(WeeklySession).filter(WeeklySession.id == cached_id).first()
+        if sess and sess.status != "LIVE":
+            return sess
+
     ATTENDED_STATUSES = ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE", "ATTENDED_ZERO", "ATTENDED_SOLVED")
     
     # 1. LIVE session takes top precedence
@@ -44,6 +53,8 @@ def _get_active_or_latest_sunday_session(db: Session) -> Optional[WeeklySession]
         or_(WeeklySession.session_code.like("WEEK-%"), WeeklySession.contest_name.ilike("%Weekly Contest%"))
     ).order_by(WeeklySession.id.desc()).first()
     if live_sess:
+        _SUNDAY_SESSION_CACHE["session_id"] = live_sess.id
+        _SUNDAY_SESSION_CACHE["expires_at"] = now + 15
         return live_sess
 
     # 2. Check for recent weekly contest sessions with real attended records
@@ -61,9 +72,15 @@ def _get_active_or_latest_sunday_session(db: Session) -> Optional[WeeklySession]
             )
         ).first()
         if has_attended:
+            _SUNDAY_SESSION_CACHE["session_id"] = cand.id
+            _SUNDAY_SESSION_CACHE["expires_at"] = now + 60
             return cand
 
-    return candidates[0] if candidates else None
+    chosen = candidates[0] if candidates else None
+    if chosen:
+        _SUNDAY_SESSION_CACHE["session_id"] = chosen.id
+        _SUNDAY_SESSION_CACHE["expires_at"] = now + 60
+    return chosen
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
 
@@ -85,6 +102,9 @@ class StudentUpdateRequest(BaseModel):
     leetcode_username: Optional[str] = None
     email: Optional[str] = None
     section_id: Optional[int] = None
+    allocation: Optional[str] = None
+    accommodation: Optional[str] = None
+    twelfth_cutoff: Optional[float] = None
 
 class AIQueryRequest(BaseModel):
     query: str = Field(..., min_length=3, max_length=500)
@@ -1627,8 +1647,52 @@ def update_student(reg_no: str, req: StudentUpdateRequest, db: Session = Depends
     if req.leetcode_username:
         student.username = req.leetcode_username.strip().lower()  # type: ignore
         student.leetcode_url = f"https://leetcode.com/{student.username}/"  # type: ignore
+    if req.allocation is not None:
+        student.allocation = req.allocation.strip() if req.allocation else None  # type: ignore
+    if req.accommodation is not None:
+        student.accommodation = req.accommodation.strip() if req.accommodation else None  # type: ignore
+    if req.twelfth_cutoff is not None:
+        student.twelfth_cutoff = req.twelfth_cutoff  # type: ignore
 
     db.commit()
+    db.refresh(student)
+    from backend.cache import cache
+    cache.invalidate_tag("students")
+    cache.invalidate_tag("leaderboard")
+    from backend.services.connection_manager import connection_manager
+    connection_manager.broadcast_sync({
+        'type': 'STUDENT_UPDATED',
+        'student_id': student.id,
+        'entityId': student.id,
+        'changes': {
+            'id': student.id,
+            'name': student.name,
+            'reg_no': student.reg_no,
+            'department_id': student.department_id,
+            'year_level': student.year_level,
+            'section_id': student.section_id,
+            'email': student.email,
+            'username': student.username,
+            'leetcode_url': student.leetcode_url,
+            'allocation': student.allocation,
+            'accommodation': student.accommodation,
+            'twelfth_cutoff': student.twelfth_cutoff
+        },
+        'data': {
+            'id': student.id,
+            'name': student.name,
+            'reg_no': student.reg_no,
+            'department_id': student.department_id,
+            'year_level': student.year_level,
+            'section_id': student.section_id,
+            'email': student.email,
+            'username': student.username,
+            'leetcode_url': student.leetcode_url,
+            'allocation': student.allocation,
+            'accommodation': student.accommodation,
+            'twelfth_cutoff': student.twelfth_cutoff
+        }
+    })
     _log_admin_action(db, "UPDATE_STUDENT", student.reg_no, f"Updated student {student.name} ({student.reg_no})")  # type: ignore
     return {"success": True, "message": f"Student '{student.name}' updated successfully."}
 
@@ -1737,6 +1801,18 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     ).group_by(User.department_id).all()
     faculty_counts = {dept_id: count for dept_id, count in faculty_counts_query}
 
+    # Pre-fetch assigned faculty counts from active FacultyStudentAssignment
+    from backend.models import FacultyStudentAssignment
+    assigned_faculty_query = db.query(
+        Student.department_id, func.count(func.distinct(FacultyStudentAssignment.faculty_id))
+    ).join(
+        FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+    ).filter(
+        FacultyStudentAssignment.is_active == True,
+        Student.is_active == True
+    ).group_by(Student.department_id).all()
+    assigned_faculty_map = {dept_id: count for dept_id, count in assigned_faculty_query}
+
     # Pre-fetch total solved per department
     dept_solved_query = db.query(
         Student.department_id,
@@ -1757,19 +1833,43 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             continue
         name = "Information Technology" if (d.code and d.code.upper() == "IT") else d.name
         
+        code_u = (d.code or "").upper().strip()
+        name_u = (d.name or "").upper().strip()
         hod_user = hod_by_dept.get(d.id)
         hod_display_name = None
+
+        # 1. PRIORITY: Genuine assigned HOD user from database
         if hod_user and (hod_user.full_name or hod_user.username):
-            raw_name = hod_user.full_name or hod_user.username
-            # Guard against coordinators accidentally linked
+            raw_name = (hod_user.full_name or hod_user.username).strip()
             if not any(coord.lower() in raw_name.lower() for coord in ["Santhoshkumar", "Devayani", "Sivakumar"]):
                 hod_display_name = raw_name
-        
-        if not hod_display_name:
-            code_clean = (d.code or "").upper().strip()
-            hod_display_name = CANONICAL_HOD_MAP.get(code_clean, f"HOD ({d.code})")
 
-        fac_count = faculty_counts.get(d.id, 0)
+        # 2. FALLBACK: Only if no genuine HOD is assigned in the database
+        if not hod_display_name:
+            if "IOT" in code_u or "IOT" in name_u:
+                hod_display_name = "Dr. S. Karthikeyan"
+            elif "CYBER" in code_u or "CYBER" in name_u or "(CS)" in code_u or code_u in ["CSE(CS)", "CSE"]:
+                hod_display_name = "Dr. S. Prabhu"
+            elif code_u == "IT" or "INFORMATION" in name_u:
+                hod_display_name = "Dr. M. Senthilkumar"
+            else:
+                code_clean = (d.code or "").upper().strip()
+                hod_display_name = CANONICAL_HOD_MAP.get(code_clean, f"HOD ({d.code})")
+
+        # 1. PRIORITY: Genuine assigned HOD email from database
+        hod_email = (hod_user.email.strip() if (hod_user and hod_user.email) else None)
+        # 2. FALLBACK: Only if no email assigned in database
+        if not hod_email:
+            if "IOT" in code_u or "IOT" in name_u:
+                hod_email = "hod.cseiot@nandhaengg.org"
+            elif "CYBER" in code_u or "CYBER" in name_u or "(CS)" in code_u or code_u in ["CSE(CS)", "CSE"]:
+                hod_email = "prabhu.s@nandhaengg.org"
+            elif code_u == "IT" or "INFORMATION" in name_u:
+                hod_email = "hod.it@nandhaengg.org"
+
+        direct_fac = faculty_counts.get(d.id, 0)
+        assigned_fac = assigned_faculty_map.get(d.id, 0)
+        fac_count = max(direct_fac, assigned_fac)
         tot_solved, act_count = dept_solved_map.get(d.id, (0, 0))
         comp_rate = round((act_count / count) * 100.0, 1) if count > 0 else 0.0
 
@@ -1780,7 +1880,7 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             "student_count": count,
             "faculty_count": fac_count,
             "hod_name": hod_display_name,
-            "hod_email": hod_user.email if hod_user else None,
+            "hod_email": hod_email,
             "total_solved": tot_solved,
             "completion_rate": comp_rate
         })
@@ -1833,22 +1933,40 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
             User.is_active == True
         ).first()
 
-    code_clean = (dept.code or "").upper().strip() if dept else ""
-    canonical_fallback = CANONICAL_HOD_MAP.get(code_clean, f"HOD - {dept.code}" if dept else "Head of Department")
+    code_u = (dept.code or "").upper().strip() if dept else ""
+    name_u = (dept.name or "").upper().strip() if dept else ""
+    canonical_fallback = None
+    canonical_email = None
 
+    if "IOT" in code_u or "IOT" in name_u:
+        canonical_fallback = "Dr. S. Karthikeyan"
+        canonical_email = "hod.cseiot@nandhaengg.org"
+    elif "CYBER" in code_u or "CYBER" in name_u or "(CS)" in code_u or code_u in ["CSE(CS)", "CSE"]:
+        canonical_fallback = "Dr. S. Prabhu"
+        canonical_email = "prabhu.s@nandhaengg.org"
+    elif code_u == "IT" or "INFORMATION" in name_u:
+        canonical_fallback = "Dr. M. Senthilkumar"
+        canonical_email = "hod.it@nandhaengg.org"
+    else:
+        canonical_fallback = CANONICAL_HOD_MAP.get(code_u, f"HOD - {dept.code}" if dept else "Head of Department")
+        canonical_email = "hod@nandha.edu.in"
+
+    # 1. PRIORITY: Genuine assigned HOD user from database
     resolved_hod_name = None
     if hod_user and (hod_user.full_name or hod_user.username):
-        raw_name = hod_user.full_name or hod_user.username
+        raw_name = (hod_user.full_name or hod_user.username).strip()
         if not any(coord.lower() in raw_name.lower() for coord in ["Santhoshkumar", "Devayani", "Sivakumar"]):
             resolved_hod_name = raw_name
 
+    # 2. FALLBACK: Only if no genuine HOD is assigned in the database
     hod_name_out = resolved_hod_name or canonical_fallback
+    hod_email_out = (hod_user.email.strip() if hod_user and hod_user.email else None) or canonical_email
 
     hod_info = {
         "id": hod_user.id if hod_user else None,
         "name": hod_name_out,
         "username": hod_user.username if hod_user else "HOD",
-        "email": hod_user.email if hod_user else "hod@nandha.edu.in",
+        "email": hod_email_out,
         "role": hod_user.role if (hod_user and "hod" in (hod_user.role or "").lower()) else "Department HOD"
     }
 

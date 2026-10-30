@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { SwipeHandle } from '../SwipeHandle';
 import { StaffRecord, StudentRecord, getCommandCenterStudents } from '../../services/commandCenterService';
-import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Target, Eye, Shield, Building2 } from 'lucide-react';
+import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity, RefreshCw, Gauge, Trophy, Target, Eye, Shield, Building2, Copy, Check } from 'lucide-react';
 import { isRoleEligibleForMentees } from '../../utils/staffRoleUtils';
+import { copyToClipboard } from '../../utils/clipboard';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface StaffDetailDrawerProps {
   staff: StaffRecord | null;
@@ -22,12 +24,26 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   onSelectStudent,
   onFilterDashboard
 }) => {
+  useEscapeKey(onClose, Boolean(staff));
+
   if (!staff) return null;
 
   const isMenteeEligible = isRoleEligibleForMentees(staff.role, (staff as any).mentoring_role);
   const [mentees, setMentees] = useState<StudentRecord[]>([]);
   const [loadingMentees, setLoadingMentees] = useState<boolean>(isMenteeEligible);
   const [showPhotoZoom, setShowPhotoZoom] = useState<boolean>(false);
+  const [copiedStaffName, setCopiedStaffName] = useState<string | null>(null);
+
+  const handleCopyStaffName = async (text: string) => {
+    if (!text) return;
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedStaffName(text);
+      setTimeout(() => {
+        setCopiedStaffName(prev => (prev === text ? null : prev));
+      }, 2000);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -79,7 +95,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-xl h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
 
         {/* Hero Header Profile Section */}
@@ -124,12 +140,26 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             </div>
 
             <div className="min-w-0 flex-1 pb-1">
-              {/* Full name (large) */}
-              <div className="text-xl font-black text-white leading-tight truncate" title={staff.full_name || staff.username}>
-                {staff.full_name || staff.username}
+              {/* Full name (large) with Copy button */}
+              <div className="flex items-center gap-2">
+                <div className="text-xl font-black text-white leading-tight truncate select-text" title={staff.full_name || staff.username}>
+                  {staff.full_name || staff.username}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyStaffName(staff.full_name || staff.username)}
+                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer inline-flex items-center shrink-0 active:scale-95"
+                  title="Copy Staff Name"
+                >
+                  {copiedStaffName === (staff.full_name || staff.username) ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
               </div>
               {/* Username */}
-              <div className="text-xs text-slate-300 font-mono truncate mt-0.5" title={staff.username}>
+              <div className="text-xs text-slate-300 font-mono truncate mt-0.5 select-text" title={staff.username}>
                 @{staff.username}
               </div>
               {/* Email */}

@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, AlertOctagon, Bell, Palette, Check, RefreshCw, Search } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
-import { SyncStatusModal } from './SyncStatusModal';
-import { SignOutConfirmModal } from './SignOutConfirmModal';
+const SyncStatusModal = lazy(() => import('./SyncStatusModal').then(m => ({ default: m.SyncStatusModal })));
+const SignOutConfirmModal = lazy(() => import('./SignOutConfirmModal').then(m => ({ default: m.SignOutConfirmModal })));
 const NotificationPanel = lazy(() => import('./NotificationPanel').then(m => ({ default: m.NotificationPanel })));
 import { useGlobalNotifications } from '../context/GlobalNotificationContext';
 
@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
             <div className="flex items-center space-x-1.5 sm:space-x-3.5 min-w-0 flex-1">
-              {isAuthenticated && (
+              {(isAuthenticated || activeTab === "public") && (
                 <button
                   type="button"
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -256,18 +256,26 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Sign Out Confirmation Modal */}
-      <SignOutConfirmModal
-        isOpen={showLogoutConfirm}
-        onClose={() => setShowLogoutConfirm(false)}
-        onConfirm={logout}
-        user={user}
-      />
+      {showLogoutConfirm && (
+        <Suspense fallback={null}>
+          <SignOutConfirmModal
+            isOpen={showLogoutConfirm}
+            onClose={() => setShowLogoutConfirm(false)}
+            onConfirm={logout}
+            user={user}
+          />
+        </Suspense>
+      )}
 
       {/* Sync Engine Status Top-Level Portal Modal */}
-      <SyncStatusModal
-        isOpen={showSyncModal}
-        onClose={() => setShowSyncModal(false)}
-      />
+      {showSyncModal && (
+        <Suspense fallback={null}>
+          <SyncStatusModal
+            isOpen={showSyncModal}
+            onClose={() => setShowSyncModal(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 };

@@ -1357,7 +1357,7 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
                   disabled={loading}
                   placeholder={activeMode === 'operations' ? 'Ask copilot — audit, email, contest compare…' : 'Ask about contest rankings, student stats…'}
                   aria-label="Ask AI assistant"
-                  className="flex-1 bg-transparent text-[12.5px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none min-w-0 resize-none max-h-28 overflow-y-auto leading-relaxed py-1"
+                  className="flex-1 bg-transparent border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none text-[12.5px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 min-w-0 resize-none max-h-28 overflow-y-auto leading-relaxed py-1 chat-input"
                 />
                 <button
                   type="button"

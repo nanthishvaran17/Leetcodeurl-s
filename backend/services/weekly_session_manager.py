@@ -219,6 +219,14 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     # Step 1: Final Retry Sweep
     await retry_failed_student_fetches(db, session_id)
 
+    # Step 1.5: Auto-Sync 100% Real Verbatim Code in background for all contest solvers
+    try:
+        from backend.services.auto_code_sync_service import sync_contest_submission_codes_for_session
+        import asyncio
+        asyncio.create_task(asyncio.to_thread(sync_contest_submission_codes_for_session, session_id))
+    except Exception as _cs_err:
+        logger.warning(f"[WEEKLY_SESSION] Auto code sync task trigger: {_cs_err}")
+
     def _do():
         # Step 2: Strict State Machine Resolution & Evidence Verification
         public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()

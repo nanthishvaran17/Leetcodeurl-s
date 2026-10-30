@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { downloadManager } from '../services/download/downloadManager';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import {
   AlertOctagon,
   AlertCircle,
@@ -211,6 +212,15 @@ export const StudentDataIssuesPage: React.FC = () => {
   };
 
   // Keyboard Shortcuts (ESC to close modals/reset search, Ctrl+K / '/' to focus search)
+  useEscapeKey(() => {
+    if (repairStudent) {
+      setRepairStudent(null);
+    } else if (showSaveViewModal) {
+      setShowSaveViewModal(false);
+    } else if (searchQuery) {
+      setSearchQuery('');
+    }
+  }, Boolean(repairStudent || showSaveViewModal || searchQuery));
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

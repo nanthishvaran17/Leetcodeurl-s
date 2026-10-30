@@ -55,6 +55,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const { user } = useAuth();
   const [departments, setDepartments] = useState<any[]>([]);
+  const [selectedCollege, setSelectedCollege] = useState<string>('all');
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
@@ -62,7 +63,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
-  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'department' | 'year' | 'performance' | 'sort'>('all');
+  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'college' | 'department' | 'year' | 'performance' | 'sort'>('all');
   const loggedInUser = useMemo(() => {
     if (user) return user;
     try {
@@ -541,6 +542,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
   const { filteredAndSorted: sortedList, counts: performanceCounts } = useMemo(() => {
     const { filteredAndSorted, counts } = filterAndSortStudents(students, {
+      college: selectedCollege,
       department: selectedDept,
       academicYear: yearLevel,
       nameSearch,
@@ -559,9 +561,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     });
 
     return { filteredAndSorted: stableList, counts };
-  }, [students, selectedDept, yearLevel, nameSearch, solvedFilter, sortBy]);
+  }, [students, selectedCollege, selectedDept, yearLevel, nameSearch, solvedFilter, sortBy]);
 
   const handleResetFilters = () => {
+    setSelectedCollege('all');
     setSelectedDept('all');
     setYearLevel('all');
     setNameSearch('');
@@ -598,6 +601,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
 
 
+  // College Filter Options dynamically gathered from loaded students
+  const collegeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    students.forEach((st: any) => {
+      const col = (st.college || 'NEC').trim().toUpperCase();
+      counts[col] = (counts[col] || 0) + 1;
+    });
+    return counts;
+  }, [students]);
+
+  const collegeOptions: DropdownOption[] = useMemo(() => {
+    const set = new Set<string>(['NEC', 'NCT']);
+    students.forEach((st: any) => {
+      if (st.college) set.add(st.college.trim().toUpperCase());
+    });
+    const arr = Array.from(set).sort();
+    return [
+      { value: 'all', label: 'All Colleges', badge: 'ALL', count: students.length },
+      ...arr.map(c => ({
+        value: c,
+        label: c,
+        badge: c,
+        count: collegeCounts[c] || 0
+      }))
+    ];
+  }, [students, collegeCounts]);
+
   // Academic Year Dropdown Options (Batches: 2030, 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
     { value: 'all', label: 'All Academic Years', badge: 'ALL' },
@@ -629,6 +659,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    if (selectedCollege !== 'all') count++;
     if (selectedDept !== 'all') count++;
     if (yearLevel !== 'all') count++;
     if (solvedFilter !== 'all') count++;
@@ -637,6 +668,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [selectedDept, yearLevel, solvedFilter, sortBy]);
 
   // Active filter label helpers for mobile quick pills
+  const activeCollegeLabel = useMemo(() => {
+    if (selectedCollege === 'all') return 'All Colleges';
+    return selectedCollege;
+  }, [selectedCollege]);
+
   const activeDeptLabel = useMemo(() => {
     if (selectedDept === 'all') return 'All Depts';
     const found = departments.find(d => (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) || String(d.id) === String(selectedDept) || d.name === selectedDept);
@@ -1248,6 +1284,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Quick-Filter Horizontal Scrollable Pills */}
           <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+            {/* College Quick Chip */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileFilterTab('college');
+                setIsMobileFilterOpen(true);
+              }}
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
+                selectedCollege !== 'all'
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
+                  : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
+              }`}
+            >
+              <Building2 className="w-3 h-3 shrink-0" />
+              <span>College: {activeCollegeLabel}</span>
+              {selectedCollege !== 'all' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 ml-0.5" />
+              )}
+            </button>
+
             {/* Department Quick Chip */}
             <button
               type="button"
@@ -1322,8 +1378,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* Desktop View: Full 4-Column Responsive Grid */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+        {/* Desktop View: Full 5-Column Responsive Grid */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+
+          {/* 0. College Filter */}
+          <div className="min-w-0">
+            <CustomDropdown
+              id="college-filter"
+              label="College Filter"
+              options={collegeOptions}
+              value={selectedCollege}
+              onChange={(val) => {
+                setSelectedCollege(val);
+                setDisplayCount(32);
+              }}
+              icon={Building2}
+              align="left"
+            />
+          </div>
 
           {/* 1. Department Filter */}
           <div className="min-w-0">
@@ -1412,6 +1484,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         isOpen={isMobileFilterOpen}
         onClose={() => setIsMobileFilterOpen(false)}
         initialTab={mobileFilterTab}
+        selectedCollege={selectedCollege}
+        onSelectCollege={(val) => {
+          setSelectedCollege(val);
+          setDisplayCount(32);
+        }}
+        collegeOptions={collegeOptions}
         selectedDept={selectedDept}
         onSelectDept={(val) => {
           setSelectedDept(val);
@@ -1445,9 +1523,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
               <div className="flex flex-col min-w-0">
                 <span className="break-words">Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
-                {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
+                {(selectedCollege !== 'all' || selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
                   <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-words [overflow-wrap:anywhere]">
                     Filtered by: {[
+                      selectedCollege !== 'all' ? `College: ${selectedCollege}` : null,
                       selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
                       yearLevel !== 'all' ? `${yearLevel} Year` : null,
                       solvedFilter !== 'all' ? `${{

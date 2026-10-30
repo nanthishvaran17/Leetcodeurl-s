@@ -47,7 +47,9 @@ class StudentBase(BaseModel):
     hackerrank_username: Optional[str] = None
     allocation: Optional[str] = None
     accommodation: Optional[str] = None
+    gender: Optional[str] = None
     twelfth_cutoff: Optional[float] = None
+    college: Optional[str] = "NEC"
     institutional_email: Optional[str] = None
     is_active: bool = True
 
@@ -65,6 +67,10 @@ class StudentUpdate(BaseModel):
     codeforces_username: Optional[str] = None
     hackerrank_username: Optional[str] = None
     allocation: Optional[str] = None
+    accommodation: Optional[str] = None
+    gender: Optional[str] = None
+    twelfth_cutoff: Optional[float] = None
+    college: Optional[str] = None
     is_active: Optional[bool] = None
 
 class LeetCodeStatsOut(BaseModel):

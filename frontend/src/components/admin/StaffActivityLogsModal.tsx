@@ -101,7 +101,7 @@ export const StaffActivityLogsModal: React.FC<StaffActivityLogsModalProps> = ({
   });
 
   return (
-    <GlobalModalBackdrop isOpen={isOpen} className="flex items-center justify-center p-3 sm:p-4 z-[100060]">
+    <GlobalModalBackdrop isOpen={isOpen} onClose={onClose} className="flex items-center justify-center p-3 sm:p-4 z-[100060]">
       <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 flex flex-col max-h-[90vh] animate-scale-in">
         
         {/* Modal Header */}

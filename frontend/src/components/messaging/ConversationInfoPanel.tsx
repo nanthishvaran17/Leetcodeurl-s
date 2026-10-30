@@ -6,6 +6,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface LeetCodeStatsData {
   total_solved?: number;
@@ -44,6 +45,7 @@ interface ConversationInfoPanelProps {
 }
 
 export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ userId, onClose, messageCount }) => {
+  useEscapeKey(onClose, Boolean(userId));
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

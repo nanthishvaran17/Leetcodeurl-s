@@ -3,8 +3,9 @@ import {
   Users, UserPlus, RefreshCw, CheckCircle2, AlertTriangle, User,
   Search, Sliders, ArrowRight, Power, Filter, X, Building2,
   Trash2, UserCheck, ShieldAlert, Shuffle, Check, AlertOctagon, ChevronDown,
-  Eye, BookOpen, Trophy, Award, UserMinus, Mail, Activity
+  Eye, BookOpen, Trophy, Award, UserMinus, Mail, Activity, Copy
 } from 'lucide-react';
+import { copyToClipboard } from '../utils/clipboard';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
@@ -80,6 +81,24 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   const [newDeptId, setNewDeptId] = useState<number | ''>('');
 
   // Custom Confirmation Dialog State
+  const [copiedStaffName, setCopiedStaffName] = useState<string | null>(null);
+
+  const handleCopyStaff = async (name: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!name) return;
+    const ok = await copyToClipboard(name);
+    if (ok) {
+      setCopiedStaffName(name);
+      notify.success('Copied to Clipboard', `Staff username: "${name}"`, { category: 'ADMIN', duration: 2000 });
+      setTimeout(() => {
+        setCopiedStaffName(prev => (prev === name ? null : prev));
+      }, 2000);
+    }
+  };
+
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     type: 'auto_assign' | 'delete_staff' | 'toggle_status' | 'auto_rebalance' | null;
@@ -776,10 +795,24 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 border-white dark:border-slate-900 bg-emerald-500 shadow-2xs" />
                           )}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" title={st.username}>
-                            {st.username}
-                          </h4>
+                        <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate select-text cursor-text" title={st.username}>
+                              {st.username}
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCopyStaff(st.username, e)}
+                              className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                              title="Copy Staff Username"
+                            >
+                              {copiedStaffName === st.username ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
                           <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate" title={st.email}>
                             <Mail className="w-3 h-3 text-indigo-500 shrink-0" />
                             <span className="truncate">{st.email || 'No email'}</span>

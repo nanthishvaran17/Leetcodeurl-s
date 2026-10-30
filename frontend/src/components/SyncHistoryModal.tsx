@@ -3,6 +3,7 @@ import { X, Clock, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import api from '../services/api';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { SwipeHandle } from './SwipeHandle';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface SyncJobHistoryItem {
   id: number;
@@ -31,6 +32,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
   const [loading, setLoading] = useState(false);
 
   useScrollLock(isOpen);
+  useEscapeKey(onClose, isOpen);
 
   const fetchHistory = async () => {
     setLoading(true);

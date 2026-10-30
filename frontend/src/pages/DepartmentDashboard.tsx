@@ -4,7 +4,7 @@ import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
-import { filterAndSortStudents } from '../utils/filterUtils';
+import { filterAndSortStudents, normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useGlobalData } from '../context/GlobalDataContext';
@@ -319,7 +319,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               ...(isRestrictedHod && departments.length <= 1 ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
               ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
             ].map(d => {
-              const isSelected = selectedDept === d.id || (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL'));
+              const isSelected = 
+                selectedDept === d.id || 
+                (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL')) ||
+                normalizeDepartment(selectedDept) === normalizeDepartment(d.id);
               return (
                 <button
                   key={d.id}
@@ -345,7 +348,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               { value: '3', label: 'III Year' },
               { value: '4', label: 'IV Year' }
             ].map(y => {
-              const isSelected = yearLevel === y.value;
+              const isSelected = 
+                yearLevel === y.value ||
+                (y.value === 'all' && (yearLevel === 'all' || yearLevel === 'ALL')) ||
+                normalizeAcademicYear(yearLevel) === normalizeAcademicYear(y.value);
               return (
                 <button
                   key={y.value}
@@ -705,7 +711,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         ) : viewMode === 'table' ? (
           <LeaderboardTable
-            students={finalStudentList}
+            students={filteredAndSorted}
             onSelectStudent={onSelectStudent}
             onRefreshStudent={async (studentId) => {
               if (studentId) {

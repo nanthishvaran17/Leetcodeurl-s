@@ -240,6 +240,14 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
             
         dept_id = dept_obj.id if dept_obj else None
 
+        # --- College Extraction ---
+        college_raw = None
+        for col_cand in ["COLLEGE", "COLLEGE NAME", "INSTITUTION", "INSTITUTION NAME", "CAMPUS"]:
+            if col_cand in df.columns and pd.notna(row.get(col_cand)):
+                college_raw = str(row.get(col_cand)).strip().upper()
+                break
+        college_val = college_raw if college_raw else "NEC"
+
         # --- Batch Extraction / Inference ---
         batch_str = str(row.get("BATCH", "")).strip() if "BATCH" in df.columns and pd.notna(row.get("BATCH")) else None  # type: ignore
         if not batch_str:
@@ -267,6 +275,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
                 username=username,
                 codeforces_username=codeforces if codeforces else None,
                 hackerrank_username=hackerrank if hackerrank else None,
+                college=college_val,
                 is_active=True,
                 batch=batch_str,
                 accommodation=accommodation_val,
@@ -286,6 +295,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
             student.name = name
             if dept_id: student.department_id = dept_id
             if year_str: student.year_level = year_str
+            if college_raw: student.college = college_val
             if email: student.email = email
             if batch_str: student.batch = batch_str
             if accommodation_val is not None: student.accommodation = accommodation_val

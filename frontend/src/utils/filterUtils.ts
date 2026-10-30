@@ -27,7 +27,7 @@ export function normalizeDepartment(dept: any): string {
     const name = (dept.name || '').trim().toUpperCase();
     const combined = `${code} ${name}`.trim();
 
-    if (dept.id === 1 || combined.includes('CYBER') || combined.includes('CSE(CS)') || combined.includes('CSE-CS') || combined.includes('CSE (CS)')) {
+    if (dept.id === 1 || combined.includes('CYBER') || combined.includes('CSE(CS)') || combined.includes('CSE-CS') || combined.includes('CSE_CS') || combined.includes('CSE (CS)')) {
       return 'cse_cs';
     }
     if (dept.id === 2 || combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
@@ -77,7 +77,7 @@ export function normalizeDepartment(dept: any): string {
     const clean = dept.trim().toUpperCase();
     if (clean === 'ALL' || clean === 'ALL DEPARTMENTS' || clean === 'ALL_DEPARTMENTS') return 'all';
 
-    if (clean.includes('CYBER') || clean.includes('CSE(CS)') || clean.includes('CSE-CS') || clean.includes('CSE (CS)')) {
+    if (clean.includes('CYBER') || clean.includes('CSE(CS)') || clean.includes('CSE-CS') || clean.includes('CSE_CS') || clean.includes('CSE (CS)') || clean === 'CS') {
       return 'cse_cs';
     }
     if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)') || clean.includes('INTERNET')) {
@@ -207,12 +207,11 @@ export function formatDepartmentCode(dept: any): string {
  */
 export function deriveYearLevelFromRegNo(regNoStr?: string, currentYearVal?: any): 'I' | 'II' | 'III' | 'IV' {
   if (currentYearVal != null && currentYearVal !== '') {
-    const valStr = String(currentYearVal).trim().toUpperCase();
-    const clean = valStr.replace(/\b(YEAR|YR|BATCH|ST|ND|RD|TH)\b/gi, '').replace(/[\s\-\_]+/g, '').trim();
-    if (valStr === '1' || valStr === 'I' || clean === '1' || clean === 'I' || valStr.includes('1ST') || valStr.includes('FIRST') || valStr.includes('2030') || valStr.includes('2026-2030')) return 'I';
-    if (valStr === '2' || valStr === 'II' || clean === '2' || clean === 'II' || valStr.includes('2ND') || valStr.includes('SECOND') || valStr.includes('2029') || valStr.includes('2025-2029')) return 'II';
-    if (valStr === '3' || valStr === 'III' || clean === '3' || clean === 'III' || valStr.includes('3RD') || valStr.includes('THIRD') || valStr.includes('2028') || valStr.includes('2024-2028')) return 'III';
-    if (valStr === '4' || valStr === 'IV' || clean === '4' || clean === 'IV' || valStr.includes('4TH') || valStr.includes('FOURTH') || valStr.includes('FINAL') || valStr.includes('2027') || valStr.includes('2023-2027')) return 'IV';
+    const normYear = normalizeAcademicYear(currentYearVal);
+    if (normYear === '1') return 'I';
+    if (normYear === '2') return 'II';
+    if (normYear === '3') return 'III';
+    if (normYear === '4') return 'IV';
   }
 
   const norm = (regNoStr || '').trim().toUpperCase();
@@ -247,17 +246,71 @@ export function formatStudentYearBadge(student: any): string {
  * Normalizes academic year variations to canonical '1' | '2' | '3' | '4' | 'all'
  */
 export function normalizeAcademicYear(yr: any): NormalizedAcademicYear {
-  if (!yr || yr === 'ALL' || yr === 'all' || yr === 'ALL YEARS' || yr === 'ALL_YEARS') {
+  if (!yr || yr === 'ALL' || yr === 'all' || yr === 'ALL YEARS' || yr === 'ALL_YEARS' || yr === 'ALL_YEAR') {
     return 'all';
   }
 
   const raw = String(yr).trim().toUpperCase();
-  const clean = raw.replace(/\b(YEAR|YR|BATCH|ST|ND|RD|TH)\b/gi, '').replace(/[\s\-\_]+/g, '').trim();
+  if (raw === 'ALL' || raw === 'ALL YEARS' || raw === 'ALL_YEARS' || raw === 'ALL COHORTS') return 'all';
 
-  if (['I', '1', '1ST', 'FIRST', '2030'].includes(raw) || ['I', '1'].includes(clean)) return '1';
-  if (['II', '2', '2ND', 'SECOND', '2029'].includes(raw) || ['II', '2'].includes(clean)) return '2';
-  if (['III', '3', '3RD', 'THIRD', '2028'].includes(raw) || ['III', '3'].includes(clean)) return '3';
-  if (['IV', '4', '4TH', 'FOURTH', 'FINAL', '2027', '2026'].includes(raw) || ['IV', '4'].includes(clean)) return '4';
+  if (
+    raw === 'Y4' ||
+    raw.includes('IV') ||
+    raw.includes('FINAL') ||
+    raw.includes('FOURTH') ||
+    /\b4(TH)?\b/.test(raw) ||
+    raw.startsWith('4') ||
+    raw.includes('2027') ||
+    raw.includes('2023')
+  ) {
+    return '4';
+  }
+
+  if (
+    raw === 'Y3' ||
+    raw.includes('III') ||
+    raw.includes('THIRD') ||
+    /\b3(RD)?\b/.test(raw) ||
+    raw.startsWith('3') ||
+    raw.includes('2028') ||
+    raw.includes('2024')
+  ) {
+    return '3';
+  }
+
+  if (
+    raw === 'Y2' ||
+    raw.includes('II') ||
+    raw.includes('SECOND') ||
+    /\b2(ND)?\b/.test(raw) ||
+    raw.startsWith('2') ||
+    raw.includes('2029') ||
+    raw.includes('2025')
+  ) {
+    return '2';
+  }
+
+  if (
+    raw === 'Y1' ||
+    raw.includes('1ST') ||
+    raw.includes('FIRST') ||
+    /\b1(ST)?\b/.test(raw) ||
+    raw.startsWith('1') ||
+    raw === 'I' ||
+    raw.includes('YEAR I') ||
+    raw.includes('YEAR 1') ||
+    raw.includes('I YEAR') ||
+    raw.includes('2030') ||
+    raw.includes('2026')
+  ) {
+    return '1';
+  }
+
+  const clean = raw.replace(/(YEAR|YR|BATCH|ST|ND|RD|TH)/gi, '').replace(/[\s\-\_\(\)]+/g, '').trim();
+  if (clean === '1' || clean === 'I') return '1';
+  if (clean === '2' || clean === 'II') return '2';
+  if (clean === '3' || clean === 'III') return '3';
+  if (clean === '4' || clean === 'IV') return '4';
 
   return clean || raw;
 }
@@ -296,12 +349,37 @@ export function matchesDepartment(student: StudentData, selectedDept: string | a
   if (typeof selectedDept === 'number' && student.department_id === selectedDept) {
     return true;
   }
+  if (student.department_id != null && selectedDept != null && String(student.department_id) === String(selectedDept)) {
+    return true;
+  }
+  if (student.department_id != null && selectedDept?.id != null && String(student.department_id) === String(selectedDept.id)) {
+    return true;
+  }
 
   const studentNorm = normalizeDepartment(student.department ?? student.department_id);
   if (studentNorm === targetNorm) return true;
 
+  // Generic CSE selected: matches all specialized CSE branches (Cyber Security & IoT) in NEC
+  if (targetNorm === 'cse' && (studentNorm === 'cse_cs' || studentNorm === 'cse_iot' || studentNorm === 'cse')) {
+    return true;
+  }
+
   const derivedDeptFromReg = deriveDepartmentFromRegNo(student.reg_no);
-  if (derivedDeptFromReg && normalizeDepartment(derivedDeptFromReg) === targetNorm) {
+  if (derivedDeptFromReg) {
+    const derivedNorm = normalizeDepartment(derivedDeptFromReg);
+    if (derivedNorm === targetNorm) return true;
+    if (targetNorm === 'cse' && (derivedNorm === 'cse_cs' || derivedNorm === 'cse_iot')) return true;
+  }
+
+  // Bulletproof fallback checks by student register number or canonical department ID
+  const regUpper = (student.reg_no || '').toUpperCase();
+  if (targetNorm === 'cse_cs' && (regUpper.includes('CC') || regUpper.includes('CYBER') || student.department_id === 1)) {
+    return true;
+  }
+  if (targetNorm === 'cse_iot' && (regUpper.includes('CI') || regUpper.includes('IOT') || student.department_id === 2)) {
+    return true;
+  }
+  if (targetNorm === 'it' && (regUpper.includes('IT') || student.department_id === 4 || student.department_id === 7)) {
     return true;
   }
 
@@ -417,7 +495,8 @@ export function matchesAcademicYear(student: StudentData, selectedYear: string):
   const studentNorm = normalizeAcademicYear(derivedYear);
   if (studentNorm === targetNorm) return true;
 
-  if (String((student as any).batch) === String(selectedYear)) return true;
+  if (student.year_level && normalizeAcademicYear(student.year_level) === targetNorm) return true;
+  if ((student as any).batch && normalizeAcademicYear((student as any).batch) === targetNorm) return true;
 
   return false;
 }
@@ -545,7 +624,27 @@ export function sortStudents(students: StudentData[], sortBy: SortByKey): Studen
   }
 }
 
+
+/**
+ * Normalizes any college name to canonical uppercase format
+ */
+export function normalizeCollege(c: any): string {
+  if (!c || c === 'all' || c === 'ALL' || c === 'all_colleges' || c === 'ALL COLLEGES') return 'all';
+  return String(c).trim().toUpperCase();
+}
+
+/**
+ * College filter matching predicate
+ */
+export function matchesCollege(student: StudentData, selectedCollege?: string): boolean {
+  if (!selectedCollege || selectedCollege === 'all' || selectedCollege === 'ALL') return true;
+  const target = normalizeCollege(selectedCollege);
+  const studentCollege = normalizeCollege((student as any).college || 'NEC');
+  return studentCollege === target;
+}
+
 export interface FilterAndSortOptions {
+  college?: string;
   department?: string;
   academicYear?: string;
   nameSearch?: string;
@@ -601,15 +700,17 @@ export function filterAndSortStudents(
     };
   }
 
+  const college = options.college || 'all';
   const dept = options.department || 'all';
   const year = options.academicYear || 'all';
   const search = options.nameSearch || '';
   const range = options.performanceRange || 'all';
   const sort = options.sortBy || 'top_solved';
 
-  // Step 1: Base filter by Department + Academic Year + Search
+  // Step 1: Base filter by College + Department + Academic Year + Search
   const baseFiltered = students.filter(s => {
     return (
+      matchesCollege(s, college) &&
       matchesDepartment(s, dept) &&
       matchesAcademicYear(s, year) &&
       matchesNameSearch(s, search)
