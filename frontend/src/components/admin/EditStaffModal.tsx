@@ -80,7 +80,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const [showPhotoZoom, setShowPhotoZoom] = useState(false);
 
   // Role Dropdown Stacking State
-  const [mobileTab, setMobileTab] = useState<'all' | 'identity' | 'scope' | 'access' | 'security'>('all');
+  const [activeTab, setActiveTab] = useState<'identity' | 'scope' | 'access' | 'security' | 'all'>('identity');
   const [roleOpen, setRoleOpen] = useState(false);
   const [hodDeptOpen, setHodDeptOpen] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
@@ -567,29 +567,34 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
           </div>
         </div>
 
-        {/* MOBILE SEGMENTED TABS (CLEAN APP PILL SWITCHER) */}
-        <div className="sm:hidden px-3 py-2 bg-slate-100/95 dark:bg-navy-900/95 border-b border-slate-200/80 dark:border-navy-800 shrink-0">
-          <div className="flex items-center gap-1 p-1 bg-white/90 dark:bg-navy-950/90 rounded-xl border border-slate-200/70 dark:border-navy-800 shadow-2xs overflow-x-auto no-scrollbar">
+        {/* UNIFIED SEGMENTED TABS (RESPONSIVE FOR ALL SCREEN SIZES) */}
+        <div className="px-3 sm:px-8 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-navy-900/95 border-b border-slate-200/80 dark:border-navy-800 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-white/95 dark:bg-navy-950/95 rounded-xl sm:rounded-2xl border border-slate-200/70 dark:border-navy-800 shadow-2xs overflow-x-auto no-scrollbar">
             {[
-              { id: 'all', label: 'All' },
-              { id: 'identity', label: 'Identity' },
-              { id: 'scope', label: 'Role & Scope' },
-              { id: 'access', label: 'Permissions' },
-              { id: 'security', label: 'Security' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setMobileTab(tab.id as any)}
-                className={`flex-1 min-w-[68px] py-1.5 px-2 rounded-lg text-[11px] font-bold whitespace-nowrap text-center transition-all cursor-pointer ${
-                  mobileTab === tab.id
-                    ? 'bg-brand-600 text-white shadow-xs font-black'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+              { id: 'identity', label: 'Identity & Contact', icon: User, num: '01' },
+              { id: 'scope', label: 'Role & Academic Scope', icon: Briefcase, num: '02' },
+              { id: 'access', label: 'Permissions & Reports', icon: Key, num: '03' },
+              { id: 'security', label: 'Security & Status', icon: Shield, num: '04' },
+              { id: 'all', label: 'All Details', icon: CheckCircle, num: 'ALL' }
+            ].map(tab => {
+              const TabIcon = tab.icon;
+              const isSelected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex-1 min-w-[70px] sm:min-w-fit py-1.5 sm:py-2 px-2.5 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98 ${
+                    isSelected
+                      ? 'bg-brand-600 text-white shadow-xs font-black ring-2 ring-brand-500/20'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-850'
+                  }`}
+                >
+                  <TabIcon className="w-3.5 h-3.5 shrink-0 hidden sm:inline-block" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -667,13 +672,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6 lg:gap-8">
-              
-              {/* LEFT COLUMN: IDENTITY & PROFESSIONAL DETAILS */}
-              <div className="lg:col-span-6 space-y-3 sm:space-y-6 lg:space-y-8">
+            <div className="space-y-5 sm:space-y-6 max-w-4xl mx-auto w-full">
                 
                 {/* 01 IDENTITY */}
-                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'identity' ? 'hidden sm:block' : ''}`}>
+                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${activeTab !== 'all' && activeTab !== 'identity' ? 'hidden' : 'block animate-fade-in'}`}>
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2.5 sm:pb-3">
                     <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-500 text-white font-black text-xs shadow-sm shadow-brand-500/30">01</span>
                     <h3 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -811,7 +813,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 02 PROFESSIONAL DETAILS */}
-                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'identity' && mobileTab !== 'scope' ? 'hidden sm:block' : ''}`}>
+                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${activeTab !== 'all' && activeTab !== 'scope' ? 'hidden' : 'block animate-fade-in'}`}>
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2.5 sm:pb-3">
                     <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-indigo-500 text-white font-black text-xs shadow-sm shadow-indigo-500/30">02</span>
                     <h3 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -899,13 +901,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </div>
                 </section>
 
-              </div>
 
-              {/* RIGHT COLUMN: DEPARTMENT, SCOPE, PERMISSIONS, STATUS & SECURITY */}
-              <div className="lg:col-span-6 space-y-3 sm:space-y-6 lg:space-y-8">
                 
                 {/* 03 DEPARTMENT & ACADEMIC SCOPE */}
-                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'scope' ? 'hidden sm:block' : ''}`}>
+                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${activeTab !== 'all' && activeTab !== 'scope' ? 'hidden' : 'block animate-fade-in'}`}>
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2.5 sm:pb-3">
                     <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-cyan-500 text-white font-black text-xs shadow-sm shadow-cyan-500/30">03</span>
                     <h3 className="text-xs font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1036,7 +1035,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 04 ACCESS & PERMISSIONS */}
-                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 ${mobileTab !== 'all' && mobileTab !== 'access' ? 'hidden sm:block' : ''}`}>
+                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 ${activeTab !== 'all' && activeTab !== 'access' ? 'hidden' : 'block animate-fade-in'}`}>
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2.5 sm:pb-3">
                     <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-amber-500 text-white font-black text-xs shadow-sm shadow-amber-500/30">04</span>
                     <h3 className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1130,7 +1129,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 05 ACCOUNT STATUS & SECURITY ACTIONS */}
-                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${mobileTab !== 'all' && mobileTab !== 'security' ? 'hidden sm:block' : ''}`}>
+                <section className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4 sm:space-y-5 ${activeTab !== 'all' && activeTab !== 'security' ? 'hidden' : 'block animate-fade-in'}`}>
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2.5 sm:pb-3">
                     <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-500 text-white font-black text-xs shadow-sm shadow-emerald-500/30">05</span>
                     <h3 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -1321,7 +1320,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </div>
                 </section>
 
-              </div>
             </div>
 
           </form>
