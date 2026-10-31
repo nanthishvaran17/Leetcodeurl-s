@@ -1511,28 +1511,130 @@ export const ReportsPage: React.FC = () => {
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleGenerateUniversalReport()}
-                onTouchStart={() => {
-                  if (navigator.onLine) {
+              <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap">
+                {/* 1. Direct Excel Download */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const q = getActiveFilterQueryParams();
                     const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
-                    api.post('/reports/generate', {
-                      report_type: selectedReportType,
-                      college: selectedCollege,
-                      department: effDept,
-                      year: selectedYear,
-                      output_scope: selectedOutputScope,
-                      filters: { session_id: selectedSessionId, college: selectedCollege }
-                    }).catch(() => {});
-                  }
-                }}
-                disabled={isGeneratingUniversal}
-                className="w-full sm:w-auto min-h-[48px] flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
-              >
-                <CheckCircle2 className={`w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform shrink-0 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
-                <span className="font-sans font-black">{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>
-              </button>
+                    const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.xlsx`;
+                    downloadReportFile(`/reports/export-excel${q}`, fname);
+                  }}
+                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-xs rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer touch-manipulation"
+                  title="Download Excel (.xlsx) with current active filters"
+                >
+                  <FileSpreadsheet className="w-4 h-4 shrink-0" />
+                  <span>Download Excel</span>
+                </button>
+
+                {/* 2. Direct PDF Download */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const q = getActiveFilterQueryParams();
+                    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                    const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.pdf`;
+                    downloadReportFile(`/reports/export-pdf${q}`, fname);
+                  }}
+                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center space-x-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-black text-xs rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer touch-manipulation"
+                  title="Download PDF (.pdf) with current active filters"
+                >
+                  <FileText className="w-4 h-4 shrink-0" />
+                  <span>Download PDF</span>
+                </button>
+
+                {/* 3. Generate Interactive Preview */}
+                <button
+                  type="button"
+                  onClick={() => handleGenerateUniversalReport()}
+                  onTouchStart={() => {
+                    if (navigator.onLine) {
+                      const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                      api.post('/reports/generate', {
+                        report_type: selectedReportType,
+                        college: selectedCollege,
+                        department: effDept,
+                        year: selectedYear,
+                        output_scope: selectedOutputScope,
+                        filters: { session_id: selectedSessionId, college: selectedCollege }
+                      }).catch(() => {});
+                    }
+                  }}
+                  disabled={isGeneratingUniversal}
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
+                >
+                  <CheckCircle2 className={`w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform shrink-0 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
+                  <span className="font-sans font-black">{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Pre-Formatted Institutional Exports & Download Hub Grid */}
+          <div className="space-y-4 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                    Pre-Formatted Institutional Exports &amp; Download Hub
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    1-Click download official institutional Excel workbooks, weekly contest matrices, PDF summaries, and Word documents.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {reportCards.map((card) => {
+                const Icon = card.icon;
+                const isDownloading = downloadingFiles[card.filename];
+                return (
+                  <div
+                    key={card.id}
+                    className="p-5 rounded-3xl border border-slate-200/90 dark:border-white/10 hover:border-brand-500/40 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between space-y-4 bg-white dark:bg-[#0b101e] group"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className={`p-3 rounded-2xl ${card.iconBg}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${card.badgeColor}`}>
+                          {card.badge}
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                          {card.title}
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-3 leading-relaxed font-medium">
+                          {card.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={card.onClick}
+                      disabled={isDownloading}
+                      className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 min-h-[42px] rounded-2xl text-xs font-black text-white bg-gradient-to-r ${card.btnGradient} transition-all transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-md hover:shadow-lg touch-manipulation`}
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      ) : (
+                        <Download className="w-4 h-4 shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {isDownloading ? 'Generating Report...' : `Download ${card.filename.split('.').pop()?.toUpperCase()}`}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
