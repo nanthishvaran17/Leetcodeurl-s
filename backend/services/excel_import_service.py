@@ -207,7 +207,12 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
             raw_section = _get_val("section")
             raw_batch = _get_val("batch")
             raw_college = _get_val("college")
-            norm_college = raw_college.strip().upper() if raw_college else "NEC"
+            if raw_college:
+                norm_college = raw_college.strip().upper()
+            elif (reg_no and (reg_no.startswith("7321") or "NCT" in reg_no.upper())) or (email and "@nct" in email.lower()):
+                norm_college = "NCT"
+            else:
+                norm_college = "NEC"
             raw_cutoff = _get_val("twelfth_cutoff") or _get_val("cutoff")
             norm_cutoff = None
             if raw_cutoff:

@@ -189,6 +189,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               )}
 
+              {/* Mobile Compact Profile Button */}
+              {isAuthenticated && user && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('account-settings')}
+                  className="sm:hidden p-1 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.06] active:scale-95 transition-all flex items-center justify-center shrink-0 min-w-[36px] min-h-[36px]"
+                  title="Open Profile Settings"
+                >
+                  {(user.photoURL || (user as any).profile_photo) ? (
+                    <img
+                      src={user.photoURL || (user as any).profile_photo}
+                      alt={user.full_name || user.username}
+                      className="w-7 h-7 rounded-full border-2 border-brand-500 object-contain p-0.5 bg-white dark:bg-navy-900 shadow-xs"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-brand-600 text-white font-black text-[11px] flex items-center justify-center uppercase shadow-xs">
+                      {(user.full_name || user.displayName || user.name || user.username || 'U')[0]}
+                    </div>
+                  )}
+                </button>
+              )}
 
               {/* Auth Profile / Login */}
               {isAuthenticated && user ? (

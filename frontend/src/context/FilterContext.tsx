@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useMemo, useCallback, React
 import { useDebounce } from '../hooks/useDebounce';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
 import { StudentEntity } from '../types/student';
-import { matchesNameSearch, matchesAcademicYear, matchesDepartment } from '../utils/filterUtils';
+import { matchesNameSearch, matchesAcademicYear, matchesDepartment, deriveStudentCollege } from '../utils/filterUtils';
 
 type FilterState = {
   department: string;
@@ -195,7 +195,7 @@ export const useFilteredStudents = (): StudentEntity[] => {
       if (filters.academicYear !== 'ALL' && !matchesAcademicYear(student as any, filters.academicYear)) continue;
 
       if (filters.college !== 'ALL') {
-        const studentCollege = ((student as any).college || 'NEC').toUpperCase();
+        const studentCollege = deriveStudentCollege(student);
         if (studentCollege !== filters.college) continue;
       }
 

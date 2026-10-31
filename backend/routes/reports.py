@@ -1989,6 +1989,7 @@ def _get_dataset_for_id(
     search: str = "",
     status: str = "ALL",
     batch: str = "ALL",
+    college: str = "ALL",
     report_type: Optional[str] = None,
     current_user: Optional[Any] = None
 ):
@@ -2417,6 +2418,19 @@ def _get_dataset_for_id(
                     return True
                 return (row_batch or "").upper().strip() == (filter_batch or "").upper().strip()
 
+            def _college_match(row: dict, filter_college: str) -> bool:
+                if not filter_college or filter_college.upper().strip() in ("ALL", ""):
+                    return True
+                fc = filter_college.upper().strip()
+                rc = (row.get("college") or "NEC").upper().strip()
+                reg = str(row.get("reg_no") or "").upper().strip()
+                em = str(row.get("email") or "").lower().strip()
+                if fc == "NCT":
+                    return rc == "NCT" or reg.startswith("7321") or "@nct" in em
+                if fc == "NEC":
+                    return rc != "NCT" and not reg.startswith("7321") and "@nct" not in em
+                return rc == fc
+
             raw_rows = [
                 r for r in all_raw_rows
                 if _dept_match(r.get("dept", r.get("department", "")), dept)
@@ -2424,6 +2438,7 @@ def _get_dataset_for_id(
                 and _att_match(r.get("status", ""), effective_att)
                 and _search_match(r, search)
                 and _batch_match(r.get("batch", ""), batch)
+                and _college_match(r, college)
             ]
 
             all_students = []

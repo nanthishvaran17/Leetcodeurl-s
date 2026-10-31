@@ -20,7 +20,7 @@ from backend.websocket_manager import connection_manager
 router = APIRouter(prefix="/api/students", tags=["Students"])
 from backend.constants import get_academic_year_filter_clause
 
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_, not_
 
 from sqlalchemy.orm import joinedload, defer, selectinload
 
@@ -359,6 +359,7 @@ async def get_students(
     page: Optional[int] = Query(None, ge=1),
     limit: Optional[int] = Query(None, ge=1, le=500),
     paginated: Optional[bool] = False,
+    college: Optional[str] = Query(None),
     request_db: Session = Depends(get_db)
 ):
     from backend.security import get_current_user_optional
@@ -367,9 +368,10 @@ async def get_students(
     user_id = current_user.id if current_user else 0
     role_clean = (current_user.role or "").strip().lower() if current_user else ""
 
-    cache_key = f"students_list_v4:{user_id}:{role_clean}:{dept_id}:{department}:{dept}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
+    cache_key = f"students_list_v4:{user_id}:{role_clean}:{dept_id}:{department}:{dept}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}:{college}"
     def _execute_query(db):
         import re
+        from sqlalchemy import or_, and_, not_
         from backend.models import Department
         query = db.query(Student).outerjoin(Student.stats).options(
             joinedload(Student.department),
@@ -406,6 +408,21 @@ async def get_students(
                     if d_obj:
                         effective_dept_id = d_obj.id
 
+        if college and college.strip().upper() not in ("ALL", ""):
+            col_target = college.strip().upper()
+            is_nct_cond = or_(
+                func.upper(func.coalesce(Student.college, "")) == "NCT",
+                func.coalesce(Student.reg_no, "").ilike("7321%"),
+                func.coalesce(Student.email, "").ilike("%@nct%"),
+                func.coalesce(Student.institutional_email, "").ilike("%@nct%")
+            )
+            if col_target == "NCT":
+                query = query.filter(is_nct_cond)
+            elif col_target == "NEC":
+                query = query.filter(not_(is_nct_cond))
+            else:
+                query = query.filter(func.upper(func.coalesce(Student.college, "NEC")) == col_target)
+
         if effective_dept_id:
             query = query.filter(Student.department_id == effective_dept_id)
         if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
@@ -416,7 +433,6 @@ async def get_students(
         if section_id:
             query = query.filter(Student.section_id == section_id)
         if min_solved is not None and max_solved == 0:
-            from sqlalchemy import or_
             query = query.filter(or_(LeetCodeProfileStats.total_solved <= 0, LeetCodeProfileStats.total_solved.is_(None)))
         else:
             if min_solved is not None:
@@ -1099,7 +1115,7 @@ def create_student(
     student_in: StudentCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user=Depends(require_security_access(resource_name="Create Student", required_roles=["admin", "super admin", "hod"]))
+    current_user=Depends(require_security_access(resource_name="Create Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
     existing = db.query(Student).filter(Student.reg_no == student_in.reg_no.upper()).first()
     if existing:
@@ -1136,6 +1152,7 @@ def create_student(
         username=username,
         codeforces_username=student_in.codeforces_username,
         hackerrank_username=student_in.hackerrank_username,
+        college=(getattr(student_in, "college", None) or "NEC").strip().upper(),
         accommodation=student_in.accommodation,
         gender=student_in.gender.capitalize() if getattr(student_in, 'gender', None) else None,
         twelfth_cutoff=student_in.twelfth_cutoff
@@ -1166,6 +1183,21 @@ def create_student(
     )
     db.add(audit)
     db.commit()
+
+    # If created by staff/faculty mentor, auto-assign this new student to their mentorship roster
+    _cr_role = (getattr(current_user, "role", "") or "").strip().lower()
+    if _cr_role in ("faculty", "staff", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor", "professor"):
+        try:
+            from backend.services.faculty_assignment_service import FacultyAssignmentService
+            FacultyAssignmentService.assign_students_to_faculty(
+                db=db,
+                faculty_id=int(current_user.id),
+                student_ids=[student.id],
+                assigned_by_id=int(current_user.id),
+                background_tasks=background_tasks
+            )
+        except Exception as _assign_err:
+            logger.warning(f"[CREATE_STUDENT_AUTO_ASSIGN_WARN] Could not auto-assign student {student.id} to staff {current_user.id}: {_assign_err}")
 
     # Trigger background verification+sync immediately after creation so the profile
     # is verified without blocking the HTTP response.  The background task opens its
@@ -1331,6 +1363,7 @@ class StudentUpdateSchema(BaseModel):
     accommodation: Optional[str] = None
     gender: Optional[str] = None
     twelfth_cutoff: Optional[float] = None
+    college: Optional[str] = None
 
 
 @router.patch("/{student_id}")
@@ -1486,6 +1519,13 @@ def update_student(
             url_changed = True
             student.username = None  # type: ignore
             student.leetcode_url = None  # type: ignore
+
+    if payload.college is not None:
+        clean_col = payload.college.strip().upper()
+        if clean_col in ("NEC", "NCT"):
+            if student.college != clean_col:
+                changes_made['college'] = clean_col
+                student.college = clean_col
 
     if payload.is_active is not None:
         student.is_active = payload.is_active  # type: ignore
@@ -2147,7 +2187,7 @@ async def validate_leetcode_account(
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(
         resource_name="Validate LeetCode Account",
-        required_roles=["admin", "super admin", "hod", "faculty"]
+        required_roles=["admin", "super admin", "hod", "faculty", "staff"]
     ))
 ):
     """

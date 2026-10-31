@@ -1344,6 +1344,11 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
                   rows={1}
                   value={input}
                   onChange={handleTextareaChange}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 300);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       setIsOpen(false);

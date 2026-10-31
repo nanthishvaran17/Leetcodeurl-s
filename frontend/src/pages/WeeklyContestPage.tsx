@@ -23,7 +23,7 @@ import { playContestAlertChime, playCelebrationChime } from '../utils/audioChime
 import { triggerConfetti } from '../utils/confettiCelebration';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
-import { normalizeDepartment } from '../utils/filterUtils';
+import { normalizeDepartment, deriveStudentCollege } from '../utils/filterUtils';
 import { 
   getCachedContestData, 
   setCachedContestData, 
@@ -1974,7 +1974,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED' || (!isAttended && !isError);
 
       if (selectedCollegeFilter !== 'ALL') {
-        const studentCollege = ((r.college || 'NEC') as string).toUpperCase();
+        const studentCollege = deriveStudentCollege(r);
         if (studentCollege !== selectedCollegeFilter) return false;
       }
       if (selectedDeptFilter !== 'ALL') {

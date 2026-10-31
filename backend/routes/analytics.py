@@ -649,6 +649,7 @@ def get_data_quality(
     year: Optional[str] = Query(None),
     attendance: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    college: Optional[str] = Query(None),
     force_refresh: bool = False,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
@@ -676,7 +677,15 @@ def get_data_quality(
 
     students = query.order_by(Student.name.asc()).all()
 
-    # Filter students in memory by dept, year, search
+    # Filter students in memory by college, dept, year, search
+    if college and college.strip().upper() not in ("ALL", ""):
+        col_target = college.strip().upper()
+        if col_target == "NCT":
+            students = [s for s in students if (getattr(s, "college", "") or "").upper() == "NCT" or (s.reg_no or "").startswith("7321") or "@nct" in (s.email or "").lower()]
+        elif col_target == "NEC":
+            students = [s for s in students if (getattr(s, "college", "NEC") or "NEC").upper() != "NCT" and not (s.reg_no or "").startswith("7321") and "@nct" not in (s.email or "").lower()]
+        else:
+            students = [s for s in students if (getattr(s, "college", "") or "").upper() == col_target]
     if dept and dept != "ALL":
         d_upper = dept.upper()
         if d_upper in ("CSE(CS)", "CS", "CYBER"):

@@ -4,7 +4,7 @@ import {
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Building2, LayoutList, Calendar,
   Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User,
-  SlidersHorizontal, Filter, RotateCcw
+  SlidersHorizontal, Filter, RotateCcw, School
 } from 'lucide-react';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -169,6 +169,14 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.college && filters.college !== 'ALL') count++;
+    if (filters.department && filters.department !== 'ALL') count++;
+    if (filters.academicYear && filters.academicYear !== 'ALL') count++;
+    return count;
+  }, [filters.college, filters.department, filters.academicYear]);
   const { data: initialStudents = [] } = useStudentsQuery();
   const globalTotalCount = initialStudents.length > 0 ? initialStudents.length : 0;
 
@@ -201,6 +209,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [accommodationType, setAccommodationType] = useState('Day Scholar');
   const [gender, setGender] = useState('Male');
   const [leetcodeUrl, setLeetcodeUrl] = useState('');
+  const [collegeType, setCollegeType] = useState<'NEC' | 'NCT'>('NEC');
 
   // LeetCode validation state (per-modal; cleared on open/close)
   const [lcValidation, setLcValidation] = useState<LcValidationState>({ status: 'idle' });
@@ -219,10 +228,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
   // Use backend paginated API instead of client-side filtering
   const { data: paginatedData, isLoading: isTableLoading, refetch: refetchStudents } = useQuery({
-    queryKey: ['students-master', serverPage, serverPageSize, filters.department, filters.academicYear, filters.searchQuery, departments.length],
+    queryKey: ['students-master', serverPage, serverPageSize, filters.department, filters.academicYear, filters.searchQuery, filters.college, departments.length],
     queryFn: async () => {
       const params: any = { paginated: 'true', page: serverPage, limit: serverPageSize };
       if (filters.searchQuery) params.search = filters.searchQuery;
+      if (filters.college && filters.college !== 'ALL') {
+        params.college = filters.college;
+      }
       
       // Map department CODE to ID
       const allDepts = departments.length > 0 ? departments : (ctxDepts.length > 0 ? ctxDepts : globalDepts);
@@ -279,7 +291,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   // When filters change, reset to page 1
   useEffect(() => {
     setServerPage(1);
-  }, [filters.department, filters.academicYear, filters.searchQuery]);
+  }, [filters.department, filters.academicYear, filters.searchQuery, filters.college]);
 
   // Pull-to-refresh listener: clear caches, invalidate React Query and refetch student roster
   useEffect(() => {
@@ -396,6 +408,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const handleOpenAddModal = () => {
     // Reset form + validation state cleanly
     setRegNo(''); setName(''); setLeetcodeUrl(''); setEmail('');
+    setCollegeType(filters.college === 'NCT' ? 'NCT' : 'NEC');
     setLcValidation({ status: 'idle' });
     lastValidatedUrl.current = '';
     setShowAddModal(true);
@@ -437,6 +450,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         name,
         department_id: deptId,
         year_level: yearLevel,
+        college: collegeType,
         email: email || undefined,
         institutional_email: institutionalEmail || undefined,
         accommodation: accommodationType,
@@ -565,11 +579,11 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-4 lg:justify-end mt-2 lg:mt-0 w-full lg:w-auto">
-            {/* View Mode Toggle */}
-            <div className="hidden sm:flex items-center gap-2 p-1.5 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
+            {/* View Mode Toggle - Responsive (Visible on Mobile & Desktop) */}
+            <div className="flex items-center gap-1.5 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[36px] ${
                   viewMode === 'table'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -580,7 +594,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[36px] ${
                   viewMode === 'cards'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -615,36 +629,55 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {/* Search & Comprehensive Responsive Filter Bar — Sticky Frosted Glass */}
       <div className="sticky top-14 sm:top-16 z-20 bg-white/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-2xl p-3.5 sm:p-5 shadow-md border border-slate-200/90 dark:border-white/[0.08] space-y-3 mb-6 sm:mb-8 transition-all">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-          {/* Live Search Input */}
-          <div className="relative flex-1 flex items-center min-w-0">
-            <input
-              type="text"
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              placeholder="Search students by name, reg no, username..."
-              autoComplete="off"
-              className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
-            />
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-600 dark:text-slate-300">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+          {/* Search + Mobile Filter Button Container */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Live Search Input */}
+            <div className="relative flex-1 flex items-center min-w-0">
+              <input
+                type="text"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                placeholder="Search students by name, reg no, username..."
+                autoComplete="off"
+                className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
+              />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-600 dark:text-slate-300">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              {localSearch && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocalSearch('');
+                    filters.setSearchQuery('');
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center cursor-pointer"
+                  title="Clear search"
+                >
+                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              )}
             </div>
-            {localSearch && (
-              <button
-                type="button"
-                onClick={() => {
-                  setLocalSearch('');
-                  filters.setSearchQuery('');
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center cursor-pointer"
-                title="Clear search"
-              >
-                <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            )}
+
+            {/* Mobile Filter Drawer Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              className="lg:hidden flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80 font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs cursor-pointer min-h-[42px] touch-manipulation"
+              title="Open Filter Drawer"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-brand-500" />
+              <span className="hidden xs:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-black flex items-center justify-center font-mono">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Inline Filter Controls - Responsive: Side-by-Side on Mobile & Inline on Desktop */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+          {/* Inline Filter Controls - Hidden on Mobile (Drawer used instead), Clean Inline on Desktop */}
+          <div className="hidden lg:flex items-center gap-2.5 shrink-0">
                         {/* College Campus Quick Segmented Pill */}
             <div className="flex items-center bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0 self-center">
               {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
@@ -766,19 +799,19 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
           <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Loading student directory...</p>
         </div>
-      ) : serverTotalCount === 0 && filters.isFilteringActive && (
+      ) : serverTotalCount === 0 && (filters.isFilteringActive || filters.college !== 'ALL') && (
         <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-sm space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-base font-black text-slate-900 dark:text-white">No students found</h4>
-            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
-              Try searching with: <br/>
-              • Student name<br/>
-              • Register number<br/>
-              • LeetCode username<br/>
-              • Email
+            <h4 className="text-base font-black text-slate-900 dark:text-white">
+              {filters.college === 'NCT' ? 'No NCT Students Enrolled' : filters.college === 'NEC' ? 'No NEC Students Found' : 'No Students Found'}
+            </h4>
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+              {filters.college === 'NCT'
+                ? 'Only NCT students are displayed when the NCT filter is selected. No NCT records were found. Use "Add Student" above to enroll NCT students, or switch to ALL/NEC.'
+                : 'Try adjusting your search criteria, department, or academic year filters.'}
             </p>
           </div>
         </div>
@@ -944,6 +977,39 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">2</span>
                   ACADEMIC PLACEMENT
                 </span>
+
+                {/* College Selection */}
+                <div>
+                  <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
+                    College Campus <span className="text-rose-500 font-black">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCollegeType('NEC')}
+                      className={`h-11 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        collegeType === 'NEC'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <School className="w-3.5 h-3.5" />
+                      <span>NEC (Nandha Engg)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCollegeType('NCT')}
+                      className={`h-11 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        collegeType === 'NCT'
+                          ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <School className="w-3.5 h-3.5" />
+                      <span>NCT (Nandha Tech)</span>
+                    </button>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>

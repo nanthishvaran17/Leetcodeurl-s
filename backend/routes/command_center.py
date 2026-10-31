@@ -493,6 +493,7 @@ def get_students(
     status_filter: Optional[str] = None,
     allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
+    college: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
@@ -511,6 +512,21 @@ def get_students(
             page_size = 20
     real_ids = _real_dept_ids(db)
     q = db.query(Student).filter(Student.department_id.in_(real_ids))
+
+    if college and college.strip().upper() not in ("ALL", ""):
+        col_target = college.strip().upper()
+        is_nct_cond = or_(
+            func.upper(func.coalesce(Student.college, "")) == "NCT",
+            func.coalesce(Student.reg_no, "").ilike("7321%"),
+            func.coalesce(Student.email, "").ilike("%@nct%"),
+            func.coalesce(Student.institutional_email, "").ilike("%@nct%")
+        )
+        if col_target == "NCT":
+            q = q.filter(is_nct_cond)
+        elif col_target == "NEC":
+            q = q.filter(not_(is_nct_cond))
+        else:
+            q = q.filter(func.upper(func.coalesce(Student.college, "NEC")) == col_target)
 
     if not include_inactive and status_filter != "INACTIVE":
         q = q.filter(Student.is_active == True)

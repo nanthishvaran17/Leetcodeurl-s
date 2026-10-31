@@ -8,7 +8,7 @@ import { getCachedStudents, clearAllStudentCaches } from '../utils/rosterCache';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
-import { deriveYearLevelFromRegNo, normalizeAcademicYear } from '../utils/filterUtils';
+import { deriveYearLevelFromRegNo, normalizeAcademicYear, deriveStudentCollege } from '../utils/filterUtils';
 
 export const ComparePage: React.FC = () => {
   // Mode: STUDENT vs GROUP
@@ -86,13 +86,13 @@ export const ComparePage: React.FC = () => {
   useEffect(() => {
     const fetchFullCohort = async () => {
       try {
-        const res = await api.get('/students');
+        const params: any = {};
+        if (selectedCollege && selectedCollege !== 'ALL') params.college = selectedCollege;
+        const res = await api.get('/students', { params });
         const rawList = Array.isArray(res.data) ? res.data : (res.data?.items || []);
-      const list = rawList.filter((s: any) => selectedCollege === 'ALL' || ((s.college || 'NEC') as string).toUpperCase() === selectedCollege);
-        if (list.length > 0) {
-          const sorted = [...list].sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
-          setAllStudents(sorted);
-        }
+        const list = rawList.filter((s: any) => selectedCollege === 'ALL' || deriveStudentCollege(s) === selectedCollege);
+        const sorted = [...list].sort((a: StudentData, b: StudentData) => (b.stats?.total_solved || 0) - (a.stats?.total_solved || 0));
+        setAllStudents(sorted);
       } catch (err) {
         console.error('Failed to fetch full student cohort:', err);
       }

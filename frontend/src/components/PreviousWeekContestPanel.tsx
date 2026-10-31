@@ -40,6 +40,7 @@ import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
+import { deriveStudentCollege } from '../utils/filterUtils';
 import { downloadManager } from '../services/download/downloadManager';
 const ContestForensicModal = lazy(() => import('./ContestForensicModal').then(m => ({ default: m.ContestForensicModal })));
 import { playNotificationChime, playCelebrationChime } from '../utils/audioChime';
@@ -1331,7 +1332,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     return records.filter((r) => {
 
       if (selectedCollegeFilter !== 'ALL') {
-        const studentCollege = ((r as any).college || 'NEC').toUpperCase().trim();
+        const studentCollege = deriveStudentCollege(r);
         if (studentCollege !== selectedCollegeFilter) return false;
       }
       if (!isTypeAll) {
@@ -1378,7 +1379,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     };
     records.forEach(r => {
       if (selectedCollegeFilter !== 'ALL') {
-        const studentCollege = ((r as any).college || 'NEC').toUpperCase().trim();
+        const studentCollege = deriveStudentCollege(r);
         if (studentCollege !== selectedCollegeFilter) return;
       }
       if (selectedDeptFilter !== 'ALL') {

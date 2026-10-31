@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, ExternalLink, Trophy, RefreshCw } from 'lucide-react';
+import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, ExternalLink, Trophy, RefreshCw, School } from 'lucide-react';
+import { deriveStudentCollege } from '../utils/filterUtils';
 import api, { clearApiCache } from '../services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { studentLiveStore } from '../stores/studentLiveStore';
@@ -370,6 +371,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [accommodation, setAccommodation] = useState('Day Scholar');
   const [gender, setGender] = useState('Male');
   const [twelfthCutoff, setTwelfthCutoff] = useState('');
+  const [college, setCollege] = useState<'NEC' | 'NCT'>('NEC');
 
   const [secondaryAccounts, setSecondaryAccounts] = useState<SecondaryAccountItem[]>([]);
 
@@ -488,6 +490,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     setAccommodation(initAccomm);
     setGender(initGender);
     setTwelfthCutoff(formattedCutoff);
+    const initCollege = deriveStudentCollege(stData);
+    setCollege(initCollege);
     setSecondaryAccounts(initSecAccounts);
 
     const initTotalSolved = stData.total_solved ?? stData.stats?.total_solved;
@@ -525,6 +529,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       accommodation: initAccomm,
       gender: initGender,
       twelfthCutoff: formattedCutoff,
+      college: initCollege,
       secondaryAccounts: JSON.stringify(initSecAccounts)
     };
   }, [departments]);
@@ -565,6 +570,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     return (
       name !== init.name ||
       regNo !== init.regNo ||
+      college !== init.college ||
       deptId !== init.deptId ||
       yearLevel !== init.yearLevel ||
       section !== init.section ||
@@ -813,6 +819,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         accommodation: accommodation,
         gender: gender,
         twelfth_cutoff: twelfthCutoff ? parseFloat(twelfthCutoff) : null,
+        college: college,
         secondary_leetcode_id: formattedSecondary[0]?.leetcode_username || null,
         secondary_accounts: formattedSecondary,
         version: student.version
@@ -897,7 +904,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
+      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();
@@ -908,9 +915,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-student-dialog-title"
-        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl my-auto bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
+        className="w-full h-auto max-h-[92dvh] sm:max-h-[88vh] max-w-xl my-0 sm:my-auto bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Pull Handle Indicator */}
+        <div className="sm:hidden w-12 h-1 bg-slate-400/40 rounded-full mx-auto my-2 shrink-0" />
+
         {/* Fixed Header */}
         <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
@@ -1020,6 +1030,39 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     placeholder="Auto-generated from Register Number"
                     className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-700 dark:text-slate-300 font-bold outline-none shadow-xs cursor-not-allowed"
                   />
+                </div>
+              </div>
+
+              {/* College Campus Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                  College Campus <span className="text-rose-500 font-black">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setCollege('NEC'); hasUserEditedRef.current = true; }}
+                    className={`h-11 sm:h-10 px-3 rounded-xl sm:rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      college === 'NEC'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <School className="w-3.5 h-3.5" />
+                    <span>NEC (Nandha Engg)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setCollege('NCT'); hasUserEditedRef.current = true; }}
+                    className={`h-11 sm:h-10 px-3 rounded-xl sm:rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      college === 'NCT'
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                        : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <School className="w-3.5 h-3.5" />
+                    <span>NCT (Nandha Tech)</span>
+                  </button>
                 </div>
               </div>
 

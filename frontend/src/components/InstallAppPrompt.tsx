@@ -116,7 +116,7 @@ export const InstallAppPrompt: React.FC = () => {
     setDownloadStarted(true);
     const link = document.createElement('a');
     link.href = '/nandha-leetcode.apk';
-    link.download = 'Nandha_LeetCode_Intelligence_v4.1.3_latest.apk';
+    link.download = 'Nandha_LeetCode_Intelligence_v4.1.4_latest.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -133,7 +133,7 @@ export const InstallAppPrompt: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-slide-up">
+    <div className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-slide-up">
       <div className="bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border border-indigo-500/30 rounded-3xl p-4 sm:p-5 shadow-2xl text-white relative ring-1 ring-white/10">
         <button
           onClick={handleDismiss}
@@ -157,7 +157,7 @@ export const InstallAppPrompt: React.FC = () => {
                 Nandha LeetCode Mobile
               </h4>
               <span className="px-2 py-0.5 text-[9.5px] font-black rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                v4.1.3 APK
+                v4.1.4 APK
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-medium">

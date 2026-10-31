@@ -476,12 +476,7 @@ export function getDepartmentThemeColor(dept: any): { bg: string; text: string; 
  * Campus filter matching predicate (NEC vs NCT vs ALL)
  */
 export function matchesCampus(student: any, selectedCampus: string): boolean {
-  if (!selectedCampus || selectedCampus === 'all' || selectedCampus === 'ALL' || selectedCampus === 'ALL CAMPUSES') return true;
-  const sCampus = (student?.institution_id || student?.campus || student?.college || 'NEC').toUpperCase();
-  const target = selectedCampus.toUpperCase();
-  if (target.includes('NCT') && sCampus.includes('NCT')) return true;
-  if (target.includes('NEC') && (sCampus.includes('NEC') || !sCampus.includes('NCT'))) return true;
-  return sCampus.includes(target);
+  return matchesCollege(student, selectedCampus);
 }
 
 /**
