@@ -2294,8 +2294,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         }`}
                         title="Reduced essential columns for fast staff and faculty review"
                       >
-                        <span>⚡ Quick Staff View</span>
-                        <span className="text-[9px] opacity-80 font-mono px-1 rounded bg-black/15 font-bold">Fast</span>
+                        <span>Quick Staff View</span>
                       </button>
                       <button
                         type="button"
@@ -2307,7 +2306,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         }`}
                         title="Full detailed matrix with all columns including Q1-Q4, Cutoff, and Accommodation"
                       >
-                        <span>📊 Detailed Full View</span>
+                        <span>Detailed Full View</span>
                       </button>
                     </div>
 

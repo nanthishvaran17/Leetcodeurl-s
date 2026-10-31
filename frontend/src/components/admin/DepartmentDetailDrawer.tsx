@@ -463,26 +463,26 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                                       <table className="w-full text-left border-collapse text-xs">
                                         <thead>
                                           <tr className="bg-slate-100/70 dark:bg-navy-950 text-[10.5px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-navy-800">
-                                            <th className="py-2 px-3">Student</th>
-                                            <th className="py-2 px-2 text-center">Year</th>
-                                            <th className="py-2 px-3 text-right">Problems Solved</th>
-                                            <th className="py-2 px-3 text-right">Rating</th>
+                                            <th className="py-2 px-3 whitespace-nowrap">Student</th>
+                                            <th className="py-2 px-2 text-center whitespace-nowrap">Year</th>
+                                            <th className="py-2 px-3 text-right whitespace-nowrap">Problems Solved</th>
+                                            <th className="py-2 px-3 text-right whitespace-nowrap">Rating</th>
                                           </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                                           {staff.students.map((st) => (
                                             <tr key={st.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
                                               <td className="py-2 px-3">
-                                                <div className="font-bold text-slate-900 dark:text-white">{st.name}</div>
-                                                <div className="text-[10px] text-slate-500 font-mono">{st.reg_no}</div>
+                                                <div className="font-bold text-slate-900 dark:text-white whitespace-nowrap">{st.name}</div>
+                                                <div className="text-[10px] text-slate-500 font-mono whitespace-nowrap">{st.reg_no}</div>
                                               </td>
-                                              <td className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 font-mono">
+                                              <td className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 font-mono whitespace-nowrap">
                                                 {st.year_level}
                                               </td>
-                                              <td className="py-2 px-3 text-right font-black font-mono text-brand-600 dark:text-brand-400">
+                                              <td className="py-2 px-3 text-right font-black font-mono text-brand-600 dark:text-brand-400 whitespace-nowrap">
                                                 {st.total_solved}
                                               </td>
-                                              <td className="py-2 px-3 text-right font-bold font-mono text-slate-600 dark:text-slate-300">
+                                              <td className="py-2 px-3 text-right font-bold font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
                                                 {st.contest_rating && st.contest_rating > 0 ? st.contest_rating : '—'}
                                               </td>
                                             </tr>
