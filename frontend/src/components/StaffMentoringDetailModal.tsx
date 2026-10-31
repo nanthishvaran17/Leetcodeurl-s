@@ -359,7 +359,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
         </div>
 
         {/* Tab Contents */}
-        <div className="p-4 sm:p-6 pb-8 overflow-y-auto flex-1 space-y-6">
+        <div className="p-4 sm:p-6 pb-8 overflow-y-auto overflow-x-hidden max-w-full flex-1 space-y-6">
 
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (

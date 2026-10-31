@@ -822,7 +822,7 @@ const ReportHubModal: React.FC<{
  if (!isOpen || typeof document === 'undefined') return null;
 
  return createPortal(
- <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex flex-col bg-slate-50 dark:bg-navy-950 animate-fade-in overflow-hidden" onClick={e => e.target === e.currentTarget && onClose()}>
+ <div className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex flex-col bg-slate-50 dark:bg-navy-950 animate-fade-in overflow-hidden" onClick={e => e.target === e.currentTarget && onClose()}>
  <div className="w-full h-full flex flex-col text-slate-900 dark:text-white antialiased bg-white dark:bg-navy-950">
  {/* Header */}
  <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
@@ -1308,11 +1308,13 @@ export const HODCommandCenter: React.FC = () => {
      // Only lock to single department if HOD has exactly 1 authorized department
      if (authIds.length === 1 && (selectedDept === 'ALL' || !selectedDept)) {
        setSelectedDept(String(authIds[0]));
+     } else if (authIds.length === 0 && user?.department_id && (selectedDept === 'ALL' || !selectedDept)) {
+       setSelectedDept(String(user.department_id));
      } else if (!selectedDept) {
        setSelectedDept(defaultDeptValue);
      }
    }
- }, [isHod, isGlobalAdmin, defaultDeptValue, selectedDept, user?.authorized_department_ids]);
+ }, [isHod, isGlobalAdmin, defaultDeptValue, selectedDept, user?.authorized_department_ids, user?.department_id]);
 
  // Summary & Metadata
  const [summary, setSummary] = useState<CommandCenterSummary | null>(null);
@@ -1460,6 +1462,7 @@ export const HODCommandCenter: React.FC = () => {
  const deptId = selectedDept !== 'ALL' ? Number(selectedDept) : undefined;
  const staffId = selectedStaff !== 'ALL' ? Number(selectedStaff) : undefined;
  const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
+ const section = selectedSection !== 'ALL' ? selectedSection : undefined;
 
  try {
  if (isRefresh) {
@@ -1469,6 +1472,7 @@ export const HODCommandCenter: React.FC = () => {
  dept_id: deptId,
  staff_id: staffId,
  year_level: yearLevel,
+ section: section,
  refresh: isRefresh
  });
  setSummary(summaryData);
@@ -1482,7 +1486,7 @@ export const HODCommandCenter: React.FC = () => {
  setScopeLoading(false);
  setRefreshing(false);
  }
- }, [selectedDept, selectedStaff, selectedYear]);
+ }, [selectedDept, selectedStaff, selectedYear, selectedSection]);
 
  // Load Students List
  const loadStudents = useCallback(async () => {
@@ -1757,18 +1761,14 @@ export const HODCommandCenter: React.FC = () => {
     { value: '4', label: 'IV Year', pillText: '4TH' }
   ];
 
-  const isSingleIntakeDeptSelected = Boolean(
-    selectedDept && departments.some((d: any) => String(d.id) === String(selectedDept) && (d.code?.toUpperCase().includes('CS') || d.code?.toUpperCase().includes('CYBER') || d.code?.toUpperCase().includes('IOT') || d.name?.toLowerCase().includes('cyber') || d.name?.toLowerCase().includes('iot')))
-  );
+  const isSingleIntakeDeptSelected = false;
 
-  const sectionOptions = isSingleIntakeDeptSelected
-    ? [{ value: 'ALL', label: 'Single Cohort (All Students)', pillText: 'SINGLE' }]
-    : [
-        { value: 'ALL', label: 'All Sections', pillText: 'ALL' },
-        { value: 'A', label: 'Section A', pillText: 'A' },
-        { value: 'B', label: 'Section B', pillText: 'B' },
-        { value: 'C', label: 'Section C', pillText: 'C' }
-      ];
+  const sectionOptions = [
+    { value: 'ALL', label: 'All Sections', pillText: 'ALL' },
+    { value: 'A', label: 'Section A', pillText: 'A' },
+    { value: 'B', label: 'Section B', pillText: 'B' },
+    { value: 'C', label: 'Section C', pillText: 'C' }
+  ];
 
   const statusOptions = [
     { value: 'ALL', label: 'All Status', pillText: 'ALL' },
@@ -1778,7 +1778,7 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
  return (
- <div className="max-w-full w-full box-border space-y-5 sm:space-y-6 md:space-y-8 pb-36 sm:pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="max-w-full w-full overflow-x-hidden box-border space-y-5 sm:space-y-6 md:space-y-8 pb-36 sm:pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
@@ -1950,8 +1950,10 @@ export const HODCommandCenter: React.FC = () => {
                 Active Scope
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold truncate max-w-[160px] sm:max-w-none">
+                <span className="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 font-bold truncate max-w-[280px] sm:max-w-none">
                   {scopeDeptCode} / {scopeStaffName}
+                  {selectedYear !== 'ALL' ? ` • ${selectedYear === '2' ? 'II Yr' : selectedYear === '3' ? 'III Yr' : selectedYear === '4' ? 'IV Yr' : `Yr ${selectedYear}`}` : ''}
+                  {selectedSection !== 'ALL' ? ` • Sec ${selectedSection}` : ''}
                 </span>
                 {activeFilterCount > 0 && (
                   <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-500 dark:text-brand-400 border border-brand-400/30">
@@ -2185,7 +2187,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
  <div className="min-w-0">
  <div className="font-display text-sm font-bold text-slate-900 dark:text-white truncate">
- Your Student Cohort ({scopeStaffName} / {scopeDeptCode})
+ Your Student Cohort ({scopeStaffName} / {scopeDeptCode}{selectedYear !== 'ALL' ? ` / ${selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : selectedYear === '4' ? 'IV Year' : `Year ${selectedYear}`}` : ''}{selectedSection !== 'ALL' ? ` / Sec ${selectedSection}` : ''})
  </div>
  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-mono mt-0.5">
  <span className="text-emerald-600 font-bold">{activeInScope} Active</span>
@@ -3428,7 +3430,7 @@ export const HODCommandCenter: React.FC = () => {
  {/* Unassign All Mentees Confirmation Modal */}
  {confirmUnassignTarget && typeof document !== 'undefined' && createPortal(
  <div
- className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in"
+ className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in"
  onClick={e => { if (e.target === e.currentTarget) setConfirmUnassignTarget(null); }}
  >
  <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-800/60 overflow-hidden">
@@ -3490,7 +3492,7 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* View Methodology Modal */}
  {showMethodologyModal && typeof document !== 'undefined' && createPortal(
- <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
+ <div className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
  <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
@@ -3520,7 +3522,7 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* Ask AI Modal */}
  {showAIModal && typeof document !== 'undefined' && createPortal(
- <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
+ <div className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
  <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -3556,7 +3558,7 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* What-If Simulator Modal */}
  {showWhatIfModal && typeof document !== 'undefined' && createPortal(
- <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
+ <div className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
  <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
@@ -3609,7 +3611,7 @@ export const HODCommandCenter: React.FC = () => {
           ========================================================================= */}
       {selectedYearBenchmark && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
+          className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
           onClick={e => e.target === e.currentTarget && setSelectedYearBenchmark(null)}
         >
           <div className="w-full max-w-2xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
@@ -3803,7 +3805,7 @@ export const HODCommandCenter: React.FC = () => {
           ========================================================================= */}
       {selectedSkillGap && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
+          className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/95 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
           onClick={e => e.target === e.currentTarget && setSelectedSkillGap(null)}
         >
           <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] sm:max-h-[90vh]">

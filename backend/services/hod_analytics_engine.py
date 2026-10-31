@@ -52,7 +52,8 @@ def calculate_department_health_score(
     dept_id: Optional[int] = None,
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
-    section_id: Optional[int] = None
+    section_id: Optional[int] = None,
+    section: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Computes Scoped Coding Health Score (0–100) & KPI counts from real DB records.
@@ -92,7 +93,11 @@ def calculate_department_health_score(
 
     if year_level and year_level != "ALL":
         base_q = base_q.filter(Student.year_level.in_(_year_matches(year_level)))
-    if section_id:
+    if section and str(section).strip().upper() != "ALL":
+        from backend.models import Section
+        sec_str = str(section).strip().upper()
+        base_q = base_q.filter(Student.section.has(Section.name.ilike(sec_str)))
+    elif section_id:
         base_q = base_q.filter(Student.section_id == section_id)
         
     base_q = apply_role_based_student_filter(base_q, current_user, db)
@@ -128,7 +133,11 @@ def calculate_department_health_score(
 
     if year_level and year_level != "ALL":
         stats_q = stats_q.filter(Student.year_level.in_(_year_matches(year_level)))
-    if section_id:
+    if section and str(section).strip().upper() != "ALL":
+        from backend.models import Section
+        sec_str = str(section).strip().upper()
+        stats_q = stats_q.filter(Student.section.has(Section.name.ilike(sec_str)))
+    elif section_id:
         stats_q = stats_q.filter(Student.section_id == section_id)
 
     stats_q = apply_role_based_student_filter(stats_q, current_user, db)
@@ -599,7 +608,8 @@ def calculate_department_kpi_summary(
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
-    status_filter: Optional[str] = None
+    status_filter: Optional[str] = None,
+    section: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Authoritative HOD KPI Summary.
@@ -708,7 +718,11 @@ def calculate_department_kpi_summary(
         clean_yr_key = str(year_level).upper().replace("YEAR", "").strip()
         y_matches = years_map_dict.get(clean_yr_key) or years_map_dict.get(str(year_level).upper()) or [year_level]
         st_q = st_q.filter(Student.year_level.in_(y_matches))
-    if section_id:
+    if section and str(section).strip().upper() != "ALL":
+        from backend.models import Section
+        sec_str = str(section).strip().upper()
+        st_q = st_q.filter(Student.section.has(Section.name.ilike(sec_str)))
+    elif section_id:
         st_q = st_q.filter(Student.section_id == section_id)
 
     st_q = apply_role_based_student_filter(st_q, current_user, db)
@@ -775,7 +789,8 @@ def get_todays_action_items(
     dept_id: Optional[int] = None,
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
-    section_id: Optional[int] = None
+    section_id: Optional[int] = None,
+    section: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """Data-driven action items (URGENT red & ATTENTION amber). Fully dynamic to active scope."""
     from backend.services.authorization_service import get_hod_authorized_department_ids
@@ -834,7 +849,11 @@ def get_todays_action_items(
     
     if y_matches:
         unassigned_q = unassigned_q.filter(Student.year_level.in_(y_matches))
-    if section_id and str(section_id) != "ALL":
+    if section and str(section).strip().upper() != "ALL":
+        from backend.models import Section
+        sec_str = str(section).strip().upper()
+        unassigned_q = unassigned_q.filter(Student.section.has(Section.name.ilike(sec_str)))
+    elif section_id and str(section_id) != "ALL":
         unassigned_q = unassigned_q.filter(Student.section_id == section_id)
     
     unassigned_count = unassigned_q.count()
@@ -917,7 +936,11 @@ def get_todays_action_items(
         pending_zero = pending_zero.filter(FacultyStudentAssignment.faculty_id == staff_id)
     if y_matches:
         pending_zero = pending_zero.filter(Student.year_level.in_(y_matches))
-    if section_id and str(section_id) != "ALL":
+    if section and str(section).strip().upper() != "ALL":
+        from backend.models import Section
+        sec_str = str(section).strip().upper()
+        pending_zero = pending_zero.filter(Student.section.has(Section.name.ilike(sec_str)))
+    elif section_id and str(section_id) != "ALL":
         pending_zero = pending_zero.filter(Student.section_id == section_id)
     
     zero_count = pending_zero.count()

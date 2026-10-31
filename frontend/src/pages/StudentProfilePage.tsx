@@ -13,6 +13,7 @@ import { ExportStatus } from '../components/ExportStatus';
 import { deriveYearLevelFromRegNo, formatDepartmentCode, deriveDepartmentFromRegNo } from '../utils/filterUtils';
 
 import { IDCardGenerator } from '../components/IDCardGenerator';
+import { StudentPlacementAndContestOverview } from '../components/StudentPlacementAndContestOverview';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 const StudentAuditModal = React.lazy(() => import('../components/StudentAuditModal').then(m => ({ default: m.StudentAuditModal })));
 const IndividualAnalyticsDashboard = React.lazy(() => import('../components/analytics/IndividualAnalyticsDashboard').then(m => ({ default: m.IndividualAnalyticsDashboard })));
@@ -843,6 +844,27 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   return Math.round(Number(r)).toLocaleString('en-US');
                 })()}
               </h3>
+              {(() => {
+                const r = Number(detail?.stats?.contest_rating ?? detail?.lc_contest_standing?.contest_rating ?? 0);
+                const attended = detail?.lc_contest_standing?.attended_count ?? detail?.stats?.official_contests ?? 0;
+                if (!r || r <= 0 || Math.round(r) === 1500 || attended === 0) return null;
+                if (r >= 2150) return (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/30 text-rose-200 border border-rose-400/50 mt-1">
+                    🛡️ Guardian Tier
+                  </span>
+                );
+                if (r >= 1850) return (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/50 mt-1">
+                    ⚔️ Knight Tier
+                  </span>
+                );
+                if (r >= 1600) return (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/50 mt-1">
+                    ⭐ Specialist (Top 15%)
+                  </span>
+                );
+                return null;
+              })()}
             </div>
 
             {/* Official / Virtual Split */}
@@ -867,7 +889,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       {/* Skill Radar & Digital Student Pass */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {isChartsReady ? (
-          <SkillRadarChart totalSolved={detail?.stats?.total_solved || 0} />
+          <SkillRadarChart skills={detail?.dsa_skills} totalSolved={detail?.stats?.total_solved || 0} />
         ) : (
           <div className="h-[350px] bg-slate-100/50 dark:bg-navy-900/50 rounded-3xl animate-pulse flex items-center justify-center">
             <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">Loading Radar...</span>
@@ -1009,6 +1031,17 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           )}
         </div>
       </div>
+
+      {/* Placement Readiness, Upcoming Weekly Contest Countdown & Recent Submissions */}
+      <StudentPlacementAndContestOverview
+        totalSolved={(easy + medium + hard) || detail?.stats?.total_solved || 0}
+        easySolved={easy}
+        mediumSolved={medium}
+        hardSolved={hard}
+        contestRating={detail?.stats?.contest_rating || detail?.lc_contest_standing?.contest_rating}
+        recentSubmissions={detail?.recent_submissions || []}
+        studentName={detail?.name || student?.name}
+      />
       </>
     )}
 

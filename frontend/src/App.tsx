@@ -581,7 +581,7 @@ export const App: React.FC = () => {
       }
     }
   }, [isAuthenticated]);
-  useScrollLock(showLoginModal);
+  useScrollLock(showLoginModal || isSidebarOpen || showImportModal || showAlertCenterModal || showMobileFilterDrawer || showShareModal);
 
 
   // Handle Global Native Deep Link URLs (including Google OAuth callback)

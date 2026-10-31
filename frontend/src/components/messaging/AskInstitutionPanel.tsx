@@ -431,7 +431,7 @@ function decodeShareUrlPayload(base64Payload: string): StoredChat | null {
     <div 
       className={`bg-white dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 flex flex-col overflow-hidden ${
         isFullscreen 
-          ? 'fixed inset-0 z-[99999] w-screen h-screen' 
+          ? 'fixed inset-0 z-[99999] w-full max-w-full h-screen' 
           : 'w-full h-full min-h-0 flex-1 relative'
       }`}
       style={isFullscreen ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 } : undefined}

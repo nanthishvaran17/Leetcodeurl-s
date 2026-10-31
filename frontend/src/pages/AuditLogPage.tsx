@@ -452,7 +452,7 @@ export const AuditLogPage: React.FC = () => {
             <div className="flex items-center justify-between gap-2">
               <div className="inline-flex max-w-full items-center space-x-1.5 sm:space-x-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-[10px] sm:text-xs font-black">
                 <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="truncate">ADMIN IDENTITY & AUDIT TRAIL</span>
+                <span className="truncate">SYSTEM AUDIT TRAIL</span>
               </div>
 
               {/* Quick Refresh Icon on Mobile */}
@@ -468,9 +468,10 @@ export const AuditLogPage: React.FC = () => {
             </div>
 
             <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-snug break-words">
-              Admin Identity & <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-300 to-violet-400">Audit Log</span>
+              Audit Log <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-300 to-violet-400">Institutional Activity Trail</span>
             </h1>
-            <p className="hidden sm:block text-xs md:text-sm text-slate-300 font-semibold leading-relaxed">
+            <p className="text-[11px] sm:text-xs md:text-sm text-slate-300 font-medium sm:font-semibold leading-relaxed line-clamp-2 sm:line-clamp-none">
               Real-time database audit log recording administrator identity, logins, page visits, report generation, email dispatches & setting modifications. Click any log entry to inspect full event telemetry.
             </p>
           </div>

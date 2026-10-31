@@ -154,6 +154,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     const clean = searchInput.trim();
     if (!clean) return;
     setVerificationId(clean);
+    fetchVerification(clean);
     if (typeof window !== 'undefined' && window.history?.pushState) {
       window.history.pushState(null, '', `/verify/${encodeURIComponent(clean)}`);
     }
@@ -184,10 +185,10 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       // 1. Primary: Authoritative Backend API (forwarding all QR query params for zero-loss resolution)
       const allParams = searchParams.toString();
       const queryStr = allParams ? `?${allParams}` : '';
-      const res = await api.get(`/certificates/verify/${encodeURIComponent(verificationId)}${queryStr}`);
+      const res = await api.get(`/certificates/verify/${encodeURIComponent(activeId)}${queryStr}`);
       if (res.data && res.data.verified !== false && res.data.status !== 'NOT_FOUND') {
         const returnedId = (res.data.verification_id || res.data.certificate_id || '').trim().toLowerCase();
-        const requestedId = verificationId.trim().toLowerCase();
+        const requestedId = activeId.trim().toLowerCase();
         const isIdentityDoc = res.data.document_type === 'INSTITUTIONAL_ID_CARD' || res.data.document_type === 'STUDENT_DIGITAL_PASS';
         if (!isIdentityDoc && returnedId && requestedId && !requestedId.includes(returnedId) && !returnedId.includes(requestedId)) {
           console.error("Verification ID mismatch:", returnedId, "expected:", requestedId);
@@ -195,7 +196,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
           setData({
             status: 'NOT_VERIFIED',
             is_valid: false,
-            verification_id: verificationId,
+            verification_id: activeId,
             message: 'Verification Integrity Mismatch — Returned record does not match trace ID.'
           });
           setLoading(false);
@@ -211,7 +212,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
     try {
       // 2. Secondary High-Availability Fallback: Cloud Firestore
-      const firestoreCert = await fetchCertificateFromFirestoreWeb(verificationId);
+      const firestoreCert = await fetchCertificateFromFirestoreWeb(activeId);
       if (firestoreCert) {
         setData(firestoreCert as CertificateVerificationData);
         setLoading(false);
@@ -249,13 +250,13 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     // 3A. Student Digital Pass Client Fallback (Zero-Loss Offline/Instant Resolver)
     const isStudentPassFallback = (
       queryType === 'student_pass' ||
-      verificationId.toUpperCase().includes('PASS') ||
+      activeId.toUpperCase().includes('PASS') ||
       queryRole.toUpperCase() === 'STUDENT' ||
       Boolean(queryReg && querySolved !== null)
     );
 
     if (isStudentPassFallback) {
-      const sReg = queryReg || verificationId.replace(/^(?:NEC[-_]?)?PASS[-_]?(?:\d{4}[-_]?)?/i, '').trim() || '732225CC018';
+      const sReg = queryReg || activeId.replace(/^(?:NEC[-_]?)?PASS[-_]?(?:\d{4}[-_]?)?/i, '').trim() || '732225CC018';
       const sName = queryName || (queryUser ? queryUser.replace(/[-_]/g, ' ').toUpperCase() : 'Student');
       const sDept = queryDept || 'Computer Science and Engineering';
       const sYear = queryYear || 'III Year';
@@ -272,8 +273,8 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
         status: 'VERIFIED',
         is_valid: true,
         document_type: 'STUDENT_DIGITAL_PASS',
-        verification_id: verificationId,
-        certificate_id: verificationId,
+        verification_id: activeId,
+        certificate_id: activeId,
         student_name: sName,
         full_name: sName,
         reg_no: sReg,
@@ -311,19 +312,19 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     const isExplicitIdCard = (
       queryType === 'id_card' ||
       Boolean(queryRole && queryRole.toUpperCase() !== 'STUDENT') ||
-      verificationId.toUpperCase().startsWith('NEC-STAFF-') ||
-      verificationId.toUpperCase().startsWith('NEC-FACULTY-') ||
-      verificationId.toUpperCase().startsWith('NEC-ADMIN-') ||
-      verificationId.toUpperCase().startsWith('NEC-PRIN-') ||
-      verificationId.toUpperCase().startsWith('NEC-IOT-') ||
-      verificationId.toUpperCase().startsWith('NEC-IT-') ||
-      verificationId.toUpperCase().startsWith('NEC-CSE-') ||
-      verificationId.toUpperCase().startsWith('STAFF-') ||
-      verificationId.toUpperCase().startsWith('ID-')
+      activeId.toUpperCase().startsWith('NEC-STAFF-') ||
+      activeId.toUpperCase().startsWith('NEC-FACULTY-') ||
+      activeId.toUpperCase().startsWith('NEC-ADMIN-') ||
+      activeId.toUpperCase().startsWith('NEC-PRIN-') ||
+      activeId.toUpperCase().startsWith('NEC-IOT-') ||
+      activeId.toUpperCase().startsWith('NEC-IT-') ||
+      activeId.toUpperCase().startsWith('NEC-CSE-') ||
+      activeId.toUpperCase().startsWith('STAFF-') ||
+      activeId.toUpperCase().startsWith('ID-')
     );
 
     if (isExplicitIdCard) {
-      const fallbackName = queryName || verificationId.replace(/^NEC-|^STAFF-|^ID-/, '').replace(/[-_]/g, ' ').trim().toUpperCase() || 'Staff Member';
+      const fallbackName = queryName || activeId.replace(/^NEC-|^STAFF-|^ID-/, '').replace(/[-_]/g, ' ').trim().toUpperCase() || 'Staff Member';
       const fallbackRole = queryRole || 'FACULTY';
       const fallbackDesig = queryDesig || (fallbackRole.toLowerCase().includes('hod') ? 'Head of Department & Professor' : 'Faculty Member & Mentor');
       const fallbackDept = queryDept || 'Computer Science & Engineering';
@@ -332,15 +333,15 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
         status: 'VERIFIED',
         is_valid: true,
         document_type: 'INSTITUTIONAL_ID_CARD',
-        verification_id: verificationId,
-        certificate_id: verificationId,
+        verification_id: activeId,
+        certificate_id: activeId,
         student_name: fallbackName,
         full_name: fallbackName,
         role: fallbackRole.toUpperCase(),
         designation: fallbackDesig,
         department: fallbackDept,
         department_name: fallbackDept,
-        institutional_id: verificationId,
+        institutional_id: activeId,
         email: queryEmail || '',
         phone: queryPhone || '+91 90420 20879',
         dob: queryDob || '15/06/1985',
@@ -351,7 +352,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
         institution: 'Nandha Engineering College (Autonomous)',
         accreditation: 'Autonomous • Anna University • NBA & NAAC A+',
         issue_date: 'Academic Session 2025–26 (Silver Jubilee)',
-        sha_hash: queryHash || `SHA256-${verificationId.toLowerCase()}-verified`,
+        sha_hash: queryHash || `SHA256-${activeId.toLowerCase()}-verified`,
         integrity_status: 'PASSED',
         authorized_signatory: 'Dr. U. S. Ragupathy, M.E., Ph.D. (Principal)'
       });
@@ -363,7 +364,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     setData({
       status: 'NOT_VERIFIED',
       is_valid: false,
-      verification_id: verificationId,
+      verification_id: activeId,
       message: 'Certificate / Identity Card Not Found in Institutional Registry'
     });
     setError('NOT_FOUND');

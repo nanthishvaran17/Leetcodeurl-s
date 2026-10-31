@@ -277,7 +277,9 @@ export const StudentPerformanceSearch: React.FC<StudentPerformanceSearchProps> =
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder || 'Search name, reg no (e.g. 732224CC008)...'}
-          className="flex-1 w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none pr-9 py-2 truncate text-left"
+          className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left ${
+            (inputValue || isLoading) ? 'pr-9' : 'pr-3.5'
+          }`}
         />
 
         {/* Right Action Icons: Loading Spinner + Clear X Button */}

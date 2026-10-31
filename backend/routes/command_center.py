@@ -158,6 +158,7 @@ def get_command_center_summary(
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
+    section: Optional[str] = None,
     refresh: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
@@ -183,7 +184,9 @@ def get_command_center_summary(
             dept_id = current_user.department_id
 
     scope_key = f"global" if is_global_admin else f"user_{uid}"
-    cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"
+    eff_section = section.strip().upper() if section and str(section).strip().upper() != "ALL" else None
+    sec_key = eff_section or (str(section_id) if section_id else "all")
+    cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{sec_key}"
     tags = ["analytics", "dashboard", f"dept_{dept_id}" if dept_id else "global"]
 
     if refresh:
@@ -201,21 +204,22 @@ def get_command_center_summary(
             get_year_section_heatmap
         )
         health = calculate_department_health_score(
-            db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
+            db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id, section=eff_section
         )
         brief = get_executive_brief(db, current_user, dept_id=dept_id, staff_id=staff_id)
         needs_att = get_needs_attention_metrics(db, current_user, dept_id=dept_id, staff_id=staff_id)
         benchmarks = get_institutional_benchmarks(db, current_user, dept_id=dept_id)
         
         kpi_summary = calculate_department_kpi_summary(
-            db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
+            db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id, section=eff_section
         )
         action_items = get_todays_action_items(
             db, current_user,
             dept_id=dept_id,
             staff_id=staff_id,
             year_level=year_level,
-            section_id=section_id
+            section_id=section_id,
+            section=eff_section
         )
         heatmap_matrix = get_year_section_heatmap(db, current_user, dept_id=dept_id)
 

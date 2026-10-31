@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, Clock, TrendingUp, Activity, ChevronRight, Cpu, Compass, AlertOctagon, Download, Radio, X, MessageSquare, Brain, Briefcase, User, Smartphone, ShieldCheck, QrCode } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { CollegeLogo } from './CollegeLogo';
 import { getApiUrl } from '../services/api';

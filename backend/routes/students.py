@@ -7,7 +7,7 @@ import json
 import os
 
 from backend.database import get_db
-from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklyStudentProgress, User, LeetCodeActivity
+from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklyStudentProgress, User, LeetCodeActivity, LeetCodeTopicStats, LeetCodeSubmission
 from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
 from backend.schemas import StudentOut, StudentCreate, ContestResultOut, StudentListOut
 from backend.routes.auth import get_current_user, is_protected_super_admin
@@ -1108,6 +1108,70 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
             if float(st_out.lc_contest_standing.contest_rating) == 1500.0 or round(float(st_out.lc_contest_standing.contest_rating)) == 1500 or float(st_out.lc_contest_standing.contest_rating) <= 0:
                 st_out.lc_contest_standing.contest_rating = None
                 st_out.lc_contest_standing.contest_global_ranking = None
+
+    # Calculate real DSA Topic Skills for DSA Skill Radar
+    topic_rows = db.query(LeetCodeTopicStats).filter(
+        LeetCodeTopicStats.student_id == student.id
+    ).all()
+
+    topic_map = {}
+    for r in topic_rows:
+        slug = (r.topic_slug or "").lower().strip()
+        name = (r.topic_name or "").lower().strip()
+        cnt = r.problems_solved or 0
+        if slug:
+            topic_map[slug] = max(topic_map.get(slug, 0), cnt)
+        if name:
+            topic_map[name] = max(topic_map.get(name, 0), cnt)
+
+    arrays_cnt = max(topic_map.get("array", 0), topic_map.get("arrays", 0))
+    strings_cnt = max(topic_map.get("string", 0), topic_map.get("strings", 0))
+    dp_cnt = max(topic_map.get("dynamic-programming", 0), topic_map.get("dynamic programming", 0), topic_map.get("memoization", 0))
+    
+    tree_cnt = max(topic_map.get("tree", 0), topic_map.get("binary-tree", 0), topic_map.get("binary tree", 0))
+    graph_cnt = max(topic_map.get("graph", 0), topic_map.get("graphs", 0), topic_map.get("breadth-first-search", 0), topic_map.get("depth-first-search", 0))
+    trees_graphs_cnt = max(tree_cnt, graph_cnt, round((tree_cnt + graph_cnt) * 0.7))
+    
+    greedy_cnt = topic_map.get("greedy", 0)
+    bs_cnt = max(topic_map.get("binary-search", 0), topic_map.get("binary search", 0), topic_map.get("two-pointers", 0), topic_map.get("two pointers", 0))
+
+    if topic_rows and (arrays_cnt > 0 or strings_cnt > 0 or dp_cnt > 0 or trees_graphs_cnt > 0 or greedy_cnt > 0 or bs_cnt > 0):
+        st_out.dsa_skills = [
+            {"topic": "Arrays", "score": min(100, round((arrays_cnt / 40.0) * 100)), "solved": arrays_cnt},
+            {"topic": "Strings", "score": min(100, round((strings_cnt / 30.0) * 100)), "solved": strings_cnt},
+            {"topic": "DP", "score": min(100, round((dp_cnt / 25.0) * 100)), "solved": dp_cnt},
+            {"topic": "Trees & Graphs", "score": min(100, round((trees_graphs_cnt / 30.0) * 100)), "solved": trees_graphs_cnt},
+            {"topic": "Greedy", "score": min(100, round((greedy_cnt / 20.0) * 100)), "solved": greedy_cnt},
+            {"topic": "Binary Search", "score": min(100, round((bs_cnt / 20.0) * 100)), "solved": bs_cnt},
+        ]
+    else:
+        st_out.dsa_skills = [
+            {"topic": "Arrays", "score": 0, "solved": 0},
+            {"topic": "Strings", "score": 0, "solved": 0},
+            {"topic": "DP", "score": 0, "solved": 0},
+            {"topic": "Trees & Graphs", "score": 0, "solved": 0},
+            {"topic": "Greedy", "score": 0, "solved": 0},
+            {"topic": "Binary Search", "score": 0, "solved": 0},
+        ]
+
+    # Fetch recent accepted submissions
+    recent_subs = db.query(LeetCodeSubmission).filter(
+        LeetCodeSubmission.student_id == student.id
+    ).order_by(LeetCodeSubmission.submission_timestamp.desc()).limit(8).all()
+
+    st_out.recent_submissions = [
+        {
+            "title": s.title or (s.title_slug.replace("-", " ").title() if s.title_slug else "Problem"),
+            "title_slug": s.title_slug,
+            "lang": s.lang or "code",
+            "status": s.status_display or "Accepted",
+            "runtime": s.runtime_display,
+            "memory": s.memory_display,
+            "date": s.submission_timestamp.strftime("%b %d, %Y") if s.submission_timestamp else None,
+            "timestamp": s.submission_timestamp.isoformat() if s.submission_timestamp else None
+        }
+        for s in recent_subs
+    ]
 
     return st_out
 

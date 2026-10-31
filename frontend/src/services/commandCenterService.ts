@@ -313,6 +313,7 @@ export async function getCommandCenterSummary(params?: {
   staff_id?: number;
   year_level?: string;
   section_id?: number;
+  section?: string;
   refresh?: boolean;
 }): Promise<CommandCenterSummary> {
   const res = await api.get<CommandCenterSummary>('/command-center/summary', { params });

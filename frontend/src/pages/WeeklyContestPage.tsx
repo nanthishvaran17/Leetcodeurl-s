@@ -2090,9 +2090,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     <div className="w-full max-w-full overflow-x-hidden space-y-6 sm:space-y-10 pt-0 animate-fade-in pb-40 sm:pb-32 md:pb-16">
 
       {/* 1. SLEEK 2026 INSTITUTIONAL HERO HEADER */}
-      <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 shadow-xl border transition-all duration-500 ${isLive
+      <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl text-white p-3.5 sm:p-5 md:p-6 border transition-all duration-500 ${isLive
         ? 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-emerald-500/40 shadow-emerald-500/10'
-        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.09] shadow-[0_20px_50px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.15)]'
+        : 'bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] border-white/[0.09]'
         }`}>
         {/* Ambient Radial Mesh Glow */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />

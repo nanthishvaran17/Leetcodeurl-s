@@ -6,6 +6,7 @@ import { Users, X, Code, CheckCircle, Clock, Calendar, Mail, Briefcase, Activity
 import { isRoleEligibleForMentees } from '../../utils/staffRoleUtils';
 import { copyToClipboard } from '../../utils/clipboard';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface StaffDetailDrawerProps {
   staff: StaffRecord | null;
@@ -25,6 +26,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   onFilterDashboard
 }) => {
   useEscapeKey(onClose, Boolean(staff));
+  useScrollLock(Boolean(staff));
 
   if (!staff) return null;
 
@@ -95,8 +97,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fade-in p-0" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-xl h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl sm:rounded-none">
+    <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fade-in p-0 overflow-x-hidden max-w-full" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-xl max-w-full h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden overflow-x-hidden flex flex-col rounded-t-3xl sm:rounded-none">
 
         {/* Hero Header Profile Section */}
         <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10 rounded-t-3xl sm:rounded-none">
@@ -204,7 +206,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           </div>
         </div>
 
-        <div className="p-3.5 sm:p-5 space-y-4 sm:space-y-5 flex-1 overflow-y-auto bg-slate-50 dark:bg-navy-950">
+        <div className="p-3.5 sm:p-5 space-y-4 sm:space-y-5 flex-1 overflow-y-auto overflow-x-hidden max-w-full bg-slate-50 dark:bg-navy-950">
           {/* Mentorship Workload & Solver Metrics (Only for Mentoring Roles: Faculty, Mentors, Placement Coordinators) */}
           {isMenteeEligible ? (
             <div className="space-y-3">

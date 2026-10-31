@@ -23,7 +23,9 @@ import {
   ChevronRight,
   Loader2,
   GraduationCap,
-  Briefcase
+  Briefcase,
+  ShieldCheck,
+  QrCode
 } from 'lucide-react';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useAuth } from '../context/AuthContext';
@@ -301,6 +303,28 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         icon: Activity,
         category: 'Commands',
         action: () => onNavigate('system-health')
+      },
+      {
+        id: 'nav_verify_credential',
+        type: 'navigation',
+        label: 'Verify Credential / Student Digital Pass',
+        sublabel: 'Official institutional portal to verify certificates, digital passes, and staff ID cards',
+        icon: ShieldCheck,
+        category: 'Commands',
+        badge: 'PUBLIC',
+        action: () => {
+          window.location.hash = '#/verify';
+          window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: 'verify' } }));
+        }
+      },
+      {
+        id: 'nav_account_id_card',
+        type: 'navigation',
+        label: 'My Account & Digital ID Card',
+        sublabel: 'Inspect institutional digital ID, QR code pass, download PNG, or print physical card',
+        icon: QrCode,
+        category: 'Commands',
+        action: () => onNavigate('account-settings')
       }
     ];
 
@@ -313,7 +337,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       });
     } else {
       // Student role
-      items.push(navCommands[0]); // Dashboard only
+      items.push(navCommands[0]); // Dashboard
+      const verifyCmd = navCommands.find(c => c.id === 'nav_verify_credential');
+      const idCmd = navCommands.find(c => c.id === 'nav_account_id_card');
+      if (verifyCmd) items.push(verifyCmd);
+      if (idCmd) items.push(idCmd);
     }
 
     // --- 4. Action & System Commands ---

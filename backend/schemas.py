@@ -215,6 +215,8 @@ class StudentOut(StudentBase):
     lc_problem_stats: Optional[CanonicalProblemStatsOut] = None
     lc_contest_standing: Optional[CanonicalContestOut] = None
     lc_activity: Optional[CanonicalActivityOut] = None
+    dsa_skills: Optional[List[Dict[str, Any]]] = None
+    recent_submissions: Optional[List[Dict[str, Any]]] = None
     
     contest_global_ranking: Optional[int] = None
     public_profile_ranking: Optional[int] = None

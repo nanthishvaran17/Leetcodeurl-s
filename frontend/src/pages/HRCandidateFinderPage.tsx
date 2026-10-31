@@ -2165,7 +2165,7 @@ export const HRCandidateFinderPage: React.FC = () => {
 
       {/* MOBILE FILTER DRAWER PORTAL */}
       {isMobileFilterOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 w-screen h-[100dvh] z-[999999] flex flex-col justify-end md:hidden bg-slate-950/80 backdrop-blur-md transition-all animate-fadeIn">
+        <div className="fixed inset-0 w-full max-w-full h-[100dvh] z-[999999] flex flex-col justify-end md:hidden bg-slate-950/80 backdrop-blur-md transition-all animate-fadeIn">
           {/* Backdrop */}
           <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} />
 

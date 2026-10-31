@@ -271,6 +271,8 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
   const heightClass =
     size === 'sm' ? 'h-9 min-h-[36px]' : size === 'lg' ? 'h-12 min-h-[48px]' : 'h-11 min-h-[44px]';
 
+  const hasRightAction = Boolean((inputValue && !disabled) || isLoading);
+
   return (
     <div className={`relative w-full ${className}`} ref={containerRef}>
       {/* Modern Rounded Search Container with subtle purple border & soft glow */}
@@ -304,11 +306,13 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           autoFocus={autoFocus}
-          className={`flex-1 w-full bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none pr-9 py-2 truncate text-left ${inputClassName}`}
+          className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left ${
+            hasRightAction ? 'pr-9' : 'pr-3.5'
+          } ${inputClassName}`}
         />
 
         {/* Right Action Icons: Loading Spinner + Clear X Button */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 space-x-1.5">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 space-x-1.5 pointer-events-auto">
           {isLoading && (
             <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin shrink-0" />
           )}
