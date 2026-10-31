@@ -276,9 +276,13 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("Student Name", ["name", "student_name", "student", "full_name"]),
             ("Department", ["dept", "department", "dept_name", "department_code", "department_name"]),
             ("Year", ["year", "year_level", "academic_year", "yr"]),
-            ("Accommodation", ["accommodation", "accomodation", "hostel_dayscholar", "residence"]),
-            ("12th Cutoff", ["twelfth_cutoff", "cutoff", "cutoff_mark", "12th_cutoff", "twelfth_cutoff_mark"]),
         ]
+        # Only include Accommodation & 12th Cutoff if specifically a cutoff/accreditation report or general roster
+        if not is_single_contest or "CUTOFF" in report_type:
+            BASE_DEMOGRAPHIC.extend([
+                ("Accommodation", ["accommodation", "accomodation", "hostel_dayscholar", "residence"]),
+                ("12th Cutoff", ["twelfth_cutoff", "cutoff", "cutoff_mark", "12th_cutoff", "twelfth_cutoff_mark"]),
+            ])
 
         selected_cols.append(("S.No", "__SNO__"))
         used_titles.add("s.no")
@@ -339,17 +343,14 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 for k in candidates:
                     used_raw_keys.add(k.lower())
         elif is_single_contest:
-            # 2. Single Contest / Standard: Contests Attended, Q1-Q4, Total Solved, Contest Easy, Medium, Hard, Score
+            # 2. Single Contest / Standard: Reduced Columns with Difficulty Labeling (Q1 Easy, Q2-Q3 Med, Q4 Hard, Contest Solved)
             SINGLE_METRICS = [
-                ("Contests Attended", ["contests_attended", "total_attended", "totalattended", "total_attendance", "attended_contests", "contests_att"]),
-                ("Q1", ["q1_display", "q1", "q1_time"]),
-                ("Q2", ["q2_display", "q2", "q2_time"]),
-                ("Q3", ["q3_display", "q3", "q3_time"]),
-                ("Q4", ["q4_display", "q4", "q4_time"]),
-                ("Total Solved", ["contest_solved", "solved", "solved_str", "problems_solved", "overall_total_solved", "totalsolved", "total_solved"]),
-                ("Contest Easy", ["contest_easy", "contest_easy_solved", "c_easy"]),
-                ("Contest Medium", ["contest_medium", "contest_medium_solved", "c_medium"]),
-                ("Contest Hard", ["contest_hard", "contest_hard_solved", "c_hard"]),
+                ("Status", ["status", "attendance_status", "participation_status"]),
+                ("Q1 (Easy)", ["q1_display", "q1", "q1_time"]),
+                ("Q2 (Medium)", ["q2_display", "q2", "q2_time"]),
+                ("Q3 (Medium)", ["q3_display", "q3", "q3_time"]),
+                ("Q4 (Hard)", ["q4_display", "q4", "q4_time"]),
+                ("Contest Solved", ["contest_solved", "solved", "solved_str", "problems_solved", "total_contest_solved"]),
                 ("Score", ["score", "performance_score", "total_score", "contest_score"]),
             ]
             for title, candidates in SINGLE_METRICS:
@@ -625,10 +626,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     else:
                         val = t_raw
 
-            elif title in ("Q1", "Q2", "Q3", "Q4"):
+            elif title in ("Q1", "Q2", "Q3", "Q4", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)"):
                 val_str = str(val or "").strip()
                 q_idx = int(title[1])
-                q_num = title.lower()
+                q_num = f"q{title[1]}"
                 q_t = r.get(f"{q_num}_time")
                 st_u = str(r.get("status") or r.get("attendance_status") or r.get("participation_status") or "").upper()
                 is_p = any(s in st_u for s in ["ATTENDED", "PUBLIC", "VIRTUAL", "LIVE", "VERIFIED", "COMPLETED"])
@@ -731,7 +732,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                                 strict_solved += 1
                         val = strict_solved
                     else:
-                        val = _safe_int(r.get("contest_solved") or r.get("solved") or r.get("total_solved"))
+                        val = _safe_int(r.get("contest_solved") or r.get("solved") or (r.get("total_solved") if _safe_int(r.get("total_solved")) <= 4 else 0))
                 elif is_historical:
                     if r.get("total_solved_fraction"):
                         val = r.get("total_solved_fraction")
@@ -1093,8 +1094,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     )
                     c_cell.value = col_sum
                     c_cell.number_format = '#,##0'
-                elif title in ("Q1", "Q2", "Q3", "Q4"):
-                    q_k = title.lower()
+                elif title in ("Q1", "Q2", "Q3", "Q4", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)"):
+                    q_k = f"q{title[1]}"
                     q_sum = sum(
                         1 for r in sub_rows
                         if str(r.get(q_k) or r.get(f"{q_k}_display") or "").strip() in ("1", "1.0", "True")
@@ -1210,7 +1211,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             final_width = max(content_len, 14)
         elif h_lower.startswith("c5") or h_lower.startswith("c6") or h_lower.startswith("c7") or h_lower.startswith("c8") or h_lower.startswith("c9"):
             final_width = 5.5
-        elif h_lower in ("q1", "q2", "q3", "q4"):
+        elif h_lower in ("q1", "q2", "q3", "q4") or h_lower.startswith("q1") or h_lower.startswith("q2") or h_lower.startswith("q3") or h_lower.startswith("q4"):
             final_width = 6 if max_data_len <= 2 else min(max_data_len + 3, 11)
         elif h_lower in ("total solved", "solved", "contest solved") or (h_lower.endswith("solved") and "delta" not in h_lower):
             final_width = 11

@@ -1218,7 +1218,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws4 = wb.create_sheet(title="Contest Performance Matrix")
     _write_college_header(ws4, f"{contest_name.upper()} — BINARY QUESTION MATRIX (0 OR 1)", dept_header_text, 12, metadata_block)
     r4_hdr = 7
-    s4_headers = ["S.No", "Register No", "Student Name", "Dept", "Year", "Status", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
+    s4_headers = ["S.No", "Register No", "Student Name", "Dept", "Year", "Status", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score"]
     for c_i, h in enumerate(s4_headers, 1):
         cell = ws4.cell(row=r4_hdr, column=c_i, value=h)
         cell.font = FONT_TBL_HDR
@@ -1249,7 +1249,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws_t = wb.create_sheet(title=sheet_title)
         _write_college_header(ws_t, title_text, dept_header_text, 12, metadata_block)
         rt_hdr = 7
-        th_headers = ["Rank", "Register No", "Student Name", "Dept", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
+        th_headers = ["Rank", "Register No", "Student Name", "Dept", "Year", "LeetCode Handle", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score"]
         for c_i, h in enumerate(th_headers, 1):
             cell = ws_t.cell(row=rt_hdr, column=c_i, value=h)
             cell.font = FONT_TBL_HDR
@@ -1372,7 +1372,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             _apply_thin_border(c_dh)
             r11_cur += 1
 
-            d_hdrs = ["Rank", "Student Name", "Register No", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
+            d_hdrs = ["Rank", "Student Name", "Register No", "Year", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score"]
             for c_i, h in enumerate(d_hdrs, 1):
                 cell = ws11.cell(row=r11_cur, column=c_i, value=h)
                 cell.font = FONT_TBL_HDR
