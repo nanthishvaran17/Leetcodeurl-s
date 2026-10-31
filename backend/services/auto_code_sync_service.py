@@ -242,61 +242,64 @@ def sync_contest_submission_codes_for_session(
 
         def process_single_task(task_item):
             student, q_idx, slug, q_sec = task_item
-            # 1. Resolve submission ID
-            sub_id = None
-            detected_lang = None
-            runtime_disp = None
-            memory_disp = None
-
-            # First try local LeetCodeSubmission in DB
-            local_sub = db.query(LeetCodeSubmission).filter(
-                LeetCodeSubmission.student_id == student.id,
-                (LeetCodeSubmission.title_slug == slug) | (LeetCodeSubmission.title_slug.like(f"%{slug}%"))
-            ).order_by(LeetCodeSubmission.id.desc()).first()
-
-            if local_sub:
-                detected_lang = local_sub.lang
-                runtime_disp = local_sub.runtime_display
-                memory_disp = local_sub.memory_display
-
-            # Next query LeetCode GraphQL recentAcSubmissionList for exact submission_id
-            try:
-                q = """
-                query userRecentAc($username: String!) {
-                  recentAcSubmissionList(username: $username, limit: 30) {
-                    id
-                    titleSlug
-                    timestamp
-                  }
-                }
-                """
-                with httpx.Client(timeout=8, headers={"User-Agent": "Mozilla/5.0"}) as client:
-                    r = client.post("https://leetcode.com/graphql", json={"query": q, "variables": {"username": student.username}})
-                    if r.status_code == 200:
-                        subs = r.json().get("data", {}).get("recentAcSubmissionList") or []
-                        for s in subs:
-                            tslug = (s.get("titleSlug") or "").strip().lower()
-                            if tslug == slug or slug in tslug or tslug in slug:
-                                sub_id = s.get("id")
-                                break
-            except Exception:
-                pass
-
-            if not sub_id:
-                return False, student.reg_no, q_idx, "Submission ID not found in LeetCode history"
-
-            # 2. Fetch verbatim code from LeetCode API
-            verbatim_data = fetch_submission_verbatim_from_api(sub_id)
-            if not verbatim_data or not verbatim_data.get("code"):
-                return False, student.reg_no, q_idx, "Failed to extract code from LeetCode API"
-
-            code_str = verbatim_data["code"]
-            lang_str = verbatim_data.get("lang") or detected_lang or "java"
-            contest_sub = verbatim_data.get("contest_submission")
-
-            # 3. Save to database using a dedicated thread-safe session
             t_db = SessionLocal()
             try:
+                # 1. Resolve submission ID
+                sub_id = None
+                detected_lang = None
+                runtime_disp = None
+                memory_disp = None
+
+                # First try local LeetCodeSubmission in DB with thread-safe session
+                try:
+                    local_sub = t_db.query(LeetCodeSubmission).filter(
+                        LeetCodeSubmission.student_id == int(student.id),
+                        (LeetCodeSubmission.title_slug == str(slug)) | (LeetCodeSubmission.title_slug.like(f"%{slug}%"))
+                    ).order_by(LeetCodeSubmission.id.desc()).first()
+
+                    if local_sub:
+                        detected_lang = local_sub.lang
+                        runtime_disp = local_sub.runtime_display
+                        memory_disp = local_sub.memory_display
+                except Exception:
+                    pass
+
+                # Next query LeetCode GraphQL recentAcSubmissionList for exact submission_id
+                try:
+                    q = """
+                    query userRecentAc($username: String!) {
+                      recentAcSubmissionList(username: $username, limit: 30) {
+                        id
+                        titleSlug
+                        timestamp
+                      }
+                    }
+                    """
+                    with httpx.Client(timeout=8, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}) as client:
+                        r = client.post("https://leetcode.com/graphql", json={"query": q, "variables": {"username": student.username}})
+                        if r.status_code == 200:
+                            subs = r.json().get("data", {}).get("recentAcSubmissionList") or []
+                            for s in subs:
+                                tslug = (s.get("titleSlug") or "").strip().lower()
+                                if tslug == slug or slug in tslug or tslug in slug:
+                                    sub_id = s.get("id")
+                                    break
+                except Exception:
+                    pass
+
+                if not sub_id:
+                    return False, student.reg_no, q_idx, "Submission ID not found in LeetCode history"
+
+                # 2. Fetch verbatim code from LeetCode API
+                verbatim_data = fetch_submission_verbatim_from_api(sub_id)
+                if not verbatim_data or not verbatim_data.get("code"):
+                    return False, student.reg_no, q_idx, "Failed to extract code from LeetCode API"
+
+                code_str = verbatim_data["code"]
+                lang_str = verbatim_data.get("lang") or detected_lang or "java"
+                contest_sub = verbatim_data.get("contest_submission")
+
+                # 3. Save to database using this thread's isolated session
                 row = t_db.query(ContestSubmissionCode).filter(
                     ContestSubmissionCode.session_id == session_id,
                     ContestSubmissionCode.student_id == student.id,
