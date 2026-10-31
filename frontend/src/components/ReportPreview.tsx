@@ -121,6 +121,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [tableDensity, setTableDensity] = useState<'quick' | 'full'>('quick');
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -2273,18 +2274,52 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               {/* Official Student Result Detail Table (Section 5) — not shown for WOW/HIST reports */}
               {!isWowIntel && !isHistIntel && (
               <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-                    {isFridayOfficial ? 'Official Student Result Roster' : isSundayLive ? 'Sunday Live Attendance & Solve Detail Table' : 'Student Contest Detail Table'} ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
+                    <span>
+                      {isFridayOfficial ? 'Official Student Result Roster' : isSundayLive ? 'Sunday Live Attendance & Solve Detail Table' : 'Student Contest Detail Table'} ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
+                    </span>
                   </h3>
-                  {activeFilter && (
-                    <button
-                      onClick={() => setActiveFilter(null)}
-                      className="text-xs font-bold text-brand-600 hover:text-brand-700 underline cursor-pointer"
-                    >
-                      Clear Active Filter (Show All {allRows.length})
-                    </button>
-                  )}
+                  
+                  {/* View Density Switcher: Quick Staff View vs Detailed Matrix */}
+                  <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                    <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-200/80 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setTableDensity('quick')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          tableDensity === 'quick'
+                            ? 'bg-brand-600 text-white shadow-xs'
+                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+                        }`}
+                        title="Reduced essential columns for fast staff and faculty review"
+                      >
+                        <span>⚡ Quick Staff View</span>
+                        <span className="text-[9px] opacity-80 font-mono px-1 rounded bg-black/15 font-bold">Fast</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTableDensity('full')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                          tableDensity === 'full'
+                            ? 'bg-brand-600 text-white shadow-xs'
+                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+                        }`}
+                        title="Full detailed matrix with all columns including Q1-Q4, Cutoff, and Accommodation"
+                      >
+                        <span>📊 Detailed Full View</span>
+                      </button>
+                    </div>
+
+                    {activeFilter && (
+                      <button
+                        onClick={() => setActiveFilter(null)}
+                        className="text-xs font-bold text-brand-600 hover:text-brand-700 underline cursor-pointer ml-1"
+                      >
+                        Clear Filter (Show All {allRows.length})
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Mobile Card View (< sm) - Compact, Crisp White & Clean */}
@@ -2351,24 +2386,32 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                 {/* Desktop Table View (>= sm) */}
                 <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                  <table className="w-full text-left text-xs mobile-card-table min-w-[650px] sm:min-w-[950px] print:min-w-0 print:w-full">
+                  <table className={`w-full text-left text-xs mobile-card-table ${tableDensity === "quick" ? "min-w-[600px] sm:min-w-[760px]" : "min-w-[850px] sm:min-w-[1100px]"} print:min-w-0 print:w-full`}>
                     <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                       {isFridayOfficial ? (
                         <tr>
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
-                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Department</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                          <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
+                          {tableDensity === 'full' && (
+                            <>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                              <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
+                            </>
+                          )}
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
-                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
-                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
-                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                          {tableDensity === 'full' ? (
+                            <>
+                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
+                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
+                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
+                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                            </>
+                          ) : null}
                           <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
@@ -2382,14 +2425,22 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                          {tableDensity === 'full' && (
+                            <>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                            </>
+                          )}
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q1</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q2</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q3</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q4</th>
+                          {tableDensity === 'full' ? (
+                            <>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Q1</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Q2</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Q3</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Q4</th>
+                            </>
+                          ) : null}
                           <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                           <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
@@ -2403,30 +2454,43 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black sticky left-[140px] z-20 bg-slate-900 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]">Student Name</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                          <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                          <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                          {displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
+                          {tableDensity === 'full' && (
                             <>
-                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
-                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
-                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
-                              <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
                             </>
+                          )}
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                          {tableDensity === 'full' ? (
+                            displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
+                              <>
+                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
+                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
+                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
+                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                              </>
+                            ) : (
+                              <>
+                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
+                              </>
+                            )
                           ) : (
                             <>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
-                              <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Solved</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Easy</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Med</th>
+                              <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Hard</th>
                             </>
                           )}
                           <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rank</th>
@@ -2450,25 +2514,33 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                               <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                               <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
-                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
-                              <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
+                              {tableDensity === 'full' && (
+                                <>
+                                  <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
+                                  <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
+                                </>
+                              )}
                               <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                 {getStatusBadge(s.status)}
                               </td>
-                              <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                              </td>
-                              <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                              </td>
-                              <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                              </td>
-                              <td className="px-3 py-2.5 text-center font-black">
-                                {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                              </td>
+                              {tableDensity === 'full' ? (
+                                <>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                </>
+                              ) : null}
                               <td className="px-4 py-2.5 text-center font-black text-sm">
                                 {isPart && cSolved !== null ? (
                                   <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
