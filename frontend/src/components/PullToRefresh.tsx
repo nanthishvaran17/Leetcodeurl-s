@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { RefreshCw, ArrowDown, Check } from 'lucide-react';
 
 interface PullToRefreshProps {
@@ -8,7 +7,7 @@ interface PullToRefreshProps {
   disabled?: boolean;
 }
 
-const PULL_THRESHOLD = 68;
+const PULL_THRESHOLD = 64;
 const MAX_PULL_DISTANCE = 88;
 
 /**
@@ -42,13 +41,6 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   children,
   disabled = false
 }) => {
-  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
-
-  // On native mobile app (Capacitor), let native WebView handle 120Hz momentum scrolling freely without touch interception
-  if (disabled || isNative) {
-    return <>{children}</>;
-  }
-
   const [pullDistance, setPullDistance] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isThresholdReached, setIsThresholdReached] = useState<boolean>(false);
@@ -113,14 +105,14 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       return;
     }
 
-    // Deadzone: only activate pull if user has pulled downward at least 24px with clear vertical intent
-    if (deltaY > 24 && deltaY > Math.abs(deltaX) * 2) {
+    // Deadzone: activate pull once vertical intent is detected
+    if (deltaY > 8 && deltaY > Math.abs(deltaX) * 1.2) {
       if (e.cancelable) {
         e.preventDefault();
       }
 
       // Smooth rubberband dampening curve
-      const damped = Math.min((deltaY - 14) * 0.42, MAX_PULL_DISTANCE);
+      const damped = Math.min((deltaY - 8) * 0.44, MAX_PULL_DISTANCE);
       setPullDistance(damped);
 
       if (damped >= PULL_THRESHOLD && !reachedThresholdRef.current) {
@@ -150,7 +142,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     }
 
     const winY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    if (winY > 1 || isScrolledDown(e.target)) {
+    if (winY > 2 || isScrolledDown(e.target)) {
       isPullingRef.current = false;
       detachTouchMove();
       return;
@@ -159,8 +151,9 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const touchY = e.touches[0]?.clientY || 0;
     const touchX = e.touches[0]?.clientX || 0;
 
-    // Only trigger if touch starts in the top area of the screen (top 200px)
-    if (touchY > 100) {
+    // Allow pull gesture to start anywhere in the upper 75% of the viewport when scrolled to top
+    const maxAllowedStartY = typeof window !== 'undefined' ? window.innerHeight * 0.75 : 600;
+    if (touchY > maxAllowedStartY) {
       isPullingRef.current = false;
       detachTouchMove();
       return;
@@ -178,17 +171,17 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
 
   const executeRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    setPullDistance(46); // Keep capsule parked visibly
+    setPullDistance(48); // Keep capsule parked visibly
     triggerHaptic([18, 32, 18]);
 
-    // Safety timeout: automatically release after 4s
+    // Safety timeout: automatically release after 4.5s
     if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
     safetyTimeoutRef.current = setTimeout(() => {
       setIsRefreshing(false);
       setIsThresholdReached(false);
       setIsSuccess(false);
       setPullDistance(0);
-    }, 4000);
+    }, 4500);
 
     try {
       // 1. Dispatch custom events to refresh any active page
@@ -236,7 +229,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     }
   }, [disabled, isRefreshing, detachTouchMove, executeRefresh]);
 
-  // Touch event listeners for mobile / touch devices only
+  // Touch event listeners for mobile / touch devices
   useEffect(() => {
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -261,6 +254,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     };
   }, [handleTouchStart, handleTouchEnd, detachTouchMove]);
 
+  const progressPercent = Math.min((pullDistance / PULL_THRESHOLD) * 100, 100);
   const rotation = Math.min((pullDistance / PULL_THRESHOLD) * 360, 360);
 
   return (
@@ -268,9 +262,10 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       {/* Floating Refresh Indicator Capsule (Smooth Spring Below Top Navbar) */}
       {(pullDistance > 6 || isRefreshing) && (
         <div
-          className="fixed left-0 right-0 top-14 sm:top-16 z-[999999] pointer-events-none flex justify-center transition-transform duration-100 ease-out"
+          className="fixed left-0 right-0 top-14 sm:top-16 z-[999999] pointer-events-none flex justify-center"
           style={{
             transform: `translate3d(0, ${pullDistance}px, 0)`,
+            transition: isPullingRef.current ? 'none' : 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease',
             opacity: Math.min(pullDistance / 14, 1)
           }}
         >
@@ -290,10 +285,23 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
             ) : isThresholdReached ? (
               <ArrowDown className="w-4 h-4 text-white stroke-[2.5] animate-bounce" />
             ) : (
-              <RefreshCw
-                className="w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform"
-                style={{ transform: `rotate(${rotation}deg)` }}
-              />
+              <div className="relative w-4 h-4 flex items-center justify-center">
+                <RefreshCw
+                  className="w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform"
+                  style={{ transform: `rotate(${rotation}deg)` }}
+                />
+                <svg className="absolute inset-0 -rotate-90 pointer-events-none w-4 h-4" viewBox="0 0 36 36">
+                  <path
+                    className="text-brand-500"
+                    strokeDasharray={`${progressPercent}, 100`}
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+              </div>
             )}
             <span className="text-xs font-black tracking-wide font-sans">
               {isSuccess
@@ -309,7 +317,15 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       )}
 
       {/* Page Content with Native Elastic Pull Feedback on Touch */}
-      <div className="w-full min-h-full flex-1 flex flex-col">
+      <div
+        className="w-full min-h-full flex-1 flex flex-col will-change-transform"
+        style={{
+          transform: (pullDistance > 0 || isRefreshing)
+            ? `translate3d(0, ${isRefreshing ? 44 : Math.round(pullDistance * 0.42)}px, 0)`
+            : undefined,
+          transition: isPullingRef.current ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1)'
+        }}
+      >
         {children}
       </div>
     </div>
