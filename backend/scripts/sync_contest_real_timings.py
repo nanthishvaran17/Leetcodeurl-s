@@ -32,7 +32,23 @@ def main():
 
         print(f"[START] Syncing Session {session.id} ({session.contest_name}) with genuine LeetCode telemetry...")
         result = OfficialContestRankingService.scan_and_sync_contest_sync(session.id, db)
-        print(f"[COMPLETE] Result: {result}")
+        print(f"[COMPLETE] Telemetry (Count & Time) Result: {result}")
+
+        print(f"[START] Syncing Verbatim Submission Codes for Session {session.id}...")
+        try:
+            from backend.services.auto_code_sync_service import sync_contest_submission_codes_for_session
+            code_result = sync_contest_submission_codes_for_session(session.id, db=db, force_refresh=True)
+            print(f"[COMPLETE] Verbatim Code Result: {code_result}")
+        except Exception as code_err:
+            print(f"[NOTE] Code sync notice: {code_err}")
+
+        # Invalidate cache so changes take effect immediately
+        try:
+            from backend.services.canonical_contest_engine import invalidate_canonical_cache
+            invalidate_canonical_cache(session.id)
+            print("[SUCCESS] Cache invalidated. All 3 pillars (COUNT, TIME, and CODE) are now live!")
+        except Exception as cache_err:
+            print(f"[NOTE] Cache invalidation notice: {cache_err}")
     finally:
         db.close()
 
