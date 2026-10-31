@@ -818,7 +818,7 @@ def generate_master_10_sheet_workbook(
 
         elif s_name == "01 Official Leaderboard":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=15)  # type: ignore
-            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Contest Rank", "Rating"]
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Status", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score", "Contest Rank", "Rating"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["status"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s.get("rank") or (idx + 1), f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A"] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
@@ -858,7 +858,7 @@ def generate_master_10_sheet_workbook(
 
         elif s_name == "02 Complete Student Roster":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)  # type: ignore
-            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Mentor Signal"]
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
@@ -878,11 +878,11 @@ def generate_master_10_sheet_workbook(
         elif s_name == "04 Contest Performance":
             if report_type == "FACULTY_CONSOLIDATED":
                 write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=11)  # type: ignore
-                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Mentor Signal"]
+                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Mentor Signal"]
                 rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
             else:
                 write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)  # type: ignore
-                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1", "Q2", "Q3", "Q4", "Contest Solved"]
+                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved"]
                 rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
@@ -949,7 +949,7 @@ def generate_master_10_sheet_workbook(
         elif s_name == "Contest Performance Ranking":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)  # type: ignore
             sorted_by_rank = sorted(normalized_students, key=lambda s: -s["solved"])
-            headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Contest Rank", "Rating"]
+            headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score", "Contest Rank", "Rating"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], idx + 1, f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A"] for idx, s in enumerate(sorted_by_rank)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 

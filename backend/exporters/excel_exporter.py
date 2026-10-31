@@ -1126,7 +1126,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws1[f"A{r_sec}"].alignment = ALIGN_CENTER
     ws1.row_dimensions[r_sec].height = 24
 
-    perf_headers = ["Metric", "4/4 (Perfect)", "3/4 Solvers", "2/4 Solvers", "1/4 Solvers", "0/4 / Absent", "Q1 Solves", "Q2 Solves", "Q3 Solves", "Q4 Solves"]
+    perf_headers = ["Metric", "4/4 (Perfect)", "3/4 Solvers", "2/4 Solvers", "1/4 Solvers", "0/4 / Absent", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)"]
     r_perf_hdr = r_sec + 1
     for c_i, h in enumerate(perf_headers, 1):
         cell = ws1.cell(row=r_perf_hdr, column=c_i, value=h)
@@ -1150,7 +1150,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     ws2 = wb.create_sheet(title="Complete Student Roster")
     _write_college_header(ws2, f"STUDENT ROSTER — ALPHABETICAL ORDER ({tot_students} STUDENTS)", dept_header_text, 12, metadata_block)
     r2_hdr = 7
-    s2_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username", "Status", "Q1", "Q2", "Q3", "Q4", "Solved"]
+    s2_headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Username", "Status", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved"]
     for c_i, h in enumerate(s2_headers, 1):
         cell = ws2.cell(row=r2_hdr, column=c_i, value=h)
         cell.font = FONT_TBL_HDR
@@ -1289,7 +1289,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws10 = wb.create_sheet(title="Department Summary")
         _write_college_header(ws10, f"{contest_name.upper()} — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
         r10_hdr = 7
-        s10_headers = ["S.No", "Department Name", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Q1", "Q2", "Q3", "Q4", "Total Solves"]
+        s10_headers = ["S.No", "Department Name", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Total Solves"]
         for c_i, h in enumerate(s10_headers, 1):
             cell = ws10.cell(row=r10_hdr, column=c_i, value=h)
             cell.font = FONT_TBL_HDR
@@ -1417,7 +1417,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _write_college_header(ws_yr, title_text, f"DEPARTMENT OF {dept_name} ({full_dept}) • {year_label}", 12, metadata_block)
         
         yr_hdr_row = 7
-        yr_headers = ["S.No", "Register No", "Student Name", "LeetCode Username", "Status", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Rank"]
+        yr_headers = ["S.No", "Register No", "Student Name", "LeetCode Username", "Status", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score", "Rank"]
         for c_i, h in enumerate(yr_headers, 1):
             cell = ws_yr.cell(row=yr_hdr_row, column=c_i, value=h)
             cell.font = FONT_TBL_HDR

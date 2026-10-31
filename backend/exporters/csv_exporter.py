@@ -42,29 +42,39 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
 
     if contest_rows and has_contest_questions:
         writer.writerow([
-            "S.No", "Register No", "Student Name", "Dept", "Year", "Accommodation", "12th Cutoff", "Contests Attended",
-            "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Total Solved", "Contest Easy", "Contest Medium", "Contest Hard", "Global Rank", "Contest Rating"
+            "S.No", "Register No", "Student Name", "Dept", "Year",
+            "Status", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Contest Solved", "Score", "Global Rank", "Contest Rating"
         ])
         for idx, r in enumerate(contest_rows, start=1):
+            # Calculate strict contest solved for that specific contest (0 to 4)
+            q1_v = 1 if str(r.get("q1", "")).strip() in ("1", "1.0", "True") else 0
+            q2_v = 1 if str(r.get("q2", "")).strip() in ("1", "1.0", "True") else 0
+            q3_v = 1 if str(r.get("q3", "")).strip() in ("1", "1.0", "True") else 0
+            q4_v = 1 if str(r.get("q4", "")).strip() in ("1", "1.0", "True") else 0
+            c_sum = q1_v + q2_v + q3_v + q4_v
+            
+            raw_c = r.get("contest_solved")
+            if raw_c is not None:
+                try:
+                    c_solved = int(raw_c)
+                except (ValueError, TypeError):
+                    c_solved = c_sum
+            else:
+                c_solved = c_sum
+
             writer.writerow([
                 idx,
                 str(r.get("reg_no", "")).strip().upper(),
                 str(r.get("name") or r.get("student_name") or "").strip().upper(),
                 r.get("dept", r.get("department", "")),
                 r.get("year", r.get("year_level", "")),
-                _fmt_acc(r.get("accommodation") or r.get("accomodation") or r.get("accommodation_type")),
-                _fmt_cutoff(r.get("twelfth_cutoff") if r.get("twelfth_cutoff") is not None else (r.get("cutoff") if r.get("cutoff") is not None else r.get("twelfthCutoff"))),
-                r.get("contests_attended", r.get("total_attended", 0)),
                 r.get("status", "NOT ATTENDED"),
-                r.get("contest_name", dataset.get("contestName", "")),
-                r.get("q1", "—"),
-                r.get("q2", "—"),
-                r.get("q3", "—"),
-                r.get("q4", "—"),
-                r.get("total_solved") if r.get("total_solved") is not None else (r.get("contest_solved", "—")),
-                r.get("contest_easy", 0),
-                r.get("contest_medium", 0),
-                r.get("contest_hard", 0),
+                r.get("q1_display") or r.get("q1") or "—",
+                r.get("q2_display") or r.get("q2") or "—",
+                r.get("q3_display") or r.get("q3") or "—",
+                r.get("q4_display") or r.get("q4") or "—",
+                c_solved,
+                r.get("score") if r.get("score") is not None else 0,
                 r.get("global_rank") or r.get("contest_global_ranking") or "—",
                 r.get("contest_rating") or r.get("rating") or "—"
             ])
@@ -88,9 +98,8 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
             ])
     else:
         writer.writerow([
-            "S.No", "Register No", "Student Name", "Department", "Year", "Accommodation", "12th Cutoff", "Contests Attended",
-            "Total Solved", "Contest Easy", "Contest Medium", "Contest Hard",
-            "Easy Solved", "Medium Solved", "Hard Solved", "Global Rank", "Contest Rating", "Status"
+            "S.No", "Register No", "Student Name", "Department", "Year",
+            "Easy", "Medium", "Hard", "Total Solved", "Contests Attended", "Global Rank", "Contest Rating", "Status"
         ])
         rows_to_export = all_students or contest_rows
         for idx, s in enumerate(rows_to_export, start=1):
@@ -100,19 +109,14 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 str(s.get("name") or s.get("student_name") or "").strip().upper(),
                 s.get("dept", s.get("department", "")),
                 s.get("year", s.get("year_level", "")),
-                _fmt_acc(s.get("accommodation") or s.get("accomodation") or s.get("accommodation_type")),
-                _fmt_cutoff(s.get("twelfth_cutoff") if s.get("twelfth_cutoff") is not None else (s.get("cutoff") if s.get("cutoff") is not None else s.get("twelfthCutoff"))),
+                s.get("easy") if s.get("easy") is not None else (s.get("easy_solved", 0)),
+                s.get("medium") if s.get("medium") is not None else (s.get("medium_solved", 0)),
+                s.get("hard") if s.get("hard") is not None else (s.get("hard_solved", 0)),
+                s.get("total_solved") if s.get("total_solved") is not None else (s.get("totalSolved", 0)),
                 s.get("contests_attended", s.get("total_attended", 0)),
-                s.get("total_solved") if s.get("total_solved") is not None else (s.get("totalSolved", "")),
-                s.get("contest_easy", 0),
-                s.get("contest_medium", 0),
-                s.get("contest_hard", 0),
-                s.get("easy") if s.get("easy") is not None else (s.get("easy_solved", "")),
-                s.get("medium") if s.get("medium") is not None else (s.get("medium_solved", "")),
-                s.get("hard") if s.get("hard") is not None else (s.get("hard_solved", "")),
-                s.get("global_rank") if s.get("global_rank") is not None else (s.get("contest_global_ranking") or s.get("profile_rank") or ""),
-                s.get("contest_rating") or s.get("rating") or "",
-                s.get("status") or s.get("verification_status") or "UNVERIFIED"
+                s.get("global_rank") if s.get("global_rank") is not None else (s.get("contest_global_ranking") or s.get("profile_rank") or "—"),
+                s.get("contest_rating") or s.get("rating") or "—",
+                s.get("status") or s.get("verification_status") or "ACTIVE"
             ])
 
     return output.getvalue().encode('utf-8-sig') # UTF-8 BOM for Excel compatibility

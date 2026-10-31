@@ -151,8 +151,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     ws.page_margins.bottom = 0.4
 
     # Extract metadata context
-    contest_name = str(dataset.get("contestName") or (dataset.get("current_session") or {}).get("contest_name") or dataset.get("title") or "WEEKLY CONTEST").split("\n")[0].strip()
+    raw_contest_name = str(dataset.get("contestName") or (dataset.get("current_session") or {}).get("contest_name") or dataset.get("title") or "").split("\n")[0].strip()
     session_date = str(dataset.get("sessionDate") or dataset.get("session_date") or (dataset.get("current_session") or {}).get("session_date") or dataset.get("report_date") or "").strip()
+    contest_name = raw_contest_name or "WEEKLY CONTEST"
     dept = str(dataset.get("deptFilter") or dataset.get("department") or "ALL").upper().strip()
     year = str(dataset.get("yearFilter") or dataset.get("year") or "ALL").upper().strip()
 
@@ -187,9 +188,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
     is_five_week = (report_type in ("FIVE_WEEK_PERFORMANCE_TREND", "FIVE_WEEK_TREND")) or ("c1_solved" in first_row)
     is_historical = (report_type == "HISTORICAL_CONTEST_INTELLIGENCE") or ("weeklyData" in first_row)
     is_single_contest = (
-        any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST", "SINGLE_CONTEST", "SINGLE_SHEET"))
+        any(k in report_type for k in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST", "SINGLE_CONTEST", "SINGLE_SHEET", "BIWEEKLY", "PARTICIPATION", "RANKING", "CONTEST_INTELLIGENCE"))
         or any(k in first_row for k in ("q1_display", "q1_time", "contest_solved", "q1", "contest_easy"))
-        or (bool(session_date or contest_name) and report_type in ("12TH_TNEA_CUTOFF_ANALYSIS", "HOD_DEPARTMENT_INTELLIGENCE", "LEADERBOARD", "WEEKLY_STUDENT_PERFORMANCE"))
+        or (bool(session_date or raw_contest_name) and report_type in ("12TH_TNEA_CUTOFF_ANALYSIS", "HOD_DEPARTMENT_INTELLIGENCE", "LEADERBOARD") and any(k in first_row for k in ("q1_display", "q1_time", "q1", "contest_solved")))
     ) and not is_historical and not is_wow and not is_five_week and "COORDINATOR" not in report_type
 
     if is_wow:
@@ -237,16 +238,10 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("Dept", "dept"),
             ("Yr", "year"),
             (f"{prev_c_lbl} Status", "prev_status"),
-            (f"{prev_c_lbl} Easy", "prev_easy"),
-            (f"{prev_c_lbl} Medium", "prev_medium"),
-            (f"{prev_c_lbl} Hard", "prev_hard"),
-            (f"{prev_c_lbl} Total Solved", "prev_solved"),
+            (f"{prev_c_lbl} Solved", "prev_solved"),
             (f"{prev_c_lbl} Score", "prev_score"),
             (f"{curr_c_lbl} Status", "curr_status"),
-            (f"{curr_c_lbl} Easy", "curr_easy"),
-            (f"{curr_c_lbl} Medium", "curr_medium"),
-            (f"{curr_c_lbl} Hard", "curr_hard"),
-            (f"{curr_c_lbl} Total Solved", "curr_solved"),
+            (f"{curr_c_lbl} Solved", "curr_solved"),
             (f"{curr_c_lbl} Score", "curr_score"),
             ("Δ Solved", "solved_delta"),
             ("Trend", "trend"),
@@ -277,8 +272,8 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("Department", ["dept", "department", "dept_name", "department_code", "department_name"]),
             ("Year", ["year", "year_level", "academic_year", "yr"]),
         ]
-        # Only include Accommodation & 12th Cutoff if specifically a cutoff/accreditation report or general roster
-        if not is_single_contest or "CUTOFF" in report_type:
+        # Only include Accommodation & 12th Cutoff if specifically a cutoff/accreditation report
+        if "CUTOFF" in report_type:
             BASE_DEMOGRAPHIC.extend([
                 ("Accommodation", ["accommodation", "accomodation", "hostel_dayscholar", "residence"]),
                 ("12th Cutoff", ["twelfth_cutoff", "cutoff", "cutoff_mark", "12th_cutoff", "twelfth_cutoff_mark"]),
