@@ -370,7 +370,7 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
                   No students found matching &quot;{inputValue}&quot;
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                  Try searching with student name or register number (e.g. 732224CC008)
+                  Try searching with student name or register number (e.g. 732224CC031)
                 </p>
               </div>
             ) : (

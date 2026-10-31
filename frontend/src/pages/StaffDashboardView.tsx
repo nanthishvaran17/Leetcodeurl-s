@@ -974,7 +974,7 @@ NEC LeetCode Intelligence Portal`;
                         ? 'border-brand-500 ring-2 ring-brand-500/20 dark:border-brand-400'
                         : selectedStudentFilter !== 'ALL'
                         ? 'border-brand-300 dark:border-brand-700 bg-brand-50/30 dark:bg-brand-950/30'
-                        : 'border-slate-200 dark:border-navy-700'
+                        : 'border-slate-300 dark:border-navy-700 hover:border-purple-400'
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1040,7 +1040,7 @@ NEC LeetCode Intelligence Portal`;
                           onChange={(e) => setStudentSelectSearch(e.target.value)}
                           onMouseDown={(e) => e.stopPropagation()}
                           placeholder="Search student or reg no..."
-                          className="w-full h-9 pl-9 pr-7 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder:text-slate-400 text-left"
+                          className="w-full h-9 pl-9 pr-7 rounded-xl bg-white dark:bg-navy-900 border border-purple-200/90 hover:border-purple-400 dark:border-purple-800/80 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 placeholder:text-slate-400 text-left shadow-xs"
                         />
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
                           <Search className="w-3.5 h-3.5" />
@@ -1173,7 +1173,7 @@ NEC LeetCode Intelligence Portal`;
                     type="button"
                     onClick={() => setIsFilterOpen(p => !p)}
                     className={`h-10 flex items-center gap-2 bg-white dark:bg-navy-950 px-3.5 rounded-2xl border shadow-xs text-left transition-all hover:border-indigo-400 dark:hover:border-indigo-500 focus:outline-none cursor-pointer ${
-                      isFilterOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20 dark:border-indigo-400' : 'border-slate-200 dark:border-navy-700'
+                      isFilterOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20 dark:border-indigo-400' : 'border-slate-300 dark:border-navy-700 hover:border-purple-400'
                     }`}
                   >
                     <Filter className="w-3.5 h-3.5 text-indigo-500 shrink-0" />

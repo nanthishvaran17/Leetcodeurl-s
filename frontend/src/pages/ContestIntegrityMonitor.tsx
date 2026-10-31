@@ -1,3 +1,4 @@
+import { ModernSearchInput } from "../components/ui/ModernSearchInput";
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -475,28 +476,14 @@ export const ContestIntegrityMonitor: React.FC = () => {
           {activeTab === 'CASES' && (
             <div className="flex items-center gap-3 w-full lg:w-auto flex-wrap sm:flex-nowrap justify-end flex-1 min-w-0">
               {/* Search Bar */}
-              <div className="relative flex-1 min-w-[200px] sm:max-w-xs flex items-center">
-                <input
-                  type="text"
-                  placeholder="Search by name, reg no, username..."
+              <div className="flex-1 min-w-[200px] sm:max-w-xs">
+                <ModernSearchInput
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50/60 dark:bg-navy-900/60 text-xs font-bold text-slate-900 dark:text-white placeholder:font-normal placeholder:text-slate-400 focus:bg-white dark:focus:bg-navy-900 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-left transition"
+                  onChange={setSearchTerm}
+                  onClear={() => setSearchTerm('')}
+                  placeholder="Search name, reg no, username..."
+                  className="w-full"
                 />
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
-                  <Search size={15} />
-                </div>
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 transition cursor-pointer z-10"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
               </div>
 
               {/* Status Filter Buttons */}

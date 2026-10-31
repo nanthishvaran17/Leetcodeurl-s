@@ -213,7 +213,7 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
     # 0. Active Faculty/Staff Student Allocation Precedence:
     # If the user has assigned student mentees (e.g. 21 students) and is not a top-level institutional administrator,
     # strictly scope the query to their allocated students.
-    if u_id and role not in ("admin", "administrator", "super admin", "super_admin", "principal", "management", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"):
+    if u_id and role not in ("admin", "administrator", "super admin", "super_admin", "principal", "management", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer", "hod", "department hod", "department_hod"):
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, u_id)
         if assigned_ids:
             return query.filter(Student.id.in_(assigned_ids))

@@ -709,14 +709,14 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                     </span>
                     
                     {/* Quick Search */}
-                    <div className="relative min-w-[160px]">
-                      <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <div className="relative min-w-[180px] flex items-center rounded-xl bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400 dark:border-purple-500/30 shadow-xs focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
+                      <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-purple-600 dark:text-purple-400 stroke-[2.5] pointer-events-none" />
                       <input
                         type="text"
                         placeholder="Search student..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-7 pr-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-white"
+                        className="w-full pl-7 pr-2.5 py-1 text-xs font-semibold bg-transparent text-slate-800 dark:text-white placeholder:text-slate-400 outline-none"
                       />
                     </div>
                   </div>

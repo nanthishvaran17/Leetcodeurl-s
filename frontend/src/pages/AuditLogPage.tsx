@@ -534,7 +534,7 @@ export const AuditLogPage: React.FC = () => {
         </div>
 
         {/* 1. Search Bar */}
-        <div className="relative flex items-center w-full">
+        <div className="group relative flex items-center w-full h-10 sm:h-11 rounded-2xl bg-white dark:bg-[#0b0f19] border border-purple-200/90 hover:border-purple-400/90 dark:border-purple-500/30 shadow-[0_2px_12px_rgba(168,85,247,0.06)] focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all duration-200">
           <input
             id="audit-search-input"
             type="text"
@@ -547,10 +547,10 @@ export const AuditLogPage: React.FC = () => {
                 fetchLogs();
               }
             }}
-            className="w-full h-10 sm:h-11 bg-slate-50/80 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs font-bold py-2 pl-9 pr-9 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-left transition-all"
+            className="flex-1 w-full min-w-0 bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs sm:text-sm font-semibold py-2 pl-9 pr-9 focus:outline-none text-left"
           />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-600 dark:text-slate-300">
-            <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-purple-600 dark:text-purple-400 group-focus-within:text-purple-600 transition-colors stroke-[2.5]">
+            <Search className="w-4 h-4 stroke-[2.5]" />
           </div>
           {searchTerm && (
             <button

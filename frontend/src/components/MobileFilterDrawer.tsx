@@ -162,14 +162,14 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
               Search Student
             </label>
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <div className="relative flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400/90 dark:border-purple-500/30 shadow-[0_2px_12px_rgba(168,85,247,0.06)] focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
+              <Search className="w-4 h-4 absolute left-3.5 text-purple-600 dark:text-purple-400 pointer-events-none stroke-[2.5]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, reg. no, username..."
-                className="w-full pl-9 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/[0.04] text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none min-h-[44px]"
+                className="w-full pl-10 pr-10 py-3 rounded-2xl bg-transparent text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none min-h-[44px]"
               />
               {searchQuery && (
                 <button 

@@ -471,9 +471,9 @@ export const StaffManagement: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             autoComplete="off"
             spellCheck={false}
-            className="w-full h-9 pl-9 pr-8 text-xs font-bold rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm text-left transition-all"
+            className="w-full h-10 pl-9 pr-8 text-xs font-bold rounded-2xl border border-purple-200/90 hover:border-purple-400 dark:border-purple-500/30 bg-white dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none shadow-[0_2px_10px_rgba(168,85,247,0.06)] text-left transition-all"
           />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-purple-600 dark:text-purple-400 stroke-[2.5]">
             <Search className="w-4 h-4 stroke-[2.5]" />
           </div>
           {searchQuery && (

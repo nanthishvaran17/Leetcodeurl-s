@@ -633,9 +633,9 @@ export const AdminStaffAllocationPanel: React.FC = () => {
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
             
             {/* Search Bar Input Container */}
-            <div className="relative flex-1 min-w-[200px] flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700/80 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 transition-all shadow-xs group">
+            <div className="relative flex-1 min-w-[200px] flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400/90 dark:border-purple-500/30 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 shadow-[0_2px_10px_rgba(168,85,247,0.06)] transition-all shadow-xs group">
               <div className="pl-3.5 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-brand-500 group-focus-within:scale-110 transition-all" />
+                <Search className="w-4 h-4 text-purple-600 dark:text-purple-400 stroke-[2.5] transition-all" />
               </div>
               <input
                 type="text"
@@ -1002,8 +1002,8 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                 <label className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider h-4 leading-4">
                   Search Query
                 </label>
-                <div className="relative flex items-center rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 h-10 sm:h-11 transition-all group">
-                  <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-sky-500 ml-3 transition-colors shrink-0" />
+                <div className="relative flex items-center rounded-2xl border border-purple-200/90 hover:border-purple-400/90 dark:border-purple-500/30 bg-white dark:bg-slate-800/90 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 shadow-[0_2px_10px_rgba(168,85,247,0.06)] h-10 sm:h-11 transition-all group">
+                  <Search className="w-4 h-4 text-purple-600 dark:text-purple-400 ml-3 stroke-[2.5] transition-colors shrink-0" />
                   <input
                     type="text"
                     value={searchQuery}

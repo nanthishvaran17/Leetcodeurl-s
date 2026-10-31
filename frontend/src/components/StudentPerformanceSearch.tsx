@@ -276,7 +276,7 @@ export const StudentPerformanceSearch: React.FC<StudentPerformanceSearchProps> =
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || 'Search name, reg no (e.g. 732224CC008)...'}
+          placeholder={placeholder || 'Search name, reg no (e.g. 732224CC031)...'}
           className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left ${
             (inputValue || isLoading) ? 'pr-9' : 'pr-3.5'
           }`}
@@ -341,7 +341,7 @@ export const StudentPerformanceSearch: React.FC<StudentPerformanceSearchProps> =
                   No students found matching &quot;{inputValue}&quot;
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                  Try searching with student name or register number (e.g. 732224CC008)
+                  Try searching with student name or register number (e.g. 732224CC031)
                 </p>
               </div>
             ) : (

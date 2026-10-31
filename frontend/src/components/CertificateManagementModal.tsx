@@ -761,13 +761,13 @@ export const CertificateManagementModal: React.FC<{
 
                         {/* Search Input */}
                         <div className="relative">
-                          <Search className="w-4.5 h-4.5 absolute left-3.5 top-3.5 text-amber-600 dark:text-amber-400" />
+                          <Search className="w-4.5 h-4.5 absolute left-3.5 top-3.5 text-purple-600 dark:text-purple-400 stroke-[2.5]" />
                           <input
                             type="text"
                             placeholder="Search by Name, Register No, or LeetCode username..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-10 py-3 bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-navy-600 rounded-2xl text-xs sm:text-sm text-slate-950 dark:text-white placeholder-slate-500 font-bold focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-inner transition-all"
+                            className="w-full pl-10 pr-10 py-3 bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400 dark:border-purple-500/30 rounded-2xl text-xs sm:text-sm text-slate-950 dark:text-white placeholder-slate-400 font-bold focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 shadow-[0_2px_12px_rgba(168,85,247,0.06)] transition-all"
                           />
                           {searchQuery && (
                             <button

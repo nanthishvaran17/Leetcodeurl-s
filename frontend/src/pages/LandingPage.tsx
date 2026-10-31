@@ -1249,7 +1249,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           }}
           students={students}
           onSelectStudent={onSelectStudent}
-          placeholder="Search name, reg no (e.g. 732224CC008)..."
+          placeholder="Search name, reg no (e.g. 732224CC031)..."
         />
 
         {/* Mobile View: Dedicated Sleek Filter Control Bar */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Swords, Award, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers } from 'lucide-react';
+import {  Swords, Award, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers , X } from "lucide-react";
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api, { clearApiCache } from '../services/api';
@@ -572,15 +572,24 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Search Box Input */}
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <div className="relative flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400/90 dark:border-purple-500/30 shadow-[0_2px_12px_rgba(168,85,247,0.06)] focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
+                <Search className="w-4 h-4 absolute left-3.5 text-purple-600 dark:text-purple-400 pointer-events-none stroke-[2.5]" />
                 <input
                   type="text"
                   placeholder="Search Student A by Name, Reg No..."
                   value={searchA}
                   onChange={(e) => setSearchA(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-brand-300 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none shadow-xs transition"
+                  className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs font-bold bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
                 />
+                {searchA && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchA('')}
+                    className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                )}
               </div>
 
               {/* Custom Dropdown Fighter A */}
@@ -686,15 +695,24 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Search Box Input */}
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+              <div className="relative flex items-center rounded-2xl bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400/90 dark:border-purple-500/30 shadow-[0_2px_12px_rgba(168,85,247,0.06)] focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
+                <Search className="w-4 h-4 absolute left-3.5 text-purple-600 dark:text-purple-400 pointer-events-none stroke-[2.5]" />
                 <input
                   type="text"
                   placeholder="Search Student B by Name, Reg No..."
                   value={searchB}
                   onChange={(e) => setSearchB(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-indigo-300 dark:border-navy-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none shadow-xs transition"
+                  className="w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs font-bold bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
                 />
+                {searchB && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchB('')}
+                    className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                )}
               </div>
 
               {/* Custom Dropdown Fighter B */}
