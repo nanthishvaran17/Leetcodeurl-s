@@ -784,30 +784,35 @@ const ReportHubModal: React.FC<{
  }
  };
 
- const handleDownloadPdf = async () => {
- setDownloadingPdf(true);
- try {
- const qParam = getFilterQueryParams();
- const deptSlug = reportScope.departmentCode !== 'ALL' ? `_${reportScope.departmentCode}` : '_ALL';
- const yearSlug = selectedYear !== 'ALL' ? `_Yr${selectedYear}` : '';
- const secSlug = selectedSection !== 'ALL' ? `_Sec${selectedSection}` : '';
- const filename = `NEC_${selectedReportType}_Report${deptSlug}${yearSlug}${secSlug}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      const qsParams = new URLSearchParams();
+      qsParams.append('report_type', selectedReportType);
+      if (selectedDeptId) qsParams.append('dept_id', String(selectedDeptId));
+      if (selectedYear !== 'ALL') qsParams.append('year_level', selectedYear);
+      if (selectedSection !== 'ALL') qsParams.append('section', selectedSection);
+      if (selectedStatus !== 'ALL') qsParams.append('status_filter', selectedStatus);
 
- const res = await downloadManager.download({
- endpoint: `/reports/export-pdf${qParam}`,
- filename,
- mimeType: 'application/pdf',
- });
- if (!res.success) {
- alert(res.error || "Failed to download PDF report.");
- }
- } catch (err) {
- console.error("Report download error:", err);
- alert("Failed to download PDF report.");
- } finally {
- setDownloadingPdf(false);
- }
- };
+      const yearSlug = selectedYear !== 'ALL' ? `_Yr${selectedYear}` : '';
+      const secSlug = selectedSection !== 'ALL' ? `_Sec${selectedSection}` : '';
+      const filename = `NEC_${selectedReportType}_Report_${currentDeptObj?.code || reportScope.departmentCode}${yearSlug}${secSlug}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      const res = await downloadManager.download({
+        endpoint: `/command-center/reports/export-pdf?${qsParams.toString()}`,
+        filename,
+        mimeType: 'application/pdf',
+      });
+      if (!res.success) {
+        alert(res.error || 'Failed to download PDF report.');
+      }
+    } catch (err) {
+      console.error('Report download error:', err);
+      alert('Failed to download PDF report.');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
  useEffect(() => {
  if (isOpen) {

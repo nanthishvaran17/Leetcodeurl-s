@@ -829,12 +829,19 @@ def download_pdf_report(
                 }
             pdf_bytes = export_dynamic_pdf(pdf_dataset)
         else:
-            pdf_bytes = generate_pdf_report(
+            from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+            dataset, _ = _get_dataset_for_id(
+                report_id=session_id or "latest",
                 db=db,
-                department=eff_dept if eff_dept != "ALL" else None,
-                year=eff_year if eff_year != "ALL" else None,
+                dept=eff_dept,
+                year=eff_year,
+                attendance=attendance if attendance != "ALL" else (status if status != "ALL" else "ALL"),
+                search=search or "",
+                batch=batch or "ALL",
+                report_type=eff_report_type or "SINGLE_SHEET",
                 current_user=current_user
             )
+            pdf_bytes = export_dynamic_pdf(dataset)
 
         # Dynamic filename: pull latest contest number from DB
         today_str = get_ist_date().strftime("%d-%m-%Y")

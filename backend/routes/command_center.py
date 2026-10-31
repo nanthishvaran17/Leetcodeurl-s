@@ -1393,6 +1393,185 @@ def export_command_center_report_excel(
         headers={"Content-Disposition": f'attachment; filename="{dynamic_filename}"'}
     )
 
+
+@router.get("/reports/export-pdf")
+def export_command_center_report_pdf(
+    report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
+    dept_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    section: Optional[str] = Query(None),
+    staff_id: Optional[int] = Query(None),
+    status_filter: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
+):
+    import io
+    import os
+    import datetime
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import landscape, A4
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from fastapi.responses import Response
+    from backend.exporters.dynamic_pdf_exporter import NumberedCanvas
+
+    data = get_report_data(report_type, dept_id, year_level, section, staff_id, status_filter, db, current_user)
+
+    output = io.BytesIO()
+    base_width, doc_height = landscape(A4)
+    margin = 20
+    usable_width = base_width - (margin * 2)
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    college_style = ParagraphStyle('CCCollege', parent=styles['Heading1'], fontSize=12.5, textColor=colors.HexColor("#1B365D"), alignment=1, fontName='Helvetica-Bold', spaceAfter=2)
+    dept_style = ParagraphStyle('CCDept', parent=styles['Heading2'], fontSize=10, textColor=colors.HexColor("#1E293B"), alignment=1, fontName='Helvetica-Bold', spaceAfter=2)
+    title_style = ParagraphStyle('CCTitle', parent=styles['Heading2'], fontSize=9.5, textColor=colors.HexColor("#1B365D"), alignment=1, fontName='Helvetica-Bold', spaceAfter=2)
+    meta_style = ParagraphStyle('CCMeta', parent=styles['Normal'], fontSize=8, textColor=colors.HexColor("#475569"), fontName='Helvetica-Bold', alignment=1, spaceAfter=8)
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    logo_path = os.path.join(base_dir, "assets", "nec_25_logo.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(base_dir, "assets", "round_logo.png")
+
+    if os.path.exists(logo_path):
+        try:
+            img = Image(logo_path, width=42, height=42)
+            img.hAlign = 'CENTER'
+            elements.append(img)
+            elements.append(Spacer(1, 2))
+        except Exception:
+            pass
+
+    elements.append(Paragraph("<b>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</b>", college_style))
+    elements.append(Paragraph(f"<b>{data.get('department_scope', 'All Departments').upper()}</b>", dept_style))
+    raw_title = data.get("report_title", "Command Center Report")
+    elements.append(Paragraph(f"<b>{raw_title.upper()}</b>", title_style))
+    elements.append(Paragraph(f"<b>GENERATED AT: {data.get('generated_at', '')}</b>", meta_style))
+
+    fs = 7.5
+    hs = 8.0
+    cell_style = ParagraphStyle('CCCell', parent=styles['Normal'], fontSize=fs, alignment=1, textColor=colors.HexColor("#0F172A"), leading=fs+2)
+    left_cell_style = ParagraphStyle('CCLeftCell', parent=styles['Normal'], fontSize=fs, alignment=0, textColor=colors.HexColor("#0F172A"), fontName='Helvetica-Bold', leading=fs+2)
+    header_style = ParagraphStyle('CCHdr', parent=styles['Normal'], fontSize=hs, alignment=1, textColor=colors.white, fontName='Helvetica-Bold', leading=hs+2)
+
+    def add_page_decorations(canvas, doc):
+        canvas.saveState()
+        current_width, current_height = doc.pagesize
+        canvas.setStrokeColor(colors.HexColor("#CBD5E1"))
+        canvas.setLineWidth(0.75)
+        canvas.rect(12, 12, current_width - 24, current_height - 24)
+        canvas.restoreState()
+
+    if report_type == "FACULTY_ALLOCATION":
+        headers = ["Faculty Mentor", "Department", "Limit", "Assigned", "Active", "Inactive", "Conversion %", "Total Solves", "Status"]
+        col_widths = [160.0, 75.0, 50.0, 60.0, 55.0, 55.0, 75.0, 75.0, 95.0]
+        table_data = [[Paragraph(f"<b>{h}</b>", header_style) for h in headers]]
+        for fac in data.get("faculty_records", []):
+            table_data.append([
+                Paragraph(str(fac.get("faculty_name") or ""), left_cell_style),
+                Paragraph(str(fac.get("department_code") or ""), cell_style),
+                Paragraph(str(fac.get("max_capacity", 20)), cell_style),
+                Paragraph(str(fac.get("assigned_students", 0)), cell_style),
+                Paragraph(str(fac.get("active_students", 0)), cell_style),
+                Paragraph(str(fac.get("inactive_students", 0)), cell_style),
+                Paragraph(f"{fac.get('conversion_rate_pct', 0)}%", cell_style),
+                Paragraph(str(fac.get("total_mentee_solves", 0)), cell_style),
+                Paragraph(str(fac.get("workload_status", "NORMAL")), cell_style),
+            ])
+        t = Table(table_data, colWidths=col_widths, repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+            ('TOPPADDING', (0, 0), (-1, -1), 3.0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3.0),
+        ]))
+        elements.append(t)
+
+    elif report_type == "INACTIVE_AT_RISK":
+        headers = ["S.No", "Reg No", "Student Name", "Department", "Assigned Faculty Mentor", "Status"]
+        col_widths = [35.0, 95.0, 240.0, 110.0, 220.0, 100.0]
+        table_data = [[Paragraph(f"<b>{h}</b>", header_style) for h in headers]]
+        for s_idx, st in enumerate(data.get("students", []), 1):
+            table_data.append([
+                Paragraph(str(s_idx), cell_style),
+                Paragraph(str(st.get("reg_no") or ""), cell_style),
+                Paragraph(str(st.get("name") or ""), left_cell_style),
+                Paragraph(str(st.get("department") or ""), cell_style),
+                Paragraph(str(st.get("assigned_mentor") or "Unassigned"), left_cell_style),
+                Paragraph("INACTIVE", cell_style),
+            ])
+        t = Table(table_data, colWidths=col_widths, repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+            ('TOPPADDING', (0, 0), (-1, -1), 3.0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3.0),
+        ]))
+        elements.append(t)
+
+    else:
+        # EXECUTIVE or other
+        headers = ["Metric / Department", "Total Students", "Active Solvers", "Inactive", "Health / Participation"]
+        col_widths = [240.0, 140.0, 140.0, 140.0, 140.0]
+        table_data = [[Paragraph(f"<b>{h}</b>", header_style) for h in headers]]
+        kpis = data.get("kpi_summary", {})
+        table_data.append([
+            Paragraph("Overall Department Cohort", left_cell_style),
+            Paragraph(str(kpis.get("total_students", 0)), cell_style),
+            Paragraph(str(kpis.get("active_students", 0)), cell_style),
+            Paragraph(str(kpis.get("inactive_students", 0)), cell_style),
+            Paragraph(f"{kpis.get('overall_health_score', 0)}/100", cell_style),
+        ])
+        for dept_row in data.get("department_health_records", []):
+            table_data.append([
+                Paragraph(str(dept_row.get("department_name") or dept_row.get("code") or ""), left_cell_style),
+                Paragraph(str(dept_row.get("total_students", 0)), cell_style),
+                Paragraph(str(dept_row.get("active_students", 0)), cell_style),
+                Paragraph(str(dept_row.get("inactive_students", 0)), cell_style),
+                Paragraph(f"{dept_row.get('participation_rate', 0)}%", cell_style),
+            ])
+        t = Table(table_data, colWidths=col_widths, repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+            ('TOPPADDING', (0, 0), (-1, -1), 4.0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4.0),
+        ]))
+        elements.append(t)
+
+    doc = SimpleDocTemplate(output, pagesize=(base_width, doc_height), rightMargin=margin, leftMargin=margin, topMargin=20, bottomMargin=30)
+    doc.build(elements, canvasmaker=NumberedCanvas, onFirstPage=add_page_decorations, onLaterPages=add_page_decorations)
+
+    filter_slugs = []
+    if dept_id:
+        from backend.models import Department
+        d = db.query(Department).filter(Department.id == dept_id).first()
+        if d: filter_slugs.append(d.code or f"Dept{d.id}")
+    else:
+        filter_slugs.append("ALL_DEPTS")
+    if year_level and year_level != "ALL": filter_slugs.append(f"Yr{year_level}")
+    if section and section != "ALL": filter_slugs.append(f"Sec{section}")
+    if status_filter and status_filter != "ALL": filter_slugs.append(f"Status_{status_filter}")
+
+    ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    timestamp_slug = datetime.datetime.now(ist_tz).strftime("%Y%m%d_%H%M")
+    report_name_slug = report_type.title().replace("_", "")
+    dynamic_filename = f"NEC_{report_name_slug}_Report_{'_'.join(filter_slugs)}_{timestamp_slug}.pdf"
+
+    return Response(
+        content=output.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{dynamic_filename}"'}
+    )
+
 @router.get("/reports/data")
 def get_report_data(
     report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),

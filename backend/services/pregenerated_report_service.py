@@ -611,13 +611,8 @@ def generate_report_bytes(
         if flt.get("student_id"):
             from backend.exporters.student_pdf_exporter import export_student_pdf_from_dataset
             return export_student_pdf_from_dataset(dataset, rpt)
-        from backend.pdf_generator import generate_pdf_report
-        return generate_pdf_report(
-            db=db,
-            department=dept if dept != "ALL" else None,
-            year=year if year != "ALL" else None,
-            current_user=current_user
-        )
+        from backend.exporters.dynamic_pdf_exporter import export_dynamic_pdf
+        return export_dynamic_pdf(dataset)
     elif fmt == "both":
         if flt.get("student_id"):
             from backend.exporters.zip_exporter import export_student_zip_bundle_from_dataset
@@ -678,3 +673,4 @@ def pregenerate_all_weekly_reports(db: Session, institution_id: str = "NEC"):
             institution_id=institution_id,
             data_version=curr_version
         )
+
