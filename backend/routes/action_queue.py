@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.models import User
-from backend.services.authorization_service import require_security_access
+from backend.security import require_security_access
 from backend.services.faculty_action_engine import FacultyActionEngine
 
 router = APIRouter()

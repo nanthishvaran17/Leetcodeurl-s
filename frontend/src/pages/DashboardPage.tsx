@@ -121,18 +121,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
     const roleClean = (user?.role || '').trim().toLowerCase();
     const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+    const isStaff = ['staff', 'faculty', 'professor', 'mentor', 'staff mentor', 'faculty mentor'].includes(roleClean);
     const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
 
-    if (isHod && !isGlobalRole) {
+    if ((isHod || isStaff) && !isGlobalRole) {
       const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
       const uDeptCode = String(user?.department || (user as any)?.department_code || '').toUpperCase();
       const uDeptId = user?.department_id ? Number(user.department_id) : null;
 
       list = list.filter(dept => {
         const dCode = String(dept.code || dept.department_code || '').toUpperCase();
+        const dName = String(dept.name || dept.department_name || '').toUpperCase();
         const dId = Number(dept.id || dept.department_id);
         if (authCodes.length > 0 && authCodes.includes(dCode)) return true;
-        if (uDeptCode && dCode === uDeptCode) return true;
+        if (uDeptCode && (dCode === uDeptCode || dName === uDeptCode || uDeptCode.includes(dCode))) return true;
         if (uDeptId && dId === uDeptId) return true;
         return false;
       });
@@ -1076,7 +1078,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="stagger-5 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         
         {/* Participation Analytics */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-5">
+        <div className="glass-card p-3.5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
               <PieChart className="w-4 h-4 text-indigo-500" />
@@ -1151,7 +1153,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         {/* Data Quality Board */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm flex flex-col justify-between">
+        <div className="glass-card p-3.5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm flex flex-col justify-between">
           <div className="space-y-5">
             <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
@@ -1199,7 +1201,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 7. DEPARTMENT PERFORMANCE MATRIX */}
-      <div className="stagger-6 glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
+      <div className="stagger-6 glass-card p-3.5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-navy-800 pb-3">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1">
             <Building2 className="w-4 h-4 text-brand-500 shrink-0" />

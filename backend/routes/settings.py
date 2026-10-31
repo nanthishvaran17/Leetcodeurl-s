@@ -88,11 +88,13 @@ DEFAULT_SYSTEM_SETTINGS = {
     "BACKUP_FREQUENCY": "Before Finalization",
     "BACKUP_RETENTION": "30",
 
-    # 7. Security Settings
+    # 7. Security Settings & Executive Role Delegation
     "PRODUCTION_MODE": "true",
     "ADMIN_SESSION_TIMEOUT": "30",
     "MAINTENANCE_MODE": "false",
     "FAILED_LOGIN_PROTECTION": "true",
+    "ALLOW_MANAGEMENT_AUDIT_ACCESS": "false",
+    "ALLOW_MANAGEMENT_ADMIN_SETTINGS": "false",
 
     # 8. Extended Full Automation Controls
     "ENABLE_AUTO_BIWEEKLY_CONTEST": "true",
@@ -107,7 +109,8 @@ DEFAULT_SYSTEM_SETTINGS = {
 
 PUBLIC_SAFE_KEYS = {
     "COLLEGE_NAME", "SESSION_START", "SESSION_END", "TIMEZONE", "SHOW_CONTEST_BANNER",
-    "PROGRESS_THRESHOLD", "ENABLE_AUTO_SUNDAY_SESSION", "ENABLE_AUTO_BIWEEKLY_CONTEST", "ENABLE_DAILY_SOLVE_SYNC"
+    "PROGRESS_THRESHOLD", "ENABLE_AUTO_SUNDAY_SESSION", "ENABLE_AUTO_BIWEEKLY_CONTEST", "ENABLE_DAILY_SOLVE_SYNC",
+    "ALLOW_MANAGEMENT_AUDIT_ACCESS", "ALLOW_MANAGEMENT_ADMIN_SETTINGS"
 }
 
 @router.get("")
@@ -122,7 +125,8 @@ def get_admin_settings(request: Request, db: Session = Depends(get_db)):
     merged.update(settings_dict)
 
     user_role = (current_user.role or "").strip().lower() if current_user else ""
-    is_admin = user_role in ["admin", "administrator", "super admin", "super_admin", "principal"]
+    mgmt_settings_allowed = str(merged.get("ALLOW_MANAGEMENT_ADMIN_SETTINGS", "false")).strip().lower() in ["true", "1", "yes"]
+    is_admin = user_role in ["admin", "administrator", "super admin", "super_admin", "principal"] or (user_role == "management" and mgmt_settings_allowed)
 
     # If not an authenticated admin, return ONLY non-sensitive branding/session configs
     if not is_admin:
@@ -146,6 +150,14 @@ def update_admin_settings(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    user_role = (current_user.role or "").strip().lower()
+    is_admin = user_role in ["admin", "administrator", "super admin", "super_admin", "principal"]
+    if not is_admin:
+        mgmt_row = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_ADMIN_SETTINGS").first()
+        is_mgmt_allowed = user_role == "management" and mgmt_row and str(mgmt_row.value).strip().lower() in ["true", "1", "yes"]
+        if not is_mgmt_allowed:
+            raise HTTPException(status_code=403, detail="System Administrator authorization required to modify configuration.")
+
     # Validation rules
     start_t = str(settings_data.get("SESSION_START", "08:00")).strip()
     end_t = str(settings_data.get("SESSION_END", "09:30")).strip()

@@ -301,21 +301,34 @@ export const FastStudentRow = memo(({
               </div>
             </div>
 
-            {/* Row 2: Reg No • Dept/Year Pill + Solved Count Pill */}
-            <div className="flex items-center justify-between gap-2 min-w-0">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono min-w-0 flex-1">
-                <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">{student.reg_no}</span>
-                <span className="shrink-0 text-slate-300 dark:text-slate-600">•</span>
-                <span className={`px-1.5 py-0.5 rounded-md font-bold text-[9.5px] shrink-0 border ${
-                  ((student.college || 'NEC').toUpperCase() === 'NCT')
-                    ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
-                    : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
-                }`}>
-                  {student.college || 'NEC'}
-                </span>
-                <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20 shrink-0 truncate max-w-[130px]">
-                  {getDeptCode(student)} {formatStudentYearBadge(student)}
-                </span>
+            {/* Row 2: Reg No • College • Dept & Year Badge */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono min-w-0 overflow-hidden">
+              <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">{student.reg_no}</span>
+              <span className="shrink-0 text-slate-300 dark:text-slate-600">•</span>
+              <span className={`px-1.5 py-0.5 rounded-md font-bold text-[9.5px] shrink-0 border ${
+                ((student.college || 'NEC').toUpperCase() === 'NCT')
+                  ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
+                  : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+              }`}>
+                {student.college || 'NEC'}
+              </span>
+              <span className="px-1.5 py-0.5 rounded-md bg-brand-500/10 text-brand-700 dark:text-brand-300 font-bold text-[10px] border border-brand-500/20 truncate">
+                {getDeptCode(student)} {formatStudentYearBadge(student)}
+              </span>
+            </div>
+
+            {/* Row 3: LeetCode Username (Left) + Solved Count Pill (Right) */}
+            <div className="flex items-center justify-between gap-2 min-w-0 pt-0.5">
+              <div className="flex items-center min-w-0 flex-1">
+                {student.username ? (
+                  <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 truncate">
+                    @{student.username}
+                  </span>
+                ) : (
+                  <span className="text-[10.5px] text-slate-400 dark:text-slate-500 italic">
+                    Not Linked
+                  </span>
+                )}
               </div>
 
               {/* Solved Pill */}
@@ -324,15 +337,6 @@ export const FastStudentRow = memo(({
                 <span className="text-xs font-black font-mono">{totalSolved ?? '—'}</span>
               </div>
             </div>
-
-            {/* Row 3: LeetCode Username */}
-            {student.username && (
-              <div className="flex items-center min-w-0">
-                <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 truncate">
-                  @{student.username}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 

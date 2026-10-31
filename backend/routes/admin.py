@@ -898,9 +898,9 @@ def create_staff_user(
 
     # Flexible institutional_id: accept any custom format or auto-generate if missing
     inst_id = payload.institutional_id.strip().upper() if (payload.institutional_id and payload.institutional_id.strip()) else None
-    if not inst_id and payload.department_id:
+    if not inst_id:
         from backend.models import Department
-        dept = db.query(Department).filter(Department.id == payload.department_id).first()
+        dept = db.query(Department).filter(Department.id == payload.department_id).first() if payload.department_id else None
         dept_code = (dept.code if dept and dept.code else "GEN").replace("(", "").replace(")", "").replace("-", "").upper()
         role_prefix = "PRN" if payload.role == "Principal" else ("MGT" if payload.role == "Management" else ("FAC" if payload.role in ["Faculty", "Staff", "Faculty Mentor", "Staff Mentor"] else ("HOD" if payload.role in ["HOD", "Department HOD"] else "ADM")))
         prefix = f"NEC-{dept_code}-{role_prefix}-"

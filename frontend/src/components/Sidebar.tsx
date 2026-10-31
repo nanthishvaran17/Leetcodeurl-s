@@ -8,6 +8,7 @@ import { getApiUrl } from '../services/api';
 import { isAdminOtpVerified } from '../utils/adminOtpAuth';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { prefetchRoute } from '../utils/pagePrefetch';
+import { triggerHaptic } from '../utils/haptics';
 
 interface SidebarProps {
   activeTab: string;
@@ -75,6 +76,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'reports', label: 'Executive Reports & Export', icon: FileSpreadsheet, badge: 'EXECUTIVE', badgeColor: 'emerald' },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
         { id: 'account-settings', label: 'Account Settings', icon: User },
+        ...(user?.allow_management_admin_settings
+          ? [{ id: 'settings', label: 'Admin Settings', icon: Settings, badge: 'CONFIG' as const, badgeColor: 'purple' as const }]
+          : []),
+        ...(user?.allow_management_audit_access
+          ? [{ id: 'audit', label: 'Audit Log', icon: ShieldAlert, badge: 'AUDIT' as const, badgeColor: 'rose' as const }]
+          : []),
       ]
     }
   ];
@@ -222,30 +229,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
           data-modal-active="true"
           className="fixed inset-0 z-[100000] flex"
         >
-          {/* Backdrop */}
+          {/* Backdrop (high performance, GPU friendly) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/75 dark:bg-black/85 backdrop-blur-sm"
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 bg-black/65 dark:bg-black/80"
             onClick={onClose}
           />
           
-          {/* Drawer with Native Smooth Touch-Aware Navigation */}
+          {/* Drawer with Native Ultra-Smooth 120fps Touch-Aware Navigation */}
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+            transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.22 }}
+            style={{ willChange: 'transform' }}
             onTouchStart={(e) => {
               touchStartXRef.current = e.touches[0].clientX;
               touchStartYRef.current = e.touches[0].clientY;
             }}
+            onTouchMove={(e) => {
+              const deltaX = touchStartXRef.current - e.touches[0].clientX;
+              const deltaY = Math.abs(touchStartYRef.current - e.touches[0].clientY);
+              if (deltaX > 20 && deltaX > deltaY * 0.6) {
+                onClose();
+                triggerHaptic('light');
+              }
+            }}
             onTouchEnd={(e) => {
               const deltaX = touchStartXRef.current - e.changedTouches[0].clientX;
               const deltaY = Math.abs(touchStartYRef.current - e.changedTouches[0].clientY);
-              if (deltaX > 30 && deltaX > deltaY * 0.75) {
+              if (deltaX > 15 && deltaX > deltaY * 0.5) {
                 onClose();
+                triggerHaptic('light');
               }
             }}
             className="relative w-[76vw] max-w-[275px] sm:max-w-[295px] h-full shadow-2xl bg-white dark:bg-[#0c1322] pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200/80 dark:border-white/[0.08]"

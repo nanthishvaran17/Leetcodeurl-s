@@ -1,3 +1,5 @@
+import { useAuth } from '../../context/AuthContext';
+import { isStaffRole } from '../../services/auth/authTypes';
 import React, { useEffect, useMemo } from 'react';
 import { Building2 } from 'lucide-react';
 import { GlobalFilter } from '../GlobalFilter';
@@ -29,25 +31,27 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
   showAllDepartments = false
 }) => {
   const { departments, allDepartments, isHodScope, isGlobalAccess } = useDepartments();
-
+  const { user } = useAuth();
+  const isStaffUser = isStaffRole(user);
   const isRestrictedHod = isHodScope && !isGlobalAccess;
+  const isRestricted = (isRestrictedHod || isStaffUser) && !isGlobalAccess;
 
   const activeDepts = useMemo(() => {
     let list = departments;
-    if (isRestrictedHod) {
+    if (isRestricted) {
       list = departments;
     } else if (showAllDepartments || isGlobalAccess) {
       list = (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
     }
     // Strictly exclude any department with 0 students/stats unless explicitly scoped
     return list.filter(d => d.student_count === undefined || d.student_count > 0);
-  }, [isRestrictedHod, showAllDepartments, isGlobalAccess, allDepartments, departments]);
+  }, [isRestricted, showAllDepartments, isGlobalAccess, allDepartments, departments]);
 
   // If HOD has scoped departments, auto-select their first department if single dept, or allow 'ALL' / 'MY_DEPARTMENTS' for multi-dept
   useEffect(() => {
-    if (isRestrictedHod && activeDepts.length > 0) {
+    if ((isRestrictedHod || isStaffUser) && activeDepts.length > 0) {
       const validValues = activeDepts.map(d => useIdAsValue ? String(d.id || '') : (formatDepartmentCode(d) || d.code));
-      if (activeDepts.length === 1) {
+      if (activeDepts.length === 1 || isStaffUser) {
         if (selectedDept === 'ALL' || selectedDept === 'MY_DEPARTMENTS' || !validValues.includes(selectedDept)) {
           onChange(validValues[0]);
         }
@@ -59,7 +63,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
         }
       }
     }
-  }, [isRestrictedHod, activeDepts, selectedDept, useIdAsValue, onChange]);
+  }, [isRestrictedHod, isStaffUser, activeDepts, selectedDept, useIdAsValue, onChange]);
 
   // Options generator strictly respecting HOD scope
   const options = useMemo(() => {
@@ -72,6 +76,10 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
         pillText: code
       };
     });
+
+    if (isStaffUser) {
+      return deptOpts;
+    }
 
     if (isRestrictedHod) {
       if (activeDepts.length > 1) {

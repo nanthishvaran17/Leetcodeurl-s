@@ -14,7 +14,15 @@ import {
   Trophy, BookmarkCheck, FileBadge, Users, ArrowLeft, HelpCircle,
   Sun, Moon, Monitor, LogOut, Play
 } from 'lucide-react';
-import { playWhatsAppPop, playAppleGlassChime, playTechKnockDing, playSelectedNotificationChime } from '../utils/audioChime';
+import {
+  playGalaxyCelestialChime,
+  playAppleGlassChime,
+  playPixelVelvetChime,
+  playTechKnockDing,
+  playNeonKineticChime,
+  playTone,
+  playSelectedNotificationChime,
+} from '../utils/audioChime';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -778,13 +786,13 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
 
   const [selectedNotificationTone, setSelectedNotificationTone] = useState<string>(() => {
     try {
-      return localStorage.getItem('notification_sound_tone') || 'whatsapp';
+      return localStorage.getItem('notification_sound_tone') || 'galaxy';
     } catch {
-      return 'whatsapp';
+      return 'galaxy';
     }
   });
 
-  const handleSelectNotificationTone = (tone: 'whatsapp' | 'apple' | 'tech' | 'none') => {
+  const handleSelectNotificationTone = (tone: 'galaxy' | 'apple' | 'pixel' | 'tech' | 'neon' | 'none') => {
     setSelectedNotificationTone(tone);
     try {
       localStorage.setItem('notification_sound_tone', tone);
@@ -792,18 +800,19 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
       console.warn('Could not store notification sound preference:', e);
     }
     triggerHaptic('light');
-    if (tone === 'whatsapp') {
-      playWhatsAppPop();
-      notify.info('WhatsApp Bubble Pop Selected', 'Short, bubbly water pop tone.', { category: 'AUDIO', duration: 3000 });
-    } else if (tone === 'apple') {
-      playAppleGlassChime();
-      notify.info('Apple Crystal Glass Selected', 'Tri-tone acoustic glass bell.', { category: 'AUDIO', duration: 3000 });
-    } else if (tone === 'tech') {
-      playTechKnockDing();
-      notify.info('Tech Knock & Ding Selected', 'Snappy knock with crystal ping.', { category: 'AUDIO', duration: 3000 });
-    } else if (tone === 'none') {
-      notify.info('Silent / Mute Mode Selected', 'Notifications will arrive silently without any sound.', { category: 'AUDIO', duration: 3000 });
+    if (tone === 'none') {
+      notify.info('Silent / Mute Mode Selected', 'Notifications & downloads will arrive silently.', { category: 'AUDIO', duration: 3000 });
+      return;
     }
+    playTone(tone);
+    const toneTitles: Record<string, string> = {
+      galaxy: 'Galaxy Celestial Selected (Signature Harp)',
+      apple: 'Apple Aurora Crystal Selected (Glass Bell)',
+      pixel: 'Pixel Velvet Pop Selected (Warm Kalimba)',
+      tech: 'Tech Studio Knock Selected (Slack / Discord Ding)',
+      neon: 'Cyberpunk Neon Selected (Future Shimmer)',
+    };
+    notify.info(toneTitles[tone] || 'Notification Tone Updated', 'Preview playing! Applied to all alerts & downloads.', { category: 'AUDIO', duration: 3000 });
   };
 
   // Executive Institutional Workstation Preferences & Plan Settings
@@ -6365,124 +6374,180 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <div className="flex items-center gap-2">
                       <Volume2 size={16} className="text-indigo-500 shrink-0" />
                       <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Notification Sound Studio (Click to Preview)
+                        Top 5 World-Class Sound Studio (Click to Preview)
                       </span>
                     </div>
                     <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 hidden sm:inline">
-                      Active sound tone for alerts & push
+                      Active sound tone for alerts, notifications & downloads
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                    {/* Option 1: WhatsApp Pop */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
+                    {/* Option 1: Galaxy Celestial */}
                     <div
-                      onClick={() => handleSelectNotificationTone('whatsapp')}
-                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
-                        selectedNotificationTone === 'whatsapp'
-                          ? 'bg-emerald-500/15 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
+                      onClick={() => handleSelectNotificationTone('galaxy')}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'galaxy'
+                          ? 'bg-purple-500/15 border-purple-500/50 shadow-xs ring-1 ring-purple-500/30'
                           : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-black text-slate-900 dark:text-white">WhatsApp</span>
-                        {selectedNotificationTone === 'whatsapp' && (
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500 text-white flex items-center gap-0.5">
-                            <Check size={10} /> Active
+                        <span className="text-xs font-black text-purple-700 dark:text-purple-300 truncate">Galaxy Celestial</span>
+                        {selectedNotificationTone === 'galaxy' && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-600 text-white flex items-center gap-0.5 shrink-0">
+                            <Check size={9} />
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Bubbly Pop</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">4-Note Harp</span>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('whatsapp'); }}
-                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('galaxy'); }}
+                        className="w-full mt-1 py-1.5 px-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
                       >
                         <Play size={10} className="fill-current" />
                         <span>Play</span>
                       </button>
                     </div>
 
-                    {/* Option 2: Apple Glass */}
+                    {/* Option 2: Apple Aurora Glass */}
                     <div
                       onClick={() => handleSelectNotificationTone('apple')}
-                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
                         selectedNotificationTone === 'apple'
                           ? 'bg-indigo-500/15 border-indigo-500/50 shadow-xs ring-1 ring-indigo-500/30'
                           : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-black text-slate-900 dark:text-white">Apple Glass</span>
+                        <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 truncate">Apple Aurora</span>
                         {selectedNotificationTone === 'apple' && (
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-500 text-white flex items-center gap-0.5">
-                            <Check size={10} /> Active
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-600 text-white flex items-center gap-0.5 shrink-0">
+                            <Check size={9} />
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Crystal Chime</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">Crystal Glass</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('apple'); }}
-                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                        className="w-full mt-1 py-1.5 px-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
                       >
                         <Play size={10} className="fill-current" />
                         <span>Play</span>
                       </button>
                     </div>
 
-                    {/* Option 3: Tech Knock */}
+                    {/* Option 3: Pixel Velvet */}
+                    <div
+                      onClick={() => handleSelectNotificationTone('pixel')}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'pixel' || selectedNotificationTone === 'whatsapp'
+                          ? 'bg-emerald-500/15 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
+                          : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 truncate">Pixel Velvet</span>
+                        {(selectedNotificationTone === 'pixel' || selectedNotificationTone === 'whatsapp') && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-600 text-white flex items-center gap-0.5 shrink-0">
+                            <Check size={9} />
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">Warm Kalimba</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('pixel'); }}
+                        className="w-full mt-1 py-1.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Play size={10} className="fill-current" />
+                        <span>Play</span>
+                      </button>
+                    </div>
+
+                    {/* Option 4: Tech Studio Knock */}
                     <div
                       onClick={() => handleSelectNotificationTone('tech')}
-                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
                         selectedNotificationTone === 'tech'
                           ? 'bg-cyan-500/15 border-cyan-500/50 shadow-xs ring-1 ring-cyan-500/30'
                           : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-black text-slate-900 dark:text-white">Tech Knock</span>
+                        <span className="text-xs font-black text-cyan-700 dark:text-cyan-300 truncate">Tech Knock</span>
                         {selectedNotificationTone === 'tech' && (
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-500 text-white flex items-center gap-0.5">
-                            <Check size={10} /> Active
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-cyan-600 text-white flex items-center gap-0.5 shrink-0">
+                            <Check size={9} />
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">Knock & Ding</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">Studio Ping</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('tech'); }}
-                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                        className="w-full mt-1 py-1.5 px-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
                       >
                         <Play size={10} className="fill-current" />
                         <span>Play</span>
                       </button>
                     </div>
 
-                    {/* Option 4: Silent / Mute (None) */}
+                    {/* Option 5: Cyber Neon */}
+                    <div
+                      onClick={() => handleSelectNotificationTone('neon')}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                        selectedNotificationTone === 'neon'
+                          ? 'bg-amber-500/15 border-amber-500/50 shadow-xs ring-1 ring-amber-500/30'
+                          : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-black text-amber-700 dark:text-amber-300 truncate">Cyber Neon</span>
+                        {selectedNotificationTone === 'neon' && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-600 text-white flex items-center gap-0.5 shrink-0">
+                            <Check size={9} />
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">Future Shimmer</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('neon'); }}
+                        className="w-full mt-1 py-1.5 px-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                      >
+                        <Play size={10} className="fill-current" />
+                        <span>Play</span>
+                      </button>
+                    </div>
+
+                    {/* Option 6: Silent / Mute (None) */}
                     <div
                       onClick={() => handleSelectNotificationTone('none')}
-                      className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 active:scale-95 touch-manipulation ${
                         selectedNotificationTone === 'none' || selectedNotificationTone === 'silent'
                           ? 'bg-rose-500/15 border-rose-500/50 shadow-xs ring-1 ring-rose-500/30'
                           : 'bg-white dark:bg-navy-900/80 border-slate-200/80 dark:border-white/10 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-black text-slate-900 dark:text-white">Silent / Mute</span>
+                        <span className="text-xs font-black text-rose-700 dark:text-rose-300 truncate">Silent / Mute</span>
                         {(selectedNotificationTone === 'none' || selectedNotificationTone === 'silent') && (
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-rose-600 text-white flex items-center gap-0.5">
-                            <Check size={10} /> Active
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-600 text-white flex items-center gap-0.5 shrink-0">
+                            <Check size={9} />
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium">No Sound (Silent)</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate">No Sound</span>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleSelectNotificationTone('none'); }}
-                        className="w-full mt-1 py-1.5 px-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                        className="w-full mt-1 py-1.5 px-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-[10.5px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
                       >
                         <VolumeX size={11} />
-                        <span>Select Mute</span>
+                        <span>Mute</span>
                       </button>
                     </div>
                   </div>

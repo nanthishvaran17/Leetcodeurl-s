@@ -141,7 +141,7 @@ def create_or_get_conversation_endpoint(
 @router.get("/conversations/{conversation_id}/messages")
 def get_messages_endpoint(
     conversation_id: str,
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(100, ge=1, le=200),
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):

@@ -61,12 +61,18 @@ import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from '../components/ExportStatus';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 
-import { useNotification } from '../context/NotificationContext';
+import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 
 export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const { notify } = useNotification();
+  const { user } = useAuth();
+  const roleClean = (user?.role || '').trim().toLowerCase();
+  const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
+  const isManagement = roleClean === 'management';
+  const isAuditAllowed = isAdmin || (isManagement && Boolean(user?.allow_management_audit_access));
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -976,7 +982,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           { id: 'automation', label: 'Autonomous Sunday Session', icon: Clock, desc: 'Zero-touch cron engine' },
           { id: 'recovery', label: 'Database Recovery & Snapshots', icon: Database, desc: 'Immutable backup & restore' },
           { id: 'audit', label: 'Operations Audit Timeline', icon: Clock, desc: 'Comprehensive operational logs' }
-        ].map((tab) => {
+        ].filter(tab => tab.id !== 'audit' || isAuditAllowed).map((tab) => {
           const Icon = tab.icon;
           const isActive = activeOpsTab === tab.id;
           return (

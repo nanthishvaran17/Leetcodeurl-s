@@ -13,6 +13,7 @@ import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
+import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
 
@@ -54,16 +55,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onViewForColleges
 }) => {
   const { user } = useAuth();
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [selectedCollege, setSelectedCollege] = useState<string>('all');
-  const [selectedDept, setSelectedDept] = useState<string>('all');
-  const [yearLevel, setYearLevel] = useState<string>('all');
-  const [nameSearch, setNameSearch] = useState<string>('');
-  const [solvedFilter, setSolvedFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('top_solved');
-  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
-  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'college' | 'department' | 'year' | 'performance' | 'sort'>('all');
   const loggedInUser = useMemo(() => {
     if (user) return user;
     try {
@@ -74,10 +65,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   }, [user]);
 
+  const userCollege = useMemo(() => getUserCollege(loggedInUser), [loggedInUser]);
+  const canFilterCollege = useMemo(() => {
+    if (!loggedInUser) return true;
+    return isCollegeFilterAllowed(loggedInUser);
+  }, [loggedInUser]);
+
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [selectedCollege, setSelectedCollege] = useState<string>(() => (!loggedInUser || isCollegeFilterAllowed(loggedInUser)) ? 'all' : (userCollege || 'NEC'));
+
+  useEffect(() => {
+    if (!canFilterCollege && userCollege && selectedCollege !== userCollege) {
+      setSelectedCollege(userCollege);
+    }
+  }, [canFilterCollege, userCollege, selectedCollege]);
+  const [selectedDept, setSelectedDept] = useState<string>('all');
+  const [yearLevel, setYearLevel] = useState<string>('all');
+  const [nameSearch, setNameSearch] = useState<string>('');
+  const [solvedFilter, setSolvedFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('top_solved');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
+  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'college' | 'department' | 'year' | 'performance' | 'sort'>('all');
+
   const isFacultyRole = useMemo(() => {
     const roleClean = (loggedInUser?.role || user?.role || '').trim().toLowerCase();
-    return ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
+    return ['staff', 'faculty', 'professor', 'mentor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
   }, [loggedInUser?.role, user?.role]);
+
+  const userAllocatedDept = useMemo(() => {
+    return loggedInUser?.department_code 
+      || loggedInUser?.department 
+      || (Array.isArray(loggedInUser?.authorized_department_codes) && loggedInUser.authorized_department_codes[0]) 
+      || '';
+  }, [loggedInUser]);
 
   const [students, setStudents] = useState<StudentData[]>(() => {
     try {
@@ -612,6 +633,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [students]);
 
   const collegeOptions: DropdownOption[] = useMemo(() => {
+    if (!canFilterCollege) return [];
     const set = new Set<string>(['NEC', 'NCT']);
     students.forEach((st: any) => {
       if (st.college) set.add(st.college.trim().toUpperCase());
@@ -626,7 +648,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         count: collegeCounts[c] || 0
       }))
     ];
-  }, [students, collegeCounts]);
+  }, [students, collegeCounts, canFilterCollege]);
 
   // Academic Year Dropdown Options (Batches: 2030, 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
@@ -906,7 +928,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-5 sm:p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.15)] border border-white/[0.09]"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-4 sm:p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.15)] border border-white/[0.09]"
       >
         {/* Ambient Radial Mesh Glow */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
@@ -926,14 +948,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            {['Live Solve Tracking', 'Sunday Contest Verification', 'Automated Department Audits', 'Faculty Mentoring Roster'].map((tag) => (
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2 pt-1">
+            {[
+              { full: 'Live Solve Tracking', short: 'Live Solve Tracking' },
+              { full: 'Sunday Contest Verification', short: 'Sunday Contest Verify' },
+              { full: 'Automated Department Audits', short: 'Automated Dept Audits' },
+              { full: 'Faculty Mentoring Roster', short: 'Faculty Mentoring' }
+            ].map((tag) => (
               <span
-                key={tag}
-                className="inline-flex items-center justify-start px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold tracking-wide bg-white/[0.06] border border-white/10 text-slate-200 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors"
+                key={tag.full}
+                className="inline-flex items-center justify-start px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-[10px] min-[380px]:text-[11px] sm:text-xs font-semibold tracking-tight sm:tracking-wide bg-white/[0.06] border border-white/10 text-slate-200 backdrop-blur-sm shadow-2xs hover:border-white/20 transition-colors min-w-0"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-2 shrink-0" />
-                <span>{tag}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mr-1.5 sm:mr-2 shrink-0" />
+                <span className="truncate">
+                  <span className="hidden min-[380px]:inline">{tag.full}</span>
+                  <span className="min-[380px]:hidden">{tag.short}</span>
+                </span>
               </span>
             ))}
           </div>
@@ -1015,14 +1045,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         transition={{ delay: 0.2, duration: 0.45 }}
         className="mt-4 sm:mt-8 mb-4 sm:mb-8 space-y-2 sm:space-y-3"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5 px-1 sm:px-2 py-0.5 sm:py-1">
           <div className="flex items-center space-x-2.5">
             <div className={`w-2.5 h-2.5 rounded-full ${summaryData?.is_session_live ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-brand-500'} animate-pulse shrink-0`} />
             <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
               {summaryData?.is_session_live ? 'Live Sunday Monitoring Session' : 'Next Sunday Session Timer'}
             </span>
           </div>
-          <span className={`text-xs font-extrabold px-3.5 py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors ${
+          <span className={`text-[11px] sm:text-xs font-extrabold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors ${
             summaryData?.is_session_live
               ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/90 dark:border-emerald-500/40 shadow-xs'
               : 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 border-brand-200/80 dark:border-brand-500/40 shadow-xs'
@@ -1381,21 +1411,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Desktop View: Full 5-Column Responsive Grid */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
 
-          {/* 0. College Filter */}
-          <div className="min-w-0">
-            <CustomDropdown
-              id="college-filter"
-              label="College Filter"
-              options={collegeOptions}
-              value={selectedCollege}
-              onChange={(val) => {
-                setSelectedCollege(val);
-                setDisplayCount(32);
-              }}
-              icon={Building2}
-              align="left"
-            />
-          </div>
+          {/* 0. College Filter — Only for Admin, Management & Public View */}
+          {canFilterCollege && (
+            <div className="min-w-0">
+              <CustomDropdown
+                id="college-filter"
+                label="College Filter"
+                options={collegeOptions}
+                value={selectedCollege}
+                onChange={(val) => {
+                  setSelectedCollege(val);
+                  setDisplayCount(32);
+                }}
+                icon={Building2}
+                align="left"
+              />
+            </div>
+          )}
 
           {/* 1. Department Filter */}
           <div className="min-w-0">
@@ -1405,10 +1437,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 label="Mentee Scope"
                 options={[
                   { value: 'all', label: 'My Allocated Mentees' },
-                  ...departments.map((d: any) => ({
-                    value: d.code || d.name,
-                    label: d.name || d.code
-                  }))
+                  ...(userAllocatedDept ? [{ value: userAllocatedDept, label: `${userAllocatedDept} (My Department)` }] : [])
                 ]}
                 value={selectedDept}
                 onChange={(val) => {
@@ -1507,7 +1536,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         }}
         sortBy={sortBy}
         onSelectSortBy={(val) => setSortBy(val)}
-        departments={activeDepartmentsWithCounts.length > 0 ? activeDepartmentsWithCounts : departments}
+        departments={isFacultyRole && userAllocatedDept ? departments.filter((d: any) => normalizeDepartment(d) === normalizeDepartment(userAllocatedDept)) : (activeDepartmentsWithCounts.length > 0 ? activeDepartmentsWithCounts : departments)}
         yearOptions={yearOptions}
         performanceOptions={performanceOptions}
         sortOptions={sortOptions}

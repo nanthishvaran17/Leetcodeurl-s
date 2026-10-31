@@ -137,7 +137,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
                     repeat: Infinity,
                     ease: "linear"
                   }}
-                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_10px_rgba(0,43,73,0.15)]"
+                  className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_10px_rgba(0,43,73,0.15)] rounded-full"
                   onError={(e: any) => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = '/nec_25_years_logo.png';

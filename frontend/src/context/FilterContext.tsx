@@ -1,4 +1,4 @@
-import { isGlobalAccessRole, isHodRole, isStaffRole, getUserCollege } from '../services/auth/authTypes';
+import { isGlobalAccessRole, isHodRole, isStaffRole, getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import React, { createContext, useContext, useState, useMemo, useCallback, ReactNode } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
@@ -34,7 +34,7 @@ function getDefaultCollege(): 'ALL' | 'NEC' | 'NCT' {
     const raw = localStorage.getItem('user');
     if (!raw) return 'ALL';
     const user = JSON.parse(raw);
-    if (isGlobalAccessRole(user)) return 'ALL';
+    if (isCollegeFilterAllowed(user)) return 'ALL';
     return getUserCollege(user);
   } catch {
     return 'ALL';
@@ -50,7 +50,15 @@ function getDefaultDepartment(): string {
     const user = JSON.parse(raw);
     if (isGlobalAccessRole(user)) return 'ALL';
     if (isStaffRole(user)) {
-      return (user?.department_code || user?.department || 'ALL').trim();
+      const code = user?.department_code || user?.department;
+      if (code && code !== 'ALL') return code.trim();
+      if (user?.department_id) return String(user.department_id);
+      if (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes.length > 0) {
+        return user.authorized_department_codes[0];
+      }
+      if (Array.isArray(user?.authorized_department_ids) && user.authorized_department_ids.length > 0) {
+        return String(user.authorized_department_ids[0]);
+      }
     }
     if (isHodRole(user)) {
       const codes: string[] = user?.authorized_department_codes || [];
@@ -85,7 +93,7 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       const raw = localStorage.getItem('user');
       const user = raw ? JSON.parse(raw) : null;
-      if (!isGlobalAccessRole(user)) {
+      if (!isCollegeFilterAllowed(user)) {
         setCollegeState(defaultCollege);
         return;
       }

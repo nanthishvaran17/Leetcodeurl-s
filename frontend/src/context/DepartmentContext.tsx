@@ -1,3 +1,4 @@
+import { normalizeDepartment } from '../utils/filterUtils';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
@@ -165,6 +166,9 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (authCodes.length > 0 && d.code && authCodes.includes(d.code.toUpperCase())) return true;
           if (uDeptId && d.id && Number(d.id) === uDeptId) return true;
           if (uDeptCode && d.code && (d.code.toUpperCase() === uDeptCode || uDeptCode.includes(d.code.toUpperCase()))) return true;
+          if (uDeptCode && d.name && (d.name.toUpperCase() === uDeptCode || uDeptCode.includes(d.name.toUpperCase()))) return true;
+          if (uDeptCode && normalizeDepartment(d) === normalizeDepartment(uDeptCode)) return true;
+          if (uDeptId && normalizeDepartment(d) === normalizeDepartment(uDeptId)) return true;
           return false;
         };
 

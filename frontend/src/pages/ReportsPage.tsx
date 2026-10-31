@@ -10,7 +10,7 @@ import { SyncStatusModal } from '../components/SyncStatusModal';
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-import { isGlobalAccessRole, isHodRole, isStaffRole, getUserCollege } from '../services/auth/authTypes';
+import { isGlobalAccessRole, isHodRole, isStaffRole, getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { downloadFromUrl } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { ExportStatus } from '../components/ExportStatus';
@@ -48,7 +48,7 @@ export const ReportsPage: React.FC = () => {
   const [selectedReportType, setSelectedReportType] = useState<string>('WEEKLY_PERFORMANCE');
 
   const userRole = (user?.role || '').trim().toLowerCase();
-  const isGlobalAccess = isGlobalAccessRole(user);
+  const isGlobalAccess = isCollegeFilterAllowed(user);
   const isPlacementUser = ['placement', 'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'].includes(userRole);
   const isHodUser = !isPlacementUser && isHodRole(user);
   const isStaffUser = isStaffRole(user);
@@ -415,12 +415,14 @@ export const ReportsPage: React.FC = () => {
       const year = overrideFilters?.year || selectedYear;
       const output_scope = overrideFilters?.output_scope || selectedOutputScope;
 
+      const col = overrideFilters?.college || selectedCollege;
       const res = await api.post('/reports/generate', {
         report_type: reportType,
+        college: col,
         department: department,
         year: year,
         output_scope: output_scope,
-        filters: { session_id: selectedSessionId, ...(overrideFilters || {}) }
+        filters: { session_id: selectedSessionId, college: col, ...(overrideFilters || {}) }
       }, {
         headers: {
           'Cache-Control': 'no-cache, no-store',
@@ -631,7 +633,7 @@ export const ReportsPage: React.FC = () => {
     <div className="space-y-6 sm:space-y-8 pt-0 pb-32 sm:pb-12 animate-fade-in">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-2 sm:space-y-3 max-w-2xl">
@@ -1505,7 +1507,7 @@ export const ReportsPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200/80 dark:border-white/10 relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 font-semibold truncate w-full sm:w-auto">
                 <span className="text-[11px] sm:text-xs truncate">
-                  Active Filter: <span className="font-black text-slate-900 dark:text-white">{selectedDept === 'ALL' ? 'All Departments' : selectedDept}</span> • <span className="font-black text-indigo-600 dark:text-indigo-400">{selectedYear === 'ALL' ? 'All Batches' : `${selectedYear === '2' ? 'II' : selectedYear === '3' ? 'III' : 'IV'} Year`}</span>
+                  Active Filter: {isGlobalAccess && selectedCollege !== 'ALL' && <><span className="font-black text-brand-600 dark:text-brand-400">Campus: {selectedCollege}</span> • </>}<span className="font-black text-slate-900 dark:text-white">{selectedDept === 'ALL' ? 'All Departments' : selectedDept}</span> • <span className="font-black text-indigo-600 dark:text-indigo-400">{selectedYear === 'ALL' ? 'All Batches' : `${selectedYear === '2' ? 'II' : selectedYear === '3' ? 'III' : 'IV'} Year`}</span>
                 </span>
               </div>
 
@@ -1517,10 +1519,11 @@ export const ReportsPage: React.FC = () => {
                     const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
                     api.post('/reports/generate', {
                       report_type: selectedReportType,
+                      college: selectedCollege,
                       department: effDept,
                       year: selectedYear,
                       output_scope: selectedOutputScope,
-                      filters: { session_id: selectedSessionId }
+                      filters: { session_id: selectedSessionId, college: selectedCollege }
                     }).catch(() => {});
                   }
                 }}

@@ -429,6 +429,9 @@ def _dispatch_internal_endpoint(
 
     # 15. Database Backup File Download
     elif "/api/settings/backups/" in clean_endpoint and clean_endpoint.endswith("/download"):
+        user_role_clean = (getattr(user, "role", "") or "").strip().lower()
+        if user_role_clean not in ["admin", "super admin", "super_admin", "administrator"]:
+            raise HTTPException(status_code=403, detail="Admin privileges required to download database backups.")
         from backend.routes.settings import download_backup_api, BACKUP_DIR
         safe_name = os.path.basename(clean_endpoint.split("/backups/")[1].replace("/download", ""))
         f_path = os.path.join(BACKUP_DIR, safe_name)

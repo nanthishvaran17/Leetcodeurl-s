@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 class ReportConfig(BaseModel):
     report_type: str = Field(default="STUDENT_PERFORMANCE", description="COLLEGE_EXECUTIVE, STUDENT_PERFORMANCE, DEPARTMENT_PERFORMANCE, BATCH_PERFORMANCE, CONTEST_PERFORMANCE, STUDENT_MASTER, LEADERBOARD, CUSTOM")
+    college: Optional[str] = Field(default="ALL", description="ALL, NEC, NCT")
     department: str = Field(default="ALL", description="ALL, CSE(CS), CSE(IOT)")
     year: str = Field(default="ALL", description="ALL, II, III, IV")
     output_scope: str = Field(default="COLLEGE", description="COLLEGE, DEPARTMENT, YEAR, DEPT_YEAR, CUSTOM")

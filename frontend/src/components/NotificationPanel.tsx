@@ -217,12 +217,12 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
 };
 export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, onNavigateTab }) => {
   const {
-    notifications,
+    notifications = [],
     allNotifications = [],
-    unreadCount,
-    isLoading,
-    error,
-    selectedCategory,
+    unreadCount = 0,
+    isLoading = false,
+    error = null,
+    selectedCategory = 'all',
     setSelectedCategory,
     markAsRead,
     markAllAsRead,
@@ -272,19 +272,24 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   };
 
   const checkInitialPushPermission = async () => {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const permStatus = await PushNotifications.checkPermissions();
-        console.log('[Push] Capacitor initial perm status:', permStatus.receive);
-        setPushPermState(permStatus.receive);
-      } catch (err) {
-        console.warn('[Push] Error checking Capacitor permissions:', err);
-        setPushPermState('default');
+    try {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const permStatus = await PushNotifications.checkPermissions();
+          console.log('[Push] Capacitor initial perm status:', permStatus.receive);
+          setPushPermState(permStatus.receive);
+        } catch (err) {
+          console.warn('[Push] Error checking Capacitor permissions:', err);
+          setPushPermState('default');
+        }
+      } else if (typeof window !== 'undefined' && 'Notification' in window) {
+        const perm = (window as any).Notification?.permission || 'default';
+        console.log('[Push] Web initial perm status:', perm);
+        setPushPermState(perm);
+      } else {
+        setPushPermState('unsupported');
       }
-    } else if (typeof window !== 'undefined' && 'Notification' in window) {
-      console.log('[Push] Web initial perm status:', Notification.permission);
-      setPushPermState(Notification.permission);
-    } else {
+    } catch (_err) {
       setPushPermState('unsupported');
     }
   };
@@ -482,6 +487,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Do not close if clicking the notification trigger (bell button) so toggling works properly
+      const isTrigger = (event.target as HTMLElement)?.closest?.('[data-notification-trigger]');
+      if (isTrigger) return;
+
       if (window.innerWidth >= 640 && panelRef.current && !panelRef.current.contains(event.target as Node)) {
         onClose();
       }
@@ -547,7 +556,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     });
   };
 
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined' || !document.body) return null;
 
   return createPortal(
     <>
@@ -779,3 +788,5 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     document.body
   );
 };
+
+export default NotificationPanel;

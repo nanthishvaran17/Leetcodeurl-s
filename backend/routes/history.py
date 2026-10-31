@@ -211,48 +211,58 @@ def _conflict(baseline: Optional[StudentStatSnapshot], current: Optional[Student
     }
 
 
-def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datetime.datetime], period: str = "7d", now_utc: Optional[datetime.datetime] = None) -> Dict[int, Dict[str, Any]]:
+def _derived_growth(
+    db: Session,
+    students: List[Student],
+    cutoff: Optional[datetime.datetime],
+    period: str = "7d",
+    now_utc: Optional[datetime.datetime] = None
+) -> Dict[int, Dict[str, Any]]:
     if not students:
         return {}
-    
+
     now_ist = datetime.datetime.now(IST_TZ)
-    ref_now_utc = now_utc
-    if ref_now_utc is not None and ref_now_utc.tzinfo is None:
-        ref_now_utc = ref_now_utc.replace(tzinfo=UTC_TZ)
-    
-    today_date_ist = now_ist.date()
-    today_date_utc = (ref_now_utc or datetime.datetime.now(UTC_TZ)).date()
-    target_dates = _get_target_dates(period, today_date_ist, today_date_utc)
+    if now_utc is not None:
+        effective_now_utc = now_utc
+    elif cutoff is not None and period in ("today", "7d", "30d"):
+        delta_map = {"today": datetime.timedelta(hours=24), "7d": datetime.timedelta(days=7), "30d": datetime.timedelta(days=30)}
+        inferred_now = cutoff + delta_map[period]
+        real_now = datetime.datetime.now(UTC_TZ)
+        effective_now_utc = inferred_now if abs((real_now - inferred_now).days) > 2 else real_now
+    else:
+        effective_now_utc = datetime.datetime.now(UTC_TZ)
+    if effective_now_utc.tzinfo is None:
+        effective_now_utc = effective_now_utc.replace(tzinfo=UTC_TZ)
 
     student_ids = [getattr(s, "id") for s in students]
     snapshots = db.query(StudentStatSnapshot).filter(
         StudentStatSnapshot.student_id.in_(student_ids),
         (StudentStatSnapshot.source != 'unverified') | (StudentStatSnapshot.source.is_(None))
     ).order_by(StudentStatSnapshot.student_id.asc(), StudentStatSnapshot.captured_at.asc()).all()
-    
+
     grouped: Dict[int, List[StudentStatSnapshot]] = defaultdict(list)
     for snap in snapshots:
         grouped[getattr(snap, "student_id")].append(snap)
 
     growth: Dict[int, Dict[str, Any]] = {}
-    
+
     for s in students:
         s_id = getattr(s, "id")
         snaps = _clean_snaps(grouped.get(s_id, []))
         st = s.stats
         c_snap = snaps[-1] if snaps else None
-        
+
         if st and st.total_solved is not None:
             st_any = cast(Any, st)
-            c_at = st_any.last_verified_at or st_any.last_updated or datetime.datetime.now(UTC_TZ)
+            c_at = st_any.last_verified_at or st_any.last_updated or effective_now_utc
             if c_at and c_at.tzinfo is None:
                 c_at = c_at.replace(tzinfo=UTC_TZ)
             cur_ez = int(st_any.easy_solved or 0)
             cur_med = int(st_any.medium_solved or 0)
             cur_hd = int(st_any.hard_solved or 0)
-            cur_tot = int(st_any.total_solved if st_any.total_solved is not None else (cur_ez + cur_med + cur_hd))
+            cur_tot = int(st_any.total_solved)
             cur_rat = float(st_any.contest_rating) if st_any.contest_rating is not None else None
-            
+
             if c_snap:
                 c_snap_any = cast(Any, c_snap)
                 cs_at = c_snap_any.captured_at
@@ -260,14 +270,14 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
                     cs_at = cs_at.replace(tzinfo=UTC_TZ)
                 cs_tot = int(c_snap_any.total_solved if c_snap_any.total_solved is not None else 0)
                 if cs_tot > cur_tot or (cs_at and cs_at > c_at):
-                    cur_ez = max(cur_ez, int(c_snap_any.easy_solved or 0))
-                    cur_med = max(cur_med, int(c_snap_any.medium_solved or 0))
-                    cur_hd = max(cur_hd, int(c_snap_any.hard_solved or 0))
-                    cur_tot = max(cur_tot, cs_tot)
+                    cur_ez = int(c_snap_any.easy_solved or 0)
+                    cur_med = int(c_snap_any.medium_solved or 0)
+                    cur_hd = int(c_snap_any.hard_solved or 0)
+                    cur_tot = cs_tot
                     if c_snap_any.contest_rating is not None:
                         cur_rat = float(c_snap_any.contest_rating)
                     c_at = max(c_at, cs_at)
-                    
+
             current_dict = {
                 "captured_at": c_at.isoformat() if c_at else None,
                 "source": st_any.source or "live_stats",
@@ -304,6 +314,29 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             }
             continue
 
+        # Check reconciliation on current:
+        if cur_ez + cur_med + cur_hd != cur_tot:
+            growth[s_id] = _conflict(None, c_snap, "reconciliation:current")
+            continue
+
+        # Check current staleness:
+        if c_at and (effective_now_utc - c_at) > MAX_CURRENT_AGE:
+            growth[s_id] = {
+                "period": period,
+                "growth_status": "UNKNOWN",
+                "current_status": "VERIFIED",
+                "total_solved": cur_tot,
+                "easy_solved": cur_ez,
+                "medium_solved": cur_med,
+                "hard_solved": cur_hd,
+                "contest_rating": cur_rat,
+                "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
+                "conflict_reason": "STALE_CURRENT_STATS",
+                "baseline": None,
+                "current": current_dict
+            }
+            continue
+
         if period == "all":
             baseline_snap = snaps[0] if snaps else None
             b_snap_any = cast(Any, baseline_snap) if baseline_snap else None
@@ -337,8 +370,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             }
             continue
 
-        # Baseline snapshot selection:
-        baseline_snap: Optional[StudentStatSnapshot] = None
+        baseline_snap = None
         if cutoff is not None:
             snaps_before_cutoff = [
                 snap for snap in snaps
@@ -346,39 +378,8 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             ]
             if snaps_before_cutoff:
                 baseline_snap = snaps_before_cutoff[-1]
-            elif snaps:
-                baseline_snap = snaps[0]
 
         if baseline_snap is None:
-            act = getattr(s, "lc_activity", None)
-            cal_entries = _parse_cal_entries(act.submission_calendar_json if act else None)
-            if cal_entries:
-                cal_delta = _sum_cal_delta(cal_entries, target_dates)
-                growth[s_id] = {
-                    "period": period,
-                    "growth_status": "VERIFIED",
-                    "current_status": "VERIFIED",
-                    "total_solved": cur_tot,
-                    "easy_solved": cur_ez,
-                    "medium_solved": cur_med,
-                    "hard_solved": cur_hd,
-                    "contest_rating": cur_rat,
-                    "site_rank": getattr(st, "public_profile_ranking", None) if st else None,
-                    "contest_rank": getattr(st, "contest_global_ranking", None) if st else None,
-                    "global_rank": getattr(st, "public_profile_ranking", None) if st else None,
-                    "captured_at": current_dict.get("captured_at") if current_dict else None,
-                    "source": "submission_calendar",
-                    "delta_total": cal_delta,
-                    "delta_easy": round(cal_delta * (cur_ez / cur_tot)) if cur_tot > 0 else cal_delta,
-                    "delta_medium": round(cal_delta * (cur_med / cur_tot)) if cur_tot > 0 else 0,
-                    "delta_hard": round(cal_delta * (cur_hd / cur_tot)) if cur_tot > 0 else 0,
-                    "delta_rating": None,
-                    "conflict_reason": None,
-                    "baseline": None,
-                    "current": current_dict
-                }
-                continue
-
             growth[s_id] = {
                 "period": period,
                 "growth_status": "UNKNOWN",
@@ -396,47 +397,68 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             continue
 
         b_snap_any = cast(Any, baseline_snap)
+        b_at = b_snap_any.captured_at
+        if b_at and b_at.tzinfo is None:
+            b_at = b_at.replace(tzinfo=UTC_TZ)
+
+        max_staleness = MAX_BASELINE_STALENESS.get(period)
+        if max_staleness and cutoff and (cutoff - b_at) > max_staleness:
+            growth[s_id] = {
+                "period": period,
+                "growth_status": "UNKNOWN",
+                "current_status": "VERIFIED",
+                "total_solved": cur_tot,
+                "easy_solved": cur_ez,
+                "medium_solved": cur_med,
+                "hard_solved": cur_hd,
+                "contest_rating": cur_rat,
+                "delta_total": None, "delta_easy": None, "delta_medium": None, "delta_hard": None, "delta_rating": None,
+                "conflict_reason": "STALE_BASELINE",
+                "baseline": _serialize_snap(baseline_snap),
+                "current": current_dict
+            }
+            continue
+
         b_ez = int(b_snap_any.easy_solved or 0)
         b_med = int(b_snap_any.medium_solved or 0)
         b_hd = int(b_snap_any.hard_solved or 0)
         b_tot = int(b_snap_any.total_solved if b_snap_any.total_solved is not None else (b_ez + b_med + b_hd))
         b_rat = float(b_snap_any.contest_rating) if b_snap_any.contest_rating is not None else None
 
-        snap_d_ez = max(0, cur_ez - b_ez)
-        snap_d_med = max(0, cur_med - b_med)
-        snap_d_hd = max(0, cur_hd - b_hd)
-        snap_d_tot = max(0, cur_tot - b_tot)
+        if b_ez + b_med + b_hd != b_tot:
+            growth[s_id] = _conflict(baseline_snap, c_snap, "reconciliation:baseline")
+            continue
 
-        # Check activity heatmap calendar
-        act = getattr(s, "lc_activity", None)
-        cal_entries = _parse_cal_entries(act.submission_calendar_json if act else None)
-        if cal_entries:
-            cal_delta = _sum_cal_delta(cal_entries, target_dates)
-            d_tot = max(cal_delta, snap_d_tot)
-            if d_tot > 0:
-                if snap_d_tot == d_tot:
-                    d_ez, d_med, d_hd = snap_d_ez, snap_d_med, snap_d_hd
-                elif snap_d_tot > 0:
-                    d_ez = round(float(d_tot) * (float(snap_d_ez) / float(snap_d_tot)))
-                    d_hd = round(float(d_tot) * (float(snap_d_hd) / float(snap_d_tot)))
-                    d_med = max(0, d_tot - d_ez - d_hd)
-                    if d_ez + d_med + d_hd != d_tot:
-                        d_ez = d_tot - d_med - d_hd
-                elif cur_tot > 0:
-                    d_ez = round(float(d_tot) * (float(cur_ez) / float(cur_tot)))
-                    d_hd = round(float(d_tot) * (float(cur_hd) / float(cur_tot)))
-                    d_med = max(0, d_tot - d_ez - d_hd)
-                    if d_ez + d_med + d_hd != d_tot:
-                        d_ez = d_tot - d_med - d_hd
-                else:
-                    d_ez, d_med, d_hd = d_tot, 0, 0
-            else:
-                d_ez, d_med, d_hd = 0, 0, 0
-        else:
-            d_tot = snap_d_tot
-            d_ez = snap_d_ez
-            d_med = snap_d_med
-            d_hd = snap_d_hd
+        if cur_hd < b_hd:
+            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:hard")
+            continue
+        if cur_med < b_med:
+            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:medium")
+            continue
+        if cur_ez < b_ez:
+            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:easy")
+            continue
+        if cur_tot < b_tot:
+            growth[s_id] = _conflict(baseline_snap, c_snap, "negative_delta:total")
+            continue
+
+        snap_d_ez = cur_ez - b_ez
+        snap_d_med = cur_med - b_med
+        snap_d_hd = cur_hd - b_hd
+        snap_d_tot = cur_tot - b_tot
+
+        d_tot = snap_d_tot
+        d_ez = snap_d_ez
+        d_med = snap_d_med
+        d_hd = snap_d_hd
+
+        if d_tot > cur_tot:
+            d_tot = cur_tot
+            if d_ez + d_med + d_hd > d_tot:
+                scale = float(d_tot) / float(d_ez + d_med + d_hd) if (d_ez + d_med + d_hd) > 0 else 1.0
+                d_ez = round(d_ez * scale)
+                d_hd = round(d_hd * scale)
+                d_med = max(0, d_tot - d_ez - d_hd)
 
         d_rat = None
         if b_rat is not None and cur_rat is not None:
@@ -455,7 +477,7 @@ def _derived_growth(db: Session, students: List[Student], cutoff: Optional[datet
             "contest_rank": getattr(st, "contest_global_ranking", None) if st else None,
             "global_rank": getattr(st, "public_profile_ranking", None) if st else None,
             "captured_at": current_dict.get("captured_at") if current_dict else None,
-            "source": "reconciled_telemetry" if cal_entries else "snapshot_delta",
+            "source": "snapshot_delta",
             "delta_total": d_tot,
             "delta_easy": d_ez,
             "delta_medium": d_med,
@@ -552,147 +574,49 @@ def get_student_history(
     cal_counts = _parse_cal_counts(act.submission_calendar_json if act else None)
 
     growth_available = len(snapshots) >= 2
-    if len(snapshots) == 1:
-        # Only one eligible snapshot exists
-        s0 = cast(Any, snapshots[0])
-        s0.delta_total = None
-        s0.delta_easy = None
-        s0.delta_medium = None
-        s0.delta_hard = None
-        s0.delta_rating = None
-    elif len(snapshots) >= 2:
-        if cal_counts:
-            # Reconcile snapshot totals & deltas from ground-truth submission_calendar_json
-            st = student.stats
-            if st and st.total_solved:
-                s0_snap = cast(Any, snapshots[0])
-                s0_snap.total_solved = int(st.total_solved)
-                s0_snap.easy_solved = int(st.easy_solved or 0)
-                s0_snap.medium_solved = int(st.medium_solved or 0)
-                s0_snap.hard_solved = int(st.hard_solved or 0)
+    for i in range(len(snapshots)):
+        s_curr = cast(Any, snapshots[i])
+        if s_curr.contest_rating is not None and (float(s_curr.contest_rating) == 1500.0 or float(s_curr.contest_rating) == 0):
+            s_curr.contest_rating = None
 
-            for i in range(len(snapshots) - 1):
-                s_curr = cast(Any, snapshots[i])
-                s_prev = cast(Any, snapshots[i + 1])
+        if i < len(snapshots) - 1:
+            s_prev = cast(Any, snapshots[i + 1])
+            c_ez = int(s_curr.easy_solved or 0)
+            c_med = int(s_curr.medium_solved or 0)
+            c_hd = int(s_curr.hard_solved or 0)
+            c_tot = int(s_curr.total_solved if s_curr.total_solved is not None else (c_ez + c_med + c_hd))
 
-                d_curr = s_curr.captured_at.date() if s_curr.captured_at else datetime.datetime.now(UTC_TZ).date()
-                d_prev = s_prev.captured_at.date() if s_prev.captured_at else d_curr
+            p_ez = int(s_prev.easy_solved or 0)
+            p_med = int(s_prev.medium_solved or 0)
+            p_hd = int(s_prev.hard_solved or 0)
+            p_tot = int(s_prev.total_solved if s_prev.total_solved is not None else (p_ez + p_med + p_hd))
 
-                # Sum official calendar submissions in range (d_prev, d_curr]
-                period_cal_sum = sum(cnt for d, cnt in cal_counts.items() if d_prev < d <= d_curr)
+            d_ez = max(0, c_ez - p_ez)
+            d_med = max(0, c_med - p_med)
+            d_hd = max(0, c_hd - p_hd)
+            d_tot = max(0, c_tot - p_tot)
+            if d_tot == 0 and (d_ez + d_med + d_hd) > 0:
+                d_tot = d_ez + d_med + d_hd
 
-                if period_cal_sum > 0:
-                    d_tot = period_cal_sum
-                    s_curr.delta_total = d_tot
+            s_curr.delta_easy = d_ez
+            s_curr.delta_medium = d_med
+            s_curr.delta_hard = d_hd
+            s_curr.delta_total = d_tot
 
-                    # Reconcile previous snapshot total_solved
-                    reconciled_prev_tot = max(0, (s_curr.total_solved or 0) - d_tot)
-                    s_prev.total_solved = reconciled_prev_tot
-
-                    # Difficulty breakdown deltas
-                    c_ez = s_curr.easy_solved or 0
-                    c_med = s_curr.medium_solved or 0
-                    c_hd = s_curr.hard_solved or 0
-                    c_tot = s_curr.total_solved or 1
-
-                    snap_d_ez = c_ez - (s_prev.easy_solved or 0)
-                    snap_d_med = c_med - (s_prev.medium_solved or 0)
-                    snap_d_hd = c_hd - (s_prev.hard_solved or 0)
-
-                    if snap_d_ez >= 0 and snap_d_med >= 0 and snap_d_hd >= 0 and (snap_d_ez + snap_d_med + snap_d_hd) == d_tot:
-                        s_curr.delta_easy = snap_d_ez
-                        s_curr.delta_medium = snap_d_med
-                        s_curr.delta_hard = snap_d_hd
-                    else:
-                        d_ez = round(d_tot * (c_ez / c_tot))
-                        d_hd = round(d_tot * (c_hd / c_tot))
-                        d_med = max(0, d_tot - d_ez - d_hd)
-                        if d_ez + d_med + d_hd != d_tot:
-                            d_ez = d_tot - d_med - d_hd
-
-                        s_curr.delta_easy = d_ez
-                        s_curr.delta_medium = d_med
-                        s_curr.delta_hard = d_hd
-
-                        s_prev.easy_solved = max(0, c_ez - d_ez)
-                        s_prev.medium_solved = max(0, c_med - d_med)
-                        s_prev.hard_solved = max(0, c_hd - d_hd)
-                else:
-                    s_curr.delta_total = 0
-                    s_curr.delta_easy = 0
-                    s_curr.delta_medium = 0
-                    s_curr.delta_hard = 0
-                    s_prev.total_solved = s_curr.total_solved
-                    s_prev.easy_solved = s_curr.easy_solved
-                    s_prev.medium_solved = s_curr.medium_solved
-                    s_prev.hard_solved = s_curr.hard_solved
-
-                if s_curr.contest_rating is not None and (float(s_curr.contest_rating) == 1500.0 or float(s_curr.contest_rating) == 0):
-                    s_curr.contest_rating = None
-                p_rat = s_prev.contest_rating
-                if p_rat is not None and (float(p_rat) == 1500.0 or float(p_rat) == 0):
-                    p_rat = None
-                c_rat = s_curr.contest_rating
-                if c_rat is not None and p_rat is not None:
-                    s_curr.delta_rating = round(float(c_rat) - float(p_rat), 1)
-                else:
-                    s_curr.delta_rating = None
-
-            s_oldest = cast(Any, snapshots[-1])
-            s_oldest.delta_total = None
-            s_oldest.delta_easy = None
-            s_oldest.delta_medium = None
-            s_oldest.delta_hard = None
-            s_oldest.delta_rating = None
-            if s_oldest.contest_rating is not None and (float(s_oldest.contest_rating) == 1500.0 or float(s_oldest.contest_rating) == 0):
-                s_oldest.contest_rating = None
-
-            try:
-                db.commit()
-            except Exception:
-                db.rollback()
+            p_rat = s_prev.contest_rating
+            if p_rat is not None and (float(p_rat) == 1500.0 or float(p_rat) == 0):
+                p_rat = None
+            c_rat = s_curr.contest_rating
+            if c_rat is not None and p_rat is not None:
+                s_curr.delta_rating = round(float(c_rat) - float(p_rat), 1)
+            else:
+                s_curr.delta_rating = None
         else:
-            # Fallback to direct snapshot subtraction if no submission calendar exists
-            for i in range(len(snapshots)):
-                s_curr = cast(Any, snapshots[i])
-                if s_curr.contest_rating is not None and (float(s_curr.contest_rating) == 1500.0 or float(s_curr.contest_rating) == 0):
-                    s_curr.contest_rating = None
-
-                if i < len(snapshots) - 1:
-                    s_prev = cast(Any, snapshots[i + 1])
-                    c_ez = s_curr.easy_solved or 0
-                    c_med = s_curr.medium_solved or 0
-                    c_hd = s_curr.hard_solved or 0
-                    c_tot = s_curr.total_solved or 0
-
-                    p_ez = s_prev.easy_solved or 0
-                    p_med = s_prev.medium_solved or 0
-                    p_hd = s_prev.hard_solved or 0
-                    p_tot = s_prev.total_solved or 0
-
-                    d_ez = c_ez - p_ez
-                    d_med = c_med - p_med
-                    d_hd = c_hd - p_hd
-                    d_tot = c_tot - p_tot if (c_tot - p_tot) != 0 else (d_ez + d_med + d_hd)
-                    s_curr.delta_easy = d_ez
-                    s_curr.delta_medium = d_med
-                    s_curr.delta_hard = d_hd
-                    s_curr.delta_total = d_tot
-
-                    p_rat = s_prev.contest_rating
-                    if p_rat is not None and (float(p_rat) == 1500.0 or float(p_rat) == 0):
-                        p_rat = None
-                    c_rat = s_curr.contest_rating
-                    if c_rat is not None and p_rat is not None:
-                        s_curr.delta_rating = round(float(c_rat) - float(p_rat), 1)
-                    else:
-                        s_curr.delta_rating = None
-                else:
-                    s_curr.delta_total = None
-                    s_curr.delta_easy = None
-                    s_curr.delta_medium = None
-                    s_curr.delta_hard = None
-                    s_curr.delta_rating = None
+            s_curr.delta_total = None
+            s_curr.delta_easy = None
+            s_curr.delta_medium = None
+            s_curr.delta_hard = None
+            s_curr.delta_rating = None
 
     st_rat = student.stats.contest_rating if student.stats else None
     if st_rat is not None and (float(st_rat) == 1500.0 or float(st_rat) == 0):

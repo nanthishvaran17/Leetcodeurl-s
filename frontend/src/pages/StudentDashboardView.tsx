@@ -78,7 +78,7 @@ export const StudentDashboardView: React.FC = () => {
     <div className="space-y-8 pt-0 pb-8">
 
       {/* Student Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-4 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-brand-950 text-white p-3.5 sm:p-6 md:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
           <div className="flex items-center space-x-5 flex-1 min-w-0 max-w-full">
@@ -144,7 +144,7 @@ export const StudentDashboardView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
             {/* Total Solved */}
-            <div className="glass-card p-6 rounded-3xl border border-brand-500/30 space-y-2 shadow-lg">
+            <div className="glass-card p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-brand-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Total Solved</span>
                 <Award className="w-5 h-5 text-amber-500" />
@@ -158,7 +158,7 @@ export const StudentDashboardView: React.FC = () => {
             </div>
 
             {/* Contest Rating */}
-            <div className="glass-card p-6 rounded-3xl border border-amber-500/30 space-y-2 shadow-lg">
+            <div className="glass-card p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Contest Rating</span>
                 <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
@@ -175,7 +175,7 @@ export const StudentDashboardView: React.FC = () => {
             </div>
 
             {/* Weekly Progress */}
-            <div className="glass-card p-6 rounded-3xl border border-emerald-500/30 space-y-2 shadow-lg">
+            <div className="glass-card p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-emerald-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Weekly Progress</span>
                 <TrendingUp className="w-5 h-5 text-emerald-500" />
@@ -198,7 +198,7 @@ export const StudentDashboardView: React.FC = () => {
             </div>
 
             {/* Active Streak */}
-            <div className="glass-card p-6 rounded-3xl border border-rose-500/30 space-y-2 shadow-lg">
+            <div className="glass-card p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-rose-500/30 space-y-2 shadow-lg">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Active Streak</span>
                 <Activity className="w-5 h-5 text-rose-500 fill-rose-500" />
@@ -223,7 +223,7 @@ export const StudentDashboardView: React.FC = () => {
           </div>
 
           {/* Difficulty Breakdown */}
-          <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
+          <div className="glass-card p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
                 <Layers className="w-5 h-5 text-brand-500" />
@@ -256,7 +256,7 @@ export const StudentDashboardView: React.FC = () => {
 
           {/* Badges Shelf */}
           {studentData.badge_list && studentData.badge_list.length > 0 && (
-            <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
+            <div className="glass-card p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border space-y-4 shadow-xl">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
                 <Award className="w-5 h-5 text-amber-500" />
                 <span>Earned Achievements & Badges</span>

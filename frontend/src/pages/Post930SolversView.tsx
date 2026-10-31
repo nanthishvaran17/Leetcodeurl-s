@@ -429,10 +429,10 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
       </div>
 
       {/* Main Solvers Table (Desktop) & Cards (Mobile) */}
-      <div className="glass-card rounded-3xl border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-xl max-w-full">
+      <div className="glass-card rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-xl max-w-full">
         
         {/* MOBILE CARDS VIEW (md:hidden) — 2026 SaaS Bento Solvers */}
-        <div className="block md:hidden p-3.5 sm:p-5 flex flex-col gap-3.5 sm:gap-5">
+        <div className="block md:hidden p-2.5 sm:p-5 flex flex-col gap-3 sm:gap-5">
           {loading ? (
             <div className="p-8 text-center text-slate-400 font-bold animate-pulse">
               Detecting post-9:30 AM solvers &amp; verifying submission timestamps...

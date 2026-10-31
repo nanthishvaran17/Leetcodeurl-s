@@ -1247,6 +1247,7 @@ from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 
 class GenerateReportPayload(BaseModel):
     report_type: str = "STUDENT_PERFORMANCE"
+    college: Optional[str] = "ALL"
     department: str = "ALL"
     year: str = "ALL"
     output_scope: str = "COLLEGE"
@@ -1259,7 +1260,7 @@ def generate_universal_report(
     payload: ReportGenerateRequest,
     request: Request,
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(required_roles=["admin", "super admin", "hod", "faculty", "staff", "student"], resource_name="Generate Universal Report", dept_scoped=True))
+    current_user = Depends(require_security_access(required_roles=["admin", "super admin", "principal", "management", "director", "hod", "faculty", "staff", "student"], resource_name="Generate Universal Report", dept_scoped=True))
 ):
     """
     UNIVERSAL CENTRAL REPORT GENERATION ENDPOINT
@@ -1268,6 +1269,8 @@ def generate_universal_report(
     """
     try:
         filters = payload.filters or {}
+        col = payload.college or filters.get("college", "ALL")
+        filters["college"] = col
         dept = payload.department or filters.get("department", "ALL")
         yr = payload.year or filters.get("year", "ALL")
         scope = payload.output_scope or filters.get("output_scope", "COLLEGE")
@@ -1290,6 +1293,7 @@ def generate_universal_report(
 
         config = ReportConfig(
             report_type=payload.report_type,
+            college=col,
             department=dept,
             year=yr,
             output_scope=scope,
@@ -2921,7 +2925,7 @@ class HODSnapshotPayload(BaseModel):
 def create_hod_snapshot(
     payload: Optional[HODSnapshotPayload] = None, 
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Generate HOD Snapshot", required_roles=["admin", "super admin"]))
+    current_user = Depends(require_security_access(resource_name="Generate HOD Snapshot", required_roles=["admin", "super admin", "principal", "management"]))
 ):
     """
     Generates a new executive HOD snapshot.

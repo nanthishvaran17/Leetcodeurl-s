@@ -187,7 +187,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
     <motion.div
       whileHover={{ scale: 1.002 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className={`p-5 sm:p-7 rounded-3xl border transition-all duration-500 relative overflow-hidden backdrop-blur-xl ${
+      className={`p-4 sm:p-7 rounded-2xl sm:rounded-3xl border transition-all duration-500 relative overflow-hidden backdrop-blur-xl ${
         isSessionLive
           ? 'bg-white dark:bg-navy-900/95 border-emerald-200/90 dark:border-emerald-600/50 shadow-[0_10px_35px_-8px_rgba(16,185,129,0.15),0_4px_12px_rgba(0,0,0,0.02)]'
           : 'bg-white dark:bg-navy-900/95 border-slate-200/90 dark:border-white/[0.09] shadow-[0_10px_35px_-8px_rgba(99,102,241,0.12)] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.14)]'
@@ -209,10 +209,10 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
         }`} 
       />
 
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 w-full relative z-10">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6 w-full relative z-10">
         
         {/* Left Section: Live Beacon & Title */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           
           {/* Animated Icon Badge */}
           <div className="relative flex items-center justify-center shrink-0">
@@ -233,16 +233,16 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
           {/* Titles and Badges */}
           <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h4 className="font-black text-xl sm:text-2xl tracking-tight flex items-center gap-2 w-full text-slate-900">
+              <h4 className="font-black text-lg sm:text-2xl tracking-tight flex items-center gap-2 w-full text-slate-900 dark:text-white">
                 {isSessionLive ? (
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-slate-900 font-black">SUNDAY SESSION</span>
+                    <span className="text-slate-900 dark:text-white font-black">SUNDAY SESSION</span>
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 font-black">
                       LIVE NOW
                     </span>
                   </span>
                 ) : (
-                  <span className="text-slate-900 font-black line-clamp-2 break-words max-w-full">
+                  <span className="text-slate-900 dark:text-white font-black line-clamp-2 break-words max-w-full">
                     {timing.headerTitle}
                   </span>
                 )}
@@ -285,12 +285,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -3 }}
                         transition={{ duration: 0.3 }}
-                        className="text-slate-900 font-extrabold"
+                        className="text-slate-900 dark:text-white font-extrabold"
                       >
                         {MOTIVATIONAL_HOOKS[quoteIndex](displayName)}
                       </motion.span>
                     </AnimatePresence>
-                    <span className="text-slate-500 font-medium">• Next Window: 08:00 AM – 09:30 AM IST</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">• Next Window: 08:00 AM – 09:30 AM IST</span>
                   </span>
                 ) : (
                   <span>{timing.subTitle}</span>
@@ -301,13 +301,13 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
         </div>
 
         {/* Right Section: Time Counter Digit Cards (Clean White Elevated Cards) */}
-        <div className="flex items-center space-x-2 sm:space-x-3 self-center sm:self-auto font-mono">
+        <div className="flex items-center space-x-1.5 sm:space-x-3 self-center sm:self-auto font-mono">
           {!isSessionLive && (
             <>
               {/* Days Box */}
               <div className="flex flex-col items-center">
-                <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
-                  <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
+                <div className="relative px-2.5 min-[390px]:px-3.5 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[50px] min-[390px]:min-w-[58px] sm:min-w-[66px] text-center">
+                  <span className="text-xl min-[390px]:text-2xl sm:text-3xl font-mono font-black text-slate-800 dark:text-white">
                     {time.days}
                   </span>
                 </div>
@@ -315,14 +315,14 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
                   DAYS
                 </span>
               </div>
-              <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 mb-4 animate-pulse">:</span>
+              <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 dark:text-slate-600 mb-4 animate-pulse">:</span>
             </>
           )}
 
           {/* Hours Box */}
           <div className="flex flex-col items-center">
-            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
-              <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
+            <div className="relative px-2.5 min-[390px]:px-3.5 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[50px] min-[390px]:min-w-[58px] sm:min-w-[66px] text-center">
+              <span className="text-xl min-[390px]:text-2xl sm:text-3xl font-mono font-black text-slate-800 dark:text-white">
                 {time.hours}
               </span>
             </div>
@@ -331,12 +331,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
             </span>
           </div>
 
-          <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 mb-4 animate-pulse">:</span>
+          <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 dark:text-slate-600 mb-4 animate-pulse">:</span>
 
           {/* Minutes Box */}
           <div className="flex flex-col items-center">
-            <div className="relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[58px] sm:min-w-[66px] text-center">
-              <span className="text-2xl sm:text-3xl font-mono font-black text-slate-800">
+            <div className="relative px-2.5 min-[390px]:px-3.5 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl bg-slate-50/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700 shadow-sm min-w-[50px] min-[390px]:min-w-[58px] sm:min-w-[66px] text-center">
+              <span className="text-xl min-[390px]:text-2xl sm:text-3xl font-mono font-black text-slate-800 dark:text-white">
                 {time.minutes}
               </span>
             </div>
@@ -345,16 +345,16 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
             </span>
           </div>
 
-          <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 mb-4 animate-pulse">:</span>
+          <span className="text-xl sm:text-2xl font-mono font-black text-slate-300 dark:text-slate-600 mb-4 animate-pulse">:</span>
 
           {/* Seconds Box - Hero Accent Card on White */}
           <div className="flex flex-col items-center">
-            <div className={`relative px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl min-w-[58px] sm:min-w-[66px] text-center shadow-sm transition-all ${
+            <div className={`relative px-2.5 min-[390px]:px-3.5 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl min-w-[50px] min-[390px]:min-w-[58px] sm:min-w-[66px] text-center shadow-sm transition-all ${
               isSessionLive 
                 ? 'bg-gradient-to-b from-emerald-50 to-emerald-100/60 border border-emerald-300 shadow-emerald-500/10' 
                 : 'bg-gradient-to-b from-brand-50 to-indigo-100/60 border border-brand-300 shadow-brand-500/10'
             }`}>
-              <span className={`text-2xl sm:text-3xl font-mono font-black ${
+              <span className={`text-xl min-[390px]:text-2xl sm:text-3xl font-mono font-black ${
                 isSessionLive 
                   ? 'text-emerald-600' 
                   : 'text-brand-600'

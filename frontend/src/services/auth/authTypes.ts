@@ -22,6 +22,8 @@ export interface AuthUser {
   registerNo?: string | null;
   department?: string | null;
   department_id?: number | null;
+  department_code?: string | null;
+  department_name?: string | null;
   section_id?: number | null;
   year?: string | null;
   section?: string | null;
@@ -38,6 +40,8 @@ export interface AuthUser {
   date_of_birth?: string | null;
   is_2fa_enabled?: boolean;
   college?: string | null;
+  allow_management_audit_access?: boolean;
+  allow_management_admin_settings?: boolean;
   /** HOD multi-department scope: list of department IDs this HOD is authorized to access.
    *  Empty array means global access (for Admin/Principal/Management roles). */
   authorized_department_ids?: number[];
@@ -49,19 +53,41 @@ export interface AuthUser {
 export function isHodRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return r === 'hod' || r === 'department hod' || r === 'department_hod' || r === 'head of department' || r === 'placement coordinator' || r === 'placement officer';
+  return r === 'hod' || r === 'department hod' || r === 'department_hod' || r === 'head of department' || r === 'placement coordinator' || r === 'placement_coordinator' || r === 'placement officer' || r === 'placement_officer' || r === 'placement';
 }
 
 export function isStaffRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'].includes(r);
+  return ['staff', 'faculty', 'professor', 'mentor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'].includes(r);
 }
 
 export function isGlobalAccessRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
   return ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive'].includes(r);
+}
+
+/**
+ * College filter access check:
+ * Returns true ONLY for Admin and Management roles.
+ * Staff, HOD, Faculty, Principal, and Students CANNOT view or switch colleges.
+ * Their scope is strictly locked to their own college (NEC or NCT).
+ */
+export function isCollegeFilterAllowed(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const r = (user.role || '').trim().toLowerCase();
+  return [
+    'admin',
+    'administrator',
+    'super admin',
+    'super_admin',
+    'management',
+    'director',
+    'executive',
+    'trust',
+    'trustee',
+  ].includes(r);
 }
 
 export function getUserCollege(user: AuthUser | null): 'NEC' | 'NCT' {

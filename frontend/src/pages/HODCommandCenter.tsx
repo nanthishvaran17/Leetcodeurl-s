@@ -954,7 +954,7 @@ const ReportHubModal: React.FC<{
  {loading ? (
  <div className="p-16 text-center text-slate-700 dark:text-slate-400 font-black text-sm">Loading live report data for selected scope...</div>
  ) : (
- <div className="mt-6 sm:mt-8 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-lg space-y-6 sm:space-y-7 text-slate-900 dark:text-white">
+ <div className="mt-4 sm:mt-8 p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-lg space-y-4 sm:space-y-7 text-slate-900 dark:text-white">
  <div className="border-b border-slate-200 dark:border-navy-800 pb-4 sm:pb-5 mb-2 flex justify-between items-center flex-wrap gap-4">
  <div className="flex items-center space-x-3">
  <img src="/nandha_emblem.png" alt="Nandha Emblem" className="h-10 w-auto object-contain hidden sm:block" onError={(e: any) => { e.target.style.display = 'none'; }} />

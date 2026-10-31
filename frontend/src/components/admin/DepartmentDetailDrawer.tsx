@@ -512,8 +512,8 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                         No top performer data available.
                       </div>
                     ) : (
-                      <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
-                        <table className="w-full text-left border-collapse">
+                      <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[280px]">
                           <thead>
                             <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                               <th className="py-2.5 px-2 sm:px-3 w-10 sm:w-14 text-center">Rank</th>

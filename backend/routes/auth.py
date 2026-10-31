@@ -35,6 +35,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=Fals
 # HOD DEPARTMENT SCOPE HELPER
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _get_management_permission_flags(db: Session) -> dict:
+    from backend.models import AdminSettingsModel
+    mgmt_audit = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_AUDIT_ACCESS").first()
+    mgmt_settings = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_ADMIN_SETTINGS").first()
+    return {
+        "allow_management_audit_access": str(mgmt_audit.value).strip().lower() in ["true", "1", "yes"] if mgmt_audit else False,
+        "allow_management_admin_settings": str(mgmt_settings.value).strip().lower() in ["true", "1", "yes"] if mgmt_settings else False,
+    }
+
+
 def _get_user_dept_scope(db: Session, user: User) -> dict:
     """
     Returns authorized_department_ids, authorized_department_codes, staff_verification_status,
@@ -83,6 +93,20 @@ def _get_user_dept_scope(db: Session, user: User) -> dict:
         )
         scope["authorized_department_ids"] = get_hod_authorized_department_ids(db, user)
         scope["authorized_department_codes"] = get_hod_authorized_department_codes(db, user)
+
+    # For staff / faculty / mentors: strictly lock scope to their allocated department!
+    u_dept_id = getattr(user, "department_id", None)
+    if u_dept_id:
+        from backend.models import Department
+        dept = db.query(Department).filter(Department.id == u_dept_id).first()
+        if dept:
+            scope["department"] = dept.name
+            scope["department_name"] = dept.name
+            scope["department_code"] = dept.code
+            if not scope["authorized_department_ids"]:
+                scope["authorized_department_ids"] = [dept.id]
+            if not scope["authorized_department_codes"]:
+                scope["authorized_department_codes"] = [dept.code]
 
     return scope
 
@@ -988,7 +1012,8 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
             "email": user.email,
             "role": user.role,
             "department_id": user.department_id,
-            "section_id": user.section_id
+            "section_id": user.section_id,
+            **_get_user_dept_scope(db, user)
         }
     }
 
@@ -1341,6 +1366,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
             "section_id": user.section_id,
             "require_password_change": getattr(user, "require_password_change", False),
             "profile_photo": getattr(user, "profile_photo", None) or "",
+            **_get_management_permission_flags(db),
             **dept_scope
         }
     }
@@ -1372,7 +1398,8 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
             "mentoring_role": getattr(user, "mentoring_role", "") or "",
             "require_password_change": getattr(user, "require_password_change", False),
             "profile_photo": getattr(user, "profile_photo", None) or "",
-            "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            "is_2fa_enabled": bool(getattr(user, "is_2fa_enabled", False)),
+            **_get_management_permission_flags(db),
             **dept_scope
         }
     }
@@ -1445,6 +1472,7 @@ def get_my_profile(
             "profile_metadata": getattr(user, "profile_metadata", None) or {},
             "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else "",
             "last_login": user.last_login.isoformat() if getattr(user, "last_login", None) else "",
+            **_get_management_permission_flags(db),
             **dept_scope
         }
     }

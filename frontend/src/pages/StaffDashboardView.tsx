@@ -390,12 +390,12 @@ export const StaffDashboardView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6 pb-36 sm:pb-20">
+    <div className="flex flex-col gap-3 sm:gap-6 pb-36 sm:pb-20">
 
       <LiveContestPanel />
 
       {/* Staff Mentoring Header Banner — 2026 Bento Architecture */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-5 sm:p-7 md:p-8 shadow-2xl border border-white/[0.08]">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#090d1a] to-[#05070e] text-white p-3.5 sm:p-7 md:p-8 shadow-2xl border border-white/[0.08]">
         {/* Ambient Radial Mesh Glow */}
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-gradient-to-br from-indigo-500/15 via-brand-500/10 to-transparent blur-3xl pointer-events-none" />
 
@@ -461,13 +461,13 @@ export const StaffDashboardView: React.FC = () => {
       </div>
 
       {/* Interactive Summary KPI Grid — 2026 Bento Matrix */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-2 sm:gap-4">
 
         {/* 1. Assigned (All) */}
         <div 
           onClick={() => handleCardFilterClick('ALL')}
           title="Click to view all assigned students"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ALL'
               ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border-brand-500 ring-2 ring-brand-500/30 shadow-indigo-500/10'
               : 'glass-panel hover:border-brand-500/40'
@@ -502,7 +502,7 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('ACTIVE')}
           title="Click to filter active solvers"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ACTIVE'
               ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-emerald-500/10'
               : 'glass-panel hover:border-emerald-500/40'
@@ -531,7 +531,7 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('COMPLETED')}
           title="Click to filter students with 100+ solved"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'COMPLETED'
               ? 'bg-purple-50/90 dark:bg-purple-950/50 border-purple-500 ring-2 ring-purple-500/30 shadow-purple-500/10'
               : 'glass-panel hover:border-purple-500/40'
@@ -560,7 +560,7 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('ATTENTION')}
           title="Click to filter students needing attention"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ATTENTION'
               ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-500 ring-2 ring-amber-500/30 shadow-amber-500/10'
               : 'glass-panel hover:border-amber-500/40'
@@ -589,7 +589,7 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('UNRESPONSIVE')}
           title="Click to filter students who haven't solved anything in a week"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'UNRESPONSIVE'
               ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-orange-500/30 shadow-orange-500/10'
               : 'glass-panel hover:border-orange-500/40'
@@ -618,7 +618,7 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('AT_RISK')}
           title="Click to filter at-risk students"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'AT_RISK'
               ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 ring-2 ring-rose-500/30 shadow-rose-500/10'
               : 'glass-panel hover:border-rose-500/40'
@@ -647,7 +647,7 @@ export const StaffDashboardView: React.FC = () => {
         <div 
           onClick={() => handleCardFilterClick('IN_PROGRESS')}
           title="Click to filter students in progress towards 100 target"
-          className={`p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'IN_PROGRESS'
               ? 'bg-sky-50/90 dark:bg-sky-950/50 border-sky-500 ring-2 ring-sky-500/30 shadow-sky-500/10'
               : 'glass-panel hover:border-sky-500/40'
@@ -687,7 +687,7 @@ export const StaffDashboardView: React.FC = () => {
 
       {/* POST-9:30 AM ACTIVITY NOTIFICATION BANNER FOR STAFF */}
       {summary?.post_930_solvers_count > 0 && (
-        <div className="glass-card p-5 rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-slate-900/40 to-indigo-950/40 flex items-center justify-between flex-wrap gap-4 shadow-xl">
+        <div className="glass-card p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-slate-900/40 to-indigo-950/40 flex items-center justify-between flex-wrap gap-3 sm:gap-4 shadow-xl">
           <div className="flex items-center space-x-3">
             <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
               <Clock className="w-6 h-6 animate-pulse" />
@@ -709,7 +709,7 @@ export const StaffDashboardView: React.FC = () => {
 
       {/* TODAY'S PRIORITY SECTION */}
       {priorityStudents.length > 0 && (
-        <div className="bg-amber-50/40 dark:bg-amber-950/20 p-6 rounded-3xl border border-amber-300/80 dark:border-amber-700/40 space-y-4 shadow-sm">
+        <div className="bg-amber-50/40 dark:bg-amber-950/20 p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-300/80 dark:border-amber-700/40 space-y-3 sm:space-y-4 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center space-x-2.5">
               <div className="p-1.5 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-400">
@@ -733,7 +733,7 @@ export const StaffDashboardView: React.FC = () => {
             {priorityStudents.slice(0, 3).map((st: any) => (
               <div 
                 key={st.id} 
-                className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-amber-200/90 dark:border-amber-900/60 shadow-sm flex flex-col justify-between transition-all hover:border-amber-400 hover:shadow-md"
+                className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-950 border border-amber-200/90 dark:border-amber-900/60 shadow-sm flex flex-col justify-between transition-all hover:border-amber-400 hover:shadow-md"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
@@ -781,11 +781,11 @@ export const StaffDashboardView: React.FC = () => {
       )}
 
       {/* MY STUDENTS MAIN SECTION */}
-      <div id="assigned-students-table-section" className="glass-card p-6 rounded-3xl border space-y-6 shadow-xl scroll-mt-6">
+      <div id="assigned-students-table-section" className="bg-transparent sm:glass-card border-0 sm:border border-slate-200/80 dark:border-navy-700/80 p-0 sm:p-6 rounded-none sm:rounded-3xl space-y-3.5 sm:space-y-6 shadow-none sm:shadow-xl scroll-mt-6">
 
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <Users className="w-5 h-5 text-brand-500" />
               <span>
                 My Assigned Students ({filteredStudents.length})
@@ -796,7 +796,7 @@ export const StaffDashboardView: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
 
             {/* Premium Student Dropdown Filter */}
             {(() => {
@@ -819,7 +819,7 @@ export const StaffDashboardView: React.FC = () => {
 
               return (
                 <div
-                  className="relative shrink-0 min-w-[220px] sm:w-72"
+                  className="relative flex-1 min-w-full sm:min-w-[220px] sm:w-72"
                   onBlur={(e) => {
                     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                       setIsStudentSelectOpen(false);
@@ -1028,7 +1028,7 @@ export const StaffDashboardView: React.FC = () => {
               ];
               const sel = filterOpts.find(o => o.value === filterStatus) || filterOpts[0];
               return (
-                <div className="relative shrink-0" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsFilterOpen(false); }}>
+                <div className="relative flex-1 min-w-full sm:min-w-0 sm:shrink-0" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsFilterOpen(false); }}>
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen(p => !p)}
@@ -1106,7 +1106,7 @@ export const StaffDashboardView: React.FC = () => {
 
         {/* Active Filter Indicator Pill if any filter is applied */}
         {(selectedStudentFilter !== 'ALL' || filterStatus !== 'ALL' || search.trim() !== '') && (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 animate-fade-in">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 animate-fade-in">
             <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-900 dark:text-indigo-200 flex-wrap min-w-0 flex-1">
               <Filter className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
               <span className="min-w-0 break-words">
@@ -1146,7 +1146,7 @@ export const StaffDashboardView: React.FC = () => {
         )}
 
         {/* MOBILE CARDS VIEW (md:hidden) - ZERO horizontal scroll on phone/small screens with clean spacious card gaps */}
-        <div className="block md:hidden flex flex-col gap-4 sm:gap-5 py-1">
+        <div className="block md:hidden flex flex-col gap-3 sm:gap-4 py-0.5">
           {loading ? (
             <div className="p-8 text-center text-slate-400 font-bold animate-pulse">
               Loading your assigned students...
@@ -1173,7 +1173,7 @@ export const StaffDashboardView: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className="overflow-hidden bg-white dark:bg-navy-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
+                  className="overflow-hidden bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-4 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
                 >
                   {/* Top Bar: Reg No, Dept/Year & Status Pills */}
                   <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-navy-800/80 pb-2.5">
@@ -1251,16 +1251,16 @@ export const StaffDashboardView: React.FC = () => {
 
                   {/* Quick Numbers & Inspect Button */}
                   <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-navy-800">
-                    <div className="grid grid-cols-3 gap-1.5 flex-1 min-w-0 text-xs">
-                      <div className="bg-slate-50 dark:bg-navy-950 px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
+                    <div className="grid grid-cols-3 gap-1 sm:gap-1.5 flex-1 min-w-0 text-xs">
+                      <div className="bg-slate-50 dark:bg-navy-950 px-1 sm:px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
                         <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase block truncate">Solved</span>
                         <span className="font-black text-slate-900 dark:text-white text-xs">{solved}</span>
                       </div>
-                      <div className="bg-slate-50 dark:bg-navy-950 px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
+                      <div className="bg-slate-50 dark:bg-navy-950 px-1 sm:px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
                         <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase block truncate">Rating</span>
                         <span className="font-black text-amber-500 dark:text-amber-400 text-xs truncate block">{st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}</span>
                       </div>
-                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 text-center min-w-0">
+                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-1 sm:px-2 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 text-center min-w-0">
                         <span className="text-[9px] text-indigo-700 dark:text-indigo-300 font-black uppercase block truncate">Sun. Contest</span>
                         <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs truncate block">
                           {st.recent_contest_score ? st.recent_contest_score.split('/')[0].trim() : '-'}

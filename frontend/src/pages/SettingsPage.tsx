@@ -7,7 +7,7 @@ import {
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye,
   Check, HardDrive, Terminal, SlidersHorizontal, UserCheck,
-  Camera, Play, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, Info, X, Copy, Code, FileCode, Bell, RotateCcw, Trash2, User
+  Camera, Play, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, Info, X, Copy, Code, FileCode, Bell, RotateCcw, Trash2, User, Settings as SettingsIcon
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -86,6 +86,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
     MAX_LOGIN_ATTEMPTS: '5',
     LOCKOUT_DURATION: '15',
     MAINTENANCE_MODE: 'false',
+    ALLOW_MANAGEMENT_AUDIT_ACCESS: 'false',
+    ALLOW_MANAGEMENT_ADMIN_SETTINGS: 'false',
     ENABLE_AUTO_BIWEEKLY_CONTEST: 'true',
     ENABLE_DAILY_SOLVE_SYNC: 'true',
     DAILY_SOLVE_SYNC_TIME: '02:00',
@@ -95,6 +97,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
     AUTO_PRUNE_BACKUPS: 'true',
     LAST_UPDATED_AT: ''
   });
+
+  const isManagement = roleClean === 'management';
+  const isSettingsAllowed = isAdmin || (isManagement && (Boolean(currentUser?.allow_management_admin_settings) || settings.ALLOW_MANAGEMENT_ADMIN_SETTINGS === 'true'));
 
   const [backups, setBackups] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -145,10 +150,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ initialSection }) =>
 
   // Auto-switch away from admin-only tabs if non-admin user
   useEffect(() => {
-    if (currentUser && !isAdmin && !['profile', 'notifications', 'security'].includes(activeSectionFilter)) {
+    if (currentUser && !isSettingsAllowed && !['profile', 'notifications', 'security'].includes(activeSectionFilter)) {
       setActiveSectionFilter('profile');
     }
-  }, [currentUser, isAdmin, activeSectionFilter]);
+  }, [currentUser, isSettingsAllowed, activeSectionFilter]);
 
   const configFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -2390,6 +2395,90 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               <div className="p-3 rounded-2xl border bg-white/90 dark:bg-navy-900/90 border-teal-100 dark:border-teal-900/60 shadow-xs flex flex-col justify-between">
                 <span className="text-teal-600 dark:text-teal-400 text-[10px] font-black uppercase tracking-wider">Audit Logging</span>
                 <span className="font-mono font-black text-xs text-emerald-600 dark:text-emerald-400 mt-1">LOCKED ON</span>
+              </div>
+            </div>
+
+            {/* EXECUTIVE & MANAGEMENT DELEGATED PERMISSIONS */}
+            <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-brand-500/5 border border-indigo-200/80 dark:border-indigo-800/60 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-indigo-100 dark:border-indigo-900/40">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider">
+                      Management Role Elevated Permissions
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Control whether users with the Management role can access Admin Settings and Audit Logs.
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 self-start sm:self-auto uppercase tracking-wider">
+                  ROLE ACCESS SWITCH
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {/* Switch 1: Audit Log Access */}
+                <div className={`p-4 rounded-xl border transition-all flex items-start justify-between gap-3 ${
+                  settings.ALLOW_MANAGEMENT_AUDIT_ACCESS === 'true'
+                    ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700'
+                }`}>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className={`w-4 h-4 ${settings.ALLOW_MANAGEMENT_AUDIT_ACCESS === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        Management Audit Log Access
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      When ON, Management users see the Audit Log page in the sidebar and can view compliance activity logs.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettings((prev: any) => ({ ...prev, ALLOW_MANAGEMENT_AUDIT_ACCESS: prev.ALLOW_MANAGEMENT_AUDIT_ACCESS === 'true' ? 'false' : 'true' }))}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      settings.ALLOW_MANAGEMENT_AUDIT_ACCESS === 'true' ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      settings.ALLOW_MANAGEMENT_AUDIT_ACCESS === 'true' ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Switch 2: Admin Settings Access */}
+                <div className={`p-4 rounded-xl border transition-all flex items-start justify-between gap-3 ${
+                  settings.ALLOW_MANAGEMENT_ADMIN_SETTINGS === 'true'
+                    ? 'bg-purple-50/70 dark:bg-purple-950/20 border-purple-300 dark:border-purple-800'
+                    : 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700'
+                }`}>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <SettingsIcon className={`w-4 h-4 ${settings.ALLOW_MANAGEMENT_ADMIN_SETTINGS === 'true' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400'}`} />
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        Management Admin Settings Access
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      When ON, Management users see Admin Settings in the sidebar and can view/manage system modules.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettings((prev: any) => ({ ...prev, ALLOW_MANAGEMENT_ADMIN_SETTINGS: prev.ALLOW_MANAGEMENT_ADMIN_SETTINGS === 'true' ? 'false' : 'true' }))}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      settings.ALLOW_MANAGEMENT_ADMIN_SETTINGS === 'true' ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      settings.ALLOW_MANAGEMENT_ADMIN_SETTINGS === 'true' ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

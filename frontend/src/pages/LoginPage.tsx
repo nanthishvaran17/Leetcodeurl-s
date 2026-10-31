@@ -679,7 +679,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
             <img
               src="/nec_25_logo.webp"
               alt="25 NEC Silver Jubilee"
-              className="mobile-jubilee-img"
+              className="mobile-jubilee-img rounded-full"
               loading="eager"
               fetchPriority="high"
               decoding="async"

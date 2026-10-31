@@ -191,7 +191,7 @@ export const AdminLoginPage = () => {
                   />
 
                   {/* 6 Animated Digit Slot Boxes */}
-                  <div className="grid grid-cols-6 gap-2 sm:gap-3 py-1">
+                  <div className="grid grid-cols-6 gap-1.5 sm:gap-3 py-1">
                     {[0, 1, 2, 3, 4, 5].map((index) => {
                       const char = otp[index] || '';
                       const isCurrent = otp.length === index;

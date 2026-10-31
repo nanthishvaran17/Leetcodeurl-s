@@ -16,12 +16,133 @@ interface MessagesPageProps {
   onNavigateTab?: (tab: string) => void;
 }
 
+
+const normalizeId = (val: any) => String(val || '').trim().toLowerCase();
+
+/**
+ * Authoritative, loss-free message reconciliation algorithm.
+ * Guarantees that:
+ * 1. Optimistic messages in 'SENDING' state are never dropped while pending.
+ * 2. Confirmed server messages seamlessly replace matching optimistic messages by clientMessageId.
+ * 3. Already rendered messages in 'prev' are NEVER wiped out by background polling or partial snapshots.
+ * 4. Deduplication is strictly 100% stable by messageId and clientMessageId (no content-based mis-matching).
+ * 5. Messages are ordered chronologically by createdAt (oldest to newest).
+ */
+export function mergeMessages(prevList: Message[], incoming: Message | Message[]): Message[] {
+  const incomingArr = (Array.isArray(incoming) ? incoming : [incoming]).filter(Boolean);
+  if (incomingArr.length === 0) return prevList;
+
+  // Index incoming by real messageId and by clientMessageId
+  const incomingByMsgId = new Map<string, Message>();
+  const incomingByClientMsgId = new Map<string, Message>();
+
+  for (const inc of incomingArr) {
+    if (inc.messageId) {
+      incomingByMsgId.set(inc.messageId, inc);
+    }
+    if (inc.clientMessageId) {
+      incomingByClientMsgId.set(inc.clientMessageId, inc);
+    }
+  }
+
+  const merged: Message[] = [];
+  const handledServerMsgIds = new Set<string>();
+
+  // Reconcile existing messages in list
+  for (const prevMsg of prevList) {
+    // 1. Direct match by messageId
+    if (incomingByMsgId.has(prevMsg.messageId)) {
+      const serverMsg = incomingByMsgId.get(prevMsg.messageId)!;
+      merged.push({
+        ...serverMsg,
+        localMediaUrl: serverMsg.localMediaUrl || prevMsg.localMediaUrl
+      });
+      handledServerMsgIds.add(serverMsg.messageId);
+      continue;
+    }
+
+    // 2. Match optimistic message by clientMessageId
+    if (incomingByClientMsgId.has(prevMsg.messageId)) {
+      const serverMsg = incomingByClientMsgId.get(prevMsg.messageId)!;
+      if (prevMsg.localMediaUrl) {
+        URL.revokeObjectURL(prevMsg.localMediaUrl);
+      }
+      merged.push(serverMsg);
+      handledServerMsgIds.add(serverMsg.messageId);
+      continue;
+    }
+
+    // 3. Match if prevMsg has a clientMessageId that matches incoming clientMessageId
+    if (prevMsg.clientMessageId && incomingByClientMsgId.has(prevMsg.clientMessageId)) {
+      const serverMsg = incomingByClientMsgId.get(prevMsg.clientMessageId)!;
+      if (prevMsg.localMediaUrl) {
+        URL.revokeObjectURL(prevMsg.localMediaUrl);
+      }
+      merged.push(serverMsg);
+      handledServerMsgIds.add(serverMsg.messageId);
+      continue;
+    }
+
+    // 4. If prevMsg is an in-flight optimistic message, ALWAYS keep it
+    if (prevMsg.status === 'SENDING' || prevMsg.messageId.startsWith('TEMP_')) {
+      merged.push(prevMsg);
+      continue;
+    }
+
+    // 5. If prevMsg is a confirmed message, ALWAYS preserve it (prevent disappearance from partial polling)
+    merged.push(prevMsg);
+  }
+
+  // Append any incoming messages not matched above
+  for (const inc of incomingArr) {
+    if (!handledServerMsgIds.has(inc.messageId)) {
+      merged.push(inc);
+      handledServerMsgIds.add(inc.messageId);
+    }
+  }
+
+  // Deduplicate: If an entry is TEMP_ but its clientMessageId is already confirmed by a real server message, drop the TEMP_
+  const confirmedClientIds = new Set<string>();
+  for (const m of merged) {
+    if (!m.messageId.startsWith('TEMP_')) {
+      if (m.clientMessageId) confirmedClientIds.add(m.clientMessageId);
+      confirmedClientIds.add(m.messageId);
+    }
+  }
+
+  const deduped: Message[] = [];
+  const seenIds = new Set<string>();
+
+  for (const m of merged) {
+    if (m.messageId.startsWith('TEMP_')) {
+      if (confirmedClientIds.has(m.messageId) || (m.clientMessageId && confirmedClientIds.has(m.clientMessageId))) {
+        continue; // Already confirmed by server
+      }
+    }
+    if (!seenIds.has(m.messageId)) {
+      seenIds.add(m.messageId);
+      deduped.push(m);
+    }
+  }
+
+  // Sort stably by createdAt
+  deduped.sort((a, b) => {
+    const tA = new Date(a.createdAt || 0).getTime();
+    const tB = new Date(b.createdAt || 0).getTime();
+    return tA - tB;
+  });
+
+  return deduped;
+}
+
 export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => {
   const { token, user } = useAuth();
   const { notify } = useNotification();
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const activeConversationIdRef = useRef<string | null>(activeConversationId);
+  activeConversationIdRef.current = activeConversationId;
   const [messages, setMessages] = useState<Message[]>([]);
   
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -115,30 +236,17 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
       return;
     }
     try {
-      const res = await api.get(`/messaging/conversations/${conversationId}/messages`);
+      const res = await api.get(`/messaging/conversations/${conversationId}/messages?limit=100`);
       const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-      if (data?.success) {
-        const uniqueMsgs: Message[] = [];
-        const seen = new Set<string>();
-        (data.messages || []).forEach((m: Message) => {
-          if (m?.messageId && !seen.has(m.messageId)) {
-            seen.add(m.messageId);
-            uniqueMsgs.push(m);
-          }
-        });
-        // Preserve local optimistic messages currently in 'SENDING' state
-        setMessages(prev => {
-          const pendingLocals = prev.filter(m => m.status === 'SENDING' && !seen.has(m.messageId));
-          if (pendingLocals.length === 0) {
-            return uniqueMsgs;
-          }
-          return [...uniqueMsgs, ...pendingLocals];
-        });
-        
-        // Clear unread count for this conversation
-        setConversations(prev => prev.map(c => 
-          c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c
-        ));
+      if (data?.success && Array.isArray(data.messages)) {
+        if (activeConversationIdRef.current === conversationId) {
+          setMessages(prev => mergeMessages(prev, data.messages));
+          
+          // Clear unread count for this conversation
+          setConversations(prev => prev.map(c => 
+            c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c
+          ));
+        }
       }
     } catch (err) {
       if (!isSilent) console.error('Failed to fetch messages', err);
@@ -181,7 +289,54 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     }
   }, [activeConversationId]);
 
-  // WebSocket Integration with all real-time events
+  // Real-time message receipt handler
+  const handleIncomingNewMessage = useCallback((msg: any) => {
+    if (!msg) return;
+
+    setConversations(prev => {
+      let updated = false;
+      const mapped = prev.map(c => {
+        if (c.conversationId === msg.conversationId) {
+          updated = true;
+          return {
+            ...c,
+            lastMessagePreview: msg.content || (msg.attachmentFileId ? 'Sent an attachment' : c.lastMessagePreview),
+            lastMessageAt: msg.createdAt || new Date().toISOString(),
+            unreadCount: (activeConversationIdRef.current === msg.conversationId || normalizeId(msg.senderId) === normalizeId(currentUserStr))
+              ? c.unreadCount 
+              : c.unreadCount + 1
+          };
+        }
+        return c;
+      });
+      if (!updated) {
+        fetchConversations();
+        return prev;
+      }
+      return mapped.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+    });
+
+    const currentActive = activeConversationIdRef.current;
+    const conv = conversations.find(c => c.conversationId === currentActive);
+    const sId = normalizeId(msg.senderId);
+    const rId = normalizeId(msg.receiverId);
+    const myId = normalizeId(currentUserStr);
+    const otherId = normalizeId(conv?.otherUser?.id);
+
+    const isCurrentChat = (currentActive && msg.conversationId === currentActive) ||
+      (conv && (
+        ((sId === myId || sId === otherId) && (rId === myId || rId === otherId))
+      ));
+
+    if (isCurrentChat) {
+      if (currentActive !== msg.conversationId && !currentActive?.startsWith('system-')) {
+        setActiveConversationId(msg.conversationId);
+      }
+      setMessages(prev => mergeMessages(prev, msg));
+    }
+  }, [conversations, currentUserStr, fetchConversations]);
+
+  // WebSocket Integration with direct zero-latency event dispatch
   const {
     isConnected,
     latestMessage,
@@ -192,7 +347,30 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     statusUpdate,
     viewConversation,
     leaveConversation
-  } = useMessagingWebSocket(token);
+  } = useMessagingWebSocket(token, {
+    onNewMessage: handleIncomingNewMessage,
+    onMessageEdited: (msg) => {
+      setMessages(prev => prev.map(m => m.messageId === msg.messageId ? { ...m, ...msg } : m));
+    },
+    onMessageDeleted: ({ messageId, mode, message }) => {
+      if (mode === 'FOR_EVERYONE' && message) {
+        setMessages(prev => prev.map(m => m.messageId === messageId ? message : m));
+      } else {
+        setMessages(prev => prev.filter(m => m.messageId !== messageId));
+      }
+    },
+    onMessageReaction: ({ messageId, reactions }) => {
+      setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, reactions } : m));
+    },
+    onTypingStatus: ({ conversationId, senderId, isTyping }) => {
+      if (normalizeId(senderId) !== normalizeId(currentUserStr)) {
+        setTypingUsers(prev => ({ ...prev, [conversationId]: isTyping }));
+      }
+    },
+    onMessageStatusUpdate: ({ messageId, status, deliveredAt, readAt }) => {
+      setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, status, deliveredAt, readAt } : m));
+    }
+  });
 
   const flushOutbox = useCallback(async () => {
     const outboxRaw = localStorage.getItem('messages_outbox');
@@ -207,9 +385,12 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
           // Re-send text payloads via direct fast HTTP
           const res = await api.post('/messaging/messages', item.payload);
           const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-          if (data?.success) {
-            const realMsg = data.message;
-            setMessages(prev => prev.map(m => (m.messageId === item.tempId || (m.status === 'SENDING' && m.content === item.payload?.content)) ? realMsg : m));
+          if (data?.success && data.message) {
+            const realMsg: Message = data.message;
+            if (!realMsg.clientMessageId && item.tempId) {
+              realMsg.clientMessageId = item.tempId;
+            }
+            setMessages(prev => mergeMessages(prev, realMsg));
           } else {
             remaining.push(item);
           }
@@ -303,113 +484,10 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     };
   }, [flushOutbox, fetchConversations, fetchMessages, activeConversationId]);
 
-  // Handle incoming NEW_MESSAGE
-  useEffect(() => {
-    if (latestMessage) {
-      const msg = latestMessage;
-      setConversations(prev => {
-        let updated = false;
-        const mapped = prev.map(c => {
-          if (c.conversationId === msg.conversationId) {
-            updated = true;
-            return {
-              ...c,
-              lastMessagePreview: msg.content,
-              lastMessageAt: msg.createdAt,
-              unreadCount: activeConversationId === msg.conversationId && msg.senderId !== currentUserStr 
-                ? c.unreadCount 
-                : (msg.senderId !== currentUserStr ? c.unreadCount + 1 : c.unreadCount)
-            };
-          }
-          return c;
-        });
-        if (!updated) {
-          fetchConversations();
-          return prev;
-        }
-        return mapped.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
-      });
-
-      // Reconcile message with active conversation even if activeConversationId was a temporary or client ID
-      const conv = conversations.find(c => c.conversationId === activeConversationId);
-      const isCurrentChat = activeConversationId === msg.conversationId ||
-        (conv && (
-          ((msg.senderId === currentUserStr || msg.senderId === conv.otherUser?.id) &&
-           (msg.receiverId === currentUserStr || msg.receiverId === conv.otherUser?.id))
-        ));
-
-      if (isCurrentChat) {
-        if (activeConversationId !== msg.conversationId && !activeConversationId?.startsWith('system-')) {
-          setActiveConversationId(msg.conversationId);
-        }
-        setMessages(prev => {
-          if (prev.some(p => p.messageId === msg.messageId)) return prev;
-          const tempIdx = prev.findIndex(p =>
-            (p.messageId.startsWith('TEMP_') || p.status === 'SENDING') &&
-            (msg.clientMessageId
-              ? (p.messageId === msg.clientMessageId || (p as any).clientMessageId === msg.clientMessageId)
-              : (p.content === msg.content))
-          );
-          if (tempIdx !== -1) {
-            const updated = [...prev];
-            updated[tempIdx] = msg;
-            return updated;
-          }
-          // Fallback: match any message in SENDING state with same content
-          const sendingIdx = prev.findIndex(p => p.status === 'SENDING' && p.content === msg.content);
-          if (sendingIdx !== -1) {
-            const updated = [...prev];
-            updated[sendingIdx] = msg;
-            return updated;
-          }
-          return [...prev, msg];
-        });
-      }
-    }
-  }, [latestMessage, activeConversationId, currentUserStr, fetchConversations, conversations]);
-
-  // Handle MESSAGE_EDITED, DELETED, REACTION, TYPING
-  useEffect(() => {
-    if (updatedMessage) {
-      setMessages(prev => prev.map(m => m.messageId === updatedMessage.messageId ? updatedMessage : m));
-    }
-  }, [updatedMessage]);
-
-  useEffect(() => {
-    if (deletedMessageEvent) {
-      const { messageId, mode, message } = deletedMessageEvent;
-      if (mode === 'FOR_EVERYONE' && message) {
-        setMessages(prev => prev.map(m => m.messageId === messageId ? message : m));
-      } else if (mode === 'FOR_ME') {
-        setMessages(prev => prev.filter(m => m.messageId !== messageId));
-      }
-    }
-  }, [deletedMessageEvent]);
-
-  useEffect(() => {
-    if (reactionUpdate) {
-      const { messageId, reactions } = reactionUpdate;
-      setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, reactions } : m));
-    }
-  }, [reactionUpdate]);
-
-  useEffect(() => {
-    if (typingStatus) {
-      const { conversationId, senderId, isTyping } = typingStatus;
-      if (senderId !== currentUserStr) {
-        setTypingUsers(prev => ({ ...prev, [conversationId]: isTyping }));
-      }
-    }
-  }, [typingStatus, currentUserStr]);
-
-  useEffect(() => {
-    if (statusUpdate) {
-      const { messageId, status, deliveredAt, readAt } = statusUpdate;
-      setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, status, deliveredAt, readAt } : m));
-    }
-  }, [statusUpdate]);
-
   const handleSelectConversation = async (id: string) => {
+    if (activeConversationId !== id) {
+      setMessages([]);
+    }
     setActiveConversationId(id);
     if (!id.startsWith('system-')) {
       setIsMessagesLoading(true);
@@ -437,6 +515,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
     const optMsg: Message = {
       messageId: tempId,
+      clientMessageId: tempId,
       conversationId: activeConversationId,
       senderId: currentUserStr,
       receiverId: conv.otherUser.id,
@@ -450,7 +529,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     };
 
     // 0ms Perception: Instantly render message bubble in UI without waiting
-    setMessages(prev => [...prev, optMsg]);
+    setMessages(prev => mergeMessages(prev, optMsg));
 
     // 0ms Perception: Immediately elevate conversation to top with latest preview
     setConversations(prev => {
@@ -496,21 +575,15 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
         // Direct HTTP API post: bypasses WebSocket disconnect blocks
         const res = await api.post('/messaging/messages', payload);
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-        if (data?.success) {
-          const realMsg = data.message;
-          setMessages(prev => prev.map(m => {
-            const isMatch = m.messageId === tempId ||
-              (realMsg.clientMessageId && (m.messageId === realMsg.clientMessageId || (m as any).clientMessageId === realMsg.clientMessageId)) ||
-              (m.status === 'SENDING' && m.content === content);
-            if (isMatch) {
-              if (m.localMediaUrl) URL.revokeObjectURL(m.localMediaUrl);
-              return realMsg;
-            }
-            return m;
-          }));
+        if (data?.success && data.message) {
+          const realMsg: Message = data.message;
+          if (!realMsg.clientMessageId) {
+            realMsg.clientMessageId = tempId;
+          }
+          setMessages(prev => mergeMessages(prev, realMsg));
 
           // If the backend assigned a canonical conversationId, sync it immediately
-          if (realMsg.conversationId && activeConversationId && activeConversationId !== realMsg.conversationId) {
+          if (realMsg.conversationId && activeConversationIdRef.current && activeConversationIdRef.current !== realMsg.conversationId) {
             setActiveConversationId(realMsg.conversationId);
           }
 

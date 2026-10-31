@@ -8,7 +8,7 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
+import { getUserCollege, isCollegeFilterAllowed, isStaffRole } from '../services/auth/authTypes';
 import { useDepartments } from '../contexts/DepartmentContext';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -73,7 +73,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
   const { departments } = useDepartments();
   const { user } = useAuth();
   const userCollege = useMemo(() => getUserCollege(user), [user]);
-  const isGlobalAccess = isGlobalAccessRole(user);
+  const isGlobalAccess = isCollegeFilterAllowed(user);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -87,7 +87,15 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       setSelectedCollege(userCollege);
     }
   }, [isGlobalAccess, userCollege, selectedCollege]);
-  const [selectedDept, setSelectedDept] = useState<string>('ALL');
+  const isStaffUser = isStaffRole(user);
+  const userDeptCode = ((user as any)?.department_code || user?.department || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || 'ALL').toUpperCase();
+  const [selectedDept, setSelectedDept] = useState<string>(() => isStaffUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL');
+
+  useEffect(() => {
+    if (isStaffUser && userDeptCode !== 'ALL' && selectedDept !== userDeptCode) {
+      setSelectedDept(userDeptCode);
+    }
+  }, [isStaffUser, userDeptCode, selectedDept]);
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<any | null>(null);
 
@@ -314,7 +322,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {((isGlobalAccess ? selectedCollege !== 'ALL' : false) || selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
           <button
             type="button"
-            onClick={() => { setSelectedCollege(isGlobalAccess ? 'ALL' : userCollege); setSelectedDept('ALL'); setSelectedYear('ALL'); }}
+            onClick={() => { setSelectedCollege(isGlobalAccess ? 'ALL' : userCollege); setSelectedDept(isStaffUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL'); setSelectedYear('ALL'); }}
             className="text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-2 min-h-[38px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />

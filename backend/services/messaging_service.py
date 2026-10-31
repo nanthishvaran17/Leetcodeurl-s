@@ -907,7 +907,7 @@ class MessagingService:
                     m.delivered_at = now  # type: ignore[assignment]
             db.commit()
 
-        messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(desc(Message.created_at)).limit(limit).all()
+        messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(desc(Message.created_at), desc(Message.id)).limit(limit).all()
         
         result = []
         for m in reversed(messages): # Oldest to newest

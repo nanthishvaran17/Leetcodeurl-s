@@ -5,7 +5,7 @@ import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 const SyncStatusModal = lazy(() => import('./SyncStatusModal').then(m => ({ default: m.SyncStatusModal })));
 const SignOutConfirmModal = lazy(() => import('./SignOutConfirmModal').then(m => ({ default: m.SignOutConfirmModal })));
-const NotificationPanel = lazy(() => import('./NotificationPanel').then(m => ({ default: m.NotificationPanel })));
+import { NotificationPanel } from './NotificationPanel';
 import { useGlobalNotifications } from '../context/GlobalNotificationContext';
 
 interface NavbarProps {
@@ -32,12 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
-  const [hasOpenedNotifications, setHasOpenedNotifications] = useState<boolean>(false);
   const { unreadCount } = useGlobalNotifications();
-
-  useEffect(() => {
-    if (showNotifications) setHasOpenedNotifications(true);
-  }, [showNotifications]);
 
   useEffect(() => {
     loadFreshness();
@@ -166,13 +161,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative">
                   <button
                     type="button"
+                    data-notification-trigger="true"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowNotifications(!showNotifications);
+                      setShowNotifications(prev => !prev);
                     }}
                     className="relative p-2 flex-shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center"
                     title={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
                     aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+                    aria-expanded={showNotifications}
                   >
                     <Bell className="w-4 h-4 sm:w-4 sm:h-4" />
                     {unreadCount > 0 && (
@@ -181,18 +178,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     )}
                   </button>
-                  {hasOpenedNotifications && (
-                    <Suspense fallback={null}>
-                      <NotificationPanel
-                        isOpen={showNotifications}
-                        onClose={() => setShowNotifications(false)}
-                        onNavigateTab={(tab) => {
-                          setActiveTab(tab);
-                          setShowNotifications(false);
-                        }}
-                      />
-                    </Suspense>
-                  )}
+                  <NotificationPanel
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                    onNavigateTab={(tab) => {
+                      setActiveTab(tab);
+                      setShowNotifications(false);
+                    }}
+                  />
                 </div>
               )}
 

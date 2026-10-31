@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Layers, Users, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, SortAsc, SortDesc, Award, Activity, SlidersHorizontal } from 'lucide-react';
+import { Layers, Users, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, School, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, SortAsc, SortDesc, Award, Activity, SlidersHorizontal } from 'lucide-react';
 import api from '../services/api';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
@@ -11,7 +11,7 @@ import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
+import { getUserCollege, isGlobalAccessRole, isCollegeFilterAllowed, isStaffRole } from '../services/auth/authTypes';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
 
@@ -25,10 +25,30 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const { departments = [], isHodScope, isGlobalAccess } = useDepartments();
   const { user } = useAuth();
   const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const canFilterCollege = useMemo(() => isCollegeFilterAllowed(user), [user]);
   const isGlobalUser = isGlobalAccess || isGlobalAccessRole(user);
+  const isStaffUser = isStaffRole(user) && !isGlobalUser;
   const isRestrictedHod = isHodScope && !isGlobalUser;
 
+  // College filter state: 'all', 'NEC', or 'NCT' — Only Admin & Management can switch colleges.
+  // Staff, HOD, and Principal are strictly locked to their college (userCollege).
+  const [selectedCollege, setSelectedCollege] = useState<string>(() => canFilterCollege ? 'all' : (userCollege || 'NEC'));
+
+  useEffect(() => {
+    if (!canFilterCollege && userCollege && selectedCollege !== userCollege) {
+      setSelectedCollege(userCollege);
+    }
+  }, [canFilterCollege, userCollege, selectedCollege]);
+
   const defaultDeptId = useMemo(() => {
+    if (isStaffUser) {
+      if (departments.length === 1 && departments[0].id) {
+        return String(departments[0].id);
+      }
+      if (user?.department_id) return String(user.department_id);
+      if ((user as any)?.department_code) return (user as any).department_code;
+      if (user?.department) return user.department;
+    }
     if (isRestrictedHod) {
       if (departments.length > 1) {
         return 'all'; // Multi-dept HOD defaults to combined view of all authorized depts (150 + 150 = 300)
@@ -39,19 +59,23 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       if (user?.department_id) return String(user.department_id);
     }
     return 'all';
-  }, [isRestrictedHod, departments, user]);
+  }, [isStaffUser, isRestrictedHod, departments, user]);
 
   const [selectedDept, setSelectedDept] = useState<string>(() => defaultDeptId);
 
   useEffect(() => {
-    if (isRestrictedHod) {
+    if (isStaffUser) {
+      if (selectedDept !== defaultDeptId) {
+        setSelectedDept(defaultDeptId);
+      }
+    } else if (isRestrictedHod) {
       if (departments.length === 1 && (selectedDept === 'all' || selectedDept === 'ALL')) {
         setSelectedDept(defaultDeptId);
       } else if (!selectedDept) {
         setSelectedDept(defaultDeptId);
       }
     }
-  }, [isRestrictedHod, defaultDeptId, selectedDept, departments.length]);
+  }, [isStaffUser, isRestrictedHod, defaultDeptId, selectedDept, departments.length]);
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
   const deferredNameSearch = useDeferredValue(nameSearch);
@@ -90,15 +114,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const { data: allStudents = [], isLoading, refetch } = useStudentsQuery();
 
   const { filteredAndSorted, counts } = useMemo(() => {
+    const effectiveDept = isStaffUser ? defaultDeptId : selectedDept;
     return filterAndSortStudents(allStudents as StudentData[], {
-      college: isGlobalUser ? undefined : userCollege,
-      department: selectedDept,
+      college: selectedCollege === 'all' || selectedCollege === 'ALL' ? undefined : selectedCollege,
+      department: effectiveDept,
       academicYear: yearLevel,
       nameSearch: deferredNameSearch,
       performanceRange: solvedFilter,
       sortBy: sortBy,
     });
-  }, [allStudents, isGlobalUser, userCollege, selectedDept, yearLevel, deferredNameSearch, solvedFilter, sortBy]);
+  }, [allStudents, selectedCollege, selectedDept, isStaffUser, defaultDeptId, yearLevel, deferredNameSearch, solvedFilter, sortBy]);
 
   const totalStudents = counts.total;
 
@@ -135,6 +160,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   }, [refreshAllData, refetch]);
 
   const handleResetFilters = () => {
+    setSelectedCollege(canFilterCollege ? 'all' : (userCollege || 'NEC'));
     setSelectedDept(defaultDeptId);
     setYearLevel('all');
     setNameSearch('');
@@ -144,6 +170,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     notify.info('Filters Reset', 'Department filters restored to default.', { category: 'FILTERS' });
   };
 
+
+  // College Filter Options (NEC, NCT, ALL) — Only for Admin & Management
+  const collegeOptions: DropdownOption[] = useMemo(() => {
+    if (!canFilterCollege) return [];
+    return [
+      { value: 'all', label: 'All Colleges', badge: 'ALL', icon: School },
+      { value: 'NEC', label: 'Nandha Engineering College (NEC)', badge: 'NEC', icon: School },
+      { value: 'NCT', label: 'Nandha College of Technology (NCT)', badge: 'NCT', icon: School },
+    ];
+  }, [canFilterCollege]);
 
   // Academic Year Dropdown Options (Removed 1st Year; Batches: 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
@@ -174,16 +210,24 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   ];
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'department' | 'year' | 'performance' | 'sort'>('all');
+  const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'college' | 'department' | 'year' | 'performance' | 'sort'>('all');
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
+    if (canFilterCollege && selectedCollege !== 'all' && selectedCollege !== 'ALL') count++;
     if (selectedDept !== 'all' && selectedDept !== 'ALL') count++;
     if (yearLevel !== 'all') count++;
     if (solvedFilter !== 'all') count++;
     if (sortBy !== 'top_solved') count++;
     return count;
-  }, [selectedDept, yearLevel, solvedFilter, sortBy]);
+  }, [selectedCollege, selectedDept, yearLevel, solvedFilter, sortBy]);
+
+  const activeCollegeLabel = useMemo(() => {
+    if (selectedCollege === 'all' || selectedCollege === 'ALL') return 'All Colleges';
+    if (selectedCollege.toUpperCase() === 'NEC') return 'NEC';
+    if (selectedCollege.toUpperCase() === 'NCT') return 'NCT';
+    return selectedCollege;
+  }, [selectedCollege]);
 
   const activeDeptLabel = useMemo(() => {
     if (selectedDept === 'all' || selectedDept === 'ALL') return 'All Depts';
@@ -235,10 +279,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   };
 
   return (
-    <div className="space-y-8 pb-10 animate-fade-in">
+    <div className="space-y-4 sm:space-y-8 pb-10 animate-fade-in">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         {/* Animated Decorative Ambient Light Beams */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
@@ -248,11 +292,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="space-y-3.5 max-w-2xl">
             {/* Status Pill */}
             <div className="inline-flex items-center space-x-2 px-3 sm:px-3.5 py-1 sm:py-1 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs max-w-full">
-              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">{isRestrictedHod ? 'DEPARTMENT ANALYTICS • HOD LEADERSHIP SCOPE' : 'DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL DEPARTMENTS)'}</span>
+              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">{isRestrictedHod ? 'DEPARTMENT ANALYTICS • HOD LEADERSHIP SCOPE' : !canFilterCollege ? `DEPARTMENT ANALYTICS • ${userCollege} CAMPUS` : selectedCollege !== 'all' && selectedCollege !== 'ALL' ? `DEPARTMENT ANALYTICS • ${selectedCollege} CAMPUS` : 'DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL COLLEGES & DEPTS)'}</span>
             </div>
 
             <div className="space-y-1.5">
-              <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
                 Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">Year Dashboard</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
@@ -261,11 +305,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </div>
           </div>
 
-          <div className="flex shrink-0">
+          <div className="flex shrink-0 w-full sm:w-auto">
             <button
               onClick={handleRefreshAllStats}
               disabled={isRefreshing}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? 'Syncing Roster...' : 'Sync Live Stats'}</span>
@@ -275,7 +319,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       </div>
 
       {/* Filter Tabs Bar */}
-      <div className="glass-card p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-3 sm:space-y-4 relative z-30 overflow-visible">
+      <div className="glass-card p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-3 sm:space-y-4 relative z-30 overflow-visible">
 
         {/* Header with Title & Controls */}
         <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
@@ -315,12 +359,41 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* Department and Academic Year Pill Selectors (Desktop 1-Tap Fast Filter) */}
+        {/* College, Department and Academic Year Pill Selectors (Desktop 1-Tap Fast Filter) */}
         <div className="hidden md:flex flex-col gap-2 pt-1 pb-1 border-t border-slate-100 dark:border-navy-800">
+          {canFilterCollege && (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+              <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">College:</span>
+              {[
+                { value: 'all', label: 'All Colleges' },
+                { value: 'NEC', label: 'NEC' },
+                { value: 'NCT', label: 'NCT' }
+              ].map(c => {
+                const isSelected =
+                  selectedCollege.toUpperCase() === c.value.toUpperCase() ||
+                  (c.value === 'all' && (selectedCollege === 'all' || selectedCollege === 'ALL'));
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => { setSelectedCollege(c.value); setDisplayCount(32); }}
+                    className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
             <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
             {[
-              ...(isRestrictedHod && departments.length <= 1 ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
+              ...((isRestrictedHod && departments.length <= 1) || isStaffUser ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
               ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
             ].map(d => {
               const isSelected = 
@@ -446,10 +519,33 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
           {/* Quick-Filter Horizontal Scrollable Pills */}
           <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+            {/* College Quick Chip — Admin & Management only */}
+            {canFilterCollege && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileFilterTab('college');
+                  setIsMobileFilterOpen(true);
+                }}
+                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
+                  selectedCollege !== 'all' && selectedCollege !== 'ALL'
+                    ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30'
+                    : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
+                }`}
+              >
+                <School className="w-3 h-3 shrink-0 text-teal-500" />
+                <span>College: {activeCollegeLabel}</span>
+                {(selectedCollege !== 'all' && selectedCollege !== 'ALL') && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shrink-0 ml-0.5" />
+                )}
+              </button>
+            )}
+
             {/* Department Quick Chip */}
             <button
               type="button"
               onClick={() => {
+                if (isStaffUser) return;
                 setMobileFilterTab('department');
                 setIsMobileFilterOpen(true);
               }}
@@ -520,11 +616,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* Desktop View: 3 Filter & Search Controls (>= 768px) */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 items-end">
+        {/* Desktop View: 4 Filter & Search Controls (>= 768px) */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 items-end">
 
           {/* 1. Name Search */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col space-y-1.5 min-w-0 w-full">
+          <div className="flex flex-col space-y-1.5 min-w-0 w-full">
             <label htmlFor="dept-dashboard-name-search" className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
@@ -556,7 +652,26 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </div>
           </div>
 
-          {/* 2. Performance Range Filter */}
+          {/* 2. College Campus Filter — Admin & Management only */}
+          {canFilterCollege && (
+            <div className="min-w-0 w-full">
+              <CustomDropdown
+                compact={true}
+                id="dept-dashboard-college-filter"
+                label="College Campus"
+                options={collegeOptions}
+                value={selectedCollege}
+                onChange={(val) => {
+                  setSelectedCollege(val);
+                  setDisplayCount(32);
+                }}
+                icon={School}
+                align="left"
+              />
+            </div>
+          )}
+
+          {/* 3. Performance Range Filter */}
           <div className="min-w-0 w-full">
             <CustomDropdown
               compact={true}
@@ -573,7 +688,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             />
           </div>
 
-          {/* 3. Sort Students */}
+          {/* 4. Sort Students */}
           <div className="min-w-0 w-full">
             <CustomDropdown
               compact={true}
@@ -596,8 +711,15 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         isOpen={isMobileFilterOpen}
         onClose={() => setIsMobileFilterOpen(false)}
         initialTab={mobileFilterTab}
+        selectedCollege={selectedCollege}
+        onSelectCollege={(val) => {
+          setSelectedCollege(val);
+          setDisplayCount(32);
+        }}
+        collegeOptions={collegeOptions}
         selectedDept={selectedDept === 'ALL' ? 'all' : selectedDept}
         onSelectDept={(val) => {
+          if (isStaffUser) return;
           setSelectedDept(val);
           setDisplayCount(32);
         }}
@@ -627,6 +749,23 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         <div className="flex items-center flex-wrap gap-3 mb-5">
           {/* Active Filters Premium Pill */}
           <div className="inline-flex items-center flex-wrap gap-2.5 px-3.5 sm:px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-navy-900 dark:to-navy-800/80 border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-sm">
+            <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
+              <School className="w-4 h-4 text-teal-500" />
+              <span className="font-black text-xs sm:text-sm tracking-tight">
+                {canFilterCollege
+                  ? (selectedCollege === 'all' || selectedCollege === 'ALL'
+                    ? 'All Colleges'
+                    : selectedCollege.toUpperCase() === 'NEC'
+                    ? 'Nandha Engineering (NEC)'
+                    : selectedCollege.toUpperCase() === 'NCT'
+                    ? 'Nandha Tech (NCT)'
+                    : selectedCollege)
+                  : (userCollege === 'NCT' ? 'Nandha Tech (NCT)' : 'Nandha Engineering (NEC)')}
+              </span>
+            </div>
+
+            <span className="text-slate-300 dark:text-navy-600 font-bold px-0.5">•</span>
+
             <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
               <Building2 className="w-4 h-4 text-brand-500" />
               <span className="font-black text-xs sm:text-sm tracking-tight">

@@ -1229,7 +1229,7 @@ export const FacultyActionCenter: React.FC = () => {
   return (
     <div className="space-y-6 md:space-y-7 pb-32 sm:pb-16 animate-fade-in font-sans">
       {/* Executive Header Banner (Authoritative Dark OLED Gradient in all modes for crystal-clear readability) */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-2xl border border-indigo-500/30 mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 shadow-2xl border border-indigo-500/30 mb-4 sm:mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 

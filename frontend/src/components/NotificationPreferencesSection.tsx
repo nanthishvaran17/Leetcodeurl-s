@@ -11,7 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 import { useNotification as useToastNotification } from '../context/NotificationContext';
-import { playWhatsAppPop, playAppleGlassChime, playTechKnockDing } from '../utils/audioChime';
+import { playTone, type NotificationSoundTone } from '../utils/audioChime';
 
 export const NotificationPreferencesSection: React.FC = () => {
   const { preferences, updatePreferences, registerFCMDeviceToken } = useGlobalNotifications();
@@ -26,30 +26,31 @@ export const NotificationPreferencesSection: React.FC = () => {
   const [isSavingPrefs, setIsSavingPrefs] = useState(false);
   const [selectedTone, setSelectedTone] = useState<string>(() => {
     try {
-      return localStorage.getItem('notification_sound_tone') || 'whatsapp';
+      return localStorage.getItem('notification_sound_tone') || 'galaxy';
     } catch {
-      return 'whatsapp';
+      return 'galaxy';
     }
   });
 
-  const handleSelectTone = (tone: 'whatsapp' | 'apple' | 'tech' | 'none') => {
+  const handleSelectTone = (tone: NotificationSoundTone) => {
     setSelectedTone(tone);
     try {
       localStorage.setItem('notification_sound_tone', tone);
     } catch {}
 
-    if (tone === 'whatsapp') {
-      playWhatsAppPop();
-      notify.info('WhatsApp Bubble Pop Selected', 'Short, bubbly water pop — now active for messages & alerts.', { category: 'AUDIO' });
-    } else if (tone === 'apple') {
-      playAppleGlassChime();
-      notify.info('Apple Crystal Glass Selected', 'Acoustic glass tri-tone chord — now active for messages & alerts.', { category: 'AUDIO' });
-    } else if (tone === 'tech') {
-      playTechKnockDing();
-      notify.info('Tech Knock & Ding Selected', 'Acoustic knock with crystal ding — now active for messages & alerts.', { category: 'AUDIO' });
-    } else if (tone === 'none') {
-      notify.info('Silent / Mute Mode Selected', 'Notifications will arrive silently without any sound.', { category: 'AUDIO' });
-    }
+    playTone(tone);
+
+    const descriptions: Record<string, { title: string; desc: string }> = {
+      galaxy: { title: 'Galaxy Celestial Selected', desc: 'Luxurious ascending 4-note celestial harp chime.' },
+      apple: { title: 'Apple Aurora Glass Selected', desc: 'Pristine acoustic glass tri-tone bell.' },
+      pixel: { title: 'Pixel Velvet Pop Selected', desc: 'Warm organic marimba & kalimba glissando pop.' },
+      tech: { title: 'Tech Knock & Ding Selected', desc: 'Snappy tactile wood knock with high crystal ping.' },
+      neon: { title: 'Cyberpunk Neon Selected', desc: 'High-energy futuristic kinetic shimmer chime.' },
+      none: { title: 'Silent / Mute Selected', desc: 'Notifications and downloads will arrive 100% silently.' },
+    };
+
+    const info = descriptions[tone] || { title: 'Notification Tone Updated', desc: 'Active for all alerts and downloads.' };
+    notify.info(info.title, info.desc, { category: 'AUDIO' });
   };
 
   // Local state for preferences
@@ -416,63 +417,65 @@ export const NotificationPreferencesSection: React.FC = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Option 1: WhatsApp Bubbly Pop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {/* Tone 1: Samsung Galaxy Celestial */}
           <div
-            onClick={() => handleSelectTone('whatsapp')}
+            onClick={() => handleSelectTone('galaxy')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
-              selectedTone === 'whatsapp'
-                ? 'bg-emerald-500/10 border-emerald-500/40 shadow-sm ring-1 ring-emerald-500/30'
+              selectedTone === 'galaxy'
+                ? 'bg-violet-500/15 border-violet-500/50 shadow-md ring-2 ring-violet-500/30'
                 : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
             }`}
           >
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  WhatsApp Pop
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-violet-500" />
+                  Galaxy Celestial
                 </span>
-                {selectedTone === 'whatsapp' && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-0.5">
-                    <Check size={10} /> Active
+                {selectedTone === 'galaxy' && (
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-violet-600 text-white flex items-center gap-0.5 shadow-xs">
+                    <Check size={10} strokeWidth={3} /> Active
                   </span>
                 )}
               </div>
-              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                Bubbly water pop tone. Fast, playful, and non-intrusive.
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug font-medium">
+                4-note ascending celestial harp breeze. Opulent, satisfying & executive.
               </p>
             </div>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); handleSelectTone('whatsapp'); }}
-              className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('galaxy'); }}
+              className="w-full py-2 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <Play size={12} className="fill-current" />
-              <span>Listen & Select</span>
+              <span>Listen &amp; Select</span>
             </button>
           </div>
 
-          {/* Option 2: Apple Crystal Glass */}
+          {/* Tone 2: Apple Aurora Crystal Glass */}
           <div
             onClick={() => handleSelectTone('apple')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
               selectedTone === 'apple'
-                ? 'bg-indigo-500/10 border-indigo-500/40 shadow-sm ring-1 ring-indigo-500/30'
+                ? 'bg-indigo-500/15 border-indigo-500/50 shadow-md ring-2 ring-indigo-500/30'
                 : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
             }`}
           >
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  Apple Crystal Glass
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                  Apple Aurora Glass
                 </span>
                 {selectedTone === 'apple' && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-indigo-500 text-white flex items-center gap-0.5">
-                    <Check size={10} /> Active
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-indigo-600 text-white flex items-center gap-0.5 shadow-xs">
+                    <Check size={10} strokeWidth={3} /> Active
                   </span>
                 )}
               </div>
-              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                Tri-tone acoustic glass bell. Premium, soft, and professional.
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug font-medium">
+                Acoustic crystal glass tri-tone bell. Prestigious, velvety & ultra-clean.
               </p>
             </div>
             <button
@@ -481,32 +484,68 @@ export const NotificationPreferencesSection: React.FC = () => {
               className="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <Play size={12} className="fill-current" />
-              <span>Listen & Select</span>
+              <span>Listen &amp; Select</span>
             </button>
           </div>
 
-          {/* Option 3: Tech Knock & Ding */}
+          {/* Tone 3: Google Pixel Velvet Pop */}
+          <div
+            onClick={() => handleSelectTone('pixel')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              selectedTone === 'pixel' || selectedTone === 'whatsapp'
+                ? 'bg-emerald-500/15 border-emerald-500/50 shadow-md ring-2 ring-emerald-500/30'
+                : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+            }`}
+          >
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Pixel Velvet Pop
+                </span>
+                {(selectedTone === 'pixel' || selectedTone === 'whatsapp') && (
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white flex items-center gap-0.5 shadow-xs">
+                    <Check size={10} strokeWidth={3} /> Active
+                  </span>
+                )}
+              </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug font-medium">
+                Warm organic marimba &amp; kalimba glissando pop. Bubbly, natural &amp; friendly.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('pixel'); }}
+              className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Play size={12} className="fill-current" />
+              <span>Listen &amp; Select</span>
+            </button>
+          </div>
+
+          {/* Tone 4: Silicon Valley Tech Knock */}
           <div
             onClick={() => handleSelectTone('tech')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
               selectedTone === 'tech'
-                ? 'bg-cyan-500/10 border-cyan-500/40 shadow-sm ring-1 ring-cyan-500/30'
+                ? 'bg-cyan-500/15 border-cyan-500/50 shadow-md ring-2 ring-cyan-500/30'
                 : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
             }`}
           >
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  Tech Knock & Ding
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-500" />
+                  Tech Knock &amp; Ding
                 </span>
                 {selectedTone === 'tech' && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-cyan-600 text-white flex items-center gap-0.5">
-                    <Check size={10} /> Active
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-cyan-600 text-white flex items-center gap-0.5 shadow-xs">
+                    <Check size={10} strokeWidth={3} /> Active
                   </span>
                 )}
               </div>
-              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                Snappy wood knock + digital ping. Distinct, punchy & sharp.
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug font-medium">
+                Tactile wood transient punch + digital crystal ping. Punchy, crisp &amp; sharp.
               </p>
             </div>
             <button
@@ -515,32 +554,68 @@ export const NotificationPreferencesSection: React.FC = () => {
               className="w-full py-2 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <Play size={12} className="fill-current" />
-              <span>Listen & Select</span>
+              <span>Listen &amp; Select</span>
             </button>
           </div>
 
-          {/* Option 4: Silent / Mute (None) */}
+          {/* Tone 5: Cyberpunk Neon Shimmer */}
+          <div
+            onClick={() => handleSelectTone('neon')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+              selectedTone === 'neon'
+                ? 'bg-amber-500/15 border-amber-500/50 shadow-md ring-2 ring-amber-500/30'
+                : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+            }`}
+          >
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  Cyberpunk Neon
+                </span>
+                {selectedTone === 'neon' && (
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-600 text-white flex items-center gap-0.5 shadow-xs">
+                    <Check size={10} strokeWidth={3} /> Active
+                  </span>
+                )}
+              </div>
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug font-medium">
+                Futuristic kinetic dual-chime with metallic vibrato. Victorious &amp; impressive.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleSelectTone('neon'); }}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <Play size={12} className="fill-current" />
+              <span>Listen &amp; Select</span>
+            </button>
+          </div>
+
+          {/* Tone 6: Silent / Mute (None) */}
           <div
             onClick={() => handleSelectTone('none')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
               selectedTone === 'none' || selectedTone === 'silent'
-                ? 'bg-rose-500/10 border-rose-500/40 shadow-sm ring-1 ring-rose-500/30'
+                ? 'bg-rose-500/15 border-rose-500/50 shadow-md ring-2 ring-rose-500/30'
                 : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 hover:border-slate-300'
             }`}
           >
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-slate-900 dark:text-white">
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
                   Silent / Mute
                 </span>
                 {(selectedTone === 'none' || selectedTone === 'silent') && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-rose-600 text-white flex items-center gap-0.5">
-                    <Check size={10} /> Active
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-rose-600 text-white flex items-center gap-0.5 shadow-xs">
+                    <Check size={10} strokeWidth={3} /> Active
                   </span>
                 )}
               </div>
-              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">
-                No notification sound. Alerts and toasts arrive 100% silently.
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug font-medium">
+                Zero audio playback. Alerts, toasts &amp; downloads arrive 100% silently.
               </p>
             </div>
             <button

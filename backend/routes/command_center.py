@@ -160,7 +160,7 @@ def get_command_center_summary(
     section_id: Optional[int] = None,
     refresh: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
     from backend.services.cache_service import cache_service
 
@@ -494,7 +494,7 @@ def get_students(
     allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
     from backend.services.authorization_service import apply_role_based_student_filter
     from sqlalchemy.orm import joinedload, selectinload
@@ -779,7 +779,7 @@ def auto_distribute_department(
 def get_faculty_workload(
     dept_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
     STAFF_MENTOR_ROLES = [
         "faculty", "staff", "professor", "faculty mentor", "staff mentor",
@@ -989,7 +989,7 @@ def export_command_center_report_excel(
     staff_id: Optional[int] = Query(None),
     status_filter: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
     import io
     import os
@@ -1382,7 +1382,7 @@ def get_report_data(
     staff_id: Optional[int] = Query(None),
     status_filter: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
+    current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
     """
     Returns structured data for on-screen report rendering & multi-format export.

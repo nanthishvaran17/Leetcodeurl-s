@@ -618,15 +618,37 @@ def require_security_access(
             effective_role = "hod"
 
         # 2. ROLE & PERMISSION CHECK
-        # Global roles get universal bypass (they can access anything)
-        if effective_role in ["admin", "super admin", "super_admin", "principal", "management", "administrator"]:
+        # System administrator roles get universal bypass
+        if effective_role in ["admin", "super admin", "super_admin", "administrator"]:
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="SUCCESS", session_id=session_id
             )
             return user
 
-        allowed_roles_norm = [role_alias_map.get(r.lower(), r.lower()) for r in (required_roles or ["admin", "super admin", "hod", "faculty", "staff", "student"])]
+        # Dynamic Management / Principal elevated permissions check for Audit & Settings
+        if effective_role in ["management", "principal"]:
+            res_lower = (target_resource or "").lower()
+            from backend.models import AdminSettingsModel
+            if "audit" in res_lower:
+                mgmt_audit = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_AUDIT_ACCESS").first()
+                if mgmt_audit and str(mgmt_audit.value).strip().lower() in ["true", "1", "yes"]:
+                    log_security_access_event(
+                        db, request, user, action="ACCESS_RESOURCE",
+                        resource=target_resource, result="SUCCESS", session_id=session_id
+                    )
+                    return user
+            if any(kw in res_lower for kw in ["setting", "admin settings", "system configuration", "staff management", "admin audit"]):
+                mgmt_settings = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_ADMIN_SETTINGS").first()
+                if mgmt_settings and str(mgmt_settings.value).strip().lower() in ["true", "1", "yes"]:
+                    log_security_access_event(
+                        db, request, user, action="ACCESS_RESOURCE",
+                        resource=target_resource, result="SUCCESS", session_id=session_id
+                    )
+                    return user
+
+        default_allowed_roles = ["admin", "super admin", "principal", "management", "director", "hod", "faculty", "staff", "student"]
+        allowed_roles_norm = [role_alias_map.get(r.lower(), r.lower()) for r in (required_roles or default_allowed_roles)]
         
         if effective_role == "student" and "student" not in allowed_roles_norm:
             log_security_access_event(

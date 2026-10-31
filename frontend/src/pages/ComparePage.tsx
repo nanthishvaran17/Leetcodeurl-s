@@ -7,7 +7,7 @@ import { StudentData } from '../components/LeaderboardTable';
 import { getCachedStudents, clearAllStudentCaches } from '../utils/rosterCache';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
+import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { deriveYearLevelFromRegNo, normalizeAcademicYear } from '../utils/filterUtils';
 
 export const ComparePage: React.FC = () => {
@@ -28,7 +28,7 @@ export const ComparePage: React.FC = () => {
   const { departments } = useDepartments();
   const { user } = useAuth();
   const userCollege = useMemo(() => getUserCollege(user), [user]);
-  const isGlobalAccess = isGlobalAccessRole(user);
+  const isGlobalAccess = isCollegeFilterAllowed(user);
   const [selectedCollege, setSelectedCollege] = useState<'ALL' | 'NEC' | 'NCT'>(() => isGlobalAccess ? 'ALL' : userCollege);
 
   useEffect(() => {
@@ -1315,7 +1315,7 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Side-by-Side Metric Comparison Bars */}
-              <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
+              <div className="glass-card p-3 sm:p-6 rounded-2xl sm:rounded-3xl border space-y-4 sm:space-y-5 shadow-xl">
                 <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
                   <BarChart3 className="w-5 h-5 text-brand-500" />
                   <span>Head-to-Head Metric Distribution</span>
@@ -1375,7 +1375,7 @@ export const ComparePage: React.FC = () => {
         <div className="space-y-8">
 
           {/* Group Dimension & Selector Bar */}
-          <div className={`glass-card p-6 rounded-3xl border space-y-6 shadow-xl relative ${groupAOpen || groupBOpen ? 'z-50' : 'z-10'}`}>
+          <div className={`glass-card p-3 sm:p-6 rounded-2xl sm:rounded-3xl border space-y-4 sm:space-y-6 shadow-xl relative ${groupAOpen || groupBOpen ? 'z-50' : 'z-10'}`}>
             
             {/* Dimension Sub-Tabs (Department & Year Combo vs Department vs Year Level vs Section) */}
             <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -1861,7 +1861,7 @@ export const ComparePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   
                   {/* Group A Card */}
-                  <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
+                  <div className={`glass-card p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-2 space-y-4 sm:space-y-6 shadow-xl ${
                     groupWinner?.winner === 'A' ? 'border-amber-400 shadow-amber-500/10' : 'border-brand-500/30'
                   }`}>
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -1924,7 +1924,7 @@ export const ComparePage: React.FC = () => {
                   </div>
 
                   {/* Group B Card */}
-                  <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
+                  <div className={`glass-card p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-2 space-y-4 sm:space-y-6 shadow-xl ${
                     groupWinner?.winner === 'B' ? 'border-amber-400 shadow-amber-500/10' : 'border-indigo-500/30'
                   }`}>
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -1989,7 +1989,7 @@ export const ComparePage: React.FC = () => {
                 </div>
 
                 {/* Side-by-Side Group Metric Bars */}
-                <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
+                <div className="glass-card p-3 sm:p-6 rounded-2xl sm:rounded-3xl border space-y-4 sm:space-y-5 shadow-xl">
                   <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
                     <BarChart3 className="w-5 h-5 text-brand-500" />
                     <span>Side-by-Side Group Metric Comparison Bars</span>

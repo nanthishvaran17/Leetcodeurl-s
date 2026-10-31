@@ -8,6 +8,7 @@ import {
   Check,
   Search,
   Building2,
+  School,
   GraduationCap,
   Award,
   ArrowUpDown,
@@ -95,13 +96,13 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (selectedCollege !== 'all') count++;
+    if (collegeOptions.length > 0 && selectedCollege && selectedCollege.toLowerCase() !== 'all') count++;
     if (selectedDept !== 'all') count++;
     if (yearLevel !== 'all') count++;
     if (solvedFilter !== 'all') count++;
     if (sortBy !== 'top_solved') count++;
     return count;
-  }, [selectedDept, yearLevel, solvedFilter, sortBy]);
+  }, [selectedCollege, selectedDept, yearLevel, solvedFilter, sortBy]);
 
   // Normalized department options strictly showing departments with active enrolled students
   const deptList = useMemo(() => {
@@ -223,7 +224,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-white/[0.05]'
                   }`}
                 >
-                  <Building2 className="w-3 h-3" />
+                  <School className="w-3 h-3 text-teal-500" />
                   <span>College</span>
                   {selectedCollege !== 'all' && <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />}
                 </button>
@@ -293,7 +294,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                      <School className="w-3.5 h-3.5 text-teal-500" />
                       <span>College Filter</span>
                     </label>
                     {selectedCollege !== 'all' && (
@@ -582,7 +583,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
             </div>
 
             {/* Sticky Bottom Action Bar */}
-            <div className="p-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md">
+            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom,1rem))] bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md">
               <button
                 onClick={onClose}
                 className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-xl shadow-brand-500/25 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"

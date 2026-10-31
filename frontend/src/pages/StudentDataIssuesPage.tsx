@@ -48,7 +48,7 @@ import { normalizeAcademicYear } from '../utils/filterUtils';
 import { ExportStatus } from '../components/ExportStatus';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
+import { getUserCollege, isCollegeFilterAllowed, isStaffRole } from '../services/auth/authTypes';
 import { GlobalFilter } from '../components/GlobalFilter';
 
 interface StudentIssue {
@@ -126,7 +126,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   const { departments } = useDepartments();
   const { user } = useAuth();
   const userCollege = useMemo(() => getUserCollege(user), [user]);
-  const isGlobalAccess = isGlobalAccessRole(user);
+  const isGlobalAccess = isCollegeFilterAllowed(user);
   const [selectedCollege, setSelectedCollege] = useState<string>(() => isGlobalAccess ? 'all' : userCollege);
 
   useEffect(() => {
@@ -134,7 +134,15 @@ export const StudentDataIssuesPage: React.FC = () => {
       setSelectedCollege(userCollege);
     }
   }, [isGlobalAccess, userCollege, selectedCollege]);
-  const [selectedDept, setSelectedDept] = useState<string>('all');
+  const isStaffUser = isStaffRole(user);
+  const userDeptCode = ((user as any)?.department_code || user?.department || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || 'all').toLowerCase();
+  const [selectedDept, setSelectedDept] = useState<string>(() => isStaffUser && userDeptCode !== 'all' ? userDeptCode : 'all');
+
+  useEffect(() => {
+    if (isStaffUser && userDeptCode !== 'all' && selectedDept !== userDeptCode) {
+      setSelectedDept(userDeptCode);
+    }
+  }, [isStaffUser, userDeptCode, selectedDept]);
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedIssue, setSelectedIssue] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -703,7 +711,7 @@ export const StudentDataIssuesPage: React.FC = () => {
           <button
             onClick={() => {
               setSelectedCollege('all');
-              setSelectedDept('all');
+              setSelectedDept(isStaffUser && userDeptCode !== 'all' ? userDeptCode : 'all');
               setSelectedYear('all');
               setSelectedIssue('all');
               setSearchQuery('');
@@ -754,7 +762,7 @@ export const StudentDataIssuesPage: React.FC = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
             <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
             {[
-              { id: 'all', label: 'All Depts' },
+              ...(isStaffUser ? [] : [{ id: 'all', label: 'All Depts' }]),
               ...departments.map(d => ({ id: d.code, label: d.code || d.name }))
             ].map(d => {
               const isSelected = selectedDept.toLowerCase() === d.id.toLowerCase() || (d.id === 'all' && (selectedDept.toLowerCase() === 'all'));

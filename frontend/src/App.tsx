@@ -24,6 +24,7 @@ import { BackToTopButton } from './components/BackToTopButton';
 import { isAdminOtpVerified } from './utils/adminOtpAuth';
 import { PullToRefresh } from './components/PullToRefresh';
 import { SwipeHandle } from './components/SwipeHandle';
+import { triggerHaptic } from './utils/haptics';
 import { OfflineIndicatorBanner } from './components/OfflineIndicatorBanner';
 import { warmupPriorityRoutes } from './utils/pagePrefetch';
 import { AnimatedAppSplashScreen } from './components/AnimatedAppSplashScreen';
@@ -699,11 +700,17 @@ export const App: React.FC = () => {
   ]);
 
   // Native Edge Swipe to Open Sidebar (Left-to-Right swipe) & Swipe Left to Close on Mobile
+  const isSidebarOpenRef = useRef(isSidebarOpen);
+  isSidebarOpenRef.current = isSidebarOpen;
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     let startX = 0;
     let startY = 0;
+    let startTime = 0;
+    let lastClientX = 0;
+    let lastClientY = 0;
     let isTracking = false;
 
     const handleStart = (clientX: number, clientY: number, target: HTMLElement | null) => {
@@ -722,56 +729,91 @@ export const App: React.FC = () => {
         }
       }
 
-      if (!isSidebarOpen) {
-        // Generous left-edge zone on mobile: within first 65px or 18% of screen width
-        const edgeThreshold = Math.min(65, Math.max(45, window.innerWidth * 0.18));
+      const isOpen = isSidebarOpenRef.current;
+      if (!isOpen) {
+        // Generous left-side zone on mobile: anywhere in the left 90px-130px (or left ~28% of screen)
+        const edgeThreshold = Math.max(90, Math.min(130, window.innerWidth * 0.28));
         if (clientX <= edgeThreshold) {
           startX = clientX;
           startY = clientY;
+          lastClientX = clientX;
+          lastClientY = clientY;
+          startTime = Date.now();
           isTracking = true;
         }
       } else {
         // Sidebar is open: allow swiping left from anywhere to close
         startX = clientX;
         startY = clientY;
+        lastClientX = clientX;
+        lastClientY = clientY;
+        startTime = Date.now();
         isTracking = true;
       }
     };
 
     const handleMove = (clientX: number, clientY: number) => {
       if (!isTracking) return;
+      lastClientX = clientX;
+      lastClientY = clientY;
       const currentDeltaX = clientX - startX;
       const absDeltaX = Math.abs(currentDeltaX);
       const absDeltaY = Math.abs(clientY - startY);
+      const elapsed = Date.now() - startTime;
+      const isOpen = isSidebarOpenRef.current;
 
-      // Only cancel if vertical scrolling is distinctly dominant
-      if (absDeltaY > 25 && absDeltaY > absDeltaX * 1.3) {
+      // Only cancel if vertical scrolling is overwhelmingly dominant before any horizontal motion
+      if (absDeltaY > 35 && absDeltaY > absDeltaX * 1.8 && absDeltaX < 12) {
         isTracking = false;
         return;
       }
 
-      if (!isSidebarOpen) {
-        // Natural 35px rightward swipe opens drawer smoothly
-        if (currentDeltaX >= 35 && currentDeltaX > absDeltaY * 1.1) {
+      if (!isOpen) {
+        // Ultra-responsive light swipe / quick flick to open (even light 15px swipe triggers smoothly)
+        const isQuickFlick = elapsed < 350 && currentDeltaX >= 15 && currentDeltaX > absDeltaY * 0.55;
+        const isDistanceSwipe = currentDeltaX >= 22 && currentDeltaX > absDeltaY * 0.65;
+        if (isQuickFlick || isDistanceSwipe) {
           setIsSidebarOpen(true);
           isTracking = false;
-          if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
-            try { navigator.vibrate(14); } catch {}
-          }
+          triggerHaptic('light');
         }
       } else {
-        // 35px leftward swipe closes drawer
-        if (currentDeltaX <= -35 && absDeltaX > absDeltaY * 1.1) {
+        // Small light leftward swipe to close
+        const isQuickClose = elapsed < 350 && currentDeltaX <= -15 && absDeltaX > absDeltaY * 0.55;
+        const isDistanceClose = currentDeltaX <= -22 && absDeltaX > absDeltaY * 0.65;
+        if (isQuickClose || isDistanceClose) {
           setIsSidebarOpen(false);
           isTracking = false;
-          if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
-            try { navigator.vibrate(10); } catch {}
-          }
+          triggerHaptic('light');
         }
       }
     };
 
-    const handleEnd = () => {
+    const handleEnd = (clientX?: number, clientY?: number) => {
+      if (!isTracking) return;
+      const endX = clientX !== undefined ? clientX : lastClientX;
+      const endY = clientY !== undefined ? clientY : lastClientY;
+      const currentDeltaX = endX - startX;
+      const absDeltaX = Math.abs(currentDeltaX);
+      const absDeltaY = Math.abs(endY - startY);
+      const elapsed = Date.now() - startTime;
+      const isOpen = isSidebarOpenRef.current;
+
+      if (!isOpen) {
+        const isQuickFlick = elapsed < 400 && currentDeltaX >= 12 && currentDeltaX > absDeltaY * 0.5;
+        const isDistanceSwipe = currentDeltaX >= 18 && currentDeltaX > absDeltaY * 0.55;
+        if (isQuickFlick || isDistanceSwipe) {
+          setIsSidebarOpen(true);
+          triggerHaptic('light');
+        }
+      } else {
+        const isQuickClose = elapsed < 400 && currentDeltaX <= -12 && absDeltaX > absDeltaY * 0.5;
+        const isDistanceClose = currentDeltaX <= -18 && absDeltaX > absDeltaY * 0.55;
+        if (isQuickClose || isDistanceClose) {
+          setIsSidebarOpen(false);
+          triggerHaptic('light');
+        }
+      }
       isTracking = false;
     };
 
@@ -783,8 +825,9 @@ export const App: React.FC = () => {
       if (!isTracking || e.touches.length !== 1) return;
       handleMove(e.touches[0].clientX, e.touches[0].clientY);
     };
-    const onTouchEnd = () => {
-      handleEnd();
+    const onTouchEnd = (e: TouchEvent) => {
+      const touch = e.changedTouches && e.changedTouches[0];
+      handleEnd(touch?.clientX, touch?.clientY);
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -798,10 +841,7 @@ export const App: React.FC = () => {
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [isAuthenticated, isSidebarOpen, activeTab]);
-
-
-
+  }, []);
 
   const fetchSummary = async () => {
     try {
@@ -1252,7 +1292,7 @@ export const App: React.FC = () => {
       <div className={`w-full max-w-full mx-auto relative flex flex-col ${
         activeTab === 'messages'
           ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-3.5 sm:pt-4 pb-36 sm:pb-6 px-2.5 sm:px-4 max-w-full'
+          : 'pt-2.5 sm:pt-4 pb-36 sm:pb-6 px-1.5 sm:px-4 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}

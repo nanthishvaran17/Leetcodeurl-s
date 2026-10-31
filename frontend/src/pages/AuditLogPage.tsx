@@ -416,6 +416,26 @@ export const AuditLogPage: React.FC = () => {
     }
   }, [selectedLog]);
 
+  const roleClean = (user?.role || '').trim().toLowerCase();
+  const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
+  const isManagement = roleClean === 'management';
+  const isAuditAllowed = isAdmin || (isManagement && Boolean(user?.allow_management_audit_access));
+
+  if (!isAuditAllowed) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full glass-card p-6 rounded-3xl border border-rose-200/80 dark:border-rose-900/60 text-center space-y-4">
+          <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Administrator Access Required</h2>
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            Audit log tracking and security compliance telemetry are restricted. Contact a System Administrator to enable elevated access for your account.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pt-0 pb-32 sm:pb-16 animate-slideUp">

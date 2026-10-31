@@ -902,7 +902,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Pie Chart / Difficulty Architecture */}
-        <div className="bg-white/80 dark:bg-slate-900/70 p-6 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between backdrop-blur-xl relative overflow-hidden">
+        <div className="bg-white/80 dark:bg-slate-900/70 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between backdrop-blur-xl relative overflow-hidden">
           <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none"></div>
 
           <div className="flex items-center justify-between mb-4 relative z-10">
@@ -965,7 +965,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
 
         {/* Weak Topic AI Insights */}
-        <div className="bg-white/80 dark:bg-slate-900/70 p-6 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between backdrop-blur-xl relative overflow-hidden">
+        <div className="bg-white/80 dark:bg-slate-900/70 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between backdrop-blur-xl relative overflow-hidden">
           <div className="absolute -top-16 -right-16 w-52 h-52 bg-amber-500/10 blur-3xl rounded-full pointer-events-none"></div>
 
           <div className="flex items-center justify-between mb-4 relative z-10">

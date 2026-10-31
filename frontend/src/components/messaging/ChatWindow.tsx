@@ -86,6 +86,7 @@ export interface Message {
   isEdited?: boolean;
   isDeletedEveryone?: boolean;
   replyToMessageId?: string;
+  clientMessageId?: string;
   replyToMessage?: {
     messageId: string;
     senderId: string;
@@ -777,7 +778,7 @@ export const ChatWindow: React.FC<Props> = ({
         ) : (
           messages.map((msg, idx) => {
             // Skip empty phantom messages that have no content, no attachment, and no deleted status
-            if (!msg.content && !msg.attachmentFileId && !msg.localMediaUrl && !msg.isDeletedEveryone) {
+            if (!msg.content && !msg.attachmentFileId && !msg.localMediaUrl && !msg.isDeletedEveryone && !msg.isUploading) {
               return null;
             }
 

@@ -14,7 +14,7 @@ import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel, normalizeYear } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege } from '../services/auth/authTypes';
+import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -544,9 +544,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [currentSession, setCurrentSession] = useState<any>(null);
   const userRoleClean = (user?.role || '').trim().toLowerCase();
   const isUserHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRoleClean);
+  const isUserStaff = ['staff', 'faculty', 'professor', 'mentor', 'staff mentor', 'faculty mentor'].includes(userRoleClean);
   const isUserGlobal = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(userRoleClean);
   const userCollege = useMemo(() => getUserCollege(user), [user]);
+  const canFilterCollege = useMemo(() => isCollegeFilterAllowed(user), [user]);
+
+  const userDeptCode = useMemo(() => {
+    return (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code)
+      || (Array.isArray((user as any)?.authorized_department_codes) && (user as any).authorized_department_codes[0])
+      || (user as any)?.department_code
+      || (user as any)?.department_id
+      || '';
+  }, [user]);
+
   const initialDeptFilter = useMemo(() => {
+    if (isUserStaff && !isUserGlobal && userDeptCode) {
+      return userDeptCode;
+    }
     if (isUserHod && !isUserGlobal) {
       const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
       if (authCodes.length > 1) {
@@ -559,20 +573,24 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if ((user?.department as any)?.code) return (user?.department as any).code;
     }
     return 'ALL';
-  }, [isUserHod, isUserGlobal, user]);
+  }, [isUserStaff, isUserHod, isUserGlobal, user, userDeptCode]);
   const [selectedCollegeFilter, setSelectedCollegeFilter] = useState<'ALL' | 'NEC' | 'NCT'>(() => {
-    return isUserGlobal ? 'ALL' : userCollege;
+    return canFilterCollege ? 'ALL' : userCollege;
   });
 
   useEffect(() => {
-    if (!isUserGlobal && selectedCollegeFilter !== userCollege) {
+    if (!canFilterCollege && selectedCollegeFilter !== userCollege) {
       setSelectedCollegeFilter(userCollege);
     }
-  }, [isUserGlobal, userCollege, selectedCollegeFilter]);
+  }, [canFilterCollege, userCollege, selectedCollegeFilter]);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>(() => initialDeptFilter);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
 
   useEffect(() => {
+    if (isUserStaff && !isUserGlobal && userDeptCode && selectedDeptFilter !== userDeptCode) {
+      setSelectedDeptFilter(userDeptCode);
+      return;
+    }
     if (isUserHod && !isUserGlobal) {
       const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
       if (authCodes.length === 1 && (selectedDeptFilter === 'ALL' || !selectedDeptFilter)) {
@@ -581,7 +599,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         setSelectedDeptFilter(initialDeptFilter);
       }
     }
-  }, [isUserHod, isUserGlobal, initialDeptFilter, selectedDeptFilter, user?.authorized_department_codes]);
+  }, [isUserStaff, isUserHod, isUserGlobal, userDeptCode, initialDeptFilter, selectedDeptFilter, user?.authorized_department_codes]);
   const [selectedAttendanceFilter, setSelectedAttendanceFilter] = useState<string>('ALL');
   const [matrixRows, setMatrixRows] = useState<any[]>([]);
   const [allSessionRows, setAllSessionRows] = useState<any[]>([]);
@@ -1739,7 +1757,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Memoized Dynamic Statistics Calculation with Fast Tiered Fallback
   const stats = useMemo(() => {
-    const isScopeActive = (isUserGlobal ? selectedCollegeFilter !== 'ALL' : false) || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
+    const isScopeActive = (canFilterCollege ? selectedCollegeFilter !== 'ALL' : false) || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
 
     let calcAttended = 0;
     let calcVirtual = 0;
@@ -2281,7 +2299,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) */}
       {isScheduled && (
-        <div className="mt-6 sm:mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
+        <div className="mt-6 sm:mt-8 p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-black">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -3275,7 +3293,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 items-end">
           {/* College Campus Filter — Admin & Management only */}
-          {isUserGlobal && (() => {
+          {canFilterCollege && (() => {
             const collegeOptions: GlobalFilterOption[] = [
               { value: 'ALL', label: 'All Colleges', pillText: 'ALL' },
               { value: 'NEC', label: 'Nandha Engineering (NEC)', pillText: 'NEC' },
@@ -3418,7 +3436,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <button
               type="button"
               onClick={() => {
-                setSelectedCollegeFilter(isUserGlobal ? 'ALL' : userCollege);
+                setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
                 setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
                 setSelectedYearFilter('ALL');
                 setSelectedAttendanceFilter('ALL');
@@ -3445,7 +3463,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
           <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
             <span className="text-[10px] font-extrabold uppercase text-slate-400">Active:</span>
-            {isUserGlobal && selectedCollegeFilter !== 'ALL' && (
+            {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
                 College: {selectedCollegeFilter}
                 <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>

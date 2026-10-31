@@ -642,12 +642,45 @@ export function normalizeCollege(c: any): string {
 }
 
 /**
+ * Accurately derives whether a student belongs to NEC or NCT based on:
+ * 1. student.college (explicit field)
+ * 2. student.reg_no (7322 -> NEC, 7321 or contains NCT -> NCT)
+ * 3. student.institutional_email / email domain (@nct -> NCT, @nandhaengg -> NEC)
+ * 4. student.campus / institution_id
+ */
+export function deriveStudentCollege(student: StudentData | any): 'NEC' | 'NCT' {
+  if (!student) return 'NEC';
+
+  // 1. Explicit college property
+  const explicit = String(student.college || '').trim().toUpperCase();
+  if (explicit === 'NCT') return 'NCT';
+  if (explicit === 'NEC') return 'NEC';
+
+  // 2. Campus / Institution ID
+  const campus = String(student.campus || student.institution_id || '').trim().toUpperCase();
+  if (campus.includes('NCT')) return 'NCT';
+  if (campus.includes('NEC')) return 'NEC';
+
+  // 3. Anna University Register Number prefix
+  const reg = String(student.reg_no || '').trim().toUpperCase();
+  if (reg.startsWith('7321') || reg.includes('NCT')) return 'NCT';
+  if (reg.startsWith('7322') || reg.includes('NEC')) return 'NEC';
+
+  // 4. Institutional email domain
+  const email = String(student.institutional_email || student.email || '').trim().toLowerCase();
+  if (email.includes('@nct') || email.includes('.nct.')) return 'NCT';
+  if (email.includes('nandhaengg') || email.includes('@nec') || email.includes('.nec.')) return 'NEC';
+
+  return 'NEC';
+}
+
+/**
  * College filter matching predicate
  */
 export function matchesCollege(student: StudentData, selectedCollege?: string): boolean {
   if (!selectedCollege || selectedCollege === 'all' || selectedCollege === 'ALL') return true;
   const target = normalizeCollege(selectedCollege);
-  const studentCollege = normalizeCollege((student as any).college || 'NEC');
+  const studentCollege = deriveStudentCollege(student);
   return studentCollege === target;
 }
 

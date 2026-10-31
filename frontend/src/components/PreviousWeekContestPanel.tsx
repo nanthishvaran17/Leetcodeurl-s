@@ -39,7 +39,7 @@ import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege, isGlobalAccessRole } from '../services/auth/authTypes';
+import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { downloadManager } from '../services/download/downloadManager';
 const ContestForensicModal = lazy(() => import('./ContestForensicModal').then(m => ({ default: m.ContestForensicModal })));
 import { playNotificationChime, playCelebrationChime } from '../utils/audioChime';
@@ -544,7 +544,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [questionTitles, setQuestionTitles] = useState<{q1: string, q2: string, q3: string, q4: string} | null>(null);
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
   const userCollege = useMemo(() => getUserCollege(user), [user]);
-  const isGlobalAccess = isGlobalAccessRole(user);
+  const isGlobalAccess = isCollegeFilterAllowed(user);
   const [selectedCollegeFilter, setSelectedCollegeFilter] = useState<'ALL' | 'NEC' | 'NCT'>(() => isGlobalAccess ? 'ALL' : userCollege);
 
   useEffect(() => {

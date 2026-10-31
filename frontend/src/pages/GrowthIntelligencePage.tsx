@@ -94,8 +94,14 @@ export const GrowthIntelligencePage: React.FC = () => {
   const { user } = useAuth();
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+  const isStaff = ['staff', 'faculty', 'professor', 'mentor', 'staff mentor', 'faculty mentor'].includes(roleClean);
   const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+  const userAllocDept = ((typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '').toUpperCase();
+
   const initialDept = useMemo(() => {
+    if (isStaff && !isGlobalRole && userAllocDept) {
+      return userAllocDept;
+    }
     if (isHod && !isGlobalRole) {
       const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
       if (authCodes.length > 1) {
@@ -108,7 +114,7 @@ export const GrowthIntelligencePage: React.FC = () => {
       if ((user?.department as any)?.code) return (user?.department as any).code;
     }
     return 'ALL';
-  }, [isHod, isGlobalRole, user]);
+  }, [isStaff, isHod, isGlobalRole, user, userAllocDept]);
   const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'all'>('today');
   const [deptFilter, setDeptFilter] = useState<string>(() => initialDept);
   const [yearFilter, setYearFilter] = useState<string>('ALL');
@@ -157,11 +163,13 @@ export const GrowthIntelligencePage: React.FC = () => {
     const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
     const userDept = ((typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || '').toUpperCase();
 
-    const allowedDepts = (isHod && !isGlobalRole)
+    const allowedDepts = ((isHod || isStaff) && !isGlobalRole)
       ? departments.filter(d => authCodes.includes((d.code || '').toUpperCase()) || (userDept && (d.code || '').toUpperCase() === userDept))
       : departments;
 
-    if (!isHod || isGlobalRole) {
+    if (isStaff && !isGlobalRole) {
+      // Staff locked strictly to their department, no All option
+    } else if (!isHod || isGlobalRole) {
       list.push({ value: 'ALL', label: 'All Departments', pillText: 'ALL' });
     } else if (allowedDepts.length > 1) {
       list.push({ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' });
@@ -186,7 +194,7 @@ export const GrowthIntelligencePage: React.FC = () => {
       });
     });
     return list;
-  }, [departments, user, isHod, isGlobalRole]);
+  }, [departments, user, isHod, isStaff, isGlobalRole]);
 
   const yearOptions: GlobalFilterOption[] = useMemo(() => {
     const list: GlobalFilterOption[] = [
@@ -363,7 +371,7 @@ export const GrowthIntelligencePage: React.FC = () => {
     <div className="space-y-8 py-2 pb-32 sm:pb-20 animate-slideUp">
 
       {/* Executive Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-7 md:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-7 md:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
@@ -840,8 +848,8 @@ export const GrowthIntelligencePage: React.FC = () => {
                               Loading history snapshots...
                             </div>
                           ) : historySnapshots.length > 0 ? (
-                            <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0a1120] max-w-full overflow-hidden shadow-xs">
-                              <table className="w-full text-left text-[11px] table-fixed">
+                            <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0a1120] max-w-full overflow-x-auto shadow-xs">
+                              <table className="w-full text-left text-[11px] table-fixed min-w-[320px]">
                                 <thead className="bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200/80 dark:border-white/10">
                                   <tr>
                                     <th className="py-2.5 px-3 w-[38%]">Date</th>
