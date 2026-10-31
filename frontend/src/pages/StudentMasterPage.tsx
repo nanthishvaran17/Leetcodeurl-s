@@ -22,6 +22,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 
 // Validation state machine 
 type LcValidationState =
@@ -632,32 +633,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           {/* Search + Mobile Filter Button Container */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {/* Live Search Input */}
-            <div className="relative flex-1 flex items-center min-w-0">
-              <input
-                type="text"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                placeholder="Search students by name, reg no, username..."
-                autoComplete="off"
-                className="w-full pl-11 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all text-ellipsis"
-              />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10 text-slate-600 dark:text-slate-300">
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              {localSearch && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocalSearch('');
-                    filters.setSearchQuery('');
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex items-center justify-center cursor-pointer"
-                  title="Clear search"
-                >
-                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              )}
-            </div>
+            <ModernSearchInput
+              value={localSearch}
+              onChange={(val) => setLocalSearch(val)}
+              onClear={() => filters.setSearchQuery('')}
+              placeholder="Search students by name, reg no, username..."
+              className="flex-1 min-w-0"
+            />
 
             {/* Mobile Filter Drawer Trigger Button */}
             <button

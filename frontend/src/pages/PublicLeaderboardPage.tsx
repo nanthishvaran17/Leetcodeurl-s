@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Globe, Shield, Users, TrendingUp, Search, Award, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList, RotateCcw } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
@@ -324,25 +325,12 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       <div className="glass-card p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 w-full min-w-0 flex items-center">
-            <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
+          <div className="flex-1 w-full min-w-0">
+            <ModernSearchInput
               placeholder="Search by name, reg no, or username..."
               value={filters.searchQuery}
-              onChange={e => filters.setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 min-h-[44px] rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-slate-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              onChange={val => filters.setSearchQuery(val)}
             />
-            {filters.searchQuery && (
-              <button
-                type="button"
-                onClick={() => filters.setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer flex items-center justify-center"
-                title="Clear search"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
-            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:items-center gap-3">

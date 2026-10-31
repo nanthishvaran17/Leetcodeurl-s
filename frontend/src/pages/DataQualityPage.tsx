@@ -12,6 +12,7 @@ import { getUserCollege, isCollegeFilterAllowed, isStaffRole } from '../services
 import { useDepartments } from '../contexts/DepartmentContext';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 
 const StudentProfilePage = lazy(() => import('./StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
 
@@ -457,29 +458,12 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
           {/* Interactive Search & Filter Controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full xl:w-auto">
-            <div className="relative flex-1 min-w-[180px]">
-              <input
-                type="text"
+            <div className="flex-1 min-w-[180px]">
+              <ModernSearchInput
                 placeholder="Search name, reg no..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoComplete="off"
-                spellCheck={false}
-                className="pl-8 sm:pl-9 pr-8 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-navy-900/60 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full shadow-xs transition-all"
+                onChange={(val) => setSearchQuery(val)}
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 sm:pl-3 z-10 text-slate-400">
-                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
-              </div>
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 z-10 flex items-center px-2.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
-                  title="Clear search"
-                >
-                  <XCircle className="w-3.5 h-3.5 stroke-[2]" />
-                </button>
-              )}
             </div>
 
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-[10px] sm:text-[11px] font-bold overflow-x-auto no-scrollbar scrollbar-none max-w-full shadow-2xs">

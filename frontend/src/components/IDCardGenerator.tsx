@@ -958,10 +958,12 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
                 <div className="p-2 rounded-xl bg-white shrink-0 shadow-lg">
                   <QRCodeCanvas
                     value={verificationUrl}
-                    size={84}
+                    size={96}
                     level="M"
+                    marginSize={2}
                     bgColor="#ffffff"
-                    fgColor="#0B1528"
+                    fgColor="#000000"
+                    className="block"
                   />
                 </div>
                 <div className="min-w-0 flex-1 space-y-1">
@@ -998,15 +1000,15 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
         />
       </div>
 
-      <div className="sr-only" aria-hidden="true">
+      <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
         <QRCodeCanvas
           ref={qrCanvasRef}
           value={verificationUrl}
-          size={400}
+          size={480}
           level="M"
-          includeMargin
+          marginSize={2}
           bgColor="#ffffff"
-          fgColor="#0F172A"
+          fgColor="#000000"
         />
       </div>
 

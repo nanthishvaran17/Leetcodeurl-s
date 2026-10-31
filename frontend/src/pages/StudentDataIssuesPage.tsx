@@ -50,6 +50,7 @@ import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed, isStaffRole } from '../services/auth/authTypes';
 import { GlobalFilter } from '../components/GlobalFilter';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 
 interface StudentIssue {
   id: number;
@@ -820,31 +821,11 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Search className="w-3 h-3 text-indigo-600 dark:text-brand-400 shrink-0" />
               <span className="truncate">Search Student</span>
             </label>
-            <div className="relative flex items-center">
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search Name, Reg No (732224CC031)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoComplete="off"
-                spellCheck={false}
-                className="w-full h-10 min-h-[40px] pl-9 pr-9 bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-inner text-left"
-              />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-3.5 h-3.5 stroke-[2.5]" />
-              </div>
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                  title="Clear Search"
-                >
-                  <XCircle className="w-4 h-4 stroke-[2]" />
-                </button>
-              )}
-            </div>
+            <ModernSearchInput
+              value={searchQuery}
+              onChange={(val) => setSearchQuery(val)}
+              placeholder="Search Name, Reg No (732224CC031)..."
+            />
           </div>
 
           {/* Issue Category Selector */}

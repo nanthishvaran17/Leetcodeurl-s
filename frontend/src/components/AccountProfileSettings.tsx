@@ -1154,8 +1154,11 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
 
   const [showClearNotesConfirm, setShowClearNotesConfirm] = useState<boolean>(false);
   const [showIdCardModal, setShowIdCardModal] = useState<boolean>(false);
+  const [showQrEnlargeModal, setShowQrEnlargeModal] = useState<boolean>(false);
   const [isSavingCard, setIsSavingCard] = useState<boolean>(false);
   const [modalCardSide, setModalCardSide] = useState<'both' | 'front' | 'back'>('both');
+
+  useEscapeKey(() => setShowQrEnlargeModal(false), showQrEnlargeModal);
 
   // Capacitor Android Hardware Back Button listener for ID Card Modal
   useEffect(() => {
@@ -2078,7 +2081,12 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     }
   };
 
-  const institutionalId = (user as any)?.institutional_id || `NEC-STAFF-${user?.id ? String(user.id).padStart(3, '0') : '098'}`;
+  const isStudentRole = rawRole.includes('student');
+  const institutionalId = (user as any)?.institutional_id || (
+    isStudentRole
+      ? ((user as any)?.reg_no ? `NEC-PASS-2026-${(user as any).reg_no}` : `NEC-STUDENT-${user?.id ? String(user.id).padStart(3, '0') : '001'}`)
+      : `NEC-STAFF-${user?.id ? String(user.id).padStart(3, '0') : '098'}`
+  );
   const departmentName = (user as any)?.department_code || user?.department || 'INSTITUTIONAL';
   const roleName = user?.role || 'Faculty Mentor';
   const createdAtFormatted = (user as any)?.created_at ? new Date((user as any).created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Academic Session 2025–26';
@@ -2150,23 +2158,26 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   // Authoritative Institutional ID Verification URL for instant camera scan
   const idVerificationUrl = useMemo(() => {
     let origin = typeof window !== 'undefined' ? window.location.origin : 'https://nandha-leetcode.duckdns.org';
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('capacitor://') || origin.includes('ionic://')) {
       origin = 'https://nandha-leetcode.duckdns.org';
     }
+    const isStudent = rawRole.includes('student');
     const params = new URLSearchParams({
-      type: 'id_card',
+      type: isStudent ? 'student_pass' : 'id_card',
       id: institutionalId,
-      name: fullName || user?.username || 'Staff Member',
-      role: rawRole.includes('admin') ? 'ADMINISTRATOR' : rawRole.includes('student') ? 'STUDENT' : 'FACULTY',
-      desig: designation || roleName || 'Faculty',
+      name: fullName || user?.username || (isStudent ? 'Student' : 'Staff Member'),
+      role: rawRole.includes('admin') ? 'ADMINISTRATOR' : isStudent ? 'STUDENT' : 'FACULTY',
       dept: departmentName && departmentName !== 'INSTITUTIONAL' ? departmentName : 'Computer Science & Engineering',
-      email: user?.email || '',
-      phone: phoneNumber || (user as any)?.phone_number || '',
-      dob: dateOfBirth || '',
-      blood: bloodGroup || 'O+ (Positive)'
     });
+    if (designation || roleName) params.set('desig', designation || roleName);
+    if (phoneNumber || (user as any)?.phone_number) params.set('phone', phoneNumber || (user as any)?.phone_number);
+    if (user?.email) params.set('email', user.email);
+    if (dateOfBirth) params.set('dob', dateOfBirth);
+    if (bloodGroup) params.set('blood', bloodGroup);
+    if (isStudent && (user as any)?.reg_no) params.set('reg', (user as any).reg_no);
+
     return `${origin}/verify/${encodeURIComponent(institutionalId)}?${params.toString()}`;
-  }, [institutionalId, fullName, user?.username, user?.email, (user as any)?.phone_number, phoneNumber, dateOfBirth, rawRole, designation, roleName, departmentName, bloodGroup]);
+  }, [institutionalId, fullName, user?.username, user?.email, (user as any)?.phone_number, (user as any)?.reg_no, phoneNumber, dateOfBirth, rawRole, designation, roleName, departmentName, bloodGroup]);
 
 
 
@@ -2811,17 +2822,27 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
       ctx.fillText(`HASH: SHA256-${institutionalId.toLowerCase()}-verified`, bx + 65, by + 750);
       ctx.fillText('ISSUED BY: Nandha Engineering College Autonomous Cell', bx + 65, by + 780);
 
-      drawRoundRect(bx + cw - 180, by + 695, 110, 110, 14);
+      const qrBoxX = bx + cw - 190;
+      const qrBoxY = by + 690;
+      const qrBoxW = 135;
+      const qrBoxH = 135;
+
+      drawRoundRect(qrBoxX, qrBoxY, qrBoxW, qrBoxH, 16);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
-      if (idCardQrCanvasRef.current) {
-        ctx.drawImage(idCardQrCanvasRef.current, bx + cw - 175, by + 700, 100, 100);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const qrSource = idCardQrCanvasRef.current || (document.getElementById('hidden_id_card_qr') as HTMLCanvasElement);
+      if (qrSource) {
+        ctx.drawImage(qrSource, qrBoxX + 6, qrBoxY + 6, qrBoxW - 12, qrBoxH - 12);
       } else {
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('VERIFIED', bx + cw - 125, by + 745);
-        ctx.fillText('SMART QR', bx + cw - 125, by + 765);
+        ctx.fillText('VERIFIED', qrBoxX + qrBoxW / 2, qrBoxY + 65);
+        ctx.fillText('SMART QR', qrBoxX + qrBoxW / 2, qrBoxY + 85);
       }
 
       // Export to Blob
@@ -3034,9 +3055,9 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
           <span style="font-size:8.5px;font-weight:900;color:#6ee7b7;display:block;">CRYPTOGRAPHIC SEAL</span>
           <span style="font-size:7.5px;font-family:monospace;color:#cbd5e1;">SHA256-${institutionalId.toLowerCase()}-verified</span>
         </div>
-        <div style="background:#ffffff;padding:4px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:68px;height:68px;display:block;border-radius:4px;" alt="Verified QR" />` : `<div style="width:68px;height:68px;background:#fff;color:#000;font-size:8px;font-weight:900;display:flex;align-items:center;justify-content:center;text-align:center;">SCAN TO<br/>VERIFY</div>`}
-          <span style="font-size:6.5px;font-weight:900;color:#0f172a;margin-top:2px;letter-spacing:0.5px;">SCAN TO VERIFY</span>
+        <div style="background:#ffffff;padding:6px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          ${qrDataUrl ? `<img src="${qrDataUrl}" style="width:84px;height:84px;display:block;" alt="Verified QR" />` : `<div style="width:84px;height:84px;background:#fff;color:#000;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;text-align:center;">SCAN TO<br/>VERIFY</div>`}
+          <span style="font-size:7px;font-weight:900;color:#0f172a;margin-top:3px;letter-spacing:0.5px;">SCAN TO VERIFY</span>
         </div>
       </div>
     </div>
@@ -7555,8 +7576,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           Scan with any phone to view live status &amp; verified digital credentials
                         </p>
                       </div>
-                      <div className="shrink-0 bg-white p-1.5 rounded-xl shadow-md">
-                        <QRCodeCanvas value={idVerificationUrl} size={86} level="M" includeMargin={false} bgColor="#ffffff" fgColor="#0b1528" className="rounded-lg shadow-sm block" />
+                      <div 
+                        onClick={() => setShowQrEnlargeModal(true)}
+                        className="shrink-0 bg-white p-2 rounded-xl shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform group relative"
+                        title="Click to enlarge QR Code for instant scanning"
+                      >
+                        <QRCodeCanvas 
+                          value={idVerificationUrl} 
+                          size={96} 
+                          level="M" 
+                          marginSize={2} 
+                          bgColor="#ffffff" 
+                          fgColor="#000000" 
+                          className="block" 
+                        />
+                        <span className="absolute -bottom-1 -right-1 bg-brand-600 text-white rounded-full p-0.5 shadow">
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </span>
                       </div>
                     </div>
 
@@ -9046,8 +9082,23 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           Scan with any phone to view live status &amp; verified digital credentials
                         </p>
                       </div>
-                      <div className="shrink-0 bg-white p-1.5 rounded-xl shadow-md">
-                        <QRCodeCanvas value={idVerificationUrl} size={84} level="M" includeMargin={false} bgColor="#ffffff" fgColor="#0b1528" className="rounded-lg shadow-xs block" />
+                      <div 
+                        onClick={() => setShowQrEnlargeModal(true)}
+                        className="shrink-0 bg-white p-2 rounded-xl shadow-md cursor-pointer hover:scale-105 active:scale-95 transition-transform group relative"
+                        title="Click to enlarge QR Code for instant scanning"
+                      >
+                        <QRCodeCanvas 
+                          value={idVerificationUrl} 
+                          size={96} 
+                          level="M" 
+                          marginSize={2} 
+                          bgColor="#ffffff" 
+                          fgColor="#000000" 
+                          className="block" 
+                        />
+                        <span className="absolute -bottom-1 -right-1 bg-brand-600 text-white rounded-full p-0.5 shadow">
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </span>
                       </div>
                     </div>
 
@@ -9579,15 +9630,91 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
       {/* Hidden QR Code Canvas for High-Resolution PVC Print & PNG Generation */}
       <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
         <QRCodeCanvas
+          id="hidden_id_card_qr"
           ref={idCardQrCanvasRef}
           value={idVerificationUrl}
-          size={480}
+          size={512}
           level="M"
-          includeMargin={true}
+          marginSize={2}
           bgColor="#ffffff"
-          fgColor="#0b1528"
+          fgColor="#000000"
         />
       </div>
+
+      {/* Enlarged High-Resolution QR Code Modal for Instant Smartphone Camera Scanning */}
+      {showQrEnlargeModal && (
+        <GlobalModalBackdrop
+          isOpen={showQrEnlargeModal}
+          onClose={() => setShowQrEnlargeModal(false)}
+          className="flex items-center justify-center p-4 z-[99999]"
+        >
+          <div className="relative w-full max-w-sm flex flex-col items-center bg-slate-900 border-2 border-emerald-500/50 rounded-3xl p-6 shadow-2xl text-white text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => setShowQrEnlargeModal(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Close QR modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-black uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Official Verification QR</span>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black text-white">{fullName || user?.username || 'Institutional Member'}</h3>
+              <p className="text-xs text-amber-400 font-mono font-bold mt-0.5">{institutionalId}</p>
+            </div>
+
+            {/* High-Contrast Large QR with Perfect Quiet Zone */}
+            <div className="p-4 bg-white rounded-2xl shadow-xl flex items-center justify-center border-4 border-slate-100">
+              <QRCodeCanvas
+                value={idVerificationUrl}
+                size={240}
+                level="M"
+                marginSize={2}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                className="block"
+              />
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Scan with any smartphone camera or Google Lens to view official institutional credentials and verification status.
+            </p>
+
+            <div className="flex items-center gap-2 w-full pt-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(idVerificationUrl);
+                    notify.success('Verification link copied to clipboard!', '', { category: 'ADMIN' });
+                  } catch {
+                    notify.error('Could not copy link', '', { category: 'ADMIN' });
+                  }
+                }}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all border border-white/15 active:scale-95 cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Link</span>
+              </button>
+
+              <a
+                href={idVerificationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 text-center cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open Page</span>
+              </a>
+            </div>
+          </div>
+        </GlobalModalBackdrop>
+      )}
 
     </div>
   );

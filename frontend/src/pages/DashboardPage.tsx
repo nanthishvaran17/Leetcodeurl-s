@@ -728,34 +728,40 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="stagger-2 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* Metric 1: Total Enrolled — Sapphire Executive */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-blue-50/40 via-white to-white dark:from-blue-950/20 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_2px_12px_-2px_rgba(59,130,246,0.06)] hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-400/60 dark:hover:border-blue-500/40 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]">
+        <div 
+          onClick={() => onNavigateTab('students')}
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-blue-100/70 via-white to-blue-50/40 dark:from-blue-950/40 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-blue-300/80 dark:border-blue-700/80 shadow-[0_2px_14px_-2px_rgba(59,130,246,0.14)] hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-400 dark:hover:border-blue-500/60 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]"
+          title="View Full Enrolled Students Roster"
+        >
           {/* Subtle soft ambient corner glow */}
-          <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-blue-500/20 dark:bg-blue-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
 
           <div>
             <div className="flex items-center justify-between mb-2 sm:mb-2.5">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-sm shadow-blue-500/25 group-hover:scale-105 transition-transform shrink-0">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-300/80 dark:border-blue-800/80">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                 <span>Roster</span>
               </span>
             </div>
 
-            <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+            <div className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-300 truncate">
               Enrolled Roster
             </div>
             
             <div className="flex items-baseline gap-1.5 mt-0.5 sm:mt-1">
-              <span className="text-xl sm:text-3xl font-display font-black text-slate-900 dark:text-white tracking-tight">
+              <span className="text-xl sm:text-3xl font-display font-black text-blue-600 dark:text-blue-400 tracking-tight">
                 {fmtCount(canonicalTotal ?? totalStudents)}
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Students</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-blue-100/70 dark:bg-blue-950/80 text-[9px] sm:text-xs font-black text-blue-700 dark:text-blue-300 border border-blue-300/80 dark:border-blue-800/70 uppercase tracking-wide">
+                Students
+              </span>
             </div>
           </div>
 
-          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-blue-200/70 dark:border-blue-900/50 flex items-center justify-between text-[9px] sm:text-[11px] font-semibold text-blue-800/80 dark:text-blue-200/80">
             <span className="flex items-center gap-1 sm:gap-1.5 truncate">
               <span className="hidden xs:flex -space-x-1 shrink-0">
                 <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-blue-500 ring-1 ring-white dark:ring-navy-900" />
@@ -765,20 +771,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </span>
               <span className="truncate">{departments.length > 0 ? `${departments.length} Depts Covered` : 'Verified Roster'}</span>
             </span>
-            <span className="text-[8px] sm:text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/70 px-1.5 py-0.5 rounded border border-blue-200/60 dark:border-blue-900/60 shrink-0">NEC</span>
+            <span className="text-[8px] sm:text-[10px] font-black text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-300/80 dark:border-blue-800/80 shrink-0">NEC</span>
           </div>
         </div>
 
         {/* Metric 2: Active Profiles — Emerald Live Matrix */}
-        <div className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-emerald-50/40 via-white to-white dark:from-emerald-950/20 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_2px_12px_-2px_rgba(16,185,129,0.06)] hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-400/60 dark:hover:border-emerald-500/40 hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]">
-          <div className="absolute -top-10 -right-10 w-28 h-28 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+        <div 
+          onClick={() => onNavigateTab('students')}
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-emerald-100/70 via-white to-emerald-50/40 dark:from-emerald-950/40 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-emerald-300/80 dark:border-emerald-700/80 shadow-[0_2px_14px_-2px_rgba(16,185,129,0.14)] hover:shadow-lg hover:shadow-emerald-500/20 hover:border-emerald-400 dark:hover:border-emerald-500/60 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]"
+          title="View Active Profiles"
+        >
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-emerald-500/20 dark:bg-emerald-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
 
           <div>
             <div className="flex items-center justify-between mb-2 sm:mb-2.5">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-sm shadow-emerald-500/25 group-hover:scale-105 transition-transform shrink-0">
                 <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/80">
                 <span className="relative flex h-1.5 w-1.5 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
@@ -787,7 +797,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </span>
             </div>
 
-            <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+            <div className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 truncate">
               Active Profiles
             </div>
             
@@ -796,21 +806,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 {fmtCount(activeStudents)}
               </span>
               {totalStudents > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/80 text-[9px] sm:text-xs font-black font-mono text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70">
+                <span className="px-1.5 py-0.5 rounded-md bg-emerald-100/70 dark:bg-emerald-950/80 text-[9px] sm:text-xs font-black font-mono text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/70">
                   {`${Math.round((activeStudents / totalStudents) * 1000) / 10}%`}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-slate-100 dark:border-slate-800/80 space-y-1 sm:space-y-1.5">
-            <div className="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-emerald-200/70 dark:border-emerald-900/50 space-y-1 sm:space-y-1.5">
+            <div className="w-full bg-emerald-100/90 dark:bg-emerald-950/70 rounded-full h-1.5 overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700" 
                 style={{ width: `${Math.min(100, Math.round((activeStudents / (totalStudents || 1)) * 100))}%` }} 
               />
             </div>
-            <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-emerald-800/80 dark:text-emerald-200/80">
               <span className="truncate">Synchronized</span>
               <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold shrink-0">{activeStudents}/{totalStudents}</span>
             </div>
@@ -820,9 +830,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* Metric 3: Contest Solvers — Amber Sunset Flame (Dynamic Contest Switcher up to WC 525) */}
         <div 
           onClick={() => onNavigateTab('weekly-contest')}
-          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_2px_12px_-2px_rgba(245,158,11,0.06)] hover:shadow-lg hover:shadow-amber-500/10 hover:border-amber-400/60 dark:hover:border-amber-500/40 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]"
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-amber-100/70 via-white to-amber-50/40 dark:from-amber-950/40 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-amber-300/80 dark:border-amber-700/80 shadow-[0_2px_14px_-2px_rgba(245,158,11,0.14)] hover:shadow-lg hover:shadow-amber-500/20 hover:border-amber-400 dark:hover:border-amber-500/60 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]"
         >
-          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-500/20 dark:bg-amber-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
 
           <div>
             <div className="flex items-center justify-between mb-2 sm:mb-2.5 gap-1">
@@ -837,7 +847,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   e.stopPropagation();
                   setShowContestPicker(true);
                 }}
-                className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/80 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 transition-all active:scale-95 cursor-pointer"
                 title="Tap to select Weekly Contest session"
               >
                 <span className="truncate max-w-[70px] sm:max-w-[105px]">
@@ -847,7 +857,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </button>
             </div>
 
-            <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+            <div className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 truncate">
               Contest Solvers
             </div>
             
@@ -855,17 +865,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="text-xl sm:text-3xl font-display font-black text-amber-600 dark:text-amber-400 tracking-tight">
                 {fmtCount(actualContestSolvers)}
               </span>
-              <span className="px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/80 text-[9px] sm:text-xs font-black text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70 truncate max-w-[85px] sm:max-w-none">
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-100/70 dark:bg-amber-950/80 text-[9px] sm:text-xs font-black text-amber-700 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/70 truncate max-w-[85px] sm:max-w-none">
                 {activeContestSession?.contestName ? activeContestSession.contestName.replace('Weekly Contest', 'WC') : 'Sunday'}
               </span>
             </div>
           </div>
 
-          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[9px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-            <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
+          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-amber-200/70 dark:border-amber-900/50 flex items-center justify-between text-[9px] sm:text-[11px] font-bold text-amber-800/80 dark:text-amber-200/80">
+            <span className="text-[9px] sm:text-[10px] font-bold text-amber-800/80 dark:text-amber-200/80 truncate">
               {activeContestSession?.sessionDate ? `Sun ${activeContestSession.sessionDate}` : 'Sunday Contest'}
             </span>
-            <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0">
+            <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px] font-black text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0">
               <span>View Solvers</span>
               <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </span>
@@ -875,9 +885,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* Metric 4: Contest Rate — Electric Violet */}
         <div 
           onClick={() => onNavigateTab('weekly-contest')}
-          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-purple-50/40 via-white to-white dark:from-purple-950/20 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_2px_12px_-2px_rgba(168,85,247,0.06)] hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-400/60 dark:hover:border-purple-500/40 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]"
+          className="relative group overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 bg-gradient-to-b from-purple-100/70 via-white to-purple-50/40 dark:from-purple-950/40 dark:via-[#0c1424] dark:to-[#0c1424] backdrop-blur-xl border border-purple-300/80 dark:border-purple-700/80 shadow-[0_2px_14px_-2px_rgba(168,85,247,0.14)] hover:shadow-lg hover:shadow-purple-500/20 hover:border-purple-400 dark:hover:border-purple-500/60 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98] flex flex-col justify-between select-none min-h-[148px] sm:min-h-[170px]"
         >
-          <div className="absolute -top-10 -right-10 w-28 h-28 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-purple-500/20 dark:bg-purple-500/25 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
 
           <div>
             <div className="flex items-center justify-between mb-2 sm:mb-2.5">
@@ -886,8 +896,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${
                 isSundayLive 
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60' 
-                  : 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800/60'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/80' 
+                  : 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-300/80 dark:border-purple-800/80'
               }`}>
                 {isSundayLive ? (
                   <>
@@ -903,7 +913,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </span>
             </div>
 
-            <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+            <div className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 truncate">
               Contest Rate
             </div>
             
@@ -911,20 +921,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="text-xl sm:text-3xl font-display font-black text-purple-600 dark:text-purple-300 tracking-tight">
                 {contestParticipationRate}%
               </span>
-              <span className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide truncate max-w-[85px] sm:max-w-none">
+              <span className="px-1.5 py-0.5 rounded-md bg-purple-100/70 dark:bg-purple-950/80 text-[9px] sm:text-xs font-black font-mono text-purple-700 dark:text-purple-300 border border-purple-300/80 dark:border-purple-800/70 uppercase tracking-wide truncate max-w-[85px] sm:max-w-none">
                 {actualContestSolvers} / {totalStudents}
               </span>
             </div>
           </div>
 
-          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-slate-100 dark:border-slate-800/80 space-y-1 sm:space-y-1.5">
-            <div className="w-full bg-slate-100 dark:bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+          <div className="pt-2 sm:pt-2.5 mt-2 sm:mt-2.5 border-t border-purple-200/70 dark:border-purple-900/50 space-y-1 sm:space-y-1.5">
+            <div className="w-full bg-purple-100/90 dark:bg-purple-950/70 rounded-full h-1.5 overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-700" 
                 style={{ width: `${Math.min(100, Number(contestParticipationRate) || 0)}%` }} 
               />
             </div>
-            <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold text-purple-800/80 dark:text-purple-200/80">
               <span className="truncate">{activeContestSession?.contestName || 'Weekly Contest'}</span>
               <span className="font-mono text-purple-600 dark:text-purple-400 font-bold shrink-0">{contestParticipationRate}% Rate</span>
             </div>

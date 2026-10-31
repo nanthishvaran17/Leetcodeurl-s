@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
+import { StudentPerformanceSearch } from '../components/StudentPerformanceSearch';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -1239,35 +1240,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* Search Bar on Top Full-Width for instant mobile accessibility */}
-        <div className="relative">
-          <input
-            id="landing-name-search"
-            type="text"
-            autoComplete="off"
-            spellCheck={false}
-            value={nameSearch}
-            onChange={(e) => {
-              setNameSearch(e.target.value);
-              setDisplayCount(32);
-            }}
-            placeholder="Search name, reg no (e.g. 732224CC031)..."
-            className="w-full h-11 min-h-[44px] bg-slate-50 dark:bg-navy-950/95 text-slate-900 dark:text-white text-xs font-semibold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-200/90 dark:border-white/[0.08] shadow-inner focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-400 dark:placeholder-slate-500 truncate transition-all text-left"
-          />
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10 text-slate-500 dark:text-slate-400">
-            <Search className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          {nameSearch && (
-            <button
-              type="button"
-              onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-              className="absolute inset-y-0 right-0 flex items-center px-3 z-10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
-              title="Clear search"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        {/* Modern 2026 Student Performance Search Bar with Autocomplete Suggestions */}
+        <StudentPerformanceSearch
+          value={nameSearch}
+          onChange={(val) => {
+            setNameSearch(val);
+            setDisplayCount(32);
+          }}
+          students={students}
+          onSelectStudent={onSelectStudent}
+          placeholder="Search name, reg no (e.g. 732224CC008)..."
+        />
 
         {/* Mobile View: Dedicated Sleek Filter Control Bar */}
         <div className="block md:hidden space-y-2.5">

@@ -624,32 +624,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             <label htmlFor="dept-dashboard-name-search" className="block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
-            <div className="relative flex items-center w-full">
-              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="dept-dashboard-name-search"
-                type="text"
-                value={nameSearch}
-                onChange={(e) => {
-                  setNameSearch(e.target.value);
-                  setDisplayCount(32);
-                }}
-                autoComplete="off"
-                spellCheck={false}
-                placeholder="Search by name, reg no..."
-                className="w-full h-9 min-h-[36px] bg-slate-50/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs font-semibold py-1.5 pl-10 pr-8 rounded-xl border border-slate-300 dark:border-slate-700 shadow-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
-              />
-              {nameSearch && (
-                <button
-                  type="button"
-                  onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-navy-800 cursor-pointer transition-colors flex items-center justify-center"
-                  title="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            <ModernSearchInput
+              id="dept-dashboard-name-search"
+              value={nameSearch}
+              onChange={(val) => {
+                setNameSearch(val);
+                setDisplayCount(32);
+              }}
+              placeholder="Search by name, reg no..."
+              size="sm"
+            />
           </div>
 
           {/* 2. College Campus Filter — Admin & Management only */}

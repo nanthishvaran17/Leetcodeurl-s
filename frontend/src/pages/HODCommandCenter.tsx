@@ -7,6 +7,7 @@ import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
 import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
 import { FacultyMentorMatrixCard } from '../components/admin/FacultyMentorMatrixCard';
 import { GlobalFilter } from '../components/GlobalFilter';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import {
  getCommandCenterSummary, getCommandCenterStudents, addStudent, updateStudent,
  deleteStudent, getCommandCenterDepartments, askCommandCenterAI,
@@ -2651,18 +2652,13 @@ export const HODCommandCenter: React.FC = () => {
                 <span>Show All</span>
               </button>
             )}
-            <div className="relative min-w-[240px] flex items-center">
-              <input
+            <div className="min-w-[240px]">
+              <ModernSearchInput
                 value={studentsSearch}
-                onChange={e => setStudentsSearch(e.target.value)}
-                autoComplete="off"
-                spellCheck={false}
+                onChange={val => setStudentsSearch(val)}
                 placeholder="Search student, reg no, or LeetCode handle..."
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-800 dark:text-slate-100 outline-none focus:border-brand-500 text-left transition-all"
+                size="sm"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 z-10 text-slate-600 dark:text-slate-300">
-                <Search size={14} />
-              </div>
             </div>
           </div>
  </div>
