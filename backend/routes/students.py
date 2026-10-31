@@ -408,8 +408,9 @@ async def get_students(
                     if d_obj:
                         effective_dept_id = d_obj.id
 
-        if college and college.strip().upper() not in ("ALL", ""):
-            col_target = college.strip().upper()
+        college_val = college if isinstance(college, str) else None
+        if college_val and college_val.strip().upper() not in ("ALL", ""):
+            col_target = college_val.strip().upper()
             is_nct_cond = or_(
                 func.upper(func.coalesce(Student.college, "")) == "NCT",
                 func.coalesce(Student.reg_no, "").ilike("7321%"),

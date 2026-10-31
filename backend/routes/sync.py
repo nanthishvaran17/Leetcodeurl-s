@@ -490,6 +490,7 @@ def get_failed_sync_students(db: Session = Depends(get_db)):
     return failed_list
 
 
+@router.get("/data/freshness")
 @router.get("/api/data/freshness")
 def get_data_freshness_metadata(db: Session = Depends(get_db)):
     """

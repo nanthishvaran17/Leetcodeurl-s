@@ -39,6 +39,7 @@ async def get_public_leaderboard(
         paginated=paginated,
         page=page,
         limit=limit,
+        college=None,
         request_db=db
     )
 
