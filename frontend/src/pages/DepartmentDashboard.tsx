@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isGlobalAccessRole, isCollegeFilterAllowed, isStaffRole } from '../services/auth/authTypes';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
@@ -450,31 +451,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         {/* Mobile View: Dedicated Sleek Filter Control Bar (< 768px) */}
         <div className="block md:hidden space-y-2.5 pt-2">
           {/* Mobile Name Search */}
-          <div className="relative flex items-center w-full">
-            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={nameSearch}
-              onChange={(e) => {
-                setNameSearch(e.target.value);
-                setDisplayCount(32);
-              }}
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="Search by name, reg no, username..."
-              className="w-full h-11 min-h-[44px] bg-slate-50/80 dark:bg-navy-950/80 hover:bg-white dark:hover:bg-navy-900 focus:bg-white dark:focus:bg-navy-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm font-semibold py-2.5 pl-10 pr-10 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-left transition-all"
-            />
-            {nameSearch && (
-              <button
-                type="button"
-                onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer flex items-center justify-center"
-                title="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+          <ModernSearchInput
+            value={nameSearch}
+            onChange={(val) => {
+              setNameSearch(val);
+              setDisplayCount(32);
+            }}
+            placeholder="Search by name, reg no, username..."
+          />
 
           <div className="flex items-center space-x-2">
             {/* Primary Mobile Filter Trigger Button */}

@@ -17,6 +17,7 @@ import { StudentWhatsAppModal } from '../components/StudentWhatsAppModal';
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 import { GlobalFilter } from '../components/GlobalFilter';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
@@ -1375,21 +1376,12 @@ export const FacultyActionCenter: React.FC = () => {
             {/* Filters Container - Fully styled for clean dark theme */}
       <div className="relative z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-md backdrop-blur-xl mb-6">
         {/* Search Bar Input */}
-        <div className="relative group flex-1 min-w-[200px] w-full md:w-auto">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-2xl md:rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
-          <div className="relative flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 rounded-2xl md:rounded-full px-4 py-2 sm:py-2.5 border border-slate-300 dark:border-navy-700/80 focus-within:border-indigo-500 shadow-xs">
-            <Search size={16} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors shrink-0" />
-            <input
-              value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search by name, reg no, username..."
-              className="flex-1 bg-transparent border-none focus:ring-0 focus:border-transparent focus:outline-none !outline-none !ring-0 !border-none text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 placeholder:font-medium p-0 m-0"
-            />
-            {search && (
-              <button aria-label="Clear search" title="Clear search" onClick={() => { setSearch(''); setPage(1); }} className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800">
-                <X size={14} />
-              </button>
-            )}
-          </div>
+        <div className="flex-1 min-w-[200px] w-full md:w-auto">
+          <ModernSearchInput
+            value={search}
+            onChange={val => { setSearch(val); setPage(1); }}
+            placeholder="Search by name, reg no, username..."
+          />
         </div>
 
         {/* Dropdown Filters (Flex container with adequate spacing) */}

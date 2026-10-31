@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -551,25 +552,13 @@ export const GrowthIntelligencePage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5">
             {/* Live Leaderboard Search Box */}
-            <div className="relative flex items-center flex-1 sm:flex-initial min-w-0 sm:min-w-[280px]">
-              <Search className="w-4 h-4 text-brand-600 dark:text-brand-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 stroke-[2.5]" />
-              <input
-                type="text"
+            <div className="flex-1 sm:flex-initial min-w-0 sm:min-w-[280px]">
+              <ModernSearchInput
                 value={leaderboardSearch}
-                onChange={(e) => setLeaderboardSearch(e.target.value)}
+                onChange={(val) => setLeaderboardSearch(val)}
                 placeholder="Search solver, reg no, username..."
-                style={{ textAlign: 'left', paddingLeft: '2.5rem' }}
-                className="w-full text-left pl-10 pr-8 py-2 min-h-[38px] sm:min-h-[42px] text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all shadow-xs"
+                size="sm"
               />
-              {leaderboardSearch && (
-                <button
-                  type="button"
-                  onClick={() => setLeaderboardSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md cursor-pointer z-10"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
             </div>
 
             {/* Controls Bar - Perfectly Contained Inside Card Frame (No Cutoff / No Overflow) */}

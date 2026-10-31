@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useDeferredValue, lazy, Su
 import { createPortal } from 'react-dom';
 import { useDebounce } from '../hooks/useDebounce';
 import { triggerHaptic } from '../utils/haptics';
+import { ModernSearchInput } from './ui/ModernSearchInput';
 import { 
   ShieldCheck, 
   RefreshCw, 
@@ -1632,29 +1633,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         {/* Search Bar + Filters Row */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Input */}
-          <div className="relative w-full sm:max-w-md lg:max-w-lg shrink-0 flex items-center">
-            <input
-              type="text"
+          <div className="w-full sm:max-w-md lg:max-w-lg shrink-0">
+            <ModernSearchInput
               placeholder={isMobile ? "Search student, reg no, handle..." : "Search student, reg no, or LeetCode username..."}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              autoComplete="off"
-              spellCheck={false}
-              className="w-full pl-10 pr-9 py-2.5 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-navy-900 text-left transition-all shadow-inner"
+              onChange={(val) => setSearchTerm(val)}
             />
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-              <Search className="w-4 h-4 stroke-[2.5]" />
-            </div>
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="absolute inset-y-0 right-0 z-10 flex items-center px-3 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 cursor-pointer transition-colors"
-                title="Clear search"
-              >
-                <X className="w-4 h-4 stroke-[2.5]" />
-              </button>
-            )}
           </div>
 
           {/* Department and Academic Year Selector Boxes */}

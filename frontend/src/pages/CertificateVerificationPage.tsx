@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Search,
   ShieldCheck,
   ShieldAlert,
   XCircle,
@@ -127,9 +128,11 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     return new URLSearchParams(window.location.search);
   };
 
-  const verificationId = (propId || getPathId()).trim();
+  const initialId = (propId || getPathId()).trim();
+  const [verificationId, setVerificationId] = useState<string>(initialId);
+  const [searchInput, setSearchInput] = useState<string>(initialId);
   const [data, setData] = useState<CertificateVerificationData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(Boolean(initialId));
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<boolean>(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -140,16 +143,21 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     setDownloadError(null);
     if (!verificationId) {
       setLoading(false);
-      setData({
-        status: 'NOT_VERIFIED',
-        is_valid: false,
-        verification_id: '',
-        message: 'Invalid Certificate Identifier'
-      });
+      setData(null);
       return;
     }
-    fetchVerification();
+    fetchVerification(verificationId);
   }, [verificationId]);
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = searchInput.trim();
+    if (!clean) return;
+    setVerificationId(clean);
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+      window.history.pushState(null, '', `/verify/${encodeURIComponent(clean)}`);
+    }
+  };
 
   useEffect(() => {
     const handlePull = () => {
@@ -161,7 +169,13 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
     return () => window.removeEventListener('pull_to_refresh', handlePull);
   }, [verificationId]);
 
-  const fetchVerification = async () => {
+  const fetchVerification = async (targetId?: string) => {
+    const activeId = (targetId || verificationId).trim();
+    if (!activeId) {
+      setLoading(false);
+      setData(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     const searchParams = getSearchParams();
@@ -519,6 +533,86 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
         <div className="max-w-2xl w-full">
           
+          {/* Institutional Credential Search & Lookup Bar */}
+          <form onSubmit={handleSearchSubmit} className="mb-6 flex gap-2 w-full max-w-xl mx-auto">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Enter Student Reg No, Staff ID, or Certificate Code..."
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl text-xs text-white placeholder-slate-500 outline-none transition-all shadow-inner font-mono"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center gap-1.5 cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Verify</span>
+            </button>
+          </form>
+
+          {/* 1A. EMPTY / DIRECT PORTAL WELCOME STATE */}
+          {!loading && !verificationId && !data && (
+            <div className="rounded-3xl bg-slate-900 border border-slate-800 shadow-xl p-6 sm:p-8 space-y-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-2">
+                <span className="px-3.5 py-1 rounded-full text-[11px] font-black bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                  Real-Time Credential Registry
+                </span>
+                <h2 className="text-2xl font-black text-white">
+                  Institutional Credential Verification Portal
+                </h2>
+                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                  Enter any official Student Register Number, Staff Institutional ID, or Certificate Verification Identifier to authenticate institutional records in real-time.
+                </p>
+              </div>
+
+              {/* Supported Credential Types */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
+                <div 
+                  onClick={() => { setSearchInput('732225CC018'); setVerificationId('732225CC018'); }}
+                  className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/50 transition-all cursor-pointer group"
+                >
+                  <span className="text-[10px] font-black uppercase text-amber-400 block">Student DSA Pass</span>
+                  <p className="text-xs font-bold text-white mt-1 group-hover:text-emerald-300 transition-colors">Enter Reg No</p>
+                  <span className="text-[10px] font-mono text-slate-400 block mt-0.5">e.g. 732225CC018</span>
+                </div>
+
+                <div 
+                  onClick={() => { setSearchInput('NEC-STAFF-001'); setVerificationId('NEC-STAFF-001'); }}
+                  className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/50 transition-all cursor-pointer group"
+                >
+                  <span className="text-[10px] font-black uppercase text-cyan-400 block">Faculty / Staff ID</span>
+                  <p className="text-xs font-bold text-white mt-1 group-hover:text-emerald-300 transition-colors">Enter Staff ID</p>
+                  <span className="text-[10px] font-mono text-slate-400 block mt-0.5">e.g. NEC-STAFF-001</span>
+                </div>
+
+                <div 
+                  onClick={() => { setSearchInput('CERT-2026-NEC-TOP'); setVerificationId('CERT-2026-NEC-TOP'); }}
+                  className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 hover:border-emerald-500/50 transition-all cursor-pointer group"
+                >
+                  <span className="text-[10px] font-black uppercase text-purple-400 block">Certificate</span>
+                  <p className="text-xs font-bold text-white mt-1 group-hover:text-emerald-300 transition-colors">Enter Cert Code</p>
+                  <span className="text-[10px] font-mono text-slate-400 block mt-0.5">e.g. CERT-2026-NEC</span>
+                </div>
+              </div>
+
+              {/* Instructions on how to add records */}
+              <div className="pt-2 text-left bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-[11px] text-slate-400 space-y-1.5">
+                <span className="text-xs font-bold text-slate-200 block">How are credentials added to this registry?</span>
+                <p>• <strong>Faculty / Staff:</strong> Register and save your profile in <em>Account Settings</em> to automatically issue an authoritative Institutional ID Card.</p>
+                <p>• <strong>Students:</strong> Register your roll/register number in the college LeetCode tracker to activate your verified Digital DSA Pass.</p>
+                <p>• <strong>Certificates:</strong> Issued by Department HODs &amp; Faculty Mentors for top performers.</p>
+              </div>
+            </div>
+          )}
+
           {/* Loading State */}
           {loading && (
             <div className="p-12 text-center rounded-3xl bg-slate-900/80 border border-slate-800 shadow-lg backdrop-blur-xl space-y-4">
@@ -1341,7 +1435,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
               <div className="pt-2">
                 <button
-                  onClick={fetchVerification}
+                  onClick={() => fetchVerification()}
                   className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl inline-flex items-center space-x-2 shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
                 >
                   <span>Retry Verification</span>

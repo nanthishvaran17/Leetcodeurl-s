@@ -5,6 +5,7 @@ import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 
 const formatYear = (yr: any) => {
   if (!yr) return 'II Year';
@@ -338,25 +339,11 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
             <label className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
               <span>Search Student</span>
             </label>
-            <div className="relative w-full">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name, reg no, username"
-                className="w-full pl-10 pr-9 h-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all shadow-xs text-left"
-              />
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            <ModernSearchInput
+              value={search}
+              onChange={(val) => setSearch(val)}
+              placeholder="Search name, reg no, username"
+            />
           </div>
 
           {/* Min Solves Filter */}

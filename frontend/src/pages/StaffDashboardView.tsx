@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
+import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import api, { clearApiCache } from '../services/api';
 import { StaffMentoringDetailModal } from '../components/StaffMentoringDetailModal';
 import { useNotification } from '../context/NotificationContext';
@@ -1074,32 +1075,16 @@ export const StaffDashboardView: React.FC = () => {
             })()}
 
             {/* Search inside assigned set strictly */}
-            <div className="relative w-full sm:w-64 shrink-0 flex items-center">
-              <input
-                type="text"
+            <div className="w-full sm:w-64 shrink-0">
+              <ModernSearchInput
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
+                onChange={(val) => {
+                  setSearch(val);
                   if (selectedStudentFilter !== 'ALL') setSelectedStudentFilter('ALL');
                 }}
-                autoComplete="off"
-                spellCheck={false}
                 placeholder="Search assigned students..."
-                className="w-full h-10 pl-10 pr-8 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition shadow-xs placeholder:font-medium text-left"
+                size="sm"
               />
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 z-10 text-slate-500 dark:text-slate-400">
-                <Search className="w-4 h-4" />
-              </div>
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
-                  title="Clear search"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              )}
             </div>
           </div>
         </div>
