@@ -330,6 +330,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               placeholder="Search by name, reg no, or username..."
               value={filters.searchQuery}
               onChange={val => filters.setSearchQuery(val)}
+              onSelectStudent={onSelectStudent}
             />
           </div>
 

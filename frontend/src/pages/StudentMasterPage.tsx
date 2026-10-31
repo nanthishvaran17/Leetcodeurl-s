@@ -637,6 +637,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               value={localSearch}
               onChange={(val) => setLocalSearch(val)}
               onClear={() => filters.setSearchQuery('')}
+              onSelectStudent={onSelectStudent}
               placeholder="Search students by name, reg no, username..."
               className="flex-1 min-w-0"
             />

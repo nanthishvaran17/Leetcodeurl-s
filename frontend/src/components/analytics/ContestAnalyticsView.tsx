@@ -3,7 +3,7 @@ import api from '../../services/api';
 import { 
   Loader2, Trophy, Target, Award, AlertCircle, Zap, 
   CheckCircle2, TrendingUp, TrendingDown, Clock, Search, 
-  Calendar, Sparkles, Minus, ArrowUpDown, ChevronLeft, ChevronRight
+  Calendar, Sparkles, Minus, ArrowUpDown, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -234,7 +234,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
         </div>
       </div>
 
-      {/* Charts & Trends */}
+      {/* Charts & Highlights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
@@ -243,12 +243,12 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
               Rating & Rank Progression
             </h3>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {trend.length} Recorded Contests
+              {trend.length} Contests
             </span>
           </div>
 
           {trend && trend.length > 0 ? (
-            <div className="flex-1 min-h-[300px]">
+            <div className="flex-1 min-h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
@@ -256,78 +256,65 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                   <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
                   <YAxis yAxisId="right" orientation="right" reversed axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Legend wrapperStyle={{ paddingTop: '16px' }} />
                   <Line yAxisId="left" type="monotone" dataKey="avg_rating" name="Rating" stroke="#3b82f6" strokeWidth={3} dot={{ r: 2 }} activeDot={{ r: 6 }} />
                   <Line yAxisId="right" type="monotone" dataKey="avg_rank" name="Rank" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="4 4" dot={false} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-navy-800 rounded-xl border border-slate-100 dark:border-navy-700 h-[300px]">
+            <div className="flex-1 flex items-center justify-center bg-slate-50 dark:bg-navy-800 rounded-xl border border-slate-100 dark:border-navy-700 h-[280px]">
               <p className="text-slate-400 dark:text-navy-400 font-medium">No trend data available.</p>
             </div>
           )}
         </div>
 
-        {/* Contest Summary Box (For single student) OR Top Performers (Global) */}
+        {/* Highlights Tile (Single student) OR Top Performers (Global) */}
         {studentId ? (
-          <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                Contest Performance Highlights
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
-                Overview of participation consistency, problem solving distribution, and ranking peak.
-              </p>
+          <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col justify-center">
+            <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Contest Highlights
+            </h3>
 
-              <div className="grid grid-cols-2 gap-3.5 mb-5">
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Contests Attended</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white">{rawContests.length}</span>
-                    <span className="text-xs text-slate-400">({weeklyCount} Weekly / {biweeklyCount} Biweekly)</span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Total Problems Solved</span>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                      {summary.problems_solved || rawContests.reduce((acc, c) => acc + (c.problems_solved || 0), 0)}
-                    </span>
-                    <span className="text-xs text-slate-400">problems</span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Peak Standing</span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-black text-amber-500">
-                      {summary.best_rank ? `#${Number(summary.best_rank).toLocaleString('en-US')}` : '-'}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-medium">All-time best</span>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-                  <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Solved Per Contest</span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-black text-indigo-500">
-                      {summary.avg_solved ? Number(summary.avg_solved).toFixed(1) : 0}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-medium">avg out of 4</span>
-                  </div>
+            <div className="grid grid-cols-2 gap-3.5">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Contests Attended</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{rawContests.length}</span>
+                  <span className="text-[11px] text-slate-400">({weeklyCount}W / {biweeklyCount}B)</span>
                 </div>
               </div>
-            </div>
 
-            <div className="p-3.5 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200/50 dark:border-brand-800/30 rounded-xl flex items-center justify-between text-xs text-brand-700 dark:text-brand-300">
-              <span className="font-medium">Scroll down to view detailed each-week solve count, rating, and rank.</span>
-              <span className="font-bold underline cursor-pointer" onClick={() => {
-                const el = document.getElementById('weekly-contest-breakdown-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}>View List ↓</span>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Total Solved</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {summary.problems_solved || rawContests.reduce((acc, c) => acc + (c.problems_solved || 0), 0)}
+                  </span>
+                  <span className="text-[11px] text-slate-400">problems</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Peak Standing</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-black text-amber-500">
+                    {summary.best_rank ? `#${Number(summary.best_rank).toLocaleString('en-US')}` : '-'}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium">Best rank</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">Solved / Contest</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-black text-indigo-500">
+                    {summary.avg_solved ? Number(summary.avg_solved).toFixed(1) : 0}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium">/ 4 avg</span>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -369,23 +356,18 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
         )}
       </div>
 
-      {/* Weekly Contest Breakdown Section (Requested by User) */}
+      {/* Weekly Contest Breakdown Section */}
       {(studentId || rawContests.length > 0) && (
-        <div id="weekly-contest-breakdown-section" className="bg-white dark:bg-navy-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm space-y-4">
+        <div id="weekly-contest-breakdown-section" className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm space-y-3.5">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-navy-800 pb-4">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Weekly & Biweekly Contest Breakdown
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400 border border-brand-200/50 dark:border-brand-800/30">
-                  {rawContests.length} Total Contests
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Detailed record of each week's contest: questions solved, rating progression, and global rank.
-              </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-navy-800 pb-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Weekly & Biweekly Contest Breakdown
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400 border border-brand-200/50 dark:border-brand-800/30">
+                {rawContests.length}
+              </span>
             </div>
 
             {/* Filter buttons & sort toggle */}
@@ -394,21 +376,21 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                 <button
                   type="button"
                   onClick={() => setTypeFilter('ALL')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${typeFilter === 'ALL' ? 'bg-white dark:bg-navy-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${typeFilter === 'ALL' ? 'bg-white dark:bg-navy-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
                 >
                   All ({rawContests.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setTypeFilter('Weekly')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${typeFilter === 'Weekly' ? 'bg-white dark:bg-navy-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${typeFilter === 'Weekly' ? 'bg-white dark:bg-navy-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
                 >
                   Weekly ({weeklyCount})
                 </button>
                 <button
                   type="button"
                   onClick={() => setTypeFilter('Biweekly')}
-                  className={`px-3 py-1.5 rounded-lg transition-all ${typeFilter === 'Biweekly' ? 'bg-white dark:bg-navy-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${typeFilter === 'Biweekly' ? 'bg-white dark:bg-navy-700 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
                 >
                   Biweekly ({biweeklyCount})
                 </button>
@@ -417,53 +399,62 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
               <button
                 type="button"
                 onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors"
                 title={`Sorting: ${sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}`}
               >
                 <ArrowUpDown className="w-3.5 h-3.5" />
-                <span>{sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}</span>
+                <span>{sortOrder === 'desc' ? 'Newest' : 'Oldest'}</span>
               </button>
             </div>
           </div>
 
-          {/* Search bar */}
+          {/* Search bar with Prominent Clear Border */}
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by contest name (e.g., Weekly Contest 412, Biweekly Contest 135)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
-            />
+            <div className="flex items-center w-full bg-white dark:bg-navy-950 border-2 border-slate-300 dark:border-navy-600 focus-within:border-brand-500 dark:focus-within:border-brand-400 rounded-xl shadow-xs transition-all overflow-hidden px-3 py-1.5 sm:py-2">
+              <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
+              <input
+                type="text"
+                placeholder="Search contest (e.g. 192, Weekly)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+              />
+              {searchQuery && (
+                <button 
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-md text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Table Container */}
+          {/* Table Container - Fits 100% on same page with ZERO horizontal scroll */}
           {filteredContests.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-navy-800/30 rounded-xl border border-dashed border-slate-200 dark:border-navy-700">
-              <Trophy className="w-8 h-8 mx-auto mb-2 opacity-30 text-slate-400" />
-              <p className="font-semibold text-sm">No contests match your search or filter.</p>
+            <div className="py-10 text-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-navy-800/30 rounded-xl border border-dashed border-slate-200 dark:border-navy-700">
+              <Trophy className="w-7 h-7 mx-auto mb-1.5 opacity-30 text-slate-400" />
+              <p className="font-semibold text-xs sm:text-sm">No contests match your search or filter.</p>
               <button 
                 onClick={() => { setSearchQuery(''); setTypeFilter('ALL'); }}
-                className="mt-2 text-xs font-semibold text-brand-600 hover:underline"
+                className="mt-1.5 text-xs font-semibold text-brand-600 hover:underline"
               >
                 Reset filters
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="w-full">
+              <table className="w-full text-left border-collapse table-auto sm:table-fixed">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/60 dark:bg-navy-800/40 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    <th className="py-3 px-3.5 rounded-l-lg">Contest / Week</th>
-                    <th className="py-3 px-3.5">Date</th>
-                    <th className="py-3 px-3.5 text-center">Questions Solved</th>
-                    <th className="py-3 px-3.5 text-right">Contest Rating</th>
-                    <th className="py-3 px-3.5 text-right">Global Rank</th>
-                    <th className="py-3 px-3.5 text-right rounded-r-lg">Finish Time</th>
+                  <tr className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-800/40 text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="py-2.5 px-2.5 sm:px-3 rounded-l-lg w-[42%] sm:w-[40%]">Contest & Date</th>
+                    <th className="py-2.5 px-1.5 sm:px-2 text-center w-[20%] sm:w-[22%]">Solved</th>
+                    <th className="py-2.5 px-2 sm:px-3 text-right w-[20%] sm:w-[19%]">Rating</th>
+                    <th className="py-2.5 px-2.5 sm:px-3 text-right rounded-r-lg w-[18%] sm:w-[19%]">Rank</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-navy-800 text-sm">
+                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                   {paginatedContests.map((c) => {
                     const solved = c.problems_solved || 0;
                     const total = c.total_problems || 4;
@@ -472,51 +463,52 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                     return (
                       <tr 
                         key={c.id || c.contest_name} 
-                        className={`hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors ${c.is_best_rank ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''}`}
+                        className={`hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors ${c.is_best_rank ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''}`}
                       >
-                        {/* Contest Name */}
-                        <td className="py-3.5 px-3.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-white">
-                              {c.contest_name}
-                            </span>
-                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider ${
-                              c.contest_type === 'Biweekly' 
-                                ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/30' 
-                                : 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30'
-                            }`}>
-                              {c.contest_type}
-                            </span>
-                            {c.is_best_rank && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                <Trophy className="w-3 h-3 text-amber-500" />
-                                Best Rank
+                        {/* 1. Contest & Date */}
+                        <td className="py-2.5 sm:py-3 px-2.5 sm:px-3">
+                          <div className="flex flex-col">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                                {c.contest_name}
                               </span>
-                            )}
+                              <span className={`px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded uppercase tracking-wider ${
+                                c.contest_type === 'Biweekly' 
+                                  ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/30' 
+                                  : 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30'
+                              }`}>
+                                {c.contest_type}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                {c.formatted_date || c.date || '-'}
+                              </span>
+                              {c.finish_time && (
+                                <span className="flex items-center gap-0.5 font-mono text-[10px] text-slate-400">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {c.finish_time}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
 
-                        {/* Date */}
-                        <td className="py-3.5 px-3.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{c.formatted_date || c.date || '-'}</span>
-                          </div>
-                        </td>
-
-                        {/* Solved Count with Visual Blocks */}
-                        <td className="py-3.5 px-3.5">
+                        {/* 2. Questions Solved with 4 visual blocks */}
+                        <td className="py-2.5 sm:py-3 px-1.5 sm:px-2 text-center">
                           <div className="flex flex-col items-center justify-center">
-                            <div className="flex items-center gap-1 mb-1">
+                            <div className="flex items-center gap-0.5 sm:gap-1 mb-0.5">
                               {[1, 2, 3, 4].map((idx) => {
                                 const isSolved = idx <= solved;
                                 return (
                                   <div
                                     key={idx}
                                     title={`Q${idx}: ${isSolved ? 'Solved' : 'Unsolved'}`}
-                                    className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-bold transition-all ${
+                                    className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded flex items-center justify-center text-[7px] sm:text-[8px] font-bold ${
                                       isSolved
-                                        ? 'bg-emerald-500 text-white shadow-xs'
+                                        ? 'bg-emerald-500 text-white'
                                         : 'bg-slate-200 dark:bg-navy-700 text-slate-400 dark:text-slate-500'
                                     }`}
                                   >
@@ -525,21 +517,21 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                                 );
                               })}
                             </div>
-                            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                              <span className="font-bold text-slate-900 dark:text-white">{solved}</span> / {total} Solved
+                            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                              <span className="font-bold text-slate-900 dark:text-white">{solved}</span> / {total}
                             </span>
                           </div>
                         </td>
 
-                        {/* Rating & Rating Delta */}
-                        <td className="py-3.5 px-3.5 text-right whitespace-nowrap">
+                        {/* 3. Contest Rating & Delta */}
+                        <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
                           {c.rating_after ? (
-                            <div className="flex items-center justify-end gap-2">
-                              <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">
+                            <div className="flex flex-col items-end">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
                                 {Math.round(c.rating_after).toLocaleString('en-US')}
                               </span>
                               {ratingDelta !== null && ratingDelta !== undefined && (
-                                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                <span className={`inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] sm:text-[10px] font-bold mt-0.5 ${
                                   ratingDelta > 0 
                                     ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' 
                                     : ratingDelta < 0 
@@ -558,27 +550,23 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                           )}
                         </td>
 
-                        {/* Global Rank */}
-                        <td className="py-3.5 px-3.5 text-right whitespace-nowrap">
-                          {c.contest_rank && c.contest_rank > 0 ? (
-                            <span className={`font-mono font-bold ${c.is_best_rank ? 'text-amber-500 text-sm sm:text-base' : 'text-slate-700 dark:text-slate-200'}`}>
-                              #{Number(c.contest_rank).toLocaleString('en-US')}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 text-xs">—</span>
-                          )}
-                        </td>
-
-                        {/* Finish Time */}
-                        <td className="py-3.5 px-3.5 text-right whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
-                          {c.finish_time ? (
-                            <div className="inline-flex items-center gap-1 font-mono">
-                              <Clock className="w-3 h-3 text-slate-400" />
-                              <span>{c.finish_time}</span>
-                            </div>
-                          ) : (
-                            <span>—</span>
-                          )}
+                        {/* 4. Global Rank */}
+                        <td className="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right">
+                          <div className="flex flex-col items-end">
+                            {c.contest_rank && c.contest_rank > 0 ? (
+                              <span className={`font-mono font-bold text-xs sm:text-sm ${c.is_best_rank ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-200'}`}>
+                                #{Number(c.contest_rank).toLocaleString('en-US')}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-xs">—</span>
+                            )}
+                            {c.is_best_rank && (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-amber-600 dark:text-amber-400 mt-0.5">
+                                <Trophy className="w-2.5 h-2.5 text-amber-500" />
+                                Best
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -590,21 +578,21 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-3 border-t border-slate-200/80 dark:border-navy-800 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/80 dark:border-navy-800 text-xs text-slate-500 dark:text-slate-400">
               <div>
-                Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredContests.length)} of {filteredContests.length} contests
+                {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredContests.length)} of {filteredContests.length}
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   className="p-1.5 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
-                <span className="px-2 font-bold text-slate-700 dark:text-slate-200">
-                  Page {currentPage} of {totalPages}
+                <span className="px-2 font-bold text-slate-700 dark:text-slate-200 text-[11px]">
+                  {currentPage} / {totalPages}
                 </span>
                 <button
                   type="button"
@@ -612,7 +600,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   className="p-1.5 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>

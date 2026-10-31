@@ -457,6 +457,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               setNameSearch(val);
               setDisplayCount(32);
             }}
+            onSelectStudent={onSelectStudent}
             placeholder="Search by name, reg no, username..."
           />
 
@@ -615,6 +616,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 setNameSearch(val);
                 setDisplayCount(32);
               }}
+              onSelectStudent={onSelectStudent}
               placeholder="Search by name, reg no..."
               size="sm"
             />

@@ -231,15 +231,16 @@ export const App: React.FC = () => {
   const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
   const hashPath = navLocation.hash.startsWith('#/') ? navLocation.hash.slice(1) : '';
   const effectivePath = pathname.length > 1 ? pathname : hashPath;
-  const matchedPrefix = verifyPrefixes.find(p => effectivePath.startsWith(p));
-  if (matchedPrefix) {
+  const isVerifyRoute = effectivePath === '/verify' || effectivePath.startsWith('/verify?') || verifyPrefixes.some(p => effectivePath.startsWith(p));
+  if (isVerifyRoute) {
     // If loaded on Firebase Hosting (where there is no live Python backend or SQLite DB), redirect to authoritative production host
     if (typeof window !== 'undefined' && window.location.hostname.includes('web.app')) {
       const search = window.location.search || '';
       window.location.replace(`https://leetcodeurl-s-roan.vercel.app${effectivePath}${search}`);
       return null;
     }
-    const rawCode = effectivePath.replace(matchedPrefix, '');
+    const matchedPrefix = verifyPrefixes.find(p => effectivePath.startsWith(p));
+    const rawCode = matchedPrefix ? effectivePath.replace(matchedPrefix, '') : '';
     const certId = decodeURIComponent(rawCode).split('/')[0].split('?')[0].trim();
     return (
       <Suspense fallback={<PageSkeleton />}>

@@ -409,8 +409,6 @@ def get_individual_analytics(
         
     if current_user:
         try:
-            # We enforce RBAC directly by calling _filtered_students and checking presence
-            # But simpler to just use apply_role_based_student_filter on a direct query
             q = db.query(Student).filter(Student.id == student_id)
             q = apply_role_based_student_filter(q, current_user, db)
             if not q.first():
@@ -419,128 +417,173 @@ def get_individual_analytics(
             raise HTTPException(status_code=403, detail="Not authorized")
             
     start_dt, end_dt = resolve_date_range(period, custom_start, custom_end)
-    
-    snapshots = db.query(StudentStatSnapshot).filter(
-        StudentStatSnapshot.student_id == student_id,
-        StudentStatSnapshot.captured_at >= start_dt,
-        StudentStatSnapshot.captured_at <= end_dt
-    ).order_by(StudentStatSnapshot.captured_at.asc()).all()
-    
-    contests = db.query(StudentContestSnapshot).filter(
-        StudentContestSnapshot.student_id == student_id,
-        StudentContestSnapshot.captured_at >= start_dt,
-        StudentContestSnapshot.captured_at <= end_dt
-    ).order_by(StudentContestSnapshot.captured_at.asc()).all()
-    
+    start_date = start_dt.date()
+    end_date = end_dt.date()
+
     profile_stats = student.stats
-    current_solved = profile_stats.total_solved if profile_stats else 0
-    current_easy = profile_stats.easy_solved if profile_stats else 0
-    current_medium = profile_stats.medium_solved if profile_stats else 0
-    current_hard = profile_stats.hard_solved if profile_stats else 0
-    current_rating = profile_stats.contest_rating if profile_stats else 1500.0
+    current_solved = profile_stats.total_solved if (profile_stats and profile_stats.total_solved is not None) else 0
+    current_easy = profile_stats.easy_solved if (profile_stats and profile_stats.easy_solved is not None) else 0
+    current_medium = profile_stats.medium_solved if (profile_stats and profile_stats.medium_solved is not None) else 0
+    current_hard = profile_stats.hard_solved if (profile_stats and profile_stats.hard_solved is not None) else 0
+    current_rating = round(profile_stats.contest_rating, 1) if (profile_stats and profile_stats.contest_rating and profile_stats.contest_rating > 0) else None
 
-    trend_data = []
-    for snap in snapshots:
-        trend_data.append({
-            "date": snap.captured_at.strftime("%Y-%m-%d"),
-            "rating": snap.contest_rating or current_rating,
-            "total_solved": min(snap.total_solved or 0, current_solved) if current_solved > 0 else (snap.total_solved or 0),
-            "easy": snap.easy_solved or 0,
-            "medium": snap.medium_solved or 0,
-            "hard": snap.hard_solved or 0
-        })
+    # 1. Parse activity / submission calendar
+    act_row = db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == student_id).first()
+    cal_dict = {}
+    if act_row and act_row.submission_calendar_json:
+        try:
+            raw_cal = json.loads(act_row.submission_calendar_json) if isinstance(act_row.submission_calendar_json, str) else act_row.submission_calendar_json
+            if isinstance(raw_cal, dict):
+                for ts, cnt in raw_cal.items():
+                    d_str = datetime.datetime.fromtimestamp(int(ts), tz=datetime.timezone.utc).strftime("%Y-%m-%d")
+                    cal_dict[d_str] = int(cnt)
+        except Exception:
+            pass
 
-    # If no snapshots or single snapshot, populate baseline timeline from live profile_stats
-    if not trend_data and profile_stats:
-        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        start_str = start_dt.strftime("%Y-%m-%d")
-        trend_data = [
-            {
-                "date": start_str,
-                "rating": current_rating,
-                "total_solved": current_solved,
-                "easy": current_easy,
-                "medium": current_medium,
-                "hard": current_hard
-            },
-            {
-                "date": today_str,
-                "rating": current_rating,
-                "total_solved": current_solved,
-                "easy": current_easy,
-                "medium": current_medium,
-                "hard": current_hard
-            }
-        ]
-    elif len(trend_data) == 1 and profile_stats:
-        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        if trend_data[0]["date"] != today_str:
-            trend_data.append({
-                "date": today_str,
-                "rating": current_rating,
-                "total_solved": current_solved,
-                "easy": current_easy,
-                "medium": current_medium,
-                "hard": current_hard
+    # 2. Get contest history (chronological order)
+    contests_query = db.query(LeetCodeContestRatingHistory).filter(
+        LeetCodeContestRatingHistory.student_id == student_id,
+        or_(LeetCodeContestRatingHistory.attended == True, LeetCodeContestRatingHistory.problems_solved > 0)
+    ).order_by(LeetCodeContestRatingHistory.contest_start_time.asc(), LeetCodeContestRatingHistory.id.asc()).all()
+
+    contest_events = []
+    for c in contests_query:
+        c_date = c.contest_start_time.strftime("%Y-%m-%d") if c.contest_start_time else (c.created_at.strftime("%Y-%m-%d") if c.created_at else None)
+        if c_date:
+            contest_events.append({
+                "date": c_date,
+                "name": c.contest_name or "Weekly Contest",
+                "rating": round(c.rating_after, 1) if c.rating_after else None,
+                "rank": c.contest_rank,
+                "solved": c.problems_solved or 0
             })
 
-    # Ensure final point aligns with current stats
-    if trend_data and profile_stats:
-        last_pt = trend_data[-1]
-        if last_pt["total_solved"] < current_solved:
-            last_pt["total_solved"] = current_solved
-            last_pt["easy"] = current_easy
-            last_pt["medium"] = current_medium
-            last_pt["hard"] = current_hard
-        
-    contest_data = []
-    for c in contests:
-        contest_data.append({
-            "date": c.contest_date or c.captured_at.strftime("%Y-%m-%d"),
-            "name": c.contest_name,
-            "rating": c.contest_rating,
-            "rank": c.contest_rank,
-            "solved": c.questions_solved
+    # Contest data for performance chart
+    start_str = start_date.strftime("%Y-%m-%d")
+    end_str = end_date.strftime("%Y-%m-%d")
+    period_contests = [c for c in contest_events if start_str <= c["date"] <= end_str]
+    if len(period_contests) < 3 and len(contest_events) >= 3:
+        contest_data = contest_events[-10:]
+    else:
+        contest_data = period_contests if period_contests else contest_events
+
+    # 3. Retrieve snapshots
+    all_snapshots = db.query(StudentStatSnapshot).filter(
+        StudentStatSnapshot.student_id == student_id
+    ).order_by(StudentStatSnapshot.captured_at.asc()).all()
+
+    # 4. Total submissions and acceptance rate
+    cal_total_subs = sum(cal_dict.values()) if cal_dict else 0
+    total_submissions = max(cal_total_subs, current_solved, getattr(profile_stats, "total_submissions", 0) or 0)
+    if total_submissions == 0 and current_solved > 0:
+        total_submissions = int(current_solved * 1.35)
+    acceptance_rate = min(100.0, round((current_solved / total_submissions) * 100, 1)) if total_submissions > 0 else 0
+
+    # 5. Build daily calendar trend
+    num_days = max(1, (end_date - start_date).days + 1)
+    all_dates = [start_date + datetime.timedelta(days=i) for i in range(num_days)]
+
+    # Determine baseline total_solved on or before start_date
+    prior_snaps = [s for s in all_snapshots if s.captured_at.date() <= start_date]
+    baseline_solved = prior_snaps[-1].total_solved if prior_snaps and prior_snaps[-1].total_solved is not None else None
+
+    today_date = datetime.date.today()
+    subs_in_period = sum(cal_dict.get(d.strftime("%Y-%m-%d"), 0) for d in all_dates)
+    subs_since_start = sum(cal_dict.get((start_date + datetime.timedelta(days=i)).strftime("%Y-%m-%d"), 0) for i in range(max(1, (today_date - start_date).days + 1)))
+
+    if baseline_solved is None:
+        solve_ratio = min(1.0, current_solved / max(1, total_submissions))
+        est_solved_delta = int(round(subs_since_start * solve_ratio))
+        baseline_solved = max(0, current_solved - est_solved_delta)
+
+    # Monotonic progression towards current_solved
+    target_delta = max(0, current_solved - baseline_solved)
+    e_ratio = current_easy / max(1, current_solved) if current_solved else 0.4
+    m_ratio = current_medium / max(1, current_solved) if current_solved else 0.4
+    h_ratio = current_hard / max(1, current_solved) if current_solved else 0.2
+
+    def get_rating_as_of(d_str: str) -> Optional[float]:
+        valid_c = [c for c in contest_events if c["date"] <= d_str and c["rating"]]
+        if valid_c:
+            return valid_c[-1]["rating"]
+        return current_rating
+
+    trend_data = []
+    activity_data = []
+    accumulated_subs = 0
+
+    for d in all_dates:
+        d_str = d.strftime("%Y-%m-%d")
+        daily_subs = cal_dict.get(d_str, 0)
+        activity_data.append({"date": d_str, "submissions": daily_subs})
+
+        if subs_in_period > 0:
+            accumulated_subs += daily_subs
+            running_solved = baseline_solved + int(round((accumulated_subs / subs_in_period) * target_delta))
+        else:
+            running_solved = current_solved
+
+        running_solved = min(running_solved, current_solved)
+
+        r_easy = int(round(running_solved * e_ratio))
+        r_med = int(round(running_solved * m_ratio))
+        r_hard = max(0, running_solved - r_easy - r_med)
+
+        trend_data.append({
+            "date": d_str,
+            "rating": get_rating_as_of(d_str),
+            "total_solved": running_solved,
+            "easy": r_easy,
+            "medium": r_med,
+            "hard": r_hard,
+            "submissions": daily_subs
         })
 
-    if not contest_data:
-        hist_rows = db.query(LeetCodeContestRatingHistory).filter(
-            LeetCodeContestRatingHistory.student_id == student_id
-        ).order_by(LeetCodeContestRatingHistory.id.asc()).all()
+    # Ensure last point matches current live profile stats exactly
+    if trend_data:
+        trend_data[-1]["total_solved"] = current_solved
+        trend_data[-1]["easy"] = current_easy
+        trend_data[-1]["medium"] = current_medium
+        trend_data[-1]["hard"] = current_hard
+        if current_rating:
+            trend_data[-1]["rating"] = current_rating
 
-        for h in hist_rows:
-            if h.attended or (h.problems_solved or 0) > 0:
-                c_date = h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else (h.created_at.strftime("%Y-%m-%d") if h.created_at else datetime.date.today().isoformat())
-                contest_data.append({
-                    "date": c_date,
-                    "name": h.contest_name,
-                    "rating": int(round(h.rating_after)) if h.rating_after else None,
-                    "rank": h.contest_rank,
-                    "solved": h.problems_solved or 0
-                })
+    # Weekly Cadence Benchmark (Past 7 days vs previous 7 days)
+    seven_days_ago = end_date - datetime.timedelta(days=7)
+    fourteen_days_ago = end_date - datetime.timedelta(days=14)
 
-    if not contest_data:
-        pub_rows = db.query(WeeklyPublicResult).filter(
-            WeeklyPublicResult.student_id == student_id
-        ).all()
-        for pr in pub_rows:
-            if (pr.participation_status or "").upper() in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED") or (pr.total_contest_solved or 0) > 0:
-                s_name = pr.session.contest_name if pr.session else "Weekly Contest"
-                s_date = pr.session.session_date if (pr.session and pr.session.session_date) else (pr.last_fetched_at.strftime("%Y-%m-%d") if pr.last_fetched_at else datetime.date.today().isoformat())
-                contest_data.append({
-                    "date": str(s_date),
-                    "name": s_name,
-                    "rating": pr.contest_rating,
-                    "rank": pr.contest_rank,
-                    "solved": pr.total_contest_solved or 0
-                })
+    this_week_subs = sum(cal_dict.get((seven_days_ago + datetime.timedelta(days=i+1)).strftime("%Y-%m-%d"), 0) for i in range(7))
+    last_week_subs = sum(cal_dict.get((fourteen_days_ago + datetime.timedelta(days=i+1)).strftime("%Y-%m-%d"), 0) for i in range(7))
 
-    total_submissions = getattr(profile_stats, "total_submissions", 0) if profile_stats else 0
-    acceptance_rate = round((current_solved / total_submissions) * 100, 1) if total_submissions > 0 else 0
-        
+    val_now = current_solved
+    val_7d = trend_data[-8]["total_solved"] if len(trend_data) >= 8 else (trend_data[0]["total_solved"] if trend_data else 0)
+    val_14d = trend_data[-15]["total_solved"] if len(trend_data) >= 15 else (trend_data[0]["total_solved"] if trend_data else 0)
+
+    this_week_solved = max(0, val_now - val_7d)
+    last_week_solved = max(0, val_7d - val_14d)
+
+    # Use solved delta if available; fallback to actual submissions
+    this_week_metric = this_week_solved if this_week_solved > 0 else this_week_subs
+    last_week_metric = last_week_solved if last_week_solved > 0 else last_week_subs
+
+    diff = this_week_metric - last_week_metric
+    if last_week_metric == 0:
+        percent = 100.0 if this_week_metric > 0 else 0.0
+    else:
+        percent = round((diff / last_week_metric) * 100, 1)
+
+    week_comparison = {
+        "thisWeek": this_week_metric,
+        "lastWeek": last_week_metric,
+        "diff": diff,
+        "percent": percent
+    }
+
     return {
         "trend_data": trend_data,
+        "activity_data": activity_data,
         "contest_data": contest_data,
+        "week_comparison": week_comparison,
         "current_stats": {
             "total_solved": current_solved,
             "easy": current_easy,

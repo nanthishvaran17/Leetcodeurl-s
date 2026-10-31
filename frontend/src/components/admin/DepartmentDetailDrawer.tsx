@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { SwipeHandle } from '../SwipeHandle';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { getDepartmentIntelligenceDetails, DepartmentIntelligenceDetails, DeptBenchmark } from '../../services/commandCenterService';
 
 interface DepartmentDetailDrawerProps {
@@ -55,6 +56,7 @@ const resolveDepartmentHODEmail = (deptCode?: string, rawEmail?: string, deptNam
 
 export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ department, onClose }) => {
   useEscapeKey(onClose, Boolean(department));
+  useScrollLock(Boolean(department));
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState<DepartmentIntelligenceDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -151,25 +153,25 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end p-0">
+      <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end p-0 bg-slate-950/60 dark:bg-black/75 backdrop-blur-xs overflow-hidden max-w-full w-full" onClick={(e) => e.target === e.currentTarget && onClose()}>
         <motion.div
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-3xl bg-white dark:bg-navy-950 h-full sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-none overflow-hidden"
+          className="relative w-full max-w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-navy-950 h-[92vh] sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-t-3xl sm:rounded-none overflow-x-hidden overflow-y-hidden"
         >
           {/* Header */}
-          <div className="relative p-4 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden rounded-none">
+          <div className="relative p-3.5 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden shrink-0 rounded-t-3xl sm:rounded-none">
             {/* Mobile indicator */}
             <SwipeHandle onClose={onClose} className="pt-1 pb-1 relative z-20" pillClassName="bg-indigo-300 dark:bg-indigo-700 hover:bg-indigo-400" />
 
-            <div className="flex items-start justify-between w-full">
+            <div className="flex items-start justify-between w-full gap-2">
               {/* Background elements */}
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
               <div className="absolute -bottom-10 left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="flex items-start gap-3 sm:gap-4 relative z-10 w-full pr-2 sm:pr-4">
+              <div className="flex items-start gap-2.5 sm:gap-4 relative z-10 flex-1 min-w-0 pr-1">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
                   <Building2 size={24} className="sm:hidden" />
                   <Building2 size={28} className="hidden sm:block" />
@@ -206,7 +208,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6 stylish-scrollbar pb-32 sm:pb-8">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 space-y-4 sm:space-y-6 stylish-scrollbar pb-32 sm:pb-8 max-w-full">
             {/* KPI Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 shadow-sm">
@@ -297,11 +299,11 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
             )}
 
             {/* Navigation Tabs */}
-            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-navy-800 pb-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 dark:border-navy-800 pb-2 overflow-x-auto no-scrollbar max-w-full">
               <button
                 type="button"
                 onClick={() => setActiveTab('staff')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'staff'
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${activeTab === 'staff'
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-navy-800'
                   }`}
@@ -312,7 +314,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
               <button
                 type="button"
                 onClick={() => setActiveTab('top')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'top'
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${activeTab === 'top'
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-navy-800'
                   }`}
@@ -323,7 +325,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
               <button
                 type="button"
                 onClick={() => setActiveTab('risk')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${activeTab === 'risk'
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap ${activeTab === 'risk'
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-navy-800'
                   }`}
@@ -457,8 +459,8 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                                       No student records linked to this faculty mentor yet.
                                     </div>
                                   ) : (
-                                    <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 overflow-x-auto custom-scrollbar">
-                                      <table className="w-full min-w-[340px] text-left border-collapse text-xs">
+                                    <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 overflow-x-auto custom-scrollbar max-w-full">
+                                      <table className="w-full text-left border-collapse text-xs">
                                         <thead>
                                           <tr className="bg-slate-100/70 dark:bg-navy-950 text-[10.5px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-navy-800">
                                             <th className="py-2 px-3">Student</th>
@@ -513,7 +515,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                       </div>
                     ) : (
                       <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[280px]">
+                        <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                               <th className="py-2.5 px-2 sm:px-3 w-10 sm:w-14 text-center">Rank</th>

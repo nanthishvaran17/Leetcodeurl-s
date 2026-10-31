@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity } from 'lucide-react';
+import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity, MessageCircle, Copy, ExternalLink, QrCode, ArrowUpDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
@@ -327,6 +327,107 @@ export const StaffDashboardView: React.FC = () => {
     });
   }, [myStudents, selectedStudentFilter, filterStatus, search, isActiveStudent, isCompletedStudent, isAttentionStudent, isAtRiskStudent, isUnresponsiveStudent]);
 
+  const handleExportCSV = () => {
+    if (!myStudents || myStudents.length === 0) {
+      notify.warning('Export Empty', 'No assigned students available in your mentoring portfolio to export.');
+      return;
+    }
+
+    const studentsToExport = filteredStudents.length > 0 ? filteredStudents : myStudents;
+    
+    const headers = [
+      'Register Number',
+      'Student Name',
+      'Department',
+      'Year',
+      'LeetCode Handle',
+      'Status',
+      'Weekly Solved',
+      'Total Solved',
+      'Contest Rating',
+      'Sunday Contest Score',
+      'Days Inactive'
+    ];
+
+    const rows = studentsToExport.map((s: any) => [
+      `"${s.reg_no || ''}"`,
+      `"${(s.name || '').replace(/"/g, '""')}"`,
+      `"${s.department || 'CSE'}"`,
+      `"${(s.year_level || '').replace(/year/gi, '').trim() || 'III'}"`,
+      `"${s.username || ''}"`,
+      `"${s.status_label || (s.status_code === 'AT_RISK' ? 'At Risk' : (s.total_solved || 0) >= 100 ? 'Excellent' : 'Improving')}"`,
+      s.weekly_solved || 0,
+      s.total_solved || 0,
+      s.contest_rating && Number(s.contest_rating) > 0 && Math.round(s.contest_rating) !== 1500 ? Math.round(s.contest_rating) : 'N/A',
+      `"${s.recent_contest_score || '-'}"`,
+      s.days_inactive ?? 0
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const facultyName = (user?.name || 'Faculty').replace(/[^a-zA-Z0-9]/g, '_');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Mentoring_Roster_${facultyName}_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    notify.success('Report Exported', `Successfully exported ${studentsToExport.length} student records to CSV.`);
+  };
+
+  const handleCopySummary = () => {
+    const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const textToCopy = `*FACULTY MENTORING ROSTER REPORT* (${dateStr})
+Mentor: ${user?.name || 'Faculty Mentor'} (${user?.department || 'CSE'})
+────────────────────────
+Total Assigned: ${totalAssignedCount} Students
+Target Achieved (100+): ${completedCount}
+Active Solvers: ${activeCount}
+Needs Attention: ${attentionCount}
+At Risk: ${atRiskCount}
+Inactive (7d+): ${unresponsiveCount}
+Average Solved: ${avgSolvedProblems} problems
+Target Progress: ${targetProgressPct}% towards 100 target
+────────────────────────
+NEC LeetCode Intelligence Portal`;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      notify.success('Summary Copied', 'Mentoring status summary copied to clipboard for WhatsApp/email sharing.');
+    }).catch(() => {
+      notify.error('Copy Failed', 'Unable to copy summary to clipboard.');
+    });
+  };
+
+  const handleWhatsAppNudge = (st: any) => {
+    const solved = st.total_solved || 0;
+    const days = st.days_inactive ?? 0;
+    const greeting = `Hi ${st.name || 'Student'}`;
+    const reminder = days > 0
+      ? `You have been inactive on LeetCode for ${days} days (Current Solved: ${solved}).`
+      : `Your current LeetCode solved count is ${solved}.`;
+    
+    const msg = `${greeting}, this is your faculty mentor from Nandha Engineering College. ${reminder} Please solve today's challenge to maintain consistency and boost your coding placement score: https://leetcode.com/problemset/`;
+
+    const phone = (st.phone || st.phone_number || '').replace(/\D/g, '');
+    if (phone) {
+      const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      notify.info('WhatsApp Opened', 'Student phone number not registered. Pre-filled reminder message opened in WhatsApp.');
+    }
+  };
+
+  const handleOpenDigitalPass = (regNo: string) => {
+    if (!regNo) return;
+    const cleanReg = encodeURIComponent(regNo.trim().toUpperCase());
+    window.open(`/#/verify/${cleanReg}`, '_blank', 'noopener,noreferrer');
+  };
+
   const handleSort = (field: 'name' | 'reg_no' | 'total_solved' | 'progress' | 'contest_rating' | 'status') => {
     if (sortField === field) {
       setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
@@ -420,12 +521,12 @@ export const StaffDashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
             <button
               type="button"
               onClick={handleLiveSync}
               disabled={liveSyncing}
-              className="min-h-[44px] flex-1 sm:flex-none justify-center px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-95 text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
+              className="min-h-[44px] flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-95 text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
             >
               <RefreshCw className={`w-4 h-4 ${liveSyncing ? 'animate-spin text-amber-400' : 'text-amber-300'}`} />
               <span>{liveSyncing ? 'Fetching Live Data...' : 'FETCH LIVE DATA'}</span>
@@ -435,10 +536,32 @@ export const StaffDashboardView: React.FC = () => {
               type="button"
               onClick={() => fetchMentoringData(true)}
               disabled={loading}
-              className="min-h-[44px] flex-1 sm:flex-none justify-center px-4 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation"
+              className="min-h-[44px] flex-1 sm:flex-none justify-center px-3.5 sm:px-4 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh Portfolio</span>
+              <span>Refresh</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              disabled={myStudents.length === 0}
+              className="min-h-[44px] flex-1 sm:flex-none justify-center px-3.5 sm:px-4 py-2.5 rounded-2xl bg-emerald-600/80 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold border border-emerald-500/30 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation shadow-lg shadow-emerald-950/20 disabled:opacity-50"
+              title="Export Mentoring Roster to CSV"
+            >
+              <Download className="w-4 h-4 text-emerald-200" />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopySummary}
+              disabled={myStudents.length === 0}
+              className="min-h-[44px] flex-1 sm:flex-none justify-center px-3 sm:px-3.5 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-1.5 transition-all cursor-pointer backdrop-blur-md touch-manipulation disabled:opacity-50"
+              title="Copy Portfolio Summary for WhatsApp/Email sharing"
+            >
+              <Copy className="w-4 h-4 text-indigo-300" />
+              <span>Copy Report</span>
             </button>
           </div>
         </div>
@@ -765,14 +888,30 @@ export const StaffDashboardView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-amber-100 dark:border-navy-800 mt-2">
+                <div className="pt-3 border-t border-amber-100 dark:border-navy-800 mt-2 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setSelectedStudent(st)}
-                    className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 cursor-pointer touch-manipulation"
+                    className="flex-1 min-h-[44px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 cursor-pointer touch-manipulation"
                   >
-                    <span>Inspect Student</span>
+                    <span>Inspect</span>
                     <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleWhatsAppNudge(st)}
+                    className="min-h-[44px] px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer touch-manipulation"
+                    title="Send WhatsApp Nudge"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenDigitalPass(st.reg_no)}
+                    className="min-h-[44px] px-3 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-navy-600 flex items-center justify-center transition-all cursor-pointer touch-manipulation"
+                    title="Verify Student Digital Pass"
+                  >
+                    <QrCode className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1130,6 +1269,33 @@ export const StaffDashboardView: React.FC = () => {
           </div>
         )}
 
+        {/* MOBILE SORT & STATS BAR (md:hidden) */}
+        <div className="block md:hidden flex items-center justify-between gap-2 px-1 pt-1 pb-2">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+            {sortedFilteredStudents.length} of {myStudents.length} Mentees
+          </span>
+          <div className="flex items-center gap-1.5">
+            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <select
+              value={`${sortField}-${sortOrder}`}
+              onChange={(e) => {
+                const parts = e.target.value.split('-');
+                setSortField(parts[0] as any);
+                setSortOrder(parts[1] as any);
+              }}
+              className="text-xs font-bold bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl px-2.5 py-1 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
+            >
+              <option value="total_solved-desc">Solved: High to Low</option>
+              <option value="total_solved-asc">Solved: Low to High</option>
+              <option value="progress-desc">Weekly: High to Low</option>
+              <option value="contest_rating-desc">Rating: High to Low</option>
+              <option value="name-asc">Name: A to Z</option>
+              <option value="reg_no-asc">Reg No: Ascending</option>
+              <option value="status-asc">Status Order</option>
+            </select>
+          </div>
+        </div>
+
         {/* MOBILE CARDS VIEW (md:hidden) - ZERO horizontal scroll on phone/small screens with clean spacious card gaps */}
         <div className="block md:hidden flex flex-col gap-3 sm:gap-4 py-0.5">
           {loading ? (
@@ -1253,14 +1419,32 @@ export const StaffDashboardView: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedStudent(st)}
-                      className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer shrink-0 touch-manipulation"
-                    >
-                      <Eye className="w-4 h-4 shrink-0" />
-                      <span>Inspect</span>
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleWhatsAppNudge(st)}
+                        className="min-h-[38px] w-9 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 inline-flex items-center justify-center transition-all cursor-pointer touch-manipulation"
+                        title="Send WhatsApp Nudge"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDigitalPass(st.reg_no)}
+                        className="min-h-[38px] w-9 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-navy-600 inline-flex items-center justify-center transition-all cursor-pointer touch-manipulation"
+                        title="View Digital Pass"
+                      >
+                        <QrCode className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStudent(st)}
+                        className="min-h-[38px] px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer touch-manipulation"
+                      >
+                        <Eye className="w-4 h-4 shrink-0" />
+                        <span>Inspect</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -1460,14 +1644,32 @@ export const StaffDashboardView: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4 sticky right-0 z-10 bg-white group-hover:bg-slate-50 dark:bg-navy-950 dark:group-hover:bg-navy-850 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors whitespace-nowrap text-center">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedStudent(st)}
-                          className="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-bold inline-flex items-center space-x-1.5 transition-all text-xs shadow-sm cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>Inspect</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleWhatsAppNudge(st)}
+                            className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 transition-all cursor-pointer"
+                            title="Send WhatsApp Nudge"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDigitalPass(st.reg_no)}
+                            className="p-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 transition-all cursor-pointer"
+                            title="Open Digital Verification Pass"
+                          >
+                            <QrCode className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStudent(st)}
+                            className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-bold inline-flex items-center space-x-1.5 transition-all text-xs shadow-sm cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span>Inspect</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

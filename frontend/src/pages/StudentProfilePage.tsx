@@ -324,6 +324,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       const refreshed = await api.get(`/students/${encodeURIComponent(targetId)}`);
       setDetail(refreshed.data);
       setSyncSuccess(true);
+      window.dispatchEvent(new CustomEvent("student_synced", { detail: { studentId: targetId } }));
+      window.dispatchEvent(new Event("refresh_dashboard_summary"));
       triggerHaptic('success');
       notify.success('Sync Complete', 'LeetCode data synced successfully.', { category: 'LIVE SYNC' });
       setTimeout(() => setSyncSuccess(false), 3000);

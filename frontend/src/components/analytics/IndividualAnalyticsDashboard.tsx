@@ -13,22 +13,26 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   useEffect(() => {
     let isMounted = true;
     const cacheKey = `individual_analytics_${studentId}_${period}`;
     const url = `/analytics/student/${studentId}?period=${period}`;
     
-    // 1. Check client cache first for instant load
-    const cached = getCachedData(cacheKey, url);
-    if (cached) {
-      setData(cached);
-      setLoading(false);
-      return;
+    // 1. Check client cache first for instant load unless refresh was triggered
+    if (refreshTrigger === 0) {
+      const cached = getCachedData(cacheKey, url);
+      if (cached) {
+        setData(cached);
+        setLoading(false);
+        return;
+      }
     }
 
     setLoading(true);
     setError(null);
-    api.get(url)
+    api.get(`${url}&_t=${Date.now()}`)
       .then((res) => {
         if (isMounted) {
           setData(res.data);
@@ -45,7 +49,23 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
       });
 
     return () => { isMounted = false; };
-  }, [period, studentId]);
+  }, [period, studentId, refreshTrigger]);
+
+  // Listen for sync events to automatically invalidate cache and refresh live
+  useEffect(() => {
+    const handleSyncEvent = (e: any) => {
+      const targetId = e?.detail?.studentId;
+      if (!targetId || targetId === studentId) {
+        setRefreshTrigger(prev => prev + 1);
+      }
+    };
+    window.addEventListener('student_synced', handleSyncEvent);
+    window.addEventListener('refresh_dashboard_summary', handleSyncEvent);
+    return () => {
+      window.removeEventListener('student_synced', handleSyncEvent);
+      window.removeEventListener('refresh_dashboard_summary', handleSyncEvent);
+    };
+  }, [studentId]);
 
   // Derived Data Calculations
   const rawTrendData = data?.trend_data || [];
@@ -69,16 +89,22 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
   }, [rawContestData]);
 
   const activityData = useMemo(() => {
+    if (data?.activity_data && data.activity_data.length > 0) {
+      return data.activity_data;
+    }
     if (!trendData.length) return [];
     const sorted = [...trendData].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return sorted.map((d: any, i: number, arr: any[]) => {
-      if (i === 0) return { date: d.date, submissions: 0 };
+      if (i === 0) return { date: d.date, submissions: d.submissions ?? 0 };
       const diff = (d.total_solved || 0) - (arr[i - 1].total_solved || 0);
-      return { date: d.date, submissions: Math.max(0, diff) };
+      return { date: d.date, submissions: d.submissions ?? Math.max(0, diff) };
     });
-  }, [trendData]);
+  }, [trendData, data]);
 
   const weekComparison = useMemo(() => {
+    if (data?.week_comparison) {
+      return data.week_comparison;
+    }
     if (!trendData || trendData.length === 0) return null;
     
     const sorted = [...trendData].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -215,9 +241,9 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
                     <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} minTickGap={30} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} domain={['auto', 'auto']} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} domain={['dataMin - 30', 'dataMax + 30']} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Line type="monotone" dataKey="rating" name="Contest Rating" stroke="#6366f1" strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: '#6366f1' }} />
+                      <Line type="monotone" dataKey="rating" name="Contest Rating" stroke="#6366f1" strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: '#6366f1' }} connectNulls />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -266,20 +292,20 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Submission Activity (Solved per Day)</h3>
-              {activityData.length > 1 ? (
+              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Submission Activity (Submissions per Day)</h3>
+              {activityData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={activityData.slice(1)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <BarChart data={data?.activity_data ? activityData : (activityData.length > 1 ? activityData.slice(1) : activityData)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} minTickGap={30} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                       <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.1 }} />
-                      <Bar dataKey="submissions" name="New Solved" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="submissions" name="Submissions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              ) : <EmptyState message="Not enough daily snapshot data to compute activity." />}
+              ) : <EmptyState message="No submission activity recorded in this period." />}
             </div>
 
             {/* 4. Contest Performance */}
