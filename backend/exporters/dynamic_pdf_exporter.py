@@ -459,7 +459,7 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
                     pass
 
             # Contest Rank < 5000 check
-            cr_val = r.get("contest_rank") or r.get("rank")
+            cr_val = r.get("contest_rank") or r.get("contest_ranking") or r.get("lc_contest_rank")
             if cr_val not in (None, "", "—", "Unrated", "-"):
                 try:
                     cr_int = int(str(cr_val).replace("#", "").replace(",", "").strip())

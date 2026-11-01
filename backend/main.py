@@ -111,7 +111,7 @@ async def _deferred_startup_tasks():
                 else:
                     admin_user.role = "Admin"  # type: ignore
                     admin_user.is_active = True  # type: ignore
-                    if not admin_user.hashed_password or not verify_password(admin_pass, str(admin_user.hashed_password)):
+                    if admin_pass and (not admin_user.hashed_password or not verify_password(admin_pass, str(admin_user.hashed_password))):
                         admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore
                         db_admin.commit()
         except Exception as _adm_err:

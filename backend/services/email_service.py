@@ -950,7 +950,7 @@ LeetCode Weekly Performance Tracker • OFFICIAL ADMINISTRATOR PORTAL
 YOUR DEVELOPER STUDIO VERIFICATION CODE:
 {otp}
 
-Enter this verification code at http://localhost:3000/admin (or http://13.53.231.6/admin) to unlock and immediately open Developer Studio [LIVE].
+Enter this verification code at http://localhost:3000/admin (or https://nandha-leetcode.duckdns.org/admin) to unlock and immediately open Developer Studio [LIVE].
 
 - This code expires in 5 minutes.
 - This code can only be used once.

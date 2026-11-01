@@ -294,7 +294,7 @@ def generate_single_sheet_contest_excel(
         elif vr and getattr(vr, "contest_rank", None):
             cr_val = vr.contest_rank
         else:
-            cr_val = s.get("contest_rank") or s.get("rank")
+            cr_val = s.get("contest_rank") or s.get("contest_ranking") or s.get("lc_contest_rank")
         if cr_val not in (None, "", "—", "Unrated", "-"):
             try:
                 cr_int = int(str(cr_val).replace("#", "").replace(",", "").strip())
@@ -636,7 +636,7 @@ def generate_single_sheet_contest_excel(
         ws2.cell(row=r2, column=c).border = grid_border
     r2 += 1
     
-    kpi_headers = ["Total Enrolled", "Contest Attended", "Turnout Rate", "4 Qs Solved", "3 Qs Solved", "2 Qs Solved", "Rank < 5,000", "Global < 20,000"]
+    kpi_headers = ["Total Enrolled", "Contest Attended", "Turnout Rate", "4 Qs Solved", "3 Qs Solved", "2 Qs Solved", "1 Q Solved", "Total Solved"]
     ws2.row_dimensions[r2].height = 28
     for c_idx, kh in enumerate(kpi_headers, 1):
         cell_kh = ws2.cell(row=r2, column=c_idx, value=kh)
@@ -654,8 +654,8 @@ def generate_single_sheet_contest_excel(
         int(count_q4), 
         int(count_q3), 
         int(count_q2), 
-        int(count_below_5k), 
-        int(count_below_20k)
+        int(count_q1), 
+        int(sum_total_solved)
     ]
     ws2.row_dimensions[r2].height = 22
     for c_idx, kv in enumerate(kpi_vals, 1):
@@ -768,7 +768,7 @@ def generate_single_sheet_contest_excel(
         elif vr and getattr(vr, "contest_rank", None):
             cr = vr.contest_rank
         else:
-            cr = s.get("contest_rank") or s.get("rank")
+            cr = s.get("contest_rank") or s.get("contest_ranking") or s.get("lc_contest_rank")
         
         try:
             cr_int = int(str(cr).replace("#", "").replace(",", "").strip()) if cr else 999999

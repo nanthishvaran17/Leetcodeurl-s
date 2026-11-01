@@ -673,7 +673,7 @@ class NotificationService:
                             """
                             action_btn = None
                             if eff_route:
-                                base_site_url = os.environ.get("BASE_SITE_URL", "http://13.53.231.6").rstrip("/")
+                                base_site_url = os.environ.get("BASE_SITE_URL", "https://nandha-leetcode.duckdns.org").rstrip("/")
                                 full_url = f"{base_site_url}{eff_route}" if not eff_route.startswith("http") else eff_route
                                 action_btn = f'<a href="{full_url}" class="btn" target="_blank" style="display:inline-block; background-color:#2563eb; color:#ffffff !important; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold;">View in System</a>'
                             

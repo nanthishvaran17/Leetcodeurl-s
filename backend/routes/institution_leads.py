@@ -116,7 +116,7 @@ def _build_principal_pitch_html(college_name: str = "Your Institution", recipien
                     <p style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 16px;">
                         We invite <strong>{college_name}</strong> to experience a complimentary 14-day institutional pilot.
                     </p>
-                    <a href="http://13.53.231.6/#/for-colleges" class="cta-btn">Schedule Demo / Activate Free Pilot →</a>
+                    <a href="https://nandha-leetcode.duckdns.org/#/for-colleges" class="cta-btn">Schedule Demo / Activate Free Pilot →</a>
                 </div>
             </div>
             <div class="footer">
@@ -174,7 +174,7 @@ def register_college_lead(
             <p>Thank you for requesting an institutional demo for <strong>{payload.college_name}</strong>.</p>
             <p>Your 14-Day Free Institutional Trial has been provisioned. Our academic team will assist you in onboarding your students via roll-number roster upload.</p>
             <div style="background: #f1f5f9; padding: 16px; border-radius: 8px; margin: 20px 0;">
-                <strong>Live Demonstration Portal:</strong> <a href="http://13.53.231.6/#/weekly-contest">Access Live Contest Analytics</a><br>
+                <strong>Live Demonstration Portal:</strong> <a href="https://nandha-leetcode.duckdns.org/#/weekly-contest">Access Live Contest Analytics</a><br>
                 <strong>Demo Credentials:</strong> View-only guest access is automatically enabled.
             </div>
             <p>We look forward to partnering with {payload.college_name} to accelerate student placements!</p>
@@ -316,7 +316,7 @@ def get_pitch_template_content():
         "2. 1-Click Executive PDF Reports for NBA/NAAC criteria 2 & 5 accreditation.\n"
         "3. Real-Time Leaderboards & Placement Readiness Risk Banding.\n\n"
         "We are pleased to offer a complimentary 14-day institutional pilot for your college.\n\n"
-        "Live Demo: http://13.53.231.6/#/for-colleges\n\n"
+        "Live Demo: https://nandha-leetcode.duckdns.org/#/for-colleges\n\n"
         "Warm regards,\n"
         "Institutional Partnerships Team\n"
         "Phone: +91-9488358488 | Email: nanthishvaran17@gmail.com"
@@ -335,7 +335,7 @@ def get_pitch_template_content():
         "2. NBA / NAAC அக்ரடிடேஷனுக்கான 1-கிளிக் Executive PDF & Excel அறிக்கைகள்.\n"
         "3. மாணவர்கள் எந்த கம்பெனிக்கு தகுதியானவர்கள் என்பதை காட்டும் Placement Readiness Matrix.\n\n"
         "தங்கள் கல்லூரிக்கு 14 நாட்கள் இலவச முன்னோட்ட அனுமதி (Free 14-Day Pilot) வழங்க தயாராக உள்ளோம்.\n\n"
-        "நேரடி டெமோ பார்வை: http://13.53.231.6/#/for-colleges\n\n"
+        "நேரடி டெமோ பார்வை: https://nandha-leetcode.duckdns.org/#/for-colleges\n\n"
         "நன்றியுடன்,\n"
         "LeetCode Intelligence Team\n"
         "தொடர்புக்கு: +91-9488358488 | nanthishvaran17@gmail.com"
@@ -344,7 +344,7 @@ def get_pitch_template_content():
     return {
         "english": english_pitch,
         "tamil": tamil_pitch,
-        "demo_url": "http://13.53.231.6/#/for-colleges"
+        "demo_url": "https://nandha-leetcode.duckdns.org/#/for-colleges"
     }
 
 

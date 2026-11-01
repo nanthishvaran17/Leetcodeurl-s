@@ -142,7 +142,7 @@ Key Benefits for Your Institution:
 
 We are pleased to offer a complimentary 14-day institutional pilot for your college.
 
-Live Demo: http://13.53.231.6/#/for-colleges
+Live Demo: https://nandha-leetcode.duckdns.org/#/for-colleges
 
 Warm regards,
 Institutional Partnerships Team
@@ -163,7 +163,7 @@ Phone: +91-9488358488 | Email: nanthishvaran17@gmail.com`;
 
 தங்கள் கல்லூரிக்கு 14 நாட்கள் இலவச முன்னோட்ட அனுமதி (Free 14-Day Pilot) வழங்க தயாராக உள்ளோம்.
 
-நேரடி டெமோ பார்வை: http://13.53.231.6/#/for-colleges
+நேரடி டெமோ பார்வை: https://nandha-leetcode.duckdns.org/#/for-colleges
 
 நன்றியுடன்,
 LeetCode Intelligence Team
@@ -552,7 +552,7 @@ LeetCode Intelligence Team
                   <div className="text-center py-8 text-xs text-slate-400 font-medium">Loading leads...</div>
                 ) : leadsList.length === 0 ? (
                   <div className="text-center py-8 text-xs text-slate-500 font-medium">
-                    No institutional leads registered yet. Share the link <span className="text-indigo-400">http://13.53.231.6/#/for-colleges</span> with college leadership.
+                    No institutional leads registered yet. Share the link <span className="text-indigo-400">https://nandha-leetcode.duckdns.org/#/for-colleges</span> with college leadership.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">

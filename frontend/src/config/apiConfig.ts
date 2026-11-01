@@ -74,7 +74,7 @@ export const getApiBaseUrl = (): string => {
     return '/api';
   }
 
-  if (RAW_ENV_URL && !RAW_ENV_URL.startsWith('http://13.53.231.6')) {
+  if (RAW_ENV_URL) {
     const cleanEnv = RAW_ENV_URL.replace(/\/+$/, '');
     return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
   }
