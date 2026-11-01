@@ -9,7 +9,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "http://13.53.231.6/api/:path*"
+      "destination": "https://nandha-leetcode.duckdns.org/api/:path*"
     },
     {
       "source": "/((?!robots\\.txt|sitemap\\.xml|llms\\.txt|site\\.webmanifest|assets/|.*\\.(?:png|jpg|jpeg|gif|webp|ico|svg|css|js)).*)",

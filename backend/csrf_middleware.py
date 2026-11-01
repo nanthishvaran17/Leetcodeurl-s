@@ -48,8 +48,8 @@ async def global_csrf_middleware(request: Request, call_next):
                 "https://leetcodeurl-s-roan.vercel.app",
                 "https://nandha-leetcode.duckdns.org",
                 "http://nandha-leetcode.duckdns.org",
-                "http://13.53.231.6",
-                "https://13.53.231.6",
+                "https://nandha-leetcode.duckdns.org",
+                "https://nandha-leetcode.duckdns.org",
                 "capacitor://localhost", "ionic://localhost",
                 "http://localhost", "https://localhost",
                 "http://127.0.0.1", "https://127.0.0.1"

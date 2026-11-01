@@ -12,7 +12,7 @@ sudo tee /etc/nginx/sites-available/default > /dev/null << 'EOF'
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name nandha-leetcode.duckdns.org 13.53.231.6 _;
+    server_name nandha-leetcode.duckdns.org nandha-leetcode.duckdns.org _;
 
     # Allow Let's Encrypt renewal challenges
     location /.well-known/acme-challenge/ {

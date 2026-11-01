@@ -279,16 +279,16 @@ AI_CATALOG_DATA = {
     "specVersion": "1.0",
     "host": {
         "displayName": "Nandha Engineering College (Autonomous)",
-        "identifier": "did:web:13.53.231.6",
-        "documentationUrl": "http://13.53.231.6/docs",
-        "logoUrl": "http://13.53.231.6/pwa-512x512.png"
+        "identifier": "did:web:nandha-leetcode.duckdns.org",
+        "documentationUrl": "https://nandha-leetcode.duckdns.org/docs",
+        "logoUrl": "https://nandha-leetcode.duckdns.org/pwa-512x512.png"
     },
     "entries": [
         {
             "identifier": "urn:air:nandhaengg.org:api:leetcode-tracker",
             "displayName": "Nandha LeetCode Tracker & Contest Intelligence API",
             "type": "application/json",
-            "url": "http://13.53.231.6/api/public/stats",
+            "url": "https://nandha-leetcode.duckdns.org/api/public/stats",
             "description": "Provides real-time contest leaderboard, student analytics, and attendance telemetry.",
             "tags": ["education", "coding", "analytics", "leaderboard", "leetcode"],
             "representativeQueries": [
@@ -301,7 +301,7 @@ AI_CATALOG_DATA = {
             "identifier": "urn:air:nandhaengg.org:doc:llms-txt",
             "displayName": "Nandha Platform Documentation for LLMs",
             "type": "text/markdown",
-            "url": "http://13.53.231.6/llms.txt",
+            "url": "https://nandha-leetcode.duckdns.org/llms.txt",
             "description": "Comprehensive institutional architecture and agent discovery manual.",
             "tags": ["documentation", "llms", "guide"],
             "representativeQueries": [
@@ -933,8 +933,8 @@ origins = [
     "https://leetcodeurl-s-roan.vercel.app",
     "https://nandha-leetcode.duckdns.org",
     "http://nandha-leetcode.duckdns.org",
-    "http://13.53.231.6",
-    "https://13.53.231.6",
+    "https://nandha-leetcode.duckdns.org",
+    "https://nandha-leetcode.duckdns.org",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",

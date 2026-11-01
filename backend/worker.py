@@ -33,7 +33,7 @@ async def heartbeat_loop():
         counter += 1
         if counter % 4 == 0:
             try:
-                web_url = os.environ.get("WEB_SERVICE_URL", "http://13.53.231.6/health")
+                web_url = os.environ.get("WEB_SERVICE_URL", "https://nandha-leetcode.duckdns.org/health")
                 import urllib.request
                 req = urllib.request.Request(web_url, headers={"User-Agent": "BackendWorkerKeepAlive/1.0"})
                 with urllib.request.urlopen(req, timeout=10) as _resp:

@@ -225,3 +225,7 @@ releases/android/*.apk
 backend/firebase-key.json
 firebase-key.json
 contest_*_authentic_*.json
+
+# Agent & Assistant IDE configuration
+.agents/
+.claude/
