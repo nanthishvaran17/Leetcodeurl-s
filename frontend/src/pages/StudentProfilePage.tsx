@@ -398,62 +398,52 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     <div className="h-full flex flex-col overflow-hidden bg-[#0a0f1d] dark:bg-navy-950 rounded-2xl sm:rounded-3xl isolate">
       
       {/* Header Bar with Close Button & Actions — Ultra-modern 2026 Glassmorphic Header */}
-      <div className="relative p-4 sm:p-5 bg-gradient-to-br from-[#0a0f1d] via-[#0f172a] to-[#070b14] text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/[0.08] shrink-0 shadow-2xl overflow-hidden">
+      <div className="relative p-3 sm:p-4 md:p-5 bg-gradient-to-br from-[#0a0f1d] via-[#0f172a] to-[#070b14] text-white flex items-center justify-between gap-2.5 sm:gap-4 border-b border-white/[0.08] shrink-0 shadow-2xl overflow-hidden">
         {/* Ambient Radial Mesh Glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-1/4 -mt-16 w-80 h-80 rounded-full bg-brand-500/15 blur-3xl" />
           <div className="absolute bottom-0 right-0 -mb-16 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl" />
         </div>
 
-        <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto justify-between md:justify-start relative z-10">
-          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-            <button
-              type="button"
-              onClick={() => onBack()}
-              className="min-h-[40px] px-3.5 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:bg-white/[0.05] text-white border border-white/10 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md active:scale-95 shrink-0 backdrop-blur-md touch-manipulation"
-              title="Back"
-            >
-              <ArrowLeft className="w-4 h-4 text-white shrink-0" />
-              <span className="font-bold text-white">Back</span>
-            </button>
-            
-            {/* Student Avatar */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-sm sm:text-base flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0 border border-white/20 font-display">
-              {(detail?.name || student?.name || 'S').charAt(0).toUpperCase()}
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base sm:text-xl font-black text-white font-display tracking-tight leading-tight truncate">
-                {detail?.name || student?.name || student?.student_name || "Unknown Student"}
-              </h2>
-              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 font-mono text-[10px] font-bold">
-                  {detail?.reg_no || student?.reg_no}
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-[10px] font-bold whitespace-nowrap">
-                  {formatDepartmentCode(detail?.department?.code || detail?.department?.name || student?.department?.code || student?.department || student?.dept) ||
-                    deriveDepartmentFromRegNo(detail?.reg_no || student?.reg_no) ||
-                    (detail?.department?.code || student?.department?.code || student?.dept || 'DEPT')}
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-white/[0.08] border border-white/10 text-slate-300 text-[10px] font-bold">
-                  {deriveYearLevelFromRegNo(detail?.reg_no || student?.reg_no, detail?.year_level || student?.year_level || student?.year)} Year
-                </span>
-              </div>
-            </div>
-          </div>
-
+        {/* Left: Back + Student Identity */}
+        <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0 flex-1 relative z-10">
           <button
             type="button"
             onClick={() => onBack()}
-            className="md:hidden p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white border border-white/10 shrink-0 cursor-pointer transition active:scale-95 touch-manipulation"
-            title="Close modal"
+            className="min-h-[38px] sm:min-h-[40px] px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:bg-white/[0.05] text-white border border-white/10 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md active:scale-95 shrink-0 backdrop-blur-md touch-manipulation"
+            title="Back"
           >
-            <X className="w-4.5 h-4.5" />
+            <ArrowLeft className="w-4 h-4 text-white shrink-0" />
+            <span className="hidden sm:inline font-bold text-white">Back</span>
           </button>
+          
+          {/* Student Avatar */}
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-xs sm:text-base flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0 border border-white/20 font-display">
+            {(detail?.name || student?.name || 'S').charAt(0).toUpperCase()}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm sm:text-lg md:text-xl font-black text-white font-display tracking-tight leading-tight truncate">
+              {detail?.name || student?.name || student?.student_name || "Unknown Student"}
+            </h2>
+            <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1 flex-wrap">
+              <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/25 text-emerald-300 font-mono text-[9px] sm:text-[10px] font-bold">
+                {detail?.reg_no || student?.reg_no}
+              </span>
+              <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-400/25 text-indigo-300 text-[9px] sm:text-[10px] font-bold whitespace-nowrap">
+                {formatDepartmentCode(detail?.department?.code || detail?.department?.name || student?.department?.code || student?.department || student?.dept) ||
+                  deriveDepartmentFromRegNo(detail?.reg_no || student?.reg_no) ||
+                  (detail?.department?.code || student?.department?.code || student?.dept || 'DEPT')}
+              </span>
+              <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-white/[0.08] border border-white/10 text-slate-300 text-[9px] sm:text-[10px] font-bold">
+                {deriveYearLevelFromRegNo(detail?.reg_no || student?.reg_no, detail?.year_level || student?.year_level || student?.year)} Year
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Action Buttons Row — Responsive Native App Layout */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 w-full md:w-auto shrink-0 relative z-20 justify-end">
+        {/* Right: Action Buttons Group (Single Row - No Awkward Dead Space) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-20">
           {/* SYNC LIVE (High-frequency primary action) */}
           <button
             type="button"
@@ -463,11 +453,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               handleLiveFetch();
             }}
             disabled={isLiveFetching}
-            className={`min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl font-black text-xs flex items-center justify-center space-x-1.5 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer touch-manipulation select-none border backdrop-blur-xl ${
+            className={`min-h-[36px] sm:min-h-[40px] px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl font-black text-xs flex items-center justify-center space-x-1.5 transition-all duration-200 active:scale-95 sm:hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer touch-manipulation select-none border backdrop-blur-xl ${
               syncSuccess
                 ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white border-emerald-400/40 shadow-md shadow-emerald-500/20'
                 : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white border-blue-400/30 shadow-md shadow-indigo-600/25'
             }`}
+            title={syncSuccess ? 'Synced' : isLiveFetching ? 'Syncing...' : 'Sync Live'}
           >
             {syncSuccess ? (
               <>
@@ -477,7 +468,10 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             ) : (
               <>
                 <RefreshCw className={`w-3.5 h-3.5 text-white shrink-0 ${isLiveFetching ? 'animate-spin' : ''}`} />
-                <span className="truncate tracking-wide font-sans">{isLiveFetching ? 'Syncing...' : 'Sync Live'}</span>
+                <span className="truncate tracking-wide font-sans">
+                  <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync Live'}</span>
+                  <span className="sm:hidden">{isLiveFetching ? '...' : 'Sync'}</span>
+                </span>
               </>
             )}
           </button>
@@ -490,7 +484,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               e.preventDefault();
               setShowEditOverlay(true);
             }}
-            className="hidden sm:flex min-h-[42px] px-3.5 sm:px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 transition-all duration-200 active:scale-95 hover:scale-105 cursor-pointer touch-manipulation select-none"
+            className="hidden lg:flex min-h-[40px] px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 transition-all duration-200 active:scale-95 hover:scale-105 cursor-pointer touch-manipulation select-none"
             title="Edit Student Record"
           >
             <Edit3 className="w-4 h-4 text-slate-950 shrink-0" />
@@ -506,7 +500,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               handleGenerateCert();
             }}
             disabled={downloadingCert}
-            className="hidden sm:flex min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white border border-indigo-300/40 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 hover:scale-105 disabled:opacity-50 cursor-pointer touch-manipulation select-none"
+            className="hidden lg:flex min-h-[40px] px-3.5 py-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:from-indigo-400 hover:to-purple-500 text-white border border-indigo-300/40 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 hover:scale-105 disabled:opacity-50 cursor-pointer touch-manipulation select-none"
           >
             <Award className="w-4 h-4 text-white shrink-0" />
             <span className="truncate tracking-wide font-sans">{downloadingCert ? 'Generating...' : 'Certificate'}</span>
@@ -520,23 +514,34 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               e.preventDefault();
               setShowAuditModal(true);
             }}
-            className="hidden sm:flex min-h-[42px] px-4 py-2 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-emerald-700 hover:from-teal-400 hover:to-emerald-600 text-white border border-emerald-300/40 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/20 transition-all duration-200 active:scale-95 hover:scale-105 cursor-pointer touch-manipulation select-none"
+            className="hidden xl:flex min-h-[40px] px-3.5 py-2 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-600 to-emerald-700 hover:from-teal-400 hover:to-emerald-600 text-white border border-emerald-300/40 font-black text-xs items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/20 transition-all duration-200 active:scale-95 hover:scale-105 cursor-pointer touch-manipulation select-none"
           >
             <FileText className="w-4 h-4 text-white shrink-0" />
             <span className="truncate tracking-wide font-sans">Audit</span>
           </button>
 
-          {/* MOBILE MORE ACTIONS (3-Dots → Portaled Bottom Sheet) */}
-          <div className="sm:hidden">
+          {/* MORE ACTIONS (3-Dots → Portaled Bottom Sheet, for screens where full direct buttons are hidden) */}
+          <div className="lg:hidden">
             <button
               type="button"
               onClick={() => { triggerHaptic('light'); setShowMobileMenu(prev => !prev); }}
-              className="p-2 min-w-[38px] min-h-[38px] rounded-xl bg-white/[0.08] active:bg-white/[0.20] text-white border border-white/10 flex items-center justify-center cursor-pointer active:scale-90 transition-transform duration-100 touch-manipulation"
+              className="p-2 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] rounded-xl bg-white/[0.08] active:bg-white/[0.20] hover:bg-white/[0.14] text-white border border-white/10 flex items-center justify-center cursor-pointer active:scale-90 transition-transform duration-100 touch-manipulation"
               title="More Actions"
             >
               <MoreVertical className="w-4 h-4 text-white" />
             </button>
           </div>
+
+          {/* Close Modal Button */}
+          <button
+            type="button"
+            onClick={() => onBack()}
+            className="p-2 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center rounded-xl bg-white/[0.08] hover:bg-white/[0.16] text-slate-300 hover:text-white border border-white/10 shrink-0 cursor-pointer transition active:scale-95 touch-manipulation"
+            title="Close modal"
+          >
+            <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+          </button>
+        </div>
 
           {/* Portaled Bottom Sheet — renders outside clipping overflow-hidden header */}
           {showMobileMenu && createPortal(
@@ -641,7 +646,6 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </AnimatePresence>,
             document.body
           )}
-        </div>
       </div>
       
       {liveFetchError && (
@@ -844,27 +848,6 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   return Math.round(Number(r)).toLocaleString('en-US');
                 })()}
               </h3>
-              {(() => {
-                const r = Number(detail?.stats?.contest_rating ?? detail?.lc_contest_standing?.contest_rating ?? 0);
-                const attended = detail?.lc_contest_standing?.attended_count ?? detail?.stats?.official_contests ?? 0;
-                if (!r || r <= 0 || Math.round(r) === 1500 || attended === 0) return null;
-                if (r >= 2150) return (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/30 text-rose-200 border border-rose-400/50 mt-1">
-                    🛡️ Guardian Tier
-                  </span>
-                );
-                if (r >= 1850) return (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/50 mt-1">
-                    ⚔️ Knight Tier
-                  </span>
-                );
-                if (r >= 1600) return (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/50 mt-1">
-                    ⭐ Specialist (Top 15%)
-                  </span>
-                );
-                return null;
-              })()}
             </div>
 
             {/* Official / Virtual Split */}
@@ -1032,7 +1015,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
       </div>
 
-      {/* Placement Readiness, Upcoming Weekly Contest Countdown & Recent Submissions */}
+      {/* Recent Submissions */}
       <StudentPlacementAndContestOverview
         totalSolved={(easy + medium + hard) || detail?.stats?.total_solved || 0}
         easySolved={easy}

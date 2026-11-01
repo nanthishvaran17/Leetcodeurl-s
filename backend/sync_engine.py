@@ -521,10 +521,22 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
                         attended=is_att
                     )
                     db.add(existing_hist)
+                existing_hist.attended = is_att
+                if p.get("contest_date"):
+                    try:
+                        existing_hist.contest_start_time = datetime.datetime.strptime(p.get("contest_date"), "%Y-%m-%d")
+                    except Exception:
+                        pass
+                if not getattr(existing_hist, "contest_start_time", None):
+                    try:
+                        from backend.services.canonical_contest_engine import derive_contest_datetime
+                        existing_hist.contest_start_time = derive_contest_datetime(c_name)
+                    except Exception:
+                        pass
                 if p.get("contest_rating_after") is not None:
                     existing_hist.rating_after = p.get("contest_rating_after")
                 if p.get("contest_rank") is not None:
-                    existing_hist.ranking = p.get("contest_rank")
+                    existing_hist.contest_rank = p.get("contest_rank")
                 if p.get("problems_solved") is not None:
                     existing_hist.problems_solved = p.get("problems_solved")
 

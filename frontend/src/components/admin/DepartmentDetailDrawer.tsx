@@ -153,13 +153,22 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end p-0 bg-slate-950/60 dark:bg-black/75 backdrop-blur-xs overflow-hidden max-w-full w-full" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        data-drawer="department-detail"
+        className="fixed inset-0 z-[999999] flex items-end sm:items-stretch justify-center sm:justify-end p-0 bg-slate-950/60 dark:bg-black/75 backdrop-blur-xs overflow-hidden max-w-full w-full no-drawer-swipe touch-pan-y overscroll-x-none"
+        style={{ touchAction: 'pan-y', overscrollBehaviorX: 'none' }}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
         <motion.div
+          role="document"
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-navy-950 h-[92vh] sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-t-3xl sm:rounded-none overflow-x-hidden overflow-y-hidden"
+          className="relative w-full max-w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-navy-950 h-[92vh] sm:h-full shadow-2xl flex flex-col sm:border-l border-slate-200 dark:border-navy-700 rounded-t-3xl sm:rounded-none overflow-x-hidden overflow-y-hidden no-drawer-swipe touch-pan-y overscroll-x-none"
+          style={{ touchAction: 'pan-y', overscrollBehaviorX: 'none' }}
         >
           {/* Header */}
           <div className="relative p-3.5 sm:p-6 border-b border-indigo-200/50 dark:border-indigo-900/50 flex flex-col bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-navy-900 dark:via-navy-950 dark:to-indigo-950 overflow-hidden shrink-0 rounded-t-3xl sm:rounded-none">

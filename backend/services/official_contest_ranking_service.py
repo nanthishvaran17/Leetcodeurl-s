@@ -31,6 +31,52 @@ def resolve_contest_slug(session: WeeklySession) -> str:
         return f"biweekly-contest-{c_num}"
     return f"weekly-contest-{c_num}"
 
+
+def filter_students_by_dept_and_year(students: list, target_dept: str = None, target_year: str = None) -> list:
+    if (not target_dept or target_dept == 'ALL') and (not target_year or target_year == 'ALL'):
+        return students
+
+    filtered = []
+    t_dept = (target_dept or 'ALL').upper().strip()
+    t_year = (target_year or 'ALL').upper().replace('YEAR', '').strip()
+
+    for s in students:
+        reg = (s.reg_no or '').upper()
+        dept = (s.department.code if s.department else '').upper()
+        if 'CC' in reg: dept = 'CSE(CS)'
+        elif 'CI' in reg or 'CIR' in reg: dept = 'CSE(IOT)'
+        elif 'IT' in reg or 'ITL' in reg: dept = 'IT'
+
+        year = 'III'
+        if reg.startswith('732225') or '25CC' in reg or '25CI' in reg: year = 'II'
+        elif reg.startswith('732224') or '24CC' in reg or '24CI' in reg or '24CIR' in reg: year = 'III'
+        elif reg.startswith('732223') or '23CC' in reg or '23CI' in reg: year = 'IV'
+        elif reg.startswith('732226') or '26CC' in reg: year = 'I'
+        else:
+            y = str(s.year_level or '').upper()
+            if '1' in y or 'I' in y: year = 'I'
+            elif '2' in y or 'II' in y: year = 'II'
+            elif '3' in y or 'III' in y: year = 'III'
+            elif '4' in y or 'IV' in y: year = 'IV'
+
+        if t_dept != 'ALL':
+            if t_dept in ('CSE(CS)', 'CS', 'CYBER', 'CYBER SECURITY') and dept != 'CSE(CS)':
+                continue
+            elif t_dept in ('CSE(IOT)', 'IOT') and dept != 'CSE(IOT)':
+                continue
+            elif t_dept in ('IT', 'INFORMATION TECHNOLOGY') and dept != 'IT':
+                continue
+            elif t_dept not in ('CSE(CS)', 'CSE(IOT)', 'IT') and dept != t_dept:
+                continue
+
+        if t_year != 'ALL':
+            if t_year != year:
+                continue
+
+        filtered.append(s)
+
+    return filtered
+
 class OfficialContestRankingService:
     """
     Universal 100% Evidence-Based Contest Ranking Scanner & Sync Service.
@@ -46,7 +92,9 @@ class OfficialContestRankingService:
         db: Optional[Session] = None, 
         max_pages: int = 1200,
         concurrency: int = 25,
-        force_live: bool = False
+        force_live: bool = False,
+        target_dept: Optional[str] = None,
+        target_year: Optional[str] = None
     ) -> Dict[str, Any]:
         close_db_on_exit = False
         if db is None:
@@ -76,23 +124,28 @@ class OfficialContestRankingService:
                 except Exception as e:
                     logger.warning(f"[CONTEST_SCAN] Failed reading {cached_path}: {e}")
 
-            # 2. 100% Cloudflare-Proof GraphQL Contest Engine: Directly checks all college students via GraphQL
+            # 2. Primary Source: Scan Official LeetCode REST Ranking Leaderboard FIRST
+            # https://leetcode.com/contest/api/ranking/{contest-name}/?pagination={page}&region=global_v2
             if not scanned_data:
-                logger.info(f"[CONTEST_SCAN] Running 100% Cloudflare-Proof Direct GraphQL Contest Engine for {contest_slug}...")
-                scanned_data = await cls.scan_via_graphql_contest_engine(
-                    contest_slug=contest_slug,
-                    db=db,
-                    concurrency=25
-                )
-
-            # 3. Fallback to REST only if GraphQL returned empty
-            if not scanned_data:
-                logger.info(f"[CONTEST_SCAN] GraphQL returned 0 solvers, attempting REST ranking fallback for {contest_slug}...")
+                logger.info(f"[CONTEST_SCAN] Primary Source: Scanning official LeetCode REST ranking API for {contest_slug}...")
                 scanned_data = await cls._scan_live_leetcode_ranking(
                     contest_slug=contest_slug,
                     db=db,
                     max_pages=max_pages,
-                    concurrency=concurrency
+                    concurrency=concurrency,
+                    target_dept=target_dept,
+                    target_year=target_year
+                )
+
+            # 3. Fallback: Direct GraphQL Contest Engine if REST returned empty
+            if not scanned_data:
+                logger.info(f"[CONTEST_SCAN] REST ranking returned empty, activating Direct GraphQL Contest Engine fallback for {contest_slug}...")
+                scanned_data = await cls.scan_via_graphql_contest_engine(
+                    contest_slug=contest_slug,
+                    db=db,
+                    concurrency=25,
+                    target_dept=target_dept,
+                    target_year=target_year
                 )
 
             # 4. Auto-save authentic scan artifact for instant cache hits
@@ -108,7 +161,9 @@ class OfficialContestRankingService:
             sync_summary = cls.apply_scanned_results_to_db(
                 session=session,
                 scanned_data=scanned_data,
-                db=db
+                db=db,
+                target_dept=target_dept,
+                target_year=target_year
             )
 
             return {
@@ -129,7 +184,9 @@ class OfficialContestRankingService:
         cls,
         session_id: int,
         db: Optional[Session] = None,
-        force_live: bool = False
+        force_live: bool = False,
+        target_dept: Optional[str] = None,
+        target_year: Optional[str] = None
     ) -> Dict[str, Any]:
         """Synchronous wrapper for schedulers, autopilot, and background threads."""
         try:
@@ -137,11 +194,11 @@ class OfficialContestRankingService:
             if loop.is_running():
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
-                    return pool.submit(asyncio.run, cls.scan_and_sync_contest(session_id, db, force_live=force_live)).result()
+                    return pool.submit(asyncio.run, cls.scan_and_sync_contest(session_id, db, force_live=force_live, target_dept=target_dept, target_year=target_year)).result()
             else:
-                return loop.run_until_complete(cls.scan_and_sync_contest(session_id, db, force_live=force_live))
+                return loop.run_until_complete(cls.scan_and_sync_contest(session_id, db, force_live=force_live, target_dept=target_dept, target_year=target_year))
         except RuntimeError:
-            return asyncio.run(cls.scan_and_sync_contest(session_id, db, force_live=force_live))
+            return asyncio.run(cls.scan_and_sync_contest(session_id, db, force_live=force_live, target_dept=target_dept, target_year=target_year))
 
     @classmethod
     async def scan_live_leetcode_ranking(
@@ -149,13 +206,17 @@ class OfficialContestRankingService:
         contest_slug: str,
         db: Session,
         max_pages: int = 1200,
-        concurrency: int = 25
+        concurrency: int = 25,
+        target_dept: Optional[str] = None,
+        target_year: Optional[str] = None
     ) -> Dict[str, Any]:
         students = db.query(Student).filter(
             Student.is_active == True,
             ~Student.reg_no.like("REG_%"),
             ~Student.reg_no.like("TEST%")
         ).all()
+        if target_dept or target_year:
+            students = filter_students_by_dept_and_year(students, target_dept, target_year)
 
         # Build fast index by username and real name
         student_by_slug: Dict[str, Student] = {}
@@ -182,6 +243,12 @@ class OfficialContestRankingService:
         contest_start_ts: int = 0
 
         async with httpx.AsyncClient(headers=headers, limits=limits, timeout=timeout, follow_redirects=True) as client:
+            # 0. Warmup session cookies so Cloudflare allows all subsequent pagination calls
+            try:
+                await client.get(f"https://leetcode.com/contest/{contest_slug}/ranking/")
+            except Exception:
+                pass
+
             # Probe Page 1 for contest metadata & question IDs
             try:
                 p1_resp = await client.get(base_url.format(page=1))
@@ -197,6 +264,23 @@ class OfficialContestRankingService:
                     contest_start_ts = contest_meta.get("start_time", 0)
                     available_pages = (total_participants + 24) // 25
                     target_pages = min(max_pages, available_pages) if available_pages > 0 else max_pages
+
+                    # If questions list was empty on page 1, fetch question IDs via fast GraphQL probe
+                    if not question_ids:
+                        try:
+                            cq_resp = await client.post(
+                                "https://leetcode.com/graphql",
+                                json={"query": "query contestInfo($titleSlug: String!) { contest(titleSlug: $titleSlug) { questions { questionId } } }", "variables": {"titleSlug": contest_slug}},
+                                timeout=6.0
+                            )
+                            if cq_resp.status_code == 200:
+                                cq_data = (cq_resp.json().get("data") or {}).get("contest") or {}
+                                for q in cq_data.get("questions") or []:
+                                    qid = str(q.get("questionId") or "")
+                                    if qid:
+                                        question_ids.append(qid)
+                        except Exception:
+                            pass
                 else:
                     logger.info(f"[CONTEST_SCAN] Page 1 returned status {p1_resp.status_code} (Cloudflare block). Skipping REST, activating fast GraphQL engine immediately.")
                     return await cls.scan_via_graphql_contest_engine(contest_slug=contest_slug, db=db, concurrency=concurrency)
@@ -282,7 +366,9 @@ class OfficialContestRankingService:
         cls,
         contest_slug: str,
         db: Session,
-        concurrency: int = 20
+        concurrency: int = 20,
+        target_dept: Optional[str] = None,
+        target_year: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         100% Cloudflare-Proof Universal Contest Solver Engine.
@@ -390,6 +476,8 @@ class OfficialContestRankingService:
             ~Student.reg_no.like("TEST%")
         ).all()
 
+        if target_dept or target_year:
+            students = filter_students_by_dept_and_year(students, target_dept, target_year)
         valid_students = [s for s in students if s.username and s.username.strip()]
         logger.info(f"[GRAPHQL_SCAN] Scanning {len(valid_students)} students via 100% Cloudflare-Proof GraphQL for {contest_slug}...")
 
@@ -568,7 +656,9 @@ class OfficialContestRankingService:
         cls,
         session: WeeklySession,
         scanned_data: Dict[str, Any],
-        db: Session
+        db: Session,
+        target_dept: Optional[str] = None,
+        target_year: Optional[str] = None
     ) -> Dict[str, Any]:
         session_id = session.id
         contest_slug = resolve_contest_slug(session)
@@ -580,12 +670,13 @@ class OfficialContestRankingService:
             WeeklyPublicResult.reg_no.like('REG_%')
         ).delete(synchronize_session=False)
 
-        students = db.query(Student).filter(
+        all_students = db.query(Student).filter(
             Student.is_active == True,
             ~Student.reg_no.like('REG_%'),
             ~Student.reg_no.like('TEST%'),
             ~Student.reg_no.like('HARDENING%')
         ).all()
+        students = filter_students_by_dept_and_year(all_students, target_dept, target_year) if (target_dept or target_year) else all_students
 
         existing_wpr = {r.student_id: r for r in db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()}
         existing_pwpr = {r.student_id: r for r in db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.session_id == session_id).all()}

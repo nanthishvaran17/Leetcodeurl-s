@@ -1228,7 +1228,7 @@ export const FacultyActionCenter: React.FC = () => {
   const filterSelectCls = "rounded-xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-brand-500 transition cursor-pointer";
 
   return (
-    <div className="space-y-6 md:space-y-7 pb-32 sm:pb-16 animate-fade-in font-sans">
+    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-6 md:space-y-7 pb-32 sm:pb-16 animate-fade-in font-sans">
       {/* Executive Header Banner (Authoritative Dark OLED Gradient in all modes for crystal-clear readability) */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 shadow-2xl border border-indigo-500/30 mb-4 sm:mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -1236,9 +1236,6 @@ export const FacultyActionCenter: React.FC = () => {
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black shadow-xs">
-              <span>STUDENT INTERVENTION & MENTORING</span>
-            </div>
 
             <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3 text-white drop-shadow-sm">
               <span className="text-white">Faculty</span> <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
@@ -1272,7 +1269,7 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* Action Matrix — 4 Compact Stat Boxes (2 per line on mobile, 4 on desktop) */}
       {kpis && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 min-w-0 max-w-full">
 
           {/* 1. Critical Box */}
           <button
@@ -1492,7 +1489,7 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1 font-mono">Show:</span>
-            {(isMobile ? [10, 25, 50] : [20, 50, 100, 200]).map((sz) => (
+            {[10, 20, 50, 100, 200].map((sz) => (
               <button
                 key={sz}
                 onClick={() => { setPageSize(sz); setPage(1); }}

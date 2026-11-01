@@ -155,101 +155,7 @@ const PageSkeleton = () => (
   </div>
 );
 
-export const App: React.FC = () => {
-  // Direct Public Route Interceptors with reactive routing state
-  const [navLocation, setNavLocation] = useState(() => ({
-    pathname: typeof window !== 'undefined' ? window.location.pathname : '',
-    hash: typeof window !== 'undefined' ? window.location.hash : ''
-  }));
-
-  useEffect(() => {
-    const onLocationChange = () => {
-      setNavLocation({
-        pathname: window.location.pathname,
-        hash: window.location.hash
-      });
-    };
-    window.addEventListener('popstate', onLocationChange);
-    window.addEventListener('hashchange', onLocationChange);
-    return () => {
-      window.removeEventListener('popstate', onLocationChange);
-      window.removeEventListener('hashchange', onLocationChange);
-    };
-  }, []);
-
-  const pathname = navLocation.pathname;
-  if (pathname === '/admin' || pathname === '/admin/') {
-    return (
-      <Suspense fallback={<PageSkeleton />}>
-        <AdminLoginPage />
-      </Suspense>
-    );
-  }
-  if (pathname === '/dev-studio' || pathname === '/dev-studio/') {
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={<PageSkeleton />}>
-          <DeveloperStudio onClose={() => {
-            try {
-              sessionStorage.removeItem('admin_login_portal');
-              localStorage.removeItem('admin_login_portal');
-            } catch {}
-            window.location.href = '/';
-          }} />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
-  if (pathname === '/hall-of-fame' || pathname === '/hall-of-fame/' || pathname === '/kiosk' || pathname === '/tv') {
-    return (
-      <Suspense fallback={<PageSkeleton />}>
-        <HallOfFameKioskPage />
-      </Suspense>
-    );
-  }
-  if (pathname === '/accreditation-studio' || pathname === '/accreditation-studio/' || pathname === '/accreditation' || pathname === '/naac-nba') {
-    return (
-      <Suspense fallback={<PageSkeleton />}>
-        <AccreditationStudioPage />
-      </Suspense>
-    );
-  }
-  if (pathname === '/privacy' || pathname === '/privacy/') {
-    return (
-      <Suspense fallback={<PageSkeleton />}>
-        <PrivacyPolicyPage />
-      </Suspense>
-    );
-  }
-  if (pathname === '/terms' || pathname === '/terms/') {
-    return (
-      <Suspense fallback={<PageSkeleton />}>
-        <TermsOfServicePage />
-      </Suspense>
-    );
-  }
-
-  const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
-  const hashPath = navLocation.hash.startsWith('#/') ? navLocation.hash.slice(1) : '';
-  const effectivePath = pathname.length > 1 ? pathname : hashPath;
-  const isVerifyRoute = effectivePath === '/verify' || effectivePath.startsWith('/verify?') || verifyPrefixes.some(p => effectivePath.startsWith(p));
-  if (isVerifyRoute) {
-    // If loaded on Firebase Hosting (where there is no live Python backend or SQLite DB), redirect to authoritative production host
-    if (typeof window !== 'undefined' && window.location.hostname.includes('web.app')) {
-      const search = window.location.search || '';
-      window.location.replace(`https://leetcodeurl-s-roan.vercel.app${effectivePath}${search}`);
-      return null;
-    }
-    const matchedPrefix = verifyPrefixes.find(p => effectivePath.startsWith(p));
-    const rawCode = matchedPrefix ? effectivePath.replace(matchedPrefix, '') : '';
-    const certId = decodeURIComponent(rawCode).split('/')[0].split('?')[0].trim();
-    return (
-      <Suspense fallback={<PageSkeleton />}>
-        <CertificateVerificationPage verificationId={certId} />
-      </Suspense>
-    );
-  }
-
+const MainAppContent: React.FC = () => {
   const { user, isAuthenticated, login } = useAuth();
   
   // Initialize System & Download Notification listeners early on app boot
@@ -719,12 +625,25 @@ export const App: React.FC = () => {
       // Only enable touch edge swipe on mobile/tablet screens (< 1024px)
       if (window.innerWidth >= 1024) return;
 
+      // Disable edge swipe completely if any modal, drawer, or dialog is open in DOM
+      if (
+        typeof document !== 'undefined' &&
+        document.querySelector(
+          '[role="dialog"], [aria-modal="true"], .no-drawer-swipe, [data-drawer], .fixed.inset-0.z-\\[999999\\], .fixed.z-\\[999999\\]'
+        )
+      ) {
+        isTracking = false;
+        return;
+      }
+
       if (target) {
         const tag = target.tagName?.toLowerCase();
         if (
           ['input', 'textarea', 'select'].includes(tag) ||
           target.getAttribute('role') === 'slider' ||
-          target.closest('input, textarea, select, [role="slider"], .no-drawer-swipe')
+          target.closest(
+            'input, textarea, select, [role="slider"], .no-drawer-swipe, [role="dialog"], [aria-modal="true"], [data-drawer], .fixed.inset-0, .overflow-y-auto'
+          )
         ) {
           isTracking = false;
           return;
@@ -1234,7 +1153,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className={`overflow-x-hidden bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
+    <div className={`overflow-x-clip max-w-full min-w-0 box-border bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
       activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
       {/* Signature World-Class App Launch Splash Screen (Airtel / Swiggy / Cred style) */}
@@ -1291,10 +1210,10 @@ export const App: React.FC = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className={`w-full max-w-full mx-auto relative flex flex-col ${
+      <div className={`w-full max-w-full min-w-0 mx-auto relative flex flex-col overflow-x-clip box-border ${
         activeTab === 'messages'
           ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-2.5 sm:pt-4 pb-36 sm:pb-6 px-1.5 sm:px-4 max-w-full'
+          : 'pt-2 sm:pt-4 pb-36 sm:pb-6 px-3 sm:px-5 max-w-7xl mx-auto w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}
@@ -1327,7 +1246,7 @@ export const App: React.FC = () => {
           <main
             id="main-content"
             key={activeTab}
-            className={`min-w-0 w-full max-w-full animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
+            className={`min-w-0 w-full max-w-full overflow-x-clip box-border animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
           >
 
             <ErrorBoundary>
@@ -1711,3 +1630,100 @@ export const App: React.FC = () => {
 };
 
 
+export const App: React.FC = () => {
+  // Direct Public Route Interceptors with reactive routing state
+  const [navLocation, setNavLocation] = useState(() => ({
+    pathname: typeof window !== 'undefined' ? window.location.pathname : '',
+    hash: typeof window !== 'undefined' ? window.location.hash : ''
+  }));
+
+  useEffect(() => {
+    const onLocationChange = () => {
+      setNavLocation({
+        pathname: window.location.pathname,
+        hash: window.location.hash
+      });
+    };
+    window.addEventListener('popstate', onLocationChange);
+    window.addEventListener('hashchange', onLocationChange);
+    return () => {
+      window.removeEventListener('popstate', onLocationChange);
+      window.removeEventListener('hashchange', onLocationChange);
+    };
+  }, []);
+
+  const pathname = navLocation.pathname;
+  if (pathname === '/admin' || pathname === '/admin/') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <AdminLoginPage />
+      </Suspense>
+    );
+  }
+  if (pathname === '/dev-studio' || pathname === '/dev-studio/') {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<PageSkeleton />}>
+          <DeveloperStudio onClose={() => {
+            try {
+              sessionStorage.removeItem('admin_login_portal');
+              localStorage.removeItem('admin_login_portal');
+            } catch {}
+            window.location.href = '/';
+          }} />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+  if (pathname === '/hall-of-fame' || pathname === '/hall-of-fame/' || pathname === '/kiosk' || pathname === '/tv') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <HallOfFameKioskPage />
+      </Suspense>
+    );
+  }
+  if (pathname === '/accreditation-studio' || pathname === '/accreditation-studio/' || pathname === '/accreditation' || pathname === '/naac-nba') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <AccreditationStudioPage />
+      </Suspense>
+    );
+  }
+  if (pathname === '/privacy' || pathname === '/privacy/') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <PrivacyPolicyPage />
+      </Suspense>
+    );
+  }
+  if (pathname === '/terms' || pathname === '/terms/') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <TermsOfServicePage />
+      </Suspense>
+    );
+  }
+
+  const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
+  const hashPath = navLocation.hash.startsWith('#/') ? navLocation.hash.slice(1) : '';
+  const effectivePath = pathname.length > 1 ? pathname : hashPath;
+  const isVerifyRoute = effectivePath === '/verify' || effectivePath.startsWith('/verify?') || verifyPrefixes.some(p => effectivePath.startsWith(p));
+  if (isVerifyRoute) {
+    // If loaded on Firebase Hosting (where there is no live Python backend or SQLite DB), redirect to authoritative production host
+    if (typeof window !== 'undefined' && window.location.hostname.includes('web.app')) {
+      const search = window.location.search || '';
+      window.location.replace(`https://leetcodeurl-s-roan.vercel.app${effectivePath}${search}`);
+      return null;
+    }
+    const matchedPrefix = verifyPrefixes.find(p => effectivePath.startsWith(p));
+    const rawCode = matchedPrefix ? effectivePath.replace(matchedPrefix, '') : '';
+    const certId = decodeURIComponent(rawCode).split('/')[0].split('?')[0].trim();
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <CertificateVerificationPage verificationId={certId} />
+      </Suspense>
+    );
+  }
+
+  return <MainAppContent />;
+};

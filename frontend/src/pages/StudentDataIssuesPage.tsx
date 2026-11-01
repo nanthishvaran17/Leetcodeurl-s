@@ -1532,7 +1532,7 @@ export const StudentDataIssuesPage: React.FC = () => {
               {students.length > 10 && (
                 <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-mono font-bold">
                   <span className="text-xs text-slate-800 dark:text-slate-200 font-bold">Per page:</span>
-                  {[10, 25, 50, 100].map(sz => (
+                  {[10, 20, 50, 100, 200].map(sz => (
                     <button
                       key={sz}
                       onClick={() => {

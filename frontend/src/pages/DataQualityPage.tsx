@@ -8,7 +8,7 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-import { getUserCollege, isCollegeFilterAllowed, isStaffRole } from '../services/auth/authTypes';
+import { getUserCollege, isCollegeFilterAllowed, isStaffRole, isHodRole } from '../services/auth/authTypes';
 import { useDepartments } from '../contexts/DepartmentContext';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -89,16 +89,30 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
     }
   }, [isGlobalAccess, userCollege, selectedCollege]);
   const isStaffUser = isStaffRole(user);
+  const isHodUser = isHodRole(user);
+  const isDeptScopedUser = isStaffUser || isHodUser;
   const userDeptCode = ((user as any)?.department_code || user?.department || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || 'ALL').toUpperCase();
-  const [selectedDept, setSelectedDept] = useState<string>(() => isStaffUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL');
+  const [selectedDept, setSelectedDept] = useState<string>(() => isDeptScopedUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL');
 
   useEffect(() => {
-    if (isStaffUser && userDeptCode !== 'ALL' && selectedDept !== userDeptCode) {
+    if (isDeptScopedUser && userDeptCode !== 'ALL' && selectedDept !== userDeptCode) {
       setSelectedDept(userDeptCode);
     }
-  }, [isStaffUser, userDeptCode, selectedDept]);
+  }, [isDeptScopedUser, userDeptCode, selectedDept]);
+
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<any | null>(null);
+
+  // Collapsible Filters State (default collapsed on mobile, open on large screens)
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (isGlobalAccess && selectedCollege !== 'ALL') count++;
+    if (!isDeptScopedUser && selectedDept !== 'ALL') count++;
+    if (selectedYear !== 'ALL') count++;
+    return count;
+  }, [isGlobalAccess, selectedCollege, isDeptScopedUser, selectedDept, selectedYear]);
 
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [page, setPage] = useState<number>(1);
@@ -250,23 +264,43 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {onNavigateTab && (
                 <button
                   type="button"
                   onClick={() => onNavigateTab('data-issues')}
-                  className="px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 border border-rose-400/30 touch-manipulation"
+                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] bg-gradient-to-r from-rose-600 via-rose-500 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 border border-rose-400/30 touch-manipulation"
                 >
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">Issues &amp; Recovery</span>
                 </button>
               )}
 
+              {/* Show / Hide Filter Button */}
+              <button
+                type="button"
+                onClick={() => setShowFilters(prev => !prev)}
+                className={`flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl border transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation ${
+                  showFilters
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
+                    : 'bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border-white/20 backdrop-blur-md'
+                }`}
+                title={showFilters ? 'Hide filter controls' : 'Show filter controls'}
+              >
+                <Filter className="w-3.5 h-3.5 shrink-0" />
+                <span>{showFilters ? 'Hide Filters' : 'Filters'}</span>
+                {activeFiltersCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black leading-none ml-1">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={() => fetchQualityData(true)}
                 disabled={refreshing}
-                className="px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
+                className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 min-h-[40px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''} shrink-0 text-brand-300`} />
                 <span>{refreshing ? 'Auditing...' : 'Run Audit'}</span>
@@ -276,61 +310,113 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         </div>
       </div>
 
-      {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar */}
-      <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5 sm:gap-4 w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5 flex-1 w-full max-w-4xl min-w-0">
-          {/* College Campus Filter — Admin & Management only */}
-          {isGlobalAccess && (
-            <GlobalFilter
-              label="College Campus"
-              value={selectedCollege}
-              onChange={(val) => setSelectedCollege(val as 'ALL' | 'NEC' | 'NCT')}
-              dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
-              options={[
-                { value: "ALL", label: "All Colleges", pillText: "ALL" },
-                { value: "NEC", label: "Nandha Engineering College (NEC)", pillText: "NEC" },
-                { value: "NCT", label: "Nandha College of Technology (NCT)", pillText: "NCT" }
-              ]}
-            />
-          )}
-
-          {/* Department Filter */}
-          <PremiumDepartmentSelect
-            selectedDept={selectedDept}
-            onChange={(val) => setSelectedDept(val)}
-            useIdAsValue={false}
-            label="Department Scope"
-            dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
-          />
-
-          {/* Academic Year Filter */}
-          <GlobalFilter
-            label="Academic Year"
-            value={selectedYear}
-            onChange={setSelectedYear}
-            dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
-            searchPlaceholder="Search academic year..."
-            options={[
-              { value: "ALL", label: "All Academic Years", pillText: "ALL" },
-              { value: "1", label: "I Year", pillText: "1ST" },
-              { value: "2", label: "II Year", pillText: "2ND" },
-              { value: "3", label: "III Year", pillText: "3RD" },
-              { value: "4", label: "IV Year", pillText: "4TH" }
-            ]}
-          />
-        </div>
-
-        {((isGlobalAccess ? selectedCollege !== 'ALL' : false) || selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
+      {/* Active Filter Chips Mini-bar (When Filters are Hidden) */}
+      {!showFilters && activeFiltersCount > 0 && (
+        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#0c1427]/80 backdrop-blur-md border border-slate-200/90 dark:border-white/10 text-xs shadow-xs animate-in fade-in duration-150">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-slate-600 dark:text-slate-300 text-[11px] font-bold">
+            <span className="text-slate-400 uppercase text-[9px] font-black tracking-wider">Active Scope:</span>
+            {isGlobalAccess && selectedCollege !== 'ALL' && (
+              <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-[10px] font-black">
+                {selectedCollege}
+              </span>
+            )}
+            {!isDeptScopedUser && selectedDept !== 'ALL' && (
+              <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 text-[10px] font-black">
+                {selectedDept}
+              </span>
+            )}
+            {selectedYear !== 'ALL' && (
+              <span className="px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-[10px] font-black">
+                {selectedYear === '1' ? 'I Year' : selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : 'IV Year'}
+              </span>
+            )}
+          </div>
           <button
             type="button"
-            onClick={() => { setSelectedCollege(isGlobalAccess ? 'ALL' : userCollege); setSelectedDept(isStaffUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL'); setSelectedYear('ALL'); }}
-            className="text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-2 min-h-[38px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
+            onClick={() => setShowFilters(true)}
+            className="text-[11px] font-black text-amber-600 dark:text-amber-400 hover:underline cursor-pointer ml-2 shrink-0"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Filters</span>
+            Modify Filters
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar (Collapsible) */}
+      {showFilters && (
+        <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5 sm:gap-4 w-full animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5 flex-1 w-full max-w-4xl min-w-0">
+            {/* College Campus Filter — Admin & Management only */}
+            {isGlobalAccess && (
+              <GlobalFilter
+                label="College Campus"
+                value={selectedCollege}
+                onChange={(val) => setSelectedCollege(val as 'ALL' | 'NEC' | 'NCT')}
+                dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
+                options={[
+                  { value: "ALL", label: "All Colleges", pillText: "ALL" },
+                  { value: "NEC", label: "Nandha Engineering College (NEC)", pillText: "NEC" },
+                  { value: "NCT", label: "Nandha College of Technology (NCT)", pillText: "NCT" }
+                ]}
+              />
+            )}
+
+            {/* Department Filter - Locked for HOD & Staff */}
+            {isDeptScopedUser && userDeptCode !== 'ALL' ? (
+              <div className="flex flex-col space-y-1.5 min-w-0">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Department (Locked)
+                </span>
+                <div className="flex items-center space-x-2 px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-200 min-h-[44px]">
+                  <Building2 className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="truncate">{userDeptCode}</span>
+                  <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 font-black ml-auto shrink-0">
+                    HOD Scope
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <PremiumDepartmentSelect
+                selectedDept={selectedDept}
+                onChange={(val) => setSelectedDept(val)}
+                useIdAsValue={false}
+                label="Department Scope"
+                dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
+              />
+            )}
+
+            {/* Academic Year Filter */}
+            <GlobalFilter
+              label="Academic Year"
+              value={selectedYear}
+              onChange={setSelectedYear}
+              dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
+              searchPlaceholder="Search academic year..."
+              options={[
+                { value: "ALL", label: "All Academic Years", pillText: "ALL" },
+                { value: "1", label: "I Year", pillText: "1ST" },
+                { value: "2", label: "II Year", pillText: "2ND" },
+                { value: "3", label: "III Year", pillText: "3RD" },
+                { value: "4", label: "IV Year", pillText: "4TH" }
+              ]}
+            />
+          </div>
+
+          {((isGlobalAccess ? selectedCollege !== 'ALL' : false) || (!isDeptScopedUser && selectedDept !== 'ALL') || selectedYear !== 'ALL') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCollege(isGlobalAccess ? 'ALL' : userCollege);
+                setSelectedDept(isDeptScopedUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL');
+                setSelectedYear('ALL');
+              }}
+              className="text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-2 min-h-[38px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Metrics Snapshot Grid — 5 2026 SaaS Bento Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">

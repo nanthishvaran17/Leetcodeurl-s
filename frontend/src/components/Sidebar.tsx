@@ -279,8 +279,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 className="flex items-center space-x-3 p-1 -m-1 rounded-xl hover:bg-slate-100/80 dark:hover:bg-white/[0.05] active:scale-[0.98] transition-all text-left cursor-pointer min-w-0 group"
                 aria-label="Return to Institutional Dashboard"
               >
-                <div className="shrink-0 transition-transform group-hover:scale-105 p-1 rounded-xl bg-slate-100/60 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
-                  <CollegeLogo size={28} />
+                <div className="shrink-0 transition-transform group-hover:scale-105">
+                  <CollegeLogo size={32} className="w-8 h-8" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white uppercase tracking-wider truncate leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors font-display">

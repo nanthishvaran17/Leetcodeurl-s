@@ -1,5 +1,6 @@
 # Trigger uvicorn reload
 import datetime
+import re
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from backend.models import (
@@ -8,6 +9,41 @@ from backend.models import (
 )
 from backend.logger import logger
 from backend.time_utils import ensure_utc, now_ist, format_ist_datetime, format_ist
+
+def derive_contest_datetime(name: Optional[str]) -> Optional[datetime.datetime]:
+    """
+    Derives canonical start timestamp for a LeetCode contest given its title.
+    Weekly Contest 525 = 2026-10-25 08:00 UTC (Sundays, every 7 days)
+    Biweekly Contest 171 = 2025-12-06 14:30 UTC (Saturdays, every 14 days)
+    """
+    if not name:
+        return None
+    m = re.search(r'\d+', name)
+    if not m:
+        return None
+    num = int(m.group(0))
+    lower = name.lower()
+    if 'biweekly' in lower:
+        return datetime.datetime(2025, 12, 6, 14, 30) + datetime.timedelta(days=14 * (num - 171))
+    elif 'weekly' in lower:
+        return datetime.datetime(2026, 10, 25, 8, 0) + datetime.timedelta(weeks=(num - 525))
+    return None
+
+def get_contest_sort_timestamp(h: Any) -> float:
+    """
+    Returns an authentic chronological timestamp for sorting contest history records.
+    Prioritizes official contest_start_time, then derived datetime from contest number, then created_at.
+    """
+    st_time = getattr(h, "contest_start_time", None)
+    if st_time and isinstance(st_time, datetime.datetime):
+        return st_time.timestamp()
+    dt = derive_contest_datetime(getattr(h, "contest_name", ""))
+    if dt:
+        return dt.timestamp()
+    cr_at = getattr(h, "created_at", None)
+    if cr_at and isinstance(cr_at, datetime.datetime):
+        return cr_at.timestamp()
+    return 0.0
 
 VALID_PARTICIPATION_STATUSES = {
     "PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED",

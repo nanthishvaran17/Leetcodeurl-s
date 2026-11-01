@@ -2188,7 +2188,7 @@ def get_contest_question_analytics(
 
 
 
-def _run_sync_in_background(session_id: int):
+def _run_sync_in_background(session_id: int, dept: Optional[str] = None, year: Optional[str] = None):
     # Separate DB session for background task
     from backend.database import SessionLocal
     db = SessionLocal()
@@ -2213,9 +2213,9 @@ def _run_sync_in_background(session_id: int):
             Contest516ReconciliationService.reconcile_contest(session_id, db)
             logger.info(f"Completed background reconciliation for Contest 516 (Session {session_id})")
         else:
-            logger.info(f"Starting universal official LeetCode ranking sync for Contest {c_name} (Session {session_id})")
+            logger.info(f"Starting universal official LeetCode ranking sync for Contest {c_name} (Session {session_id}) [Filter: {dept or 'ALL'}/{year or 'ALL'}]")
             from backend.services.official_contest_ranking_service import OfficialContestRankingService
-            OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db, force_live=True)
+            OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db, force_live=True, target_dept=dept, target_year=year)
 
             _CONTEST_RAM_CACHE.clear()
             from backend.cache import cache
@@ -2235,18 +2235,22 @@ def _run_sync_in_background(session_id: int):
 def sync_single_weekly_contest(
     session_id: int,
     background_tasks: BackgroundTasks,
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Weekly Contest Sync"))
 ):
     """
     Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
-    Now correctly runs in the background to prevent 180s gateway timeout on the proxy.
+    Optionally scoped to specific Department and Academic Year for lightning-fast targeted re-sync.
     """
-    background_tasks.add_task(_run_sync_in_background, session_id)
+    background_tasks.add_task(_run_sync_in_background, session_id, dept, year)
     return {
         "success": True,
         "sessionId": session_id,
-        "message": f"Synchronization for session {session_id} successfully started in the background."
+        "dept": dept or "ALL",
+        "year": year or "ALL",
+        "message": f"Synchronization for session {session_id} (Filter: {dept or 'ALL'}/{year or 'ALL'}) successfully started in the background."
     }
 
 @router.post("/sync-all")
@@ -4053,19 +4057,24 @@ def sync_session_codes(
     session_id: int,
     background_tasks: BackgroundTasks,
     force: bool = Query(False),
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
     Triggers automated background sync of 100% real verbatim code for all students in a session.
+    Optionally filters by Department and Year.
     """
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
     from backend.services.auto_code_sync_service import sync_contest_submission_codes_for_session
-    background_tasks.add_task(sync_contest_submission_codes_for_session, session_id, force_refresh=force)
+    background_tasks.add_task(sync_contest_submission_codes_for_session, session_id, force_refresh=force, target_dept=dept, target_year=year)
     return {
         "status": "queued",
         "session_id": session_id,
-        "message": f"100% Real Verbatim Code sync initiated for {session.contest_name or session.session_code}"
+        "dept": dept or "ALL",
+        "year": year or "ALL",
+        "message": f"100% Real Verbatim Code sync initiated for {session.contest_name or session.session_code} (Filter: {dept or 'ALL'}/{year or 'ALL'})"
     }

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageCircle, X, Send, Copy, Check, Edit3, Globe, Mail } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { FacultyActionItem } from '../services/intelligenceService';
+import { useAuth } from '../context/AuthContext';
 
 export interface WhatsAppTemplate {
   id: string;
@@ -119,6 +120,25 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
   student
 }) => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('practice_nudge');
+  const { user } = useAuth();
+  const staffName = useMemo(() => {
+    return (
+      user?.full_name?.trim() ||
+      user?.name?.trim() ||
+      user?.displayName?.trim() ||
+      user?.username?.trim() ||
+      'Faculty Mentor'
+    );
+  }, [user]);
+
+  const staffDesignation = useMemo(() => {
+    if (user?.designation?.trim()) return user.designation.trim();
+    const role = (user?.role || '').toLowerCase();
+    if (role.includes('admin')) return 'Director & Chief Administrator';
+    if (role.includes('hod')) return 'Head of Department';
+    return 'Faculty Mentor';
+  }, [user]);
+
   useEscapeKey(onClose, isOpen);
   const [lang, setLang] = useState<'en' | 'ta'>('en');
   const [editableMessage, setEditableMessage] = useState<string>('');
@@ -134,14 +154,19 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
 
     const baseText = lang === 'ta' ? (tpl.textTa || tpl.text) : tpl.text;
 
+    const signOff = lang === 'ta'
+      ? `\n\nஅன்புடன் / Regards,\n${staffName}\n${staffDesignation}, Nandha Engineering College`
+      : `\n\nRegards,\n${staffName}\n${staffDesignation}, Nandha Engineering College`;
+
     const populated = baseText
       .replace(/{name}/g, name)
       .replace(/{student_name}/g, name)
       .replace(/{solved}/g, solved)
-      .replace(/{next_milestone}/g, nextMilestone);
+      .replace(/{next_milestone}/g, nextMilestone)
+      .replace(/{staff_name}/g, staffName);
 
-    setEditableMessage(populated);
-  }, [student, selectedTemplateId, lang]);
+    setEditableMessage(`${populated}${signOff}`);
+  }, [student, selectedTemplateId, lang, staffName, staffDesignation]);
 
   // Auto-hide MobileBottomNav on mobile while WhatsApp modal is open
   useEffect(() => {
@@ -175,8 +200,50 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
 
   const handleSendEmail = () => {
     const tpl = WHATSAPP_TEMPLATES.find(t => t.id === selectedTemplateId) || WHATSAPP_TEMPLATES[0];
-    const subject = encodeURIComponent(`[Nandha Engineering College] LeetCode Mentoring: ${lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}`);
-    const body = encodeURIComponent(editableMessage);
+    const tplTitle = lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title;
+    const subject = encodeURIComponent(`[Nandha Engineering College] Placement & Mentoring Notice: ${student.student_name} (${student.reg_no}) - ${tplTitle}`);
+
+    const emailBodyText = lang === 'ta'
+      ? `${editableMessage}
+
+--------------------------------------------------
+மாணவர் விவரக் குறிப்பு (Student Dossier):
+• பதிவு எண் (Reg No): ${student.reg_no || 'N/A'}
+• துறை (Department): ${student.department_code || 'N/A'}
+• கல்வி ஆண்டு (Year): ${student.year_level || 'N/A'}
+• தீர்க்கப்பட்ட கணக்குகள் (Problems Solved): ${student.total_solved || 0}
+• கண்காணிப்பு தளம்: Nandha Intelligence Continuous Evaluation
+
+வேலைவாய்ப்புப் பயிற்சி மற்றும் துறை அளவிலான தரவரிசைக்காக தினசரி லீட்கோட் பயிற்சி மற்றும் ஞாயிறு Weekly Contest-ல் தவறாமல் பங்கேற்க அறிவுறுத்தப்படுகிறீர்கள்.
+
+அன்புடன் / Warm Regards,
+${staffName}
+${staffDesignation} | நந்தா பொறியியல் கல்லூரி (தன்னாட்சி)
+பயிற்சி மற்றும் வேலைவாய்ப்புப் பிரிவு (Training & Placement Cell)
+நந்தா பொறியியல் கல்லூரி (தன்னாட்சி) / Nandha Engineering College (Autonomous)
+ஈரோடு - 638 052, தமிழ்நாடு
+வலைத்தளம்: https://leetcode.nandhaengg.org`
+      : `${editableMessage}
+
+--------------------------------------------------
+STUDENT ACADEMIC & LEETCODE DOSSIER:
+• Register Number: ${student.reg_no || 'N/A'}
+• Department: ${student.department_code || 'N/A'}
+• Academic Year: ${student.year_level || 'N/A'}
+• Verified Solved Problems: ${student.total_solved || 0}
+• Institutional Monitoring: Nandha Intelligence Continuous Assessment
+
+Consistent problem-solving and weekly contest participation are integral components of our institutional placement readiness program.
+
+Warm Regards,
+${staffName}
+${staffDesignation} | Nandha Engineering College (Autonomous)
+Training & Placement Cell | Faculty Mentorship Team
+Nandha Engineering College (Autonomous)
+Erode - 638 052, Tamil Nadu
+Portal: https://leetcode.nandhaengg.org`;
+
+    const body = encodeURIComponent(emailBodyText);
     const targetEmail = studentEmail || '';
     window.open(`mailto:${targetEmail}?subject=${subject}&body=${body}`, '_blank');
   };
@@ -193,16 +260,16 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
       aria-modal="true"
       data-modal-active="true"
       style={{ zIndex: 99999999 }}
-      className="fixed inset-0 z-[99999999] flex items-stretch sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
+      className="fixed inset-0 z-[99999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 dark:bg-black/90 backdrop-blur-md animate-fade-in"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="relative w-full h-[100dvh] sm:h-auto max-w-xl sm:max-h-[92vh] bg-white dark:bg-navy-950 rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col">
-        
-        {/* Mobile Pull Indicator */}
-        <div className="w-10 h-1.5 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
+      <div className="relative w-full max-w-lg sm:max-w-xl max-h-[88vh] sm:max-h-[90vh] bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl border-t sm:border border-slate-200/90 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col animate-slide-up sm:animate-scale-in">
+
+        {/* Mobile Pull Handle */}
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
 
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between shrink-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent">
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between shrink-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
               <MessageCircle size={22} className="stroke-[2.5]" />
@@ -232,7 +299,7 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
         </div>
 
         {/* Student Quick Pill */}
-        <div className="p-3 sm:p-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 bg-slate-50 dark:bg-navy-900 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0">
           <div className="min-w-0">
             <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">
               {student.student_name}
@@ -250,7 +317,7 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
         </div>
 
         {/* Scrollable Template List & Editor */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 custom-scrollbar">
+        <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3.5 flex-1 custom-scrollbar">
           {/* Template Selection Pills + Language Switcher */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -337,7 +404,7 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
             <textarea
               value={editableMessage}
               onChange={(e) => setEditableMessage(e.target.value)}
-              rows={4}
+              rows={3}
               className="w-full p-3 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-xs sm:text-sm text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed shadow-2xs"
               placeholder="Type your custom WhatsApp message here..."
             />
@@ -348,7 +415,7 @@ export const StudentWhatsAppModal: React.FC<StudentWhatsAppModalProps> = ({
         </div>
 
         {/* Modal Footer with Actions */}
-        <div className="p-3.5 sm:p-4 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] border-t border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/80 flex items-center justify-between gap-3 shrink-0">
+        <div className="p-3 sm:p-4 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] border-t border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 flex items-center justify-between gap-2 shrink-0">
           <button
             type="button"
             onClick={onClose}

@@ -95,8 +95,19 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const contestAttendanceRate = assignedCount > 0 ? Math.round((recentContestAttendedCount / assignedCount) * 100) : 0;
 
   return createPortal(
-    <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fade-in p-0 overflow-x-hidden max-w-full" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-xl max-w-full h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden overflow-x-hidden flex flex-col rounded-t-3xl sm:rounded-none">
+    <div
+      role="dialog"
+      aria-modal="true"
+      data-drawer="staff-detail"
+      className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fade-in p-0 overflow-x-hidden max-w-full no-drawer-swipe touch-pan-y overscroll-x-none"
+      style={{ touchAction: 'pan-y', overscrollBehaviorX: 'none' }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        role="document"
+        className="w-full max-w-xl max-w-full h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden overflow-x-hidden flex flex-col rounded-t-3xl sm:rounded-none no-drawer-swipe touch-pan-y overscroll-x-none"
+        style={{ touchAction: 'pan-y', overscrollBehaviorX: 'none' }}
+      >
 
         {/* Hero Header Profile Section */}
         <div className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-brand-900 text-white overflow-hidden shrink-0 border-b border-white/10 rounded-t-3xl sm:rounded-none">

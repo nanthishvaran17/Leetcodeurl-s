@@ -991,52 +991,63 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 {/* Header: Dept Name & Code */}
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <span className="px-2.5 py-0.5 rounded-lg text-xs font-black font-mono bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs">
+                    <span className="px-2.5 py-0.5 rounded-lg text-xs font-black font-mono bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 shadow-2xs">
                       {d.code}
                     </span>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-                      {d.completion_rate || 0}% Complete
-                    </span>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{d.completion_rate || 0}% Complete</span>
+                    </div>
                   </div>
 
-                  <h3 className="font-display font-black text-sm sm:text-base text-slate-900 dark:text-white mt-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  <h3 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white mt-2.5 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {d.name}
                   </h3>
 
-                  {/* HOD Tag */}
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-bold bg-white dark:bg-navy-950 px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                    <GraduationCap className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                    <span className="truncate">{resolveDepartmentHODName(d)}</span>
+                  {/* Executive HOD Designation Pill */}
+                  <div className="mt-2.5 inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-50/90 via-purple-50/50 to-indigo-50/30 dark:from-navy-950 dark:via-indigo-950/60 dark:to-navy-950 border border-indigo-100/90 dark:border-indigo-900/50 shadow-2xs max-w-full">
+                    <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                      <GraduationCap className="w-3 h-3" />
+                    </div>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-[10px] uppercase font-black tracking-wider text-indigo-700 dark:text-indigo-400 shrink-0">
+                        HOD
+                      </span>
+                      <span className="text-slate-300 dark:text-navy-700 font-bold select-none">•</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-100 truncate">
+                        {resolveDepartmentHODName(d)}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/60 dark:border-navy-800 text-center">
-                  <div>
-                    <div className="text-[9.5px] font-extrabold text-slate-400 uppercase">Students</div>
-                    <div className="font-mono font-black text-xs sm:text-sm text-slate-800 dark:text-slate-200">{d.student_count}</div>
+                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200/70 dark:border-navy-800 text-center">
+                  <div className="bg-white/60 dark:bg-navy-950/60 rounded-xl py-1.5 px-1 border border-slate-100 dark:border-navy-800/80">
+                    <div className="text-[9.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Students</div>
+                    <div className="font-mono font-black text-sm sm:text-base text-slate-900 dark:text-white mt-0.5">{d.student_count}</div>
                   </div>
-                  <div>
-                    <div className="text-[9.5px] font-extrabold text-slate-400 uppercase">Staff</div>
-                    <div className="font-mono font-black text-xs sm:text-sm text-indigo-600 dark:text-indigo-400">{d.faculty_count || '—'}</div>
+                  <div className="bg-white/60 dark:bg-navy-950/60 rounded-xl py-1.5 px-1 border border-slate-100 dark:border-navy-800/80">
+                    <div className="text-[9.5px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">Staff</div>
+                    <div className="font-mono font-black text-sm sm:text-base text-indigo-600 dark:text-indigo-400 mt-0.5">{d.faculty_count || '—'}</div>
                   </div>
-                  <div>
-                    <div className="text-[9.5px] font-extrabold text-slate-400 uppercase">Solved</div>
-                    <div className="font-mono font-black text-xs sm:text-sm text-brand-600 dark:text-brand-400">{d.total_solved ? d.total_solved.toLocaleString() : '—'}</div>
+                  <div className="bg-white/60 dark:bg-navy-950/60 rounded-xl py-1.5 px-1 border border-slate-100 dark:border-navy-800/80">
+                    <div className="text-[9.5px] font-black text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">Solved</div>
+                    <div className="font-mono font-black text-sm sm:text-base text-emerald-600 dark:text-emerald-400 mt-0.5">{d.total_solved ? d.total_solved.toLocaleString() : '—'}</div>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="w-full bg-slate-200 dark:bg-navy-950 rounded-full h-1.5 overflow-hidden">
+                <div className="space-y-1.5 pt-1">
+                  <div className="w-full bg-slate-200/80 dark:bg-navy-950 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-1.5 rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, d.completion_rate || 0)}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline">
+                  <div className="flex items-center justify-between text-[11px] font-black text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
                     <span>Inspect Staff Matrix</span>
-                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform" />
                   </div>
                 </div>
               </div>

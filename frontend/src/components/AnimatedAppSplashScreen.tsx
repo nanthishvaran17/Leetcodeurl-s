@@ -15,11 +15,22 @@ interface AnimatedAppSplashScreenProps {
  */
 export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = ({
   onComplete,
-  minDurationMs = 1150
+  minDurationMs = 1500
 }) => {
   const [statusText, setStatusText] = useState('Connecting to Campus Roster...');
   const [progress, setProgress] = useState(25);
   const [isReadyToExit, setIsReadyToExit] = useState(false);
+  const isExitingRef = useRef(false);
+
+  const triggerExit = () => {
+    if (isExitingRef.current) return;
+    isExitingRef.current = true;
+    setIsReadyToExit(true);
+    triggerHaptic('light');
+    if (onComplete) {
+      setTimeout(onComplete, 380);
+    }
+  };
 
   useEffect(() => {
     // 1. Initial micro-haptic upon app mount
@@ -32,29 +43,23 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
     const t1 = setTimeout(() => {
       setStatusText('Syncing Contest Forensics...');
       setProgress(72);
-    }, 420);
+    }, 450);
 
     const t2 = setTimeout(() => {
       setStatusText('Workspace Ready');
       setProgress(100);
       triggerHaptic('selection');
-    }, 850);
+    }, 1050);
 
+    // Ensure the logo completes its full 360-degree rotation (1350ms) plus a brief 150ms settled rest
     const tExit = setTimeout(() => {
-      setIsReadyToExit(true);
-      triggerHaptic('light');
-      if (onComplete) {
-        setTimeout(onComplete, 350);
-      }
-    }, minDurationMs);
+      triggerExit();
+    }, Math.max(minDurationMs, 1500));
 
     // Hard fallback: never allow splash screen to trap user touches if animation or timer lags
     const hardSafety = setTimeout(() => {
-      setIsReadyToExit(true);
-      if (onComplete) {
-        onComplete();
-      }
-    }, Math.max(minDurationMs + 450, 1600));
+      triggerExit();
+    }, 2500);
 
     return () => {
       clearTimeout(t1);
@@ -131,11 +136,12 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
                 <motion.img
                   src="/round_logo.png"
                   alt="Nandha 25th Silver Jubilee Emblem"
+                  initial={{ rotate: 0 }}
                   animate={{ rotate: 360 }}
                   transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear"
+                    duration: 1.35,
+                    ease: [0.22, 1, 0.36, 1], // Smooth organic deceleration that finishes upright
+                    repeat: 0
                   }}
                   className="w-full h-full object-contain relative z-10 drop-shadow-[0_4px_10px_rgba(0,43,73,0.15)] rounded-full"
                   onError={(e: any) => {

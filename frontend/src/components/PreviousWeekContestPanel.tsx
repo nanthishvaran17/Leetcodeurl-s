@@ -772,11 +772,23 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             }
           }
         } catch (e) {}
-        await api.post(`/contests/sessions/${latestSessionId}/sync`);
-        // Automatic multi-pass background refresh (+1s, +3s, +5s) so UI updates without manual clicks
-        setTimeout(() => fetchPreviousWeekData(false, true), 1000);
-        setTimeout(() => fetchPreviousWeekData(false, true), 3000);
-        setTimeout(() => fetchPreviousWeekData(false, true), 5000);
+        const syncParams: Record<string, string> = {};
+        if (selectedDeptFilter && selectedDeptFilter !== 'ALL') {
+          syncParams.dept = selectedDeptFilter;
+        }
+        if (selectedYearFilter && selectedYearFilter !== 'ALL') {
+          syncParams.year = selectedYearFilter;
+        }
+
+        await api.post(`/contests/sessions/${latestSessionId}/sync`, null, { params: syncParams });
+        // Trigger automated real code and solve timing sync for this filtered slice
+        api.post(`/contests/sessions/${latestSessionId}/sync-codes`, null, { params: syncParams }).catch(() => {});
+        // Fast targeted polling for filtered slice (3-12s) or progressive polling for all
+        const isTargeted = Boolean(syncParams.dept || syncParams.year);
+        const pollDelays = isTargeted ? [1500, 3500, 7000, 12000] : [2000, 5000, 10000, 20000, 35000, 48000];
+        pollDelays.forEach(delay => {
+          setTimeout(() => fetchPreviousWeekData(false, true), delay);
+        });
       }
 
       // 2. Stream Summary First (Ultra-fast ~20ms response) to clear loading state immediately
@@ -1459,26 +1471,26 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-            <span>{syncing ? 'Re-Syncing Live...' : 'Force Live Re-Sync'}</span>
+            <span>
+              {syncing
+                ? (selectedDeptFilter !== 'ALL' && selectedYearFilter !== 'ALL'
+                    ? `Re-Syncing ${selectedDeptFilter} ${selectedYearFilter} Yr...`
+                    : selectedDeptFilter !== 'ALL'
+                    ? `Re-Syncing ${selectedDeptFilter} (All Years)...`
+                    : selectedYearFilter !== 'ALL'
+                    ? `Re-Syncing All Depts (${selectedYearFilter} Yr)...`
+                    : 'Re-Syncing Live...')
+                : (selectedDeptFilter !== 'ALL' && selectedYearFilter !== 'ALL'
+                    ? `Force Sync (${selectedDeptFilter} • ${selectedYearFilter} Yr)`
+                    : selectedDeptFilter !== 'ALL'
+                    ? `Force Sync (${selectedDeptFilter} • All Years)`
+                    : selectedYearFilter !== 'ALL'
+                    ? `Force Sync (All Depts • ${selectedYearFilter} Yr)`
+                    : 'Force Live Re-Sync')}
+            </span>
           </button>
         </div>
       </div>
-
-      {/* Disconnection Notice if completely offline */}
-      {wsStatus !== 'LIVE' && (
-        <div className="p-2 sm:p-3.5 my-1.5 sm:my-2 rounded-xl sm:rounded-2xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-700 dark:text-indigo-300 text-xs font-bold flex items-center justify-between shadow-2xs gap-2">
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 animate-ping" />
-            <span className="text-[10px] sm:text-xs truncate">Auto-Sync active • {lastSyncAt || 'Live'}</span>
-          </div>
-          <button
-            onClick={() => fetchPreviousWeekData(false, true)}
-            className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[10.5px] sm:text-xs font-black hover:bg-indigo-500 transition cursor-pointer shadow-xs active:scale-95 shrink-0"
-          >
-            Sync
-          </button>
-        </div>
-      )}
 
       {error && (
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
@@ -2551,7 +2563,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             {/* Page Size Selector */}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[10.5px] sm:text-[11px] font-bold">
               <span className="text-[10px] text-slate-500 dark:text-slate-400 px-1 font-mono">Show:</span>
-              {[10, 25, 50, 100].map((sz) => (
+              {[10, 20, 50, 100, 200].map((sz) => (
                 <button
                   key={sz}
                   type="button"

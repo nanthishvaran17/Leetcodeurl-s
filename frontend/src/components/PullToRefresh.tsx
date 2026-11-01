@@ -258,7 +258,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const rotation = Math.min((pullDistance / PULL_THRESHOLD) * 360, 360);
 
   return (
-    <div className="relative w-full min-h-full flex-1 flex flex-col">
+    <div className="relative w-full max-w-full min-w-0 min-h-full flex-1 flex flex-col overflow-x-clip box-border">
       {/* Floating Refresh Indicator Capsule (Smooth Spring Below Top Navbar) */}
       {(pullDistance > 6 || isRefreshing) && (
         <div
@@ -318,7 +318,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
 
       {/* Page Content with Native Elastic Pull Feedback on Touch */}
       <div
-        className="w-full min-h-full flex-1 flex flex-col will-change-transform"
+        className="w-full max-w-full min-w-0 min-h-full flex-1 flex flex-col will-change-transform overflow-x-clip box-border"
         style={{
           transform: (pullDistance > 0 || isRefreshing)
             ? `translate3d(0, ${isRefreshing ? 44 : Math.round(pullDistance * 0.42)}px, 0)`

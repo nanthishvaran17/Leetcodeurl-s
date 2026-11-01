@@ -19,32 +19,39 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   suffix = '',
   className = ''
 }) => {
-  // If string contains non-numeric characters like %, $, etc.
-  if (typeof value === 'string') {
-    // Extract numerical part
+  let targetNum = 0;
+  let isNumeric = true;
+  let inferredPrefix = '';
+  let inferredSuffix = '';
+
+  if (typeof value === 'number') {
+    targetNum = isNaN(value) ? 0 : value;
+  } else if (typeof value === 'string') {
     const cleanNum = parseFloat(value.replace(/[^0-9.-]+/g, ''));
-    if (!isNaN(cleanNum)) {
-      const hasPercent = value.includes('%');
-      const hasPlus = value.startsWith('+');
-      const animated = useCountUp(cleanNum, duration, decimals);
-      
-      const formatted = animated.toLocaleString();
-      const finalPrefix = prefix || (hasPlus ? '+' : '');
-      const finalSuffix = suffix || (hasPercent ? '%' : '');
-      
-      return (
-        <span className={className}>
-          {finalPrefix}{formatted}{finalSuffix}
-        </span>
-      );
+    if (isNaN(cleanNum)) {
+      isNumeric = false;
+    } else {
+      targetNum = cleanNum;
+      if (value.startsWith('+')) inferredPrefix = '+';
+      if (value.includes('%')) inferredSuffix = '%';
     }
-    return <span className={className}>{value}</span>;
+  } else {
+    isNumeric = false;
   }
 
-  const animated = useCountUp(value, duration, decimals);
+  // Hook called unconditionally at the top on every render
+  const animated = useCountUp(targetNum, duration, decimals);
+
+  if (!isNumeric) {
+    return <span className={className}>{String(value ?? '')}</span>;
+  }
+
+  const finalPrefix = prefix || inferredPrefix;
+  const finalSuffix = suffix || inferredSuffix;
+
   return (
     <span className={className}>
-      {prefix}{animated.toLocaleString()}{suffix}
+      {finalPrefix}{animated.toLocaleString()}{finalSuffix}
     </span>
   );
 };

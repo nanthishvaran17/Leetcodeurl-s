@@ -11,7 +11,8 @@ import json
 from backend.database import get_db
 from backend.models import (
     Student, StudentStatSnapshot, StudentContestSnapshot, Department, User, LeetCodeProfileStats,
-    LeetCodeContestRatingHistory, WeeklyPublicResult, WeeklyVirtualResult, LeetCodeActivity
+    LeetCodeContestRatingHistory, WeeklyPublicResult, WeeklyVirtualResult, LeetCodeActivity,
+    PreviousWeekParticipationRecord, LeetCodeLanguageStats, LeetCodeSubmission, LeetCodeBadge
 )
 from backend.security import get_current_user_optional
 from backend.services.authorization_service import apply_role_based_student_filter
@@ -45,13 +46,16 @@ def resolve_date_range(period: str, custom_start: Optional[str] = None, custom_e
         first_day_this_month = now_ist.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_dt = first_day_this_month - datetime.timedelta(microseconds=1)
         start_dt = end_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    elif p in ("7d", "last_7_days", "7_days"):
+        start_dt = now_ist - datetime.timedelta(days=7)
     elif p in ("30d", "last_30_days", "30_days"):
         start_dt = now_ist - datetime.timedelta(days=30)
     elif p in ("90d", "last_90_days", "90_days"):
         start_dt = now_ist - datetime.timedelta(days=90)
-    elif p in ("academic_year", "yearly", "year"):
-        start_year = now_ist.year if now_ist.month >= 6 else now_ist.year - 1
-        start_dt = datetime.datetime(start_year, 6, 1, tzinfo=IST_TZ)
+    elif p in ("365d", "1y", "yearly", "year", "academic_year"):
+        start_dt = now_ist - datetime.timedelta(days=365)
+    elif p in ("all", "all_time", "lifetime"):
+        start_dt = now_ist - datetime.timedelta(days=365 * 3)
     elif p == "custom" and custom_start and custom_end:
         try:
             start_dt = datetime.datetime.fromisoformat(custom_start.replace('Z', '+00:00')).astimezone(IST_TZ)
@@ -1095,7 +1099,7 @@ def get_contest_aggregate(
             or_(LeetCodeContestRatingHistory.attended == True, LeetCodeContestRatingHistory.problems_solved > 0)
         ).all()
 
-        if not hist_rows:
+        if not hist_rows or any(h.contest_rank is None and h.rating_after is not None for h in hist_rows):
             student_obj = db.query(Student).filter(Student.id == student_id).first()
             if student_obj and student_obj.username:
                 try:
@@ -1121,6 +1125,12 @@ def get_contest_aggregate(
                                 rec.contest_start_time = c_date_dt
                             except Exception:
                                 pass
+                        if not getattr(rec, "contest_start_time", None):
+                            try:
+                                from backend.services.canonical_contest_engine import derive_contest_datetime
+                                rec.contest_start_time = derive_contest_datetime(c_name)
+                            except Exception:
+                                pass
                         rec.problems_solved = p.get("problems_solved", 0)
                         rec.total_problems = p.get("total_problems", 4)
                         if p.get("contest_rank") is not None:
@@ -1136,16 +1146,9 @@ def get_contest_aggregate(
                     pass
 
         if hist_rows:
-            import re
-            def _sort_contest_key(h):
-                if h.contest_start_time:
-                    return (0, h.contest_start_time.timestamp())
-                c_name = h.contest_name or ""
-                m = re.search(r'\d+', c_name)
-                num = int(m.group(0)) if m else 0
-                return (1, num)
-
-            hist_rows.sort(key=_sort_contest_key)
+            # Sorted chronologically via canonical contest timestamp
+            from backend.services.canonical_contest_engine import get_contest_sort_timestamp, derive_contest_datetime
+            hist_rows.sort(key=get_contest_sort_timestamp)
 
             total_c = len(hist_rows)
             ranks = [h.contest_rank for h in hist_rows if h.contest_rank and h.contest_rank > 0]
@@ -1169,8 +1172,24 @@ def get_contest_aggregate(
             elif latest_rating:
                 current_r = latest_rating
 
+            # Load exact PreviousWeekParticipationRecord problem-wise breakdown for this student
+            pw_records = db.query(PreviousWeekParticipationRecord).filter(
+                PreviousWeekParticipationRecord.student_id == student_id
+            ).all()
+            pw_map = {}
+            for p in pw_records:
+                if p.contest_title:
+                    pw_map[p.contest_title.lower().strip()] = p
+                if p.contest_slug:
+                    pw_map[p.contest_slug.lower().strip()] = p
+
             contests_list = []
             prev_rating = None
+            tot_score = 0
+            tot_easy = 0
+            tot_med = 0
+            tot_hard = 0
+
             for i, h in enumerate(hist_rows):
                 r_after = round(h.rating_after, 1) if h.rating_after else None
                 delta = None
@@ -1179,8 +1198,9 @@ def get_contest_aggregate(
                 if r_after is not None:
                     prev_rating = r_after
 
-                c_date = h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else (h.created_at.strftime("%Y-%m-%d") if h.created_at else None)
-                c_date_formatted = h.contest_start_time.strftime("%b %d, %Y") if h.contest_start_time else (h.created_at.strftime("%b %d, %Y") if h.created_at else None)
+                c_dt = h.contest_start_time or derive_contest_datetime(h.contest_name) or h.created_at
+                c_date = c_dt.strftime("%Y-%m-%d") if c_dt else None
+                c_date_formatted = c_dt.strftime("%b %d, %Y") if c_dt else None
 
                 finish_str = None
                 if h.finish_time_seconds:
@@ -1196,30 +1216,84 @@ def get_contest_aggregate(
                 c_name = h.contest_name or f"Contest {i+1}"
                 c_type = "Biweekly" if "Biweekly" in c_name else "Weekly"
 
+                # Accurate problem solve breakdown & contest score
+                pw = pw_map.get(c_name.lower().strip())
+                solved = h.problems_solved or 0
+                has_spec = pw and ((pw.q1 or pw.q2 or pw.q3 or pw.q4) or (pw.official_score and pw.official_score > 0))
+                if has_spec:
+                    q1 = 1 if pw.q1 else 0
+                    q2 = 1 if pw.q2 else 0
+                    q3 = 1 if pw.q3 else 0
+                    q4 = 1 if pw.q4 else 0
+                    score = pw.official_score if pw.official_score is not None else (q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6)
+                else:
+                    q1 = 1 if solved >= 1 else 0
+                    q2 = 1 if solved >= 2 else 0
+                    q3 = 1 if solved >= 3 else 0
+                    q4 = 1 if solved >= 4 else 0
+                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
+
+                easy_s = q1
+                med_s = q2 + q3
+                hard_s = q4
+
+                tot_score += score
+                tot_easy += easy_s
+                tot_med += med_s
+                tot_hard += hard_s
+
                 contests_list.append({
                     "id": h.id,
                     "contest_name": c_name,
                     "contest_type": c_type,
                     "date": c_date,
                     "formatted_date": c_date_formatted,
-                    "problems_solved": h.problems_solved or 0,
+                    "problems_solved": solved,
                     "total_problems": h.total_problems or 4,
                     "contest_rank": h.contest_rank,
                     "rating_after": r_after,
                     "rating_change": delta,
                     "finish_time": finish_str,
                     "attended": bool(h.attended),
-                    "is_best_rank": bool(best_r and h.contest_rank and h.contest_rank == best_r)
+                    "is_best_rank": bool(best_r and h.contest_rank and h.contest_rank == best_r),
+                    "score": score,
+                    "q1": q1,
+                    "q2": q2,
+                    "q3": q3,
+                    "q4": q4,
+                    "easy_solved": easy_s,
+                    "medium_solved": med_s,
+                    "hard_solved": hard_s,
                 })
 
-            trend_list = [
-                {
-                    "date": h.contest_name or (h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else f"Contest {i+1}"),
-                    "avg_rating": round(h.rating_after, 1) if h.rating_after else None,
-                    "avg_rank": h.contest_rank
-                }
-                for i, h in enumerate(hist_rows)
-            ]
+            trend_list = []
+            prev_rating = None
+            for i, h in enumerate(hist_rows):
+                r_after = round(h.rating_after, 1) if h.rating_after else None
+                cur_rating = r_after if r_after is not None else prev_rating
+                if r_after is not None:
+                    prev_rating = r_after
+
+                c_name = h.contest_name or f"Contest {i+1}"
+                short_code = (
+                    c_name.replace("Weekly Contest ", "W")
+                    .replace("Biweekly Contest ", "BW")
+                    .replace("Weekly ", "W")
+                    .replace("Biweekly ", "BW")
+                    .strip()
+                )
+                c_dt = h.contest_start_time or derive_contest_datetime(h.contest_name) or h.created_at
+                c_date_fmt = c_dt.strftime("%b %d, %Y") if c_dt else None
+
+                trend_list.append({
+                    "date": c_name,
+                    "contest_name": c_name,
+                    "short_name": short_code,
+                    "formatted_date": c_date_fmt,
+                    "avg_rating": cur_rating,
+                    "avg_rank": h.contest_rank,
+                    "problems_solved": h.problems_solved or 0
+                })
 
             return {
                 "summary": {
@@ -1231,6 +1305,14 @@ def get_contest_aggregate(
                     "avg_rank": avg_r,
                     "problems_solved": tot_p,
                     "avg_solved": avg_s,
+                    "total_score": tot_score,
+                    "avg_score": round(tot_score / total_c, 1) if total_c > 0 else 0,
+                    "total_easy": tot_easy,
+                    "avg_easy": round(tot_easy / total_c, 1) if total_c > 0 else 0,
+                    "total_medium": tot_med,
+                    "avg_medium": round(tot_med / total_c, 1) if total_c > 0 else 0,
+                    "total_hard": tot_hard,
+                    "avg_hard": round(tot_hard / total_c, 1) if total_c > 0 else 0,
                 },
                 "trend": trend_list,
                 "contests": list(reversed(contests_list)),
@@ -1290,7 +1372,9 @@ def get_contest_aggregate(
         hist_rows = db.query(LeetCodeContestRatingHistory).filter(
             LeetCodeContestRatingHistory.student_id == student_id,
             or_(LeetCodeContestRatingHistory.attended == True, LeetCodeContestRatingHistory.problems_solved > 0)
-        ).order_by(LeetCodeContestRatingHistory.id.asc()).all()
+        ).all()
+        from backend.services.canonical_contest_engine import get_contest_sort_timestamp, derive_contest_datetime
+        hist_rows.sort(key=get_contest_sort_timestamp)
 
         if hist_rows:
             total_c = len(hist_rows)
@@ -1314,8 +1398,24 @@ def get_contest_aggregate(
             elif latest_rating:
                 current_r = latest_rating
 
+            # Load exact PreviousWeekParticipationRecord problem-wise breakdown for this student
+            pw_records = db.query(PreviousWeekParticipationRecord).filter(
+                PreviousWeekParticipationRecord.student_id == student_id
+            ).all()
+            pw_map = {}
+            for p in pw_records:
+                if p.contest_title:
+                    pw_map[p.contest_title.lower().strip()] = p
+                if p.contest_slug:
+                    pw_map[p.contest_slug.lower().strip()] = p
+
             contests_list = []
             prev_rating = None
+            tot_score = 0
+            tot_easy = 0
+            tot_med = 0
+            tot_hard = 0
+
             for i, h in enumerate(hist_rows):
                 r_after = round(h.rating_after, 1) if h.rating_after else None
                 delta = None
@@ -1324,8 +1424,9 @@ def get_contest_aggregate(
                 if r_after is not None:
                     prev_rating = r_after
 
-                c_date = h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else (h.created_at.strftime("%Y-%m-%d") if h.created_at else None)
-                c_date_formatted = h.contest_start_time.strftime("%b %d, %Y") if h.contest_start_time else (h.created_at.strftime("%b %d, %Y") if h.created_at else None)
+                c_dt = h.contest_start_time or derive_contest_datetime(h.contest_name) or h.created_at
+                c_date = c_dt.strftime("%Y-%m-%d") if c_dt else None
+                c_date_formatted = c_dt.strftime("%b %d, %Y") if c_dt else None
 
                 finish_str = None
                 if h.finish_time_seconds:
@@ -1341,30 +1442,84 @@ def get_contest_aggregate(
                 c_name = h.contest_name or f"Contest {i+1}"
                 c_type = "Biweekly" if "Biweekly" in c_name else "Weekly"
 
+                # Accurate problem solve breakdown & contest score
+                pw = pw_map.get(c_name.lower().strip())
+                solved = h.problems_solved or 0
+                has_spec = pw and ((pw.q1 or pw.q2 or pw.q3 or pw.q4) or (pw.official_score and pw.official_score > 0))
+                if has_spec:
+                    q1 = 1 if pw.q1 else 0
+                    q2 = 1 if pw.q2 else 0
+                    q3 = 1 if pw.q3 else 0
+                    q4 = 1 if pw.q4 else 0
+                    score = pw.official_score if pw.official_score is not None else (q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6)
+                else:
+                    q1 = 1 if solved >= 1 else 0
+                    q2 = 1 if solved >= 2 else 0
+                    q3 = 1 if solved >= 3 else 0
+                    q4 = 1 if solved >= 4 else 0
+                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
+
+                easy_s = q1
+                med_s = q2 + q3
+                hard_s = q4
+
+                tot_score += score
+                tot_easy += easy_s
+                tot_med += med_s
+                tot_hard += hard_s
+
                 contests_list.append({
                     "id": h.id,
                     "contest_name": c_name,
                     "contest_type": c_type,
                     "date": c_date,
                     "formatted_date": c_date_formatted,
-                    "problems_solved": h.problems_solved or 0,
+                    "problems_solved": solved,
                     "total_problems": h.total_problems or 4,
                     "contest_rank": h.contest_rank,
                     "rating_after": r_after,
                     "rating_change": delta,
                     "finish_time": finish_str,
                     "attended": bool(h.attended),
-                    "is_best_rank": bool(best_r and h.contest_rank and h.contest_rank == best_r)
+                    "is_best_rank": bool(best_r and h.contest_rank and h.contest_rank == best_r),
+                    "score": score,
+                    "q1": q1,
+                    "q2": q2,
+                    "q3": q3,
+                    "q4": q4,
+                    "easy_solved": easy_s,
+                    "medium_solved": med_s,
+                    "hard_solved": hard_s,
                 })
 
-            trend_list = [
-                {
-                    "date": h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else f"Contest {i+1}",
-                    "avg_rating": round(h.rating_after, 1) if h.rating_after else None,
-                    "avg_rank": h.contest_rank
-                }
-                for i, h in enumerate(hist_rows)
-            ]
+            trend_list = []
+            prev_rating = None
+            for i, h in enumerate(hist_rows):
+                r_after = round(h.rating_after, 1) if h.rating_after else None
+                cur_rating = r_after if r_after is not None else prev_rating
+                if r_after is not None:
+                    prev_rating = r_after
+
+                c_name = h.contest_name or f"Contest {i+1}"
+                short_code = (
+                    c_name.replace("Weekly Contest ", "W")
+                    .replace("Biweekly Contest ", "BW")
+                    .replace("Weekly ", "W")
+                    .replace("Biweekly ", "BW")
+                    .strip()
+                )
+                c_dt = h.contest_start_time or derive_contest_datetime(h.contest_name) or h.created_at
+                c_date_fmt = c_dt.strftime("%b %d, %Y") if c_dt else None
+
+                trend_list.append({
+                    "date": c_name,
+                    "contest_name": c_name,
+                    "short_name": short_code,
+                    "formatted_date": c_date_fmt,
+                    "avg_rating": cur_rating,
+                    "avg_rank": h.contest_rank,
+                    "problems_solved": h.problems_solved or 0
+                })
 
             return {
                 "summary": {
@@ -1376,6 +1531,14 @@ def get_contest_aggregate(
                     "avg_rank": avg_r,
                     "problems_solved": tot_p,
                     "avg_solved": avg_s,
+                    "total_score": tot_score,
+                    "avg_score": round(tot_score / total_c, 1) if total_c > 0 else 0,
+                    "total_easy": tot_easy,
+                    "avg_easy": round(tot_easy / total_c, 1) if total_c > 0 else 0,
+                    "total_medium": tot_med,
+                    "avg_medium": round(tot_med / total_c, 1) if total_c > 0 else 0,
+                    "total_hard": tot_hard,
+                    "avg_hard": round(tot_hard / total_c, 1) if total_c > 0 else 0,
                 },
                 "trend": trend_list,
                 "contests": list(reversed(contests_list)),
@@ -1563,13 +1726,62 @@ def get_activity_aggregate(
             today_str = datetime.datetime.now().strftime("%Y-%m-%d")
             daily_trend = [{"date": today_str, "submissions": tot_sub, "active_students": 1}]
 
+        # Language breakdown
+        lang_rows = db.query(LeetCodeLanguageStats).filter(
+            LeetCodeLanguageStats.student_id == student_id
+        ).order_by(LeetCodeLanguageStats.problems_solved.desc()).all()
+        languages = [{"language": l.language_name, "solved": l.problems_solved} for l in lang_rows]
+
+        # Streaks
+        current_streak = getattr(act_row, "current_streak", 0) or 0
+        longest_streak = getattr(act_row, "longest_streak", 0) or 0
+        total_active_days = getattr(act_row, "total_active_days", 0) or 0
+        if not current_streak and st_stats:
+            current_streak = getattr(st_stats, "max_streak", 0) or 0
+            longest_streak = getattr(st_stats, "max_streak", 0) or 0
+        if not total_active_days and st_stats:
+            total_active_days = getattr(st_stats, "active_days", 0) or 0
+
+        # Recent submissions
+        sub_rows = db.query(LeetCodeSubmission).filter(
+            LeetCodeSubmission.student_id == student_id
+        ).order_by(LeetCodeSubmission.submission_timestamp.desc()).limit(15).all()
+        recent_submissions = [{
+            "id": s.id,
+            "title": s.title,
+            "title_slug": s.title_slug,
+            "lang": s.lang,
+            "status": s.status_display or "Accepted",
+            "runtime": s.runtime_display,
+            "memory": s.memory_display,
+            "timestamp": s.submission_timestamp.strftime("%Y-%m-%d %H:%M:%S") if s.submission_timestamp else None,
+            "relative_time": s.submission_timestamp.strftime("%b %d, %I:%M %p") if s.submission_timestamp else None
+        } for s in sub_rows]
+
+        # Badges
+        badge_rows = db.query(LeetCodeBadge).filter(
+            LeetCodeBadge.student_id == student_id
+        ).order_by(LeetCodeBadge.awarded_at.desc()).limit(10).all()
+        badges = [{
+            "id": b.id,
+            "name": b.display_name,
+            "icon_url": b.icon_url,
+            "awarded_at": b.awarded_at.strftime("%Y-%m-%d") if b.awarded_at else None
+        } for b in badge_rows]
+
         return {
             "summary": {
                 "total_submissions": tot_sub,
                 "active_students": 1 if tot_solved > 0 else 0,
                 "active_rate": 100.0 if tot_solved > 0 else 0.0,
+                "current_streak": current_streak,
+                "longest_streak": longest_streak,
+                "total_active_days": total_active_days,
             },
             "trend": daily_trend,
+            "languages": languages,
+            "recent_submissions": recent_submissions,
+            "badges": badges,
             "most_active": [
                 {"student_id": st.id, "name": st.name, "reg_no": st.reg_no, "solved": tot_solved}
             ] if st else []

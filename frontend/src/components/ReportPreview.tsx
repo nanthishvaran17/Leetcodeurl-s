@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock, Share2, MoreHorizontal, ChevronUp } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock, Share2, MoreHorizontal, ChevronUp, ChevronDown, Check, Copy, Trophy } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 import { SwipeHandle } from './SwipeHandle';
@@ -795,6 +795,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharingWhatsApp, setIsSharingWhatsApp] = useState(false);
+  const [shareFormat, setShareFormat] = useState<'summary' | 'solvers' | 'leaderboard' | 'absentees'>('summary');
+  const [copiedSummary, setCopiedSummary] = useState(false);
+  const [showFormatPicker, setShowFormatPicker] = useState(false);
 
   // Unified download metadata resolver for Excel, PDF, and Word documents
   const getReportDownloadMeta = (format: string = 'excel') => {
@@ -1010,14 +1013,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 leading-tight shadow-2xs">UNKNOWN</span>;
   };
 
-  const handleShareWhatsApp = async (mode: 'message' | 'file' = 'message') => {
-    if (isSharingWhatsApp) return;
-    setIsSharingWhatsApp(true);
-
+  // =========================================================================
+  // UNIVERSAL SHARE TEXT BUILDER (ALL 17 INSTITUTIONAL REPORTS & 4 FORMATS)
+  // =========================================================================
+  const generateShareText = (targetFormat: 'summary' | 'solvers' | 'leaderboard' | 'absentees' = shareFormat): string => {
     const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
     const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
 
-    // 1. Resolve Official Coordinator (only if explicitly present)
+    // 1. Resolve Official Coordinator
     const officialCoordinator = (
       report?.coordinator ||
       report?.academicCoordinator ||
@@ -1025,7 +1028,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       ''
     ).trim();
 
-    // 2. Resolve Report Title vs Contest Name
+    // 2. Resolve Report Title
     let reportTitle = report?.title || report?.reportTitle || '';
     if (!reportTitle) {
       if (isWeeklyPerformance) reportTitle = 'Coordinator Weekly Performance Report';
@@ -1035,7 +1038,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       else reportTitle = 'LeetCode Performance Report';
     }
 
-    // Resolve true contest name (e.g. Weekly Contest 446, Biweekly Contest, etc.)
+    // Resolve true contest name
     let resolvedContestName = '';
     if (report?.current_session?.contest_name) {
       resolvedContestName = report.current_session.contest_name;
@@ -1051,7 +1054,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       resolvedContestName = isWowIntel ? 'Week-on-Week Performance' : 'Weekly LeetCode Contest';
     }
 
-    // Resolve Direct Contest Date (e.g. 18.10.2026)
+    // Resolve Contest Date
     let resolvedDate = (
       report?.contest_date ||
       report?.session_date ||
@@ -1059,6 +1062,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       report?.sessionDate ||
       report?.current_session?.session_date ||
       report?.report_date ||
+      report?.date ||
       ''
     ).toString().trim();
 
@@ -1067,84 +1071,126 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       if (parts.length === 3 && parts[0].length === 4) {
         resolvedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
       }
+    } else if (/^\d{1,2}$/.test(resolvedDate)) {
+      const fullDate = report?.created_at || report?.generated_at || report?.timestamp;
+      if (fullDate && String(fullDate).includes('-')) {
+        const parts = String(fullDate).split('T')[0].split('-');
+        if (parts.length === 3) {
+          resolvedDate = `${resolvedDate.padStart(2, '0')}.${parts[1]}.${parts[0]}`;
+        }
+      } else {
+        const now = new Date();
+        resolvedDate = `${resolvedDate.padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+      }
     }
 
-    // 1. Authoritative metrics (Numbers only, NO percentages!)
-    // Ensure all report types show 100% accurate canonical counts regardless of who is logged in (Admin, HOD, or Staff)
-    const sumBatchTotal = Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0
-      ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
-      : 0;
-
-    const distSum = (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)
-      ? (Number(solveDist.solved4 || 0) + Number(solveDist.solved3 || 0) + Number(solveDist.solved2 || 0) + Number(solveDist.solved1 || 0) + Number(solveDist.solved0 || 0))
-      : 0;
-
-    const total = Number(
-      report?.total_students ||
-      report?.totalStudents ||
-      contestSummary?.totalStudents ||
-      sumBatchTotal ||
-      report?.metrics?.totalStudents ||
-      report?.college_summary?.total_students ||
-      totalRosterCount ||
-      allRows.length ||
-      0
-    );
-
-    const attended = Number(
-      (contestSummary?.publicAttended ?? 0) + (contestSummary?.virtualAttended ?? 0) > 0
-        ? (contestSummary.publicAttended ?? 0) + (contestSummary.virtualAttended ?? 0)
-        : (distSum > 0
-          ? distSum
-          : (report?.metrics?.attended ?? actualParticipantCount))
-    );
-
-    const absent = Number(
-      solveDist?.notParticipated !== undefined && solveDist?.notParticipated !== null
-        ? solveDist.notParticipated
-        : (contestSummary?.notAttended !== undefined && contestSummary?.notAttended !== null
-          ? contestSummary.notAttended
-          : (report?.metrics?.notAttended !== undefined && report?.metrics?.notAttended !== null
-            ? report.metrics.notAttended
-            : (total > attended ? total - attended : notAttendedCount)))
-    );
-
-    const s4 = Number(solveDist.solved4 ?? report?.metrics?.['4 Q Solved'] ?? contestSummary?.q4 ?? s4Count ?? 0);
-    const s3 = Number(solveDist.solved3 ?? report?.metrics?.['3 Q Solved'] ?? contestSummary?.q3 ?? s3Count ?? 0);
-    const s2 = Number(solveDist.solved2 ?? report?.metrics?.['2 Q Solved'] ?? contestSummary?.q2 ?? s2Count ?? 0);
-    const s1 = Number(solveDist.solved1 ?? report?.metrics?.['1 Q Solved'] ?? contestSummary?.q1 ?? s1Count ?? 0);
-    const s0 = Number(solveDist.solved0 ?? report?.metrics?.['0 Q Solved'] ?? contestSummary?.q0 ?? s0Count ?? Math.max(attended - (s4 + s3 + s2 + s1), 0));
-
-    // 2. In-Charge / Coordinator Resolution (Role-Aware: Staff -> Staff Name, Coordinator -> Coordinator Name, else omitted)
+    // 3. In-Charge / Coordinator Resolution (Role-Aware for All Roles)
     const rawName = (currentUser?.full_name || currentUser?.displayName || currentUser?.name || '').trim();
     const rawRole = (currentUser?.role || (userSnapshot as any)?.role || '').toLowerCase().trim();
 
+    const isPrincipal = ['principal', 'director', 'dean'].some(r => rawRole === r || rawRole.includes('principal') || rawRole.includes('director') || rawRole.includes('dean'));
     const isCoordinatorRole = ['coordinator', 'academic coordinator', 'placement coordinator', 'placement_coordinator'].some(r => rawRole === r || rawRole.includes('coordinator'));
     const isStaffOrFaculty = !isCoordinatorRole && (['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'mentor', 'tutor'].some(r => rawRole.includes(r)) || isStaffUser);
-    const isHodRole = ['hod', 'department hod', 'department_hod', 'head of department'].some(r => rawRole === r || rawRole.includes('hod'));
+    const isHodRoleUser = ['hod', 'department hod', 'department_hod', 'head of department'].some(r => rawRole === r || rawRole.includes('hod'));
+    const isAdminUser = ['admin', 'superadmin', 'super_admin'].some(r => rawRole === r || rawRole.includes('admin'));
 
     let inChargeRole = '';
     let inChargeName = '';
 
-    if (isStaffOrFaculty) {
-      // When Staff logs in: show Staff In-Charge with their name only
-      inChargeRole = 'Staff In-Charge';
+    if (isPrincipal) {
+      inChargeRole = 'Principal / Executive';
+      inChargeName = rawName || 'Office of the Principal';
+    } else if (isStaffOrFaculty) {
+      inChargeRole = isMenteeScoped ? 'Faculty Mentor' : 'Staff In-Charge';
       inChargeName = rawName || report?.staff_name || report?.mentor_name || report?.faculty_name || 'Staff Mentor';
     } else if (isCoordinatorRole) {
-      // ONLY when Coordinator logs in: show Coordinator
-      inChargeRole = 'Coordinator';
-      inChargeName = rawName || officialCoordinator || 'Academic Coordinator';
-    } else if (isHodRole && rawName) {
-      // When HOD logs in: show HOD name
+      inChargeRole = rawRole.includes('placement') ? 'Placement Coordinator' : 'Academic Coordinator';
+      inChargeName = rawName || officialCoordinator || 'Coordinator';
+    } else if (isHodRoleUser) {
       inChargeRole = 'HOD';
-      inChargeName = rawName;
+      inChargeName = rawName || report?.hod_name || 'Head of Department';
+    } else if (isAdminUser) {
+      inChargeRole = 'Institutional Admin';
+      inChargeName = (rawName.toLowerCase() === 'admin' || !rawName) ? 'Administrator' : rawName;
     } else if (isWeeklyPerformance && officialCoordinator) {
-      // Coordinator Weekly Report specific
       inChargeRole = 'Coordinator';
       inChargeName = officialCoordinator;
+    } else if (rawName) {
+      inChargeRole = 'In-Charge';
+      inChargeName = rawName.toLowerCase() === 'admin' ? 'Administrator' : rawName;
     }
 
-    // 3. Compact Batch Rating > 1500 List
+    // 4. Metrics Resolution
+    let total = Number(report?.totalStudents ?? report?.total_students ?? report?.cohort_size ?? allRows.length ?? 0);
+    let attended = Number(report?.attendedStudents ?? report?.total_attended ?? report?.active_participants ?? 0);
+    let absent = Number(report?.absentStudents ?? report?.not_attended ?? report?.total_absent ?? 0);
+
+    const isRowAttended = (r: any) => {
+      const att = String(r.attendance ?? r.status ?? '').toUpperCase().trim();
+      if (att === 'ATTENDED' || att === 'PRESENT' || att === 'YES') return true;
+      if (att === 'ABSENT' || att === 'NOT ATTENDED' || att === 'NO') return false;
+      const solv = Number(r.solved ?? r.total_solved ?? r.total_contest_solved ?? 0);
+      const qSum = (Number(r.q1 ? 1 : 0) + Number(r.q2 ? 1 : 0) + Number(r.q3 ? 1 : 0) + Number(r.q4 ? 1 : 0));
+      return solv > 0 || qSum > 0;
+    };
+
+    const getRowSolved = (r: any) => {
+      const qSum = (Number(r.q1 ? 1 : 0) + Number(r.q2 ? 1 : 0) + Number(r.q3 ? 1 : 0) + Number(r.q4 ? 1 : 0));
+      const direct = Number(r.solved ?? r.total_solved ?? r.total_contest_solved ?? 0);
+      return Math.max(direct, qSum);
+    };
+
+    const getCleanName = (r: any) => (r.name || r.student_name || r.full_name || 'Student').trim();
+    const getCleanReg = (r: any) => (r.register_number || r.reg_no || r.roll_no || r.register_no || '').trim();
+    const getCleanDept = (r: any) => (r.department || r.dept || '').trim();
+
+    if (attended === 0 && allRows.length > 0) {
+      attended = allRows.filter(isRowAttended).length;
+      if (total === 0) total = allRows.length;
+      absent = Math.max(0, total - attended);
+    } else if (total === 0 && (attended > 0 || absent > 0)) {
+      total = attended + absent;
+    } else if (absent === 0 && total > attended) {
+      absent = total - attended;
+    }
+
+    let q4 = Number(report?.solversCount?.s4 ?? report?.solvers_4 ?? report?.q4 ?? 0);
+    let q3 = Number(report?.solversCount?.s3 ?? report?.solvers_3 ?? report?.q3 ?? 0);
+    let q2 = Number(report?.solversCount?.s2 ?? report?.solvers_2 ?? report?.q2 ?? 0);
+    let q1 = Number(report?.solversCount?.s1 ?? report?.solvers_1 ?? report?.q1 ?? 0);
+    let q0 = Number(report?.solversCount?.s0 ?? report?.solvers_0 ?? report?.q0 ?? 0);
+
+    if (q4 === 0 && q3 === 0 && q2 === 0 && q1 === 0 && allRows.length > 0) {
+      allRows.forEach((r: any) => {
+        if (!isRowAttended(r)) return;
+        const s = getRowSolved(r);
+        if (s >= 4) q4++;
+        else if (s === 3) q3++;
+        else if (s === 2) q2++;
+        else if (s === 1) q1++;
+        else q0++;
+      });
+    }
+
+    // Weekly contest details
+    const currContest = report?.current_contest_metadata || {};
+    const lastContest = report?.last_week_contest_metadata || {};
+    const currContestTitle = currContest.contest_name || report?.current_session?.contest_name || resolvedContestName || 'Current Contest';
+    const currContestDate = currContest.session_date || report?.current_session?.session_date || resolvedDate || '';
+    const lastContestTitle = lastContest.contest_name || report?.previous_session?.contest_name || report?.last_week_session?.contest_name || '';
+    const lastContestDate = lastContest.session_date || report?.previous_session?.session_date || report?.last_week_session?.session_date || '';
+
+    const cwMetrics = report?.current_week_metrics || {};
+    const lwMetrics = report?.last_week_metrics || {};
+    const lw4 = Number(lwMetrics.q4 ?? 0);
+    const lw3 = Number(lwMetrics.q3 ?? 0);
+    const lw2 = Number(lwMetrics.q2 ?? 0);
+    const lw1 = Number(lwMetrics.q1 ?? 0);
+    const lw0 = Number(lwMetrics.q0 ?? 0);
+    const lwAtt = lw4 + lw3 + lw2 + lw1 + lw0;
+    const lwAbs = Number(lwMetrics.not_participated ?? (total > lwAtt ? total - lwAtt : 0));
+
+    // Batch rating list
     const batchRatingList: { name: string; count: number }[] = [];
     if (Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0) {
       report.batch_summaries.forEach((b: any) => {
@@ -1165,51 +1211,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         const r1500 = Number(b.current_week?.rating_above_1500 ?? b.rating_above_1500 ?? b.rating_1500 ?? 0);
         batchRatingList.push({ name: `${bName}${bTot}`, count: r1500 });
       });
-    } else if (allRows.length > 0) {
-      const bMap: Record<string, { count: number; total: number }> = {};
-      allRows.forEach((r: any) => {
-        let b = (r.batch || '').trim();
-        if (!b) {
-          const yr = String(r.year || r.year_level || '').trim();
-          if (yr === '4' || yr === 'IV') b = '2023 - 2027';
-          else if (yr === '3' || yr === 'III') b = '2024 - 2028';
-          else if (yr === '2' || yr === 'II') b = '2025 - 2029';
-          else b = yr ? `Batch ${yr}` : 'Other';
-        } else {
-          if (b.includes('2023')) b = '2023 - 2027';
-          else if (b.includes('2024')) b = '2024 - 2028';
-          else if (b.includes('2025')) b = '2025 - 2029';
-        }
-        if (!bMap[b]) bMap[b] = { count: 0, total: 0 };
-        bMap[b].total += 1;
-        const rat = Number(r.contest_rating || r.rating || 0);
-        if (rat > 1500) bMap[b].count += 1;
-      });
-      Object.entries(bMap).forEach(([bName, data]) => {
-        batchRatingList.push({ name: `${bName} (${data.total} students)`, count: data.count });
-      });
     }
 
-    // 4. Base Header (Professional Clean Text, No Emojis)
+    // 5. Header Assembly
     let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
       `*Department of ${cleanDept}*\n` +
       `----------------------------------------\n` +
       `*${reportTitle.toUpperCase()}*\n`;
 
-    if (isWowIntel) {
+    if (isWeeklyPerformance) {
+      text += `*Current Contest:* ${currContestTitle}${currContestDate ? ` (${currContestDate})` : ''}\n`;
+      if (lastContestTitle) {
+        text += `*Last Week Contest:* ${lastContestTitle}${lastContestDate ? ` (${lastContestDate})` : ''}\n`;
+      }
+    } else if (isWowIntel) {
       const pContest = report?.prevContest || `Contest ${report?.wowSummary?.prevContestNum || ''}`;
       const cContest = report?.currContest || resolvedContestName || `Contest ${report?.wowSummary?.currContestNum || ''}`;
       const pDate = report?.prevDate || '';
       const cDate = report?.currDate || resolvedDate || '';
       text += `*Current Contest:* ${cContest}${cDate ? ` (${cDate})` : ''}\n`;
       text += `*Previous Contest:* ${pContest}${pDate ? ` (${pDate})` : ''}\n`;
-    } else if (isFiveWeekTrend || isHistIntel) {
-      const m = report?.metrics || {};
-      const cWindow = m.contestWindow || (Array.isArray(report?.sessionHeaders) && report.sessionHeaders.length > 0 ? `${report.sessionHeaders[0]} - ${report.sessionHeaders[report.sessionHeaders.length - 1]}` : resolvedContestName);
-      if (cWindow) text += `*Contest Window:* ${cWindow}\n`;
-      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
-    } else if (isCutoffReport) {
-      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
     } else {
       if (resolvedContestName) text += `*Contest:* ${resolvedContestName}\n`;
       if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
@@ -1220,111 +1241,209 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     }
     text += `----------------------------------------\n\n`;
 
-    // Dynamic Report-Specific Format Engine (Clean Text, Zero Emojis)
-    if (isCutoffReport) {
-      text += `*TNEA 12TH CUTOFF BAND PERFORMANCE*\n`;
-      const cBands = (report?.cutoffBandSummary && Array.isArray(report.cutoffBandSummary)) ? report.cutoffBandSummary : [];
-      const validBands = cBands.filter((b: any) => (b.total || 0) > 0);
-      const bandsToUse = validBands.length > 0 ? validBands : cBands;
-      if (bandsToUse.length > 0) {
-        bandsToUse.forEach((b: any) => {
-          const cleanBand = String(b.band || '').replace(/[^\d-]/g, ' - ').replace(/\s+/g, ' ').trim();
-          const pct = b.attendance_pct ? ` (${b.attendance_pct}% active)` : '';
-          const avg = b.avg_solved != null ? ` | Avg: *${b.avg_solved}*` : '';
-          text += `- Cutoff ${cleanBand}: *${b.active_solvers || 0}/${b.total} Active*${pct}${avg}\n`;
-        });
-      }
-      text += `\n*CUTOFF COHORT OVERVIEW*\n` +
-        `- Total Students: *${total}*\n` +
-        `- Active Solvers: *${attended}*\n` +
-        `- Non-Active: *${absent}*\n`;
-    } else if (isWowIntel) {
-      const wow = report?.wowSummary || {};
-      const pAtt = Number(wow.prevAttendance ?? 0);
-      const cAtt = Number(wow.currAttendance ?? attended);
-      const attDelta = Number(wow.attendanceDelta ?? (cAtt - pAtt));
-      const pSolv = Number(wow.prevTotalSolves ?? 0);
-      const cSolv = Number(wow.currTotalSolves ?? 0);
-      const solvDelta = Number(wow.solvesDelta ?? (cSolv - pSolv));
-
-      text += `*WEEK-ON-WEEK PARTICIPATION & SOLVES*\n` +
-        `- Current Attendance: *${cAtt}*\n` +
-        `- Previous Attendance: *${pAtt}*\n` +
-        `- Attendance Delta: *${attDelta >= 0 ? '+' : ''}${attDelta}*\n` +
-        `- Current Total Solves: *${cSolv}*\n` +
-        `- Previous Total Solves: *${pSolv}*\n` +
-        `- Solves Delta: *${solvDelta >= 0 ? '+' : ''}${solvDelta}*\n\n` +
-        `*STUDENT TRAJECTORY DYNAMICS*\n` +
-        `- Improving: *${wow.improved ?? 0}* students\n` +
-        `- Consistent / Stable: *${wow.stable ?? 0}* students\n` +
-        `- Declining: *${wow.declined ?? 0}* students\n`;
-    } else if (isFiveWeekTrend || isHistIntel) {
-      const m = report?.metrics || {};
-      const hSum = report?.histSummary || {};
-      const consSolvers = m.fiveContestConsistentSolvers ?? hSum.consistentSolvers ?? 'N/A';
-      const tot5Solv = m.total5WeekSolves ?? 'N/A';
-      const avgSolv = m.average5WeekSolves ?? 'N/A';
-
-      text += `*5-WEEK PERFORMANCE TRAJECTORY*\n` +
-        `- Total Students Tracked: *${m.totalStudents || total}*\n` +
-        `- 5-Contest Consistent Solvers: *${consSolvers}*\n` +
-        `- Total 5-Week Solves: *${tot5Solv}*\n` +
-        `- Average Solves per Student: *${avgSolv}*\n\n` +
-        `*STUDENT TRAJECTORY DYNAMICS*\n` +
-        `- Improving: *${m.improvingStudents ?? 'N/A'}* students\n` +
-        `- Consistent / Stable: *${m.stableStudents ?? 'N/A'}* students\n` +
-        `- Declining: *${m.decliningStudents ?? 'N/A'}* students\n` +
-        `- Follow-Up Needed: *${m.followUpStudents ?? 'N/A'}* students\n`;
-
-      if (Array.isArray(report?.sessionHeaders) && report.sessionHeaders.length > 0) {
-        text += `\n*CONTEST SESSIONS INCLUDED*\n`;
-        report.sessionHeaders.forEach((h: string) => {
-          text += `- ${h}\n`;
-        });
-      }
-    } else if (rType.includes('PROBLEM_DIFFICULTY') || rType.includes('DIFFICULTY')) {
-      const m = report?.metrics || {};
-      text += `*DIFFICULTY BREAKDOWN*\n` +
-        `- Easy Solved: *${m.easySolved ?? 0}*\n` +
-        `- Medium Solved: *${m.mediumSolved ?? 0}*\n` +
-        `- Hard Solved: *${m.hardSolved ?? 0}*\n\n` +
-        `*PARTICIPATION OVERVIEW*\n` +
-        `- Total Enrolled: *${total}*\n` +
-        `- Active Solvers: *${attended}*\n` +
-        `- Non-Active: *${absent}*\n`;
+    // 6. Common Metrics Block
+    if (isWeeklyPerformance && lastContestTitle) {
+      text += `*PARTICIPATION COMPARISON*\n` +
+        `- Total Enrolled Students: *${total}*\n` +
+        `- Current Week Attendance: *${attended}* (${total > 0 ? ((attended / total) * 100).toFixed(1) : '0'}%)\n` +
+        `- Last Week Attendance: *${lwAtt}* (${total > 0 ? ((lwAtt / total) * 100).toFixed(1) : '0'}%)\n` +
+        `- Attendance Change: *${attended - lwAtt >= 0 ? '+' : ''}${attended - lwAtt}*\n\n` +
+        `*PROBLEM SOLVERS COMPARISON*\n` +
+        `- 4/4 Solvers: Current *${q4}* | Last Week *${lw4}*\n` +
+        `- 3/4 Solvers: Current *${q3}* | Last Week *${lw3}*\n` +
+        `- 2/4 Solvers: Current *${q2}* | Last Week *${lw2}*\n` +
+        `- 1/4 Solvers: Current *${q1}* | Last Week *${lw1}*\n` +
+        `- 0/4 Solvers: Current *${q0}* | Last Week *${lw0}*\n` +
+        `- Absent: Current *${absent}* | Last Week *${lwAbs}*\n`;
     } else {
-      // Core Participation Summary
       text += `*PARTICIPATION OVERVIEW*\n` +
-        `- Total Enrolled: *${total}*\n` +
-        `- Attended: *${attended}*\n` +
-        `- Absent: *${absent}*\n\n`;
+        `- Total Enrolled Students: *${total}*\n` +
+        `- Total Attended: *${attended}* (${total > 0 ? ((attended / total) * 100).toFixed(1) : '0'}%)\n` +
+        `- Absent / Not Participated: *${absent}* (${total > 0 ? ((absent / total) * 100).toFixed(1) : '0'}%)\n\n` +
+        `*PROBLEM SOLVE BREAKDOWN*\n` +
+        `- 4/4 Questions Solved: *${q4}*\n` +
+        `- 3/4 Questions Solved: *${q3}*\n` +
+        `- 2/4 Questions Solved: *${q2}*\n` +
+        `- 1/4 Questions Solved: *${q1}*\n` +
+        `- 0 Questions Solved: *${q0}*\n`;
+    }
 
-      // Solve Breakdown
-      text += `*CONTEST SOLVE BREAKDOWN*\n` +
-        `- 4/4 Solved: *${s4}*\n` +
-        `- 3/4 Solved: *${s3}*\n` +
-        `- 2/4 Solved: *${s2}*\n` +
-        `- 1/4 Solved: *${s1}*\n`;
-      if (s0 > 0) {
-        text += `- 0/4 Solved: *${s0}*\n`;
+    if (batchRatingList.length > 0) {
+      text += `\n*RATING > 1500 BENCHMARK*\n`;
+      batchRatingList.slice(0, 3).forEach(b => {
+        text += `- ${b.name}: *${b.count}*\n`;
+      });
+    }
+    text += `\n`;
+
+    // 7. FORMAT-SPECIFIC STUDENT LIST EXPANSIONS
+    const solvers4 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) >= 4);
+    const solvers3 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 3);
+    const solvers2 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 2);
+    const solvers1 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 1);
+    const absentRows = allRows.filter((r: any) => !isRowAttended(r));
+
+    const sortByPerf = (a: any, b: any) => {
+      const rA = Number(a.contest_rating || a.rating || 0);
+      const rB = Number(b.contest_rating || b.rating || 0);
+      return rB - rA;
+    };
+    solvers4.sort(sortByPerf);
+    solvers3.sort(sortByPerf);
+    solvers2.sort(sortByPerf);
+
+    // FORMAT 2: SOLVERS DIRECTORY (WITH STUDENT NAMES)
+    if (targetFormat === 'solvers') {
+      text += `*STUDENT SOLVERS DIRECTORY*\n` +
+        `----------------------------------------\n`;
+
+      if (solvers4.length > 0) {
+        text += `*4/4 SOLVERS (ALL PROBLEMS SOLVED) - ${solvers4.length} Students:*\n`;
+        solvers4.forEach((s: any, idx: number) => {
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
+        });
+        text += `\n`;
+      } else {
+        text += `*4/4 Solvers:* 0 students\n\n`;
       }
 
-      if (batchRatingList.length > 0) {
-        text += `\n*RATING > 1500 BENCHMARK*\n`;
-        batchRatingList.slice(0, 3).forEach(b => {
-          text += `- ${b.name}: *${b.count}*\n`;
+      if (solvers3.length > 0) {
+        text += `*3/4 SOLVERS - ${solvers3.length} Students:*\n`;
+        const limit3 = solvers3.slice(0, 25);
+        limit3.forEach((s: any, idx: number) => {
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
         });
+        if (solvers3.length > 25) {
+          text += `... and ${solvers3.length - 25} more solvers (see full list in attached Excel)\n`;
+        }
+        text += `\n`;
+      } else {
+        text += `*3/4 Solvers:* 0 students\n\n`;
+      }
+
+      if (solvers2.length > 0) {
+        text += `*2/4 SOLVERS - ${solvers2.length} Students:*\n`;
+        const limit2 = solvers2.slice(0, 15);
+        limit2.forEach((s: any, idx: number) => {
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
+        });
+        if (solvers2.length > 15) {
+          text += `... and ${solvers2.length - 15} more solvers (see attached Excel)\n`;
+        }
+        text += `\n`;
+      } else {
+        text += `*2/4 Solvers:* 0 students\n\n`;
+      }
+
+      if (solvers1.length > 0) {
+        text += `*1/4 Solvers:* ${solvers1.length} students (detailed list in Excel report)\n\n`;
+      } else {
+        text += `*1/4 Solvers:* 0 students\n\n`;
       }
     }
 
-    text += `\n----------------------------------------\n` +
-      `*Official report available on Nandha LeetCode Portal*\n\n`;
+    // FORMAT 3: TOP PERFORMERS & LEADERBOARD
+    if (targetFormat === 'leaderboard') {
+      text += `*TOP PERFORMERS / LEADERBOARD*\n` +
+        `----------------------------------------\n`;
+      const sourceList = (report?.officialLeaderboard && Array.isArray(report.officialLeaderboard) && report.officialLeaderboard.length > 0)
+        ? report.officialLeaderboard
+        : ((report?.topStudents && Array.isArray(report.topStudents) && report.topStudents.length > 0)
+          ? report.topStudents
+          : allRows.filter(isRowAttended).sort((a: any, b: any) => {
+            const solDiff = getRowSolved(b) - getRowSolved(a);
+            if (solDiff !== 0) return solDiff;
+            const rDiff = Number(b.contest_rating || b.rating || 0) - Number(a.contest_rating || a.rating || 0);
+            return rDiff;
+          })
+        );
+      const topList = sourceList.slice(0, 20);
+      if (topList.length > 0) {
+        topList.forEach((s: any, idx: number) => {
+          const name = getCleanName(s);
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          const solved = getRowSolved(s);
+          const rating = s.contest_rating || s.rating;
+          const score = s.score !== undefined && s.score !== '-' ? s.score : (solved * 3);
+          text += `${idx + 1}. ${name}${reg ? ` (${reg})` : ''}${dept ? ` [${dept}]` : ''} - *${solved}/4 Solved*${score ? ` | Score: ${score}` : ''}${rating ? ` | Rating: ${rating}` : ''}\n`;
+        });
+        if (sourceList.length > 20) {
+          text += `... and ${sourceList.length - 20} more students in full official leaderboard\n`;
+        }
+      } else {
+        text += `No participant ranking records found for this cohort.\n`;
+      }
+      text += `\n`;
+    }
+
+    // FORMAT 4: ABSENTEES DIRECTORY (FOR FACULTY MENTOR FOLLOW-UP)
+    if (targetFormat === 'absentees') {
+      text += `*ABSENT / NON-PARTICIPATED STUDENTS (FOLLOW-UP)*\n` +
+        `----------------------------------------\n` +
+        `Total Absentees: *${absentRows.length} students*\n\n`;
+      if (absentRows.length > 0) {
+        // Group by department when multiple depts and list is large
+        const deptMap = new Map<string, any[]>();
+        absentRows.forEach((s: any) => {
+          const dept = getCleanDept(s) || 'General';
+          if (!deptMap.has(dept)) deptMap.set(dept, []);
+          deptMap.get(dept)!.push(s);
+        });
+        if (deptMap.size > 1 && absentRows.length > 20) {
+          // Multi-dept: group by department, show all
+          let globalIdx = 1;
+          deptMap.forEach((students, dept) => {
+            text += `*[${dept}] - ${students.length} students:*\n`;
+            students.forEach((s: any) => {
+              const name = getCleanName(s);
+              const reg = getCleanReg(s);
+              text += `${globalIdx++}. ${name}${reg ? ` (${reg})` : ''}\n`;
+            });
+            text += `\n`;
+          });
+        } else {
+          // Single dept or small list: flat numbered list (all students, no cap)
+          absentRows.forEach((s: any, idx: number) => {
+            const name = getCleanName(s);
+            const reg = getCleanReg(s);
+            const dept = getCleanDept(s);
+            text += `${idx + 1}. ${name}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
+          });
+          text += `\n`;
+        }
+      } else {
+        text += `100% Attendance achieved! Zero absentees recorded for this session.\n\n`;
+      }
+      text += `*Action Required:* Faculty mentors are requested to follow up with the non-participating students listed above.\n\n`;
+    }
+
+    text += `----------------------------------------\n` +
+      `*Official report available on Nandha LeetCode Portal*\n`;
+
+    return text.trim();
+  };
+
+  const handleShareWhatsApp = async (
+    mode: 'message' | 'file' = 'message',
+    formatOverride?: 'summary' | 'solvers' | 'leaderboard' | 'absentees'
+  ) => {
+    if (isSharingWhatsApp) return;
+    setIsSharingWhatsApp(true);
+
+    const targetFmt = formatOverride || shareFormat;
+    const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
+    const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
+    const fullShareText = generateShareText(targetFmt);
     const { url, filename, mimeType } = getReportDownloadMeta('excel');
 
-    // Clean, direct report text without external URLs
-    const fullShareText = text.trim();
-
-    // Automatically copy the formatted summary text to clipboard for convenience
+    // Automatically copy to clipboard
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(fullShareText);
@@ -2276,43 +2395,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       </span>
                     </h3>
 
-                    {/* View Density Switcher: Quick Staff View vs Detailed Matrix */}
-                    <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                      <div className="inline-flex items-center p-0.5 rounded-xl bg-slate-200/80 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => setTableDensity('quick')}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer flex items-center gap-1.5 ${tableDensity === 'quick'
-                            ? 'bg-brand-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-                            }`}
-                          title="Reduced essential columns for fast staff and faculty review"
-                        >
-                          <span>⚡ Quick Staff View</span>
-                          <span className="text-[9px] opacity-80 font-mono px-1 rounded bg-black/15 font-bold">Fast</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setTableDensity('full')}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer flex items-center gap-1.5 ${tableDensity === 'full'
-                            ? 'bg-brand-600 text-white shadow-xs'
-                            : 'text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-                            }`}
-                          title="Full detailed matrix with all columns including Q1-Q4, Cutoff, and Accommodation"
-                        >
-                          <span>📊x`` Detailed Full View</span>
-                        </button>
-                      </div>
-
-                      {activeFilter && (
-                        <button
-                          onClick={() => setActiveFilter(null)}
-                          className="text-xs font-bold text-brand-600 hover:text-brand-700 underline cursor-pointer ml-1"
-                        >
-                          Clear Filter (Show All {allRows.length})
-                        </button>
-                      )}
-                    </div>
+                    {activeFilter && (
+                      <button
+                        onClick={() => setActiveFilter(null)}
+                        className="text-xs font-bold text-brand-600 hover:text-brand-700 underline cursor-pointer self-start sm:self-auto"
+                      >
+                        Clear Filter (Show All {allRows.length})
+                      </button>
+                    )}
                   </div>
 
                   {/* Mobile Card View (< sm) - Compact, Crisp White & Clean */}
@@ -2379,7 +2469,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
 
                   {/* Desktop Table View (>= sm) */}
                   <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                    <table className={`w-full text-left text-xs mobile-card-table ${tableDensity === "quick" ? "min-w-[600px] sm:min-w-[760px]" : "min-w-[850px] sm:min-w-[1100px]"} print:min-w-0 print:w-full`}>
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[850px] sm:min-w-[1100px] print:min-w-0 print:w-full">
                       <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                         {isFridayOfficial ? (
                           <tr>
@@ -2388,23 +2478,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
                             <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                             <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                            {tableDensity === 'full' && (
-                              <>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                                <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
-                              </>
-                            )}
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                            <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
                             <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                            {tableDensity === 'full' ? (
-                              <>
-                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
-                              </>
-                            ) : null}
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
                             <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
                             <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                             <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
@@ -2418,22 +2500,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
                             <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
                             <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
-                            {tableDensity === 'full' && (
-                              <>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                              </>
-                            )}
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
                             <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
-                            {tableDensity === 'full' ? (
-                              <>
-                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
-                              </>
-                            ) : null}
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
                             <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
                             <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                             <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
@@ -2447,43 +2521,30 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black sticky left-[140px] z-20 bg-slate-900 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]">Student Name</th>
                             <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                             <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                            {tableDensity === 'full' && (
-                              <>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                              </>
-                            )}
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
                             <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                            {tableDensity === 'full' ? (
-                              displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
-                                <>
-                                  <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                            {displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
+                              <>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
                                 <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
                                 <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
                                 <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
-                                  <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                                </>
-                              ) : (
-                                <>
-                                  <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
-                                  <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
-                                </>
-                              )
+                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                              </>
                             ) : (
                               <>
-                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Solved</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Easy</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Med</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Hard</th>
+                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
                               </>
                             )}
                             <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rank</th>
@@ -2507,33 +2568,25 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
                                 <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
                                 <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
-                                {tableDensity === 'full' && (
-                                  <>
-                                    <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
-                                    <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
-                                    <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
-                                    <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
-                                  </>
-                                )}
+                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
+                                <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
                                 <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                   {getStatusBadge(s.status)}
                                 </td>
-                                {tableDensity === 'full' ? (
-                                  <>
-                                    <td className="px-3 py-2.5 text-center font-black">
-                                      {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-center font-black">
-                                      {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-center font-black">
-                                      {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-center font-black">
-                                      {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                    </td>
-                                  </>
-                                ) : null}
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
                                 <td className="px-4 py-2.5 text-center font-black text-sm">
                                   {isPart && cSolved !== null ? (
                                     <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
@@ -4476,7 +4529,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
           <div className="flex items-center space-x-1.5 min-w-0">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <div className="flex items-center gap-1.5 truncate">
-              <span className="font-extrabold tracking-wide text-slate-900 dark:text-white text-[11px] sm:text-xs truncate">Official Dataset</span>
+              <span className="hidden sm:inline font-extrabold tracking-wide text-slate-900 dark:text-white text-xs truncate">Official Dataset</span>
               <span className="inline-block px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                 {allRows.length} Records
               </span>
@@ -4529,8 +4582,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     onClick={() => setMoreMenuOpen(false)}
                   />
 
-                  {/* MOBILE NATIVE BOTTOM SHEET (< sm) */}
-                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-[#0c1427] rounded-t-3xl border-t border-slate-200/90 dark:border-white/10 shadow-2xl p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,16px))] space-y-3 animate-in slide-in-from-bottom duration-250">
+                  {/* MOBILE NATIVE BOTTOM SHEET (< sm) — FULL EXPORT & SHARE */}
+                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-[#0c1427] rounded-t-3xl border-t border-slate-200/90 dark:border-white/10 shadow-2xl p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,16px))] space-y-3 animate-in slide-in-from-bottom duration-250 max-h-[85vh] overflow-y-auto">
                     {/* Bottom Sheet Handle */}
                     <div className="flex flex-col items-center gap-1.5 pb-1">
                       <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
@@ -4544,15 +4597,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 pt-1">
-                      {/* PDF */}
+                    <div className="space-y-2 pt-1">
+                      {/* 1. PDF (.pdf) */}
                       <button
                         type="button"
                         onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-100/70 dark:hover:bg-rose-950/60 border border-rose-200/90 dark:border-rose-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs">
+                          <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
                             <FileText className="w-5 h-5" />
                           </div>
                           <div className="text-left min-w-0">
@@ -4560,19 +4613,19 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Export print-ready PDF</div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-rose-100/70 text-rose-700 dark:bg-rose-950 dark:text-rose-300 shrink-0">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200 shrink-0">
                           .PDF
                         </span>
                       </button>
 
-                      {/* Word Docx */}
+                      {/* 2. Word (.docx) */}
                       <button
                         type="button"
                         onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100/70 dark:hover:bg-blue-950/60 border border-blue-200/90 dark:border-blue-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+                          <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
                             <FileText className="w-5 h-5" />
                           </div>
                           <div className="text-left min-w-0">
@@ -4580,69 +4633,146 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Word report (.docx)</div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-blue-100/70 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shrink-0">
                           .DOCX
                         </span>
                       </button>
 
-                      {/* WhatsApp Summary & Link */}
-                      <button
-                        type="button"
-                        disabled={isSharingWhatsApp}
-                        onClick={() => { handleShareWhatsApp('message'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-emerald-500/20 dark:border-emerald-500/30 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-                            <Share2 className="w-5 h-5" />
-                          </div>
-                          <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">
-                              Share to WhatsApp
+                      {/* 3. WhatsApp — 4-format inline selector */}
+                      <div className="w-full rounded-2xl border border-green-200/90 dark:border-green-800/80 bg-green-50/60 dark:bg-green-950/30 overflow-hidden shadow-xs">
+                        {/* Header row — tap to expand/collapse */}
+                        <button
+                          type="button"
+                          onClick={() => setShowFormatPicker(p => !p)}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-green-100/50 dark:hover:bg-green-950/50 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-green-500/20">
+                              <Share2 className="w-5 h-5" />
                             </div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                              Full summary text + 1-tap Excel download
+                            <div className="text-left min-w-0">
+                              <div className="text-xs font-black text-slate-900 dark:text-white">Share to WhatsApp</div>
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Full summary text + 1-tap Excel download</div>
                             </div>
                           </div>
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 shrink-0">
-                          TEXT + LINK
-                        </span>
-                      </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              TEXT + LINK
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-green-600 transition-transform duration-200 ${showFormatPicker ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
 
-                      {/* Attach Excel Workbook */}
+                        {/* Format picker — collapsible */}
+                        {showFormatPicker && (
+                          <div className="border-t border-green-200/80 dark:border-green-800/60 p-3 space-y-2 bg-white/50 dark:bg-green-950/20">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">SUMMARY TEXT FORMAT</span>
+                              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                                {shareFormat === 'summary' ? 'NORMAL' : shareFormat === 'solvers' ? 'NAMES' : shareFormat === 'leaderboard' ? 'TOP' : 'ABSENT'}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              {/* Normal Summary */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'summary'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'summary' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Normal Summary</span>
+                                  {shareFormat === 'summary' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">KPIs without names</span>
+                              </button>
+
+                              {/* With Solvers */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'solvers'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'solvers' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">With Solvers</span>
+                                  {shareFormat === 'solvers' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Names for 4/4, 3/4, 2/4</span>
+                              </button>
+
+                              {/* Top Solvers */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'leaderboard'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'leaderboard' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Top Solvers</span>
+                                  {shareFormat === 'leaderboard' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Rank &amp; score leaders</span>
+                              </button>
+
+                              {/* Absentees List */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'absentees'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'absentees' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Absentees List</span>
+                                  {shareFormat === 'absentees' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Follow-up roster</span>
+                              </button>
+                            </div>
+
+                            {/* Copy Summary Text */}
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const txt = generateShareText(shareFormat);
+                                await navigator.clipboard.writeText(txt).catch(() => { });
+                                setCopiedSummary(true);
+                                setTimeout(() => setCopiedSummary(false), 2000);
+                              }}
+                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              {copiedSummary ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedSummary ? 'Copied!' : 'Copy Summary Text'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 4. Attach Excel Document */}
                       <button
                         type="button"
-                        disabled={isSharingWhatsApp}
-                        onClick={() => { handleShareWhatsApp('file'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-teal-50 dark:hover:bg-teal-950/40 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98 disabled:opacity-50"
+                        onClick={() => { downloadFile('excel'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 hover:bg-teal-100/70 dark:hover:bg-teal-950/60 border border-teal-200/90 dark:border-teal-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 shadow-2xs">
+                          <div className="w-10 h-10 rounded-xl bg-teal-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20">
                             <FileSpreadsheet className="w-5 h-5" />
                           </div>
                           <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">
-                              {isSharingWhatsApp ? 'Attaching Report File...' : 'Attach Excel Document'}
-                            </div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                              Direct .xlsx file &amp; copy text to clipboard
-                            </div>
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Attach Excel Document</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Direct .xlsx file &amp; copy text to clipboard</div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-teal-100/70 text-teal-700 dark:bg-teal-950 dark:text-teal-300 shrink-0">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 shrink-0">
                           .XLSX FILE
                         </span>
                       </button>
 
-                      {/* Print View */}
+                      {/* 5. Print View */}
                       <button
                         type="button"
                         onClick={() => { window.print(); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-all cursor-pointer active:scale-98"
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700/80 transition-all cursor-pointer active:scale-98 shadow-xs"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
+                          <div className="w-10 h-10 rounded-xl bg-slate-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-slate-500/20">
                             <Printer className="w-5 h-5" />
                           </div>
                           <div className="text-left min-w-0">
@@ -4650,7 +4780,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Print or save via browser</div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 shrink-0">
                           PRINT
                         </span>
                       </button>
@@ -4659,14 +4789,18 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                     <button
                       type="button"
                       onClick={() => setMoreMenuOpen(false)}
-                      className="w-full py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-xs cursor-pointer active:scale-98 transition-all text-center mt-1"
+                      className="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-xs cursor-pointer active:scale-98 transition-all text-center mt-1"
                     >
                       Cancel
                     </button>
                   </div>
 
-                  {/* DESKTOP POPOVER MENU (>= sm) */}
-                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-64 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
+                  {/* DESKTOP POPOVER MENU (>= sm) — FULL EXPORT & SHARE */}
+                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-72 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
+                    <div className="px-2 pt-1 pb-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Export &amp; Share</span>
+                    </div>
+
                     <button
                       onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-colors cursor-pointer"
@@ -4675,7 +4809,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         <FileText className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="truncate">PDF Document</span>
+                        <span className="truncate">PDF (.pdf)</span>
                         <span className="text-[10px] text-slate-400 font-normal truncate">Export print-ready PDF</span>
                       </div>
                     </button>
@@ -4688,46 +4822,60 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                         <FileText className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="truncate">Word Document</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Word report (.docx)</span>
-                      </div>
-                    </button>
-
-                    <button
-                      disabled={isSharingWhatsApp}
-                      onClick={() => { handleShareWhatsApp('message'); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
-                        <Share2 className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="truncate">Share to WhatsApp</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Summary text + Excel link</span>
-                      </div>
-                    </button>
-
-                    <button
-                      disabled={isSharingWhatsApp}
-                      onClick={() => { handleShareWhatsApp('file'); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-950/40 hover:text-teal-600 dark:hover:text-teal-400 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 shrink-0">
-                        <FileSpreadsheet className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="truncate">{isSharingWhatsApp ? 'Attaching File...' : 'Attach Excel Document'}</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Direct .xlsx file &amp; copy text</span>
+                        <span className="truncate">Word (.docx)</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Word report document</span>
                       </div>
                     </button>
 
                     <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
 
+                    {/* WhatsApp 4-format sub-menu */}
+                    <button
+                      onClick={() => { handleShareWhatsApp('message', shareFormat); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-green-50 dark:hover:bg-green-950/40 hover:text-green-600 dark:hover:text-green-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 shrink-0">
+                        <Share2 className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="truncate">WhatsApp ({shareFormat === 'summary' ? 'Normal' : shareFormat === 'solvers' ? 'With Names' : shareFormat === 'leaderboard' ? 'Top Solvers' : 'Absentees'})</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Tap to share · change format below</span>
+                      </div>
+                    </button>
+                    {/* Format mini-grid */}
+                    <div className="grid grid-cols-2 gap-1 px-1 pb-1">
+                      {(['summary', 'solvers', 'leaderboard', 'absentees'] as const).map(fmt => (
+                        <button
+                          key={fmt}
+                          type="button"
+                          onClick={() => setShareFormat(fmt)}
+                          className={`text-[10px] font-bold py-1 px-2 rounded-lg border transition-all cursor-pointer ${shareFormat === fmt ? 'border-green-500 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-green-300'}`}
+                        >
+                          {fmt === 'summary' ? 'Normal' : fmt === 'solvers' ? 'With Names' : fmt === 'leaderboard' ? 'Top Solvers' : 'Absentees'}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+
+                    <button
+                      onClick={() => { downloadFile('excel'); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
+                        <FileSpreadsheet className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate">Excel (.xlsx)</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Institutional spreadsheet</span>
+                      </div>
+                    </button>
+
                     <button
                       onClick={() => { window.print(); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
                         <Printer className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">

@@ -2,7 +2,7 @@ import { SwipeHandle } from '../components/SwipeHandle';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { createPortal } from 'react-dom';
-import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal, User, Activity, Globe, Settings, Mail, FileText, LogIn, LogOut, Navigation, Download, SlidersHorizontal, ListFilter } from 'lucide-react';
+import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal, User, Activity, Globe, Settings, Mail, FileText, LogIn, LogOut, Navigation, Download, SlidersHorizontal, ListFilter, Trash2, CheckSquare, Square, Database, AlertOctagon } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -86,6 +86,15 @@ export const AuditLogPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [limitFilter, setLimitFilter] = useState<string>('10');
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
+
+  // Selection & Storage Space Reclaim Deletion States
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [showPurgeModal, setShowPurgeModal] = useState<boolean>(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState<boolean>(false);
+  const [deleteMode, setDeleteMode] = useState<'selected' | 'older_than' | 'all' | 'single'>('selected');
+  const [targetSingleLog, setTargetSingleLog] = useState<any | null>(null);
+  const [purgeDays, setPurgeDays] = useState<number>(30);
 
   const { user } = useAuth();
   const { notify } = useNotification();
@@ -401,8 +410,92 @@ export const AuditLogPage: React.FC = () => {
     }
   };
 
-  // Lock body scroll safely when inspection modal is open
-  useScrollLock(Boolean(selectedLog));
+  // Lock body scroll safely when inspection modal or delete dialogs are open
+  useScrollLock(Boolean(selectedLog || showPurgeModal || showDeleteConfirmModal));
+
+  const toggleSelect = (id: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === logs.length && logs.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(logs.map((l: any) => l.id)));
+    }
+  };
+
+  const isAllSelected = logs.length > 0 && selectedIds.size === logs.length;
+  const isSomeSelected = selectedIds.size > 0 && !isAllSelected;
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.size === 0) return;
+    setDeleteMode('selected');
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleDeleteSingle = (log: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setTargetSingleLog(log);
+    setDeleteMode('single');
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleOpenPurgeModal = () => {
+    setShowPurgeModal(true);
+  };
+
+  const executeDelete = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    let notifyToast: any = null;
+    try {
+      notifyToast = notify.loading('Deleting audit logs...', 'Reclaiming database capacity', { category: 'ADMIN' });
+      let res: any;
+      if (deleteMode === 'single' && targetSingleLog) {
+        res = await api.delete(`/admin/audit-logs/${targetSingleLog.id}`);
+      } else if (deleteMode === 'selected') {
+        res = await api.delete('/admin/audit-logs', {
+          data: { log_ids: Array.from(selectedIds) }
+        });
+      } else if (deleteMode === 'older_than') {
+        res = await api.delete('/admin/audit-logs', {
+          data: { older_than_days: purgeDays }
+        });
+      } else if (deleteMode === 'all') {
+        res = await api.delete('/admin/audit-logs', {
+          data: { delete_all: true }
+        });
+      }
+
+      if (notifyToast && typeof notifyToast.dismiss === 'function') notifyToast.dismiss();
+      const count = res?.data?.deleted_count ?? 1;
+      notify.success('Database Space Reclaimed', `${count} audit log(s) successfully deleted. Capacity space freed up.`, { category: 'ADMIN' });
+
+      setSelectedIds(new Set());
+      setShowDeleteConfirmModal(false);
+      setShowPurgeModal(false);
+      if (deleteMode === 'single') {
+        setSelectedLog(null);
+      }
+      fetchLogs();
+    } catch (err: any) {
+      if (notifyToast && typeof notifyToast.dismiss === 'function') notifyToast.dismiss();
+      console.error('Delete audit logs failed:', err);
+      notify.error('Deletion Failed', err?.response?.data?.detail || 'Failed to delete audit logs. Please try again.', { category: 'ADMIN' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedLog) {
@@ -487,10 +580,30 @@ export const AuditLogPage: React.FC = () => {
               <Download size={12} className={`shrink-0 text-emerald-300 ${exportingExcel ? 'animate-spin' : ''}`} />
               <span>{exportingExcel ? 'Exporting...' : 'Excel Report'}</span>
             </button>
+            {isAdmin && (
+              <button
+                onClick={handleOpenPurgeModal}
+                className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-rose-500/20 active:bg-rose-500/40 text-rose-200 border border-rose-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer"
+                title="Purge audit logs to free database storage capacity"
+              >
+                <Trash2 size={12} className="shrink-0 text-rose-300" />
+                <span>Free Space</span>
+              </button>
+            )}
           </div>
 
           {/* DESKTOP ACTION BUTTONS (sm and up) */}
           <div className="hidden sm:flex sm:items-center gap-2.5 w-full xl:w-auto shrink-0 self-start xl:self-center">
+            {isAdmin && (
+              <button
+                onClick={handleOpenPurgeModal}
+                className="inline-flex min-w-0 items-center justify-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 h-10 bg-rose-600/80 hover:bg-rose-500 active:scale-95 disabled:opacity-60 text-white rounded-xl text-xs font-black shadow-lg shadow-rose-600/20 transition-all cursor-pointer border border-rose-400/30 whitespace-nowrap touch-manipulation"
+                title="Clean and purge old audit logs to free up database storage capacity"
+              >
+                <Database className="w-4 h-4 text-rose-200" />
+                <span>Free Space</span>
+              </button>
+            )}
             <button
               onClick={handleExportAuditLogsExcel}
               disabled={exportingExcel}
@@ -682,6 +795,45 @@ export const AuditLogPage: React.FC = () => {
         )}
       </div>
 
+      {/* Batch Selection Action Bar when items selected */}
+      {isAdmin && selectedIds.size > 0 && (
+        <div className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-950/60 dark:to-pink-950/60 border border-rose-200/90 dark:border-rose-900/60 shadow-lg shadow-rose-500/10 transition-all duration-200 flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30">
+              <CheckSquare className="w-4 h-4 stroke-[2.5]" />
+            </div>
+            <div>
+              <div className="text-xs font-black text-rose-900 dark:text-rose-100 flex items-center gap-1.5">
+                <span>{selectedIds.size} {selectedIds.size === 1 ? 'log' : 'logs'} selected</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-200/60 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200">
+                  Ready to Delete
+                </span>
+              </div>
+              <div className="text-[10px] font-semibold text-rose-700/80 dark:text-rose-300/80">
+                Permanently delete selected records to free database capacity
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-navy-900 transition-colors cursor-pointer"
+            >
+              Deselect All
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteSelected}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-black shadow-md shadow-rose-600/30 transition-all cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected ({selectedIds.size})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Logs */}
       <div className="glass-card rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg bg-white dark:bg-navy-950">
         {loading ? (
@@ -710,6 +862,20 @@ export const AuditLogPage: React.FC = () => {
             <table className="hidden md:table w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-navy-900 text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
+                  {isAdmin && (
+                    <th className="py-3 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = isSomeSelected;
+                        }}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600"
+                        title={isAllSelected ? "Deselect All" : "Select All"}
+                      />
+                    </th>
+                  )}
                   <th className="py-3 px-4">Audit ID</th>
                   <th className="py-3 px-4">Admin</th>
                   <th className="py-3 px-4">Role</th>
@@ -726,9 +892,21 @@ export const AuditLogPage: React.FC = () => {
                     <tr
                       key={log.id}
                       onClick={() => setSelectedLog(log)}
-                      className="hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors cursor-pointer group"
+                      className={`hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors cursor-pointer group ${
+                        selectedIds.has(log.id) ? 'bg-rose-50/40 dark:bg-rose-950/20' : ''
+                      }`}
                       title="Click to inspect full audit event telemetry"
                     >
+                      {isAdmin && (
+                        <td className="py-3.5 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(log.id)}
+                            onChange={(e) => toggleSelect(log.id, e as any)}
+                            className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600"
+                          />
+                        </td>
+                      )}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center space-x-1.5">
                           <Eye className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500 shrink-0" />
@@ -778,7 +956,19 @@ export const AuditLogPage: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 text-right font-mono font-extrabold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
-                        {formatAuditDate(log.created_at)}
+                        <div className="flex items-center justify-end gap-2">
+                          <span>{formatAuditDate(log.created_at)}</span>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteSingle(log, e)}
+                              className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                              title="Delete this log to free space"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -796,9 +986,18 @@ export const AuditLogPage: React.FC = () => {
                     onClick={() => setSelectedLog(log)}
                     className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200/80 dark:border-navy-800 shadow-xs hover:shadow-md cursor-pointer transition-all active:scale-[0.98] touch-manipulation space-y-3"
                   >
-                    {/* Header: Audit ID & Status */}
+                    {/* Header: Checkbox + Audit ID & Status + Quick Delete */}
                     <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-navy-800 pb-2">
-                      <div className="flex items-center space-x-1.5 min-w-0">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        {isAdmin && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(log.id)}
+                            onChange={(e) => toggleSelect(log.id, e as any)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer accent-rose-600 shrink-0"
+                          />
+                        )}
                         <Eye className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                         <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-xs truncate">{log.audit_id}</span>
                       </div>
@@ -813,6 +1012,16 @@ export const AuditLogPage: React.FC = () => {
                             <AlertTriangle className="w-2.5 h-2.5" />
                             <span>{log.status}</span>
                           </span>
+                        )}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteSingle(log, e)}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer transition-colors"
+                            title="Delete this log"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -1013,13 +1222,202 @@ export const AuditLogPage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 px-6 border-t border-slate-100 dark:border-navy-800/80 flex justify-end bg-slate-50/50 dark:bg-navy-900/40 flex-shrink-0">
+            <div className="p-4 px-6 border-t border-slate-100 dark:border-navy-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-navy-900/40 flex-shrink-0">
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSingle(selectedLog)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold rounded-2xl text-xs transition-colors cursor-pointer shadow-xs active:scale-95"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-500" />
+                  <span>Delete Log (Free Space)</span>
+                </button>
+              ) : <div />}
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
                 className="px-6 py-2.5 min-h-[44px] bg-slate-900 dark:bg-navy-800 hover:bg-slate-800 dark:hover:bg-navy-700 text-white font-black rounded-2xl text-xs transition-colors cursor-pointer shadow-md touch-manipulation active:scale-95"
               >
                 Close Inspection
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Storage Purge / Cleanup Modal */}
+      {showPurgeModal && typeof document !== 'undefined' && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="modal-overlay-responsive animate-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) setShowPurgeModal(false);
+          }}
+        >
+          <div className="modal-container-responsive max-w-md w-full bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl animate-modal-content overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Free Database Capacity
+                  </h3>
+                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    Purge older audit logs to reclaim storage space
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowPurgeModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Choose Cleanup Strategy:
+              </label>
+
+              <div className="space-y-2">
+                {[
+                  { days: 7, label: 'Logs older than 7 days', desc: 'Recommended for active systems' },
+                  { days: 14, label: 'Logs older than 14 days', desc: 'Preserves recent two weeks' },
+                  { days: 30, label: 'Logs older than 30 days', desc: 'Standard monthly retention' },
+                  { days: 90, label: 'Logs older than 90 days', desc: 'Quarterly compliance retention' },
+                ].map((opt) => (
+                  <button
+                    key={opt.days}
+                    type="button"
+                    onClick={() => {
+                      setPurgeDays(opt.days);
+                      setDeleteMode('older_than');
+                      setShowPurgeModal(false);
+                      setShowDeleteConfirmModal(true);
+                    }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl border border-slate-200 dark:border-navy-800 hover:border-rose-400 dark:hover:border-rose-600 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 text-left transition-all cursor-pointer group"
+                  >
+                    <div>
+                      <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400">
+                        {opt.label}
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {opt.desc}
+                      </div>
+                    </div>
+                    <Trash2 className="w-4 h-4 text-slate-300 group-hover:text-rose-500 transition-colors" />
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteMode('all');
+                    setShowPurgeModal(false);
+                    setShowDeleteConfirmModal(true);
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 hover:bg-rose-100/60 dark:hover:bg-rose-900/40 text-left transition-all cursor-pointer group"
+                >
+                  <div>
+                    <div className="text-xs font-black text-rose-700 dark:text-rose-300">
+                      Purge ALL Audit Logs
+                    </div>
+                    <div className="text-[10px] text-rose-600/80 dark:text-rose-400/80">
+                      Completely wipe log table to maximize free storage
+                    </div>
+                  </div>
+                  <AlertOctagon className="w-4 h-4 text-rose-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-navy-800">
+              <button
+                type="button"
+                onClick={() => setShowPurgeModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && typeof document !== 'undefined' && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="modal-overlay-responsive animate-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) setShowDeleteConfirmModal(false);
+          }}
+        >
+          <div className="modal-container-responsive max-w-sm w-full bg-white dark:bg-navy-950 border border-rose-200 dark:border-rose-900/80 rounded-3xl shadow-2xl animate-modal-content overflow-hidden p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                Confirm Log Deletion
+              </h3>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                {deleteMode === 'single' && (
+                  <>Are you sure you want to delete audit log <span className="font-mono font-bold text-rose-600 dark:text-rose-400">"{targetSingleLog?.audit_id}"</span>? Database space will be freed up.</>
+                )}
+                {deleteMode === 'selected' && (
+                  <>Are you sure you want to permanently delete <span className="font-bold text-rose-600 dark:text-rose-400">{selectedIds.size}</span> selected audit log(s)? Database capacity will be reclaimed.</>
+                )}
+                {deleteMode === 'older_than' && (
+                  <>Are you sure you want to purge all audit logs older than <span className="font-bold text-rose-600 dark:text-rose-400">{purgeDays} days</span>? Database storage space will be reclaimed.</>
+                )}
+                {deleteMode === 'all' && (
+                  <span className="text-rose-600 dark:text-rose-400 font-bold">WARNING: You are about to wipe ALL audit logs permanently. This cannot be undone!</span>
+                )}
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold text-amber-800 dark:text-amber-200 flex items-start gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>Deleted logs cannot be recovered. Ensure you have exported an Excel backup if historical retention is required.</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setShowDeleteConfirmModal(false)}
+                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={executeDelete}
+                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-xs font-black text-white shadow-md shadow-rose-600/30 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-1.5"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

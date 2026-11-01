@@ -231,7 +231,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   // Ultra-Fast Paginated Table Viewport Rendering
   const [currentPage, setCurrentPage] = useState(serverPage || 1);
-  const [pageSize, setPageSize] = useState<'25' | '50' | '100' | '200'>(serverPageSize ? String(serverPageSize) as any : '50');
+  const [pageSize, setPageSize] = useState<'10' | '20' | '50' | '100' | '200'>(serverPageSize ? String(serverPageSize) as any : '50');
 
   useEffect(() => {
     if (isServerPaginated) {
@@ -301,7 +301,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     }
   };
 
-  const handlePageSizeChange = (newSize: '25' | '50' | '100' | '200') => {
+  const handlePageSizeChange = (newSize: '10' | '20' | '50' | '100' | '200') => {
     triggerHaptic('selection');
     setPageSize(newSize);
     if (isServerPaginated && onServerPageChange) {
@@ -750,11 +750,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4 w-full sm:w-auto">
             {/* Rows Per Page Selector */}
-            {totalSolvers > 25 && (
+            {totalSolvers > 10 && (
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Per Page:</span>
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
-                  {(['25', '50', '100', '200'] as const).map((size) => (
+                  {(['10', '20', '50', '100', '200'] as const).map((size) => (
                     <button
                       key={size}
                       type="button"

@@ -1469,6 +1469,9 @@ def sync_single_historical_session(db: Session, session_id: int):
             setattr(existing_hist, "total_problems", 4)
             setattr(existing_hist, "contest_rank", r.get("contest_rank"))
             setattr(existing_hist, "rating_after", r.get("contest_rating"))
+            if not getattr(existing_hist, "contest_start_time", None):
+                from backend.services.canonical_contest_engine import derive_contest_datetime
+                existing_hist.contest_start_time = derive_contest_datetime(target_contest_title)
 
     # 300/300 Mathematical Reconciliation
     total_classified = sum(counts.values())

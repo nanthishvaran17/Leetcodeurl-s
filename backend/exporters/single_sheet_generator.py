@@ -8,6 +8,107 @@ from backend.exporters.nec_master_excel_design import apply_master_college_ident
 from backend.models import Student, WeeklyPublicResult, WeeklyVirtualResult
 from backend.services.weekly_session_resolver import resolve_target_weekly_session
 
+def _extract_student_contest_solves(s: Dict[str, Any], pr: Any, vr: Any):
+    """
+    Extract verified official contest solves, per-question checkmarks (Q1..Q4),
+    and attendance status for a student row in single sheet reports.
+    Guarantees:
+      1. Absent students have 0 solves and are categorized in 0 Qs / Absent.
+      2. Strings like '2/4' are parsed correctly.
+      3. All-time total solved (>4) is never confused with contest problem solves.
+      4. Q1..Q4 checkmarks sum up exactly to solved_count (0..4).
+    """
+    status_str = ""
+    if pr and pr.participation_status:
+        status_str = str(pr.participation_status).strip().upper()
+    elif vr and vr.participation_status:
+        status_str = str(vr.participation_status).strip().upper()
+    if not status_str:
+        status_str = str(s.get("status") or s.get("participation_status") or s.get("attendance") or "").strip().upper()
+
+    is_absent = status_str in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "NO_EVIDENCE", "PUBLIC_NOT_ATTENDED", "UNATTENDED")
+    is_attended = (status_str in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "PRESENT", "VIRTUAL", "VIRTUAL_ATTENDED", "LIVE", "VERIFIED"))
+    
+    if is_absent:
+        return False, 0, 0, 0, 0, 0
+
+    q1 = q2 = q3 = q4 = 0
+    has_db_q = False
+    if pr and (pr.q1 or pr.q2 or pr.q3 or pr.q4):
+        q1 = 1 if pr.q1 else 0
+        q2 = 1 if pr.q2 else 0
+        q3 = 1 if pr.q3 else 0
+        q4 = 1 if pr.q4 else 0
+        has_db_q = True
+    elif vr and (vr.q1 or vr.q2 or vr.q3 or vr.q4):
+        q1 = 1 if vr.q1 else 0
+        q2 = 1 if vr.q2 else 0
+        q3 = 1 if vr.q3 else 0
+        q4 = 1 if vr.q4 else 0
+        has_db_q = True
+
+    if not has_db_q:
+        q1 = 1 if str(s.get("q1", "")).lower() in ("1", "true", "yes", "solved") else 0
+        q2 = 1 if str(s.get("q2", "")).lower() in ("1", "true", "yes", "solved") else 0
+        q3 = 1 if str(s.get("q3", "")).lower() in ("1", "true", "yes", "solved") else 0
+        q4 = 1 if str(s.get("q4", "")).lower() in ("1", "true", "yes", "solved") else 0
+
+    tot_val = None
+    if pr and pr.total_contest_solved is not None and pr.total_contest_solved > 0:
+        tot_val = pr.total_contest_solved
+    elif vr and vr.total_contest_solved is not None and vr.total_contest_solved > 0:
+        tot_val = vr.total_contest_solved
+    
+    if tot_val is None:
+        for candidate in [s.get("total_contest_solved"), s.get("problems_solved"), s.get("solved"), s.get("total_solved")]:
+            if candidate is not None and candidate != "" and candidate != "—":
+                if isinstance(candidate, str) and "/" in candidate:
+                    try:
+                        tot_val = int(candidate.split("/")[0].strip())
+                        break
+                    except (ValueError, TypeError):
+                        pass
+                else:
+                    try:
+                        c_int = int(candidate)
+                        # If candidate > 4, it's an all-time total solved (e.g. 150), NOT a contest solve!
+                        if 0 <= c_int <= 4:
+                            tot_val = c_int
+                            break
+                    except (ValueError, TypeError):
+                        pass
+
+    q_sum = q1 + q2 + q3 + q4
+    if tot_val is not None and 0 <= tot_val <= 4:
+        solved_count = max(q_sum, tot_val)
+    else:
+        solved_count = q_sum
+
+    solved_count = max(0, min(4, solved_count))
+
+    # Harmonize question checkmarks so Q1..Q4 sum equals solved_count
+    if solved_count > q_sum:
+        needed = solved_count - q_sum
+        if q1 == 0 and needed > 0:
+            q1 = 1; needed -= 1
+        if q2 == 0 and needed > 0:
+            q2 = 1; needed -= 1
+        if q3 == 0 and needed > 0:
+            q3 = 1; needed -= 1
+        if q4 == 0 and needed > 0:
+            q4 = 1; needed -= 1
+    elif q_sum > solved_count:
+        solved_count = q_sum
+
+    if solved_count > 0:
+        is_attended = True
+    elif not is_attended and not is_absent:
+        cr_check = getattr(pr, "contest_rank", None) or s.get("contest_rank") or s.get("rank")
+        if cr_check and str(cr_check) not in ("None", "", "—", "Unrated", "-", "0"):
+            is_attended = True
+
+    return is_attended, q1, q2, q3, q4, solved_count
+
 def generate_single_sheet_contest_excel(
     db: Session,
     dataset: Dict[str, Any],
@@ -185,36 +286,7 @@ def generate_single_sheet_contest_excel(
         pr = public_map.get(reg_upper)
         vr = virtual_map.get(reg_upper)
 
-        q1 = q2 = q3 = q4 = 0
-        if pr:
-            q1 = 1 if pr.q1 else 0
-            q2 = 1 if pr.q2 else 0
-            q3 = 1 if pr.q3 else 0
-            q4 = 1 if pr.q4 else 0
-        elif vr:
-            q1 = 1 if vr.q1 else 0
-            q2 = 1 if vr.q2 else 0
-            q3 = 1 if vr.q3 else 0
-            q4 = 1 if vr.q4 else 0
-        else:
-            q1 = 1 if str(s.get("q1", "")).lower() in ("1", "true") else 0
-            q2 = 1 if str(s.get("q2", "")).lower() in ("1", "true") else 0
-            q3 = 1 if str(s.get("q3", "")).lower() in ("1", "true") else 0
-            q4 = 1 if str(s.get("q4", "")).lower() in ("1", "true") else 0
-        
-        # Calculate total solved for student
-        tot = s.get("solved")
-        if tot is None:
-            tot = s.get("total_solved")
-        if tot is None:
-            tot = s.get("total_contest_solved")
-        
-        try:
-            tot_int = int(tot) if tot is not None else 0
-        except:
-            tot_int = 0
-        
-        solved_count = max(tot_int, q1 + q2 + q3 + q4)
+        is_attended, q1, q2, q3, q4, solved_count = _extract_student_contest_solves(s, pr, vr)
         
         # Lookup Student record for Accommodation and 12th Cutoff
         st_obj = student_meta_map.get(reg_upper) or (
@@ -261,8 +333,10 @@ def generate_single_sheet_contest_excel(
         sum_q3 += q3
         sum_q4 += q4
         sum_total_solved += solved_count
-        # Aggregate solve categories
-        if solved_count >= 4:
+        # Aggregate solve categories based on verified attendance and solve count
+        if not is_attended or solved_count == 0:
+            count_q0 += 1
+        elif solved_count >= 4:
             count_q4 += 1
         elif solved_count == 3:
             count_q3 += 1
@@ -270,8 +344,6 @@ def generate_single_sheet_contest_excel(
             count_q2 += 1
         elif solved_count == 1:
             count_q1 += 1
-        else:
-            count_q0 += 1
 
         # Check Global Ranking (< 20000)
         gr_val = s.get("global_rank") or s.get("contest_global_rank") or s.get("profile_rank")
@@ -304,7 +376,6 @@ def generate_single_sheet_contest_excel(
                 pass
 
         # Aggregate accommodation statistics
-        is_attended = (solved_count > 0)
         target_group = hostel_stats if acc_is_hostel else ds_stats
         target_group["count"] += 1
         if is_attended:
@@ -670,16 +741,16 @@ def generate_single_sheet_contest_excel(
     
     # 2. Problem-Wise Solve Distribution Table
     ws2.row_dimensions[r2].height = 24
-    ws2.merge_cells(start_row=r2, start_column=1, end_row=r2, end_column=8)
+    ws2.merge_cells(start_row=r2, start_column=1, end_row=r2, end_column=6)
     sec2_hdr = ws2.cell(row=r2, column=1, value=f"2. PROBLEM-WISE SOLVE BREAKDOWN ({contest_display.upper()})")
     sec2_hdr.font = font_acc_title
     sec2_hdr.alignment = align_center
-    for c in range(1, 9):
+    for c in range(1, 7):
         ws2.cell(row=r2, column=c).fill = fill_header
         ws2.cell(row=r2, column=c).border = grid_border
     r2 += 1
     
-    dist_headers = ["S.No", "Problem Solve Category", "Questions Solved", "Student Count", "% of Cohort", "Participation Share", "Performance Tier", "Target Status"]
+    dist_headers = ["S.No", "Problem Solve Category", "Questions Solved", "Student Count", "% of Cohort", "Participation Share"]
     ws2.row_dimensions[r2].height = 24
     for c_idx, dh in enumerate(dist_headers, 1):
         cell_dh = ws2.cell(row=r2, column=c_idx, value=dh)
@@ -691,29 +762,27 @@ def generate_single_sheet_contest_excel(
     
     total_roster_num = max(1, len(students))
     solve_tiers = [
-        (1, "4 / 4 Questions Solved", "4 Qs", int(count_q4), float(count_q4 / total_roster_num), "Grandmaster", "Top 1% Elite"),
-        (2, "3 / 4 Questions Solved", "3 Qs", int(count_q3), float(count_q3 / total_roster_num), "Advanced Solver", "High Performer"),
-        (3, "2 / 4 Questions Solved", "2 Qs", int(count_q2), float(count_q2 / total_roster_num), "Intermediate", "Consistent"),
-        (4, "1 / 4 Questions Solved", "1 Q", int(count_q1), float(count_q1 / total_roster_num), "Active Participant", "Foundational"),
-        (5, "0 Questions / Absent", "0 Qs", int(count_q0), float(count_q0 / total_roster_num), "Unattempted", "Needs Attention")
+        (1, "4 / 4 Questions Solved", "4 Qs", int(count_q4), float(count_q4 / total_roster_num)),
+        (2, "3 / 4 Questions Solved", "3 Qs", int(count_q3), float(count_q3 / total_roster_num)),
+        (3, "2 / 4 Questions Solved", "2 Qs", int(count_q2), float(count_q2 / total_roster_num)),
+        (4, "1 / 4 Questions Solved", "1 Q", int(count_q1), float(count_q1 / total_roster_num)),
+        (5, "0 Questions / Absent", "0 Qs", int(count_q0), float(count_q0 / total_roster_num))
     ]
     
-    for s_no, cat_name, q_lbl, cnt_val, cohort_pct, tier_name, target_st in solve_tiers:
-        active_pct = float(cnt_val / total_attended_cnt) if total_attended_cnt > 0 else 0.0
+    for s_no, cat_name, q_lbl, cnt_val, cohort_pct in solve_tiers:
+        active_pct = float(cnt_val / total_attended_cnt) if (total_attended_cnt > 0 and s_no < 5) else 0.0
         tier_row = [
             s_no,
             cat_name,
             q_lbl,
             cnt_val,
             cohort_pct,
-            active_pct,
-            tier_name,
-            target_st
+            active_pct
         ]
         ws2.row_dimensions[r2].height = 20
         for c_idx, val in enumerate(tier_row, 1):
             cell = ws2.cell(row=r2, column=c_idx, value=val)
-            cell.font = font_name if c_idx == 2 else (font_bold if c_idx in (4, 7) else font_data)
+            cell.font = font_name if c_idx == 2 else (font_bold if c_idx == 4 else font_data)
             cell.alignment = align_left if c_idx == 2 else align_center
             cell.border = grid_border
             if c_idx in (5, 6):
@@ -750,17 +819,7 @@ def generate_single_sheet_contest_excel(
         pr = public_map.get(reg_upper)
         vr = virtual_map.get(reg_upper)
         
-        q1_s = 1 if (pr and pr.q1) or (vr and vr.q1) or str(s.get("q1", "")).lower() in ("1", "true") else 0
-        q2_s = 1 if (pr and pr.q2) or (vr and vr.q2) or str(s.get("q2", "")).lower() in ("1", "true") else 0
-        q3_s = 1 if (pr and pr.q3) or (vr and vr.q3) or str(s.get("q3", "")).lower() in ("1", "true") else 0
-        q4_s = 1 if (pr and pr.q4) or (vr and vr.q4) or str(s.get("q4", "")).lower() in ("1", "true") else 0
-        
-        tot_s = s.get("solved") or s.get("total_solved") or s.get("total_contest_solved") or 0
-        try:
-            tot_s_int = int(tot_s)
-        except Exception:
-            tot_s_int = 0
-        s_count = max(tot_s_int, q1_s + q2_s + q3_s + q4_s)
+        is_att_s, q1_s, q2_s, q3_s, q4_s, s_count = _extract_student_contest_solves(s, pr, vr)
         
         cr = None
         if pr and pr.contest_rank:

@@ -32,7 +32,7 @@ import { downloadManager } from '../services/download/downloadManager';
 // Shared Card Component 
 
 const Card: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: () => void }> = ({ children, className = '', id, onClick }) => (
-  <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-950 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs sm:shadow-sm hover:shadow-md transition-all ${className}`}>
+  <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-950 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-navy-800 shadow-xs sm:shadow-sm hover:shadow-md transition-all min-w-0 w-full max-w-full overflow-hidden box-border ${className}`}>
     {children}
   </div>
 );
@@ -1134,6 +1134,11 @@ const ReportHubModal: React.FC<{
 export interface InstitutionalSkillGap {
   id: string;
   name: string;
+  topic_slug?: string;
+  total_students?: number;
+  proficient_students?: number;
+  gap_students?: number;
+  avg_solved?: number;
   solve: string;
   solvePct: number;
   target: string;
@@ -1303,6 +1308,8 @@ export const HODCommandCenter: React.FC = () => {
  const [selectedYear, setSelectedYear] = useState<string>('ALL');
  const [selectedSection, setSelectedSection] = useState<string>('ALL');
  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+ const [selectedTopicGap, setSelectedTopicGap] = useState<string>('ALL');
+ const [selectedTopicGapName, setSelectedTopicGapName] = useState<string>('');
  const [allocationFilter, setAllocationFilter] = useState<'ALL' | 'ALLOCATED' | 'UNASSIGNED'>('ALL');
  const [staffWorkloadFilter, setStaffWorkloadFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED'>('ALL');
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
@@ -1513,7 +1520,8 @@ export const HODCommandCenter: React.FC = () => {
  year_level: yearLevel,
  section: section,
  status_filter: selectedStatus !== 'ALL' ? selectedStatus : undefined,
- allocation_filter: allocationFilter !== 'ALL' ? allocationFilter : undefined
+ topic_gap: selectedTopicGap !== 'ALL' ? selectedTopicGap : undefined,
+  allocation_filter: allocationFilter !== 'ALL' ? allocationFilter : undefined
  });
  setStudents(res.students || []);
  setStudentsTotal(res.total || 0);
@@ -1783,7 +1791,7 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
  return (
- <div className="max-w-full w-full overflow-x-hidden box-border space-y-5 sm:space-y-6 md:space-y-8 pb-36 sm:pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+ <div className="w-full max-w-full min-w-0 mx-auto overflow-x-clip box-border space-y-4 sm:space-y-6 md:space-y-8 pb-36 sm:pb-24 md:pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 
@@ -2017,7 +2025,7 @@ export const HODCommandCenter: React.FC = () => {
                       setSelectedDept(val);
                       setSelectedStaff('ALL');
                     }}
-                    dropdownWidth="w-[calc(100vw-24px)]"
+                    dropdownWidth="w-[calc(100vw-36px)] max-w-xs"
                     searchPlaceholder="Search department..."
                     options={deptOptions}
                     icon={<Building2 className="w-3.5 h-3.5 text-brand-500" />}
@@ -2031,7 +2039,7 @@ export const HODCommandCenter: React.FC = () => {
                     compact={true}
                     value={selectedStaff}
                     onChange={val => setSelectedStaff(val)}
-                    dropdownWidth="w-[calc(100vw-24px)]"
+                    dropdownWidth="w-[calc(100vw-36px)] max-w-xs"
                     searchPlaceholder="Search staff mentor..."
                     options={staffOptions}
                     icon={<User className="w-3.5 h-3.5 text-indigo-500" />}
@@ -2045,7 +2053,7 @@ export const HODCommandCenter: React.FC = () => {
                     compact={true}
                     value={selectedYear}
                     onChange={val => setSelectedYear(val)}
-                    dropdownWidth="w-[calc(100vw-24px)]"
+                    dropdownWidth="w-[calc(100vw-36px)] max-w-xs"
                     options={yearOptions}
                     icon={<Calendar className="w-3.5 h-3.5 text-amber-500" />}
                     className={selectedYear !== 'ALL' ? 'ring-2 ring-amber-500 border-amber-500' : ''}
@@ -2058,7 +2066,7 @@ export const HODCommandCenter: React.FC = () => {
                     compact={true}
                     value={selectedSection}
                     onChange={val => setSelectedSection(val)}
-                    dropdownWidth="w-[calc(100vw-24px)]"
+                    dropdownWidth="w-[calc(100vw-36px)] max-w-xs"
                     options={sectionOptions}
                     icon={<Layers className="w-3.5 h-3.5 text-purple-500" />}
                     className={selectedSection !== 'ALL' ? 'ring-2 ring-purple-500 border-purple-500' : ''}
@@ -2071,7 +2079,7 @@ export const HODCommandCenter: React.FC = () => {
                     compact={true}
                     value={selectedStatus}
                     onChange={val => setSelectedStatus(val)}
-                    dropdownWidth="w-[calc(100vw-24px)]"
+                    dropdownWidth="w-[calc(100vw-36px)] max-w-xs"
                     options={statusOptions}
                     icon={<Activity className="w-3.5 h-3.5 text-emerald-500" />}
                     className={selectedStatus !== 'ALL' ? 'ring-2 ring-emerald-500 border-emerald-500' : ''}
@@ -2183,226 +2191,236 @@ export const HODCommandCenter: React.FC = () => {
     );
   })()}
 
- {/* 3. STUDENT COHORT SUMMARY BANNER */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 p-3.5 sm:px-6 sm:py-5 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-950 border border-slate-200/90 sm:border-2 dark:border-navy-700 shadow-xs sm:shadow-sm">
- {/* Left: Cohort Identity */}
- <div className="flex items-center gap-3 min-w-0">
- <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg sm:rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-black font-mono text-sm sm:text-base border border-brand-200 dark:border-brand-900">
- {totalInScope}
- </div>
- <div className="min-w-0">
- <div className="font-display text-sm font-bold text-slate-900 dark:text-white truncate">
- Your Student Cohort ({scopeStaffName} / {scopeDeptCode}{selectedYear !== 'ALL' ? ` / ${selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : selectedYear === '4' ? 'IV Year' : `Year ${selectedYear}`}` : ''}{selectedSection !== 'ALL' ? ` / Sec ${selectedSection}` : ''})
- </div>
- <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-mono mt-0.5">
- <span className="text-emerald-600 font-bold">{activeInScope} Active</span>
- <span className="text-slate-300 dark:text-slate-600">/</span>
- <span className="text-rose-600 font-bold">{inactiveInScope} Inactive</span>
- <span className="text-slate-300 dark:text-slate-600">/</span>
- <span className="text-brand-600 font-bold">{improvingInScope} Improving</span>
- </div>
- </div>
- </div>
+  {/* 3. STUDENT COHORT SUMMARY BANNER */}
+  <div className="relative overflow-hidden p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-950/90 border border-slate-200/90 dark:border-white/10 shadow-xs sm:shadow-sm min-w-0 max-w-full">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 min-w-0">
+      {/* Left: Cohort Identity */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+        <div className="shrink-0 w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-brand-500/10 to-indigo-500/10 dark:from-brand-500/20 dark:to-indigo-500/20 text-brand-600 dark:text-brand-400 font-black font-mono text-xs sm:text-base border border-brand-200/70 dark:border-brand-500/30 shadow-2xs">
+          {totalInScope}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-display text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate">
+            Your Student Cohort ({scopeStaffName} / {scopeDeptCode}{selectedYear !== 'ALL' ? ` / ${selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : selectedYear === '4' ? 'IV Year' : `Year ${selectedYear}`}` : ''}{selectedSection !== 'ALL' ? ` / Sec ${selectedSection}` : ''})
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-mono mt-0.5">
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">{activeInScope} Active</span>
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+            <span className="text-rose-600 dark:text-rose-400 font-bold whitespace-nowrap">{inactiveInScope} Inactive</span>
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+            <span className="text-brand-600 dark:text-brand-400 font-bold whitespace-nowrap">{improvingInScope} Improving</span>
+          </div>
+        </div>
+      </div>
 
- {/* Right: Meta + Action */}
- <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-0 border-slate-100 dark:border-navy-900 pt-2 sm:pt-0 shrink-0">
- {/* High-Contrast Live Telemetry Pill */}
- <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg sm:rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-[10px] sm:text-xs font-mono shadow-2xs">
-            <Clock size={11} className="text-emerald-500 shrink-0" />
- <span className="text-slate-600 dark:text-slate-300 font-semibold hidden xs:inline">Last Sync:</span>
- <span className="font-black text-slate-900 dark:text-white tracking-wide">{lastLiveTimestamp}</span>
- </div>
+      {/* Right: Meta + Action */}
+      <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 shrink-0 min-w-0">
+        {/* High-Contrast Live Telemetry Pill */}
+        <div className="flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/90 dark:border-white/10 text-[10px] sm:text-xs font-mono shadow-2xs shrink-0">
+          <Clock size={11} className="text-emerald-500 shrink-0" />
+          <span className="text-slate-600 dark:text-slate-300 font-semibold hidden xs:inline">Last Sync:</span>
+          <span className="font-black text-slate-900 dark:text-white tracking-wide">{lastLiveTimestamp}</span>
+        </div>
 
- {/* High-Contrast Interactive Unassigned Students Actions */}
- {summary?.unassigned_student_count ? (
- <div className="flex items-center gap-1.5">
- <button
- onClick={() => {
- setAllocationFilter('UNASSIGNED');
- notify.info(`Filtered directory to ${summary.unassigned_student_count} unassigned students.`, '', { category: 'ALLOCATION' });
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-100/90 hover:bg-amber-200/90 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-950 dark:text-amber-200 font-extrabold text-[11px] sm:text-xs border border-amber-300 dark:border-amber-700/80 transition-all flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer whitespace-nowrap"
- title="Click to view and filter unassigned students in directory below"
- >
- <UserX size={12} className="text-amber-700 dark:text-amber-400 shrink-0" />
- <span className="font-mono font-black">{summary.unassigned_student_count}</span>
- <span className="hidden xs:inline">Unassigned</span>
- </button>
+        {/* High-Contrast Interactive Unassigned Students Actions */}
+        {summary?.unassigned_student_count ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => {
+                setAllocationFilter('UNASSIGNED');
+                notify.info(`Filtered directory to ${summary.unassigned_student_count} unassigned students.`, '', { category: 'ALLOCATION' });
+                document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/70 text-amber-900 dark:text-amber-200 font-black text-[10px] sm:text-xs border border-amber-300/80 dark:border-amber-700/60 transition-all flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer whitespace-nowrap"
+              title="Click to view and filter unassigned students in directory below"
+            >
+              <UserX size={12} className="text-amber-700 dark:text-amber-400 shrink-0" />
+              <span className="font-mono font-black">{summary.unassigned_student_count}</span>
+              <span className="hidden xs:inline">Unassigned</span>
+            </button>
 
- <button
- onClick={() => setShowStaffAllocationModal(true)}
- className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-[11px] sm:text-xs border border-amber-600/30 transition-all flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer whitespace-nowrap"
- title="Open Faculty Allocation Manager to assign students"
- >
- <Users size={12} className="shrink-0" />
- <span>Assign</span>
- </button>
- </div>
- ) : (
- <span className="px-2.5 py-1 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300 font-bold text-[11px] sm:text-xs border border-emerald-300 dark:border-emerald-700/60 flex items-center gap-1 shadow-2xs">
- <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
- <span>All Assigned</span>
- </span>
- )}
- </div>
- </div>
+            <button
+              onClick={() => setShowStaffAllocationModal(true)}
+              className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-[10px] sm:text-xs border border-amber-600/30 transition-all flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer whitespace-nowrap"
+              title="Open Faculty Allocation Manager to assign students"
+            >
+              <Users size={12} className="shrink-0" />
+              <span>Assign</span>
+            </button>
+          </div>
+        ) : (
+          <span className="px-2.5 py-1 rounded-lg sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-bold text-[10px] sm:text-xs border border-emerald-300/80 dark:border-emerald-700/60 flex items-center gap-1 shadow-2xs shrink-0">
+            <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
+            <span>All Assigned</span>
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
 
- {/* 4. SIX AUTHORITATIVE HOD KPI CARDS */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3.5 lg:gap-5 mb-4 sm:mb-8">
- <Card 
- className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer ${staffWorkloadFilter === 'ALL' && selectedStaff === 'ALL' && allocationFilter === 'ALL' && selectedStatus === 'ALL' ? '' : ''}`}
- onClick={() => {
- setStaffWorkloadFilter('ALL');
- document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- >
- <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
- <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
- <Users size={14} className="text-indigo-500" />
- </div>
- <div className="mt-1.5 sm:mt-3">
- <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
- {summary?.kpi_summary?.total_staff ?? staffList.length}
- </div>
- <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">Faculty Mentors</div>
- </div>
- </Card>
+  {/* 4. SIX AUTHORITATIVE HOD KPI CARDS - Ultra-Compact Micro Bento */}
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2.5 mb-2 sm:mb-4 min-w-0 w-full max-w-full">
+    <Card 
+      className={`p-2 sm:p-2.5 flex flex-col justify-between min-h-[56px] sm:min-h-[76px] min-w-0 max-w-full rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${staffWorkloadFilter !== 'ALL' ? 'ring-2 ring-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/30' : ''}`}
+      onClick={() => {
+        setStaffWorkloadFilter('ALL');
+        document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <div className="flex items-center justify-between text-slate-700 dark:text-slate-400 min-w-0 gap-1">
+        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-mono truncate">TOTAL STAFF</span>
+        <Users size={12} className="text-indigo-500 shrink-0" />
+      </div>
+      <div className="mt-0.5 sm:mt-1 min-w-0">
+        <div className="font-display text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-white font-mono truncate">
+          {summary?.kpi_summary?.total_staff ?? staffList.length}
+        </div>
+        <div className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">Faculty Mentors</div>
+      </div>
+    </Card>
 
- <Card 
- className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg ${selectedStatus === 'ALL' && allocationFilter === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
- onClick={() => {
- setSelectedStatus('ALL');
- setAllocationFilter('ALL');
- notify.info(`Showing all enrolled students in scope (${summary?.kpi_summary?.total_students ?? totalInScope}).`, '', { category: 'ALLOCATION' });
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- >
- <div className="flex items-center justify-between text-slate-700 dark:text-slate-400">
- <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
- <BookOpen size={14} className="text-slate-600" />
- </div>
- <div className="mt-1.5 sm:mt-3">
- <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
- {summary?.kpi_summary?.total_students ?? totalInScope}
- </div>
- <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">Enrolled Scope</div>
- </div>
- </Card>
-
- <Card 
- className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40' : ''}`}
- onClick={() => {
- if (allocationFilter === 'ALLOCATED') {
-   setAllocationFilter('ALL');
-   notify.info('Cleared allocated filter. Showing all students.', '', { category: 'ALLOCATION' });
- } else {
-   setAllocationFilter('ALLOCATED');
-   notify.success(`Filtering to only ${summary?.kpi_summary?.total_allocated ?? activeInScope} allocated students.`, '', { category: 'ALLOCATION' });
- }
- document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
- }}
- >
- <div className="flex items-center justify-between text-brand-600">
- <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
- <UserCheck size={14} />
- </div>
- <div className="mt-1.5 sm:mt-3">
- <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
- {summary?.kpi_summary?.total_allocated ?? activeInScope}
- </div>
- <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
- </div>
- </Card>
-
-  <Card 
-    className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40' : ''}`}
-    onClick={() => {
-      if (selectedStatus === 'COMPLETED') {
+    <Card 
+      className="p-2 sm:p-2.5 flex flex-col justify-between min-h-[56px] sm:min-h-[76px] min-w-0 max-w-full rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+      onClick={() => {
         setSelectedStatus('ALL');
         setAllocationFilter('ALL');
-        notify.info('Cleared target completed filter. Showing all students.', '', { category: 'ALLOCATION' });
-      } else {
-        setSelectedStatus('COMPLETED');
-        setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
-        notify.success(`Viewing ${summary?.kpi_summary?.completed ?? 0} students who achieved target (10+ solved).`, '', { category: 'ALLOCATION' });
-      }
-      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
-    }}
-  >
-    <div className="flex items-center justify-between text-emerald-600">
-      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">COMPLETED</span>
-      <CheckCircle2 size={14} />
-    </div>
-    <div className="mt-1.5 sm:mt-3">
-      <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
-        {summary?.kpi_summary?.completed ?? 0}
+        notify.info(`Showing all enrolled students in scope (${summary?.kpi_summary?.total_students ?? totalInScope}).`, '', { category: 'ALLOCATION' });
+        document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <div className="flex items-center justify-between text-slate-700 dark:text-slate-400 min-w-0 gap-1">
+        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-mono truncate">TOTAL STUDENTS</span>
+        <BookOpen size={12} className="text-blue-500 shrink-0" />
       </div>
-      <div className="flex items-center justify-between text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-500 font-semibold mt-0.5">
-        <span>Target Done</span>
-        <span className="text-[9px] sm:text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
-          {summary?.kpi_summary?.completed ?? 0} →
-        </span>
+      <div className="mt-0.5 sm:mt-1 min-w-0">
+        <div className="font-display text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-white font-mono truncate">
+          {summary?.kpi_summary?.total_students ?? totalInScope}
+        </div>
+        <div className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">Enrolled Scope</div>
       </div>
-    </div>
-  </Card>
+    </Card>
 
-  <Card 
-    className={`p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500 bg-amber-50/70 dark:bg-amber-950/40' : ''}`}
-    onClick={() => {
-      if (selectedStatus === 'PENDING') {
-        setSelectedStatus('ALL');
-        setAllocationFilter('ALL');
-        notify.info('Cleared pending target filter. Showing all students.', '', { category: 'ALLOCATION' });
-      } else {
-        setSelectedStatus('PENDING');
-        setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
-        notify.warning(`Viewing ${summary?.kpi_summary?.pending ?? 0} students with target in progress (< 10 solved).`, '', { category: 'ALLOCATION' });
-      }
-      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
-    }}
-  >
-    <div className="flex items-center justify-between text-amber-600">
-      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono">PENDING</span>
-      <Clock size={14} />
-    </div>
-    <div className="mt-1.5 sm:mt-3">
-      <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
-        {summary?.kpi_summary?.pending ?? 0}
+    <Card 
+      className={`p-2 sm:p-2.5 flex flex-col justify-between min-h-[56px] sm:min-h-[76px] min-w-0 max-w-full rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500/50 bg-brand-50/50 dark:bg-brand-950/40 border-brand-300' : ''}`}
+      onClick={() => {
+        if (allocationFilter === 'ALLOCATED') {
+          setAllocationFilter('ALL');
+          notify.info('Cleared allocated filter. Showing all students.', '', { category: 'ALLOCATION' });
+        } else {
+          setAllocationFilter('ALLOCATED');
+          notify.success(`Filtering to only ${summary?.kpi_summary?.total_allocated ?? activeInScope} allocated students.`, '', { category: 'ALLOCATION' });
+        }
+        document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <div className="flex items-center justify-between text-brand-600 dark:text-brand-400 min-w-0 gap-1">
+        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-mono truncate">ALLOCATED</span>
+        <UserCheck size={12} className="shrink-0" />
       </div>
-      <div className="flex items-center justify-between text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">
-        <span>In Progress</span>
-        <span className="text-[9px] sm:text-[10px] font-mono font-bold group-hover:underline flex items-center gap-0.5">
-          {summary?.kpi_summary?.pending ?? 0} →
-        </span>
+      <div className="mt-0.5 sm:mt-1 min-w-0">
+        <div className="font-display text-sm sm:text-base lg:text-lg font-black text-brand-600 dark:text-brand-400 font-mono truncate">
+          {summary?.kpi_summary?.total_allocated ?? activeInScope}
+        </div>
+        <div className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
       </div>
-    </div>
-  </Card>
+    </Card>
 
- <Card 
- className="p-2.5 sm:p-5 flex flex-col justify-between min-h-[90px] sm:min-h-[140px] transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer !bg-slate-900 text-white border-slate-800"
- >
- <div className="flex items-center justify-between text-brand-300">
- <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider font-mono text-slate-300">PROGRESS</span>
- <Activity size={14} className="text-amber-400" />
- </div>
- <div className="mt-1.5 sm:mt-3">
- <div className="font-display text-lg sm:text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
- {summary?.kpi_summary?.overall_progress ?? 0}%
- </div>
- <div className="flex items-center gap-1.5 mt-1">
- <span className={`px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-bold ${
- (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-500 text-white' :
- (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
- }`}>
- {(summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'GOOD' :
- (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'WATCH' : 'ACTION'}
- </span>
- </div>
- </div>
- </Card>
- </div>
+    <Card 
+      className={`p-2 sm:p-2.5 flex flex-col justify-between min-h-[56px] sm:min-h-[76px] min-w-0 max-w-full rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-300' : ''}`}
+      onClick={() => {
+        if (selectedStatus === 'COMPLETED') {
+          setSelectedStatus('ALL');
+          setAllocationFilter('ALL');
+          notify.info('Cleared target completed filter. Showing all students.', '', { category: 'ALLOCATION' });
+        } else {
+          setSelectedStatus('COMPLETED');
+          setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
+          notify.success(`Viewing ${summary?.kpi_summary?.completed ?? 0} students who achieved target (10+ solved).`, '', { category: 'ALLOCATION' });
+        }
+        document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 min-w-0 gap-1">
+        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-mono truncate">COMPLETED</span>
+        <CheckCircle2 size={12} className="shrink-0" />
+      </div>
+      <div className="mt-0.5 sm:mt-1 min-w-0">
+        <div className="font-display text-sm sm:text-base lg:text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono truncate">
+          {summary?.kpi_summary?.completed ?? 0}
+        </div>
+        <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold min-w-0 gap-1">
+          <span className="truncate">Target Done</span>
+          <span className="text-[8px] sm:text-[9px] font-mono font-bold group-hover:underline flex items-center shrink-0">
+            {summary?.kpi_summary?.completed ?? 0} →
+          </span>
+        </div>
+      </div>
+    </Card>
 
+    <Card 
+      className={`p-2 sm:p-2.5 flex flex-col justify-between min-h-[56px] sm:min-h-[76px] min-w-0 max-w-full rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500/50 bg-amber-50/60 dark:bg-amber-950/40 border-amber-300' : ''}`}
+      onClick={() => {
+        if (selectedStatus === 'PENDING') {
+          setSelectedStatus('ALL');
+          setAllocationFilter('ALL');
+          notify.info('Cleared pending target filter. Showing all students.', '', { category: 'ALLOCATION' });
+        } else {
+          setSelectedStatus('PENDING');
+          setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
+          notify.warning(`Viewing ${summary?.kpi_summary?.pending ?? 0} students with target in progress (< 10 solved).`, '', { category: 'ALLOCATION' });
+        }
+        document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+    >
+      <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 min-w-0 gap-1">
+        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-mono truncate">PENDING</span>
+        <Clock size={12} className="shrink-0" />
+      </div>
+      <div className="mt-0.5 sm:mt-1 min-w-0">
+        <div className="font-display text-sm sm:text-base lg:text-lg font-black text-amber-600 dark:text-amber-400 font-mono truncate">
+          {summary?.kpi_summary?.pending ?? 0}
+        </div>
+        <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-amber-600 dark:text-amber-400 font-semibold min-w-0 gap-1">
+          <span className="truncate">In Progress</span>
+          <span className="text-[8px] sm:text-[9px] font-mono font-bold group-hover:underline flex items-center shrink-0">
+            {summary?.kpi_summary?.pending ?? 0} →
+          </span>
+        </div>
+      </div>
+    </Card>
+
+    <Card 
+      className="p-2 sm:p-2.5 flex flex-col justify-between min-h-[56px] sm:min-h-[76px] min-w-0 max-w-full rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+    >
+      <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 min-w-0 gap-1">
+        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider font-mono truncate">PROGRESS</span>
+        <Activity size={12} className="text-indigo-500 shrink-0" />
+      </div>
+      <div className="mt-0.5 sm:mt-1 min-w-0">
+        <div className="font-display text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-white font-mono truncate flex items-baseline justify-between gap-1">
+          <span>{summary?.kpi_summary?.overall_progress ?? 0}%</span>
+          <span className={`px-1 py-0.2 rounded text-[8px] sm:text-[9px] font-mono font-bold uppercase ${
+            (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300/60' :
+            (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/60' :
+            'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300/60'
+          }`}>
+            {(summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'GOOD' :
+            (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'WATCH' : 'ACTION'}
+          </span>
+        </div>
+        {/* Sleek mini progress track */}
+        <div className="w-full bg-slate-100 dark:bg-white/10 h-1 sm:h-1.5 rounded-full overflow-hidden mt-1 sm:mt-1.5">
+          <div 
+            className={`h-full rounded-full transition-all duration-500 ${
+              (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-500' :
+              (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-500' : 'bg-rose-500'
+            }`}
+            style={{ width: `${Math.min(100, Math.max(0, summary?.kpi_summary?.overall_progress ?? 0))}%` }}
+          />
+        </div>
+      </div>
+    </Card>
+  </div>
       {/* 5. FACULTY MENTORS PERFORMANCE & PROGRESS MATRIX (PRIMARY HOD VIEW) */}
       <div id="staff-performance-section" className="scroll-mt-20">
         <FacultyMentorMatrixCard
@@ -2645,7 +2663,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
           <div className="flex items-center gap-2">
-            {(allocationFilter !== 'ALL' || selectedStatus !== 'ALL') && (
+            {(allocationFilter !== 'ALL' || selectedStatus !== 'ALL' || selectedTopicGap !== 'ALL') && (
               <button
                 onClick={() => {
                   setAllocationFilter('ALL');
@@ -3341,7 +3359,7 @@ export const HODCommandCenter: React.FC = () => {
  </div>
 
  <div className="space-y-3 font-mono">
- {institutionalSkillGaps.map((s) => (
+ {(summary?.skill_gaps && summary.skill_gaps.length > 0 ? summary.skill_gaps : institutionalSkillGaps).map((s) => (
  <div
    key={s.id}
    onClick={() => setSelectedSkillGap(s)}
@@ -3353,9 +3371,14 @@ export const HODCommandCenter: React.FC = () => {
        <div className="font-extrabold text-slate-900 dark:text-white text-xs font-sans leading-snug break-words flex items-center gap-1.5">
          <span>{s.name}</span>
        </div>
-       <div className="text-xs text-slate-700 dark:text-slate-400 leading-relaxed">
-         Benchmark Target: <strong className="text-slate-700 dark:text-slate-300 font-bold">{s.target}</strong>
-       </div>
+       <div className="text-xs text-slate-700 dark:text-slate-400 leading-relaxed flex items-center justify-between gap-2 flex-wrap">
+          <span>Benchmark Target: <strong className="text-slate-700 dark:text-slate-300 font-bold">{s.target}</strong></span>
+          {s.total_students !== undefined && (
+            <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+              {s.proficient_students || 0}/{s.total_students} proficient ({s.gap_students || 0} gap)
+            </span>
+          )}
+        </div>
      </div>
      <div className="text-left sm:text-right flex flex-col items-start sm:items-end gap-1 min-w-0 shrink-0">
        <span className={`max-w-full px-2.5 py-0.5 rounded-full text-xs font-extrabold border whitespace-normal leading-tight ${
@@ -3628,17 +3651,19 @@ export const HODCommandCenter: React.FC = () => {
           <div className="w-full max-w-2xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
                   <GraduationCap size={20} />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-display text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
-                    <span>{selectedYearBenchmark.year} Cohort Academic Performance</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-display text-base font-bold text-slate-900 dark:text-white truncate">
+                      {selectedYearBenchmark.year} Academic Performance
+                    </h3>
+                    <span className="shrink-0 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800 whitespace-nowrap">
                       Cohort {selectedYearBenchmark.year_level}
                     </span>
-                  </h3>
+                  </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5 truncate">
                     Academic performance, participation health, and mentor intervention roadmap
                   </p>
@@ -3647,7 +3672,7 @@ export const HODCommandCenter: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedYearBenchmark(null)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition shrink-0 ml-2"
                 title="Close"
               >
                 <X size={18} />
@@ -3822,7 +3847,7 @@ export const HODCommandCenter: React.FC = () => {
           <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden flex flex-col max-h-[88dvh] sm:max-h-[90vh]">
             {/* Modal Header */}
             <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-2.5 shrink-0 bg-slate-50/50 dark:bg-navy-900/50">
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 ${
                   selectedSkillGap.color === 'rose'
                     ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/60 dark:border-rose-800'
@@ -3832,10 +3857,12 @@ export const HODCommandCenter: React.FC = () => {
                 }`}>
                   <Target size={18} />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
-                    <span className="truncate">{selectedSkillGap.name}</span>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border shrink-0 ${
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
+                      {selectedSkillGap.name}
+                    </h3>
+                    <span className={`shrink-0 text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold border whitespace-nowrap ${
                       selectedSkillGap.color === 'rose'
                         ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
                         : selectedSkillGap.color === 'amber'
@@ -3844,7 +3871,7 @@ export const HODCommandCenter: React.FC = () => {
                     }`}>
                       {selectedSkillGap.status}
                     </span>
-                  </h3>
+                  </div>
                   <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5 truncate">
                     Institutional algorithmic gap diagnostic & faculty-led 2-week laboratory intervention plan
                   </p>
@@ -3853,7 +3880,7 @@ export const HODCommandCenter: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedSkillGap(null)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition shrink-0"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition shrink-0 ml-2"
                 title="Close"
               >
                 <X size={18} />
@@ -4070,8 +4097,11 @@ export const HODCommandCenter: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedStatus('PENDING');
-                    notify.info(`Filtered directory to in-progress students for ${selectedSkillGap.name} intervention`, '', { category: 'ALLOCATION' });
+                    const slug = selectedSkillGap.topic_slug || selectedSkillGap.id;
+                    setSelectedTopicGap(slug);
+                    setSelectedTopicGapName(selectedSkillGap.name);
+                    setSelectedStatus('ALL');
+                    notify.info(`Filtered student roster to students needing practice in ${selectedSkillGap.name}`, '', { category: 'ALLOCATION' });
                     setSelectedSkillGap(null);
                     setTimeout(() => {
                       document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -4080,7 +4110,7 @@ export const HODCommandCenter: React.FC = () => {
                   className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm active:scale-95 cursor-pointer"
                 >
                   <Filter size={13} />
-                  <span className="truncate">Filter Struggling Solvers Below</span>
+                  <span className="truncate">Filter Students Needing Practice {selectedSkillGap.gap_students !== undefined ? `(${selectedSkillGap.gap_students})` : ''}</span>
                 </button>
 
                 <button

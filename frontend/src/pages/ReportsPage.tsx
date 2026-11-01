@@ -94,6 +94,7 @@ export const ReportsPage: React.FC = () => {
   const [rptTypeOpen, setRptTypeOpen] = useState<boolean>(false);
   const [rptSessionOpen, setRptSessionOpen] = useState<boolean>(false);
   const [rptSearch, setRptSearch] = useState<string>('');
+  const [moreFormatsOpen, setMoreFormatsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (selectedReportType === 'WEEKLY_PERFORMANCE') {
@@ -109,11 +110,12 @@ export const ReportsPage: React.FC = () => {
 
   const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
   useEscapeKey(() => {
+    if (moreFormatsOpen) { setMoreFormatsOpen(false); return; }
     if (deleteModalItem) { setDeleteModalItem(null); return; }
     if (showCertModal) { setShowCertModal(false); return; }
     if (activeUniversalPreviewId) { setActiveUniversalPreviewId(null); return; }
     if (showSyncModal) { setShowSyncModal(false); return; }
-  }, Boolean(deleteModalItem || showCertModal || activeUniversalPreviewId || showSyncModal));
+  }, Boolean(moreFormatsOpen || deleteModalItem || showCertModal || activeUniversalPreviewId || showSyncModal));
 
   // Background pre-fetch warm-up on filter change for instant (< 1ms) dataset generation
   useEffect(() => {
@@ -864,92 +866,107 @@ export const ReportsPage: React.FC = () => {
                               document.body
                             )
                           ) : (
-                            <>
-                              {/* Backdrop click to dismiss on desktop - clean transparent dismissal */}
-                              <div 
-                                className="fixed inset-0 z-[190] bg-transparent" 
-                                onClick={() => { setRptTypeOpen(false); setRptSearch(''); }} 
-                              />
-                              <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 w-full sm:w-[500px] md:w-[740px] max-w-full sm:max-w-[calc(100vw-3rem)] rounded-2xl sm:rounded-3xl overflow-hidden bg-white dark:bg-[#0c1222] border-2 border-slate-200 dark:border-slate-700 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.95)] animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col max-h-[min(480px,calc(100vh-140px))]">
-                                {/* Dropdown header bar */}
-                                <div className="flex items-center justify-between px-3.5 sm:px-5 py-3 bg-gradient-to-r from-[#111827] via-[#1e293b] to-[#111827] border-b border-brand-500/40 shrink-0">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
-                                      <LayoutTemplate className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300" />
+                            createPortal(
+                              <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-150">
+                                {/* Backdrop click to dismiss on desktop */}
+                                <div 
+                                  className="fixed inset-0" 
+                                  onClick={() => { setRptTypeOpen(false); setRptSearch(''); }} 
+                                />
+                                <div className="relative z-10 w-full max-w-3xl max-h-[85vh] flex flex-col bg-white dark:bg-[#0c1222] rounded-3xl border-2 border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+                                  {/* Dropdown header bar */}
+                                  <div className="flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-[#111827] via-[#1e293b] to-[#111827] border-b border-brand-500/40 shrink-0">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className="w-7 h-7 rounded-xl bg-brand-500/25 border border-brand-400/30 flex items-center justify-center shrink-0">
+                                        <LayoutTemplate className="w-4 h-4 text-brand-300" />
+                                      </div>
+                                      <span className="text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
                                     </div>
-                                    <span className="text-xs sm:text-sm font-black text-white tracking-wide truncate">Select Report Type</span>
+                                    <div className="flex items-center gap-2.5 shrink-0">
+                                      <span className="text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                                        {allOpts.length} Reports
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => { setRptTypeOpen(false); setRptSearch(''); }}
+                                        className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                        title="Close"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <span className="text-[10px] sm:text-[11px] font-bold text-white bg-brand-500/30 border border-brand-400/40 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                                    {allOpts.length} Reports
-                                  </span>
-                                </div>
 
-                                {/* Search Bar */}
-                                <div className="px-3.5 sm:px-5 py-2 bg-slate-900/95 border-b border-slate-700/80 flex items-center gap-2 shrink-0">
-                                  <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                  <input
-                                    type="text"
-                                    value={rptSearch}
-                                    onChange={(e) => setRptSearch(e.target.value)}
-                                    placeholder="Filter reports by name (e.g. contest, hod, faculty)..."
-                                    className="w-full bg-transparent text-xs text-white placeholder-slate-400 outline-none font-medium"
-                                    autoFocus
-                                  />
-                                  {rptSearch && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setRptSearch('')}
-                                      className="text-[10px] text-slate-300 hover:text-white px-1.5 py-0.5 rounded bg-white/10"
-                                    >
-                                      Clear
-                                    </button>
-                                  )}
-                                </div>
+                                  {/* Search Bar */}
+                                  <div className="px-5 py-2.5 bg-slate-900/95 border-b border-slate-700/80 flex items-center gap-2.5 shrink-0">
+                                    <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                                    <input
+                                      type="text"
+                                      value={rptSearch}
+                                      onChange={(e) => setRptSearch(e.target.value)}
+                                      placeholder="Filter reports by name (e.g. contest, hod, faculty)..."
+                                      className="w-full bg-transparent text-xs text-white placeholder-slate-400 outline-none font-medium"
+                                      autoFocus
+                                    />
+                                    {rptSearch && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setRptSearch('')}
+                                        className="text-[10px] text-slate-300 hover:text-white px-2 py-0.5 rounded bg-white/10"
+                                      >
+                                        Clear
+                                      </button>
+                                    )}
+                                  </div>
 
-                                {/* Two-column body on desktop, single column on mobile - constrained height & visible scrolling */}
-                                {(() => {
-                                  const displayedCategories = rptSearch.trim()
-                                    ? reportCategories.map(cat => ({
-                                        ...cat,
-                                        options: cat.options.filter((opt: any) => 
-                                          opt.label.toLowerCase().includes(rptSearch.toLowerCase()) ||
-                                          opt.value.toLowerCase().includes(rptSearch.toLowerCase())
-                                        )
-                                      })).filter(cat => cat.options.length > 0)
-                                    : reportCategories;
+                                  {/* Two-column body on desktop with clean, guaranteed-height scroll */}
+                                  {(() => {
+                                    const displayedCategories = rptSearch.trim()
+                                      ? reportCategories.map(cat => ({
+                                          ...cat,
+                                          options: cat.options.filter((opt: any) => 
+                                            opt.label.toLowerCase().includes(rptSearch.toLowerCase()) ||
+                                            opt.value.toLowerCase().includes(rptSearch.toLowerCase())
+                                          )
+                                        })).filter(cat => cat.options.length > 0)
+                                      : reportCategories;
 
-                                  return (
-                                    <div 
-                                      className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto divide-y md:divide-y-0 divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#0c1222] pb-6 custom-scrollbar"
-                                      style={{
-                                        maxHeight: '340px',
-                                        scrollbarWidth: 'thin',
-                                        scrollbarColor: '#6366f1 rgba(15, 23, 42, 0.4)'
-                                      }}
-                                    >
-                                      {/* LEFT: Contest Reports */}
-                                      <div className="p-3 sm:p-5 bg-slate-50 dark:bg-[#0f172a] border-r-0 md:border-r border-slate-200/80 dark:border-slate-800">
-                                        {displayedCategories.find(c => c.title === 'A. CONTEST REPORTS') && 
-                                          renderCategory(displayedCategories.find(c => c.title === 'A. CONTEST REPORTS'))}
-                                      </div>
-                                      {/* RIGHT: Performance, Consolidated, Executive */}
-                                      <div className="p-3 sm:p-5 bg-white dark:bg-[#0c1222] flex flex-col gap-y-3.5 sm:gap-y-5">
-                                        {displayedCategories.filter(c => c.title !== 'A. CONTEST REPORTS').map(cat => (
-                                          <div key={cat.title}>
-                                            {renderCategory(cat)}
+                                    return (
+                                      <div 
+                                        className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-white dark:bg-[#0c1222] stylish-scrollbar"
+                                        style={{
+                                          maxHeight: 'calc(85vh - 120px)',
+                                          scrollbarWidth: 'thin',
+                                          scrollbarColor: '#6366f1 rgba(15, 23, 42, 0.2)'
+                                        }}
+                                      >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-slate-100 dark:divide-slate-800">
+                                          {/* LEFT: Contest Reports */}
+                                          <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#0f172a] border-r-0 md:border-r border-slate-200/80 dark:border-slate-800">
+                                            {displayedCategories.find(c => c.title === 'A. CONTEST REPORTS') && 
+                                              renderCategory(displayedCategories.find(c => c.title === 'A. CONTEST REPORTS'))}
                                           </div>
-                                        ))}
-                                        {displayedCategories.length === 0 && (
-                                          <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
-                                            No reports found matching "{rptSearch}".
+                                          {/* RIGHT: Performance, Consolidated, Executive */}
+                                          <div className="p-4 sm:p-5 bg-white dark:bg-[#0c1222] flex flex-col gap-y-4 pb-8">
+                                            {displayedCategories.filter(c => c.title !== 'A. CONTEST REPORTS').map(cat => (
+                                              <div key={cat.title}>
+                                                {renderCategory(cat)}
+                                              </div>
+                                            ))}
+                                            {displayedCategories.length === 0 && (
+                                              <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400">
+                                                No reports found matching "{rptSearch}".
+                                              </div>
+                                            )}
                                           </div>
-                                        )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            </>
+                                    );
+                                  })()}
+                                </div>
+                              </div>,
+                              document.body
+                            )
                           )
                         )}
                       </>
@@ -1344,7 +1361,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Action Bar Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200/80 dark:border-white/10 relative z-10">
+            <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200/80 dark:border-white/10 relative ${moreFormatsOpen ? "z-[60]" : "z-10"}`}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 font-semibold truncate w-full sm:w-auto">
                 <span className="text-[11px] sm:text-xs truncate">
                   Active Filter: {isGlobalAccess && selectedCollege !== 'ALL' && <><span className="font-black text-brand-600 dark:text-brand-400">Campus: {selectedCollege}</span> • </>}<span className="font-black text-slate-900 dark:text-white">{selectedDept === 'ALL' ? 'All Departments' : selectedDept}</span> • <span className="font-black text-indigo-600 dark:text-indigo-400">{selectedYear === 'ALL' ? 'All Batches' : `${selectedYear === '2' ? 'II' : selectedYear === '3' ? 'III' : 'IV'} Year`}</span>
@@ -1368,37 +1385,174 @@ export const ReportsPage: React.FC = () => {
                   <span>Download Excel</span>
                 </button>
 
-                {/* 2. Direct PDF Download */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const q = getActiveFilterQueryParams();
-                    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
-                    const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.pdf`;
-                    downloadReportFile(`/reports/export-pdf${q}`, fname);
-                  }}
-                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center space-x-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-black text-xs rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer touch-manipulation"
-                  title="Download PDF (.pdf) with current active filters"
-                >
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span>Download PDF</span>
-                </button>
+                {/* 2. More Export Options Dropdown (PDF & Word) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMoreFormatsOpen(!moreFormatsOpen)}
+                    className={`min-h-[44px] flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-2xl border text-xs font-black transition-all active:scale-95 cursor-pointer touch-manipulation ${
+                      moreFormatsOpen
+                        ? 'bg-slate-200 dark:bg-navy-700 text-slate-900 dark:text-white border-brand-500 ring-2 ring-brand-500/20'
+                        : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-800'
+                    } shadow-xs`}
+                    title="More export options (PDF, Word)"
+                    aria-label="More export options"
+                  >
+                    <span>More Options</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreFormatsOpen ? 'rotate-180 text-brand-500' : ''}`} />
+                  </button>
 
-                {/* 2b. Direct Word Download */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const q = getActiveFilterQueryParams();
-                    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
-                    const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.docx`;
-                    downloadReportFile(`/reports/export-word${q}`, fname);
-                  }}
-                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-xs rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer touch-manipulation"
-                  title="Download Word (.docx) with current active filters"
-                >
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span>Download Word</span>
-                </button>
+                  {/* Mobile Bottom Sheet Portal (< 640px) */}
+                  {moreFormatsOpen && isMobile && typeof document !== 'undefined' && createPortal(
+                    <div className="fixed inset-0 z-[99999] flex flex-col justify-end animate-fade-in">
+                      <div
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+                        onClick={() => setMoreFormatsOpen(false)}
+                      />
+                      <div className="relative z-10 w-full bg-white dark:bg-[#0c1222] rounded-t-[28px] border-t border-slate-200 dark:border-slate-800 shadow-2xl p-4 pb-8 space-y-3 animate-slide-up">
+                        <SwipeHandle
+                          onClose={() => setMoreFormatsOpen(false)}
+                          className="pt-1 pb-1 shrink-0"
+                          pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+                        />
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                            Choose Export Format
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setMoreFormatsOpen(false)}
+                            className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2 pt-1">
+                          {/* PDF Option */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMoreFormatsOpen(false);
+                              const q = getActiveFilterQueryParams();
+                              const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                              const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.pdf`;
+                              downloadReportFile(`/reports/export-pdf${q}`, fname);
+                            }}
+                            className="w-full flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 hover:border-rose-500/40 text-left transition-all active:scale-[0.98] cursor-pointer"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-black text-slate-900 dark:text-white flex items-center justify-between">
+                                <span>Download PDF</span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-black border border-rose-200 dark:border-rose-800">PDF</span>
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Printable management summary document
+                              </p>
+                            </div>
+                          </button>
+
+                          {/* Word Option */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMoreFormatsOpen(false);
+                              const q = getActiveFilterQueryParams();
+                              const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                              const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.docx`;
+                              downloadReportFile(`/reports/export-word${q}`, fname);
+                            }}
+                            className="w-full flex items-center gap-3.5 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 hover:border-blue-500/40 text-left transition-all active:scale-[0.98] cursor-pointer"
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-black text-slate-900 dark:text-white flex items-center justify-between">
+                                <span>Download Word</span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-black border border-blue-200 dark:border-blue-800">DOCX</span>
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Fully editable Microsoft Word document
+                              </p>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>,
+                    document.body
+                  )}
+
+                  {/* Desktop Dropdown Floating Panel (>= 640px) */}
+                  {moreFormatsOpen && !isMobile && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-[150] bg-transparent"
+                        onClick={() => setMoreFormatsOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-2 z-[200] w-72 p-2 bg-white dark:bg-[#0c1222] rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-2xl space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                          Additional Export Formats
+                        </div>
+
+                        {/* Download PDF */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMoreFormatsOpen(false);
+                            const q = getActiveFilterQueryParams();
+                            const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                            const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.pdf`;
+                            downloadReportFile(`/reports/export-pdf${q}`, fname);
+                          }}
+                          className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left transition-all cursor-pointer group active:scale-[0.98]"
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 flex items-center justify-between">
+                              <span>Download PDF</span>
+                              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-black">PDF</span>
+                            </div>
+                            <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                              Printable Management Summary
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Download Word */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMoreFormatsOpen(false);
+                            const q = getActiveFilterQueryParams();
+                            const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                            const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.docx`;
+                            downloadReportFile(`/reports/export-word${q}`, fname);
+                          }}
+                          className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-950/40 text-left transition-all cursor-pointer group active:scale-[0.98]"
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 flex items-center justify-between">
+                              <span>Download Word</span>
+                              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-black">DOCX</span>
+                            </div>
+                            <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                              Editable Word Document
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 {/* 3. Generate Interactive Preview */}
                 <button

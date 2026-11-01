@@ -220,6 +220,41 @@ export interface HeatmapYearRow {
   sections: HeatmapSectionItem[];
 }
 
+export interface InstitutionalSkillGap {
+  id: string;
+  name: string;
+  topic_slug?: string;
+  solve: string;
+  solvePct: number;
+  target: string;
+  targetPct: number;
+  status: string;
+  color: 'rose' | 'amber' | 'blue';
+  deficit: string;
+  total_students?: number;
+  proficient_students?: number;
+  gap_students?: number;
+  avg_solved?: number;
+  diagnosis: string;
+  rootCauses: string[];
+  sprintPlan: {
+    duration: string;
+    phase1Title: string;
+    phase1Desc: string;
+    phase2Title: string;
+    phase2Desc: string;
+    mentorDirectives: string[];
+  };
+  problems: {
+    number: number;
+    title: string;
+    slug: string;
+    difficulty: 'Easy' | 'Medium' | 'Hard';
+    pattern: string;
+    url: string;
+  }[];
+}
+
 export interface CommandCenterSummary {
   header?: HODDashboardHeader;
   kpi_summary?: HODKPISummary;
@@ -232,6 +267,7 @@ export interface CommandCenterSummary {
     department_matrix: DeptBenchmark[];
     year_matrix: YearBenchmark[];
   };
+  skill_gaps?: InstitutionalSkillGap[];
   staff_list?: StaffRecord[];
   unassigned_student_count?: number;
   refreshed_at: string;
@@ -329,10 +365,19 @@ export async function getCommandCenterStudents(params: {
   year_level?: string;
   section?: string;
   status_filter?: string;
+  topic_gap?: string;
   allocation_filter?: string;
   include_inactive?: boolean;
 }): Promise<StudentListResponse> {
   const res = await api.get<StudentListResponse>('/command-center/students', { params });
+  return res.data;
+}
+
+export async function getCommandCenterSkillGaps(params?: {
+  dept_id?: number;
+  year_level?: string;
+}): Promise<InstitutionalSkillGap[]> {
+  const res = await api.get<InstitutionalSkillGap[]>('/command-center/skill-gaps', { params });
   return res.data;
 }
 

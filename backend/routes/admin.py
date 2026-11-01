@@ -345,6 +345,121 @@ def get_admin_audit_log_detail(
     }
 
 
+class AuditLogDeleteRequest(BaseModel):
+    log_ids: Optional[List[int]] = None
+    older_than_days: Optional[int] = None
+    delete_all: Optional[bool] = False
+
+
+@router.delete("/audit-logs/{id}")
+def delete_single_audit_log(
+    id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Admin Audit Logs", required_roles=["admin", "super admin"]))
+):
+    """Permanently deletes a single audit log entry by ID or audit_id to reclaim database capacity."""
+    clean_id = id.strip()
+    log_entry = None
+    if clean_id.isdigit():
+        log_entry = db.query(AdminAuditLog).filter(AdminAuditLog.id == int(clean_id)).first()
+    if not log_entry:
+        log_entry = db.query(AdminAuditLog).filter(AdminAuditLog.audit_id.ilike(clean_id)).first()
+
+    if not log_entry:
+        raise HTTPException(status_code=404, detail=f"Audit log entry '{id}' not found.")
+
+    deleted_audit_id = log_entry.audit_id
+    db.delete(log_entry)
+    db.commit()
+
+    logger.info(f"[AUDIT_PURGE] Single log {deleted_audit_id} deleted by {current_user.username} ({current_user.email}) to reclaim capacity.")
+
+    return {
+        "status": "success",
+        "deleted_count": 1,
+        "message": f"Audit log '{deleted_audit_id}' deleted successfully to reclaim database capacity."
+    }
+
+
+@router.delete("/audit-logs")
+def delete_audit_logs_batch(
+    payload: Optional[AuditLogDeleteRequest] = None,
+    log_ids: Optional[str] = Query(None, description="Comma-separated log IDs"),
+    older_than_days: Optional[int] = Query(None, description="Purge logs older than N days"),
+    delete_all: Optional[bool] = Query(False, description="Purge all audit logs"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Admin Audit Logs", required_roles=["admin", "super admin"]))
+):
+    """
+    Batch deletion / purge of audit logs to reclaim storage and database capacity.
+    Supports deleting specific IDs, purging logs older than N days, or wiping all logs.
+    """
+    target_ids: List[int] = []
+    if payload and payload.log_ids:
+        target_ids.extend(payload.log_ids)
+    elif log_ids:
+        try:
+            target_ids = [int(x.strip()) for x in log_ids.split(",") if x.strip().isdigit()]
+        except Exception:
+            pass
+
+    purge_days = (payload.older_than_days if payload and payload.older_than_days is not None else older_than_days)
+    is_delete_all = (payload.delete_all if payload and payload.delete_all is not None else delete_all)
+
+    query = db.query(AdminAuditLog)
+    deleted_count = 0
+
+    if target_ids:
+        query = query.filter(AdminAuditLog.id.in_(target_ids))
+        deleted_count = query.delete(synchronize_session=False)
+        db.commit()
+    elif purge_days is not None and purge_days >= 0:
+        cutoff_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=purge_days)
+        query = query.filter(
+            (AdminAuditLog.event_timestamp < cutoff_date) |
+            ((AdminAuditLog.event_timestamp.is_(None)) & (AdminAuditLog.created_at < cutoff_date))
+        )
+        deleted_count = query.delete(synchronize_session=False)
+        db.commit()
+    elif is_delete_all:
+        deleted_count = query.delete(synchronize_session=False)
+        db.commit()
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Please provide log_ids, older_than_days, or set delete_all=True."
+        )
+
+    logger.info(f"[AUDIT_PURGE] {deleted_count} logs deleted by {current_user.username} ({current_user.email}) to reclaim capacity.")
+
+    # Record the maintenance purge action in audit logs for security transparency
+    try:
+        log_admin_action(
+            db,
+            action="PURGE_AUDIT_LOGS",
+            action_type="DATABASE_MAINTENANCE",
+            description=f"Purged {deleted_count} audit logs to free database storage space.",
+            current_user=current_user,
+            target_type="AdminAuditLog",
+            target_id=str(deleted_count),
+            metadata_json={
+                "deleted_count": deleted_count,
+                "purge_days": purge_days,
+                "is_delete_all": is_delete_all,
+                "specific_ids_count": len(target_ids) if target_ids else 0
+            }
+        )
+        db.commit()
+    except Exception as e:
+        logger.warning(f"[AUDIT_PURGE] Could not log audit action for purge: {e}")
+
+    return {
+        "status": "success",
+        "deleted_count": deleted_count,
+        "message": f"Successfully deleted {deleted_count} audit log(s). Database storage capacity freed."
+    }
+
+
 class ActivityLogRequest(BaseModel):
     action: str
     description: Optional[str] = None

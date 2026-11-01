@@ -24,11 +24,6 @@ export const isRunningInMobileApp = (): boolean => {
 };
 
 export const InstallAppPrompt: React.FC = () => {
-  // Never show download/install banner if already running inside the native mobile app
-  if (isRunningInMobileApp()) {
-    return null;
-  }
-
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -128,7 +123,7 @@ export const InstallAppPrompt: React.FC = () => {
     localStorage.setItem('pwa_prompt_dismissed_at', Date.now().toString());
   };
 
-  if (!isVisible || isStandalone || isInstalled) {
+  if (isRunningInMobileApp() || !isVisible || isStandalone || isInstalled) {
     return null;
   }
 

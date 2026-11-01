@@ -428,20 +428,19 @@ def get_student_intelligence(
         if ratings:
             best_rating = round(max(ratings), 1)  # type: ignore
 
+        from backend.services.canonical_contest_engine import get_contest_sort_timestamp, derive_contest_datetime
         # Sort history: newest authentic contest date FIRST (descending)
         authentic_records.sort(
-            key=lambda h: (
-                h.contest_start_time if h.contest_start_time else datetime.datetime.min,
-                h.id or 0
-            ),
+            key=get_contest_sort_timestamp,
             reverse=True
         )
 
         for h in authentic_records:
+            c_dt = h.contest_start_time or derive_contest_datetime(h.contest_name)
             contest_history.append({
                 "contest_name": h.contest_name,
                 "contest_type": h.contest_type or ("biweekly" if "biweekly" in (h.contest_name or "").lower() else "weekly"),
-                "date": h.contest_start_time.strftime("%Y-%m-%d") if h.contest_start_time else "N/A",
+                "date": c_dt.strftime("%Y-%m-%d") if c_dt else "N/A",
                 "attended": h.attended,
                 "problems_solved": h.problems_solved,
                 "total_problems": h.total_problems,

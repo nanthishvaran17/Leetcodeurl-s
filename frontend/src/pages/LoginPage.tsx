@@ -353,7 +353,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         api.post('/auth/biometric/device-enroll').then(r => {
           if (r.data?.device_key) localStorage.setItem('nec_device_biometric_key', r.data.device_key);
         }).catch(() => {});
-        setTimeout(() => { onSuccess(); }, 180);
+        setTimeout(() => { onSuccess(); }, 480);
       }
     } catch (err: any) {
       const status = err?.response?.status;
@@ -437,7 +437,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         setAuthStatusText('Authentication verified • Directing to workspace...');
         setSuccessMsg('OTP verified successfully!');
         login(res.data.access_token, res.data.user);
-        onSuccess();
+        setTimeout(() => { onSuccess(); }, 480);
         return;
       }
     } catch (err: any) {
@@ -513,7 +513,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
           localStorage.setItem('nec_remembered_password', password.trim());
         }
         login(res.data.access_token, res.data.user);
-        setTimeout(() => { onSuccess(); }, 180);
+        setTimeout(() => { onSuccess(); }, 480);
       }
     } catch (err: any) {
       triggerShake();
@@ -676,10 +676,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         <div className="mobile-jubilee-badge">
           <picture>
             <source srcSet="/nec_25_logo.webp" type="image/webp" />
-            <img
+            <motion.img
               src="/nec_25_logo.webp"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
+              animate={loading ? { rotate: 360 } : { rotate: 0 }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], repeat: loading ? Infinity : 0 }}
               loading="eager"
               fetchPriority="high"
               decoding="async"
@@ -745,7 +747,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
               }}
               whileHover={{ y: -2, transition: { duration: 0.2 } }}
             >
-              <CollegeLogo className="brand-mark" size={48} />
+              <motion.div
+                animate={loading ? { rotate: 360 } : { rotate: 0 }}
+                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], repeat: loading ? Infinity : 0 }}
+              >
+                <CollegeLogo className="brand-mark" size={48} />
+              </motion.div>
               <div className="brand-text">
                 <p className="eyebrow">INSTITUTIONAL PORTAL</p>
                 <p className="name">Nandha Intelligence</p>

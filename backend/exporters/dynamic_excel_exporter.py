@@ -64,11 +64,35 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     first_row = rows[0] if rows else {}
     report_type = str(dataset.get("reportType") or dataset.get("report_type") or "").upper().strip()
-    
+
+    # Pre-populate missing Accommodation and 12th Cutoff from DB if needed
+    try:
+        from backend.database import SessionLocal
+        from backend.models import Student
+        reg_nos = [str(r.get("reg_no")).strip().upper() for r in rows if r.get("reg_no")]
+        if reg_nos:
+            with SessionLocal() as db_session:
+                st_objs = db_session.query(Student.reg_no, Student.accommodation, Student.twelfth_cutoff).filter(
+                    Student.reg_no.in_(reg_nos)
+                ).all()
+                st_meta = {str(s.reg_no).strip().upper(): (s.accommodation, s.twelfth_cutoff) for s in st_objs}
+                for r in rows:
+                    rn = str(r.get("reg_no") or "").strip().upper()
+                    if rn in st_meta:
+                        acc, cut = st_meta[rn]
+                        if not r.get("accommodation") and acc:
+                            r["accommodation"] = acc
+                        if r.get("twelfth_cutoff") is None and cut is not None:
+                            r["twelfth_cutoff"] = cut
+                            r["cutoff"] = cut
+    except Exception:
+        pass
+
     all_keys = set()
     for r in rows[:100]:
         if isinstance(r, dict):
             all_keys.update(r.keys())
+    all_keys.update(["accommodation", "twelfth_cutoff", "cutoff"])
 
     is_wow = (
         report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WOW_INTEL", "WEEK_ON_WEEK")
@@ -264,20 +288,16 @@ def export_dynamic_excel(dataset: dict) -> bytes:
             ("Trajectory", "trajectory"),
         ]
     else:
-        # 1. Base Demographic Columns (Always first)
+        # 1. Base Demographic Columns (Always first: S.No, Reg No, Student Name, Dept, Year, Accommodation, 12th Cutoff)
         BASE_DEMOGRAPHIC = [
             ("S.No", "__SNO__"),
             ("Register No", ["reg_no", "register_no", "regno", "reg_number", "registration_no", "register_number"]),
             ("Student Name", ["name", "student_name", "student", "full_name"]),
             ("Department", ["dept", "department", "dept_name", "department_code", "department_name"]),
             ("Year", ["year", "year_level", "academic_year", "yr"]),
+            ("Accommodation", ["accommodation", "accomodation", "hostel_dayscholar", "residence"]),
+            ("12th Cutoff", ["twelfth_cutoff", "cutoff", "cutoff_mark", "12th_cutoff", "twelfth_cutoff_mark"]),
         ]
-        # Only include Accommodation & 12th Cutoff if specifically a cutoff/accreditation report
-        if "CUTOFF" in report_type:
-            BASE_DEMOGRAPHIC.extend([
-                ("Accommodation", ["accommodation", "accomodation", "hostel_dayscholar", "residence"]),
-                ("12th Cutoff", ["twelfth_cutoff", "cutoff", "cutoff_mark", "12th_cutoff", "twelfth_cutoff_mark"]),
-            ])
 
         selected_cols.append(("S.No", "__SNO__"))
         used_titles.add("s.no")
@@ -294,6 +314,12 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                             break
                     if matched_k:
                         break
+            if not matched_k:
+                if title == "Accommodation":
+                    matched_k = "accommodation"
+                elif title == "12th Cutoff":
+                    matched_k = "twelfth_cutoff"
+
             if matched_k:
                 selected_cols.append((title, matched_k))
                 used_titles.add(title.lower())
@@ -338,9 +364,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 for k in candidates:
                     used_raw_keys.add(k.lower())
         elif is_single_contest:
-            # 2. Single Contest / Standard: Reduced Columns with Difficulty Labeling (Q1 Easy, Q2-Q3 Med, Q4 Hard, Contest Solved)
+            # 2. Single Contest / Standard: Reduced Columns with Difficulty Labeling (Q1 Easy, Q2-Q3 Med, Q4 Hard, Contest Solved, Score)
+            # User/Status column replaced by Accommodation & 12th Cutoff in Base Demographics
             SINGLE_METRICS = [
-                ("Status", ["status", "attendance_status", "participation_status"]),
                 ("Q1 (Easy)", ["q1_display", "q1", "q1_time"]),
                 ("Q2 (Medium)", ["q2_display", "q2", "q2_time"]),
                 ("Q3 (Medium)", ["q3_display", "q3", "q3_time"]),
@@ -549,12 +575,14 @@ def export_dynamic_excel(dataset: dict) -> bytes:
 
     CENTER_TITLES = {
         "s.no", "register no", "reg no", "department", "dept", "year level", "year", "section", "sec", "yr",
+        "accommodation", "12th cutoff", "cutoff", "12th cut-off",
         "attendance status", "data source", "error reason", 
         "prev status", "curr status", "status",
-        "q1", "q2", "q3", "q4", "solved", "score", "contest rating", 
+        "q1", "q2", "q3", "q4", "q1 (easy)", "q2 (medium)", "q3 (medium)", "q4 (hard)",
+        "solved", "score", "contest solved", "total solved", "contest rating", 
         "global rank", "total time", "weekly contest", "session date", "batch cohort",
         "easy", "medium", "hard", "college rank",
-        "total attended", "contests attended", "total solved", "attended solved", "attended solve", "consistency pct",
+        "total attended", "contests attended", "attended solved", "attended solve", "consistency pct",
         "badges", "total badges", "badge count",
         "prev q1", "prev q2", "prev q3", "prev q4", "prev solved", "prev score",
         "curr q1", "curr q2", "curr q3", "curr q4", "curr solved", "curr score",
@@ -805,22 +833,25 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     weekly_sum = sum(_safe_int(w.get("solved")) for w in r.get("weeklyData", []) if w.get("att"))
                     att_cnt = sum(1 for w in r.get("weeklyData", []) if w.get("att"))
                     val = f"{weekly_sum}/{att_cnt * 4}" if att_cnt > 0 else "0/0"
-            elif title == "12th Cutoff":
+            elif title in ("12th Cutoff", "Cutoff"):
                 c_val = r.get("twelfth_cutoff") if r.get("twelfth_cutoff") is not None else r.get("cutoff")
-                if c_val is not None and str(c_val).strip() not in ("—", "None", "", "nan", "NaN"):
-                    val = round(_safe_float(c_val), 1)
+                if c_val is not None and str(c_val).strip() not in ("—", "None", "", "nan", "NaN", "null"):
+                    try:
+                        val = round(_safe_float(c_val), 1)
+                    except Exception:
+                        val = "—"
                 else:
                     val = "—"
             elif title == "Accommodation":
-                raw_acc = str(r.get("accommodation") or r.get("accomodation") or "").strip()
-                if not raw_acc or raw_acc in ("—", "None", "nan", "NaN", "null", ""):
+                raw_acc = str(r.get("accommodation") or r.get("accomodation") or r.get("residence") or "").strip()
+                if not raw_acc or raw_acc.upper() in ("—", "NONE", "NAN", "NULL", ""):
                     val = "—"
-                elif "DAY" in raw_acc.upper():
-                    val = "D"
-                elif "HOSTEL" in raw_acc.upper():
+                elif "HOSTEL" in raw_acc.upper() or raw_acc.upper().startswith("H") or raw_acc.upper() == "H":
                     val = "H"
+                elif "DAY" in raw_acc.upper() or raw_acc.upper().startswith("D") or raw_acc.upper() == "D":
+                    val = "D"
                 else:
-                    val = raw_acc
+                    val = "—"
 
             title_lower = title.lower().strip()
 
@@ -867,9 +898,12 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                 cell.fill = ALT_ROW_FILL
 
             if title_lower in LEFT_ALIGN_TITLES or ("url" in title_lower and title_lower not in ("data source", "error reason")):
-                cell.alignment = Alignment(horizontal="left", vertical="center")
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=False)
             else:
-                cell.alignment = Alignment(horizontal="center", vertical="center")
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=False)
+
+            if title_lower in ("12th cutoff", "cutoff", "12th cut-off") and isinstance(val, (int, float)):
+                cell.number_format = '0.0'
 
             # Status pill colors
             if title_lower in ("attendance status", "curr status", "prev status", "status") or title_lower.endswith("status"):
@@ -948,7 +982,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         # Determine demographic merge boundary: merge from Col 1 up to first contest/metric column - 1
         first_metric_col = 1
         for col_idx, (title, raw_key) in enumerate(selected_cols, 1):
-            if str(raw_key).startswith("__weekly__") or title in ("Q1", "Q2", "Q3", "Q4", "Total Solved"):
+            if str(raw_key).startswith("__weekly__") or title.startswith("Q1") or title.startswith("Q2") or title in ("Q1", "Q2", "Q3", "Q4", "Total Solved", "Contest Solved"):
                 first_metric_col = col_idx
                 break
         
@@ -1100,9 +1134,9 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     c_cell.number_format = '#,##0'
                 elif title in ("Contests Attended",):
                     c_cell.value = "—"
-                elif title in ("Total Solved",):
+                elif title in ("Total Solved", "Contest Solved"):
                     col_tot = sum(
-                        int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0))
+                        int(r.get("total_solved_raw") if r.get("total_solved_raw") is not None else (r.get("contest_solved") if isinstance(r.get("contest_solved"), (int, float)) else (r.get("total_solved") if isinstance(r.get("total_solved"), (int, float)) else 0)))
                         for r in sub_rows
                     )
                     if col_tot == 0 and is_historical:
@@ -1163,7 +1197,7 @@ def export_dynamic_excel(dataset: dict) -> bytes:
                     c_cell.value = "—"
 
     header_row_idx = r_hdr
-    ws.row_dimensions[header_row_idx].height = 45
+    ws.row_dimensions[header_row_idx].height = 28
     for col_idx, col in enumerate(ws.columns, 1):
         col_letter = get_column_letter(col_idx)
         header_name = str(ws.cell(row=header_row_idx, column=col_idx).value or "").strip()
@@ -1183,63 +1217,69 @@ def export_dynamic_excel(dataset: dict) -> bytes:
         
         # Determine optimal column width based on field type
         if h_lower == "s.no":
-            final_width = 6
+            final_width = 8
         elif h_lower in ("register no", "reg no"):
-            final_width = 14
+            final_width = 18
         elif h_lower in ("student name", "name"):
-            final_width = min(max(content_len, 20), 28)
+            final_width = min(max(content_len, 24), 32)
         elif h_lower in ("department", "dept"):
-            final_width = 11
+            final_width = 16
         elif h_lower == "department name":
             final_width = min(max(content_len, 20), 36)
         elif h_lower in ("year level", "year", "section", "sec", "yr"):
-            final_width = 6
+            final_width = 10
         elif h_lower == "accommodation":
-            final_width = 9
+            final_width = 16
         elif h_lower in ("12th cutoff", "twelfth cutoff", "cutoff"):
-            final_width = 9.5
+            final_width = 15
         elif h_lower in ("contests attended", "total attended", "attended contests"):
-            final_width = 11.5
+            final_width = 16
         elif h_lower in ("leetcode username", "username"):
-            final_width = min(max(content_len, 14), 22)
+            final_width = min(max(content_len, 18), 24)
         elif h_lower in ("attendance status", "status") or h_lower.endswith("status"):
-            final_width = max(content_len, 14)
+            final_width = max(content_len, 18)
         elif h_lower.startswith("c5") or h_lower.startswith("c6") or h_lower.startswith("c7") or h_lower.startswith("c8") or h_lower.startswith("c9"):
-            final_width = 5.5
+            final_width = 7
+        elif "easy" in h_lower and (h_lower.startswith("q1") or h_lower in ("q1", "easy")):
+            final_width = 14
+        elif "medium" in h_lower and (h_lower.startswith("q2") or h_lower.startswith("q3") or h_lower in ("q2", "q3", "medium")):
+            final_width = 16
+        elif "hard" in h_lower and (h_lower.startswith("q4") or h_lower in ("q4", "hard")):
+            final_width = 14
         elif h_lower in ("q1", "q2", "q3", "q4") or h_lower.startswith("q1") or h_lower.startswith("q2") or h_lower.startswith("q3") or h_lower.startswith("q4"):
-            final_width = 6 if max_data_len <= 2 else min(max_data_len + 3, 11)
+            final_width = max(len(header_name) + 5, 14)
         elif h_lower in ("total solved", "solved", "contest solved") or (h_lower.endswith("solved") and "delta" not in h_lower):
-            final_width = 11
+            final_width = 17
         elif h_lower in ("contest easy", "easy"):
-            final_width = 9.5
+            final_width = 12
         elif h_lower in ("contest medium", "medium", "contest med"):
-            final_width = 10.5
+            final_width = 13
         elif h_lower in ("contest hard", "hard"):
-            final_width = 9.5
+            final_width = 12
         elif h_lower in ("score",) or h_lower.endswith("score"):
-            final_width = 9.5
+            final_width = 12
         elif h_lower in ("solved delta", "δ solved", "delta"):
-            final_width = 11
+            final_width = 13
         elif h_lower in ("trend", "trajectory"):
             final_width = 18
         elif h_lower in ("attendance %", "attendance_rate", "attendance pct"):
-            final_width = 13
+            final_width = 15
         elif h_lower in ("solved %", "solve %", "solve rate %", "solved rate %", "consistency pct"):
-            final_width = 10.5
+            final_width = 14
         elif h_lower in ("5 w solved", "5-w solved", "solved_5w", "w5_solved"):
-            final_width = 11
+            final_width = 14
         elif h_lower in ("global rank", "college rank", "rank"):
-            final_width = 11.5
+            final_width = 16
         elif h_lower in ("contest rating", "rating"):
-            final_width = 10.5
+            final_width = 16
         elif h_lower in ("total time", "finish time"):
-            final_width = 10
+            final_width = 14
         elif "email" in h_lower:
             final_width = min(max(content_len, 20), 30)
         elif any(w in h_lower for w in ["url", "link", "description", "action", "reason"]):
             final_width = min(max(content_len, 20), 40)
         else:
-            final_width = min(max(content_len, 8), 30)
+            final_width = min(max(content_len, 12), 30)
 
         ws.column_dimensions[col_letter].width = final_width
 

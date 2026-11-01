@@ -6,6 +6,7 @@ import {
   Phone, Send, AlertTriangle, CheckCircle, Search, Mail
 } from 'lucide-react';
 import { FacultyActionItem } from '../services/intelligenceService';
+import { useAuth } from '../context/AuthContext';
 import { triggerHaptic } from '../utils/haptics';
 import { WHATSAPP_TEMPLATES } from './StudentWhatsAppModal';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -22,6 +23,25 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   selectedStudents
 }) => {
   const [activeTab, setActiveTab] = useState<'queue' | 'broadcast'>('queue');
+  const { user } = useAuth();
+  const staffName = useMemo(() => {
+    return (
+      user?.full_name?.trim() ||
+      user?.name?.trim() ||
+      user?.displayName?.trim() ||
+      user?.username?.trim() ||
+      'Faculty Mentor'
+    );
+  }, [user]);
+
+  const staffDesignation = useMemo(() => {
+    if (user?.designation?.trim()) return user.designation.trim();
+    const role = (user?.role || '').toLowerCase();
+    if (role.includes('admin')) return 'Director & Chief Administrator';
+    if (role.includes('hod')) return 'Head of Department';
+    return 'Faculty Mentor';
+  }, [user]);
+
   useEscapeKey(onClose, isOpen);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('practice_nudge');
   const [lang, setLang] = useState<'en' | 'ta'>('en');
@@ -65,21 +85,29 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     const name = student.student_name || 'Student';
     const solved = String(student.total_solved || 0);
     const nextMilestone = String(Math.ceil(((student.total_solved || 0) + 10) / 10) * 10);
+    const signOff = lang === 'ta'
+      ? `\n\nஅன்புடன் / Regards,\n${staffName}\n${staffDesignation}, Nandha Engineering College`
+      : `\n\nRegards,\n${staffName}\n${staffDesignation}, Nandha Engineering College`;
     return activeTemplateText
       .replace(/{name}/g, name)
       .replace(/{student_name}/g, name)
       .replace(/{solved}/g, solved)
-      .replace(/{next_milestone}/g, nextMilestone);
+      .replace(/{next_milestone}/g, nextMilestone)
+      .replace(/{staff_name}/g, staffName) + signOff;
   };
 
   // Formatter for broadcast (group/channel context)
   const formatBroadcastMessage = () => {
     const defaultName = lang === 'ta' ? 'மாணவர்களே' : 'Students';
+    const signOff = lang === 'ta'
+      ? `\n\nஅன்புடன் / Regards,\n${staffName}\n${staffDesignation}, Nandha Engineering College`
+      : `\n\nRegards,\n${staffName}\n${staffDesignation}, Nandha Engineering College`;
     return activeTemplateText
       .replace(/{name}/g, defaultName)
       .replace(/{student_name}/g, defaultName)
       .replace(/{solved}/g, 'your current')
-      .replace(/{next_milestone}/g, 'your next target');
+      .replace(/{next_milestone}/g, 'your next target')
+      .replace(/{staff_name}/g, staffName) + signOff;
   };
 
   // Sync edited message when student, template, or language changes
@@ -166,9 +194,51 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     if (!currentStudent) return;
     triggerHaptic('success');
     const tpl = WHATSAPP_TEMPLATES.find(t => t.id === selectedTemplateId) || WHATSAPP_TEMPLATES[0];
-    const subject = encodeURIComponent(`[Nandha Engineering College] LeetCode Mentoring: ${lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}`);
+    const tplTitle = lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title;
+    const subject = encodeURIComponent(`[Nandha Engineering College] Placement & Mentoring Notice: ${currentStudent.student_name} (${currentStudent.reg_no}) - ${tplTitle}`);
     const finalMsg = isEditingMessage && editedCustomMessage ? editedCustomMessage : formatMessageForStudent(currentStudent);
-    const body = encodeURIComponent(finalMsg);
+    
+    const emailBodyText = lang === 'ta'
+      ? `${finalMsg}
+
+--------------------------------------------------
+மாணவர் விவரக் குறிப்பு (Student Dossier):
+• பதிவு எண் (Reg No): ${currentStudent.reg_no || 'N/A'}
+• துறை (Department): ${currentStudent.department_code || 'N/A'}
+• கல்வி ஆண்டு (Year): ${currentStudent.year_level || 'N/A'}
+• தீர்க்கப்பட்ட கணக்குகள் (Problems Solved): ${currentStudent.total_solved || 0}
+• கண்காணிப்பு தளம்: Nandha Intelligence Continuous Evaluation
+
+வேலைவாய்ப்புப் பயிற்சி மற்றும் துறை அளவிலான தரவரிசைக்காக தினசரி லீட்கோட் பயிற்சி மற்றும் ஞாயிறு Weekly Contest-ல் தவறாமல் பங்கேற்க அறிவுறுத்தப்படுகிறீர்கள்.
+
+அன்புடன் / Warm Regards,
+${staffName}
+${staffDesignation} | நந்தா பொறியியல் கல்லூரி (தன்னாட்சி)
+பயிற்சி மற்றும் வேலைவாய்ப்புப் பிரிவு (Training & Placement Cell)
+நந்தா பொறியியல் கல்லூரி (தன்னாட்சி) / Nandha Engineering College (Autonomous)
+ஈரோடு - 638 052, தமிழ்நாடு
+வலைத்தளம்: https://leetcode.nandhaengg.org`
+      : `${finalMsg}
+
+--------------------------------------------------
+STUDENT ACADEMIC & LEETCODE DOSSIER:
+• Register Number: ${currentStudent.reg_no || 'N/A'}
+• Department: ${currentStudent.department_code || 'N/A'}
+• Academic Year: ${currentStudent.year_level || 'N/A'}
+• Verified Solved Problems: ${currentStudent.total_solved || 0}
+• Institutional Monitoring: Nandha Intelligence Continuous Assessment
+
+Consistent problem-solving and weekly contest participation are integral components of our institutional placement readiness program.
+
+Warm Regards,
+${staffName}
+${staffDesignation} | Nandha Engineering College (Autonomous)
+Training & Placement Cell | Faculty Mentorship Team
+Nandha Engineering College (Autonomous)
+Erode - 638 052, Tamil Nadu
+Portal: https://leetcode.nandhaengg.org`;
+
+    const body = encodeURIComponent(emailBodyText);
     const email = (currentStudent as any).email || (currentStudent as any).student_email || (currentStudent.reg_no ? `${currentStudent.reg_no.toLowerCase().trim()}@nandhaengg.org` : '');
     
     setSentStudentIds(prev => new Set(prev).add(currentStudent.id));
@@ -193,7 +263,10 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     triggerHaptic('selection');
     const tpl = WHATSAPP_TEMPLATES.find(t => t.id === selectedTemplateId) || WHATSAPP_TEMPLATES[0];
     const subject = encodeURIComponent(`[Nandha Engineering College] LeetCode Mentoring Announcement: ${lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title}`);
-    const body = encodeURIComponent(formatBroadcastMessage());
+    const broadcastSignOff = lang === 'ta'
+      ? `\n\n--------------------------------------------------\nஅன்புடன் / Warm Regards,\nபயிற்சி மற்றும் வேலைவாய்ப்புப் பிரிவு (Training & Placement Cell)\nநந்தா பொறியியல் கல்லூரி (தன்னாட்சி) / Nandha Engineering College\nவலைத்தளம்: https://leetcode.nandhaengg.org`
+      : `\n\n--------------------------------------------------\nWarm Regards,\nTraining & Placement Cell | Faculty Mentorship Team\nNandha Engineering College (Autonomous)\nPortal: https://leetcode.nandhaengg.org`;
+    const body = encodeURIComponent(formatBroadcastMessage() + broadcastSignOff);
     const bccList = allStudentEmails.join(',');
     window.open(`mailto:?bcc=${encodeURIComponent(bccList)}&subject=${subject}&body=${body}`, '_blank');
   };
@@ -251,13 +324,13 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
       aria-modal="true"
       data-modal-active="true"
       style={{ zIndex: 99999999 }}
-      className="fixed inset-0 z-[99999999] flex items-stretch sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 dark:bg-black/95 backdrop-blur-xl animate-fade-in"
+      className="fixed inset-0 z-[99999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 dark:bg-black/90 backdrop-blur-md animate-fade-in"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="relative w-full h-[100dvh] sm:h-auto max-w-2xl sm:max-h-[92vh] bg-white dark:bg-navy-950 rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col">
-        
+      <div className="relative w-full max-w-lg sm:max-w-2xl max-h-[88vh] sm:max-h-[90vh] bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl border-t sm:border border-slate-200/90 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col animate-slide-up sm:animate-scale-in">
+
         {/* Mobile Pull Handle */}
-        <div className="w-10 h-1.5 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
 
         {/* Modal Top Header */}
         <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between shrink-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent">
@@ -490,28 +563,6 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
                         &ldquo;{activeMessageText}&rdquo;
                       </p>
                     )}
-                  </div>
-
-                  {/* Primary 1-Tap Action Buttons (WhatsApp + Email) */}
-                  <div className="pt-1 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSendEmailCurrent}
-                      className="min-h-[48px] px-3.5 sm:px-4 rounded-xl border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 active:scale-95 text-indigo-700 dark:text-indigo-300 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                      title="Send via Email and advance to next student"
-                    >
-                      <Mail size={16} />
-                      <span className="hidden sm:inline">Send</span> Email &rarr;
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleSendCurrentAndNext}
-                      className="flex-1 min-h-[48px] py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
-                    >
-                      <MessageCircle size={18} className="stroke-[2.5]" />
-                      <span>Send WhatsApp &amp; Next Student &rarr;</span>
-                    </button>
                   </div>
 
                   {/* Stepper Controls */}
@@ -786,24 +837,70 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3.5 sm:p-4 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] border-t border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/80 flex items-center justify-between gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-            title="Download CSV for records"
-          >
-            <Download size={14} />
-            <span>Export Contacts CSV</span>
-          </button>
+        <div className="p-3 sm:p-4 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] border-t border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 flex items-center justify-between gap-2 shrink-0">
+          {activeTab === 'queue' ? (
+            <>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportCSV}
+                  className="p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                  title="Export Contacts CSV"
+                >
+                  <Download size={15} />
+                </button>
+              </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-black transition cursor-pointer active:scale-95 shadow-sm"
-          >
-            Done
-          </button>
+              <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+                <button
+                  type="button"
+                  onClick={handleSendEmailCurrent}
+                  className="px-3 sm:px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 active:scale-95 text-indigo-700 dark:text-indigo-300 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+                  title="Send via Email and advance to next student"
+                >
+                  <Mail size={15} />
+                  <span className="hidden sm:inline">Send Email</span>
+                  <span className="sm:hidden">Email</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendCurrentAndNext}
+                  className="flex-1 sm:flex-initial min-h-[44px] px-4 sm:px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+                >
+                  <MessageCircle size={18} className="stroke-[2.5]" />
+                  <span>Send via WhatsApp &amp; Next &rarr;</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                title="Download CSV for records"
+              >
+                <Download size={14} />
+                <span>Export Contacts CSV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-black transition cursor-pointer active:scale-95 shadow-sm"
+              >
+                Done
+              </button>
+            </>
+          )}
         </div>
 
       </div>

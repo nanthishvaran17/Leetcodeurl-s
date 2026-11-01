@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from backend.database import get_db
 from backend.models import (
     Student, Department, LeetCodeProfileStats, AdminAuditLog, WeeklyPublicResult,
-    FacultyStudentAssignment, User, WeeklySession
+    FacultyStudentAssignment, User, WeeklySession, LeetCodeTopicStats
 )
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.websocket_manager import connection_manager
@@ -152,6 +152,18 @@ def _log_admin_action(db: Session, action: str, target_id: str, description: str
 
 # 1. LIVE SCOPED SUMMARY ANALYTICS 
 
+@router.get("/skill-gaps")
+def get_skill_gaps_endpoint(
+    dept_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from backend.services.skill_gap_engine import calculate_institutional_skill_gaps
+    return calculate_institutional_skill_gaps(
+        db, current_user, dept_id=dept_id, year_level=year_level
+    )
+
 @router.get("/summary")
 def get_command_center_summary(
     dept_id: Optional[int] = None,
@@ -222,6 +234,11 @@ def get_command_center_summary(
             section=eff_section
         )
         heatmap_matrix = get_year_section_heatmap(db, current_user, dept_id=dept_id)
+        
+        from backend.services.skill_gap_engine import calculate_institutional_skill_gaps
+        skill_gaps = calculate_institutional_skill_gaps(
+            db, current_user, dept_id=dept_id, year_level=year_level
+        )
 
         auth_depts = get_hod_authorized_department_ids(db, current_user) if (is_hod and not is_global_admin) else None
         prod_dept_ids = auth_depts if auth_depts else [d.id for d in db.query(Department).all() if _is_real_dept(str(d.code))]
@@ -471,6 +488,7 @@ def get_command_center_summary(
             "executive_brief": brief,
             "needs_attention": needs_att,
             "benchmarks": benchmarks,
+            "skill_gaps": skill_gaps,
             "staff_list": staff_list,
             "unassigned_student_count": unassigned_count,
             "refreshed_at": datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %H:%M:%S IST"),
@@ -495,6 +513,7 @@ def get_students(
     year_level: Optional[str] = None,
     section: Optional[str] = None,
     status_filter: Optional[str] = None,
+    topic_gap: Optional[str] = None,
     allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
     college: Optional[str] = None,
@@ -604,6 +623,24 @@ def get_students(
             q = q.outerjoin(LeetCodeProfileStats).filter(
                 func.coalesce(LeetCodeProfileStats.total_solved, 0) < 10
             )
+
+    if topic_gap and topic_gap != "ALL":
+        from sqlalchemy import select
+        slug_map = {
+            "dp": ["dynamic-programming"],
+            "dynamic-programming": ["dynamic-programming"],
+            "graph": ["graph", "breadth-first-search", "depth-first-search", "shortest-path"],
+            "bs_tp": ["binary-search", "two-pointers"],
+            "binary-search": ["binary-search", "two-pointers"],
+            "tree": ["tree", "binary-tree", "binary-search-tree"],
+            "backtracking": ["backtracking", "recursion"],
+        }
+        target_slugs = slug_map.get(topic_gap.lower(), [topic_gap.lower()])
+        prof_subq = select(LeetCodeTopicStats.student_id).filter(
+            LeetCodeTopicStats.topic_slug.in_(target_slugs),
+            LeetCodeTopicStats.problems_solved >= 5
+        ).distinct()
+        q = q.filter(~Student.id.in_(prof_subq))
 
     if search and search.strip():
         term = f"%{search.strip()}%"
@@ -798,6 +835,8 @@ def auto_distribute_department(
 @router.get("/faculty/workload")
 def get_faculty_workload(
     dept_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    section: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "principal", "management", "director", "faculty", "staff"))
 ):
@@ -806,7 +845,7 @@ def get_faculty_workload(
         "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
         "faculty_coordinator", "staff_coordinator", "placement coordinator",
         "placement_coordinator", "coordinator", "academic coordinator",
-        "mentor", "tutor", "proctor", "class advisor"
+        "mentor", "tutor", "proctor", "class advisor", "hod"
     ]
     assigned_faculty_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
         FacultyStudentAssignment.is_active == True
@@ -820,6 +859,8 @@ def get_faculty_workload(
             User.role.ilike("%Faculty%"),
             User.role.ilike("%Placement%"),
             User.role.ilike("%Coordinator%"),
+            User.role.ilike("%HOD%"),
+            User.role.ilike("%Mentor%"),
             User.id.in_(assigned_faculty_subq)
         ),
         ~func.lower(User.role).in_(["admin", "super admin", "super_admin", "administrator", "student"]),
@@ -881,11 +922,11 @@ def get_faculty_workload(
                 )
             )
 
-    faculty_list = query.all()
+    faculty_list = query.order_by(User.full_name.asc(), User.username.asc()).all()
 
     workload = []
     for fac in faculty_list:
-        assigned_students_rows = db.query(Student, LeetCodeProfileStats).join(
+        stud_q = db.query(Student, LeetCodeProfileStats).join(
             FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
         ).outerjoin(
             LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
@@ -893,7 +934,25 @@ def get_faculty_workload(
             FacultyStudentAssignment.faculty_id == fac.id,
             FacultyStudentAssignment.is_active == True,
             Student.is_active == True
-        ).all()
+        )
+
+        if year_level and year_level != "ALL":
+            y_clean = str(year_level).strip()
+            if y_clean in ("1", "I"):
+                stud_q = stud_q.filter(Student.year_level.ilike("%I%") & ~Student.year_level.ilike("%II%") & ~Student.year_level.ilike("%III%") & ~Student.year_level.ilike("%IV%"))
+            elif y_clean in ("2", "II"):
+                stud_q = stud_q.filter(Student.year_level.ilike("%II%"))
+            elif y_clean in ("3", "III"):
+                stud_q = stud_q.filter(Student.year_level.ilike("%III%"))
+            elif y_clean in ("4", "IV"):
+                stud_q = stud_q.filter(Student.year_level.ilike("%IV%"))
+            else:
+                stud_q = stud_q.filter(Student.year_level.ilike(f"%{y_clean}%"))
+
+        if section and section != "ALL":
+            stud_q = stud_q.filter(Student.section.has(Section.name.ilike(section)))
+
+        assigned_students_rows = stud_q.all()
 
         students_summary = []
         for s, st in assigned_students_rows:
@@ -913,6 +972,27 @@ def get_faculty_workload(
         total_solves = sum((st["total_solved"] or 0) for st in students_summary)
         avg_solves = round(total_solves / count, 1) if count > 0 else 0.0
 
+        # Resolve academic year: from User.academic_year or derived from assigned students
+        assigned_years = sorted(list(set(st["year_level"] for st in students_summary if st.get("year_level"))))
+        if fac.academic_year and fac.academic_year.strip():
+            raw_ay = fac.academic_year.strip()
+            if "2025" in raw_ay or "2029" in raw_ay:
+                resolved_ay = f"II Year ({raw_ay})" if "II" not in raw_ay else raw_ay
+            elif "2024" in raw_ay or "2028" in raw_ay:
+                resolved_ay = f"III Year ({raw_ay})" if "III" not in raw_ay else raw_ay
+            elif "2023" in raw_ay or "2027" in raw_ay:
+                resolved_ay = f"IV Year ({raw_ay})" if "IV" not in raw_ay else raw_ay
+            elif "2026" in raw_ay or "2030" in raw_ay:
+                resolved_ay = f"I Year ({raw_ay})" if "I" not in raw_ay else raw_ay
+            else:
+                resolved_ay = raw_ay
+        elif assigned_years:
+            resolved_ay = " & ".join(assigned_years)
+        else:
+            resolved_ay = "All Years"
+
+        resolved_role = fac.mentoring_role or fac.role or "Faculty Mentor"
+
         workload.append({
             "faculty_id": fac.id,
             "faculty_name": fac.full_name or fac.username,
@@ -920,6 +1000,8 @@ def get_faculty_workload(
             "full_name": fac.full_name or fac.username,
             "email": fac.email,
             "role": fac.role or "Faculty",
+            "academic_year": resolved_ay,
+            "mentoring_role": resolved_role,
             "department_id": fac.department_id or (
                 db.query(Student.department_id).join(
                     FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
@@ -936,10 +1018,8 @@ def get_faculty_workload(
             "conversion_rate_pct": conversion_rate_pct,
             "total_mentee_solves": total_solves,
             "avg_solves_per_mentee": avg_solves,
-            "max_capacity": 20,
             "is_allocated": bool(count > 0),
             "allocation_status": "ALLOCATED" if count > 0 else "UNALLOCATED",
-            "workload_status": "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else "HIGH_WORKLOAD"),
             "students": students_summary
         })
 
@@ -1233,7 +1313,7 @@ def export_command_center_report_excel(
 
     elif report_type == "FACULTY_ALLOCATION":
         # Section 1: Mentorship KPI Overview
-        kpi_banner = ws.cell(row=ws.max_row + 1, column=1, value="FACULTY MENTORSHIP & WORKLOAD SUMMARY")
+        kpi_banner = ws.cell(row=ws.max_row + 1, column=1, value="FACULTY MENTORSHIP & STUDENT ALLOCATION SUMMARY")
         ws.merge_cells(start_row=ws.max_row, start_column=1, end_row=ws.max_row, end_column=9)
         for col_idx in range(1, 10):
             c = ws.cell(row=ws.max_row, column=col_idx)
@@ -1274,7 +1354,7 @@ def export_command_center_report_excel(
             c.border = thin_border
         ws.row_dimensions[ws.max_row].height = 24
 
-        headers = ["Faculty Mentor", "Department", "Capacity Limit", "Assigned Mentees", "Active Solvers", "Inactive Mentees", "Active Conversion %", "Total Mentee Solves", "Ratio Status"]
+        headers = ["Faculty Mentor", "Department", "Academic Year", "Mentoring Role", "Assigned Mentees", "Active Solvers", "Inactive Mentees", "Active Conversion %", "Total Mentee Solves"]
         ws.append(headers)
         for col_idx, h in enumerate(headers, 1):
             cell = ws.cell(row=ws.max_row, column=col_idx)
@@ -1288,13 +1368,13 @@ def export_command_center_report_excel(
             ws.append([
                 fac.get("faculty_name"),
                 fac.get("department_code"),
-                fac.get("max_capacity", 20),
+                fac.get("academic_year", "All Years"),
+                fac.get("mentoring_role", "Faculty Mentor"),
                 fac.get("assigned_students", 0),
                 fac.get("active_students", 0),
                 fac.get("inactive_students", 0),
                 f"{fac.get('conversion_rate_pct', 0)}%",
-                fac.get("total_mentee_solves", 0),
-                fac.get("workload_status", "NORMAL")
+                fac.get("total_mentee_solves", 0)
             ])
             r_idx = ws.max_row
             for col_idx in range(1, 10):
@@ -1308,13 +1388,13 @@ def export_command_center_report_excel(
 
             set_clean_excel_cell_value(ws.cell(row=r_idx, column=1), fac.get("faculty_name"))
             set_clean_excel_cell_value(ws.cell(row=r_idx, column=2), fac.get("department_code"))
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=3), fac.get("max_capacity", 20))
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=4), fac.get("assigned_students", 0))
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=5), fac.get("active_students", 0))
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=6), fac.get("inactive_students", 0))
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=7), fac.get("conversion_rate_pct", 0), is_percentage=True)
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=8), fac.get("total_mentee_solves", 0))
-            set_clean_excel_cell_value(ws.cell(row=r_idx, column=9), fac.get("workload_status", "NORMAL"))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=3), fac.get("academic_year", "All Years"))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=4), fac.get("mentoring_role", "Faculty Mentor"))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=5), fac.get("assigned_students", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=6), fac.get("active_students", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=7), fac.get("inactive_students", 0))
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=8), fac.get("conversion_rate_pct", 0), is_percentage=True)
+            set_clean_excel_cell_value(ws.cell(row=r_idx, column=9), fac.get("total_mentee_solves", 0))
 
     elif report_type == "INACTIVE_AT_RISK":
         ws.append([f"Total Inactive Solvers: {data.get('total_inactive', 0)}"])
@@ -1465,20 +1545,20 @@ def export_command_center_report_pdf(
         canvas.restoreState()
 
     if report_type == "FACULTY_ALLOCATION":
-        headers = ["Faculty Mentor", "Department", "Limit", "Assigned", "Active", "Inactive", "Conversion %", "Total Solves", "Status"]
-        col_widths = [160.0, 75.0, 50.0, 60.0, 55.0, 55.0, 75.0, 75.0, 95.0]
+        headers = ["Faculty Mentor", "Department", "Academic Year", "Role", "Assigned", "Active", "Inactive", "Conversion %", "Total Solves"]
+        col_widths = [140.0, 65.0, 95.0, 90.0, 60.0, 55.0, 55.0, 70.0, 70.0]
         table_data = [[Paragraph(f"<b>{h}</b>", header_style) for h in headers]]
         for fac in data.get("faculty_records", []):
             table_data.append([
                 Paragraph(str(fac.get("faculty_name") or ""), left_cell_style),
                 Paragraph(str(fac.get("department_code") or ""), cell_style),
-                Paragraph(str(fac.get("max_capacity", 20)), cell_style),
+                Paragraph(str(fac.get("academic_year") or "All Years"), cell_style),
+                Paragraph(str(fac.get("mentoring_role") or "Faculty Mentor"), cell_style),
                 Paragraph(str(fac.get("assigned_students", 0)), cell_style),
                 Paragraph(str(fac.get("active_students", 0)), cell_style),
                 Paragraph(str(fac.get("inactive_students", 0)), cell_style),
                 Paragraph(f"{fac.get('conversion_rate_pct', 0)}%", cell_style),
                 Paragraph(str(fac.get("total_mentee_solves", 0)), cell_style),
-                Paragraph(str(fac.get("workload_status", "NORMAL")), cell_style),
             ])
         t = Table(table_data, colWidths=col_widths, repeatRows=1)
         t.setStyle(TableStyle([
@@ -1683,15 +1763,19 @@ def get_report_data(
         }
 
     elif report_type == "FACULTY_ALLOCATION":
-        workload_res = get_faculty_workload(dept_id=eff_dept_id, db=db, current_user=current_user)  # type: ignore
+        workload_res = get_faculty_workload(
+            dept_id=eff_dept_id,
+            year_level=eff_year,
+            section=eff_section,
+            db=db,
+            current_user=current_user
+        )  # type: ignore
         faculty_recs = workload_res["faculty_workload"]
         tot_assigned = sum(f.get("assigned_students", 0) for f in faculty_recs)
         tot_active = sum(f.get("active_students", 0) for f in faculty_recs)
         tot_inactive = sum(f.get("inactive_students", 0) for f in faculty_recs)
         overall_conv = round((tot_active / tot_assigned * 100), 1) if tot_assigned > 0 else 0.0
         tot_solves = sum(f.get("total_mentee_solves", 0) for f in faculty_recs)
-        opt_workload = sum(1 for f in faculty_recs if f.get("workload_status") in ("NORMAL", "AT_RATIO"))
-        high_workload = sum(1 for f in faculty_recs if f.get("workload_status") == "HIGH_WORKLOAD")
 
         return {
             "report_title": "Faculty Mentorship & Student Allocation Audit Report",
@@ -1704,9 +1788,7 @@ def get_report_data(
                 "Active Solvers (Mentees)": tot_active,
                 "Inactive Mentees": tot_inactive,
                 "Active Conversion Rate": f"{overall_conv}%",
-                "Total Mentees Solves": tot_solves,
-                "Optimal Workload (<=20)": opt_workload,
-                "High Workload (>20)": high_workload
+                "Total Mentees Solves": tot_solves
             },
             "faculty_records": faculty_recs
         }

@@ -67,7 +67,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
   return (
     <div
       id="staff-performance-section"
-      className="stagger-4 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-lg sm:shadow-xl my-4 sm:my-6 transition-all"
+      className="stagger-4 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-[#0c1424]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 shadow-lg sm:shadow-xl my-4 sm:my-6 transition-all min-w-0 w-full max-w-full"
     >
       {/* Decorative ambient gradient backdrop */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/10 via-brand-500/5 to-transparent rounded-bl-full pointer-events-none blur-2xl" />
@@ -81,9 +81,9 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                 <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h3 className="font-display text-sm sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span>Faculty Mentors Performance &amp; Progress Matrix</span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30">
+                <h3 className="font-display text-sm sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
+                  <span className="break-words min-w-0">Faculty Mentors Performance &amp; Progress Matrix</span>
+                  <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 shrink-0">
                     Live Telemetry
                   </span>
                 </h3>
@@ -115,37 +115,37 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
           </div>
         </div>
 
-        {/* 2. Micro Executive Summary Strip (All Interactive) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-2">
-          {/* Total Mentors Card — Click opens Allocation & Roster Manager */}
+        {/* 2. Micro Executive Summary Strip (All Interactive) - Compact */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 pt-1 min-w-0 max-w-full">
+          {/* Total Mentors Card */}
           <div 
             onClick={() => {
               setStaffWorkloadFilter('ALL');
               setShowStaffAllocationModal(true);
             }}
-            className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
             title="Click to open Faculty Allocation & Mentors Manager"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 Total Mentors
               </span>
-              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
-                Manage <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+              <span className="text-[8px] sm:text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
+                Manage <ChevronRight size={9} className="group-hover:translate-x-0.5 transition-transform" />
               </span>
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-lg sm:text-xl font-black font-mono text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <div className="mt-0.5 flex items-baseline gap-1">
+              <span className="text-sm sm:text-base font-black font-mono text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 {totalStaff}
               </span>
-              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Faculty</span>
+              <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400">Faculty</span>
             </div>
           </div>
 
           {/* Allocated Mentors Filter Card */}
           <div 
             onClick={() => setStaffWorkloadFilter(staffWorkloadFilter === 'COMPLETED' ? 'ALL' : 'COMPLETED')}
-            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
+            className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
               staffWorkloadFilter === 'COMPLETED'
                 ? 'bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/20'
                 : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200/70 dark:border-white/5 hover:border-emerald-500/30'
@@ -153,19 +153,19 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             title="Click to toggle filter for Allocated faculty mentors"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Allocated</span>
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Allocated</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-lg sm:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">{allocatedStaff}</span>
-              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Active Duty</span>
+            <div className="mt-0.5 flex items-baseline gap-1">
+              <span className="text-sm sm:text-base font-black font-mono text-emerald-600 dark:text-emerald-400">{allocatedStaff}</span>
+              <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400">Active Duty</span>
             </div>
           </div>
 
           {/* Unallocated Mentors Filter Card */}
           <div 
             onClick={() => setStaffWorkloadFilter(staffWorkloadFilter === 'PENDING' ? 'ALL' : 'PENDING')}
-            className={`p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
+            className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
               staffWorkloadFilter === 'PENDING'
                 ? 'bg-amber-500/10 border-amber-500/40 ring-2 ring-amber-500/20'
                 : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200/70 dark:border-white/5 hover:border-amber-500/30'
@@ -173,38 +173,37 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             title="Click to toggle filter for Unallocated faculty mentors"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Unallocated</span>
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">Unallocated</span>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-lg sm:text-xl font-black font-mono text-amber-600 dark:text-amber-400">{unallocatedStaff}</span>
-              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Mentors</span>
+            <div className="mt-0.5 flex items-baseline gap-1">
+              <span className="text-sm sm:text-base font-black font-mono text-amber-600 dark:text-amber-400">{unallocatedStaff}</span>
+              <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400">Mentors</span>
             </div>
           </div>
 
-          {/* Mentees Active Card — Click opens Active Mentees & Telemetry Modal */}
+          {/* Mentees Active Card */}
           <div 
             onClick={() => setShowActiveMenteesModal(true)}
-            className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
             title="Click to open Active Mentees & Solver Participation Telemetry"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 Mentees Active
               </span>
-              <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
-                Inspect <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+              <span className="text-[8px] sm:text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
+                Inspect <ChevronRight size={9} className="group-hover:translate-x-0.5 transition-transform" />
               </span>
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-lg sm:text-xl font-black font-mono text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500 transition-colors">
+            <div className="mt-0.5 flex items-baseline gap-1">
+              <span className="text-sm sm:text-base font-black font-mono text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500 transition-colors">
                 {totalActiveSolvers}/{totalAssignedMentees}
               </span>
-              <span className="text-[10px] font-mono font-bold text-indigo-500">({overallActiveRate}%)</span>
+              <span className="text-[8px] sm:text-[9px] font-mono font-bold text-indigo-500">({overallActiveRate}%)</span>
             </div>
           </div>
         </div>
-
         {/* 3. Search Toolbar */}
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none" />

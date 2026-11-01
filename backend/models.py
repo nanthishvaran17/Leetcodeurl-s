@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Float, ForeignKey, Text, JSON, UniqueConstraint, Index, CheckConstraint, text
-from sqlalchemy.orm import relationship, backref, validates
+from sqlalchemy.orm import relationship, backref, validates, synonym
 from backend.database import Base
 
 class Department(Base):
@@ -1589,6 +1589,7 @@ class LeetCodeContestRatingHistory(Base):
     total_problems      = Column(Integer, default=4)
     finish_time_seconds = Column(Integer, nullable=True)       # finishTimeInSeconds
     contest_rank        = Column(Integer, nullable=True)       # ranking field (official only)
+    ranking             = synonym("contest_rank")
     rating_after        = Column(Float, nullable=True)         # rating field at end of this contest
 
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))

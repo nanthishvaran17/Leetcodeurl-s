@@ -716,7 +716,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "easy_solved": getattr(st_profile, "easy_solved", 0) if st_profile else 0,
             "medium_solved": getattr(st_profile, "medium_solved", 0) if st_profile else 0,
             "hard_solved": getattr(st_profile, "hard_solved", 0) if st_profile else 0,
-            "accommodation": getattr(s, "accommodation", "") or "—",
+            "accommodation": ("H" if ("HOSTEL" in str(getattr(s, "accommodation", "") or "").upper() or str(getattr(s, "accommodation", "") or "").upper().startswith("H")) else ("D" if ("DAY" in str(getattr(s, "accommodation", "") or "").upper() or str(getattr(s, "accommodation", "") or "").upper().startswith("D")) else (getattr(s, "accommodation", "") or "—"))),
             "twelfth_cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,  # type: ignore
             "cutoff": float(s.twelfth_cutoff) if (hasattr(s, "twelfth_cutoff") and s.twelfth_cutoff is not None) else None,  # type: ignore
             "score": (solved_val * 3) if (is_att and solved_val is not None) else "—",

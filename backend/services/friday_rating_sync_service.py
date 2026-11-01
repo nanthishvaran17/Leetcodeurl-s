@@ -216,6 +216,51 @@ async def run_friday_rating_sync():
                             if matching_hist and matching_hist.get("attended"):
                                 wpr.participation_status = "PUBLIC_ATTENDED"
 
+                    # 3. Synchronize LeetCodeContestRatingHistory for authentic participations
+                    if hist and isinstance(hist, list):
+                        for h_item in hist:
+                            if not isinstance(h_item, dict):
+                                continue
+                            is_att = bool(h_item.get("attended"))
+                            q_solved = h_item.get("problemsSolved") or 0
+                            if not is_att and q_solved == 0:
+                                continue
+                            c_info = h_item.get("contest") or {}
+                            c_title = c_info.get("title")
+                            if not c_title:
+                                continue
+
+                            c_rec = db.query(LeetCodeContestRatingHistory).filter(
+                                LeetCodeContestRatingHistory.student_id == s.id,
+                                LeetCodeContestRatingHistory.contest_name == c_title
+                            ).first()
+                            if not c_rec:
+                                c_rec = LeetCodeContestRatingHistory(
+                                    student_id=s.id,
+                                    contest_name=c_title,
+                                    attended=is_att
+                                )
+                                db.add(c_rec)
+
+                            c_rec.attended = is_att
+                            c_start = c_info.get("startTime")
+                            if c_start:
+                                c_rec.contest_start_time = datetime.datetime.fromtimestamp(c_start)
+                            elif not getattr(c_rec, "contest_start_time", None):
+                                from backend.services.canonical_contest_engine import derive_contest_datetime
+                                c_rec.contest_start_time = derive_contest_datetime(c_title)
+
+                            if h_item.get("ranking"):
+                                c_rec.contest_rank = int(h_item["ranking"])
+                            if h_item.get("rating"):
+                                c_rec.rating_after = round(float(h_item["rating"]), 1)
+                            if h_item.get("problemsSolved") is not None:
+                                c_rec.problems_solved = int(h_item["problemsSolved"])
+                            if h_item.get("totalProblems") is not None:
+                                c_rec.total_problems = int(h_item["totalProblems"])
+                            if h_item.get("finishTimeInSeconds") is not None:
+                                c_rec.finish_time_seconds = int(h_item["finishTimeInSeconds"])
+
                     updated_count += 1
 
                 db.commit()

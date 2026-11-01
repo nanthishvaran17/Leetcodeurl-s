@@ -567,7 +567,7 @@ export const StaffManagement: React.FC = () => {
             ) : (
               <>
                 {/* MOBILE CARD VIEW (< 768px) - Sleek, Compact Modern Mobile UI */}
-                <div className="block md:hidden p-2.5 sm:p-3 space-y-2.5 bg-slate-100/60 dark:bg-navy-950/40">
+                <div className="block md:hidden p-2 sm:p-2.5 space-y-1.5 bg-slate-100/60 dark:bg-navy-950/40">
                   {filteredStaff.map((staff) => {
                     const isMenteeEligible = isRoleEligibleForMentees(staff.role, staff.mentoring_role);
                     const menteeCount = staff.assigned_count || 0;
@@ -589,19 +589,19 @@ export const StaffManagement: React.FC = () => {
                       <div
                         key={staff.id}
                         onClick={() => setViewingStaff(staff)}
-                        className="group relative rounded-2xl p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer space-y-3 overflow-hidden"
+                        className="group relative rounded-xl p-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-2xs hover:shadow-xs transition-all active:scale-[0.99] cursor-pointer space-y-1.5 overflow-hidden"
                       >
                         {/* Subtle Top Status Accent Line */}
-                        <div className={`absolute top-0 left-0 right-0 h-1 ${
+                        <div className={`absolute top-0 left-0 right-0 h-0.5 ${
                           staff.is_active
                             ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500'
                             : 'bg-rose-500'
                         }`} />
 
-                        {/* 1. Header: Avatar + Name & Role + Active Status */}
-                        <div className="flex items-start justify-between gap-3 min-w-0">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            {/* Avatar with Status Pip */}
+                        {/* Row 1: Avatar + Name + Role + Dept + Status */}
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {/* Avatar */}
                             <div
                               className="relative shrink-0"
                               onClick={(e) => {
@@ -620,23 +620,23 @@ export const StaffManagement: React.FC = () => {
                                 <img
                                   src={staff.profile_photo}
                                   alt={staff.full_name || staff.username}
-                                  className="w-11 h-11 rounded-2xl object-cover border-2 border-indigo-500/30 shadow-xs bg-white dark:bg-slate-950"
+                                  className="w-8 h-8 rounded-lg object-cover border border-indigo-500/30 shadow-2xs bg-white dark:bg-slate-950"
                                 />
                               ) : (
-                                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-xs uppercase tracking-wider border border-white/20">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-[11px] flex items-center justify-center shadow-2xs uppercase tracking-wider border border-white/20">
                                   {initials}
                                 </div>
                               )}
-                              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${
-                                staff.is_active ? 'bg-emerald-500 ring-2 ring-emerald-500/20' : 'bg-rose-500'
+                              <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-slate-900 ${
+                                staff.is_active ? 'bg-emerald-500' : 'bg-rose-500'
                               }`} />
                             </div>
 
-                            {/* Name + Role Pill */}
+                            {/* Name + Badges */}
                             <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-1.5 truncate">
                                 <h4
-                                  className="font-bold text-sm text-slate-900 dark:text-white leading-tight truncate select-text cursor-text"
+                                  className="font-bold text-xs text-slate-900 dark:text-white truncate"
                                   title={staff.full_name || staff.username}
                                 >
                                   {staff.full_name || staff.username}
@@ -644,25 +644,17 @@ export const StaffManagement: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={(e) => handleCopyStaffName(staff.full_name || staff.username, e)}
-                                  className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                                  className="p-0.5 rounded text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
                                   title="Copy Staff Name"
                                 >
                                   {copiedStaffName === (staff.full_name || staff.username) ? (
-                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                    <Check className="w-3 h-3 text-emerald-500" />
                                   ) : (
-                                    <Copy className="w-3.5 h-3.5" />
+                                    <Copy className="w-3 h-3" />
                                   )}
                                 </button>
-                                {isRoot && (
-                                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
-                                    ROOT
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-2 mt-1">
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold inline-block truncate ${
+                                  className={`px-1.5 py-0.2 rounded text-[8.5px] font-bold shrink-0 ${
                                     roleName === 'Faculty'
                                       ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
                                       : roleName === 'HOD'
@@ -674,142 +666,84 @@ export const StaffManagement: React.FC = () => {
                                 >
                                   {roleName}
                                 </span>
+                                {isRoot && (
+                                  <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
+                                    ROOT
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
 
-                          {/* Compact Status Badge */}
-                          <div className="shrink-0 pt-0.5">
-                            {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                Active
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                Suspended
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Email Address Bar */}
-                        <div
-                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-600 dark:text-slate-300 font-mono border border-slate-100 dark:border-slate-800"
-                          title={emailStr}
-                        >
-                          <Mail className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                          <span className="truncate">{emailStr}</span>
-                        </div>
-
-                        {/* 2. Clean Dedicated Metadata Chips Grid */}
-                        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
-                          {/* Department */}
-                          <div
-                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
-                            title={`Department: ${deptName}`}
-                          >
-                            <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                              <Building2 className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Dept
-                            </span>
-                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 truncate w-full uppercase">
+                          {/* Dept + Active Dot */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                               {deptName}
                             </span>
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${
+                              staff.is_active ? 'bg-emerald-500' : 'bg-rose-500'
+                            }`} title={staff.is_active ? 'Active' : 'Suspended'} />
                           </div>
-
-                          {/* Institutional ID */}
-                          <div
-                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
-                            title={`Institutional ID: ${instId}`}
-                          >
-                            <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                              <KeyRound className="w-2.5 h-2.5 text-slate-400 shrink-0" /> Staff ID
-                            </span>
-                            <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 truncate w-full">
-                              {instId}
-                            </span>
-                          </div>
-
-                          {/* Assigned Mentees or Executive Scope */}
-                          {isMenteeEligible ? (
-                            <div
-                              className="flex flex-col items-center justify-center p-2 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100/80 dark:border-indigo-900/40 text-center min-w-0"
-                              title={`Assigned Mentees: ${menteeCount}`}
-                            >
-                              <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                                <Users className="w-2.5 h-2.5 text-indigo-500 shrink-0" /> Mentees
-                              </span>
-                              <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-300">
-                                {menteeCount} {menteeCount === 1 ? 'Mentee' : 'Mentees'}
-                              </span>
-                            </div>
-                          ) : (
-                            <div
-                              className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-center min-w-0"
-                              title={`Scope: ${roleName}`}
-                            >
-                              <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-0.5">
-                                <Shield className="w-2.5 h-2.5 text-slate-400 shrink-0" /> Scope
-                              </span>
-                              <span className="text-[11px] font-black text-slate-600 dark:text-slate-300 truncate w-full uppercase">
-                                {roleName === 'Department HOD' ? 'HOD' : roleName === 'Administrator' ? 'Admin' : roleName}
-                              </span>
-                            </div>
-                          )}
                         </div>
 
-                        {/* 3. Dedicated Touch-Friendly Action Bar */}
+                        {/* Row 2: Staff ID & Email on left, Micro Action Buttons on right */}
                         <div
-                          className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2"
+                          className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <button
-                            type="button"
-                            onClick={() => setViewingStaff(staff)}
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors py-1 px-1 -ml-1 rounded-lg"
-                          >
-                            <span>Profile Details</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5 min-w-0 text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                            <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                              {instId}
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                            <span className="truncate">{emailStr}</span>
+                            {isMenteeEligible && (
+                              <>
+                                <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                                <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0">
+                                  {menteeCount} Mentees
+                                </span>
+                              </>
+                            )}
+                          </div>
 
                           {/* Quick Action Button Group */}
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1 shrink-0">
                             <button
                               type="button"
                               onClick={() => setViewingStaff(staff)}
-                              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95 flex items-center justify-center border border-slate-200/60 dark:border-slate-700"
+                              className="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95 flex items-center justify-center border border-slate-200/60 dark:border-slate-700 shadow-2xs"
                               title="View Staff Profile"
                             >
-                              <Eye className="w-3.5 h-3.5" />
+                              <Eye className="w-3 h-3" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleOpenEditModal(staff)}
-                              className="w-8 h-8 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/60"
+                              className="w-6 h-6 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 transition-all active:scale-95 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs"
                               title="Edit Staff Account"
                             >
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <Edit2 className="w-3 h-3" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                              className={`w-8 h-8 rounded-xl transition-all active:scale-95 flex items-center justify-center border ${
+                              className={`w-6 h-6 rounded-md transition-all active:scale-95 flex items-center justify-center border shadow-2xs ${
                                 staff.is_active
                                   ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60'
                                   : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60'
                               }`}
                               title={staff.is_active ? 'Suspend Account' : 'Activate Account'}
                             >
-                              {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <RefreshCcw className="w-3.5 h-3.5" />}
+                              {staff.is_active ? <UserX className="w-3 h-3" /> : <RefreshCcw className="w-3 h-3" />}
                             </button>
                             <button
                               type="button"
                               onClick={() => setDeletingStaff(staff)}
-                              className="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 flex items-center justify-center"
+                              className="w-6 h-6 rounded-md bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 transition-all active:scale-95 flex items-center justify-center shadow-2xs"
                               title="Delete Staff Account"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                         </div>

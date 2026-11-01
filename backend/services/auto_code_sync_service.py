@@ -166,7 +166,9 @@ def sync_contest_submission_codes_for_session(
     db: Optional[Session] = None,
     concurrency: int = 10,
     force_refresh: bool = False,
-    limit_solvers: Optional[int] = None
+    limit_solvers: Optional[int] = None,
+    target_dept: Optional[str] = None,
+    target_year: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Main entry point: Automatically syncs 100% Real Verbatim Code for all students
@@ -203,8 +205,17 @@ def sync_contest_submission_codes_for_session(
                 query_wpr = query_wpr.limit(limit_solvers)
             solvers = query_wpr.all()
 
+        if target_dept or target_year:
+            from backend.services.official_contest_ranking_service import filter_students_by_dept_and_year
+            filtered_solvers = []
+            for r in solvers:
+                st = db.query(Student).filter(Student.id == r.student_id).first()
+                if st and filter_students_by_dept_and_year([st], target_dept, target_year):
+                    filtered_solvers.append(r)
+            solvers = filtered_solvers
+
         total_solvers = len(solvers)
-        logger.info(f"[AUTO_CODE_SYNC] Found {total_solvers} participating students who solved questions.")
+        logger.info(f"[AUTO_CODE_SYNC] Found {total_solvers} participating students who solved questions (Filter: {target_dept or 'ALL'}/{target_year or 'ALL'}).")
 
         synced_count = 0
         skipped_count = 0

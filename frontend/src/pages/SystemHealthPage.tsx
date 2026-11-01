@@ -2232,7 +2232,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   <div className="flex items-center gap-3 flex-wrap justify-center">
                     <div className="flex items-center gap-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 text-[11px] font-bold shadow-2xs shrink-0">
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 px-1 font-mono font-bold">Show:</span>
-                      {[10, 25, 50, 100].map((sz) => (
+                      {[10, 20, 50, 100, 200].map((sz) => (
                         <button
                           key={sz}
                           onClick={() => { setAuditPageSize(sz); setAuditPage(1); }}

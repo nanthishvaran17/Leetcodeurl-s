@@ -563,12 +563,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-400/50 to-transparent" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
-          <div className="space-y-4 max-w-2xl">
-            {/* Live Pulsing Badge */}
-            <div className="inline-flex items-center px-3 sm:px-3.5 py-1 rounded-xl sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[9px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs max-w-full">
-              <span className="whitespace-normal sm:whitespace-nowrap leading-tight">STUDENT DIRECTORY — {globalTotalCount || serverTotalCount} ENROLLED</span>
-            </div>
-
+          <div className="space-y-1.5 max-w-2xl">
             <div className="space-y-1.5">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
                 Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Directory</span>
@@ -888,7 +883,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   }}
                   dropdownWidth="w-48"
                   options={[
-                    { value: "25", label: "25 per page" },
+                    { value: "10", label: "10 per page" },
+                    { value: "20", label: "20 per page" },
                     { value: "50", label: "50 per page" },
                     { value: "100", label: "100 per page" },
                     { value: "200", label: "200 per page" }
