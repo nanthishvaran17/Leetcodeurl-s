@@ -150,7 +150,7 @@ def export_word_from_dataset(dataset: dict) -> bytes:
             "PENDING":            "PENDING",
         }
 
-        w_headers = ["S.No", "Reg No", "Student Name", "Dept", "Yr", "Status", "Contest Name", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Rank"]
+        w_headers = ["S.No", "Reg No", "Student Name", "Dept", "Yr", "Status", "Contest Name", "Q1 (Easy)", "Q2 (Medium)", "Q3 (Medium)", "Q4 (Hard)", "Total Solved", "Rank"]
         table_w = doc.add_table(rows=1 + len(contest_rows), cols=len(w_headers))
         table_w.alignment = WD_TABLE_ALIGNMENT.CENTER
 

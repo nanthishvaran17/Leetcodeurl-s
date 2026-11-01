@@ -766,11 +766,11 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             Paragraph("<b>Student Name</b>", th_style),
             Paragraph("<b>Dept</b>", th_style),
             Paragraph("<b>Year</b>", th_style),
-            Paragraph("<b>Q1</b>", th_style),
-            Paragraph("<b>Q2</b>", th_style),
-            Paragraph("<b>Q3</b>", th_style),
-            Paragraph("<b>Q4</b>", th_style),
-            Paragraph("<b>Score</b>", th_style)
+            Paragraph("<b>Q1 (Easy)</b>", th_style),
+            Paragraph("<b>Q2 (Medium)</b>", th_style),
+            Paragraph("<b>Q3 (Medium)</b>", th_style),
+            Paragraph("<b>Q4 (Hard)</b>", th_style),
+            Paragraph("<b>Total Solved</b>", th_style)
         ]
     ]
 
