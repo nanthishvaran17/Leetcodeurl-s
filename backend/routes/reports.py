@@ -2499,10 +2499,26 @@ def _get_dataset_for_id(
             not_count = sum(1 for r in raw_rows if str(r.get("status", "")).upper() in ("NOT_ATTENDED", "NO_EVIDENCE", "ABSENT", "PUBLIC_NOT_ATTENDED"))
             err_count = sum(1 for r in raw_rows if str(r.get("status", "")).upper() in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR"))
             
-            q4_count = sum(1 for r in raw_rows if (r.get("total_solved") == 4 or r.get("q4") is not None and r.get("q4") != ""))
-            q3_count = sum(1 for r in raw_rows if r.get("total_solved") == 3)
-            q2_count = sum(1 for r in raw_rows if r.get("total_solved") == 2)
-            q1_count = sum(1 for r in raw_rows if r.get("total_solved") == 1)
+            def _calc_row_solved(r_item):
+                tot = r_item.get("total_solved")
+                if tot is None:
+                    tot = r_item.get("solved")
+                if tot is not None:
+                    try:
+                        return int(tot)
+                    except (ValueError, TypeError):
+                        pass
+                q_sum = 0
+                for qk in ("q1", "q2", "q3", "q4"):
+                    v = r_item.get(qk)
+                    if str(v).strip().lower() in ("1", "true", "yes", "solved"):
+                        q_sum += 1
+                return q_sum
+
+            q4_count = sum(1 for r in raw_rows if _calc_row_solved(r) == 4)
+            q3_count = sum(1 for r in raw_rows if _calc_row_solved(r) == 3)
+            q2_count = sum(1 for r in raw_rows if _calc_row_solved(r) == 2)
+            q1_count = sum(1 for r in raw_rows if _calc_row_solved(r) == 1)
             
             p_rate = round(((off_count + virt_count) / tot_count * 100), 1) if tot_count > 0 else 0.0
 
