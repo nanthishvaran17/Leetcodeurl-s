@@ -330,9 +330,9 @@ To populate 25+ realistic demonstration students across departments without scra
 python -m backend.scripts.seed_demo_data
 ```
 
-**Default Local Administrator Credentials**:
-* **Username**: `admin`
-* **Password**: Configured via `ADMIN_PASSWORD` in `.env` (defaults to `admin123` in local sandbox mode).
+**Administrator Credentials**:
+* **Username**: Configured in `.env` via `ADMIN_USERNAME` (defaults to `admin`).
+* **Password**: Set a secure `ADMIN_PASSWORD` in `.env` before booting the platform.
 
 ### 7. Run with Docker Compose
 To run the full production platform in a single command:
@@ -429,8 +429,7 @@ Leetcodeurl-s/
 ### Institutional Governance & Academic Advisory
 * **Nandha Engineering College (Autonomous)**, Erode, Tamil Nadu, India.
 * **Dr. S. Prabhu**, Head of Department — Computer Science and Engineering & Cyber Security.
-* **Dr. M. Senthilkumar**, Head of Department — Information Technology.
-* **Dr. S. Karthikeyan**, Head of Department — Computer Science and Engineering (IoT).
+* **M. Santhosh Kumar**, Assistant Professor / CSE(CS) & Placement Coordinator.
 * Continuous Internal Evaluation (CIE) Cell & Placement Mentorship Directorate.
 
 ---
