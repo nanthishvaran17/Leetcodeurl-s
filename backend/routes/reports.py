@@ -2557,7 +2557,7 @@ def _get_dataset_for_id(
                     "solved3": q3_count,
                     "solved2": q2_count,
                     "solved1": q1_count,
-                    "solved0": max(0, tot_count - (q4_count + q3_count + q2_count + q1_count + not_count)),
+                    "solved0": max(0, (off_count + virt_count) - (q4_count + q3_count + q2_count + q1_count)),
                     "notAttended": not_count,
                 },
                 "metrics": {

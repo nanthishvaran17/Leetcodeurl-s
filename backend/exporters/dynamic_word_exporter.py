@@ -124,6 +124,16 @@ def export_dynamic_word(dataset: dict) -> bytes:
             if h == "weeklyData":
                 for c_num in weekly_data_keys:
                     clean_headers.append(f"C{c_num}")
+            elif h.lower() == "q1":
+                clean_headers.append("Q1 (Easy)")
+            elif h.lower() == "q2":
+                clean_headers.append("Q2 (Medium)")
+            elif h.lower() == "q3":
+                clean_headers.append("Q3 (Medium)")
+            elif h.lower() == "q4":
+                clean_headers.append("Q4 (Hard)")
+            elif h.lower() in ("total_solved", "totalsolved"):
+                clean_headers.append("Total Solved")
             else:
                 formatted_h = re.sub(r'([a-z])([A-Z])', r'\1 \2', h).replace("_", " ").title().replace('Pct', '%')
                 clean_headers.append(formatted_h)
