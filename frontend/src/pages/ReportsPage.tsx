@@ -467,167 +467,7 @@ export const ReportsPage: React.FC = () => {
     downloadReportFile(`/reports/export-csv${q}`, 'LeetCode_Student_Performance_Report.csv');
   };
 
-  const reportCards = [
-    {
-      id: 'master-10-sheet',
-      title: 'Master 10-Sheet Institutional Excel',
-      badge: 'OFFICIAL 10-SHEET WORKBOOK',
-      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      description: 'Complete 10-Sheet Master Workbook: 01 Principal Executive, 02 Complete Student Roster, 03 Contest Attendance, 04 Contest Performance, 05 Top Performers, 06 4-4 Perfect Solvers, 07 3-4 Solvers, 08 2-4 Solvers, 09 1-4 Solvers, and 10 Department Intelligence.',
-      filename: 'Weekly_LeetCode_Master_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      btnGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/download${q}`, 'Weekly_LeetCode_Master_Report.xlsx');
-      }
-    },
-    {
-      id: 'five-week-trend',
-      title: 'Five-Week Performance Trend Report',
-      badge: 'LONGITUDINAL 5-CONTEST WINDOW',
-      badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-      description: 'Monitors student performance across the latest 5 valid contests. Automatically calculates rolling window metrics and identifies Improving (↑), Stable (→), Declining (↓), and Follow-Up student trajectories.',
-      filename: 'Five_Week_Performance_Trend_Report.xlsx',
-      icon: Award,
-      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-      btnGradient: 'from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 shadow-indigo-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams({ report_type: 'FIVE_WEEK_PERFORMANCE_TREND' });
-        downloadReportFile(`/reports/export-excel${q}`, 'Five_Week_Performance_Trend_Report.xlsx');
-      }
-    },
-    {
-      id: 'contest-attendance',
-      title: 'Contest Attendance & Participation',
-      badge: 'WEEKLY CONTEST MATRIX',
-      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      description: 'Comprehensive grid mapping every student’s contest attendance across the academic year. Provides a complete weekly attendance matrix and performance breakdown.',
-      filename: 'Contest_Attendance_and_Participation.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      btnGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/export-weekly-contest-matrix${q}`, 'Contest_Attendance_and_Participation.xlsx');
-      }
-    },
-    {
-      id: 'hod-department',
-      title: 'HOD Department Intelligence Report',
-      badge: 'AUTHORIZED DEPARTMENT SCOPE',
-      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-      description: 'Department-level performance review: HOD → Faculty/Mentor → Assigned Students drill-down. Contains department KPIs, solver distribution, faculty group metrics, and student performance roster.',
-      filename: 'HOD_Department_Intelligence_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
-      btnGradient: 'from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/hod${q}`, 'HOD_Department_Intelligence_Report.xlsx');
-      }
-    },
-    {
-      id: 'faculty-consolidated',
-      title: 'Faculty Consolidated Performance',
-      badge: 'ASSIGNED STUDENT ROSTER',
-      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      description: 'Consolidated review report for faculty and mentors: Includes assigned student attendance %, Q1–Q4 solve status, scores, mentor signals, and 5-week improvement trajectory.',
-      filename: 'Faculty_Consolidated_Performance_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      btnGradient: 'from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 shadow-amber-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/staff${q}`, 'Faculty_Consolidated_Performance_Report.xlsx');
-      }
-    },
-    {
-      id: 'coordinator-weekly-performance',
-      title: 'Coordinator Weekly Performance',
-      badge: 'WEEKLY SUMMARY REPORT',
-      badgeColor: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-      description: 'Generates the Weekly Performance Report for the Academic Coordinator, detailing problem solving counts, contest attendance, and Leetcode ratings.',
-      filename: 'LeetCode_Weekly_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
-      btnGradient: 'from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-cyan-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams({ report_type: 'WEEKLY_PERFORMANCE' });
-        downloadReportFile(`/reports/export-excel${q}`, 'LeetCode_Weekly_Report.xlsx');
-      }
-    },
-    {
-      id: 'principal-executive',
-      title: 'Principal Executive Intelligence Report',
-      badge: 'INSTITUTION-WIDE OVERVIEW',
-      badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
-      description: 'High-level executive institutional overview: Total enrolled students, verified solvers, attendance %, 4/4 solver count, department comparative matrix, and top achievements.',
-      filename: 'Principal_Executive_Intelligence_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
-      btnGradient: 'from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 shadow-brand-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/principal${q}`, 'Principal_Executive_Intelligence_Report.xlsx');
-      }
-    },
-    {
-      id: 'management-summary',
-      title: 'Management Executive Summary',
-      badge: 'SECRETARY & SENIOR MANAGEMENT',
-      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-      description: 'Concise executive summary for Secretary & Management: High-impact institutional participation rate, performance trajectory, department rank comparison, and key action highlights.',
-      filename: 'Management_Executive_Summary_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      btnGradient: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams({ report_type: 'MANAGEMENT_EXECUTIVE_SUMMARY' });
-        downloadReportFile(`/reports/export-excel${q}`, 'Management_Executive_Summary_Report.xlsx');
-      }
-    },
-    {
-      id: 'tnea-cutoff-analysis',
-      title: '12th TNEA Cutoff Intelligence',
-      badge: 'ADMISSIONS & ACADEMICS',
-      badgeColor: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
-      description: 'Analysis of 12th standard TNEA cutoff bands (200-190, 190-180... 70-80) mapped to department distribution and academic performance.',
-      filename: '12th_TNEA_Cutoff_Intelligence.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-      btnGradient: 'from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-sky-600/30',
-      onClick: () => {
-        const q = getActiveFilterQueryParams({ report_type: '12TH_TNEA_CUTOFF_ANALYSIS' });
-        downloadReportFile(`/reports/export-excel${q}`, '12th_TNEA_Cutoff_Intelligence.xlsx');
-      }
-    },
-    {
-      id: 'pdf-summary',
-      title: 'Executive PDF Summary Report',
-      badge: 'PRINTABLE PDF (SEGMENTED TYPOGRAPHY)',
-      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-      description: 'High-resolution printable PDF report with official college header branding, executive summary table, department statistics, and top performers formatted for executive review.',
-      filename: 'Executive_PDF_Summary.pdf',
-      icon: FileText,
-      iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
-      btnGradient: 'from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-600/30',
-      onClick: handleDownloadPDF
-    },
-    {
-      id: 'word-summary',
-      title: 'Executive Word Summary (.DOCX)',
-      badge: 'WORD DOCX (EXECUTIVE TEMPLATE)',
-      badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
-      description: 'Editable Microsoft Word document report with official Nandha Engineering College header, executive summary table, and student performance roster formatted for institutional distribution.',
-      filename: 'Executive_Word_Summary.docx',
-      icon: FileText,
-      iconBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
-      btnGradient: 'from-brand-600 to-cyan-600 hover:from-brand-700 hover:to-cyan-700 shadow-brand-600/30',
-      onClick: handleDownloadWord
-    }
-  ];
+  const reportCards: any[] = [];
 
   return (
     <div className="w-full max-w-full overflow-x-hidden box-border space-y-6 sm:space-y-8 pt-0 pb-32 sm:pb-12 animate-fade-in">
@@ -1544,6 +1384,22 @@ export const ReportsPage: React.FC = () => {
                   <span>Download PDF</span>
                 </button>
 
+                {/* 2b. Direct Word Download */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const q = getActiveFilterQueryParams();
+                    const effDept = (isHodUser && (selectedDept === 'ALL' || !selectedDept)) ? hodDeptDefault : selectedDept;
+                    const fname = `NEC_${selectedReportType}_${effDept}_Yr${selectedYear}.docx`;
+                    downloadReportFile(`/reports/export-word${q}`, fname);
+                  }}
+                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-xs rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer touch-manipulation"
+                  title="Download Word (.docx) with current active filters"
+                >
+                  <FileText className="w-4 h-4 shrink-0" />
+                  <span>Download Word</span>
+                </button>
+
                 {/* 3. Generate Interactive Preview */}
                 <button
                   type="button"
@@ -1571,72 +1427,7 @@ export const ReportsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Pre-Formatted Institutional Exports & Download Hub Grid */}
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                  <FileSpreadsheet className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                    Pre-Formatted Institutional Exports &amp; Download Hub
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    1-Click download official institutional Excel workbooks, weekly contest matrices, PDF summaries, and Word documents.
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {reportCards.map((card) => {
-                const Icon = card.icon;
-                const isDownloading = downloadingFiles[card.filename];
-                return (
-                  <div
-                    key={card.id}
-                    className="p-5 rounded-3xl border border-slate-200/90 dark:border-white/10 hover:border-brand-500/40 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between space-y-4 bg-white dark:bg-[#0b101e] group"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className={`p-3 rounded-2xl ${card.iconBg}`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${card.badgeColor}`}>
-                          {card.badge}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                          {card.title}
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-3 leading-relaxed font-medium">
-                          {card.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={card.onClick}
-                      disabled={isDownloading}
-                      className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 min-h-[42px] rounded-2xl text-xs font-black text-white bg-gradient-to-r ${card.btnGradient} transition-all transform active:scale-95 cursor-pointer disabled:opacity-50 shadow-md hover:shadow-lg touch-manipulation`}
-                    >
-                      {isDownloading ? (
-                        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                      ) : (
-                        <Download className="w-4 h-4 shrink-0" />
-                      )}
-                      <span className="truncate">
-                        {isDownloading ? 'Generating Report...' : `Download ${card.filename.split('.').pop()?.toUpperCase()}`}
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
 
           {/* Universal Report Previewer */}
           {activeUniversalPreviewId && (
