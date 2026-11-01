@@ -50,10 +50,10 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: str = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     
     # Official Administrator Credentials Configuration
-    ALLOW_DEFAULT_ADMIN_PASSWORD: bool = True
+    ALLOW_DEFAULT_ADMIN_PASSWORD: bool = False
     ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL", "nanthishvaran17@gmail.com")
     ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "AdminPass123!")
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
 
     # Server & Timezone
     HOST: str = "0.0.0.0"
@@ -118,18 +118,19 @@ class Settings(BaseSettings):
         is_prod = env_lower == "production"
 
         if is_prod:
-            # 1. Database URL Rule (Graceful fallback to SQLite if PostgreSQL not configured)
+            # 1. Database URL Rule (Strict PostgreSQL in production)
             db_url = (self.DATABASE_URL or "").strip().lower()
             allow_sqlite_prod = os.environ.get("ALLOW_SQLITE_PROD", "false").lower() in ("true", "1")
-            if not db_url or "sqlite" in db_url:
-                if not self.DATABASE_URL:
-                    self.DATABASE_URL = "sqlite:///./data/leetcode_tracker.db"
+            if not db_url:
                 if not allow_sqlite_prod:
-                    import logging
-                    logging.warning("[SECURITY/DEPLOYMENT WARNING] Production mode detected without PostgreSQL DATABASE_URL. Falling back to local SQLite database.")
+                    raise RuntimeError("Production mode requires PostgreSQL DATABASE_URL. Missing configuration.")
+                self.DATABASE_URL = "sqlite:///./data/leetcode_tracker.db"
+            elif "sqlite" in db_url:
+                if not allow_sqlite_prod:
+                    raise RuntimeError("SQLite is not permitted in production. PostgreSQL is required.")
             elif not (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
-                import logging
-                logging.warning(f"[SECURITY/DEPLOYMENT WARNING] Unrecognized DATABASE_URL format: {db_url}")
+                if not allow_sqlite_prod:
+                    raise RuntimeError(f"Invalid production DATABASE_URL. PostgreSQL is required, got: {db_url}")
 
             # 2. Secret Validation & Auto-Hardening
             if not self.SECRET_KEY or len(self.SECRET_KEY) < 32 or self.SECRET_KEY in WEAK_SECRETS:

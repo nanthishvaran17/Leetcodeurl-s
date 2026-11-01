@@ -1,0 +1,4 @@
+# Exclude generated native Android code and Gradle build artifacts from GitHub repository language statistics
+frontend/android/** linguist-vendored
+frontend/android/app/build/** linguist-vendored
+releases/** linguist-vendored
