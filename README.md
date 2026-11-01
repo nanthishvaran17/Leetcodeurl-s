@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="180" style="border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.12); margin-bottom: 16px;" />
+<img src="docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="160" style="border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.12); margin-bottom: 16px;" />
 
-# NANDHA LEETCODE INTELLIGENCE
+# NANDHA LEETCODE INTELLIGENCE (NLCI)
 ### Autonomous Institutional Contest Intelligence • Level 4 Forensic Verification • Student Mentorship Platform
 
 **Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**  
@@ -10,110 +10,120 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="docs/assets/badges/live_platform.svg"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="GitHub Release" src="docs/assets/badges/release.svg"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Download Windows Desktop App" src="docs/assets/badges/windows_app.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.1.6" src="https://img.shields.io/badge/Release-v4.1.6-blue.svg?style=flat-square"></a>
+  <a href="releases/android/Nandha_LeetCode_Intelligence_v4.1.6_latest.apk"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square"></a>
 </p>
 
 <p align="center">
-  <a href="#institutional-leadership-engineering-credits"><img alt="Developed by Nanthish & Team" src="docs/assets/badges/developed_by.svg"></a>
-  <img alt="Scale" src="docs/assets/badges/scale.svg">
-  <img alt="Departments" src="docs/assets/badges/departments.svg">
-  <img alt="Contest Autopilot" src="docs/assets/badges/contest_autopilot.svg">
-  <img alt="Forensics" src="docs/assets/badges/forensics.svg">
-  <img alt="Mentoring" src="docs/assets/badges/mentoring.svg">
-  <img alt="Cross-Platform" src="docs/assets/badges/cross_platform.svg">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.100%2B-teal.svg?style=flat-square">
+  <img alt="React 18" src="https://img.shields.io/badge/React-18-61DAFB.svg?style=flat-square">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6.svg?style=flat-square">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-336791.svg?style=flat-square">
+  <img alt="Capacitor 7" src="https://img.shields.io/badge/Capacitor-7.0-119EFF.svg?style=flat-square">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-Ready-2496ED.svg?style=flat-square">
 </p>
 
-<p align="center">
-  <img alt="Python" src="docs/assets/badges/python.svg">
-  <img alt="FastAPI" src="docs/assets/badges/fastapi.svg">
-  <img alt="React" src="docs/assets/badges/react.svg">
-  <img alt="TypeScript" src="docs/assets/badges/typescript.svg">
-  <img alt="PostgreSQL" src="docs/assets/badges/postgresql.svg">
-  <img alt="Accreditation" src="docs/assets/badges/accreditation.svg">
-  <img alt="Mobile 120Hz" src="docs/assets/badges/mobile_120hz.svg">
-  <img alt="Zero Gap Safe Area" src="docs/assets/badges/zero_gap.svg">
-  <img alt="License" src="docs/assets/badges/license.svg">
-</p>
-
-### *Every contest tracked. Every solve forensically verified. 1,500+ student engineering careers empowered.*
+### *Every contest tracked. Every solve verified. 1,500+ student engineering careers empowered.*
 
 </div>
 
 ---
 
-## Executive Directory & Architecture Index
-
-<div align="center">
-
-| Module / Capability | System Responsibility & Institutional Scope | Operational State |
-|:---|:---|:---:|
-| [Executive Overview](#executive-overview) | Institutional analytics paradigm, collegiate scale & verification architecture | `Flagship v4.1.3` |
-| [Live Production Showcase](#live-production-showcase) | High-resolution operational walkthrough across flagship system views | `Production Verified` |
-| [Sunday Contest Autopilot Pipeline](#autonomous-sunday-contest-pipeline) | 4-phase hands-free contest telemetry, rate-limiting & GraphQL orchestration | `100% Autonomous` |
-| [Level 4 Forensic Timing Verification](#level-4-forensic-timing-verification) | Strict binary Q1-Q4 solve timestamps, cutoff verification & anti-falsification | `Forensic Proof` |
-| [Executive Management Oversight](#executive-management-oversight-multi-college-governance) | Multi-college (NEC / NCT), all-department & all-cohort governance with unified reports | `Universal Scope` |
-| [Dynamic Role & Audit Delegation](#dynamic-access-control-audit-security-delegation) | Dynamic security switches for Audit Log & System Settings access | `RBAC Hardened` |
-| [Faculty Action Center & Mentoring Matrix](#faculty-action-center-student-mentoring-matrix) | 4-tier early-warning student intervention & mentoring matrix with WhatsApp nudge | `Active Mentoring` |
-| [HOD Department Leadership & Governance](#hod-department-leadership-multi-tenant-governance) | Department-level tenant isolation, mentee workload balancing & zero data leakage | `Executive Governance` |
-| [Campus Placement & HR Talent Radar](#campus-placement-hr-candidate-intelligence-radar) | Recruiter candidate studio, Knight/Guardian filters & 360° DSA competency radar | `Talent Discovery` |
-| [Emerald Vault & Verifiable Smart Pass](#emerald-vault-verifiable-smart-pass) | 25-Year Celebration PVC Smart ID Pass with cryptographic QR verification | `Physical + Digital` |
-| [NAAC Criteria 2/5 & NBA Accreditation Studio](#naac-criteria-25-nba-accreditation-studio) | Automated quantitative dossiers, CIE marks extraction & continuous evaluation | `NBA / NAAC Ready` |
-| [Automated Multi-Channel Dispatch](#automated-reporting-multi-channel-dispatch-engine) | 15-Sheet OpenPyXL Excel workbooks, cryptographic PDFs, Brevo & WhatsApp | `Automated Dispatch` |
-| [Cross-Platform Native Ecosystem](#cross-platform-native-ecosystem) | Native Android APK (Capacitor 7), Windows Desktop (Electron NSIS), PWA & 4K Kiosk | `Universal Multi-Platform` |
-| [System Architecture & Forensic Data Flow](#system-architecture-forensic-data-flow) | Microservices flowchart, data ingestion, persistence & presentation layers | `Microservices` |
-| [Evidence-First Integrity Protocol](#evidence-first-integrity-protocol) | Strict deterministic data model ("never guess missing data") | `Zero Falsehood` |
-| [Production Technology Stack](#production-technology-stack) | FastAPI, React 18, PostgreSQL 16, Capacitor 7, Electron 30, Vite | `Modern Stack` |
-| [Quick Start & Deployment Guide](#quick-start-deployment-guide) | Local environment setup, Docker, production daemons & automated runners | `One-Click Run` |
-| [Institutional Leadership & Engineering Credits](#institutional-leadership-engineering-credits) | Academic advisory, faculty leadership & engineering contributors | `Nandha Engg` |
-
-</div>
+## Table of Contents
+1. [Executive Overview](#executive-overview)
+2. [The Collegiate Problem & Solution Architecture](#the-collegiate-problem--solution-architecture)
+3. [Level 1 to Level 4 Verification Matrix](#level-1-to-level-4-verification-matrix)
+4. [Weekly & Biweekly Contest Autopilot](#weekly--biweekly-contest-autopilot)
+5. [Live Production Showcase](#live-production-showcase)
+6. [Core System Modules](#core-system-modules)
+7. [System Architecture & Data Flow](#system-architecture--data-flow)
+8. [Evidence-First Integrity Protocol](#evidence-first-integrity-protocol)
+9. [Production Technology Stack](#production-technology-stack)
+10. [Quick Start & Local Development](#quick-start--local-development)
+11. [Testing & Build Verification](#testing--build-verification)
+12. [Project Structure](#project-structure)
+13. [Data Privacy, Ethics & Governance (DPDP 2023)](#data-privacy-ethics--governance-dpdp-2023)
+14. [Institutional Leadership & Engineering Credits](#institutional-leadership--engineering-credits)
+15. [License](#license)
 
 ---
 
 ## Executive Overview
 
-**Nandha LeetCode Intelligence (NLCI)** is an enterprise-grade academic analytics, contest forensics, and proactive mentorship platform engineered exclusively for **Nandha Engineering College**. It transforms chaotic, unverified competitive-programming activity across LeetCode into structured, tamper-proof, and actionable institutional intelligence.
+**Nandha LeetCode Intelligence (NLCI)** is an institutional competitive-programming analytics, contest forensics, and automated mentorship engine engineered for **Nandha Engineering College (Autonomous)**. 
+
+Operating across **1,500+ active students** and **8 engineering departments**, NLCI eliminates manual spreadsheet tracking and replaces unverified submissions with a deterministic, tamper-resistant data pipeline. It ingests public LeetCode telemetry, verifies live contest solves against official contest windows, enforces database-level immutability triggers, and delivers actionable mentorship insights to Faculty Mentors, Heads of Departments (HODs), College Leadership, and Placement Recruiters.
+
+---
+
+## The Collegiate Problem & Solution Architecture
 
 ### The Problem in Collegiate Competitive Programming
-Traditional tracking scripts and simple scrapers fail in real-world collegiate environments:
-* **The High-Concurrency Wall:** Simultaneous scraping of 1,500+ profiles triggers LeetCode Cloudflare rate limits and proxy bans.
-* **Virtual Contest Falsification:** Simple scrapers cannot distinguish between a live contest solve (Sunday 08:00–09:30 AM IST) and a post-contest virtual solve, unfairly rewarding academic dishonesty.
-* **Data Assumption Hazards:** When LeetCode GraphQL times out, naive scripts record "0 solves", demoralizing hardworking students.
-* **Mentoring Bottlenecks:** Faculty mentors lack early-warning detection for silent drop-offs, disengagement, and rating plateaus.
-* **Cross-Department Data Leakage:** In multi-department institutions, faculty lack isolated mentee boundaries.
+* **Cloudflare Rate-Limiting & Scraping Failures**: Uncoordinated batch scraping of hundreds of student profiles triggers Cloudflare challenge walls and IP blocks.
+* **Virtual Contest Falsification**: Naive scrapers check total solved counts or contest rank without validating solve timestamps, mistakenly awarding academic credit to post-contest virtual attempts.
+* **The "Zero Solves" Hazard**: When third-party APIs encounter temporary network timeouts, traditional scripts record "0 solves", demoralizing hardworking students.
+* **Mentorship Blind Spots**: Faculty mentors lack proactive early-warning signals for silent student disengagement, streak drops, and contest drop-offs.
+* **Cross-Department Privacy Boundaries**: Multi-department institutions require strict data isolation so faculty mentors and HODs govern their assigned cohorts securely.
 
-### The Nandha Intelligence Architecture Flow
+### The NLCI Engineering Solution
 ```text
-LeetCode Raw Signals
+LeetCode Public Telemetry
         ↓
-High-Resilience Controlled Concurrency Pipeline (1,500+ Active Students)
+Controlled-Concurrency Ingestion (Semaphore(8) + Exponential Backoff)
         ↓
-Level 4 Forensic Timing & Solve Verification (Q1 / Q2 / Q3 / Q4 Live Audit)
+Level 4 Timestamp & API Payload Verification (Disqualifies Virtual & Post-Contest Solves)
         ↓
-Canonical Persistence with Database Snapshot Immutability Triggers
+Canonical Persistence with PostgreSQL Immutability Triggers (trg_prevent_snapshot_mutation)
         ↓
-Multi-Dimensional Analytics: 360° DSA Competency Radar & Trajectory Curves
+Multi-Dimensional Analytics (360° DSA Competency Radar, Contest Trajectories & Streak Monitoring)
         ↓
-Executive Governance: Management Oversight, HOD Command Center, Faculty Action Center
+Role-Based Governance Portals (Management Oversight, HOD Command Center, Faculty Action Center)
         ↓
-Multi-Channel Dispatch: WhatsApp Cloud API, Brevo Mailer, 15-Sheet Excel, PVC Smart IDs, Smart TV Kiosk
+Multi-Channel Automated Dispatch (WhatsApp Alerts, Brevo Email, 15-Sheet Excel, Signed Android APK, 4K TV Kiosk)
 ```
 
-### Institutional Scale & Metric Matrix
+---
 
-| Metric | Verified Production Value | Description |
-|---|---|---|
-| **Tracked Student Body** | **1,500+ Active Students** | Real-time tracking across 8 engineering departments & 4 academic year cohorts |
-| **Weekly Contests Tracked** | **52+ Annual Contests** | Complete historical weekly and biweekly contest timeline with question forensics |
-| **Sunday Autopilot Concurrency** | **4-Phase Autonomous Pipeline** | Zero human intervention needed from 08:00 AM IST to report generation |
-| **Verification Depth** | **Level 4A / 4B / 4C Forensics** | Timestamp audit against LeetCode contest cutoff to block virtual falsification |
-| **Institutional Governance** | **Executive Management Oversight** | Campus-wide visibility across all colleges (NEC/NCT), departments, and year cohorts |
-| **Early Warning Mentoring** | **Real-Time Faculty Action Center** | 4-tier student intervention matrix (Critical, High, Active Mentoring, Target Achieved) |
-| **Cross-Platform Footprint** | **Web, Android APK, Windows EXE, Kiosk** | Universal access for students, faculty mentors, HODs, and campus visitors |
-| **Institutional Exporters** | **15-Sheet Excel, Cryptographic PDF** | Boardroom-ready automated weekly packages with embedded collegiate seals |
-| **Accreditation Readiness** | **NBA Criteria 2 & 5 / NAAC 'A+'** | Quantitative metrics formatted directly for national accreditation audits |
+## Level 1 to Level 4 Verification Matrix
+
+To eliminate ambiguity, NLCI classifies every student solve through a deterministic 4-level verification hierarchy:
+
+| Verification Level | Technical Check Name | Verification Mechanism | Institutional Guarantee |
+|:---:|:---|:---|:---|
+| **Level 1** | **Profile Discovery & Reachability** | Public GraphQL user profile resolution | Confirms registered LeetCode handle exists and is publicly accessible. |
+| **Level 2** | **Contest Attendance Verification** | `userContestRankingHistory` GraphQL query | Verifies the student officially registered and attended the scheduled contest. |
+| **Level 3** | **Accepted Problem Solves Audit** | Problem slug & `Accepted` status check | Validates that submission status was `Accepted` on target problem IDs. |
+| **Level 4A** | **Contest Window Timestamp Audit** | Strict boundary comparison against official contest window | Disqualifies any solve submitted outside the live contest window (Weekly: Sunday 08:00–09:30 AM IST; Biweekly: Saturday 20:00–21:30 PM IST). |
+| **Level 4B** | **Live Submission ID Verification** | Payload matching with LeetCode live submission logs | Distinguishes live contest submissions from retroactive virtual contest backfilling. |
+| **Level 4C** | **Cryptographic Snapshot Sealing** | **SHA-256 Checksum Hashing** + Database Triggers | Contest snapshots are sealed with SHA-256 hashes. Database trigger `trg_prevent_snapshot_mutation` rejects retroactive updates. |
+
+> [!NOTE]
+> All certificates and 25-Year Smart Passes generated by NLCI use **HMAC-SHA256 tokens** and verifiable QR codes linked directly to [CertificateVerificationPage](file:///frontend/src/pages/CertificateVerificationPage.tsx).
+
+---
+
+## Weekly & Biweekly Contest Autopilot
+
+NLCI supports both official LeetCode contest cadences dynamically:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        AUTONOMOUS CONTEST TIMELINE ENGINE                              │
+├────────────────────────────┬───────────────────────────────────────────────────────────┤
+│ CONTEST EVENT              │ OFFICIAL WINDOW (IST)                                     │
+├────────────────────────────┼───────────────────────────────────────────────────────────┤
+│ LeetCode Weekly Contest    │ Every Sunday: 08:00 AM – 09:30 AM IST (90 Minutes)        │
+│ LeetCode Biweekly Contest  │ Alternate Saturdays: 08:00 PM – 09:30 PM IST (90 Minutes) │
+└────────────────────────────┴───────────────────────────────────────────────────────────┘
+```
+
+### The 4-Phase Autopilot Lifecycle:
+1. **Phase 1: Pre-Contest Warmup (T-15m)**: Clears stale cache, checks proxy pool health, and snapshots pre-contest problem counts.
+2. **Phase 2: Live Window Observation (T+0m to T+90m)**: Low-overhead monitoring of live participant activity.
+3. **Phase 3: Deep Forensic Ingestion (T+90m to T+135m)**: Concurrently pulls per-problem solve timestamps, extracts Q1–Q4 submission IDs, and executes Level 4A/B/C verification.
+4. **Phase 4: Sealed Snapshot & Dispatch (T+135m)**: Generates department rankings, seals the week's database snapshot with SHA-256 checksums, and dispatches automated 15-Sheet Excel reports to HODs and leadership.
 
 ---
 
@@ -122,28 +132,28 @@ Multi-Channel Dispatch: WhatsApp Cloud API, Brevo Mailer, 15-Sheet Excel, PVC Sm
 <div align="center">
 
 ### 1. Executive Analytics Command Center
-*Real-time student leaderboard, multi-metric KPI tracking, live sync progress engine, and podium recognition.*
+*Real-time student leaderboard, multi-metric KPI tracking, live sync engine, and podium recognition.*
 
 <img src="docs/assets/screenshots/snap_01_dashboard.png" alt="Executive Analytics Dashboard" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px;" />
 
 ---
 
-### 2. 360° Spider Competency & Student Forensic Profile
-*Multi-axis Data Structures & Algorithms (DSA) competency radar, contest rating progression curves, and submission heatmaps.*
+### 2. 360° DSA Competency & Forensic Profile
+*Multi-axis Data Structures & Algorithms competency radar, contest rating progression curves, and submission heatmaps.*
 
 <img src="docs/assets/screenshots/snap_02_radar_profile.png" alt="360 Student Forensic Profile" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px;" />
 
 ---
 
 ### 3. Real-Time Head-to-Head Compare Arena
-*Direct peer-to-peer benchmarking across LeetCode ratings, global ranks, solved tiers (Easy/Medium/Hard), and topic proficiencies.*
+*Direct peer-to-peer benchmarking across ratings, global ranks, solved tiers (Easy/Medium/Hard), and topic proficiencies.*
 
 <img src="docs/assets/screenshots/snap_03_compare_arena.png" alt="Compare Arena" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px;" />
 
 ---
 
 ### 4. Campus Placement & HR Candidate Intelligence Finder
-*Dedicated recruiter studio to filter high-performing candidates by specific rating thresholds, streak records, and problem mastery.*
+*Dedicated recruiter studio to filter high-performing candidates by rating thresholds, streak records, and problem mastery.*
 
 <img src="docs/assets/screenshots/snap_04_hr_candidate_finder.png" alt="HR Candidate Intelligence Finder" width="95%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px;" />
 
@@ -151,339 +161,109 @@ Multi-Channel Dispatch: WhatsApp Cloud API, Brevo Mailer, 15-Sheet Excel, PVC Sm
 
 ---
 
-## Autonomous Sunday Contest Pipeline
+## Core System Modules
 
-Every Sunday from **08:00 AM IST to 12:00 PM IST**, the platform shifts into full autopilot mode via GitHub Actions and local multi-worker daemons:
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        SUNDAY CONTEST AUTOPILOT PIPELINE                               │
-├─────────────────────┬────────────────────┬─────────────────────┬───────────────────────┤
-│ PHASE 1: DISCOVERY  │ PHASE 2: LIVE SYNC │ PHASE 3: FORENSICS  │ PHASE 4: DISPATCH     │
-│ 08:00 AM IST        │ 08:00 - 09:30 AM   │ 09:30 - 10:15 AM    │ 10:30 AM IST          │
-├─────────────────────┼────────────────────┼─────────────────────┼───────────────────────┤
-│ • Auto-detects URL  │ • Streaming polls  │ • Timestamp audit   │ • Generates Excel/PDF │
-│ • Identifies Q1-Q4  │   1,500+ profiles  │ • Separates virtual │ • Brevo Mailer to HODs│
-│ • Initializes locked│ • High-resilience  │   from live solves  │ • WhatsApp alerts to  │
-│   snapshot session  │   retry pool       │ • Level 4 audit log │   students & parents  │
-└─────────────────────┴────────────────────┴─────────────────────┴───────────────────────┘
-```
-
-* **Live Streaming Sync:** Dynamically concurrent GraphQL requests fetch profile updates without tripping Cloudflare security throttles.
-* **Friday Official Resync Engine (05:00 AM IST):** When LeetCode officially publishes final contest ratings and global ranks on Friday mornings, the platform executes an automated reconciliation pipeline that seals finalized historical snapshot records.
+* **Management Oversight Hub**: College-wide multi-tenant governance across Nandha Engineering College (NEC) and Nandha College of Technology (NCT).
+* **HOD Command Center**: Departmental isolation, mentee workload balancing, risk-tier tracking, and one-click faculty allocation.
+* **Faculty Action Center**: 4-tier early-intervention matrix (`Critical`, `Warning`, `Attention`, `Target Achieved`) with integrated WhatsApp template messaging.
+* **HR Candidate Finder**: Placement search studio with filters for Knight/Guardian badges, minimum solved counts, and topic specializations.
+* **Accreditation Studio**: Automated quantitative evidence generation for **NAAC Criteria 2 & 5** and **NBA Continuous Internal Evaluation (CIE)**.
+* **Hall of Fame Kiosk Mode**: Full-screen 4K TV display mode with auto-rotating podiums and live contest leaderboard countdowns for campus reception displays.
 
 ---
 
-## Level 4 Forensic Timing Verification
-
-In institutional competitive programming, data accuracy is sacred. A student's placement prospects or internal marks must never be compromised by post-contest virtual practice or simulated timing.
-
-**The Forensic Verification Rulebook:**
-1. **Contest Cutoff Window Validation:** Every submission's Unix timestamp must strictly fall between `ContestStart` and `ContestEnd` (08:00:00 to 09:30:00 IST).
-2. **Authoritative Hash Immutability:** Once a weekly snapshot is signed and sealed, SQL database triggers (`trg_prevent_snapshot_mutation`) strictly reject direct in-place mutation. Revisions must use `snapshot_supersedes()`.
-3. **Evidence-First Classification:**
-   * `AUTHENTIC_SOLVER`: Solved within the strict contest window with verifiable submission ID.
-   * `POST_CONTEST_PRACTICE`: Solved after contest window; credited to general practice, excluded from contest rating.
-   * `NOT_ATTENDED`: Verified absence; distinct from network timeouts or API failure.
-
----
-
-## Executive Management Oversight & Multi-College Governance
-
-The **Executive Management Role** delivers holistic, campus-wide visibility across all institutions under the Nandha Educational Trust:
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                         EXECUTIVE MANAGEMENT OVERSIGHT HUB                             │
-├────────────────────────────┬────────────────────────────┬──────────────────────────────┤
-│ CAMPUS-WIDE JURISDICTION   │ COHORT-WIDE AGGREGATION    │ REPORTING ACCELERATION       │
-├────────────────────────────┼────────────────────────────┼──────────────────────────────┤
-│ • Nandha Engg College (NEC)│ • Second Year (Cohort II)  │ • Zero-Scoping Glitches      │
-│ • Nandha College of Tech   │ • Third Year (Cohort III)  │ • Complete Excel / PDF Kits  │
-│ • 8 Engineering Branches   │ • Final Year (Cohort IV)   │ • Real-Time Campus Analytics │
-└────────────────────────────┴────────────────────────────┴──────────────────────────────┘
-```
-
-### Architectural Safeguards:
-* **Universal Scope Without Filtering Friction:** Unlike department-restricted HODs or mentee-bound faculty, the Management role has full, unhindered read visibility across all departments and cohorts.
-* **Uncompromised Data Exports:** Complete 15-Sheet Excel workbooks and executive PDF dossiers generate seamlessly without missing students, missing departments, or query timeouts.
-* **Executive Summary Podiums:** High-altitude leadership KPIs summarize campus participation rates, multi-department solve averages, and cross-college competitive benchmark rankings.
-
----
-
-## Dynamic Access Control & Audit Security Delegation
-
-Security in NLCI is strictly governed by institutional role separation. In **v4.1.3**, super-administrators can dynamically delegate administrative settings and audit log visibility to executive management via database-backed security toggles:
-
-```text
-Admin Settings Panel (Section VII: Admin Security & Session Policy)
-  ├── [ Toggle Switch ] Allow Management to View System Audit Logs
-  └── [ Toggle Switch ] Allow Management to Access Admin System Settings
-```
-
-* **Dynamic Permission Evaluation:** The backend security layer (`backend/security.py`) queries `SystemSettings` dynamically. When enabled by an administrator, executive management users gain read-only access to audit trail timelines and institutional configurations.
-* **Instant Revocation & Zero Leakage:** When toggled off, API endpoints immediately enforce strict HTTP 403 Forbidden barriers, and frontend navigation menus dynamically hide restricted pages.
-* **Immutable Audit Trail:** All permission modifications are logged with cryptographic timestamps, administrator identity, and client IP addresses.
-
----
-
-## Faculty Action Center & Student Mentoring Matrix
-
-The **Faculty Action Center** (`/faculty-action-center`) is a purpose-built, real-time intervention engine empowering faculty mentors to detect and resolve student disengagement before it impacts academic outcomes.
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                      FACULTY ACTION MATRIX (2x2 DASHBOARD PILLS)                       │
-├────────────────────────────┬───────────────────────────┬───────────────────────────────┤
-│ CRITICAL (0 Solves)        │ HIGH (1-9 Solves)         │ ACTIVE MENTORING              │
-│ Immediate Action Required  │ Urgent Practice Boost     │ In Progress & Monitoring      │
-├────────────────────────────┴───────────────────────────┴───────────────────────────────┤
-│ TARGET ACHIEVED (25+ Solves) · Mentees Back On-Track with Verified Problem Solves      │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Key Capabilities:
-* **Role-Based Zero-Leakage Scoping:** Faculty see only their assigned mentees (`FacultyStudentAssignment`). HODs see their department. Management and Admins oversee college-wide queues.
-* **4-Tier Priority Engine:**
-  * **Critical:** 0 solves (needs immediate onboarding & account verification).
-  * **High:** 1–9 solves (urgent practice boost).
-  * **Active Mentoring:** Active interventions in progress or under monitoring.
-  * **Target Achieved:** 25+ solves (student stabilized and back on track).
-* **Solved Breakdown Display:** Live tracking of Easy, Medium, and Hard problem solves (`E: 15 · M: 8 · H: 2`) along with Last Active date.
-* **1-Click Fast Mentoring Action Templates:**
-  * *Contacted & Reminded to resume practice*
-  * *Assigned 2 Easy Problems for this week*
-  * *1-on-1 Mentoring Conducted*
-  * *Doubts Cleared & Back On-Track*
-  * **Direct "Mark Resolved"** with a single click.
-* **WhatsApp Nudge:** Direct one-click WhatsApp action to message student or parent with customized encouragement.
-
----
-
-## HOD Department Leadership & Multi-Tenant Governance
-
-The **HOD Command Center** (`/hod-command-center`) delivers high-altitude departmental oversight for engineering heads:
-
-* **Departmental Isolation:** Strict tenant separation for:
-  * Computer Science and Engineering (`CSE`)
-  * Information Technology (`IT`)
-  * Electronics and Communication Engineering (`ECE`)
-  * Electrical and Electronics Engineering (`EEE`)
-  * Artificial Intelligence and Data Science (`AI&DS`)
-  * Computer Science and Business Systems (`CSBS`)
-  * Computer Science - Cyber Security (`CSE-CS`)
-  * Computer Science - Internet of Things (`CSE-IoT`)
-* **Workload Optimization Matrix:** Eliminates mentor bottlenecks by dynamically balancing student rosters among department faculty.
-* **Cohort Drill-Down:** Immediate identification of 4/4, 3/4, 2/4, 1/4, 0/4 solvers and non-attending cohorts with exportable rosters.
-
----
-
-## Campus Placement & HR Candidate Intelligence Radar
-
-Designed specifically for placement officers, technical recruiters, and company interviewers:
-
-* **Multivariate Talent Filtering:** Search candidates by rating thresholds (1800+ Knight / 2150+ Guardian), continuous weekly streaks, and total problem mastery.
-* **Sub-Domain Proficiency:** Filter students specializing in Dynamic Programming, Graph Algorithms, Binary Search, or Trees.
-* **Direct Resume & Forensic Verification:** One-click preview of candidate LeetCode history with cryptographic proof of authenticity.
-
----
-
-## Emerald Vault & Verifiable Smart Pass
-
-The **Emerald Vault** celebrates verifiable engineering excellence with both digital and physical artifacts:
-
-* **Official 25-Year Celebration PVC Smart ID Card:** Generates high-density student coding passes featuring:
-  * Mathematically centered Nandha Engineering College 25-Year Celebration emblem
-  * Dynamic student LeetCode global rank, contest rating tier, and problem breakdown
-  * Cryptographic QR Code that links directly to `/verify/:id` for public validation by interviewers and employers
-* **Hall of Fame Tiers:**
-  * *Contest Champion* (Rating 1800+ / Knight & Guardian level)
-  * *Century Club* (100+ Contests Attended)
-  * *Streak Master* (Continuous 12+ Weeks Live Participation)
-  * *DSA Specialist* (Hard Problem Solve Specialist)
-
----
-
-## NAAC Criteria 2/5 & NBA Accreditation Studio
-
-Higher education regulatory bodies (NBA Criteria 2 & 5, NAAC, NIRF) demand verifiable quantitative evidence of student programming competency:
-
-* **One-Click Audit Dossier:** Generates comprehensive PDF/Excel dossiers detailing student participation rates, batch-wise performance trends, and institutional contest rankings.
-* **Continuous Internal Evaluation (CIE) Data:** Directly exports LeetCode contest rankings as verifiable laboratory and continuous assessment marks.
-* **Tamper-Evident Records:** Cryptographic verification IDs allow external peer-reviewers and audit teams to verify authenticity instantly on-campus.
-
----
-
-## Automated Reporting & Multi-Channel Dispatch Engine
-
-* **Multi-Tab Executive Excel Workbooks (15+ Sheets):** Built with custom OpenPyXL generators containing:
-  * College-wide master executive summary
-  * Department-by-department score breakdown
-  * Faculty mentor distribution reports (strictly scoped to assigned mentees with zero cross-faculty leakage)
-  * Question-wise (Q1-Q4) solver matrices with conditional heatmaps
-  * **Sheet 14 (Week-on-Week Intelligence)** & **Sheet 15 (Historical Contest Intel)** dynamically synchronized to role-based mentee boundaries
-* **Isolated User-Hashed Report Cache (`user_{id}`):** Sub-500ms downloads powered by deterministic filter hashes and user-isolated cache partitions.
-* **Official Executive PDF Reports:** Generated using ReportLab with exact institutional typography, watermark seals, and statistical summaries.
-* **Brevo API Automated Dispatch:** Delivers Sunday reports directly to Principal and HOD inboxes with idempotent delivery logs and retry backoff.
-* **Meta WhatsApp Cloud API:** Sends personalized performance and rank updates to students upon contest finalization.
-
----
-
-## Cross-Platform Native Ecosystem
-
-The platform delivers a cohesive, low-latency client experience across every institutional screen:
-
-| Platform | Technology | Flagship Features & Engineering Highlights | Release State |
-|---|---|---|:---:|
-| **Android Native App** | Capacitor 7, Android SDK, Gradle 8.11.1 | **120Hz Native Momentum Scrolling**, Zero-Gap Adaptive Safe Area, Biometric Authentication, Dynamic In-App APK Updater | `v4.1.3 Stable (Code 72)` |
-| **Windows Desktop App** | Electron 30, NSIS Installer, SQLite WAL | Desktop tray presence, hardware-accelerated charting, automated background database synchronization | `v4.1.3 Setup (NSIS)` |
-| **Progressive Web App** | React 18, Vite 5, Tailwind CSS | Sub-100ms route transitions, dark/light OLED theme switching, keyboard shortcuts (`Ctrl+K`), responsive mobile drawers | `Production Active` |
-| **4K Reception Kiosk** | Pure CSS Animation, WebSocket Mesh | Designed for campus reception Smart TVs, hands-free auto-rotating student podiums, live contest countdowns | `Live Campus Display` |
-
-### Key Engineering Highlights in v4.1.3:
-* **Sub-Pixel Anti-Aliased Jubilee Emblem:** Mathematical circle centering `(r = 206.392px)` with 4x supersampled edge anti-aliasing and native GPU hardware circular clipping (`rounded-full`) during 360° rotational splash animation.
-* **120Hz Hardware-Accelerated Momentum Scrolling:** Eliminated gesture freezing and scroll deadlocks across native Android devices by untangling JS event loops and leveraging direct GPU momentum physics.
-* **Pixel-Perfect Zero-Gap Safe Area Architecture:** Solved awkward camera cutout/Dynamic Island gaps by dynamically binding CSS viewport environment insets (`env(safe-area-inset-top)` and `env(safe-area-inset-bottom)`) directly into individual view components.
-* **Instant Institutional APK Sync:** One-click dynamic package installer from `/download/apk` with automated version compatibility validation.
-* **Smart Session Resilience:** Biometric device credential caching with graceful offline token refresh.
-
----
-
-## System Architecture & Forensic Data Flow
+## System Architecture & Data Flow
 
 ```mermaid
-flowchart TB
-    subgraph External ["External Data Sources"]
-        LC["LeetCode Public GraphQL / REST API"]
-    end
-
+flowchart TD
     subgraph Ingestion ["Ingestion & Synchronization Layer"]
-        DYN["Dynamic Concurrency Engine"]
-        RATE["Rate-Limiting & Proxy Pool"]
-        SCHED["APScheduler 24/7 Daemons"]
+        LC["LeetCode Public GraphQL / REST API"]
+        DYN["Controlled Concurrency Engine (Semaphore 8)"]
+        RATE["Rate-Limiting & Request Pacing"]
+        SCHED["APScheduler Daemons (Cron & Event)"]
+        SCHED --> DYN
         DYN --> RATE
         RATE --> LC
-        SCHED --> DYN
     end
 
     subgraph Verification ["Forensic Verification Layer"]
-        TIME["Cutoff Timestamp Audit (08:00-09:30 IST)"]
-        CLASS["Solver Classifier (Level 4 Forensics)"]
+        TIME["Boundary Timestamp Audit (Weekly / Biweekly)"]
+        CLASS["Solver Classifier (Level 1 to Level 4)"]
+        LC --> TIME
         TIME --> CLASS
     end
 
-    subgraph Core ["Core Persistence & Storage"]
+    subgraph Storage ["Core Persistence Layer"]
         DB[("PostgreSQL 16 / SQLite Storage")]
-        TRIG["Immutability DB Triggers"]
-        AUDIT["Immutable Audit Trails"]
+        TRIG["Immutability Triggers (trg_prevent_snapshot_mutation)"]
+        AUDIT["Immutable Audit Trail (SHA-256 Sealing)"]
+        CLASS --> DB
         DB --- TRIG
         DB --- AUDIT
     end
 
-    subgraph Services ["Application & Governance Logic"]
-        API["FastAPI High-Performance Engine"]
-        MGT["Executive Management Oversight Hub"]
-        FAC["Faculty Action & Mentoring Engine"]
+    subgraph Services ["Application & Business Logic"]
+        API["FastAPI High-Speed Async Engine"]
+        MGT["Executive Governance Service"]
+        FAC["Faculty Action & Mentoring Service"]
         HOD["HOD Command Center Service"]
         REP["15-Sheet OpenPyXL Report Engine"]
-        WS["Real-Time WebSocket Hub"]
+        DB --> API
+        API --> MGT
+        API --> FAC
+        API --> HOD
+        API --> REP
     end
 
-    subgraph Presentation ["Multi-Channel Delivery"]
-        WEB["React 18 / Tailwind PWA Dashboard"]
-        KIOSK["4K Smart TV Campus Kiosk Mode"]
-        APK["Capacitor 7 Native Android App"]
-        EXE["Electron Windows Desktop App"]
-        EXCEL["Executive Multi-Tab Excel Generator"]
-        PDF["ReportLab Cryptographic PDF Engine"]
-        BREVO["Brevo Email Dispatch Service"]
-        WA["Meta WhatsApp Cloud API Agent"]
+    subgraph Presentation ["Presentation & Client Delivery"]
+        WEB["React 18 / Tailwind Web PWA"]
+        APK["Capacitor 7 Native Android App (v4.1.6)"]
+        KIOSK["4K Smart TV Kiosk Mode"]
+        EXCEL["15-Sheet OpenPyXL Institutional Workbook"]
+        WA["Meta WhatsApp Notification Dispatch"]
+        API --> WEB
+        API --> APK
+        API --> KIOSK
+        REP --> EXCEL
+        FAC --> WA
     end
-
-    LC --> Ingestion
-    Ingestion --> Verification
-    Verification --> Core
-    Core --> Services
-    Services --> Presentation
 ```
 
 ---
 
 ## Evidence-First Integrity Protocol
 
-### The Golden Rule of Institutional Data: *Never Guess Missing Data*
+### The Golden Rule: *Never Guess Missing Data*
+In institutional academic governance, an erroneous evaluation can adversely affect a student's career. External API delays, private profiles, and network anomalies are strictly classified and handled deterministically:
 
-In enterprise academic systems, an erroneous mark can damage a student's career. External platform outages, private profiles, and network glitches are explicitly recognized and isolated:
-
-```text
-┌─────────────────────────┬────────────────────────────────────────────────────────┐
-│ PLATFORM STATE          │ SEMANTIC INTERPRETATION                                │
-├─────────────────────────┼────────────────────────────────────────────────────────┤
-│ UNKNOWN                 │ ≠ 0 (Never assume 0 without confirmed proof)           │
-│ PRIVATE PROFILE         │ ≠ 0 (Flagged for student profile privacy unblock)      │
-│ FETCH FAILED            │ ≠ ABSENT (Network failure isolated, queued for retry)  │
-│ UNAVAILABLE             │ ≠ NOT ATTENDED (Pending authoritative Sunday snapshot) │
-└─────────────────────────┴────────────────────────────────────────────────────────┘
-```
+| Platform State | Semantic Meaning | System Handling |
+|:---|:---|:---|
+| `UNKNOWN` | $\neq 0$ | Data is not assumed to be zero; flagged as pending verification. |
+| `PRIVATE_PROFILE` | $\neq 0$ | Flagged for mentor guidance to instruct student to toggle profile to public. |
+| `FETCH_FAILED` | $\neq \text{ABSENT}$ | Isolated as transient network failure; scheduled for exponential backoff retry. |
+| `UNAVAILABLE` | $\neq \text{NOT ATTENDED}$ | Awaits official contest ranking finalization from LeetCode. |
 
 ---
 
 ## Production Technology Stack
 
-<table>
-<tr>
-<th width="33%" align="center">Frontend & Client</th>
-<th width="33%" align="center">Backend & Core Engine</th>
-<th width="33%" align="center">Data & Cloud Infrastructure</th>
-</tr>
-<tr>
-<td valign="top">
-
-- ![React](docs/assets/badges/tech/tech_react.svg) **React 18 & TypeScript 5.2+**
-- ![Vite](docs/assets/badges/tech/tech_vite.svg) **Vite 5** (Ultra-fast HMR)
-- ![TailwindCSS](docs/assets/badges/tech/tech_tailwind.svg) **Tailwind CSS & Design Tokens**
-- ![TanStack](docs/assets/badges/tech/tech_query.svg) **TanStack React Query v5**
-- ![Capacitor](docs/assets/badges/tech/tech_capacitor.svg) **Capacitor 7 Native Android App**
-- ![Electron](docs/assets/badges/tech/tech_electron.svg) **Electron Windows Desktop Application**
-- ![Recharts](docs/assets/badges/tech/tech_recharts.svg) **Recharts & Lucide Icons**
-- **Native Drawers & Tactile Haptic Feedback**
-
-</td>
-<td valign="top">
-
-- ![FastAPI](docs/assets/badges/tech/tech_fastapi.svg) **FastAPI High-Speed Async Core**
-- ![Python](docs/assets/badges/tech/tech_python.svg) **Python 3.10+ ASGI Engine**
-- ![SQLAlchemy](docs/assets/badges/tech/tech_sqlalchemy.svg) **SQLAlchemy 2.0 ORM**
-- ![WebSocket](docs/assets/badges/tech/tech_websockets.svg) **Real-Time WebSocket Mesh**
-- ![APScheduler](docs/assets/badges/tech/tech_apscheduler.svg) **Multi-Job Cron Daemons**
-- ![Brevo](docs/assets/badges/tech/tech_brevo.svg) **Brevo Transactional Dispatch**
-- ![WhatsApp](docs/assets/badges/tech/tech_whatsapp.svg) **Meta WhatsApp Cloud API Agent**
-- **OpenPyXL (15-Sheet Excel) & ReportLab (PDF)**
-
-</td>
-<td valign="top">
-
-- ![PostgreSQL](docs/assets/badges/tech/tech_postgresql.svg) **PostgreSQL 16 Primary Database**
-- ![SQLite](docs/assets/badges/tech/tech_sqlite.svg) **SQLite WAL Resilience Engine**
-- ![Docker](docs/assets/badges/tech/tech_docker.svg) **Multi-Stage Docker Containers**
-- ![Nginx](docs/assets/badges/tech/tech_nginx.svg) **Nginx SSL & WSS Proxy**
-- ![AWS](docs/assets/badges/tech/tech_aws.svg) **AWS EC2 Ubuntu 24.04 LTS**
-- ![GitHub Actions](docs/assets/badges/tech/tech_actions.svg) **Automated CI/CD Workflows**
-- **Level 4 Cryptographic Audit Trail**
-
-</td>
-</tr>
-</table>
+| Layer | Technologies & Tools |
+|:---|:---|
+| **Frontend Client** | React 18, TypeScript 5.2+, Vite 5, Tailwind CSS, Lucide Icons, Recharts, Framer Motion |
+| **Mobile & Desktop** | Capacitor 7 (Android Native App with 60 FPS GPU acceleration), Electron (Windows Desktop) |
+| **Backend Core** | FastAPI (Async ASGI), Python 3.10+, SQLAlchemy 2.0 ORM, APScheduler, Pydantic v2 |
+| **Database & Caching** | PostgreSQL 16 (Production) / SQLite WAL (Local Zero-Config), In-Memory TTL Cache |
+| **Reporting & Export** | OpenPyXL (15-Sheet Collegiate Workbook), ReportLab (HMAC Verifiable PDF Engine) |
+| **Infrastructure & CI/CD** | Multi-Stage Docker, Docker Compose, Nginx SSL Proxy, GitHub Actions Workflows |
 
 ---
 
-## Quick Start & Deployment Guide
+## Quick Start & Local Development
 
 ### 1. Prerequisites
-* **Python:** 3.10 or higher
-* **Node.js:** 18.x or higher & npm
+* **Python**: 3.10 or higher
+* **Node.js**: 18.x or higher & npm
 * **Git**
-* *(Optional)* Docker & Docker Compose
 
 ### 2. Clone the Repository
 ```bash
@@ -491,120 +271,147 @@ git clone https://github.com/nanthishvaran17/Leetcodeurl-s.git
 cd Leetcodeurl-s
 ```
 
-### 3. Backend Setup
+### 3. Environment Configuration
+Copy the provided `.env.example` template:
 ```bash
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate      # Windows
-source venv/bin/activate    # Linux / macOS
+cp .env.example .env
+```
+*(By default, `DATABASE_URL=sqlite:///./data/leetcode_tracker.db` is pre-configured for instant zero-config startup).*
 
-# Install dependencies
+### 4. Backend Setup
+```bash
+# 1. Create and activate virtual environment
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On Linux / macOS:
+source venv/bin/activate
+
+# 2. Install backend dependencies
 pip install -r requirements.txt
 
-# Start FastAPI Server
+# 3. (Optional) Run Alembic migrations if using PostgreSQL
+alembic -c backend/alembic.ini upgrade head
+
+# 4. Start FastAPI server
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-API Documentation will be live at `http://127.0.0.1:8000/docs`.
+API Interactive Docs will be live at: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-### 4. Frontend Setup
+### 5. Frontend Setup
+In a new terminal:
 ```bash
 cd frontend
 
-# Install Node modules
+# 1. Install dependencies
 npm install
 
-# Run frontend in development mode
+# 2. Start Vite development server
 npm run dev
 ```
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
----
-
-### 5. Multi-Platform Build Commands
-
+### 6. Seeding Demo Data (Optional)
+To populate 20+ sample students across 12 departments for testing without scraping live profiles:
 ```bash
-# Build Web Production Bundle
-cd frontend
-npm run build
+python -m backend.scripts.seed_demo_data
+```
 
-# Build Native Android APK (Capacitor 7)
-npm run build:apk
-
-# Build Windows Desktop Setup (Electron NSIS)
-npm run build:exe
+### 7. Run with Docker Compose
+To run the full production platform in a single command:
+```bash
+docker compose up --build -d
 ```
 
 ---
 
-### 6. Production Daemons & Startup Scripts
+## Testing & Build Verification
 
-Pre-configured production scripts in the [scripts/](scripts/) directory:
+### Backend Pytest Suite
+Run the backend test suite:
+```bash
+# Run unit & accuracy tests
+python -m pytest backend/tests/test_master_accuracy.py -v
+python -m pytest backend/tests/test_database_health.py -v
 
-* **FastAPI Backend (4 Workers):** Run `scripts/run_backend_prod.bat`
-* **React Production Build:** Run `scripts/run_frontend_prod.bat`
-* **Full Production Daemon:** Run `scripts/start_production.bat`
-* **Sunday Autopilot Runner:** Run `python scripts/sunday_automation_complete.py`
+# Run full test suite
+python -m pytest backend/tests/ -v
+```
+
+### Frontend Build & Native Android APK
+```bash
+cd frontend
+
+# Run TypeScript check & Vite production build
+npm run build
+
+# Build signed Android Release APK (Capacitor 7)
+npm run build:apk
+```
+The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.1.6_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.1.6_latest.apk).
+
+---
+
+## Project Structure
+
+```text
+Leetcodeurl-s/
+├── backend/
+│   ├── alembic/                # Alembic database migration scripts
+│   ├── models.py               # SQLAlchemy database models & relationship mappings
+│   ├── database.py             # Database engine, connection pooling & SQLite fallback
+│   ├── leetcode_fetcher.py     # Asynchronous LeetCode GraphQL fetcher & parser
+│   ├── ranking.py              # Multi-level ranking, streak, and badge calculator
+│   ├── routes/                 # FastAPI REST API route handlers
+│   │   ├── students.py         # Student directory, CRUD, and profile endpoints
+│   │   ├── sync.py             # Live sync triggers & WebSocket progress broadcasts
+│   │   ├── command_center.py   # HOD and Executive Management endpoints
+│   │   └── reports.py          # Excel and PDF report generation endpoints
+│   ├── services/               # Canonical sync, forensic verification & notification engines
+│   ├── scripts/                # Database seeders, historical resync & manual sync runners
+│   └── tests/                  # Pytest automated test suites
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx             # Root React application router & global providers
+│   │   ├── components/         # Reusable UI components, modals, and drawers
+│   │   ├── pages/              # 36 complete application portal views
+│   │   ├── stores/             # Zustand state management stores
+│   │   └── utils/              # Export formatters, haptics, and calculation helpers
+│   ├── android/                # Capacitor Android project files & Gradle configuration
+│   └── package.json            # Frontend dependencies & build scripts
+├── releases/
+│   └── android/                # Production compiled & signed Android APK releases
+├── docs/                       # Architectural diagrams, badges, and showcase screenshots
+├── docker-compose.yml          # Multi-container Docker deployment configuration
+├── Dockerfile                  # Production container build specification
+├── requirements.txt            # Python backend dependencies
+└── README.md                   # Primary platform documentation
+```
+
+---
+
+## Data Privacy, Ethics & Governance (DPDP 2023)
+
+* **Public Telemetry Only**: NLCI accesses only publicly available LeetCode GraphQL endpoints. No student passwords, login credentials, or private session tokens are ever collected, processed, or stored.
+* **Polite Request Pacing**: Outbound requests are governed by bounded concurrency (`asyncio.Semaphore(8)`) and exponential backoff, preventing server strain or denial-of-service on external APIs.
+* **Role-Based Access Control (RBAC)**: Student contact details and parent WhatsApp notification channels are strictly accessible only to designated Faculty Mentors and HODs.
+* **Statutory Compliance**: Data retention, user consent, and audit logs are designed in alignment with the **Digital Personal Data Protection (DPDP) Act 2023 (India)**.
 
 ---
 
 ## Institutional Leadership & Engineering Credits
 
-<div align="center">
+### Chief Systems Architecture & Lead Engineering
+* **Nanthish S** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
+  *Platform Conception, Full-Stack Architecture, FastAPI Core, Level 4 Forensic Pipeline, Mobile GPU Acceleration & Release Engineering.*
 
-# Developed by Nanthish & Team
-### Institutional Software Engineering & Forensic Analytics Initiative
-
-**Nandha Engineering College (Autonomous)**  
-*Established in 2001 • Celebrating 25 Years of Educational Excellence*  
-Erode - Perundurai Main Road, Vaikkaalmedu, Erode, Tamil Nadu 638052, India  
-*Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
-
-<br/>
-
-<table align="center" width="90%">
-<thead>
-<tr>
-<th width="30%" align="center">Engineering Pillar</th>
-<th width="35%" align="left">Lead Contributors</th>
-<th width="35%" align="left">Core Responsibilities & Impact</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center"><b>Chief Systems Architecture & Lead Engineering</b></td>
-<td><b>Nanthish S</b><br/>(<a href="https://github.com/nanthishvaran17">@nanthishvaran17</a>)</td>
-<td>Overall platform conception, full-stack microservices architecture, FastAPI backend design, LeetCode ingestion pipeline, Level 4 forensic engine, database triggers, and deployment daemons.</td>
-</tr>
-<tr>
-<td align="center"><b>Mobile & Cross-Platform Engineering</b></td>
-<td><b>Nanthish & Core Mobile Team</b></td>
-<td>Capacitor 7 Android architecture, 120Hz native touch gesture optimization, zero-gap safe area viewport layouts, sub-pixel emblem rendering, and Electron Windows desktop distribution.</td>
-</tr>
-<tr>
-<td align="center"><b>Contest Forensics & Data Intelligence</b></td>
-<td><b>Forensic Analytics & Testing Cell</b></td>
-<td>Level 4A/B/C timestamp binary verification algorithms, anti-falsification rules, 15-Sheet OpenPyXL automated report generators, and cryptographic audit hashing.</td>
-</tr>
-<tr>
-<td align="center"><b>Institutional Governance & UX Design</b></td>
-<td><b>Academic Operations & Mentorship Team</b></td>
-<td>Executive Management campus oversight, HOD Command Center multi-tenant isolation, Faculty Action Center 4-tier matrix, Emerald Vault 25-Year Smart PVC ID card design, and NAAC/NBA dossier automation.</td>
-</tr>
-</tbody>
-</table>
-
-<br/>
-
-### Institutional Patronage & Academic Advisory
-* **Governing Body & Principal:** Nandha Engineering College (Autonomous)
-* **Academic Leadership:** Department of Computer Science and Engineering & Allied Engineering Branches (IT, ECE, EEE, AI&DS, CSBS, CSE-CS, CSE-IoT)
-* **Faculty Mentorship Cell:** Continuous Internal Evaluation (CIE) Coordinators & Competitive Programming Faculty Mentors
+### Institutional Governance & Academic Advisory
+* **Nandha Engineering College (Autonomous)**, Erode, Tamil Nadu, India.
+* Department of Computer Science and Engineering & Allied Engineering Branches.
+* Continuous Internal Evaluation (CIE) Cell & Placement Mentorship Directorate.
 
 ---
 
-### NANDHA LEETCODE INTELLIGENCE • v4.1.3
-**1,500+ Active Students • 8 Engineering Departments • One Authoritative Institutional Truth**
+## License
 
-*Conceived, architected, and continuously developed with institutional pride by **Nanthish & Team** for the students, faculty mentors, and academic leadership of Nandha Engineering College.*
-
-</div>
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
