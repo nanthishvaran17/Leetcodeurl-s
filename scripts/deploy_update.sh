@@ -23,7 +23,7 @@ elif [ -d "/opt/nandha_leetcode_intelligence/venv" ]; then
 fi
 
 if command -v pip >/dev/null 2>&1; then
-    pip install -r requirements.txt --quiet
+    pip install -r requirements.txt --break-system-packages --quiet 2>/dev/null || pip install -r requirements.txt --quiet 2>/dev/null || true
 fi
 
 # Run automated schema migrations
