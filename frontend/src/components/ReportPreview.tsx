@@ -2399,10 +2399,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
                             {tableDensity === 'full' ? (
                               <>
-                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
-                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
-                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
-                                <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
                               </>
                             ) : null}
                             <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
@@ -2428,10 +2428,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
                             {tableDensity === 'full' ? (
                               <>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Q1</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Q2</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Q3</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Q4</th>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
                               </>
                             ) : null}
                             <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
@@ -2458,10 +2458,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             {tableDensity === 'full' ? (
                               displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
                                 <>
-                                  <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
-                                  <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
-                                  <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
-                                  <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                                  <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
                                   <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
                                   <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
                                   <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>

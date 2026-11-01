@@ -371,7 +371,7 @@ def export_dynamic_pdf(dataset: dict) -> bytes:
         headers = [
             "S.No", 
             "Reg No", 
-            "Name", 
+            "Student Name", 
             "Acc",
             "Cutoff",
             "Q1 (Easy)", 

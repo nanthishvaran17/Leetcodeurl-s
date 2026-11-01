@@ -139,7 +139,7 @@ def generate_single_sheet_contest_excel(
     headers = [
         "S.No", 
         "Reg No", 
-        "Name", 
+        "Student Name", 
         "Acc",
         "Cutoff",
         "Q1\n(Easy)", 
