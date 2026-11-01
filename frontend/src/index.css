@@ -350,39 +350,27 @@ html.dark body {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Universal Protection: Prevent ugly square outlines, borders, and dark backgrounds on all transparent, borderless, chat & pill inputs */
-input[class*="bg-transparent"],
-textarea[class*="bg-transparent"],
-input[class*="border-none"],
-textarea[class*="border-none"],
-input[class*="border-0"],
-textarea[class*="border-0"],
-input[class*="border-transparent"],
-textarea[class*="border-transparent"],
-input[class*="outline-none"],
-textarea[class*="outline-none"],
-input[class*="focus:outline-none"],
-textarea[class*="focus:outline-none"],
+/* Universal Protection: Prevent ugly square outlines, borders, and dark backgrounds on designated chat & borderless inputs */
 input.chat-input,
 textarea.chat-input,
 .chat-input,
 .borderless-input,
-.dark input[class*="bg-transparent"],
-.dark textarea[class*="bg-transparent"],
-.dark input[class*="border-none"],
-.dark textarea[class*="border-none"],
-.dark input[class*="border-0"],
-.dark textarea[class*="border-0"],
-.dark input[class*="border-transparent"],
-.dark textarea[class*="border-transparent"],
-.dark input[class*="outline-none"],
-.dark textarea[class*="outline-none"],
-.dark input[class*="focus:outline-none"],
-.dark textarea[class*="focus:outline-none"],
+input.borderless-input,
+textarea.borderless-input,
+input[class*="bg-transparent"][class*="border-none"],
+textarea[class*="bg-transparent"][class*="border-none"],
+input[class*="bg-transparent"][class*="border-0"],
+textarea[class*="bg-transparent"][class*="border-0"],
 .dark input.chat-input,
 .dark textarea.chat-input,
 .dark .chat-input,
-.dark .borderless-input {
+.dark .borderless-input,
+.dark input.borderless-input,
+.dark textarea.borderless-input,
+.dark input[class*="bg-transparent"][class*="border-none"],
+.dark textarea[class*="bg-transparent"][class*="border-none"],
+.dark input[class*="bg-transparent"][class*="border-0"],
+.dark textarea[class*="bg-transparent"][class*="border-0"] {
   background-color: transparent !important;
   background: transparent !important;
   border: 0 !important;
@@ -395,38 +383,26 @@ textarea.chat-input,
   appearance: none;
 }
 
-input[class*="bg-transparent"]:focus,
-textarea[class*="bg-transparent"]:focus,
-input[class*="border-none"]:focus,
-textarea[class*="border-none"]:focus,
-input[class*="border-0"]:focus,
-textarea[class*="border-0"]:focus,
-input[class*="border-transparent"]:focus,
-textarea[class*="border-transparent"]:focus,
-input[class*="outline-none"]:focus,
-textarea[class*="outline-none"]:focus,
-input[class*="focus:outline-none"]:focus,
-textarea[class*="focus:outline-none"]:focus,
 input.chat-input:focus,
 textarea.chat-input:focus,
 .chat-input:focus,
 .borderless-input:focus,
-.dark input[class*="bg-transparent"]:focus,
-.dark textarea[class*="bg-transparent"]:focus,
-.dark input[class*="border-none"]:focus,
-.dark textarea[class*="border-none"]:focus,
-.dark input[class*="border-0"]:focus,
-.dark textarea[class*="border-0"]:focus,
-.dark input[class*="border-transparent"]:focus,
-.dark textarea[class*="border-transparent"]:focus,
-.dark input[class*="outline-none"]:focus,
-.dark textarea[class*="outline-none"]:focus,
-.dark input[class*="focus:outline-none"]:focus,
-.dark textarea[class*="focus:outline-none"]:focus,
+input.borderless-input:focus,
+textarea.borderless-input:focus,
+input[class*="bg-transparent"][class*="border-none"]:focus,
+textarea[class*="bg-transparent"][class*="border-none"]:focus,
+input[class*="bg-transparent"][class*="border-0"]:focus,
+textarea[class*="bg-transparent"][class*="border-0"]:focus,
 .dark input.chat-input:focus,
 .dark textarea.chat-input:focus,
 .dark .chat-input:focus,
-.dark .borderless-input:focus {
+.dark .borderless-input:focus,
+.dark input.borderless-input:focus,
+.dark textarea.borderless-input:focus,
+.dark input[class*="bg-transparent"][class*="border-none"]:focus,
+.dark textarea[class*="bg-transparent"][class*="border-none"]:focus,
+.dark input[class*="bg-transparent"][class*="border-0"]:focus,
+.dark textarea[class*="bg-transparent"][class*="border-0"]:focus {
   background-color: transparent !important;
   background: transparent !important;
   border: 0 !important;
@@ -438,9 +414,9 @@ textarea.chat-input:focus,
 }
 
 /* AI Form Controls, Standard Inputs & Select Dropdowns (Excludes transparent, chat, and borderless inputs) */
-.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input),
-.dark select:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="outline-none"]):not(.borderless-input),
-.dark textarea:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input) {
+.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="bg-transparent"][class*="border-none"]):not([class*="bg-transparent"][class*="border-0"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input),
+.dark select:not([class*="bg-transparent"][class*="border-none"]):not([class*="bg-transparent"][class*="border-0"]):not(.borderless-input),
+.dark textarea:not([class*="bg-transparent"][class*="border-none"]):not([class*="bg-transparent"][class*="border-0"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input) {
   background-color: rgba(10, 14, 26, 0.95);
   border-color: rgba(255, 255, 255, 0.12);
   color: #F8FAFC;
@@ -451,9 +427,9 @@ textarea.chat-input:focus,
   color: #F8FAFC !important;
 }
 
-.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input):focus,
-.dark select:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="outline-none"]):not(.borderless-input):focus,
-.dark textarea:not([class*="bg-transparent"]):not([class*="border-none"]):not([class*="border-0"]):not([class*="border-transparent"]):not([class*="outline-none"]):not([class*="focus:outline-none"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input):focus {
+.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="bg-transparent"][class*="border-none"]):not([class*="bg-transparent"][class*="border-0"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input):focus,
+.dark select:not([class*="bg-transparent"][class*="border-none"]):not([class*="bg-transparent"][class*="border-0"]):not(.borderless-input):focus,
+.dark textarea:not([class*="bg-transparent"][class*="border-none"]):not([class*="bg-transparent"][class*="border-0"]):not([class*="focus:ring-0"]):not([class*="ring-0"]):not(.chat-input):not(.borderless-input):focus {
   border-color: rgba(99, 102, 241, 0.7);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), 0 0 16px rgba(99, 102, 241, 0.2);
 }
@@ -2676,5 +2652,32 @@ body.presentation-shield-active input[type="email"]:hover {
   }
   40%, 100% {
     transform: translateX(200%) rotate(25deg);
+  }
+}
+
+/* ========================================================
+   MOBILE & VIVO/ANDROID HARDWARE ACCELERATION OPTIMIZATION
+   ======================================================== */
+@media (max-width: 768px) {
+  /* On budget mobile GPUs (e.g. Vivo/Mali/MediaTek), disable expensive multi-layer backdrop-filter */
+  .student-card,
+  .perspective-1000,
+  .glass-panel,
+  .glass-panel-elevated {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* GPU-accelerate touch scrolling and remove touch event delay */
+  .perspective-1000 {
+    touch-action: pan-y !important;
+    content-visibility: auto !important;
+    contain-intrinsic-size: 0 360px !important;
+  }
+
+  /* Smooth GPU compositing for mobile modals & overlays */
+  .modal-overlay-responsive {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
   }
 }

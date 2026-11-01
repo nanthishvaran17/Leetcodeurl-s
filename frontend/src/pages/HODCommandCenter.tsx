@@ -3398,30 +3398,36 @@ export const HODCommandCenter: React.FC = () => {
 
 
  {/* Student Detail Drawer */}
- <StudentDetailDrawer
- student={selectedStudentDetail}
- staffList={staffList}
- onClose={() => setSelectedStudentDetail(null)}
- onReassign={handleReassign}
- />
+ {selectedStudentDetail && (
+   <StudentDetailDrawer
+     student={selectedStudentDetail}
+     staffList={staffList}
+     onClose={() => setSelectedStudentDetail(null)}
+     onReassign={handleReassign}
+   />
+ )}
 
  {/* Department Detail Drawer */}
- <DepartmentDetailDrawer
- department={selectedDeptIntelligence}
- onClose={() => setSelectedDeptIntelligence(null)}
- />
+ {selectedDeptIntelligence && (
+   <DepartmentDetailDrawer
+     department={selectedDeptIntelligence}
+     onClose={() => setSelectedDeptIntelligence(null)}
+   />
+ )}
 
  {/* Staff Detail Drawer */}
- <StaffDetailDrawer
- staff={selectedStaffDetail}
- studentList={students}
- onClose={() => setSelectedStaffDetail(null)}
- onManageAllocation={() => {
- setSelectedStaffDetail(null);
- setShowStaffAllocationModal(true);
- }}
- onFilterDashboard={(staffId) => handleFilterByStaff(staffId, selectedStaffDetail?.username)}
- />
+ {selectedStaffDetail && (
+   <StaffDetailDrawer
+     staff={selectedStaffDetail}
+     studentList={students}
+     onClose={() => setSelectedStaffDetail(null)}
+     onManageAllocation={() => {
+       setSelectedStaffDetail(null);
+       setShowStaffAllocationModal(true);
+     }}
+     onFilterDashboard={(staffId) => handleFilterByStaff(staffId, selectedStaffDetail?.username)}
+   />
+ )}
 
  {/* HOD Staff Allocation Manager Modal */}
  <StaffAllocationModal

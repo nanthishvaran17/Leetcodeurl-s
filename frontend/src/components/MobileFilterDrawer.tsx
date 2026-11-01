@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Filter, RotateCcw, Check, Search } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
 import { useDepartments } from '../context/DepartmentContext';
@@ -6,6 +7,7 @@ import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils
 import { SwipeHandle } from './SwipeHandle';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface MobileFilterDrawerProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   departments: propDepartments
 }) => {
   useEscapeKey(onClose, isOpen);
+  useScrollLock(isOpen);
   const { departments: ctxDepartments = [] } = useDepartments();
   const rawDepartments = (propDepartments && propDepartments.length > 0) ? propDepartments : ctxDepartments;
 
@@ -64,7 +67,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
     isFilteringActive
   } = useFilters();
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const years = [
     { id: 'ALL', label: 'All Years' },
@@ -111,12 +114,18 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in">
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
       <div 
-        className="w-full max-w-md bg-white dark:bg-[#091122] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col max-h-[88vh] transition-transform duration-300"
+        className="w-full max-w-md bg-white dark:bg-[#091122] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-white/10 overflow-hidden flex flex-col max-h-[88vh] animate-slide-up"
         role="dialog"
         aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Handle pill for swipe down or tap to close */}
         <SwipeHandle
@@ -304,7 +313,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </div>
 
         {/* Apply Footer - Safe bottom padding on mobile so button is not blocked by floating bottom nav or home bar */}
-        <div className="p-4 pb-28 sm:pb-4 bg-slate-50 dark:bg-[#070d1a] border-t border-slate-100 dark:border-white/10">
+        <div className="p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] sm:pb-4 bg-slate-50 dark:bg-[#070d1a] border-t border-slate-100 dark:border-white/10">
           <button
             type="button"
             onClick={handleApply}
@@ -315,6 +324,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bell, AlertTriangle, ShieldAlert, CheckCircle2, Award, X, Check, ArrowRight, RefreshCw 
 } from 'lucide-react';
@@ -63,8 +64,8 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
     }
   };
 
-  return (
-    <div className="modal-overlay-responsive animate-fade-in">
+  return createPortal(
+    <div className="modal-overlay-responsive animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg flex flex-col overflow-hidden">
         
         {/* Mobile Swipe / Pull Down Handle */}
@@ -180,6 +181,7 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

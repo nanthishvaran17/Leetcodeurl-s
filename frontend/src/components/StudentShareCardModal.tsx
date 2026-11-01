@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Share2, 
@@ -496,8 +497,8 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
     } catch (_e) {}
   };
 
-  return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="relative w-full max-w-sm sm:max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-navy-800 overflow-hidden flex flex-col max-h-[95vh]">
         {/* Header bar */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-navy-800">
@@ -644,6 +645,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -28,9 +28,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   useEscapeKey(onClose, Boolean(staff));
   useScrollLock(Boolean(staff));
 
-  if (!staff) return null;
-
-  const isMenteeEligible = isRoleEligibleForMentees(staff.role, (staff as any).mentoring_role);
+  const isMenteeEligible = Boolean(staff && isRoleEligibleForMentees(staff.role, (staff as any).mentoring_role));
   const [mentees, setMentees] = useState<StudentRecord[]>([]);
   const [loadingMentees, setLoadingMentees] = useState<boolean>(isMenteeEligible);
   const [showPhotoZoom, setShowPhotoZoom] = useState<boolean>(false);
@@ -80,6 +78,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
     return () => { isMounted = false; };
   }, [staff?.id, studentList, isMenteeEligible]);
 
+  if (!staff || typeof document === 'undefined') return null;
+
   const assignedCount = loadingMentees ? (staff.assigned_count || mentees.length) : mentees.length;
   const activeCount = loadingMentees ? (staff.active_count ?? mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length) : mentees.filter(m => (m.total_solved || 0) > 0 || m.is_active).length;
   const completionRate = assignedCount > 0 
@@ -93,8 +93,6 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
     ? mentees.filter(m => m.contest_attended === true || (m.contest_standing && m.contest_standing !== '—' && m.contest_standing !== 'Absent' && m.contest_standing !== 'Not Attended')).length
     : (staff.sunday_contest_attended ?? 0);
   const contestAttendanceRate = assignedCount > 0 ? Math.round((recentContestAttendedCount / assignedCount) * 100) : 0;
-
-  if (typeof document === 'undefined') return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[999999] flex justify-center items-end sm:justify-end sm:items-stretch bg-slate-950/60 dark:bg-black/75 backdrop-blur-md animate-fade-in p-0 overflow-x-hidden max-w-full" onClick={e => e.target === e.currentTarget && onClose()}>

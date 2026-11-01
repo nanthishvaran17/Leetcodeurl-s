@@ -106,6 +106,7 @@ const HRCandidateFinderPage = safeLazy(() => import('./pages/HRCandidateFinderPa
 const DeveloperStudio = safeLazy(() => import('./pages/DeveloperStudio').then(m => ({ default: m.DeveloperStudio })));
 const Post930SolversView = safeLazy(() => import('./pages/Post930SolversView').then(m => ({ default: m.Post930SolversView })));
 const ForCollegesPage = safeLazy(() => import('./pages/ForCollegesPage').then(m => ({ default: m.ForCollegesPage })));
+const SetupAccountPage = safeLazy(() => import('./pages/SetupAccountPage'));
 
 const PageSkeleton = () => (
   <div className="w-full max-w-[1600px] mx-auto space-y-6 p-4 sm:p-6 animate-pulse">
@@ -1402,10 +1403,12 @@ export const App: React.FC = () => {
               )}
 
               {activeTab === 'profile' && selectedStudent && (
-                <StudentProfilePage
-                  student={selectedStudent}
-                  onBack={handleCloseProfile}
-                />
+                <ErrorBoundary>
+                  <StudentProfilePage
+                    student={selectedStudent}
+                    onBack={handleCloseProfile}
+                  />
+                </ErrorBoundary>
               )}
 
               {activeTab === 'compare' && (
@@ -1578,10 +1581,12 @@ export const App: React.FC = () => {
                   window.dispatchEvent(new CustomEvent('pull_to_refresh'));
                 }}
               >
-                <StudentProfilePage
-                  student={selectedStudent}
-                  onBack={handleCloseProfile}
-                />
+                <ErrorBoundary>
+                  <StudentProfilePage
+                    student={selectedStudent}
+                    onBack={handleCloseProfile}
+                  />
+                </ErrorBoundary>
               </PullToRefresh>
             </Suspense>
           </div>
