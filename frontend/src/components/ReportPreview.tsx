@@ -685,7 +685,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       totalEasy += e;
       totalMed += m;
       totalHard += h;
-      totalSolves += (cSolved !== null && cSolved > 0 ? cSolved : (e + m + h));
+      const sTotal = Number(s.total_solved ?? s.totalSolved ?? (e + m + h));
+      totalSolves += sTotal;
     });
 
     // If backend report already provided college/contest-wide solveDist and filter is not active AND not mentee-scoped:

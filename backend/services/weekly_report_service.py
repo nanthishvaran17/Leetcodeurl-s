@@ -131,14 +131,30 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
     rating_2000 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 2000)
     rating_1500 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 1500)
     rating_1250 = sum(1 for s in student_list if s.get("contest_rating") is not None and s["contest_rating"] > 1250)
-    ranking_20000 = sum(1 for s in student_list if s.get("contest_ranking") is not None and 0 < s["contest_ranking"] < 20000)
-    ranking_5000 = sum(1 for s in student_list if s.get("contest_ranking") is not None and 0 < s["contest_ranking"] < 5000)
+    # Global Ranking Below 20000 (genuine global profile / contest standing)
+    ranking_20000 = sum(
+        1 for s in student_list
+        if (s.get("contest_global_ranking") is not None and 0 < s["contest_global_ranking"] < 20000)
+        or (s.get("profile_ranking") is not None and 0 < s["profile_ranking"] < 20000)
+    )
+    # Contest Rank Below 5000 (genuine LeetCode contest rank in this specific contest)
+    ranking_5000 = sum(
+        1 for s in student_list
+        if s.get("contest_ranking") is not None and 0 < s["contest_ranking"] < 5000
+    )
 
     lw_rating_2000 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 2000)
     lw_rating_1500 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 1500)
     lw_rating_1250 = sum(1 for s in student_list if s.get("last_contest_rating") is not None and s["last_contest_rating"] > 1250)
-    lw_ranking_20000 = sum(1 for s in student_list if s.get("last_contest_ranking") is not None and 0 < s["last_contest_ranking"] < 20000)
-    lw_ranking_5000 = sum(1 for s in student_list if s.get("last_contest_ranking") is not None and 0 < s["last_contest_ranking"] < 5000)
+    lw_ranking_20000 = sum(
+        1 for s in student_list
+        if (s.get("last_contest_global_ranking") is not None and 0 < s["last_contest_global_ranking"] < 20000)
+        or (s.get("profile_ranking") is not None and 0 < s["profile_ranking"] < 20000)
+    )
+    lw_ranking_5000 = sum(
+        1 for s in student_list
+        if s.get("last_contest_ranking") is not None and 0 < s["last_contest_ranking"] < 5000
+    )
 
     # STRICT PRE-GENERATION VALIDATION
     bucket_sum = above_500 + prob_250_500 + prob_100_249 + prob_1_99 + prob_0
@@ -572,12 +588,12 @@ def generate_weekly_performance_data(
             "contest_ranking": (
                 getattr(curr_pub_obj, "contest_rank", None)
                 if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None)
-                else (getattr(pr_curr, "official_rank", None) if pr_curr and getattr(pr_curr, "official_rank", None) else getattr(st, "contest_global_ranking", None))
+                else None
             ),
             "contest_global_ranking": (
-                getattr(curr_pub_obj, "contest_rank", None)
-                if curr_pub_obj and getattr(curr_pub_obj, "contest_rank", None)
-                else (getattr(pr_curr, "official_rank", None) if pr_curr and getattr(pr_curr, "official_rank", None) else getattr(st, "contest_global_ranking", None))
+                getattr(st, "contest_global_ranking", None)
+                if st and getattr(st, "contest_global_ranking", None)
+                else getattr(st, "global_rank", None)
             ),
             "last_contest_rating": (
                 getattr(last_contest_history_map.get(s.id), "rating_after", None)
@@ -591,11 +607,7 @@ def generate_weekly_performance_data(
             "last_contest_ranking": (
                 getattr(last_pub_obj, "contest_rank", None)
                 if last_pub_obj and getattr(last_pub_obj, "contest_rank", None)
-                else (
-                    getattr(pr_last, "official_rank", None)
-                    if pr_last and getattr(pr_last, "official_rank", None)
-                    else (getattr(hist_snap, "contest_ranking", None) if hist_snap and getattr(hist_snap, "contest_ranking", None) else None)
-                )
+                else None
             ),
             "last_total_solved": last_tot,
             "contest_name": f"Weekly Contest {curr_contest_num}",
