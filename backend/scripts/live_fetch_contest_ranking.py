@@ -433,7 +433,7 @@ def live_run(contest_slug: Optional[str] = None, session_id: Optional[int] = Non
             # 3. Direct in-browser JavaScript fetch (Bypasses Cloudflare 100% because request is from inside Chrome)
             js_fetch = f"""
             var callback = arguments[arguments.length - 1];
-            fetch('/contest/api/ranking/{contest_slug}/?pagination=1&region=global', {{
+            fetch('/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2', {{
                 headers: {{
                     'Accept': 'application/json',
                     'x-requested-with': 'XMLHttpRequest'
@@ -472,7 +472,7 @@ def live_run(contest_slug: Optional[str] = None, session_id: Optional[int] = Non
         })
         s.cookies.update(cf_cookies)
 
-        url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global"
+        url = f"{base}/contest/api/ranking/{contest_slug}/?pagination=1&region=global_v2"
         print(f"[INFO] Testing backup session request to {url}...")
         resp = s.get(url, timeout=25)
         if resp.status_code == 200:
