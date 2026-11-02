@@ -7246,7 +7246,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </span>
               </div>
               <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 font-bold">
-                Platform v4.3.1 • Institutional Standard
+                Platform v4.3.2 • Institutional Standard
               </span>
             </div>
           </div>
