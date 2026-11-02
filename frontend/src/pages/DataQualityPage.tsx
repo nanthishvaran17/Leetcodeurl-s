@@ -192,7 +192,8 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.reg_no?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.dept?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.issue?.toLowerCase().includes(searchQuery.toLowerCase());
+      item.issue?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.username?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
     if (filterCategory === 'ALL') return true;
@@ -316,7 +317,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
             )}
             {selectedYear !== 'ALL' && (
               <span className="px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-[10px] font-black">
-                {selectedYear === '1' ? 'I Year' : selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : 'IV Year'}
+                {selectedYear === '1' || selectedYear === 'I' ? 'I Year' : selectedYear === '2' || selectedYear === 'II' ? 'II Year' : selectedYear === '3' || selectedYear === 'III' ? 'III Year' : 'IV Year'}
               </span>
             )}
           </div>

@@ -733,18 +733,26 @@ def get_data_quality(
             students = [s for s in students if (getattr(s, "college", "NEC") or "NEC").upper() != "NCT" and not (s.reg_no or "").startswith("7321") and "@nct" not in (s.email or "").lower()]
         else:
             students = [s for s in students if (getattr(s, "college", "") or "").upper() == col_target]
-    if dept and dept != "ALL":
-        d_upper = dept.upper()
+    if dept and dept.strip().upper() not in ("ALL", ""):
+        d_upper = dept.strip().upper()
         if d_upper in ("CSE(CS)", "CS", "CYBER"):
             students = [s for s in students if (s.department and ("CS" in s.department.code.upper() or "CYBER" in s.department.code.upper())) or ("CC" in (s.reg_no or "").upper())]
         elif d_upper in ("CSE(IOT)", "IOT"):
             students = [s for s in students if (s.department and "IOT" in s.department.code.upper()) or ("CI" in (s.reg_no or "").upper())]
         else:
-            students = [s for s in students if s.department and s.department.code.upper() == d_upper]
+            students = [s for s in students if (s.department and s.department.code.upper() == d_upper) or str(getattr(s, "department_id", "")) == dept or (s.department and str(s.department.id) == dept)]
 
-    if year and year != "ALL":
-        y_upper = year.upper()
-        students = [s for s in students if str(s.year_level or "").upper() == y_upper or y_upper in str(s.year_level or "").upper()]
+    if year and year.strip().upper() not in ("ALL", ""):
+        from backend.config.report_config import normalize_year_roman
+        target_year_clean = year.strip().upper()
+        TARGET_YEAR_MAP = {
+            "1": "I", "I": "I", "1ST": "I", "FIRST": "I", "YEAR 1": "I", "I YEAR": "I",
+            "2": "II", "II": "II", "2ND": "II", "SECOND": "II", "YEAR 2": "II", "II YEAR": "II",
+            "3": "III", "III": "III", "3RD": "III", "THIRD": "III", "YEAR 3": "III", "III YEAR": "III",
+            "4": "IV", "IV": "IV", "4TH": "IV", "FOURTH": "IV", "YEAR 4": "IV", "IV YEAR": "IV",
+        }
+        target_roman = TARGET_YEAR_MAP.get(target_year_clean, target_year_clean)
+        students = [s for s in students if normalize_year_roman(s.year_level, s.reg_no) == target_roman]
 
     if search:
         s_lower = search.strip().lower()
