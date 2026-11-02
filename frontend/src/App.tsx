@@ -169,16 +169,28 @@ const MainAppContent: React.FC = () => {
     }).catch(err => console.warn('[DownloadNotification] Init note:', err));
   }, []);
 
-  // Initialize Web Push Notifications (Lazy-loaded after authentication)
+  // Initialize Native Mobile & Web Push Notifications
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      import('./services/pushNotifications').then(({ listenForForegroundMessages, requestPushPermissionAndSync }) => {
-        listenForForegroundMessages();
-        const primaryIdentifier = String(user.email || user.username || (user as any).reg_no || user.id);
+    // 1. Setup listeners early on native mobile boot
+    import('./services/pushNotifications').then(({ listenForForegroundMessages }) => {
+      listenForForegroundMessages();
+    }).catch(err => console.warn('[PUSH] Listener init note:', err));
+
+    // 2. Request permission and register device token whenever authenticated
+    if (isAuthenticated && user) {
+      import('./services/pushNotifications').then(({ requestPushPermissionAndSync }) => {
+        const primaryIdentifier = String(
+          user.email || 
+          user.username || 
+          (user as any).reg_no || 
+          (user as any).registerNo || 
+          user.id || 
+          user.uid
+        );
         requestPushPermissionAndSync(primaryIdentifier);
       }).catch(err => console.warn('[PUSH] Lazy load note:', err));
     }
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, user]);
 
   // Instant 0ms Route Warmup Engine: Staggered preloading only when authenticated
   useEffect(() => {

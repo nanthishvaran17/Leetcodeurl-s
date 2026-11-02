@@ -1740,62 +1740,16 @@ export const HODCommandCenter: React.FC = () => {
 
   if (loading && !summary) {
     return (
-      <div className="w-full max-w-7xl mx-auto space-y-4 sm:space-y-6 animate-fade-in p-2 sm:p-4 pb-24">
-        {/* Modern Shimmer Hero Skeleton */}
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 p-5 sm:p-8 text-white shadow-xl border border-brand-500/20">
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-brand-400 animate-ping" />
-                <span>HOD COMMAND CENTER</span>
-              </div>
-              <h2 className="text-lg sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-                <span>Loading Department Analytics</span>
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                </span>
-              </h2>
-              <p className="text-[11px] sm:text-sm text-slate-300 font-medium">
-                Synchronizing real-time telemetry, student rosters, and departmental performance benchmarks...
-              </p>
-            </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/20 border border-brand-400/30 text-brand-300 flex items-center justify-center shrink-0">
-              <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-brand-400" />
-            </div>
-          </div>
+      <div className="flex flex-col items-center justify-center py-24 sm:py-32 text-center px-4 animate-fade-in">
+        <div className="w-12 h-12 rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/20 flex items-center justify-center mb-3 shadow-xs">
+          <RefreshCw className="w-6 h-6 animate-spin text-brand-600 dark:text-brand-400" />
         </div>
-
-        {/* 4 Metrics Cards Skeleton Shimmer */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div 
-              key={i} 
-              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#0c1324] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3 animate-pulse"
-            >
-              <div className="flex items-center justify-between">
-                <div className="h-3 w-20 bg-slate-200 dark:bg-white/10 rounded-md" />
-                <div className="w-7 h-7 bg-slate-200 dark:bg-white/10 rounded-xl" />
-              </div>
-              <div className="h-7 w-24 bg-slate-200 dark:bg-white/10 rounded-lg" />
-              <div className="h-4 w-32 bg-slate-100 dark:bg-white/5 rounded-md" />
-            </div>
-          ))}
-        </div>
-
-        {/* Main Content Area Skeleton */}
-        <div className="rounded-2xl sm:rounded-3xl bg-white dark:bg-[#0c1324] border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 space-y-4 animate-pulse">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
-            <div className="h-4 w-48 bg-slate-200 dark:bg-white/10 rounded-md" />
-            <div className="h-8 w-28 bg-slate-200 dark:bg-white/10 rounded-xl" />
-          </div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((row) => (
-              <div key={row} className="h-14 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5" />
-            ))}
-          </div>
-        </div>
+        <p className="text-base sm:text-lg font-black text-slate-800 dark:text-white tracking-tight">
+          Loading HOD Command Center...
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+          Loading department analytics and student records
+        </p>
       </div>
     );
   }

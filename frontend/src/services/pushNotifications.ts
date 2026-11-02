@@ -112,22 +112,28 @@ export const createAndroidChannels = async () => {
 // TOKEN MANAGEMENT & REGISTRATION
 // ============================================================================
 
+let currentTargetUserId: string | null = null;
+let nativeListenersConfigured = false;
+
 export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: string) => {
   if (!deviceToken) return false;
   try {
+    if (!userEmailOrId) {
+      userEmailOrId = currentTargetUserId || undefined;
+    }
     if (!userEmailOrId) {
       try {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const u = JSON.parse(storedUser);
-          userEmailOrId = u.email || u.reg_no || u.username || (u.id ? `STAFF_${u.id}` : undefined);
+          userEmailOrId = u.email || u.reg_no || u.username || (u.id ? `STAFF_${u.id}` : undefined) || u.uid;
         }
       } catch (_e) {}
     }
 
     let platform = 'android';
     if (isNativeMobile()) {
-      platform = Capacitor.getPlatform(); // 'android' | 'ios'
+      platform = Capacitor.getPlatform() || 'android';
     } else if (isIOS()) {
       platform = 'ios-pwa';
     } else if (/android/i.test(navigator.userAgent)) {
@@ -136,6 +142,11 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
       platform = 'web';
     }
 
+    try {
+      localStorage.setItem('fcm_device_token', deviceToken);
+      localStorage.setItem('fcm_platform', platform);
+    } catch (_e) {}
+
     await api.post('/notifications/register-device', {
       user_id: userEmailOrId || undefined,
       device_token: deviceToken,
@@ -143,7 +154,7 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
       app_version: '2.2.0',
       device_model: navigator.userAgent,
     });
-    console.log('[Push] FCM Device Token registered with backend server.');
+    console.log(`[Push] FCM Device Token (${platform}) registered with backend server for user: ${userEmailOrId || 'current'}`);
     return true;
   } catch (err) {
     console.warn('[Push] Backend token registration note:', err);
@@ -152,9 +163,14 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
 };
 
 export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
+  if (userEmailOrId) {
+    currentTargetUserId = userEmailOrId;
+  }
+
   // 1. Native Capacitor App (Android / iOS)
   if (isNativeMobile()) {
     try {
+      listenForForegroundMessages();
       await createAndroidChannels();
 
       const permStatus = await PushNotifications.checkPermissions();
@@ -167,6 +183,12 @@ export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
 
       if (granted) {
         await PushNotifications.register();
+        try {
+          const cachedToken = localStorage.getItem('fcm_device_token');
+          if (cachedToken) {
+            syncTokenToBackend(cachedToken, userEmailOrId);
+          }
+        } catch (_e) {}
         return true;
       } else {
         console.warn('[Push] Native Push Notification permission denied.');
@@ -239,10 +261,13 @@ export const listenForForegroundMessages = () => {
   // 1. Native Capacitor Listeners
   if (isNativeMobile()) {
     try {
+      if (nativeListenersConfigured) return;
+      nativeListenersConfigured = true;
+
       // FCM Token registration listener
       PushNotifications.addListener('registration', (token) => {
         if (token.value) {
-          syncTokenToBackend(token.value);
+          syncTokenToBackend(token.value, currentTargetUserId || undefined);
         }
       });
 

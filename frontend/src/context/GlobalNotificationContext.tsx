@@ -7,6 +7,7 @@ import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 import { playNotificationChime } from '../utils/audioChime';
 import { triggerConfetti } from '../utils/confettiCelebration';
 import { triggerSystemNotification } from '../services/systemNotification';
+import { Capacitor } from '@capacitor/core';
 
 export interface Notification {
   id: string;
@@ -114,8 +115,9 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     }
   }, []);
 
-  const registerFCMDeviceToken = useCallback(async (fcmToken: string, platform: string = 'web'): Promise<boolean> => {
+  const registerFCMDeviceToken = useCallback(async (fcmToken: string, platform?: string): Promise<boolean> => {
     if (!token) return false;
+    const resolvedPlatform = platform || (Capacitor.isNativePlatform() ? (Capacitor.getPlatform() || 'android') : 'web');
     try {
       const res = await fetch(getApiUrl('/notifications/register-device'), {
         method: 'POST',
@@ -125,8 +127,8 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         },
         body: JSON.stringify({
           device_token: fcmToken,
-          platform: platform,
-          app_version: '2.0.0'
+          platform: resolvedPlatform,
+          app_version: '2.2.0'
         })
       });
       if (res.ok) {
