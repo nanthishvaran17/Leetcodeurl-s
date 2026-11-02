@@ -1029,14 +1029,23 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     ).trim();
 
     // 2. Resolve Report Title
-    let reportTitle = report?.title || report?.reportTitle || '';
-    if (!reportTitle) {
-      if (isWeeklyPerformance) reportTitle = 'Coordinator Weekly Performance Report';
-      else if (isWowIntel) reportTitle = 'Week-on-Week Intelligence Report';
-      else if (isFridayOfficial) reportTitle = 'Friday Official Contest Report';
-      else if (isSundayLive) reportTitle = 'Sunday Live Contest Report';
-      else reportTitle = 'LeetCode Performance Report';
+    let rawTitle = cleanReportTitle(report?.title || report?.reportTitle || '');
+    if (!rawTitle) {
+      if (isWeeklyPerformance) rawTitle = 'Coordinator Weekly Performance Report';
+      else if (isWowIntel) rawTitle = 'Week-on-Week Intelligence Report';
+      else if (isFridayOfficial) rawTitle = 'Friday Official Contest Report';
+      else if (isSundayLive) rawTitle = 'Sunday Live Contest Report';
+      else rawTitle = 'LeetCode Performance Report';
     }
+
+    // In WhatsApp, bolding cannot cross newlines: each line must be individually wrapped in *...*
+    // Also remove redundant college name if already present in title string
+    const titleLines = rawTitle
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.toUpperCase().includes('NANDHA ENGINEERING COLLEGE'))
+      .map(line => `*${line.toUpperCase()}*`);
+    const formattedTitleHeader = titleLines.length > 0 ? `${titleLines.join('\n')}\n` : '';
 
     // Resolve true contest name
     let resolvedContestName = '';
@@ -1054,35 +1063,67 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
       resolvedContestName = isWowIntel ? 'Week-on-Week Performance' : 'Weekly LeetCode Contest';
     }
 
-    // Resolve Contest Date
-    let resolvedDate = (
-      report?.contest_date ||
-      report?.session_date ||
-      report?.contestDate ||
-      report?.sessionDate ||
-      report?.current_session?.session_date ||
-      report?.report_date ||
-      report?.date ||
-      ''
-    ).toString().trim();
+    // Resolve Contest Date cleanly without invalid dates like 33.11.2026
+    const formatDateObjToDDMMYYYY = (d: Date): string => {
+      if (isNaN(d.getTime())) return '';
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}.${month}.${year}`;
+    };
 
-    if (resolvedDate.includes('-') && resolvedDate.length >= 10) {
-      const parts = resolvedDate.split('T')[0].split('-');
-      if (parts.length === 3 && parts[0].length === 4) {
-        resolvedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-      }
-    } else if (/^\d{1,2}$/.test(resolvedDate)) {
-      const fullDate = report?.created_at || report?.generated_at || report?.timestamp;
-      if (fullDate && String(fullDate).includes('-')) {
-        const parts = String(fullDate).split('T')[0].split('-');
-        if (parts.length === 3) {
-          resolvedDate = `${resolvedDate.padStart(2, '0')}.${parts[1]}.${parts[0]}`;
+    const parseAnyDateString = (raw: any): string => {
+      if (!raw) return '';
+      const str = String(raw).trim();
+      if (!str) return '';
+
+      // Check standard DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
+      const dmyMatch = str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+      if (dmyMatch) {
+        const d = parseInt(dmyMatch[1], 10);
+        const m = parseInt(dmyMatch[2], 10);
+        const y = parseInt(dmyMatch[3], 10);
+        if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
+          return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
         }
-      } else {
-        const now = new Date();
-        resolvedDate = `${resolvedDate.padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
       }
-    }
+
+      // Check ISO / YYYY-MM-DD
+      if (str.includes('-')) {
+        const datePart = str.split('T')[0];
+        const parts = datePart.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
+            return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
+          }
+        }
+      }
+
+      // Check standard parseable date string (avoid parsing pure numbers like "33" as dates!)
+      if (!/^\d+$/.test(str)) {
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000 && parsed.getFullYear() < 2100) {
+          return formatDateObjToDDMMYYYY(parsed);
+        }
+      }
+
+      return '';
+    };
+
+    let resolvedDate = parseAnyDateString(report?.contest_date) ||
+      parseAnyDateString(report?.session_date) ||
+      parseAnyDateString(report?.contestDate) ||
+      parseAnyDateString(report?.sessionDate) ||
+      parseAnyDateString(report?.current_session?.session_date) ||
+      parseAnyDateString(report?.report_date) ||
+      parseAnyDateString(report?.date) ||
+      parseAnyDateString(report?.created_at) ||
+      parseAnyDateString(report?.generated_at) ||
+      parseAnyDateString(report?.timestamp) ||
+      formatDateObjToDDMMYYYY(new Date());
 
     // 3. In-Charge / Coordinator Resolution (Role-Aware for All Roles)
     const rawName = (currentUser?.full_name || currentUser?.displayName || currentUser?.name || '').trim();
@@ -1176,9 +1217,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     const currContest = report?.current_contest_metadata || {};
     const lastContest = report?.last_week_contest_metadata || {};
     const currContestTitle = currContest.contest_name || report?.current_session?.contest_name || resolvedContestName || 'Current Contest';
-    const currContestDate = currContest.session_date || report?.current_session?.session_date || resolvedDate || '';
+    const currContestDate = parseAnyDateString(currContest.session_date || report?.current_session?.session_date) || resolvedDate;
     const lastContestTitle = lastContest.contest_name || report?.previous_session?.contest_name || report?.last_week_session?.contest_name || '';
-    const lastContestDate = lastContest.session_date || report?.previous_session?.session_date || report?.last_week_session?.session_date || '';
+    const lastContestDate = parseAnyDateString(lastContest.session_date || report?.previous_session?.session_date || report?.last_week_session?.session_date);
 
     const cwMetrics = report?.current_week_metrics || {};
     const lwMetrics = report?.last_week_metrics || {};
@@ -1217,7 +1258,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
     let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
       `*Department of ${cleanDept}*\n` +
       `----------------------------------------\n` +
-      `*${reportTitle.toUpperCase()}*\n`;
+      formattedTitleHeader;
 
     if (isWeeklyPerformance) {
       text += `*Current Contest:* ${currContestTitle}${currContestDate ? ` (${currContestDate})` : ''}\n`;
