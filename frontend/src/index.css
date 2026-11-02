@@ -2696,3 +2696,13 @@ body.presentation-shield-active input[type="email"]:hover {
   touch-action: pan-y !important;
   overscroll-behavior-x: none !important;
 }
+
+/* Pristine Apple-Grade Frosted Glass Blur for Mobile Bottom Navigation Island & Headers */
+.mobile-bottom-nav-island {
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+}
+header.sticky {
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+}

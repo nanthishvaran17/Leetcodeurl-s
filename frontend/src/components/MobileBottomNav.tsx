@@ -211,7 +211,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         shouldShow ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >
-      <div className="relative h-[62px] rounded-full bg-white/95 dark:bg-[#070A14]/95 backdrop-blur-xs md:backdrop-blur-2xl transform-gpu will-change-transform border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
+      <div className="mobile-bottom-nav-island relative h-[62px] rounded-full bg-white/85 dark:bg-[#070A14]/85 backdrop-blur-xl transform-gpu will-change-transform border border-slate-200/90 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] px-2 py-1 flex items-center justify-around ring-1 ring-black/5 dark:ring-white/10">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = 

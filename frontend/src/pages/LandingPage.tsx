@@ -1530,7 +1530,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       />
 
         {/* Student Showcase Display */}
-        <div className="mt-6 space-y-4">
+        <div className="mt-6 space-y-4 px-1 sm:px-0">
           <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
             <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
               <div className="flex flex-col min-w-0">

@@ -468,30 +468,38 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                                       No student records linked to this faculty mentor yet.
                                     </div>
                                   ) : (
-                                    <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 overflow-x-auto custom-scrollbar max-w-full">
-                                      <table className="w-full text-left border-collapse text-xs">
+                                    <div className="rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 overflow-hidden w-full max-w-full shadow-2xs">
+                                      <table className="w-full text-left border-collapse text-xs table-fixed">
                                         <thead>
-                                          <tr className="bg-slate-100/70 dark:bg-navy-950 text-[10.5px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-navy-800">
-                                            <th className="py-2 px-3 whitespace-nowrap">Student</th>
-                                            <th className="py-2 px-2 text-center whitespace-nowrap">Year</th>
-                                            <th className="py-2 px-3 text-right whitespace-nowrap">Problems Solved</th>
-                                            <th className="py-2 px-3 text-right whitespace-nowrap">Rating</th>
+                                          <tr className="bg-slate-100/70 dark:bg-navy-950 text-[10px] sm:text-[10.5px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-navy-800">
+                                            <th className="py-2 px-2 sm:px-3 w-[42%] sm:w-[40%]">Student</th>
+                                            <th className="py-2 px-1 sm:px-2 text-center w-[18%] sm:w-[18%]">Year</th>
+                                            <th className="py-2 px-1.5 sm:px-3 text-right w-[20%] sm:w-[22%]">
+                                              <span className="hidden sm:inline">Problems </span>Solved
+                                            </th>
+                                            <th className="py-2 px-2 sm:px-3 text-right w-[20%] sm:w-[20%]">Rating</th>
                                           </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                                           {staff.students.map((st) => (
-                                            <tr key={st.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
-                                              <td className="py-2 px-3">
-                                                <div className="font-bold text-slate-900 dark:text-white whitespace-nowrap">{st.name}</div>
-                                                <div className="text-[10px] text-slate-500 font-mono whitespace-nowrap">{st.reg_no}</div>
+                                            <tr key={st.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
+                                              <td className="py-2 px-2 sm:px-3 min-w-0">
+                                                <div className="font-bold text-slate-900 dark:text-white truncate" title={st.name}>
+                                                  {st.name}
+                                                </div>
+                                                <div className="text-[10px] text-slate-500 font-mono truncate">
+                                                  {st.reg_no}
+                                                </div>
                                               </td>
-                                              <td className="py-2 px-2 text-center font-bold text-slate-600 dark:text-slate-400 font-mono whitespace-nowrap">
-                                                {st.year_level}
+                                              <td className="py-2 px-1 sm:px-2 text-center font-bold text-slate-600 dark:text-slate-400 font-mono text-[10.5px] sm:text-xs">
+                                                <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-[10px] font-semibold sm:bg-transparent sm:dark:bg-transparent sm:p-0">
+                                                  {st.year_level}
+                                                </span>
                                               </td>
-                                              <td className="py-2 px-3 text-right font-black font-mono text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                                              <td className="py-2 px-1.5 sm:px-3 text-right font-black font-mono text-brand-600 dark:text-brand-400 text-xs sm:text-sm">
                                                 {st.total_solved}
                                               </td>
-                                              <td className="py-2 px-3 text-right font-bold font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                              <td className="py-2 px-2 sm:px-3 text-right font-bold font-mono text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
                                                 {st.contest_rating && st.contest_rating > 0 ? st.contest_rating : '—'}
                                               </td>
                                             </tr>
@@ -523,14 +531,16 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                         No top performer data available.
                       </div>
                     ) : (
-                      <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                      <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden w-full max-w-full">
+                        <table className="w-full text-left border-collapse table-fixed">
                           <thead>
-                            <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
-                              <th className="py-2.5 px-2 sm:px-3 w-10 sm:w-14 text-center">Rank</th>
-                              <th className="py-2.5 px-2 sm:px-3">Student</th>
-                              <th className="py-2.5 px-2.5 sm:px-3 text-right">Problems Solved</th>
-                              <th className="py-2.5 px-3 text-right hidden sm:table-cell">Last Active</th>
+                            <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                              <th className="py-2.5 px-2 sm:px-3 w-12 sm:w-14 text-center">Rank</th>
+                              <th className="py-2.5 px-2 sm:px-3 min-w-0">Student</th>
+                              <th className="py-2.5 px-2 sm:px-3 text-right w-20 sm:w-32">
+                                <span className="hidden sm:inline">Problems </span>Solved
+                              </th>
+                              <th className="py-2.5 px-3 text-right hidden sm:table-cell sm:w-28">Last Active</th>
                             </tr>
                           </thead>
                           <tbody className="text-sm divide-y divide-slate-100 dark:divide-navy-800">

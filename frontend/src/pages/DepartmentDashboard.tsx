@@ -15,7 +15,6 @@ import { getUserCollege, isGlobalAccessRole, isCollegeFilterAllowed, isStaffRole
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
-import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 
 interface DepartmentDashboardProps {
   onSelectStudent: (student: StudentData) => void;
@@ -183,38 +182,6 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     ];
   }, [canFilterCollege]);
 
-  // GlobalFilter Options for Executive Banner
-  const collegeGlobalOptions: GlobalFilterOption[] = useMemo(() => {
-    if (!canFilterCollege) return [];
-    return [
-      { value: 'all', label: 'All Colleges', pillText: 'ALL' },
-      { value: 'NEC', label: 'Nandha Engineering College (NEC)', pillText: 'NEC' },
-      { value: 'NCT', label: 'Nandha College of Technology (NCT)', pillText: 'NCT' },
-    ];
-  }, [canFilterCollege]);
-
-  const departmentGlobalOptions: GlobalFilterOption[] = useMemo(() => {
-    const list: GlobalFilterOption[] = [];
-    if (!isStaffUser && (!isRestrictedHod || departments.length > 1)) {
-      list.push({ value: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Departments', pillText: 'ALL' });
-    }
-    departments.forEach((d) => {
-      list.push({
-        value: String(d.id),
-        label: d.name ? `${d.code || d.name} - ${d.name}` : (d.code || 'Dept'),
-        pillText: d.code || 'DEPT'
-      });
-    });
-    return list;
-  }, [departments, isStaffUser, isRestrictedHod]);
-
-  const yearGlobalOptions: GlobalFilterOption[] = useMemo(() => [
-    { value: 'all', label: 'All Academic Years', pillText: 'ALL' },
-    { value: '2', label: '2nd Year (Batch 2029)', pillText: 'II Year' },
-    { value: '3', label: '3rd Year (Batch 2028)', pillText: 'III Year' },
-    { value: '4', label: 'Final Year (Batch 2027)', pillText: 'IV Year' },
-  ], []);
-
   // Academic Year Dropdown Options (Removed 1st Year; Batches: 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
     { value: 'all', label: 'All Academic Years', badge: 'ALL', icon: GraduationCap },
@@ -313,137 +280,83 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-10 animate-fade-in">
+    <div className="space-y-4 sm:space-y-8 pb-32 sm:pb-20 animate-fade-in">
 
-      {/* Executive Header Banner — Growth Intelligence Aesthetic */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-7 md:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
-        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
-        </div>
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+        {/* Animated Decorative Ambient Light Beams */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-400/50 to-transparent" />
 
-        <div className="relative z-10 space-y-4 sm:space-y-6">
-          {/* Header Title Section */}
-          <div className="flex items-start sm:items-center justify-between gap-3.5 sm:gap-4">
-            <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0">
-              <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 shadow-lg shadow-amber-500/10 mt-0.5 sm:mt-0">
-                <Building2 className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-x-2.5 leading-tight">
-                  <span className="whitespace-nowrap">Department</span>
-                  <span className="text-amber-300 font-extrabold">&amp;</span>
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 whitespace-nowrap">
-                    Academic Year
-                  </span>
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mt-1 max-w-3xl line-clamp-2 sm:line-clamp-none">
-                  Filter students by Department, Academic Year, Name &amp; Performance side-by-side
-                </p>
-              </div>
-            </div>
-
-            {/* Desktop Sync Live Stats Button */}
-            <div className="hidden xl:flex shrink-0">
-              <button
-                onClick={handleRefreshAllStats}
-                disabled={isRefreshing}
-                className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer border border-brand-300/30"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span>{isRefreshing ? 'Syncing...' : 'Sync Live Stats'}</span>
-              </button>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3.5 max-w-2xl">
+            <div className="space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+                Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">Year Dashboard</span>
+              </h1>
+              <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
+                Filter students by Department, Academic Year, Name & Performance side-by-side
+              </p>
             </div>
           </div>
 
-          {/* Filters & Actions Integrated into Banner (Growth Intelligence Style) */}
-          <div className="pt-3.5 sm:pt-4 border-t border-brand-400/20 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
-            
-            {/* Department & Academic Year Filters (side-by-side on mobile) */}
-            <div className="flex flex-row items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              {canFilterCollege && (
-                <div className="flex-1 min-w-0 sm:w-64 sm:flex-none">
-                  <GlobalFilter
-                    options={collegeGlobalOptions}
-                    value={selectedCollege}
-                    onChange={(val) => { setSelectedCollege(val); setDisplayCount(32); }}
-                    icon={<School className="w-3.5 h-3.5 text-brand-400" />}
-                    dropdownWidth="w-full sm:w-64"
-                    showSearch={false}
-                    variant="dark"
-                  />
-                </div>
-              )}
-              <div className="flex-1 min-w-0 sm:w-72 sm:flex-none">
-                <GlobalFilter
-                  options={departmentGlobalOptions}
-                  value={selectedDept}
-                  onChange={(val) => { setSelectedDept(val); setDisplayCount(32); }}
-                  icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
-                  dropdownWidth="w-full sm:w-72"
-                  showSearch={true}
-                  variant="dark"
-                />
-              </div>
-              <div className="flex-1 min-w-0 sm:w-60 sm:flex-none">
-                <GlobalFilter
-                  options={yearGlobalOptions}
-                  value={yearLevel}
-                  onChange={(val) => { setYearLevel(val); setDisplayCount(32); }}
-                  icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
-                  dropdownWidth="w-full sm:w-60"
-                  showSearch={false}
-                  variant="dark"
-                />
-              </div>
-            </div>
-
-            {/* View Mode, Reset & Live Sync Controls */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full xl:w-auto">
-              <div className="flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
-                <button
-                  type="button"
-                  onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-slate-300 hover:text-white hover:bg-white/10"
-                  title={viewMode === 'cards' ? 'Switch to Table View' : 'Switch to Grid View'}
-                >
-                  {viewMode === 'cards' ? <List className="w-3.5 h-3.5" /> : <LayoutGrid className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">{viewMode === 'cards' ? 'Table View' : 'Grid View'}</span>
-                </button>
-                {activeFiltersCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleResetFilters}
-                    className="flex items-center space-x-1 px-2.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all cursor-pointer"
-                    title="Reset all filters to default"
-                  >
-                    <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    <span>Reset</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Live Sync Button (Mobile & Tablet) */}
-              <button
-                onClick={handleRefreshAllStats}
-                disabled={isRefreshing}
-                title="Synchronize authoritative LeetCode statistics"
-                className="flex-1 xl:hidden inline-flex items-center justify-center shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="ml-1.5 font-bold">{isRefreshing ? 'Syncing...' : 'Sync Live Stats'}</span>
-              </button>
-            </div>
-
+          <div className="flex shrink-0 w-full sm:w-auto">
+            <button
+              onClick={handleRefreshAllStats}
+              disabled={isRefreshing}
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Syncing Roster...' : 'Sync Live Stats'}</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
+      {/* Filter Tabs Bar */}
       <div className="glass-card p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-3 sm:space-y-4 relative z-30 overflow-visible">
 
+        {/* Header with Title & Controls */}
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="space-y-0.5 min-w-0">
+            <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center space-x-1.5">
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-500 shrink-0" />
+              <span className="truncate">Department Analytics Filtering</span>
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+              Select department and academic year criteria to analyze student metrics
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            {/* View Mode Switch */}
+            <button
+              onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
+              className="p-1.5 sm:p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              title={viewMode === 'cards' ? 'Switch to Table View' : 'Switch to Grid View'}
+            >
+              {viewMode === 'cards' ? (
+                <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              ) : (
+                <LayoutGrid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              )}
+            </button>
+
+            {/* Reset Filters Button */}
+            <button
+              onClick={handleResetFilters}
+              className="flex items-center space-x-1 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
+              title="Reset all filters to default"
+            >
+              <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-500" />
+              <span>Reset Filters</span>
+            </button>
+          </div>
+        </div>
+
         {/* College, Department and Academic Year Pill Selectors (Desktop 1-Tap Fast Filter) */}
-        <div className="hidden md:flex flex-col gap-2 pt-0.5 pb-1">
+        <div className="hidden md:flex flex-col gap-2 pt-1 pb-1 border-t border-slate-100 dark:border-navy-800">
           {canFilterCollege && (
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
               <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">College:</span>
@@ -800,7 +713,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       <div className="space-y-6">
         <div className="flex items-center flex-wrap gap-3 mb-5">
           {/* Active Filters Premium Pill */}
-          <div className="inline-flex items-center flex-wrap gap-2.5 px-3.5 sm:px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-navy-900 dark:to-navy-800/80 border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-sm">
+          <div className="hidden sm:inline-flex items-center flex-wrap gap-2.5 px-3.5 sm:px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-50 dark:from-navy-900 dark:to-navy-800/80 border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-sm">
             <div className="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200">
               <School className="w-4 h-4 text-teal-500" />
               <span className="font-black text-xs sm:text-sm tracking-tight">

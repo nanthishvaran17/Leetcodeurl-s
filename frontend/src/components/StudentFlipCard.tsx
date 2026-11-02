@@ -60,6 +60,31 @@ function formatVerifiedAgo(lastVerifiedAt?: string): string {
 // million-ignore
 const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: initialStudent, onSelectStudent, onDeleteStudent }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const touchStartY = React.useRef(0);
+  const touchStartX = React.useRef(0);
+  const isDragging = React.useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartX.current = e.touches[0].clientX;
+    isDragging.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current);
+    const deltaX = Math.abs(e.touches[0].clientX - touchStartX.current);
+    if (deltaY > 8 || deltaX > 8) {
+      isDragging.current = true;
+    }
+  };
+
+  const handleCardClick = () => {
+    if (isDragging.current) {
+      isDragging.current = false;
+      return;
+    }
+    setIsFlipped(f => !f);
+  };
   const liveStudent = (useStudentEntity(initialStudent.id) as any) || initialStudent;
   const student = liveStudent;
 
@@ -165,7 +190,9 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
   return (
     <div
       className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
-      onClick={() => setIsFlipped(f => !f)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onClick={handleCardClick}
     >
       <motion.div
         animate={{ rotateY: isFlipped ? 180 : 0 }}

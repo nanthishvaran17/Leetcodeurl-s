@@ -4021,10 +4021,6 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             </div>
           </div>
 
-          {/* Institutional App Version Footer */}
-          <div className="text-center pt-2 pb-1 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-            <span>Nandha Intelligence &bull; Institutional Build v4.1.8</span>
-          </div>
 
           {/* Generous Bottom Spacer: Completely clears the floating bottom island navigation bar */}
           <div className="h-32 sm:h-20 pointer-events-none" aria-hidden="true" />

@@ -676,12 +676,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         <div className="mobile-jubilee-badge">
           <picture>
             <source srcSet="/nec_25_logo.webp" type="image/webp" />
-            <motion.img
+            <img
               src="/nec_25_logo.webp"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
-              animate={loading ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], repeat: loading ? Infinity : 0 }}
               loading="eager"
               fetchPriority="high"
               decoding="async"
@@ -747,12 +745,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
               }}
               whileHover={{ y: -2, transition: { duration: 0.2 } }}
             >
-              <motion.div
-                animate={loading ? { rotate: 360 } : { rotate: 0 }}
-                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], repeat: loading ? Infinity : 0 }}
-              >
+              <div>
                 <CollegeLogo className="brand-mark" size={48} />
-              </motion.div>
+              </div>
               <div className="brand-text">
                 <p className="eyebrow">INSTITUTIONAL PORTAL</p>
                 <p className="name">Nandha Intelligence</p>
