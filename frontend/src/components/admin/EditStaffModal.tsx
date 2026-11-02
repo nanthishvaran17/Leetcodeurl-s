@@ -568,14 +568,14 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         </div>
 
         {/* UNIFIED SEGMENTED TABS (RESPONSIVE FOR ALL SCREEN SIZES) */}
-        <div className="px-3 sm:px-8 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-navy-900/95 border-b border-slate-200/80 dark:border-navy-800 shrink-0">
-          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-white/95 dark:bg-navy-950/95 rounded-xl sm:rounded-2xl border border-slate-200/70 dark:border-navy-800 shadow-2xs overflow-x-auto no-scrollbar">
+        <div className="px-2.5 sm:px-8 py-2 sm:py-2.5 bg-slate-100/95 dark:bg-navy-900/95 border-b border-slate-200/80 dark:border-navy-800 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-white/95 dark:bg-navy-950/95 rounded-xl sm:rounded-2xl border border-slate-200/70 dark:border-navy-800 shadow-2xs overflow-x-auto no-scrollbar scroll-smooth">
             {[
-              { id: 'identity', label: 'Identity & Contact', icon: User, num: '01' },
-              { id: 'scope', label: 'Role & Academic Scope', icon: Briefcase, num: '02' },
-              { id: 'access', label: 'Permissions & Reports', icon: Key, num: '03' },
-              { id: 'security', label: 'Security & Status', icon: Shield, num: '04' },
-              { id: 'all', label: 'All Details', icon: CheckCircle, num: 'ALL' }
+              { id: 'identity', label: 'Identity & Contact', shortLabel: 'Identity', icon: User, num: '01' },
+              { id: 'scope', label: 'Role & Academic Scope', shortLabel: 'Role & Scope', icon: Briefcase, num: '02' },
+              { id: 'access', label: 'Permissions & Reports', shortLabel: 'Permissions', icon: Key, num: '03' },
+              { id: 'security', label: 'Security & Status', shortLabel: 'Security', icon: Shield, num: '04' },
+              { id: 'all', label: 'All Details', shortLabel: 'All Details', icon: CheckCircle, num: 'ALL' }
             ].map(tab => {
               const TabIcon = tab.icon;
               const isSelected = activeTab === tab.id;
@@ -583,15 +583,19 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 min-w-[70px] sm:min-w-fit py-1.5 sm:py-2 px-2.5 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98 ${
+                  onClick={(e) => {
+                    setActiveTab(tab.id as any);
+                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                  }}
+                  className={`shrink-0 sm:flex-1 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                     isSelected
                       ? 'bg-brand-600 text-white shadow-xs font-black ring-2 ring-brand-500/20'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-850'
                   }`}
                 >
-                  <TabIcon className="w-3.5 h-3.5 shrink-0 hidden sm:inline-block" />
-                  <span>{tab.label}</span>
+                  <TabIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.shortLabel}</span>
                 </button>
               );
             })}
