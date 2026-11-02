@@ -1,4 +1,14 @@
-# Exclude generated native Android code and Gradle build artifacts from GitHub repository language statistics
+# Exclude generated native Android code, build artifacts, third-party tools, and scripts from GitHub language stats
 frontend/android/** linguist-vendored
 frontend/android/app/build/** linguist-vendored
 releases/** linguist-vendored
+tools/** linguist-vendored
+scripts/** linguist-vendored
+tests/** linguist-vendored
+docs/** linguist-documentation
+
+# Mark binary and packaged distributions
+*.exe linguist-vendored
+*.dll linguist-vendored
+*.zip linguist-vendored
+*.apk linguist-vendored

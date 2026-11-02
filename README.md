@@ -10,8 +10,8 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="docs/assets/badges/live_platform.svg"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.1.6" src="https://img.shields.io/badge/Release-v4.1.6-blue.svg?style=flat-square"></a>
-  <a href="releases/android/Nandha_LeetCode_Intelligence_v4.1.6_latest.apk"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.2.0" src="https://img.shields.io/badge/Release-v4.2.0-blue.svg?style=flat-square"></a>
+  <a href="releases/android/Nandha_LeetCode_Intelligence_v4.2.0_latest.apk"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square"></a>
 </p>
 
@@ -224,7 +224,7 @@ flowchart TD
 
     subgraph Presentation ["Presentation & Client Delivery"]
         WEB["React 18 / Tailwind Web PWA"]
-        APK["Capacitor 7 Native Android App (v4.1.6)"]
+        APK["Capacitor 7 Native Android App (v4.2.0)"]
         KIOSK["4K Smart TV Kiosk Mode"]
         EXCEL["15-Sheet OpenPyXL Institutional Workbook"]
         WA["Meta WhatsApp Notification Dispatch"]
@@ -365,7 +365,7 @@ npm run build
 # Build signed Android Release APK (Capacitor 7)
 npm run build:apk
 ```
-The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.1.6_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.1.6_latest.apk).
+The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.2.0_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.2.0_latest.apk).
 
 ---
 
