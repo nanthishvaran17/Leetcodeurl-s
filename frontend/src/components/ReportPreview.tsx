@@ -4549,18 +4549,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
               <span>Excel (.xlsx)</span>
             </button>
 
-            {/* Primary Action: PDF */}
-            <button
-              onClick={() => downloadFile('pdf')}
-              type="button"
-              disabled={isDownloading}
-              className="flex items-center justify-center space-x-1.5 px-3.5 sm:px-4 py-2 min-h-[38px] bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50 touch-manipulation group cursor-pointer"
-              title="Download PDF document (.pdf)"
-            >
-              <FileText className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
-              <span>PDF (.pdf)</span>
-            </button>
-
             {/* Secondary Action: More Menu Dropdown */}
             <div ref={moreMenuRef} className="relative z-50">
               <button
