@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import { 
   Loader2, Trophy, Target, Award, AlertCircle, Zap, 
@@ -62,17 +63,53 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dropdownSearch, setDropdownSearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const touchStartY = useRef<number | null>(null);
 
-  // Close custom dropdown on outside click
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (isMobile && isDropdownOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isMobile, isDropdownOpen]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current !== null) {
+      const diffY = e.touches[0].clientY - touchStartY.current;
+      if (diffY > 60) {
+        setIsDropdownOpen(false);
+        touchStartY.current = null;
+      }
+    }
+  };
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+  };
+
+  // Close custom dropdown on outside click for desktop
+  useEffect(() => {
+    if (!isMobile) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setIsDropdownOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMobile]);
   const pageSize = 10;
 
   useEffect(() => {
@@ -340,8 +377,8 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
             )}
           </div>
 
-          {/* Floating Dropdown Menu */}
-          {isDropdownOpen && (
+          {/* Desktop Floating Dropdown Menu */}
+          {isDropdownOpen && !isMobile && (
             <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-navy-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-navy-700 p-2.5 z-50 space-y-2 animate-scale-in">
               {/* Quick Search inside dropdown */}
               <div className="relative px-0.5">
@@ -428,6 +465,152 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                   })}
               </div>
             </div>
+          )}
+
+          {/* Mobile Bottom Sheet Drawer */}
+          {isDropdownOpen && isMobile && createPortal(
+            <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
+              <div 
+                className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+                onClick={() => setIsDropdownOpen(false)}
+              />
+              <div 
+                className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+                style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+              >
+                <div 
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+                >
+                  <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+                </div>
+
+                <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900/50">
+                      <Trophy size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                        Select Contest Week
+                      </h3>
+                      <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        {rawContests.length} attended weeks recorded
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="px-4 pt-3 pb-2 shrink-0">
+                  <div className="relative flex items-center">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={dropdownSearch}
+                      onChange={(e) => setDropdownSearch(e.target.value)}
+                      placeholder="Search contest (e.g. 525, Biweekly)..."
+                      className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-brand-500"
+                    />
+                    {dropdownSearch && (
+                      <button 
+                        type="button" 
+                        onClick={() => setDropdownSearch('')}
+                        className="absolute right-3 text-slate-400 hover:text-slate-600 p-0.5"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="overflow-y-auto px-4 py-2 space-y-2 overscroll-contain flex-1">
+                  {(!dropdownSearch || 'all contests portfolio'.includes(dropdownSearch.toLowerCase())) && (
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedContestId('ALL'); setIsDropdownOpen(false); setDropdownSearch(''); }}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                        selectedContestId === 'ALL'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
+                          : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">⭐</span>
+                        <div className="text-left">
+                          <p className="font-extrabold text-xs">All Contests (Overall Portfolio)</p>
+                          <p className={`text-[10px] ${selectedContestId === 'ALL' ? 'text-amber-100' : 'text-slate-400'}`}>
+                            Aggregated stats of all {rawContests.length} attended weeks
+                          </p>
+                        </div>
+                      </div>
+                      {selectedContestId === 'ALL' && <Check size={18} strokeWidth={3} />}
+                    </button>
+                  )}
+
+                  {rawContests
+                    .filter(c => {
+                      if (!dropdownSearch) return true;
+                      const q = dropdownSearch.toLowerCase().trim();
+                      return (
+                        c.contest_name.toLowerCase().includes(q) ||
+                        (c.formatted_date && c.formatted_date.toLowerCase().includes(q)) ||
+                        (c.date && c.date.includes(q)) ||
+                        c.contest_type.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((c) => {
+                      const isSelected = selectedContestId === c.id;
+                      const pts = c.score ?? (c.problems_solved * 4);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setSelectedContestId(c.id); setIsDropdownOpen(false); setDropdownSearch(''); }}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-600/30'
+                              : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${c.contest_type === 'Biweekly' ? 'bg-purple-500' : 'bg-blue-500'}`}></span>
+                            <div className="min-w-0 text-left">
+                              <p className="truncate font-extrabold text-xs">{c.contest_name}</p>
+                              <p className={`text-[10px] ${isSelected ? 'text-brand-100' : 'text-slate-400'}`}>
+                                {c.formatted_date || c.date || 'Contest'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                              isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            }`}>
+                              {c.problems_solved}/4
+                            </span>
+                            <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded ${
+                              isSelected ? 'bg-white/20 text-white' : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                            }`}>
+                              {pts} pts
+                            </span>
+                            {isSelected && <Check size={18} strokeWidth={3} />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>

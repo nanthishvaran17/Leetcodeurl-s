@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity, MessageCircle, Copy, ExternalLink, QrCode, ArrowUpDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity, MessageCircle, Copy, ExternalLink, QrCode, ArrowUpDown, X, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
@@ -35,6 +36,40 @@ export const StaffDashboardView: React.FC = () => {
   const [studentSelectSearch, setStudentSelectSearch] = useState<string>('');
   const [sortField, setSortField] = useState<'name' | 'reg_no' | 'total_solved' | 'progress' | 'contest_rating' | 'status'>('total_solved');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && (isStudentSelectOpen || isFilterOpen)) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isMobile, isStudentSelectOpen, isFilterOpen]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchMove = (e: React.TouchEvent, closeFn: () => void) => {
+    if (touchStartY.current !== null) {
+      const diffY = e.touches[0].clientY - touchStartY.current;
+      if (diffY > 60) {
+        closeFn();
+        touchStartY.current = null;
+      }
+    }
+  };
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+  };
 
   useEffect(() => {
     fetchMentoringData(false);
@@ -1026,8 +1061,8 @@ NEC LeetCode Intelligence Portal`;
                     </div>
                   </button>
 
-                  {/* Dropdown Menu Popover */}
-                  {isStudentSelectOpen && (
+                  {/* Desktop Dropdown Popover */}
+                  {isStudentSelectOpen && !isMobile && (
                     <div className="absolute z-50 top-full left-0 mt-2 w-full sm:w-80 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-2 animate-in fade-in zoom-in-95">
                       {/* Search Bar inside Dropdown */}
                       <div className="relative flex items-center">
@@ -1151,6 +1186,137 @@ NEC LeetCode Intelligence Portal`;
                       </div>
                     </div>
                   )}
+
+                  {/* Mobile Bottom Sheet Drawer for Student Selection */}
+                  {isStudentSelectOpen && isMobile && createPortal(
+                    <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
+                      <div 
+                        className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+                        onClick={() => setIsStudentSelectOpen(false)}
+                      />
+                      <div 
+                        className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+                        style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+                      >
+                        <div 
+                          onTouchStart={handleTouchStart}
+                          onTouchMove={(e) => handleTouchMove(e, () => setIsStudentSelectOpen(false))}
+                          onTouchEnd={handleTouchEnd}
+                          className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+                        >
+                          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+                        </div>
+
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/50">
+                              <Users size={18} />
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                                Select Assigned Student
+                              </h3>
+                              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                {myStudents.length} mentees in your roster
+                              </p>
+                            </div>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => setIsStudentSelectOpen(false)}
+                            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
+
+                        <div className="px-4 pt-3 pb-2 shrink-0">
+                          <div className="relative flex items-center">
+                            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                            <input
+                              type="text"
+                              value={studentSelectSearch}
+                              onChange={(e) => setStudentSelectSearch(e.target.value)}
+                              placeholder="Search student by name or reg no..."
+                              className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500"
+                            />
+                            {studentSelectSearch && (
+                              <button 
+                                type="button" 
+                                onClick={() => setStudentSelectSearch('')}
+                                className="absolute right-3 text-slate-400 hover:text-slate-600 p-0.5"
+                              >
+                                <X size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="overflow-y-auto px-4 py-2 space-y-2 overscroll-contain flex-1">
+                          {!studentSelectSearch && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedStudentFilter('ALL');
+                                setIsStudentSelectOpen(false);
+                                setStudentSelectSearch('');
+                              }}
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                                selectedStudentFilter === 'ALL'
+                                  ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
+                                  : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <Users className="w-4 h-4" />
+                                <span>All Students ({myStudents.length})</span>
+                              </div>
+                              {selectedStudentFilter === 'ALL' && <Check size={18} strokeWidth={3} />}
+                            </button>
+                          )}
+
+                          {searchedStudents.map((st: any) => {
+                            const isSelected = String(st.id) === String(selectedStudentFilter);
+                            const solved = st.total_solved || 0;
+                            const initials = (st.name || 'S').slice(0, 2).toUpperCase();
+                            return (
+                              <button
+                                key={st.id || st.reg_no}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedStudentFilter(String(st.id));
+                                  setFilterStatus('ALL');
+                                  setIsStudentSelectOpen(false);
+                                  setStudentSelectSearch('');
+                                }}
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
+                                    : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                                    isSelected ? 'bg-white/20 text-white' : 'bg-indigo-100 dark:bg-navy-800 text-indigo-700 dark:text-indigo-300'
+                                  }`}>
+                                    {initials}
+                                  </div>
+                                  <div className="min-w-0 text-left">
+                                    <p className="truncate font-extrabold text-xs">{st.name}</p>
+                                    <p className={`text-[10px] font-mono ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
+                                      {st.reg_no} • {solved} solved
+                                    </p>
+                                  </div>
+                                </div>
+                                {isSelected && <Check size={18} strokeWidth={3} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>,
+                    document.body
+                  )}
                 </div>
               );
             })()}
@@ -1168,7 +1334,7 @@ NEC LeetCode Intelligence Portal`;
               ];
               const sel = filterOpts.find(o => o.value === filterStatus) || filterOpts[0];
               return (
-                <div className="relative flex-1 min-w-full sm:min-w-0 sm:shrink-0" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsFilterOpen(false); }}>
+                <div className="relative flex-1 min-w-full sm:min-w-0 sm:shrink-0" onBlur={(e) => { if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) setIsFilterOpen(false); }}>
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen(p => !p)}
@@ -1189,7 +1355,8 @@ NEC LeetCode Intelligence Portal`;
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ml-0.5 ${isFilterOpen ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {isFilterOpen && (
+                  {/* Desktop Dropdown Popover */}
+                  {isFilterOpen && !isMobile && (
                     <div className="absolute z-50 top-full right-0 sm:left-0 mt-2 w-64 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-2xl overflow-hidden p-1 space-y-0.5">
                       {filterOpts.map(opt => (
                         <button
@@ -1208,6 +1375,85 @@ NEC LeetCode Intelligence Portal`;
                         </button>
                       ))}
                     </div>
+                  )}
+
+                  {/* Mobile Bottom Sheet Drawer for Status Filter */}
+                  {isFilterOpen && isMobile && createPortal(
+                    <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
+                      <div 
+                        className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+                        onClick={() => setIsFilterOpen(false)}
+                      />
+                      <div 
+                        className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+                        style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+                      >
+                        <div 
+                          onTouchStart={handleTouchStart}
+                          onTouchMove={(e) => handleTouchMove(e, () => setIsFilterOpen(false))}
+                          onTouchEnd={handleTouchEnd}
+                          className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+                        >
+                          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+                        </div>
+
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/50">
+                              <Filter size={18} />
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                                Filter by Status
+                              </h3>
+                              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                Current: {sel.label}
+                              </p>
+                            </div>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => setIsFilterOpen(false)}
+                            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
+
+                        <div className="overflow-y-auto px-4 py-3 space-y-2 overscroll-contain flex-1">
+                          {filterOpts.map((opt) => {
+                            const isSelected = filterStatus === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => {
+                                  setFilterStatus(opt.value);
+                                  setIsFilterOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
+                                    : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <ShieldCheck className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
+                                    isSelected ? 'bg-white/20 text-white' : opt.color
+                                  }`}>
+                                    {opt.code}
+                                  </span>
+                                  <span className="truncate text-left font-bold">{opt.label}</span>
+                                </div>
+                                {isSelected && <Check size={18} strokeWidth={3} className="shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>,
+                    document.body
                   )}
                 </div>
               );

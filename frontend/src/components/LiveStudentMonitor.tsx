@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import { triggerHaptic } from '../utils/haptics';
+import { useTypewriterPlaceholder } from '../hooks/useTypewriterPlaceholder';
 
 interface LiveStudentMonitorProps {
   /** Optional: pre-fill the search field and auto-trigger a sync */
@@ -18,6 +19,16 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const animatedPlaceholder = useTypewriterPlaceholder(
+    [
+      'Enter Register Number (e.g. 732224CC031)...',
+      'Enter LeetCode username...',
+      'Enter username...',
+    ],
+    true,
+    false
+  );
 
   const handleInspectStudent = async (id?: string) => {
     const target = (id ?? identifier).trim();
@@ -77,7 +88,7 @@ export const LiveStudentMonitor: React.FC<LiveStudentMonitorProps> = ({ initialI
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Enter Register Number (e.g. 732224CC031) or Username..."
+                placeholder={animatedPlaceholder || "Enter Register Number (e.g. 732224CC031) or Username..."}
                 className="w-full pl-11 pr-4 py-3 bg-white/10 dark:bg-navy-950/60 border border-white/20 dark:border-navy-700 text-white placeholder-gray-400 text-xs sm:text-sm font-semibold rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 backdrop-blur-md transition-all"
               />
             </div>

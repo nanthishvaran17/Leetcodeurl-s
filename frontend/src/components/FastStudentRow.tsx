@@ -139,7 +139,7 @@ export function getProfileRankDisplay(st: any): string {
 }
 
 export const LEADERBOARD_TABLE_GRID_STYLE: React.CSSProperties = {
-  gridTemplateColumns: '44px 76px 124px minmax(180px, 1.8fr) minmax(115px, 1.1fr) minmax(140px, 1.3fr) minmax(72px, 0.8fr) minmax(110px, 1.1fr) minmax(72px, 0.8fr) minmax(96px, 1fr) minmax(110px, 1.1fr)',
+  gridTemplateColumns: '44px 80px 130px minmax(180px, 1.8fr) minmax(115px, 1.1fr) minmax(140px, 1.3fr) minmax(76px, 0.8fr) minmax(110px, 1.1fr) minmax(76px, 0.8fr) minmax(126px, 1.1fr) minmax(110px, 1.1fr)',
   alignItems: 'center',
 };
 

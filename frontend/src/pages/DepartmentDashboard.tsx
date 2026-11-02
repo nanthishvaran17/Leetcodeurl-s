@@ -190,6 +190,36 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     { value: '4', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap },
   ];
 
+  // Department Dropdown Options for unified desktop controls
+  const departmentOptions: DropdownOption[] = useMemo(() => {
+    const list: DropdownOption[] = [];
+    if (!((isRestrictedHod && departments.length <= 1) || isStaffUser)) {
+      list.push({
+        value: 'all',
+        label: isRestrictedHod ? 'All My Depts' : 'All Departments',
+        badge: 'ALL',
+        icon: Building2,
+      });
+    }
+    departments.forEach((d) => {
+      list.push({
+        value: String(d.id),
+        label: `${d.code || d.name} — ${d.name || d.code}`,
+        badge: d.code || d.name,
+        icon: Building2,
+      });
+    });
+    return list;
+  }, [departments, isRestrictedHod, isStaffUser]);
+
+  const [desktopFilterMode, setDesktopFilterMode] = useState<'dropdowns' | 'pills'>(() => {
+    try {
+      return (localStorage.getItem('nec_dept_filter_mode') as 'dropdowns' | 'pills') || 'dropdowns';
+    } catch {
+      return 'dropdowns';
+    }
+  });
+
   // Performance Range Dropdown Options
   const performanceOptions: DropdownOption[] = [
     { value: 'all', label: 'All Solvers', badge: 'ALL' },
@@ -343,6 +373,42 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               )}
             </button>
 
+            {/* Desktop Filter Mode Switcher (Dropdowns vs 1-Tap Pills) */}
+            <div className="hidden md:inline-flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-navy-800 border border-slate-200/80 dark:border-navy-700 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setDesktopFilterMode('dropdowns');
+                  try { localStorage.setItem('nec_dept_filter_mode', 'dropdowns'); } catch {}
+                }}
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                  desktopFilterMode === 'dropdowns'
+                    ? 'bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-400 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Unified Dropdown Grid"
+              >
+                <LayoutGrid className="w-3 h-3" />
+                <span>Dropdowns</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDesktopFilterMode('pills');
+                  try { localStorage.setItem('nec_dept_filter_mode', 'pills'); } catch {}
+                }}
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                  desktopFilterMode === 'pills'
+                    ? 'bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-400 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="1-Tap Fast Filter Pills"
+              >
+                <SlidersHorizontal className="w-3 h-3" />
+                <span>Fast Pills</span>
+              </button>
+            </div>
+
             {/* Reset Filters Button */}
             <button
               onClick={handleResetFilters}
@@ -355,93 +421,110 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* College, Department and Academic Year Pill Selectors (Desktop 1-Tap Fast Filter) */}
-        <div className="hidden md:flex flex-col gap-2 pt-1 pb-1 border-t border-slate-100 dark:border-navy-800">
-          {canFilterCollege && (
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
-              <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">College:</span>
-              {[
-                { value: 'all', label: 'All Colleges' },
-                { value: 'NEC', label: 'NEC' },
-                { value: 'NCT', label: 'NCT' }
-              ].map(c => {
-                const isSelected =
-                  selectedCollege.toUpperCase() === c.value.toUpperCase() ||
-                  (c.value === 'all' && (selectedCollege === 'all' || selectedCollege === 'ALL'));
-                return (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => { setSelectedCollege(c.value); setDisplayCount(32); }}
-                    className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
-                      isSelected
-                        ? 'bg-teal-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                );
-              })}
+        {/* Optional 1-Tap Fast Filter Pills (Shown only when 'pills' mode is chosen) */}
+        {desktopFilterMode === 'pills' && (
+          <div className="hidden md:flex flex-col gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/40 border border-slate-200/60 dark:border-navy-800 animate-fade-in">
+            {canFilterCollege && (
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+                <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0 w-20">
+                  <School className="w-3.5 h-3.5 text-teal-500" />
+                  <span>College:</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { value: 'all', label: 'All Colleges' },
+                    { value: 'NEC', label: 'NEC' },
+                    { value: 'NCT', label: 'NCT' }
+                  ].map(c => {
+                    const isSelected =
+                      selectedCollege.toUpperCase() === c.value.toUpperCase() ||
+                      (c.value === 'all' && (selectedCollege === 'all' || selectedCollege === 'ALL'));
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => { setSelectedCollege(c.value); setDisplayCount(32); }}
+                        className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${
+                          isSelected
+                            ? 'bg-teal-600 text-white shadow-xs'
+                            : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-teal-500/40'
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0 w-20">
+                <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                <span>Dept:</span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  ...((isRestrictedHod && departments.length <= 1) || isStaffUser ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
+                  ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
+                ].map(d => {
+                  const isSelected = 
+                    selectedDept === d.id || 
+                    (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL')) ||
+                    normalizeDepartment(selectedDept) === normalizeDepartment(d.id);
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => { setSelectedDept(d.id); setDisplayCount(32); }}
+                      className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? 'bg-brand-600 text-white shadow-xs'
+                          : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-brand-500/40'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
 
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
-            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Dept:</span>
-            {[
-              ...((isRestrictedHod && departments.length <= 1) || isStaffUser ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
-              ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
-            ].map(d => {
-              const isSelected = 
-                selectedDept === d.id || 
-                (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL')) ||
-                normalizeDepartment(selectedDept) === normalizeDepartment(d.id);
-              return (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() => { setSelectedDept(d.id); setDisplayCount(32); }}
-                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
-                  }`}
-                >
-                  {d.label}
-                </button>
-              );
-            })}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
+              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0 w-20">
+                <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Year:</span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { value: 'all', label: 'All Years' },
+                  { value: '2', label: 'II Year' },
+                  { value: '3', label: 'III Year' },
+                  { value: '4', label: 'IV Year' }
+                ].map(y => {
+                  const isSelected = 
+                    yearLevel === y.value ||
+                    (y.value === 'all' && (yearLevel === 'all' || yearLevel === 'ALL')) ||
+                    normalizeAcademicYear(yearLevel) === normalizeAcademicYear(y.value);
+                  return (
+                    <button
+                      key={y.value}
+                      type="button"
+                      onClick={() => { setYearLevel(y.value); setDisplayCount(32); }}
+                      className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-indigo-500/40'
+                      }`}
+                    >
+                      {y.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs select-none scroll-smooth">
-            <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Year:</span>
-            {[
-              { value: 'all', label: 'All Years' },
-              { value: '2', label: 'II Year' },
-              { value: '3', label: 'III Year' },
-              { value: '4', label: 'IV Year' }
-            ].map(y => {
-              const isSelected = 
-                yearLevel === y.value ||
-                (y.value === 'all' && (yearLevel === 'all' || yearLevel === 'ALL')) ||
-                normalizeAcademicYear(yearLevel) === normalizeAcademicYear(y.value);
-              return (
-                <button
-                  key={y.value}
-                  type="button"
-                  onClick={() => { setYearLevel(y.value); setDisplayCount(32); }}
-                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
-                  }`}
-                >
-                  {y.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* Mobile View: Dedicated Sleek Filter Control Bar (< 768px) */}
         <div className="block md:hidden space-y-2.5 pt-2">
@@ -596,8 +679,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         </div>
 
-        {/* Desktop View: 4 Filter & Search Controls (>= 768px) */}
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 items-end">
+        {/* Desktop View: Unified Filter Grid (>= 768px) */}
+        <div className={`hidden md:grid ${canFilterCollege ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5'} gap-2 sm:gap-2.5 items-end`}>
 
           {/* 1. Name Search */}
           <div className="flex flex-col space-y-1.5 min-w-0 w-full">
@@ -612,7 +695,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 setDisplayCount(32);
               }}
               onSelectStudent={onSelectStudent}
-              placeholder="Search by name, reg no..."
+              placeholder="Search name, reg no..."
               size="sm"
             />
           </div>
@@ -636,12 +719,47 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </div>
           )}
 
-          {/* 3. Performance Range Filter */}
+          {/* 3. Department Filter */}
+          <div className="min-w-0 w-full">
+            <CustomDropdown
+              compact={true}
+              id="dept-dashboard-dept-filter"
+              label="Department"
+              options={departmentOptions}
+              value={selectedDept === 'ALL' ? 'all' : selectedDept}
+              onChange={(val) => {
+                if (isStaffUser) return;
+                setSelectedDept(val);
+                setDisplayCount(32);
+              }}
+              icon={Building2}
+              align="left"
+            />
+          </div>
+
+          {/* 4. Academic Year Filter */}
+          <div className="min-w-0 w-full">
+            <CustomDropdown
+              compact={true}
+              id="dept-dashboard-year-filter"
+              label="Academic Year"
+              options={yearOptions}
+              value={yearLevel}
+              onChange={(val) => {
+                setYearLevel(val);
+                setDisplayCount(32);
+              }}
+              icon={GraduationCap}
+              align="left"
+            />
+          </div>
+
+          {/* 5. Performance Range Filter */}
           <div className="min-w-0 w-full">
             <CustomDropdown
               compact={true}
               id="dept-dashboard-performance-filter"
-              label="Performance Range"
+              label="Performance"
               options={performanceOptions}
               value={solvedFilter}
               onChange={(val) => {
@@ -653,7 +771,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             />
           </div>
 
-          {/* 4. Sort Students */}
+          {/* 6. Sort Students */}
           <div className="min-w-0 w-full">
             <CustomDropdown
               compact={true}

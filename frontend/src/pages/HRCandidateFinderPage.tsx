@@ -265,6 +265,26 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
   const popoverRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
   const lastCoordsRef = useRef<string | null>(null);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [searchQuery, setSearchQuery] = useState('');
+  const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (open && isMobile) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [open, isMobile]);
 
   const updateCoords = useCallback(() => {
     if (ref.current) {
@@ -330,7 +350,9 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
 
     if (open) {
       updateCoords();
-      document.addEventListener("mousedown", handleClickOutside);
+      if (!isMobile) {
+        document.addEventListener("mousedown", handleClickOutside);
+      }
       document.addEventListener("keydown", handleKeyDown);
       window.addEventListener("resize", handleScrollOrResize);
       window.addEventListener("scroll", handleScrollOrResize, true);
@@ -342,12 +364,13 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
       window.removeEventListener("scroll", handleScrollOrResize, true);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [open, updateCoords]);
+  }, [open, updateCoords, isMobile]);
 
   const selectedOpt = options.find(o => String(o.value) === String(value)) || options[0];
 
   const handleToggle = () => {
     if (!open) {
+      setSearchQuery('');
       const rect = ref.current?.getBoundingClientRect();
       if (rect) {
         const isNearBottom = window.innerHeight - rect.bottom < 150;
@@ -361,58 +384,215 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
     setOpen(!open);
   };
 
-  const popoverMenu = open && coords && typeof document !== 'undefined' ? createPortal(
-    <div
-      ref={popoverRef}
-      style={{
-        position: 'fixed',
-        top: `${coords.top}px`,
-        left: `${coords.left}px`,
-        width: `${coords.width}px`,
-        maxWidth: `calc(100vw - 24px)`,
-        maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '280px',
-        transformOrigin: coords.transformOrigin || 'top',
-        zIndex: 9999999
-      }}
-      className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl rounded-2xl p-1.5 space-y-1 overflow-y-auto font-sans min-w-[320px] custom-scrollbar animate-fade-in"
-    >
-      {options.map((opt) => {
-        const isSelected = String(opt.value) === String(value);
+  const filteredOptions = searchQuery.trim()
+    ? options.filter(opt => {
+        const q = searchQuery.toLowerCase();
         return (
-          <button
-            key={String(opt.value)}
-            type="button"
-            onClick={() => {
-              onChange(opt.value);
-              setOpen(false);
-            }}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${isSelected
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
-              }`}
-          >
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              {opt.icon && (
-                <span className={isSelected ? "text-white" : "text-slate-400"}>
-                  {opt.icon}
-                </span>
-              )}
-              {opt.badge && (
-                <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${isSelected
-                    ? "bg-white/20 text-white border border-white/20"
-                    : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
-                  }`}>
-                  {opt.badge}
-                </span>
-              )}
-              <span className="whitespace-normal leading-snug">{opt.label}</span>
-            </div>
-            {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0 ml-1" />}
-          </button>
+          opt.label.toLowerCase().includes(q) ||
+          (opt.badge && opt.badge.toLowerCase().includes(q))
         );
-      })}
-    </div>,
-    document.body
+      })
+    : options;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current !== null) {
+      const diffY = e.touches[0].clientY - touchStartY.current;
+      if (diffY > 60) {
+        setOpen(false);
+        touchStartY.current = null;
+      }
+    }
+  };
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+  };
+
+  const popoverMenu = open && typeof document !== 'undefined' ? (
+    isMobile ? (
+      createPortal(
+        <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Mobile Bottom Sheet Drawer */}
+          <div 
+            className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+            style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Grab Handle */}
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+            >
+              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs border border-blue-100 dark:border-blue-900/50">
+                  {icon || <SlidersHorizontal size={18} />}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                    {placeholder}
+                  </h3>
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                    {selectedOpt?.label ? `Current: ${selectedOpt.label}` : 'Select an option to filter'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick Search if more than 4 options */}
+            {options.length > 4 && (
+              <div className="px-4 pt-3 pb-1 shrink-0">
+                <div className="relative flex items-center">
+                  <Search size={15} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder={`Search ${placeholder.toLowerCase()}...`}
+                    className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500 transition-colors"
+                  />
+                  {searchQuery && (
+                    <button 
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Options List */}
+            <div className="overflow-y-auto px-4 py-3 space-y-2 overscroll-contain flex-1">
+              {filteredOptions.map((opt) => {
+                const isSelected = String(opt.value) === String(value);
+                return (
+                  <button
+                    key={String(opt.value)}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30' 
+                        : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {opt.icon && (
+                        <span className={isSelected ? "text-white" : "text-slate-400"}>
+                          {opt.icon}
+                        </span>
+                      )}
+                      {opt.badge && (
+                        <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
+                          isSelected
+                            ? "bg-white/20 text-white border border-white/20"
+                            : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
+                        }`}>
+                          {opt.badge}
+                        </span>
+                      )}
+                      <span className="truncate text-left font-bold">{opt.label}</span>
+                    </div>
+                    {isSelected && <Check size={18} strokeWidth={3} className="shrink-0" />}
+                  </button>
+                );
+              })}
+
+              {filteredOptions.length === 0 && (
+                <div className="py-8 text-center text-xs font-semibold text-slate-400">
+                  No matching options found
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )
+    ) : (
+      coords ? createPortal(
+        <div
+          ref={popoverRef}
+          style={{
+            position: 'fixed',
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            width: `${coords.width}px`,
+            maxWidth: `calc(100vw - 24px)`,
+            maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '280px',
+            transformOrigin: coords.transformOrigin || 'top',
+            zIndex: 9999999
+          }}
+          className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl rounded-2xl p-1.5 space-y-1 overflow-y-auto font-sans min-w-[320px] custom-scrollbar animate-fade-in"
+        >
+          {options.map((opt) => {
+            const isSelected = String(opt.value) === String(value);
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${isSelected
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                    : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
+                  }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {opt.icon && (
+                    <span className={isSelected ? "text-white" : "text-slate-400"}>
+                      {opt.icon}
+                    </span>
+                  )}
+                  {opt.badge && (
+                    <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${isSelected
+                        ? "bg-white/20 text-white border border-white/20"
+                        : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
+                      }`}>
+                      {opt.badge}
+                    </span>
+                  )}
+                  <span className="whitespace-normal leading-snug">{opt.label}</span>
+                </div>
+                {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0 ml-1" />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      ) : null
+    )
   ) : null;
 
   return (

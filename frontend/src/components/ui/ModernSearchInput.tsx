@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2 } from 'lucide-react';
 import {
@@ -8,6 +8,7 @@ import {
 } from '../../utils/filterUtils';
 import { getCachedStudents } from '../../utils/rosterCache';
 import api from '../../services/api';
+import { useTypewriterPlaceholder } from '../../hooks/useTypewriterPlaceholder';
 
 export interface ModernSearchInputProps {
   value: string;
@@ -17,6 +18,8 @@ export interface ModernSearchInputProps {
   onSelectStudent?: (student: any) => void;
   enableAutocomplete?: boolean;
   placeholder?: string;
+  placeholders?: string[];
+  enableTypewriter?: boolean;
   className?: string;
   inputClassName?: string;
   id?: string;
@@ -73,6 +76,8 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
   onSelectStudent,
   enableAutocomplete = true,
   placeholder = 'Search...',
+  placeholders,
+  enableTypewriter = true,
   className = '',
   inputClassName = '',
   id,
@@ -89,6 +94,33 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<any>(null);
+
+  // Typewriter animated placeholder cycling hints letter-by-letter
+  const activePlaceholders = useMemo(() => {
+    if (placeholders && placeholders.length > 0) return placeholders;
+    if (placeholder && placeholder !== 'Search...' && placeholder !== 'Search') {
+      return [
+        placeholder,
+        'Search student name...',
+        'Search reg no (e.g. 7376...)',
+        'Search username...',
+        'Search LeetCode handle...',
+      ];
+    }
+    return [
+      'Search student name...',
+      'Search reg no (e.g. 7376...)',
+      'Search username...',
+      'Search LeetCode handle...',
+      'Search department (Cyber Security, IoT, IT)...',
+    ];
+  }, [placeholder, placeholders]);
+
+  const animatedPlaceholder = useTypewriterPlaceholder(
+    activePlaceholders,
+    enableTypewriter,
+    Boolean(disabled || inputValue.trim().length > 0)
+  );
 
   // Sync external value changes
   useEffect(() => {
@@ -134,13 +166,16 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
       const matched = pool.filter((st: any) => {
         const name = (st.name || '').toLowerCase();
         const reg = (st.reg_no || '').toLowerCase();
+        const username = (st.username || st.leetcode_username || st.canonical_username || st.handle || '').toLowerCase();
         const nameClean = name.replace(/[^a-z0-9]/g, '');
         const regClean = reg.replace(/[^a-z0-9]/g, '');
+        const usernameClean = username.replace(/[^a-z0-9]/g, '');
 
         return (
           name.includes(q) ||
           reg.includes(q) ||
-          (qClean && (nameClean.includes(qClean) || regClean.includes(qClean)))
+          username.includes(q) ||
+          (qClean && (nameClean.includes(qClean) || regClean.includes(qClean) || usernameClean.includes(qClean)))
         );
       });
 
@@ -150,9 +185,11 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
         const bReg = (b.reg_no || '').toLowerCase();
         const aName = (a.name || '').toLowerCase();
         const bName = (b.name || '').toLowerCase();
+        const aUser = (a.username || a.leetcode_username || a.handle || '').toLowerCase();
+        const bUser = (b.username || b.leetcode_username || b.handle || '').toLowerCase();
 
-        const aExactPrefix = aReg.startsWith(q) || aName.startsWith(q);
-        const bExactPrefix = bReg.startsWith(q) || bName.startsWith(q);
+        const aExactPrefix = aReg.startsWith(q) || aName.startsWith(q) || aUser.startsWith(q);
+        const bExactPrefix = bReg.startsWith(q) || bName.startsWith(q) || bUser.startsWith(q);
 
         if (aExactPrefix && !bExactPrefix) return -1;
         if (!aExactPrefix && bExactPrefix) return 1;
@@ -303,7 +340,7 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={animatedPlaceholder || placeholder}
           disabled={disabled}
           autoFocus={autoFocus}
           className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left ${
@@ -415,11 +452,19 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
                             <HighlightMatch text={name} query={inputValue} />
                           </div>
 
-                          {/* Register Number + Academic Year */}
+                          {/* Register Number + LeetCode Username + Academic Year */}
                           <div className="flex items-center flex-wrap gap-1.5 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                             <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
                               <HighlightMatch text={regNo} query={inputValue} />
                             </span>
+                            {(student.username || student.leetcode_username) && (
+                              <>
+                                <span className="text-slate-300 dark:text-slate-600">•</span>
+                                <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">
+                                  @<HighlightMatch text={student.username || student.leetcode_username} query={inputValue} />
+                                </span>
+                              </>
+                            )}
                             <span className="text-slate-300 dark:text-slate-600">•</span>
                             <span className="font-semibold text-slate-600 dark:text-slate-400">
                               {academicYear}

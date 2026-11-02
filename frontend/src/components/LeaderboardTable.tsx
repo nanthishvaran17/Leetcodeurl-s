@@ -7,7 +7,7 @@ import { studentLiveStore } from '../stores/studentLiveStore';
 import { FastStudentRow, LEADERBOARD_TABLE_GRID_STYLE, getRankBadgeInfo } from './FastStudentRow';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 
-import { ExternalLink, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Award, CheckCircle2, TrendingUp, BookOpen, Star, Activity } from 'lucide-react';
+import { ExternalLink, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3, ShieldAlert, X, Clock, Award, CheckCircle2, TrendingUp, BookOpen, Star, Activity, Trophy, Hash, User, GraduationCap, Code2, Flame, Sliders } from 'lucide-react';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
 import { StudentEditOverlay } from './StudentEditOverlay';
@@ -627,48 +627,81 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
 
       <div className="responsive-table-container w-full min-w-0 overflow-x-hidden md:overflow-x-auto md:rounded-2xl md:border md:border-slate-200 md:dark:border-navy-800 md:shadow-sm md:bg-white md:dark:bg-navy-950 flex flex-col space-y-4 md:space-y-0">
-        {/* Table Header Wrapper (Sticky) */}
+        {/* Table Header Wrapper (Sticky, Executive Clean Light & Dark UI) */}
         <div
-          className="!hidden md:!grid bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center py-3.5"
+          className="!hidden md:!grid bg-slate-100/95 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-black border-b-2 border-slate-200/90 dark:border-navy-700/90 uppercase tracking-wider text-xs sm:text-[13px] w-full min-w-full md:min-w-[1150px] items-center min-h-[62px] py-4.5 sm:py-5 md:rounded-t-2xl shadow-xs select-none"
           style={LEADERBOARD_TABLE_GRID_STYLE}
         >
           {/* 1. Checkbox */}
           <div className="px-3 flex items-center justify-center">
-            <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+            <input 
+              type="checkbox" 
+              checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} 
+              onChange={toggleAll} 
+              className="rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-navy-800 text-brand-600 focus:ring-brand-500 w-4.5 h-4.5 cursor-pointer transition-all hover:border-brand-500" 
+              title="Select / Deselect all students"
+            />
           </div>
 
           {/* 2. Rank */}
-          <div className="px-3 text-left">Rank</div>
+          <div className="px-3 text-left flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
+            <span className="truncate">Rank</span>
+          </div>
 
           {/* 3. Register No */}
-          <div className="px-3 text-left">Register No</div>
+          <div className="px-3 text-left flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <Hash className="w-4 h-4 text-indigo-500 shrink-0" />
+            <span className="truncate">Register No</span>
+          </div>
 
           {/* 4. Student */}
-          <div className="px-3 flex items-center space-x-3 text-left min-w-0">
-            <div className="w-8 shrink-0"></div>
-            <span>Student</span>
+          <div className="px-3 flex items-center gap-2 text-left min-w-0 text-slate-800 dark:text-slate-100">
+            <User className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+            <span className="truncate">Student</span>
           </div>
 
           {/* 5. Dept / Year */}
-          <div className="px-3 text-left min-w-0">Dept / Year</div>
+          <div className="px-3 text-left min-w-0 flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <GraduationCap className="w-4 h-4 text-purple-500 shrink-0" />
+            <span className="truncate">Dept / Year</span>
+          </div>
 
           {/* 6. LeetCode Handle */}
-          <div className="px-3 text-left min-w-0">LeetCode Handle</div>
+          <div className="px-3 text-left min-w-0 flex items-center gap-2 text-slate-800 dark:text-slate-100">
+            <Code2 className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="truncate">LeetCode Handle</span>
+          </div>
 
           {/* 7. Solved */}
-          <div className="px-3 text-center">Solved</div>
+          <div className="px-3 text-center flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-400 font-black">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="truncate">Solved</span>
+          </div>
 
           {/* 8. Contest */}
-          <div className="px-3 text-center">Contest</div>
+          <div className="px-3 text-center flex items-center justify-center gap-2 text-rose-700 dark:text-rose-400 font-black">
+            <Flame className="w-4 h-4 text-rose-500 shrink-0" />
+            <span className="truncate">Contest</span>
+          </div>
 
           {/* 9. Rating */}
-          <div className="px-3 text-center">Rating</div>
+          <div className="px-3 text-center flex items-center justify-center gap-2 text-amber-700 dark:text-amber-400 font-black">
+            <Star className="w-4 h-4 text-amber-500 fill-amber-500/20 shrink-0" />
+            <span className="truncate">Rating</span>
+          </div>
 
           {/* 10. Contest Rank */}
-          <div className="px-3 text-center">Contest Rank</div>
+          <div className="px-3 text-center flex items-center justify-center gap-2 text-indigo-700 dark:text-indigo-400 font-black">
+            <Award className="w-4 h-4 text-indigo-500 shrink-0" />
+            <span className="truncate">Contest Rank</span>
+          </div>
 
           {/* 11. Actions */}
-          <div className="px-3 text-center">Actions</div>
+          <div className="px-3 text-center flex items-center justify-center gap-2 text-slate-700 dark:text-slate-300 font-black">
+            <Sliders className="w-4 h-4 text-slate-500 shrink-0" />
+            <span className="truncate">Actions</span>
+          </div>
         </div>
 
         {/* Virtualized Body */}

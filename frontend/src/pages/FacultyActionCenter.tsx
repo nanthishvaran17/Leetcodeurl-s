@@ -86,7 +86,10 @@ const CustomSelect: React.FC<{
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.value === value);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const touchStartY = React.useRef<number | null>(null);
   const [dropdownSide, setDropdownSide] = useState<'left' | 'right'>(alignRight ? 'right' : 'left');
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const updateAlignment = useCallback(() => {
     if (containerRef.current) {
@@ -95,8 +98,8 @@ const CustomSelect: React.FC<{
       const expectedMenuWidth = 280;
 
       // Smart boundary check:
-      // 1. If opening right-aligned would overflow the left edge of viewport (e.g. mobile left column), align left.
-      // 2. If opening left-aligned would overflow the right edge of viewport (e.g. mobile right column), align right.
+      // 1. If opening right-aligned would overflow the left edge of viewport, align left.
+      // 2. If opening left-aligned would overflow the right edge of viewport, align right.
       // 3. Otherwise, use alignRight preference.
       if (rect.right - expectedMenuWidth < 8) {
         setDropdownSide('left');
@@ -108,35 +111,96 @@ const CustomSelect: React.FC<{
     }
   }, [alignRight]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      updateAlignment();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateAlignment]);
+
   const toggleDropdown = () => {
     if (!open) {
+      setSearchQuery('');
       updateAlignment();
     }
     setOpen(prev => !prev);
   };
 
-  // Close on outside click and update alignment on resize
+  // Lock body scroll when mobile bottom sheet is open
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+    if (open && isMobile) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [open, isMobile]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
         setOpen(false);
       }
     };
     if (open) {
-      document.addEventListener('mousedown', handleClick);
-      window.addEventListener('resize', updateAlignment);
+      window.addEventListener('keydown', handleKeyDown);
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      window.removeEventListener('resize', updateAlignment);
-    };
-  }, [open, updateAlignment]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
+
+  // Close on outside click for desktop
+  useEffect(() => {
+    if (!isMobile && open) {
+      const handleClick = (e: MouseEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          setOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClick);
+      return () => {
+        document.removeEventListener('mousedown', handleClick);
+      };
+    }
+  }, [open, isMobile]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current !== null) {
+      const diffY = e.touches[0].clientY - touchStartY.current;
+      if (diffY > 60) {
+        setOpen(false);
+        touchStartY.current = null;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+  };
+
+  const filteredOptions = searchQuery.trim()
+    ? options.filter(opt => {
+        const q = searchQuery.toLowerCase();
+        return (
+          opt.label.toLowerCase().includes(q) ||
+          (opt.shortLabel && opt.shortLabel.toLowerCase().includes(q)) ||
+          (opt.badge && opt.badge.toLowerCase().includes(q))
+        );
+      })
+    : options;
 
   return (
     <div className="relative flex-1 w-full md:w-auto md:flex-initial min-w-0 md:min-w-[102px]" ref={containerRef}>
       <button
         onClick={toggleDropdown}
-        className={`flex items-center justify-between gap-1.5 sm:gap-2 w-full sm:w-auto md:min-w-[115px] lg:min-w-[125px] xl:min-w-[135px] px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
+        className={`flex items-center justify-between gap-1.5 sm:gap-2 w-full sm:w-auto md:min-w-[115px] lg:min-w-[125px] xl:min-w-[135px] px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs active:scale-95 ${
           open 
             ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
             : value 
@@ -158,7 +222,8 @@ const CustomSelect: React.FC<{
         <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${open ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
       </button>
 
-      {open && (
+      {/* Desktop Dropdown Popover */}
+      {open && !isMobile && (
         <div className={`absolute z-50 top-[110%] ${dropdownSide === 'right' ? 'right-0' : 'left-0'} w-[280px] sm:min-w-[320px] max-w-[calc(100vw-24px)] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
           <button
             onClick={() => { onChange(''); setOpen(false); }}
@@ -207,6 +272,141 @@ const CustomSelect: React.FC<{
             })}
           </div>
         </div>
+      )}
+
+      {/* Mobile Native-Style Bottom Sheet Drawer */}
+      {open && isMobile && createPortal(
+        <div className="fixed inset-0 z-[100000] flex flex-col justify-end isolate">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Bottom Sheet Drawer Container */}
+          <div 
+            className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+            style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Grab Handle Header area with swipe down to dismiss */}
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+            >
+              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+            </div>
+
+            {/* Title Header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-xs border border-indigo-100 dark:border-indigo-900/50">
+                  {icon || <SlidersHorizontal size={18} />}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                    {placeholder}
+                  </h3>
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                    {selected ? `Current: ${selected.label}` : 'Select a filter option'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick Search for large option sets (e.g. > 4 items) */}
+            {options.length > 4 && (
+              <div className="px-4 pt-3 pb-1 shrink-0">
+                <div className="relative flex items-center">
+                  <Search size={15} className="absolute left-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder={`Search ${placeholder.toLowerCase()}...`}
+                    className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500 transition-colors"
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Options List */}
+            <div className="overflow-y-auto px-4 py-3 space-y-2 overscroll-contain flex-1">
+              {/* Default / Reset button (All Priorities / All Statuses etc) */}
+              {!searchQuery && (
+                <button
+                  onClick={() => { onChange(''); setOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                    !value 
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' 
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={!value ? 'text-white' : 'text-slate-400'}>{icon}</span>
+                    <span className="font-extrabold">{placeholder}</span>
+                  </div>
+                  {!value && <Check size={18} strokeWidth={3} className="shrink-0" />}
+                </button>
+              )}
+
+              {/* Individual Options */}
+              {filteredOptions.map((opt) => {
+                const isSelected = value === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => { onChange(opt.value); setOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' 
+                        : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={isSelected ? 'text-white' : 'text-slate-400'}>{opt.icon}</span>
+                      {opt.badge && (
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0 ${
+                          isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                        }`}>
+                          {opt.badge}
+                        </span>
+                      )}
+                      <span className="truncate text-left font-bold">{opt.label}</span>
+                    </div>
+                    {isSelected && <Check size={18} strokeWidth={3} className="shrink-0" />}
+                  </button>
+                );
+              })}
+
+              {filteredOptions.length === 0 && (
+                <div className="py-8 text-center text-xs font-semibold text-slate-400">
+                  No matching options found
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -1210,7 +1410,11 @@ export const FacultyActionCenter: React.FC = () => {
       const res = await triggerSignalDetection();
       setSyncMsg(`${res.new_signals_created} new, ${res.existing_signals_updated} updated`);
       await loadData();
-    } catch { setSyncMsg('Sync failed'); }
+      setTimeout(() => setSyncMsg(''), 5000);
+    } catch {
+      setSyncMsg('Sync failed');
+      setTimeout(() => setSyncMsg(''), 4000);
+    }
     finally { setSyncing(false); }
   };
 
@@ -1233,40 +1437,45 @@ export const FacultyActionCenter: React.FC = () => {
 
   return (
     <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-6 md:space-y-7 pb-32 sm:pb-16 animate-fade-in font-sans">
-      {/* Executive Header Banner (Authoritative Dark OLED Gradient in all modes for crystal-clear readability) */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 shadow-2xl border border-indigo-500/30 mb-4 sm:mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white">
+      {/* Executive Header Banner (Original OLED Gradient with Rose-Amber-Brand Gradient Title + Top-Right Glass Sync Control) */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl px-5 py-6 sm:px-8 sm:py-7 md:py-8 shadow-2xl border border-indigo-500/30 mb-5 sm:mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white min-h-[125px] sm:min-h-[145px] flex flex-col justify-center">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-
-            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-3 text-white drop-shadow-sm">
+        <div className="relative z-10 flex items-start justify-between gap-3 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3 max-w-xl flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-2 sm:gap-3 text-white drop-shadow-sm">
               <span className="text-white">Faculty</span> <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-200/90 font-medium leading-relaxed">
               {kpis?.subtitle || 'Real-time student intervention & mentoring management · Detect, Prioritize, Assign, Resolve'}
             </p>
+
+            {syncMsg && (
+              <div className="pt-1.5">
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-white/10 backdrop-blur-md border ${syncMsg.includes('failed') ? 'border-rose-400/40 text-rose-300' : 'border-emerald-400/40 text-emerald-300'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${syncMsg.includes('failed') ? 'bg-rose-400' : 'bg-emerald-400'} animate-pulse`} />
+                  <span>{syncMsg}</span>
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {syncMsg && (
-              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 ${syncMsg.includes('failed') ? 'text-rose-400' : 'text-emerald-400'}`}>
-                {syncMsg}
+          {/* Elegant Frosted Glass Sync Control in Top-Right */}
+          <div className="shrink-0 pt-0.5 sm:pt-1">
+            <button
+              type="button"
+              onClick={handleSync}
+              disabled={syncing}
+              title="Resync live student signals and refresh queue"
+              className="group inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/15 hover:border-white/30 backdrop-blur-md text-white text-xs font-bold transition-all duration-200 cursor-pointer disabled:opacity-50 shadow-sm active:scale-95 touch-manipulation"
+            >
+              <RefreshCw size={14} className={`text-amber-300 transition-transform duration-500 ${syncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+              <span className="text-xs font-semibold tracking-wide">
+                {syncing ? 'Syncing...' : 'Sync'}
               </span>
-            )}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={handleSync}
-                disabled={syncing}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-glass hover:shadow-indigo-500/25 transition-all duration-300 cursor-pointer disabled:opacity-50 border border-white/10 active:scale-95"
-              >
-                <RefreshCw size={14} className={syncing ? 'animate-spin text-amber-300' : 'text-amber-300'} />
-                <span>{syncing ? 'Resyncing All Data...' : 'Force Sync'}</span>
-              </button>
-            )}
+            </button>
           </div>
         </div>
       </div>

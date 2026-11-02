@@ -4,7 +4,7 @@ import {
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Building2, LayoutList, Calendar,
   Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User,
-  SlidersHorizontal, Filter, RotateCcw, School
+  SlidersHorizontal, Filter, RotateCcw, School, GraduationCap
 } from 'lucide-react';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -342,6 +342,22 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     { value: '4th Year', label: '4th Year (IV)', pillText: 'Y4' },
   ], []);
 
+  const quickDepts = useMemo(() => {
+    const defaultDepts = ['ALL', 'CSE(CS)', 'CSE(IOT)', 'IT', 'EEE'];
+    if (!departments || departments.length === 0) return defaultDepts;
+    const dbCodes = departments.map((d: any) => d.code).filter(Boolean);
+    const combined = Array.from(new Set([...defaultDepts, ...dbCodes]));
+    return combined;
+  }, [departments]);
+
+  const quickYears = useMemo(() => [
+    { value: 'ALL', label: 'All Years', short: 'All' },
+    { value: '1st Year', label: '1st Year (I)', short: '1st Yr' },
+    { value: '2nd Year', label: '2nd Year (II)', short: '2nd Yr' },
+    { value: '3rd Year', label: '3rd Year (III)', short: '3rd Yr' },
+    { value: '4th Year', label: '4th Year (IV)', short: '4th Yr' },
+  ], []);
+
   // LeetCode URL validation (debounced, 900ms) 
   const validateLcUrl = useCallback(async (url: string) => {
     const trimmed = url.trim();
@@ -623,7 +639,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       </div>
 
       {/* Search & Comprehensive Responsive Filter Bar — Sticky Frosted Glass */}
-      <div className="sticky top-14 sm:top-16 z-20 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xs sm:backdrop-blur-2xl rounded-2xl p-3.5 sm:p-5 shadow-md border border-slate-200/90 dark:border-white/[0.08] space-y-3 mb-6 sm:mb-8 transition-all">
+      <div className="bg-white dark:bg-navy-950 rounded-2xl p-2.5 sm:p-3.5 shadow-sm border border-slate-200 dark:border-navy-800 space-y-2 mb-3 sm:mb-4 transition-all">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Search + Mobile Filter Button Container */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -656,7 +672,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
           {/* Inline Filter Controls - Hidden on Mobile (Drawer used instead), Clean Inline on Desktop */}
           <div className="hidden lg:flex items-center gap-2.5 shrink-0">
-                        {/* College Campus Quick Segmented Pill */}
+            {/* College Campus Quick Segmented Pill */}
             <div className="flex items-center bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0 self-center">
               {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
                 const isSelected = (filters.college || 'ALL') === col;
@@ -710,7 +726,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
 
         {/* Results Counter & Active Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
           <div className="min-w-0 flex-1 break-words flex flex-wrap items-center gap-2">
             {filters.isFilteringActive ? (
               <span>
@@ -839,7 +855,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
       {/* Leaderboard / Student Master Table / Flip Cards */}
       {serverTotalCount > 0 && (
-        <div className="pt-4 sm:pt-5">
+        <div className="pt-0">
           {viewMode === 'table' ? (
             <LeaderboardTable
               students={displayedStudents}

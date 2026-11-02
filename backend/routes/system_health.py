@@ -145,8 +145,8 @@ def get_system_health(db: Session = Depends(get_db)):
     firestore_ok = True
     firestore_err = None
     try:
-        from backend.services.firebase import get_firestore_client
-        fs = get_firestore_client()
+        from backend.services.firestore_service import firestore_service
+        fs = firestore_service if firestore_service.is_initialized else None
         if fs is None:
             firestore_ok = True  # Optional service
     except Exception as fe:
@@ -172,11 +172,26 @@ def get_system_health(db: Session = Depends(get_db)):
     try:
         import urllib.request
         req = urllib.request.Request("https://leetcode.com/graphql", headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=1.0) as response:
-            if response.status not in (200, 400, 405): # GraphQL accepts POST
+        import urllib.error
+        try:
+            with urllib.request.urlopen(req, timeout=3.0) as response:
+                if response.status not in (200, 400, 405):
+                    leetcode_ok = False
+                    leetcode_code = "LEETCODE_API_ERROR"
+                    leetcode_err = f"LeetCode GraphQL endpoint returned HTTP {response.status}"
+        except urllib.error.HTTPError as he:
+            if he.code in (200, 400, 405):
+                leetcode_ok = True
+            elif he.code == 429:
                 leetcode_ok = False
+                has_warnings = True
+                leetcode_code = "LEETCODE_RATE_LIMITED"
+                leetcode_err = "LeetCode API rate limit encountered"
+            else:
+                leetcode_ok = False
+                has_warnings = True
                 leetcode_code = "LEETCODE_API_ERROR"
-                leetcode_err = f"LeetCode GraphQL endpoint returned HTTP {response.status}"
+                leetcode_err = f"LeetCode GraphQL endpoint returned HTTP {he.code}"
     except Exception as le:
         leetcode_ok = False
         has_warnings = True
@@ -207,18 +222,26 @@ def get_system_health(db: Session = Depends(get_db)):
     scheduler_err = None
     try:
         from backend.models import AdminSettingsModel
-        hb = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "worker_heartbeat").first()
-        if hb:
-            last_hb_utc = datetime.datetime.fromisoformat(hb.value.replace('Z', '+00:00'))
-            if last_hb_utc.tzinfo is None:
-                last_hb_utc = last_hb_utc.replace(tzinfo=datetime.timezone.utc)
-            
-            if (now_utc - last_hb_utc).total_seconds() < 120:
-                scheduler_ok = True
-            else:
-                scheduler_err = f"Worker heartbeat is stale. Last seen: {hb.value}"
+        from backend.services.heartbeat_service import get_worker_heartbeat
+        wb = get_worker_heartbeat()
+        if wb and wb.get("status") in ("RUNNING", "IDLE", "BUSY") and wb.get("seconds_since_last_seen", 9999) < 600:
+            scheduler_ok = True
         else:
-            scheduler_err = "Worker heartbeat not found in database."
+            hb = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "worker_heartbeat").first()
+            if hb:
+                last_hb_utc = datetime.datetime.fromisoformat(hb.value.replace('Z', '+00:00'))
+                if last_hb_utc.tzinfo is None:
+                    last_hb_utc = last_hb_utc.replace(tzinfo=datetime.timezone.utc)
+                if (now_utc - last_hb_utc).total_seconds() < 300:
+                    scheduler_ok = True
+                else:
+                    scheduler_err = f"Worker heartbeat is stale. Last seen: {hb.value}"
+            else:
+                from backend.main import SCHEDULER_AVAILABLE
+                if SCHEDULER_AVAILABLE:
+                    scheduler_ok = True
+                else:
+                    scheduler_err = "Worker heartbeat idle"
     except Exception as se:
         scheduler_ok = False
         has_warnings = True

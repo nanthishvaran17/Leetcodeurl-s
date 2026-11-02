@@ -80,13 +80,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header 
+      <header
         className="sticky top-0 z-40 bg-white/90 dark:bg-[#070A14]/90 backdrop-blur-xl border-b border-slate-200/90 dark:border-white/[0.08] transition-all shadow-subtle dark:shadow-[0_4px_30px_rgba(0,0,0,0.6),inset_0_-1px_0_rgba(255,255,255,0.05)] pt-safe-top"
         style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)' }}
       >
         <div className="w-full max-w-full mx-auto px-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between min-h-[50px] sm:min-h-[56px] py-1 sm:py-1.5 gap-2 sm:gap-4">
-            
+
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
             <div className="flex items-center space-x-1.5 sm:space-x-3.5 min-w-0 flex-1">
               {(isAuthenticated || activeTab === "public") && (
@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {(freshness?.total_students || menteesCount !== null) ? (
                       <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-bold rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/25 whitespace-nowrap flex-shrink-0 items-center tracking-wide shadow-xs">
                         {menteesCount !== null && menteesCount > 0
-                          ? `${menteesCount} MENTEES` 
+                          ? `${menteesCount} MENTEES`
                           : `${freshness?.total_students || 0} STUDENTS`}
                       </span>
                     ) : null}

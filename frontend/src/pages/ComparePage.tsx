@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {  Swords, Award, ChevronRight, ChevronDown, Check, User, CheckCircle2, Search, Filter, RefreshCw, Building2, Users, BarChart3, TrendingUp, ArrowRightLeft, GraduationCap, School, Layers , X } from "lucide-react";
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { GlobalFilter } from '../components/GlobalFilter';
@@ -24,6 +25,40 @@ export const ComparePage: React.FC = () => {
   const [fighterBOpen, setFighterBOpen] = useState<boolean>(false);
   const [groupAOpen, setGroupAOpen] = useState<boolean>(false);
   const [groupBOpen, setGroupBOpen] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+  const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && (fighterAOpen || fighterBOpen)) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isMobile, fighterAOpen, fighterBOpen]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchMove = (e: React.TouchEvent, closeFn: () => void) => {
+    if (touchStartY.current !== null) {
+      const diffY = e.touches[0].clientY - touchStartY.current;
+      if (diffY > 60) {
+        closeFn();
+        touchStartY.current = null;
+      }
+    }
+  };
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+  };
   
   const { departments } = useDepartments();
   const { user } = useAuth();
@@ -54,17 +89,9 @@ export const ComparePage: React.FC = () => {
   const [searchA, setSearchA] = useState<string>('');
   const [searchB, setSearchB] = useState<string>('');
 
-  // Mobile Viewport Detector
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+  // Mobile Viewport Tabs
   const [mobileStudentTab, setMobileStudentTab] = useState<'MATRIX' | 'FIGHTER_A' | 'FIGHTER_B'>('MATRIX');
   const [mobileGroupTab, setMobileGroupTab] = useState<'MATRIX' | 'GROUP_A' | 'GROUP_B'>('MATRIX');
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Keyboard Escape listener to close dropdowns
   useEffect(() => {
@@ -506,52 +533,22 @@ export const ComparePage: React.FC = () => {
                 />
               </div>
 
-              {/* Year Filter — Premium Custom Dropdown */}
+              {/* Year Filter — Premium GlobalFilter with Mobile Bottom Sheet */}
               <div>
                 <label className="block text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Academic Year Level</label>
-                <div className={`relative ${yearOpen ? 'z-30' : 'z-10'}`}>
-                  <button
-                    type="button"
-                    onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
-                    className={`w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-xs ${
-                      yearOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400'
-                    }`}
-                  >
-                    <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">
-                      {selectedYear}
-                    </span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === '2' ? 'II Year (Batch 2025 - 2029)' : selectedYear === '3' ? 'III Year (Batch 2024 - 2028)' : 'IV Year (Batch 2023 - 2027)'}
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {yearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl shadow-xl max-h-64 overflow-y-auto">
-                      {[
-                        { value: 'ALL', code: 'ALL', label: 'All Academic Years' },
-                        { value: '2',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
-                        { value: '3', code: 'III', label: 'III Year (Batch 2024 - 2028)' },
-                        { value: '4',  code: 'IV',  label: 'IV Year (Batch 2023 - 2027)' },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setSelectedYear(opt.value); setYearOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors cursor-pointer ${
-                            selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-900'
-                          }`}
-                        >
-                          <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">{opt.code}</span>
-                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
-                          {selectedYear === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <GlobalFilter
+                  value={selectedYear}
+                  onChange={setSelectedYear}
+                  options={[
+                    { value: 'ALL', pillText: 'ALL', label: 'All Academic Years' },
+                    { value: '2',  pillText: 'II',  label: 'II Year (Batch 2025 - 2029)' },
+                    { value: '3', pillText: 'III', label: 'III Year (Batch 2024 - 2028)' },
+                    { value: '4',  pillText: 'IV',  label: 'IV Year (Batch 2023 - 2027)' },
+                  ]}
+                  icon={<GraduationCap className="w-4 h-4 text-brand-500" />}
+                  dropdownWidth="w-full sm:w-80"
+                  placeholder="All Academic Years"
+                />
               </div>
             </div>
           </div>
@@ -625,7 +622,8 @@ export const ComparePage: React.FC = () => {
                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${fighterAOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {fighterAOpen && (
+                {/* Desktop Dropdown Fighter A */}
+                {fighterAOpen && !isMobile && (
                   <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-brand-200 dark:border-navy-700 rounded-xl shadow-xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsA.length === 0 ? (
                       <div className="p-4 text-center text-xs font-bold text-slate-400">No matching student found</div>
@@ -663,6 +661,119 @@ export const ComparePage: React.FC = () => {
                       ))
                     )}
                   </div>
+                )}
+
+                {/* Mobile Bottom Sheet Drawer for Fighter A */}
+                {fighterAOpen && isMobile && createPortal(
+                  <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
+                    <div 
+                      className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+                      onClick={() => setFighterAOpen(false)}
+                    />
+                    <div 
+                      className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+                      style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+                    >
+                      <div 
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={(e) => handleTouchMove(e, () => setFighterAOpen(false))}
+                        onTouchEnd={handleTouchEnd}
+                        className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+                      >
+                        <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+                      </div>
+
+                      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-100 dark:border-brand-900/50">
+                            <User size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                              Select Fighter 1 (Student A)
+                            </h3>
+                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                              {studentA ? `Current: ${studentA.name}` : `${filteredStudentsA.length} students available`}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setFighterAOpen(false)}
+                          className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+
+                      <div className="px-4 pt-3 pb-2 shrink-0">
+                        <div className="relative flex items-center">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                          <input
+                            type="text"
+                            value={searchA}
+                            onChange={(e) => setSearchA(e.target.value)}
+                            placeholder="Search Student A by name or reg no..."
+                            className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-brand-500"
+                          />
+                          {searchA && (
+                            <button 
+                              type="button" 
+                              onClick={() => setSearchA('')}
+                              className="absolute right-3 text-slate-400 hover:text-slate-600 p-0.5"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="overflow-y-auto px-4 py-2 space-y-2 overscroll-contain flex-1">
+                        {filteredStudentsA.length === 0 ? (
+                          <div className="p-8 text-center text-xs font-bold text-slate-400">No matching student found</div>
+                        ) : (
+                          filteredStudentsA.map((s) => {
+                            const isSelected = studentAId === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => { handleSelectA(Number(s.id)); setFighterAOpen(false); }}
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-600/30'
+                                    : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className={`px-2 py-0.5 rounded-md font-mono font-black text-[10px] shrink-0 ${
+                                    isSelected ? 'bg-white/20 text-white' : 'bg-brand-500/15 text-brand-600 dark:text-brand-300'
+                                  }`}>
+                                    #{s.college_rank || '—'}
+                                  </span>
+                                  <div className="min-w-0 text-left">
+                                    <p className="truncate font-extrabold text-xs">{s.name}</p>
+                                    <p className={`text-[10px] font-mono ${isSelected ? 'text-brand-100' : 'text-slate-400'}`}>
+                                      {s.reg_no} • {s.department?.code || 'DEPT'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                                    isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                  }`}>
+                                    {s.stats?.total_solved || 0} Solved
+                                  </span>
+                                  {isSelected && <Check size={18} strokeWidth={3} />}
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
                 )}
               </div>
 
@@ -748,7 +859,8 @@ export const ComparePage: React.FC = () => {
                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${fighterBOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {fighterBOpen && (
+                {/* Desktop Dropdown Fighter B */}
+                {fighterBOpen && !isMobile && (
                   <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 rounded-xl shadow-xl max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsB.length === 0 ? (
                       <div className="p-4 text-center text-xs font-bold text-slate-400">No matching student found</div>
@@ -786,6 +898,119 @@ export const ComparePage: React.FC = () => {
                       ))
                     )}
                   </div>
+                )}
+
+                {/* Mobile Bottom Sheet Drawer for Fighter B */}
+                {fighterBOpen && isMobile && createPortal(
+                  <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
+                    <div 
+                      className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
+                      onClick={() => setFighterBOpen(false)}
+                    />
+                    <div 
+                      className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
+                      style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+                    >
+                      <div 
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={(e) => handleTouchMove(e, () => setFighterBOpen(false))}
+                        onTouchEnd={handleTouchEnd}
+                        className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
+                      >
+                        <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+                      </div>
+
+                      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/50">
+                            <User size={18} />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-black text-base text-slate-900 dark:text-white truncate">
+                              Select Fighter 2 (Student B)
+                            </h3>
+                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                              {studentB ? `Current: ${studentB.name}` : `${filteredStudentsB.length} students available`}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => setFighterBOpen(false)}
+                          className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+
+                      <div className="px-4 pt-3 pb-2 shrink-0">
+                        <div className="relative flex items-center">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                          <input
+                            type="text"
+                            value={searchB}
+                            onChange={(e) => setSearchB(e.target.value)}
+                            placeholder="Search Student B by name or reg no..."
+                            className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500"
+                          />
+                          {searchB && (
+                            <button 
+                              type="button" 
+                              onClick={() => setSearchB('')}
+                              className="absolute right-3 text-slate-400 hover:text-slate-600 p-0.5"
+                            >
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="overflow-y-auto px-4 py-2 space-y-2 overscroll-contain flex-1">
+                        {filteredStudentsB.length === 0 ? (
+                          <div className="p-8 text-center text-xs font-bold text-slate-400">No matching student found</div>
+                        ) : (
+                          filteredStudentsB.map((s) => {
+                            const isSelected = studentBId === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => { handleSelectB(Number(s.id)); setFighterBOpen(false); }}
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
+                                    : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className={`px-2 py-0.5 rounded-md font-mono font-black text-[10px] shrink-0 ${
+                                    isSelected ? 'bg-white/20 text-white' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-300'
+                                  }`}>
+                                    #{s.college_rank || '—'}
+                                  </span>
+                                  <div className="min-w-0 text-left">
+                                    <p className="truncate font-extrabold text-xs">{s.name}</p>
+                                    <p className={`text-[10px] font-mono ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
+                                      {s.reg_no} • {s.department?.code || 'DEPT'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded ${
+                                    isSelected ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                  }`}>
+                                    {s.stats?.total_solved || 0} Solved
+                                  </span>
+                                  {isSelected && <Check size={18} strokeWidth={3} />}
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
                 )}
               </div>
 

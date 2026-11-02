@@ -8,6 +8,7 @@ import {
   formatStudentYearBadge
 } from '../utils/filterUtils';
 import api from '../services/api';
+import { useTypewriterPlaceholder } from '../hooks/useTypewriterPlaceholder';
 
 interface StudentPerformanceSearchProps {
   value: string;
@@ -76,6 +77,19 @@ export const StudentPerformanceSearch: React.FC<StudentPerformanceSearchProps> =
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<any>(null);
+
+  // Typewriter animated placeholder (character-by-character)
+  const animatedPlaceholder = useTypewriterPlaceholder(
+    [
+      'Search student name...',
+      'Search reg no (e.g. 732224CC031)...',
+      'Search username...',
+      'Search LeetCode handle...',
+      'Search department (Cyber Security, IoT, IT)...',
+    ],
+    true,
+    Boolean(inputValue.trim().length > 0)
+  );
 
   // Sync external value changes (e.g. Filter Reset)
   useEffect(() => {
@@ -276,7 +290,7 @@ export const StudentPerformanceSearch: React.FC<StudentPerformanceSearchProps> =
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || 'Search name, reg no (e.g. 732224CC031)...'}
+          placeholder={animatedPlaceholder || placeholder || 'Search name, reg no (e.g. 732224CC031)...'}
           className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left ${
             (inputValue || isLoading) ? 'pr-9' : 'pr-3.5'
           }`}

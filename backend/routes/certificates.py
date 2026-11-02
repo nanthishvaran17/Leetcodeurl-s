@@ -303,22 +303,7 @@ def verify_certificate_public(
 
     try:
         clean_lookup = raw_id.strip()
-        # Check if clean_lookup matches a student register number directly or format
-        has_reg_pattern = bool(re.search(r'7322\d{2}[A-Za-z]{2,4}\d{1,4}', clean_lookup, re.IGNORECASE))
-        direct_student_match = None
-        if not is_staff_id and not ("CERT" in clean_lookup.upper() or "FORENSIC" in clean_lookup.upper()):
-            direct_student_match = db.query(Student).filter(
-                (Student.reg_no.ilike(clean_lookup)) |
-                (Student.username.ilike(clean_lookup))
-            ).first()
 
-        is_student_pass = (
-            type == 'student_pass' or
-            "PASS" in clean_lookup.upper() or
-            (role and role.upper() == 'STUDENT') or
-            has_reg_pattern or
-            bool(direct_student_match)
-        )
         is_staff_id = (
             type == 'id_card' or
             clean_lookup.upper().startswith("NEC-STAFF-") or
@@ -328,6 +313,25 @@ def verify_certificate_public(
             clean_lookup.upper().startswith("NEC-ADMIN-") or
             clean_lookup.upper().startswith("NEC-PRIN-") or
             (role and role.upper() in ["FACULTY", "STAFF", "ADMIN", "HOD"])
+        )
+
+        # Check if clean_lookup matches a student register number directly or format
+        has_reg_pattern = bool(re.search(r'(?:7322)?\d{2}[A-Za-z]{2,4}\d{1,4}', clean_lookup, re.IGNORECASE))
+        direct_student_match = None
+        if not is_staff_id and not ("CERT" in clean_lookup.upper() or "FORENSIC" in clean_lookup.upper()):
+            direct_student_match = db.query(Student).filter(
+                (Student.reg_no.ilike(clean_lookup)) |
+                (Student.reg_no.ilike(f"%{clean_lookup}%")) |
+                (Student.username.ilike(clean_lookup)) |
+                (Student.name.ilike(clean_lookup))
+            ).first()
+
+        is_student_pass = (
+            type == 'student_pass' or
+            "PASS" in clean_lookup.upper() or
+            (role and role.upper() == 'STUDENT') or
+            has_reg_pattern or
+            bool(direct_student_match)
         )
 
         # -------------------------------------------------------------

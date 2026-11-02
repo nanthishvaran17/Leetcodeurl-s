@@ -2188,15 +2188,23 @@ def get_contest_question_analytics(
 
 
 
-def _run_sync_in_background(session_id: int, dept: Optional[str] = None, year: Optional[str] = None):
-    # Separate DB session for background task
-    from backend.database import SessionLocal
-    db = SessionLocal()
+def execute_contest_sync(session_id: int, dept: Optional[str] = None, year: Optional[str] = None, db: Optional[Session] = None) -> Dict[str, Any]:
+    close_db = False
+    if db is None:
+        from backend.database import SessionLocal
+        db = SessionLocal()
+        close_db = True
     try:
         from backend.services.contest_reconciliation_service import Contest516ReconciliationService
-        from backend.services.weekly_session_manager import sync_single_historical_session
-        from backend.models import WeeklySession
+        from backend.services.official_contest_ranking_service import OfficialContestRankingService
+        from backend.models import WeeklySession, WeeklyPublicResult
         from backend.logger import logger
+
+        # 1. Baseline count before sync
+        prev_public_count = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.session_id == session_id,
+            WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"])
+        ).count()
 
         session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
         is_516 = False
@@ -2209,27 +2217,61 @@ def _run_sync_in_background(session_id: int, dept: Optional[str] = None, year: O
                 is_516 = True
 
         if is_516 or session_id == 21:
-            logger.info(f"Starting background reconciliation for Contest 516 (Session {session_id})")
+            logger.info(f"Starting reconciliation for Contest 516 (Session {session_id})")
             Contest516ReconciliationService.reconcile_contest(session_id, db)
-            logger.info(f"Completed background reconciliation for Contest 516 (Session {session_id})")
+            logger.info(f"Completed reconciliation for Contest 516 (Session {session_id})")
         else:
             logger.info(f"Starting universal official LeetCode ranking sync for Contest {c_name} (Session {session_id}) [Filter: {dept or 'ALL'}/{year or 'ALL'}]")
-            from backend.services.official_contest_ranking_service import OfficialContestRankingService
             OfficialContestRankingService.scan_and_sync_contest_sync(session_id, db, force_live=True, target_dept=dept, target_year=year)
 
-            _CONTEST_RAM_CACHE.clear()
-            from backend.cache import cache
-            from backend.services.canonical_contest_engine import invalidate_canonical_cache
-            invalidate_canonical_cache(session_id)
-            cache.clear()
-            logger.info(f"Completed official LeetCode ranking sync and cleared cache for Session {session_id}")
+        _CONTEST_RAM_CACHE.clear()
+        from backend.cache import cache
+        from backend.services.canonical_contest_engine import invalidate_canonical_cache
+        invalidate_canonical_cache(session_id)
+        cache.clear()
 
+        # 2. Count after sync
+        new_public_count = db.query(WeeklyPublicResult).filter(
+            WeeklyPublicResult.session_id == session_id,
+            WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"])
+        ).count()
+        delta = new_public_count - prev_public_count
+
+        return {
+            "success": True,
+            "sessionId": session_id,
+            "dept": dept or "ALL",
+            "year": year or "ALL",
+            "prev_count": prev_public_count,
+            "new_count": new_public_count,
+            "delta": delta,
+            "target_authentic": new_public_count,
+            "message": (
+                f"+{delta} new solvers added! (Total: {new_public_count})"
+                if delta > 0
+                else (f"Roster up to date with {new_public_count} verified solvers (0 new changes)." if delta == 0 else f"Total solvers updated to {new_public_count}")
+            )
+        }
     except Exception as e:
         from backend.logger import logger
-        logger.error(f"Background single session sync failed for {session_id}: {e}")
+        logger.error(f"Single session sync failed for {session_id}: {e}")
+        return {
+            "success": False,
+            "sessionId": session_id,
+            "error": str(e),
+            "prev_count": 0,
+            "new_count": 0,
+            "delta": 0,
+            "target_authentic": 0,
+            "message": f"Synchronization encountered an issue: {e}"
+        }
     finally:
         _CONTEST_RAM_CACHE.clear()
-        db.close()
+        if close_db:
+            db.close()
+
+def _run_sync_in_background(session_id: int, dept: Optional[str] = None, year: Optional[str] = None):
+    execute_contest_sync(session_id, dept, year)
 
 @router.post("/sessions/{session_id}/sync")
 def sync_single_weekly_contest(
@@ -2237,21 +2279,26 @@ def sync_single_weekly_contest(
     background_tasks: BackgroundTasks,
     dept: Optional[str] = Query(None),
     year: Optional[str] = Query(None),
+    wait: bool = Query(True),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Weekly Contest Sync"))
 ):
     """
     Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
     Optionally scoped to specific Department and Academic Year for lightning-fast targeted re-sync.
+    Computes and returns before/after solver delta (+10, 0, etc.) immediately.
     """
-    background_tasks.add_task(_run_sync_in_background, session_id, dept, year)
-    return {
-        "success": True,
-        "sessionId": session_id,
-        "dept": dept or "ALL",
-        "year": year or "ALL",
-        "message": f"Synchronization for session {session_id} (Filter: {dept or 'ALL'}/{year or 'ALL'}) successfully started in the background."
-    }
+    if wait:
+        return execute_contest_sync(session_id, dept, year, db)
+    else:
+        background_tasks.add_task(_run_sync_in_background, session_id, dept, year)
+        return {
+            "success": True,
+            "sessionId": session_id,
+            "dept": dept or "ALL",
+            "year": year or "ALL",
+            "message": f"Synchronization for session {session_id} started in background."
+        }
 
 @router.post("/sync-all")
 async def sync_all_weekly_contests(

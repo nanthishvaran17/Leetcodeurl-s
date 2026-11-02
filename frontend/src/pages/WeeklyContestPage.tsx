@@ -636,6 +636,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Live Contest Engine Real-Time State
   const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
+  // Solver Delta Tracking (+10 new solvers, delta difference on fetch/sync)
+  const [solverDelta, setSolverDelta] = useState<{ prev: number; current: number; delta: number } | null>(null);
   // NOTE: countdownSec / timeRemainingSec / nextUpdateTicker are now managed by isolated memo
   // components (ContestCountdown, LiveCountdownClock, NextUpdateTicker) to prevent 1-second
   // re-renders from cascading through the entire 3800-line component tree.
@@ -778,6 +780,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       // Silent retry
     }
   }, [selectedSessionId, currentSession?.status]);
+
+  // Load saved solver delta for selected session
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    try {
+      const saved = localStorage.getItem(`contest_delta_${selectedSessionId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Date.now() - (parsed.timestamp || 0) < 24 * 60 * 60 * 1000) {
+          setSolverDelta(parsed);
+          return;
+        }
+      }
+    } catch (_e) {}
+    setSolverDelta(null);
+  }, [selectedSessionId]);
 
   // Live Telemetry Auto-Poll: runs every 60s when session is LIVE or Sunday contest window
   useEffect(() => {
@@ -1250,6 +1268,26 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           setDepartmentStats(matRes.data?.departmentStats || null);
           setYearStats(matRes.data?.yearStats || null);
 
+          // Auto-track solver delta on fetch (e.g. 150 -> 160 => +10)
+          try {
+            const rawMetrics = matRes.data?.metrics;
+            const currentAttended = rawMetrics?.officialAttended ?? rawMetrics?.officialParticipants ?? (matRes.data?.items ? matRes.data.items.filter((x: any) => x.participation_status === 'PUBLIC_ATTENDED' || x.participation_status === 'PUBLIC' || x.status === 'PUBLIC').length : null);
+            if (typeof currentAttended === 'number' && requestedSessionId) {
+              const baselineKey = `contest_baseline_solvers_${requestedSessionId}`;
+              const prevSaved = localStorage.getItem(baselineKey);
+              if (prevSaved !== null) {
+                const prevNum = Number(prevSaved);
+                if (!isNaN(prevNum) && prevNum !== currentAttended) {
+                  const deltaVal = currentAttended - prevNum;
+                  const deltaObj = { prev: prevNum, current: currentAttended, delta: deltaVal, timestamp: Date.now() };
+                  setSolverDelta(deltaObj);
+                  localStorage.setItem(`contest_delta_${requestedSessionId}`, JSON.stringify(deltaObj));
+                }
+              }
+              localStorage.setItem(baselineKey, String(currentAttended));
+            }
+          } catch (_err) {}
+
           // Cache first page for instant re-opening
           if (currentPage === 1 && !debouncedSearchTerm) {
             setCachedContestData(`contest_matrix_${requestedSessionId}_${dept}_${year}_${attendance}_1`, matRes.data);
@@ -1331,24 +1369,46 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     setIsSyncing(true);
     setSyncStatusStage('Authenticating institutional resource…');
     try {
-      // Step 1: Pre-flight auth check & progression
       await new Promise(r => setTimeout(r, 400));
-      setSyncStatusStage('Syncing Weekly Contest…');
+      setSyncStatusStage('Scanning LeetCode records & solvers…');
 
+      const prevCount = stats.attendedRows || 0;
       const res = await api.post(`/contests/sessions/${selectedSessionId}/sync`, {}, { timeout: 180000 });
       setSyncSummary(res.data);
 
-      setSyncStatusStage('Sync completed successfully.');
-      setTimeout(() => setSyncStatusStage(''), 3000);
+      const delta = typeof res.data?.delta === 'number'
+        ? res.data.delta
+        : ((res.data?.new_count ?? res.data?.target_authentic ?? prevCount) - prevCount);
+      const newCount = res.data?.new_count ?? res.data?.target_authentic ?? (prevCount + delta);
 
-      // Reload matrix for the selected session
-      fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
+      const deltaObj = { prev: prevCount, current: newCount, delta, timestamp: Date.now() };
+      setSolverDelta(deltaObj);
+      try {
+        localStorage.setItem(`contest_delta_${selectedSessionId}`, JSON.stringify(deltaObj));
+        localStorage.setItem(`contest_baseline_solvers_${selectedSessionId}`, String(newCount));
+      } catch (_e) {}
 
+      if (delta > 0) {
+        setSyncStatusStage(`+${delta} New Solvers!`);
+      } else if (delta === 0) {
+        setSyncStatusStage('Up to Date (0 New)');
+      } else {
+        setSyncStatusStage('Sync Completed');
+      }
+      setTimeout(() => setSyncStatusStage(''), 4000);
+
+      // Invalidate caches & reload matrix for selected session
+      clearContestCache();
+      await fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
+
+      const activeName = activeSessionObj?.contestName || `Weekly Contest #${selectedSessionId}`;
       setNotification({
         isOpen: true,
         type: 'success',
-        title: 'Contest Synchronized',
-        message: `Successfully synchronized session ${selectedSessionId}. Validated ${res.data?.target_authentic || 0} authentic results.`
+        title: delta > 0 ? `+${delta} New Solvers Added!` : 'Contest Synchronized (Up to Date)',
+        message: delta > 0
+          ? `Successfully refreshed ${activeName}. Found +${delta} new verified solvers (Total increased from ${prevCount} to ${newCount}).`
+          : `Session ${activeName} is completely up to date. All ${newCount} verified students confirmed (0 new changes).`
       });
     } catch (err: any) {
       setSyncStatusStage('');
@@ -2149,6 +2209,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <span className="text-slate-400">
                     Last synced: {sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate || 'Live'}
                   </span>
+                  {solverDelta && (
+                    <span className={`inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded-full ${
+                      solverDelta.delta > 0 
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black' 
+                        : 'bg-slate-700/50 text-slate-300 border border-slate-600/30'
+                    }`}>
+                      {solverDelta.delta > 0 ? `+${solverDelta.delta} new` : '0 new'} ({solverDelta.current} verified)
+                    </span>
+                  )}
                 </>
               )}
             </div>
@@ -3706,6 +3775,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 {!showMobileStats && (
                   <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
                     {stats.attendedRows}/{stats.totalRows} Verified ({stats.totalParticipationPct}%)
+                    {solverDelta && solverDelta.delta > 0 && (
+                      <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                        (+{solverDelta.delta})
+                      </span>
+                    )}
                   </span>
                 )}
               </div>
@@ -3752,9 +3826,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     </div>
                   </div>
                   <div className="flex items-baseline justify-between w-full">
-                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
-                      <AnimatedNumber value={stats.attendedRows} />
-                    </p>
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
+                        <AnimatedNumber value={stats.attendedRows} />
+                      </p>
+                      {solverDelta && solverDelta.delta > 0 && (
+                        <span 
+                          title={`+${solverDelta.delta} new solvers added (from ${solverDelta.prev} to ${solverDelta.current})`}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-black font-mono bg-emerald-500 text-white shadow-sm shadow-emerald-500/40 animate-pulse"
+                        >
+                          +{solverDelta.delta} NEW
+                        </span>
+                      )}
+                      {solverDelta && solverDelta.delta === 0 && (
+                        <span 
+                          title="No new solvers added. Roster is up to date."
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                        >
+                          +0
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/60 uppercase tracking-widest">Verified</span>
                   </div>
                 </button>

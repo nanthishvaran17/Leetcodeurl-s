@@ -16,6 +16,7 @@ import {
   Clock,
   Building2,
   GraduationCap,
+  School,
   ChevronDown,
   Check,
   Activity,
@@ -560,6 +561,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [deptDropdownOpen, setDeptDropdownOpen] = useState<boolean>(false);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('ALL');
   const [yearDropdownOpen, setYearDropdownOpen] = useState<boolean>(false);
+  const [collegeDropdownOpen, setCollegeDropdownOpen] = useState<boolean>(false);
   const [deptSearchText, setDeptSearchText] = useState<string>('');
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' ? window.innerWidth < 640 : false);
 
@@ -569,7 +571,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useScrollLock(isMobile && (deptDropdownOpen || yearDropdownOpen));
+  useScrollLock(isMobile && (deptDropdownOpen || yearDropdownOpen || collegeDropdownOpen));
 
   useEffect(() => {
     if (!deptDropdownOpen) setDeptSearchText('');
@@ -1245,6 +1247,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     return Array.from(optsMap.values());
   }, [records, isFacultyRole]);
 
+  const collegeOptions = useMemo(() => [
+    { value: 'ALL' as const, label: 'All Campus Colleges', shortLabel: 'All Colleges', code: 'ALL', color: 'text-brand-700 bg-brand-50 dark:bg-brand-950 dark:text-brand-300 border-brand-200 dark:border-brand-800', desc: 'All affiliated institutions (NEC & NCT)' },
+    { value: 'NEC' as const, label: 'Nandha Engineering College (Autonomous)', shortLabel: 'NEC Campus', code: 'NEC', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', desc: 'Main Campus • Autonomous' },
+    { value: 'NCT' as const, label: 'Nandha College of Technology', shortLabel: 'NCT Campus', code: 'NCT', color: 'text-teal-700 bg-teal-50 dark:bg-teal-950 dark:text-teal-300 border-teal-200 dark:border-teal-800', desc: 'Technology Campus' },
+  ], []);
+
   const yearOptions = useMemo(() => [
     { value: 'ALL', label: 'All Academic Years', shortLabel: 'All Years', code: 'ALL', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800', desc: 'All batches and cohorts' },
     { value: 'I',   label: 'I Year (First Year)',  shortLabel: '1st Year',   code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800', desc: 'Batch 2026 – 2030' },
@@ -1671,35 +1679,89 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
           {/* Department and Academic Year Selector Boxes */}
           <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-                        {/* College Campus Segmented Pill — Admin & Management only */}
-            {isGlobalAccess && (
-              <div className="col-span-2 sm:col-span-1 flex items-center bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0 self-center">
-                {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
-                  const isSelected = selectedCollegeFilter === col;
-                  return (
-                    <button
-                      key={col}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setSelectedCollegeFilter(col);
-                      }}
-                      className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
-                        isSelected
-                          ? col === 'NCT'
-                            ? 'bg-teal-600 text-white shadow-xs'
-                            : col === 'NEC'
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-brand-600 text-white shadow-xs'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {col}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                        {/* 0. College Campus Box — Admin & Management only */}
+            {isGlobalAccess && (() => {
+              const currentCollegeObj = collegeOptions.find(o => o.value === selectedCollegeFilter) || collegeOptions[0];
+              const isCollegeActive = selectedCollegeFilter !== 'ALL';
+              const collegeLabel = isMobile && currentCollegeObj.value === 'ALL' ? 'All Colleges' : (currentCollegeObj.shortLabel || currentCollegeObj.label);
+
+              return (
+                <div
+                  className="col-span-2 sm:col-span-1 relative flex-1 min-w-0 sm:flex-initial"
+                  onBlur={(e) => { 
+                    if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setCollegeDropdownOpen(false); 
+                    }
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setCollegeDropdownOpen(p => !p);
+                      setDeptDropdownOpen(false);
+                      setYearDropdownOpen(false);
+                    }}
+                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                      collegeDropdownOpen
+                        ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/70 dark:bg-brand-950/50'
+                        : isCollegeActive
+                        ? 'border-brand-400 bg-brand-50/40 dark:bg-brand-950/30 text-brand-900 dark:text-brand-200 ring-1 ring-brand-400/30'
+                        : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-slate-700 hover:border-brand-300'
+                    }`}
+                    title={`Filter by College: ${currentCollegeObj.label}`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      <School className={`w-3.5 h-3.5 shrink-0 ${isCollegeActive ? 'text-brand-600 dark:text-brand-400' : 'text-brand-500'}`} />
+                      <span className={`text-[9.5px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentCollegeObj.color}`}>{currentCollegeObj.code}</span>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate flex-1">{collegeLabel}</span>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${collegeDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Desktop Dropdown Popover */}
+                  {!isMobile && collegeDropdownOpen && (
+                    <div className="absolute z-50 top-full left-0 mt-1.5 w-64 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
+                      <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+                        <span>Select College Campus</span>
+                        {isCollegeActive && (
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedCollegeFilter('ALL'); setCollegeDropdownOpen(false); }}
+                            className="text-brand-600 dark:text-brand-400 hover:underline cursor-pointer lowercase font-medium"
+                          >
+                            clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {collegeOptions.map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { 
+                              triggerHaptic('light');
+                              setSelectedCollegeFilter(opt.value); 
+                              setCollegeDropdownOpen(false); 
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 cursor-pointer ${selectedCollegeFilter === opt.value ? 'bg-brand-50/80 dark:bg-brand-950/60' : ''}`}
+                          >
+                            <School className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className={`text-xs truncate ${selectedCollegeFilter === opt.value ? 'text-brand-950 dark:text-brand-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.shortLabel}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{opt.desc}</span>
+                            </div>
+                            {selectedCollegeFilter === opt.value && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* 1. Department Box */}
             {(() => {
@@ -1722,6 +1784,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       triggerHaptic('light');
                       setDeptDropdownOpen(p => !p);
                       setYearDropdownOpen(false);
+                      setCollegeDropdownOpen(false);
                     }}
                     className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       deptDropdownOpen
@@ -1802,6 +1865,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       triggerHaptic('light');
                       setYearDropdownOpen(p => !p);
                       setDeptDropdownOpen(false);
+                      setCollegeDropdownOpen(false);
                     }}
                     className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       yearDropdownOpen
@@ -1861,6 +1925,142 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               );
             })()}
           </div>
+
+          
+          {/* ========================================================================= */}
+          {/* NATIVE MOBILE UI: College Campus Bottom Sheet Drawer (Portaled to document.body) */}
+          {/* ========================================================================= */}
+          {typeof document !== 'undefined' && createPortal(
+            <AnimatePresence>
+              {isMobile && collegeDropdownOpen && (
+                <div className="fixed inset-0 z-[100050] flex flex-col justify-end">
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => setCollegeDropdownOpen(false)}
+                    className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm"
+                  />
+
+                  {/* Bottom Sheet Drawer */}
+                  <motion.div
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    exit={{ y: '100%' }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                    className="relative z-10 w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))]"
+                  >
+                    {/* Pull Handle */}
+                    <div className="pt-2.5 pb-1 flex justify-center cursor-pointer" onClick={() => setCollegeDropdownOpen(false)}>
+                      <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors" />
+                    </div>
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-white/[0.08]">
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 flex items-center justify-center shrink-0">
+                          <School className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black tracking-tight text-slate-900 dark:text-white font-display">
+                            Select College Campus
+                          </h3>
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                            {collegeOptions.length} campus options
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Clear / Close Buttons */}
+                      <div className="flex items-center gap-2">
+                        {selectedCollegeFilter !== 'ALL' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setSelectedCollegeFilter('ALL');
+                              setCollegeDropdownOpen(false);
+                            }}
+                            className="text-xs font-bold text-brand-600 dark:text-brand-400 px-2 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60"
+                          >
+                            Reset
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setCollegeDropdownOpen(false)}
+                          className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* College Options List */}
+                    <div className="overflow-y-auto px-3.5 py-3 space-y-2 flex-1 min-h-0">
+                      {collegeOptions.map((opt) => {
+                        const isSelected = selectedCollegeFilter === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setSelectedCollegeFilter(opt.value);
+                              setCollegeDropdownOpen(false);
+                            }}
+                            className={`w-full min-h-[56px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                              isSelected
+                                ? 'bg-brand-50/90 dark:bg-brand-950/60 border-2 border-brand-500 dark:border-brand-500/80 shadow-xs'
+                                : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                isSelected 
+                                  ? 'bg-brand-600 text-white' 
+                                  : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                              }`}>
+                                <School className="w-4 h-4" />
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${opt.color}`}>
+                                    {opt.code}
+                                  </span>
+                                  {isSelected && (
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                                      Active
+                                    </span>
+                                  )}
+                                </div>
+                                <span className={`text-xs mt-0.5 font-bold leading-snug break-words ${
+                                  isSelected ? 'text-brand-950 dark:text-brand-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                }`}>
+                                  {opt.label}
+                                </span>
+                                <span className="text-[10.5px] text-slate-400 dark:text-slate-500">
+                                  {opt.desc}
+                                </span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )}
 
           {/* ========================================================================= */}
           {/* NATIVE MOBILE UI: Department Bottom Sheet Drawer (Portaled to document.body) */}

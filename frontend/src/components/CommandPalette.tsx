@@ -32,6 +32,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
 import api from '../services/api';
+import { useTypewriterPlaceholder } from '../hooks/useTypewriterPlaceholder';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -132,6 +133,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const prevIsOpenRef = useRef(false);
   const onCloseRef = useRef(onClose);
+
+  const animatedPlaceholder = useTypewriterPlaceholder(
+    [
+      'Search commands or students...',
+      'Search reg no (e.g. 732224CC031)...',
+      'Search username...',
+      'Search actions, pages, AI copilot...'
+    ],
+    isOpen,
+    Boolean(search.trim().length > 0)
+  );
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -514,7 +526,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               autoCorrect="off"
               spellCheck={false}
               className="w-full h-11 sm:h-14 pl-10 sm:pl-[68px] pr-10 sm:pr-28 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-base font-semibold shadow-inner outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 transition-all"
-              placeholder={isMobile ? "Search commands, students..." : "Search commands, students (e.g. 732224CC031)..."}
+              placeholder={animatedPlaceholder || (isMobile ? "Search commands, students..." : "Search commands, students (e.g. 732224CC031)...")}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
