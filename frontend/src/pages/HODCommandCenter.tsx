@@ -2242,35 +2242,38 @@ export const HODCommandCenter: React.FC = () => {
   </div>
 
   {/* 4. SIX AUTHORITATIVE HOD KPI CARDS - Modern Apple/Linear Bento */}
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5 mb-3 sm:mb-4 min-w-0 w-full max-w-full">
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 lg:gap-3.5 mb-3.5 sm:mb-5 min-w-0 w-full max-w-full px-0.5 sm:px-0">
     {/* Card 1: Total Staff */}
     <Card 
-      className={`p-2.5 sm:p-3 flex flex-col justify-between min-h-[76px] sm:min-h-[86px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${staffWorkloadFilter !== 'ALL' ? 'ring-2 ring-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/30' : ''}`}
+      className={`px-3 py-2.5 sm:px-3.5 sm:py-3 md:p-3.5 flex flex-col justify-between min-h-[82px] sm:min-h-[92px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${staffWorkloadFilter !== 'ALL' ? 'ring-2 ring-indigo-500/40 bg-indigo-50/40 dark:bg-indigo-950/30' : ''}`}
       onClick={() => {
         setStaffWorkloadFilter('ALL');
         document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
     >
-      <div className="flex items-center justify-between text-slate-700 dark:text-slate-400 min-w-0 gap-1">
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono text-slate-600 dark:text-slate-300 truncate">TOTAL STAFF</span>
-        <div className="w-5 h-5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/40 dark:border-indigo-800/40 flex items-center justify-center shrink-0">
-          <Users size={11} className="text-indigo-600 dark:text-indigo-400" />
+      <div className="flex items-center justify-between text-slate-700 dark:text-slate-400 min-w-0 gap-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider font-mono text-slate-600 dark:text-slate-300 truncate">TOTAL STAFF</span>
+        <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/40 dark:border-indigo-800/40 flex items-center justify-center shrink-0">
+          <Users size={12} className="text-indigo-600 dark:text-indigo-400" />
         </div>
       </div>
-      <div className="my-0.5 min-w-0">
-        <div className="font-display text-base sm:text-lg lg:text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight truncate">
+      <div className="my-1 min-w-0">
+        <div className="font-display text-lg sm:text-xl lg:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight truncate">
           {summary?.kpi_summary?.total_staff ?? staffList.length}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">
-        <span>Faculty Mentors</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium min-w-0 gap-1.5">
+        <span className="truncate">Faculty Mentors</span>
+        <span className="inline-flex items-center gap-1 font-mono font-bold text-indigo-600 dark:text-indigo-400 shrink-0 text-[8.5px] sm:text-[9.5px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+          <span>Active</span>
+        </span>
       </div>
     </Card>
 
     {/* Card 2: Total Students */}
     <Card 
-      className="p-2.5 sm:p-3 flex flex-col justify-between min-h-[76px] sm:min-h-[86px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+      className="px-3 py-2.5 sm:px-3.5 sm:py-3 md:p-3.5 flex flex-col justify-between min-h-[82px] sm:min-h-[92px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
       onClick={() => {
         setSelectedStatus('ALL');
         setAllocationFilter('ALL');
@@ -2278,26 +2281,29 @@ export const HODCommandCenter: React.FC = () => {
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
     >
-      <div className="flex items-center justify-between text-slate-700 dark:text-slate-400 min-w-0 gap-1">
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono text-slate-600 dark:text-slate-300 truncate">TOTAL STUDENTS</span>
-        <div className="w-5 h-5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200/40 dark:border-blue-800/40 flex items-center justify-center shrink-0">
-          <BookOpen size={11} className="text-blue-600 dark:text-blue-400" />
+      <div className="flex items-center justify-between text-slate-700 dark:text-slate-400 min-w-0 gap-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider font-mono text-slate-600 dark:text-slate-300 truncate">TOTAL STUDENTS</span>
+        <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/40 dark:border-blue-800/40 flex items-center justify-center shrink-0">
+          <BookOpen size={12} className="text-blue-600 dark:text-blue-400" />
         </div>
       </div>
-      <div className="my-0.5 min-w-0">
-        <div className="font-display text-base sm:text-lg lg:text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight truncate">
+      <div className="my-1 min-w-0">
+        <div className="font-display text-lg sm:text-xl lg:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight truncate">
           {summary?.kpi_summary?.total_students ?? totalInScope}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">
-        <span>Enrolled Scope</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium min-w-0 gap-1.5">
+        <span className="truncate">Enrolled Scope</span>
+        <span className="inline-flex items-center gap-1 font-mono font-bold text-blue-600 dark:text-blue-400 shrink-0 text-[8.5px] sm:text-[9.5px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+          <span>Scope</span>
+        </span>
       </div>
     </Card>
 
     {/* Card 3: Allocated */}
     <Card 
-      className={`p-2.5 sm:p-3 flex flex-col justify-between min-h-[76px] sm:min-h-[86px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500/50 bg-brand-50/50 dark:bg-brand-950/40 border-brand-300' : ''}`}
+      className={`px-3 py-2.5 sm:px-3.5 sm:py-3 md:p-3.5 flex flex-col justify-between min-h-[82px] sm:min-h-[92px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${allocationFilter === 'ALLOCATED' ? 'ring-2 ring-brand-500/50 bg-brand-50/50 dark:bg-brand-950/40 border-brand-300' : ''}`}
       onClick={() => {
         if (allocationFilter === 'ALLOCATED') {
           setAllocationFilter('ALL');
@@ -2309,26 +2315,29 @@ export const HODCommandCenter: React.FC = () => {
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
     >
-      <div className="flex items-center justify-between text-brand-600 dark:text-brand-400 min-w-0 gap-1">
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono text-brand-700 dark:text-brand-300 truncate">ALLOCATED</span>
-        <div className="w-5 h-5 rounded-md bg-brand-50 dark:bg-brand-950/60 border border-brand-200/40 dark:border-brand-800/40 flex items-center justify-center shrink-0">
-          <UserCheck size={11} className="text-brand-600 dark:text-brand-400" />
+      <div className="flex items-center justify-between text-brand-600 dark:text-brand-400 min-w-0 gap-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider font-mono text-brand-700 dark:text-brand-300 truncate">ALLOCATED</span>
+        <div className="w-6 h-6 rounded-lg bg-brand-50 dark:bg-brand-950/60 border border-brand-200/40 dark:border-brand-800/40 flex items-center justify-center shrink-0">
+          <UserCheck size={12} className="text-brand-600 dark:text-brand-400" />
         </div>
       </div>
-      <div className="my-0.5 min-w-0">
-        <div className="font-display text-base sm:text-lg lg:text-xl font-black text-brand-600 dark:text-brand-400 font-mono tracking-tight truncate">
+      <div className="my-1 min-w-0">
+        <div className="font-display text-lg sm:text-xl lg:text-2xl font-black text-brand-600 dark:text-brand-400 font-mono tracking-tight truncate">
           {summary?.kpi_summary?.total_allocated ?? activeInScope}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">
-        <span>{summary?.kpi_summary?.unassigned ?? 0} Unassigned</span>
-        <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
+      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium min-w-0 gap-1.5">
+        <span className="truncate">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</span>
+        <span className="inline-flex items-center gap-1 font-mono font-bold text-brand-600 dark:text-brand-400 shrink-0 text-[8.5px] sm:text-[9.5px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
+          <span>Cohort</span>
+        </span>
       </div>
     </Card>
 
     {/* Card 4: Completed */}
     <Card 
-      className={`p-2.5 sm:p-3 flex flex-col justify-between min-h-[76px] sm:min-h-[86px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-300' : ''}`}
+      className={`px-3 py-2.5 sm:px-3.5 sm:py-3 md:p-3.5 flex flex-col justify-between min-h-[82px] sm:min-h-[92px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group ${selectedStatus === 'COMPLETED' ? 'ring-2 ring-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-300' : ''}`}
       onClick={() => {
         if (selectedStatus === 'COMPLETED') {
           setSelectedStatus('ALL');
@@ -2342,20 +2351,20 @@ export const HODCommandCenter: React.FC = () => {
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
     >
-      <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 min-w-0 gap-1">
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono text-emerald-700 dark:text-emerald-300 truncate">COMPLETED</span>
-        <div className="w-5 h-5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/40 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
-          <CheckCircle2 size={11} className="text-emerald-600 dark:text-emerald-400" />
+      <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 min-w-0 gap-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider font-mono text-emerald-700 dark:text-emerald-300 truncate">COMPLETED</span>
+        <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/40 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
+          <CheckCircle2 size={12} className="text-emerald-600 dark:text-emerald-400" />
         </div>
       </div>
-      <div className="my-0.5 min-w-0">
-        <div className="font-display text-base sm:text-lg lg:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight truncate">
+      <div className="my-1 min-w-0">
+        <div className="font-display text-lg sm:text-xl lg:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight truncate">
           {summary?.kpi_summary?.completed ?? 0}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold min-w-0 gap-1">
+      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold min-w-0 gap-1.5">
         <span className="truncate">Target Done</span>
-        <span className="font-mono font-bold group-hover:underline flex items-center shrink-0">
+        <span className="font-mono font-bold group-hover:underline flex items-center shrink-0 text-[9px] sm:text-[10px]">
           {summary?.kpi_summary?.completed ?? 0} →
         </span>
       </div>
@@ -2363,7 +2372,7 @@ export const HODCommandCenter: React.FC = () => {
 
     {/* Card 5: Pending */}
     <Card 
-      className={`p-2.5 sm:p-3 flex flex-col justify-between min-h-[76px] sm:min-h-[86px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500/50 bg-amber-50/60 dark:bg-amber-950/40 border-amber-300' : ''}`}
+      className={`px-3 py-2.5 sm:px-3.5 sm:py-3 md:p-3.5 flex flex-col justify-between min-h-[82px] sm:min-h-[92px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group ${selectedStatus === 'PENDING' ? 'ring-2 ring-amber-500/50 bg-amber-50/60 dark:bg-amber-950/40 border-amber-300' : ''}`}
       onClick={() => {
         if (selectedStatus === 'PENDING') {
           setSelectedStatus('ALL');
@@ -2377,20 +2386,20 @@ export const HODCommandCenter: React.FC = () => {
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
     >
-      <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 min-w-0 gap-1">
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono text-amber-700 dark:text-amber-300 truncate">PENDING</span>
-        <div className="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-950/60 border border-amber-200/40 dark:border-amber-800/40 flex items-center justify-center shrink-0">
-          <Clock size={11} className="text-amber-600 dark:text-amber-400" />
+      <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 min-w-0 gap-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider font-mono text-amber-700 dark:text-amber-300 truncate">PENDING</span>
+        <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200/40 dark:border-amber-800/40 flex items-center justify-center shrink-0">
+          <Clock size={12} className="text-amber-600 dark:text-amber-400" />
         </div>
       </div>
-      <div className="my-0.5 min-w-0">
-        <div className="font-display text-base sm:text-lg lg:text-xl font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight truncate">
+      <div className="my-1 min-w-0">
+        <div className="font-display text-lg sm:text-xl lg:text-2xl font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight truncate">
           {summary?.kpi_summary?.pending ?? 0}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-amber-600 dark:text-amber-400 font-semibold min-w-0 gap-1">
+      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-amber-600 dark:text-amber-400 font-semibold min-w-0 gap-1.5">
         <span className="truncate">In Progress</span>
-        <span className="font-mono font-bold group-hover:underline flex items-center shrink-0">
+        <span className="font-mono font-bold group-hover:underline flex items-center shrink-0 text-[9px] sm:text-[10px]">
           {summary?.kpi_summary?.pending ?? 0} →
         </span>
       </div>
@@ -2398,20 +2407,20 @@ export const HODCommandCenter: React.FC = () => {
 
     {/* Card 6: Progress (Redesigned with Apple Bento Balance) */}
     <Card 
-      className="p-2.5 sm:p-3 flex flex-col justify-between min-h-[76px] sm:min-h-[86px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group"
+      className="px-3 py-2.5 sm:px-3.5 sm:py-3 md:p-3.5 flex flex-col justify-between min-h-[82px] sm:min-h-[92px] min-w-0 max-w-full rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-navy-900/90 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer group"
       onClick={() => {
         document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
     >
-      <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 min-w-0 gap-1">
-        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider font-mono text-indigo-700 dark:text-indigo-300 truncate">PROGRESS</span>
-        <div className="w-5 h-5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/40 dark:border-indigo-800/40 flex items-center justify-center shrink-0">
-          <Activity size={11} className="text-indigo-600 dark:text-indigo-400" />
+      <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 min-w-0 gap-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider font-mono text-indigo-700 dark:text-indigo-300 truncate">PROGRESS</span>
+        <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/40 dark:border-indigo-800/40 flex items-center justify-center shrink-0">
+          <Activity size={12} className="text-indigo-600 dark:text-indigo-400" />
         </div>
       </div>
-      <div className="my-0.5 min-w-0">
-        <div className="flex items-baseline justify-between gap-1">
-          <span className="font-display text-base sm:text-lg lg:text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
+      <div className="my-1 min-w-0">
+        <div className="flex items-baseline justify-between gap-1.5">
+          <span className="font-display text-lg sm:text-xl lg:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
             {summary?.kpi_summary?.overall_progress ?? 0}%
           </span>
           <span className={`px-1.5 py-0.5 rounded-md text-[8px] sm:text-[8.5px] font-mono font-black uppercase tracking-wider border shadow-2xs ${
@@ -2426,7 +2435,7 @@ export const HODCommandCenter: React.FC = () => {
           </span>
         </div>
         {/* Sleek Gradient Mini Progress Track */}
-        <div className="w-full bg-slate-100 dark:bg-white/10 h-1 sm:h-1.5 rounded-full overflow-hidden mt-1">
+        <div className="w-full bg-slate-100 dark:bg-white/10 h-1 sm:h-1.5 rounded-full overflow-hidden mt-1.5">
           <div 
             className={`h-full rounded-full transition-all duration-500 ${
               (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
@@ -2437,9 +2446,9 @@ export const HODCommandCenter: React.FC = () => {
           />
         </div>
       </div>
-      <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">
-        <span>Cohort Pace</span>
-        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 shrink-0">
+      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium min-w-0 gap-1.5">
+        <span className="truncate">Cohort Pace</span>
+        <span className="font-mono font-bold text-slate-700 dark:text-slate-300 shrink-0 text-[9px] sm:text-[10px]">
           {summary?.kpi_summary?.completed ?? 0}/{summary?.kpi_summary?.total_allocated ?? activeInScope}
         </span>
       </div>
