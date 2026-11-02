@@ -21,6 +21,8 @@ import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { useDebounce } from '../hooks/useDebounce';
 
 // Priority Config (Red=Critical, Orange=High, Amber=Medium, Green=Low)
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
@@ -409,6 +411,340 @@ const CustomSelect: React.FC<{
         document.body
       )}
     </div>
+  );
+};
+
+// Mobile Slide-up Bottom Sheet Filter Drawer for Faculty Action Center
+const FacultyMobileFilterDrawer: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  filterPriority: string;
+  setFilterPriority: (v: string) => void;
+  filterStatus: string;
+  setFilterStatus: (v: string) => void;
+  filterDept: string;
+  setFilterDept: (v: string) => void;
+  filterYear: string;
+  setFilterYear: (v: string) => void;
+  filterStaff: string;
+  setFilterStaff: (v: string) => void;
+  filterOverdue: boolean;
+  setFilterOverdue: (v: boolean) => void;
+  filterEscalated: boolean;
+  setFilterEscalated: (v: boolean) => void;
+  canFilterDepts: boolean;
+  deptOptions: { label: string; value: string; shortLabel?: string; badge?: string }[];
+  staffOptions: { label: string; value: string }[];
+  activeFilterCount: number;
+  onResetAll: () => void;
+}> = ({
+  isOpen,
+  onClose,
+  filterPriority,
+  setFilterPriority,
+  filterStatus,
+  setFilterStatus,
+  filterDept,
+  setFilterDept,
+  filterYear,
+  setFilterYear,
+  filterStaff,
+  setFilterStaff,
+  filterOverdue,
+  setFilterOverdue,
+  filterEscalated,
+  setFilterEscalated,
+  canFilterDepts,
+  deptOptions,
+  staffOptions,
+  activeFilterCount,
+  onResetAll,
+}) => {
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const priorities = [
+    { label: 'All', value: '' },
+    { label: 'Critical', value: 'Critical' },
+    { label: 'High', value: 'High' },
+    { label: 'Medium', value: 'Medium' },
+    { label: 'Low', value: 'Low' },
+  ];
+
+  const statuses = [
+    { label: 'All', value: '' },
+    { label: 'Pending', value: 'Pending' },
+    { label: 'In Progress', value: 'In Progress' },
+    { label: 'Monitoring', value: 'Monitoring' },
+    { label: 'Completed', value: 'Completed' },
+    { label: 'Resolved', value: 'Resolved' },
+  ];
+
+  const years = [
+    { label: 'All Years', value: '' },
+    { label: 'I Year', value: 'I Year' },
+    { label: 'II Year', value: 'II Year' },
+    { label: 'III Year', value: 'III Year' },
+    { label: 'IV Year', value: 'IV Year' },
+  ];
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/60 backdrop-blur-xs animate-fade-in touch-manipulation"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-navy-800 flex flex-col shadow-2xl overflow-hidden animate-slide-up"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Drag Handle Bar */}
+        <div className="pt-3 pb-1 flex flex-col items-center select-none shrink-0 cursor-grab">
+          <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
+        </div>
+
+        {/* Drawer Header */}
+        <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 shrink-0">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-brand-500" />
+            <h3 className="text-sm font-black text-slate-900 dark:text-white">Filter Action Items</h3>
+            {activeFilterCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-brand-600 text-white text-[10px] font-black flex items-center justify-center font-mono">
+                {activeFilterCount}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Scrollable Filter Options Body */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-sans">
+          {/* 1. Priority */}
+          <div>
+            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              Priority
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {priorities.map(p => {
+                const isSelected = filterPriority === p.value;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => setFilterPriority(p.value)}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                      isSelected
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. Status */}
+          <div>
+            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              Intervention Status
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {statuses.map(s => {
+                const isSelected = filterStatus === s.value;
+                return (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => setFilterStatus(s.value)}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Department (if authorized) */}
+          {canFilterDepts && (
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Department
+              </label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setFilterDept('')}
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                    !filterDept
+                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                      : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                  }`}
+                >
+                  All Departments
+                </button>
+                {deptOptions.map(d => {
+                  const isSelected = filterDept === d.value;
+                  return (
+                    <button
+                      key={d.value}
+                      type="button"
+                      onClick={() => setFilterDept(d.value)}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ${
+                        isSelected
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                          : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                      }`}
+                      title={d.label}
+                    >
+                      {d.shortLabel || d.badge || d.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Academic Year */}
+          <div>
+            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              Academic Year
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {years.map(y => {
+                const isSelected = filterYear === y.value;
+                return (
+                  <button
+                    key={y.label}
+                    type="button"
+                    onClick={() => setFilterYear(y.value)}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                      isSelected
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                    }`}
+                  >
+                    {y.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 5. Staff Mentor */}
+          {staffOptions.length > 0 && (
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Faculty Mentor
+              </label>
+              <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                <button
+                  type="button"
+                  onClick={() => setFilterStaff('')}
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
+                    !filterStaff
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                  }`}
+                >
+                  All Mentors
+                </button>
+                {staffOptions.map(st => {
+                  const isSelected = filterStaff === st.value;
+                  return (
+                    <button
+                      key={st.value}
+                      type="button"
+                      onClick={() => setFilterStaff(st.value)}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                          : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                      }`}
+                      title={st.label}
+                    >
+                      {st.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 6. Special Urgent Flags */}
+          <div>
+            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              Urgent Flags
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFilterOverdue(!filterOverdue)}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                  filterOverdue
+                    ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                    : 'bg-rose-50/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/50'
+                }`}
+              >
+                <Clock size={14} />
+                <span>Overdue ({'>'}0d)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterEscalated(!filterEscalated)}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                  filterEscalated
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                    : 'bg-purple-50/60 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900/50'
+                }`}
+              >
+                <ShieldAlert size={14} />
+                <span>Escalated</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Drawer Action Bar */}
+        <div className="p-3.5 bg-slate-50 dark:bg-navy-900 border-t border-slate-100 dark:border-navy-800 flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={onResetAll}
+            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer transition-colors text-center"
+          >
+            Reset All
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-500/20 cursor-pointer transition-all text-center"
+          >
+            Apply Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 };
 
@@ -1180,6 +1516,8 @@ export const FacultyActionCenter: React.FC = () => {
   const [filterDept, setFilterDept] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [filterEscalated, setFilterEscalated] = useState(false);
   const [page, setPage] = useState(1);
@@ -1340,22 +1678,34 @@ export const FacultyActionCenter: React.FC = () => {
   // Row expand
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
+  const activeFilterCount = React.useMemo(() => {
+    let count = 0;
+    if (filterPriority) count++;
+    if (filterStatus) count++;
+    if (filterDept) count++;
+    if (filterYear) count++;
+    if (filterStaff) count++;
+    if (filterOverdue) count++;
+    if (filterEscalated) count++;
+    return count;
+  }, [filterPriority, filterStatus, filterDept, filterYear, filterStaff, filterOverdue, filterEscalated]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const params: Record<string, any> = { page, page_size: pageSize, sort_by: sortBy, sort_dir: sortDir };
       if (filterPriority) params.priority = filterPriority;
       if (filterStatus) params.status = filterStatus;
-      if (filterDept) params.dept_id = Number(filterDept);
+      if (filterDept && !isNaN(Number(filterDept))) params.dept_id = Number(filterDept);
       if (filterYear) params.year_level = filterYear;
-      if (search.trim()) params.search = search.trim();
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
       if (filterOverdue) params.is_overdue = true;
       if (filterEscalated) params.is_escalated = true;
 
       const kpiParams: any = {};
-      if (filterDept) kpiParams.dept_id = Number(filterDept);
+      if (filterDept && !isNaN(Number(filterDept))) kpiParams.dept_id = Number(filterDept);
       if (filterYear) kpiParams.year_level = filterYear;
-      if (search.trim()) kpiParams.search = search.trim();
+      if (debouncedSearch.trim()) kpiParams.search = debouncedSearch.trim();
 
       const [kpiRes, listRes] = await Promise.all([
         getFacultyActionKPIs(kpiParams),
@@ -1365,16 +1715,19 @@ export const FacultyActionCenter: React.FC = () => {
       setItems(listRes.items || []);
       setTotalCount(listRes.total_count ?? listRes.total);
       setFilteredCount(listRes.filtered_count ?? listRes.total);
-    } catch (err) {
+    } catch (err: any) {
+      if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') {
+        return; // Request was aborted/cancelled cleanly; do not wipe data or show error
+      }
       console.error('Faculty Action Center load failed:', err);
-      if (search.trim()) {
+      if (debouncedSearch.trim()) {
         setItems([]);
         setFilteredCount(0);
       }
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterDept, filterYear, search, filterOverdue, filterEscalated]);
+  }, [page, pageSize, sortBy, sortDir, filterPriority, filterStatus, filterDept, filterYear, debouncedSearch, filterOverdue, filterEscalated]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -1437,24 +1790,24 @@ export const FacultyActionCenter: React.FC = () => {
 
   return (
     <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-6 md:space-y-7 pb-32 sm:pb-16 animate-fade-in font-sans">
-      {/* Executive Header Banner (Original OLED Gradient with Rose-Amber-Brand Gradient Title + Top-Right Glass Sync Control) */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl px-5 py-6 sm:px-8 sm:py-7 md:py-8 shadow-2xl border border-indigo-500/30 mb-5 sm:mb-6 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white min-h-[125px] sm:min-h-[145px] flex flex-col justify-center">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+      {/* Executive Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 shadow-2xl border border-indigo-500/30 mb-4 sm:mb-5 bg-gradient-to-br from-[#070a14] via-[#0d1424] to-[#121128] text-white min-h-[90px] sm:min-h-[130px] flex flex-col justify-center">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-52 h-52 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex items-start justify-between gap-3 sm:gap-6">
-          <div className="space-y-2 sm:space-y-3 max-w-xl flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-2 sm:gap-3 text-white drop-shadow-sm">
+          <div className="space-y-1 sm:space-y-2 max-w-xl flex-1 min-w-0">
+            <h1 className="text-xl sm:text-3xl xl:text-4xl font-black tracking-tight flex items-center gap-2 sm:gap-3 text-white drop-shadow-sm">
               <span className="text-white">Faculty</span> <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-200/90 font-medium leading-relaxed">
+            <p className="text-[11.5px] sm:text-sm text-slate-200/90 font-medium leading-relaxed">
               {kpis?.subtitle || 'Real-time student intervention & mentoring management · Detect, Prioritize, Assign, Resolve'}
             </p>
 
             {syncMsg && (
-              <div className="pt-1.5">
-                <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-white/10 backdrop-blur-md border ${syncMsg.includes('failed') ? 'border-rose-400/40 text-rose-300' : 'border-emerald-400/40 text-emerald-300'}`}>
+              <div className="pt-1">
+                <span className={`inline-flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-bold px-2.5 py-0.5 sm:py-1 rounded-xl bg-white/10 backdrop-blur-md border ${syncMsg.includes('failed') ? 'border-rose-400/40 text-rose-300' : 'border-emerald-400/40 text-emerald-300'}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${syncMsg.includes('failed') ? 'bg-rose-400' : 'bg-emerald-400'} animate-pulse`} />
                   <span>{syncMsg}</span>
                 </span>
@@ -1463,15 +1816,15 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
 
           {/* Elegant Frosted Glass Sync Control in Top-Right */}
-          <div className="shrink-0 pt-0.5 sm:pt-1">
+          <div className="shrink-0 pt-0.5">
             <button
               type="button"
               onClick={handleSync}
               disabled={syncing}
               title="Resync live student signals and refresh queue"
-              className="group inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/15 hover:border-white/30 backdrop-blur-md text-white text-xs font-bold transition-all duration-200 cursor-pointer disabled:opacity-50 shadow-sm active:scale-95 touch-manipulation"
+              className="group inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/15 hover:border-white/30 backdrop-blur-md text-white text-xs font-bold transition-all duration-200 cursor-pointer disabled:opacity-50 shadow-sm active:scale-95 touch-manipulation"
             >
-              <RefreshCw size={14} className={`text-amber-300 transition-transform duration-500 ${syncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+              <RefreshCw size={13} className={`text-amber-300 transition-transform duration-500 ${syncing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
               <span className="text-xs font-semibold tracking-wide">
                 {syncing ? 'Syncing...' : 'Sync'}
               </span>
@@ -1482,28 +1835,28 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* Action Matrix — 4 Compact Stat Boxes (2 per line on mobile, 4 on desktop) */}
       {kpis && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 min-w-0 max-w-full">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3.5 md:gap-4 mb-3 sm:mb-5 min-w-0 max-w-full">
 
           {/* 1. Critical Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'Critical' ? '' : 'Critical', 'priority')}
-            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
               kpiFilter === 'Critical'
                 ? 'bg-rose-100/90 dark:bg-rose-950/70 border-rose-500 dark:border-rose-500 ring-2 ring-rose-500/25 shadow-rose-500/10'
                 : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 hover:border-rose-400 dark:hover:border-rose-700 hover:bg-rose-100/60'
             }`}
           >
             {kpiFilter === 'Critical' && (
-              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-rose-600 dark:bg-rose-500 rounded-r-full" />
+              <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-rose-600 dark:bg-rose-500 rounded-r-full" />
             )}
-            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
-              <ShieldAlert size={14} strokeWidth={2.5} className="shrink-0 text-rose-600 dark:text-rose-400" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
+              <ShieldAlert size={13} strokeWidth={2.5} className="shrink-0 text-rose-600 dark:text-rose-400" />
               <span className="truncate">Critical</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-rose-600 dark:text-rose-400">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums leading-tight my-1 text-rose-600 dark:text-rose-400">
               {kpis.critical_count}
             </div>
-            <div className="text-[11px] font-bold text-rose-700/80 dark:text-rose-300/80 truncate">
+            <div className="text-[10px] sm:text-[11px] font-bold text-rose-700/80 dark:text-rose-300/80 truncate">
               Immediate action
             </div>
           </button>
@@ -1511,23 +1864,23 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 2. High Priority Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'High' ? '' : 'High', 'priority')}
-            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
               kpiFilter === 'High'
                 ? 'bg-amber-100/90 dark:bg-amber-950/70 border-amber-500 dark:border-amber-500 ring-2 ring-amber-500/25 shadow-amber-500/10'
                 : 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 dark:hover:border-amber-700 hover:bg-amber-100/60'
             }`}
           >
             {kpiFilter === 'High' && (
-              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-amber-600 dark:bg-amber-500 rounded-r-full" />
+              <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-amber-600 dark:bg-amber-500 rounded-r-full" />
             )}
-            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-              <AlertTriangle size={14} strokeWidth={2.5} className="shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+              <AlertTriangle size={13} strokeWidth={2.5} className="shrink-0 text-amber-600 dark:text-amber-400" />
               <span className="truncate">High Priority</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-amber-600 dark:text-amber-400">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums leading-tight my-1 text-amber-600 dark:text-amber-400">
               {kpis.high_count}
             </div>
-            <div className="text-[11px] font-bold text-amber-800/80 dark:text-amber-300/80 truncate">
+            <div className="text-[10px] sm:text-[11px] font-bold text-amber-800/80 dark:text-amber-300/80 truncate">
               Urgent review
             </div>
           </button>
@@ -1535,23 +1888,23 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 3. Active Mentoring Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'In Progress' ? '' : 'In Progress', 'status')}
-            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
               kpiFilter === 'In Progress'
                 ? 'bg-blue-100/90 dark:bg-blue-950/70 border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/25 shadow-blue-500/10'
                 : 'bg-blue-50/80 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/60 hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-100/60'
             }`}
           >
             {kpiFilter === 'In Progress' && (
-              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
+              <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
             )}
-            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
-              <Clock size={14} strokeWidth={2.5} className="shrink-0 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              <Clock size={13} strokeWidth={2.5} className="shrink-0 text-blue-600 dark:text-blue-400" />
               <span className="truncate">Active Mentoring</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-blue-600 dark:text-blue-400">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums leading-tight my-1 text-blue-600 dark:text-blue-400">
               {kpis.in_progress_count + kpis.monitoring_count}
             </div>
-            <div className="text-[11px] font-bold text-blue-700/80 dark:text-blue-300/80 truncate">
+            <div className="text-[10px] sm:text-[11px] font-bold text-blue-700/80 dark:text-blue-300/80 truncate">
               {kpis.in_progress_count} Active &middot; {kpis.monitoring_count} Watch
             </div>
           </button>
@@ -1559,23 +1912,23 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 4. Target Achieved Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'Resolved' ? '' : 'Resolved', 'status')}
-            className={`relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
               kpiFilter === 'Resolved'
                 ? 'bg-emerald-100/90 dark:bg-emerald-950/70 border-emerald-500 dark:border-emerald-500 ring-2 ring-emerald-500/25 shadow-emerald-500/10'
                 : 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60 hover:border-emerald-400 dark:hover:border-emerald-700 hover:bg-emerald-100/60'
             }`}
           >
             {kpiFilter === 'Resolved' && (
-              <div className="absolute left-0 top-2 bottom-2 w-1.5 bg-emerald-600 dark:bg-emerald-500 rounded-r-full" />
+              <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-emerald-600 dark:bg-emerald-500 rounded-r-full" />
             )}
-            <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-              <CheckCircle2 size={14} strokeWidth={2.5} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 size={13} strokeWidth={2.5} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span className="truncate">Target Achieved</span>
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono tabular-nums leading-tight my-1.5 text-emerald-600 dark:text-emerald-400">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tabular-nums leading-tight my-1 text-emerald-600 dark:text-emerald-400">
               {kpis.resolved_count}
             </div>
-            <div className="text-[11px] font-bold text-emerald-700/80 dark:text-emerald-300/80 truncate">
+            <div className="text-[10px] sm:text-[11px] font-bold text-emerald-700/80 dark:text-emerald-300/80 truncate">
               Mentees on-track ✓
             </div>
           </button>
@@ -1583,67 +1936,81 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       )}
 
-            {/* Filters Container - Fully styled for clean dark theme */}
-      <div className="relative z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-md backdrop-blur-xl mb-6">
-        {/* Search Bar Input */}
-        <div className="flex-1 min-w-[200px] w-full md:w-auto">
-          <ModernSearchInput
-            value={search}
-            onChange={val => { setSearch(val); setPage(1); }}
-            onSelectStudent={student => { setSearch(student.name); setPage(1); }}
-            placeholder="Search by name, reg no, username..."
-          />
-        </div>
+      {/* Search & Responsive Filter Bar */}
+      <div className="bg-white dark:bg-navy-900 rounded-2xl p-2.5 sm:p-3.5 shadow-sm border border-slate-200 dark:border-navy-800 space-y-2 mb-3 sm:mb-4 transition-all">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3">
+          {/* Search + Mobile Filter Button Container */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <ModernSearchInput
+              value={search}
+              onChange={val => { setSearch(val); setPage(1); }}
+              onSelectStudent={student => { setSearch(student.reg_no || student.name); setPage(1); }}
+              onClear={() => { setSearch(''); setPage(1); }}
+              placeholder="Search reg no, name, username..."
+              className="flex-1 min-w-0"
+            />
 
-        {/* Dropdown Filters (Flex container with adequate spacing) */}
-        <div className="grid grid-cols-2 md:flex md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3 w-full md:w-auto shrink-0">
-          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
-          <CustomSelect
-            value={filterPriority}
-            onChange={v => { 
-              setFilterPriority(v); 
-              setFilterStatus('');
-              setFilterOverdue(false);
-              setFilterEscalated(false);
-              setKpiFilter(v); 
-              setPage(1); 
-            }}
-            placeholder="All Priorities"
-            icon={<ShieldAlert size={15} />}
-            options={[
-              { label: 'Critical', value: 'Critical', icon: <ShieldAlert size={14} />, badge: 'P1', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
-              { label: 'High', value: 'High', icon: <AlertTriangle size={14} />, badge: 'P2', badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
-              { label: 'Medium', value: 'Medium', icon: <Clock size={14} />, badge: 'P3', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
-              { label: 'Low', value: 'Low', icon: <Activity size={14} />, badge: 'P4', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
-            ]}
-          />
-          </div>
-          
-          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
-          <CustomSelect
-            value={filterStatus}
-            onChange={v => { 
-              setFilterStatus(v); 
-              setFilterPriority('');
-              setFilterOverdue(false);
-              setFilterEscalated(false);
-              setKpiFilter(v);
-              setPage(1); 
-            }}
-            placeholder="All Statuses"
-            icon={<Activity size={15} />}
-            options={[
-              { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
-              { label: 'In Progress', value: 'In Progress', icon: <RotateCcw size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-              { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
-              { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' },
-              { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
-            ]}
-          />
+            {/* Mobile Filter Drawer Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              className="md:hidden flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80 font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs cursor-pointer min-h-[42px] touch-manipulation"
+              title="Open Filter Drawer"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-brand-500" />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-black flex items-center justify-center font-mono">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
 
-          {canFilterDepts && (
-            <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
+          {/* Desktop Inline Filters - Hidden on Mobile, Clean on Desktop */}
+          <div className="hidden md:flex md:flex-wrap items-center gap-2 shrink-0">
+            <CustomSelect
+              value={filterPriority}
+              onChange={v => { 
+                setFilterPriority(v); 
+                setFilterStatus('');
+                setFilterOverdue(false);
+                setFilterEscalated(false);
+                setKpiFilter(v); 
+                setPage(1); 
+              }}
+              placeholder="All Priorities"
+              icon={<ShieldAlert size={15} />}
+              options={[
+                { label: 'Critical', value: 'Critical', icon: <ShieldAlert size={14} />, badge: 'P1', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
+                { label: 'High', value: 'High', icon: <AlertTriangle size={14} />, badge: 'P2', badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
+                { label: 'Medium', value: 'Medium', icon: <Clock size={14} />, badge: 'P3', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
+                { label: 'Low', value: 'Low', icon: <Activity size={14} />, badge: 'P4', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
+              ]}
+            />
+
+            <CustomSelect
+              value={filterStatus}
+              onChange={v => { 
+                setFilterStatus(v); 
+                setFilterPriority('');
+                setFilterOverdue(false);
+                setFilterEscalated(false);
+                setKpiFilter(v);
+                setPage(1); 
+              }}
+              placeholder="All Statuses"
+              icon={<Activity size={15} />}
+              options={[
+                { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
+                { label: 'In Progress', value: 'In Progress', icon: <RotateCcw size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+                { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
+                { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' },
+                { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
+              ]}
+            />
+
+            {canFilterDepts && (
               <CustomSelect
                 value={filterDept}
                 onChange={v => { setFilterDept(v); setPage(1); }}
@@ -1651,27 +2018,23 @@ export const FacultyActionCenter: React.FC = () => {
                 icon={<Building2 size={15} />}
                 options={deptOptions}
               />
-            </div>
-          )}
+            )}
 
-          <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
-          <CustomSelect
-            value={filterYear}
-            onChange={v => { setFilterYear(v); setPage(1); }}
-            placeholder="All Years"
-            icon={<GraduationCap size={15} />}
-            alignRight={true}
-            options={[
-              { label: 'I Year', value: 'I Year', icon: <User size={14} />, badge: 'Y1', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
-              { label: 'II Year', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-              { label: 'III Year', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
-              { label: 'IV Year', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
-            ]}
-          />
-          </div>
+            <CustomSelect
+              value={filterYear}
+              onChange={v => { setFilterYear(v); setPage(1); }}
+              placeholder="All Years"
+              icon={<GraduationCap size={15} />}
+              alignRight={true}
+              options={[
+                { label: 'I Year', value: 'I Year', icon: <User size={14} />, badge: 'Y1', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
+                { label: 'II Year', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+                { label: 'III Year', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
+                { label: 'IV Year', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
+              ]}
+            />
 
-          {staffOptions.length > 0 && (
-            <div className="col-span-1 min-w-0 w-full md:w-auto shrink-0">
+            {staffOptions.length > 0 && (
               <CustomSelect
                 value={filterStaff}
                 onChange={v => { setFilterStaff(v); setPage(1); }}
@@ -1680,28 +2043,109 @@ export const FacultyActionCenter: React.FC = () => {
                 alignRight={true}
                 options={staffOptions}
               />
-            </div>
-          )}
-        </div>
-
-        {/* Count & Page Size Toggle */}
-        <div className="w-full flex items-center justify-between gap-3 pt-3 border-t border-slate-200/80 dark:border-navy-800">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate">
-              {filteredCount === totalCount ? (
-                `Showing ${totalCount} action items`
-              ) : (
-                `Showing ${filteredCount} of ${totalCount} action items`
-              )}
-            </span>
-            {(hasFilters || kpiFilter) && (
-               <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterDept(''); setFilterYear(''); setFilterStaff(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
-                 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition flex items-center gap-0.5 ml-1 shrink-0 cursor-pointer">
-                 <X size={14} /> Clear
-               </button>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0">
+        </div>
+
+        {/* Results Counter & Active Filter Pills */}
+        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <div className="min-w-0 flex-1 break-words flex flex-wrap items-center gap-1.5">
+            <span>
+              {filteredCount === totalCount ? (
+                <>Showing <span className="text-slate-900 dark:text-white font-bold">{totalCount}</span> action items</>
+              ) : (
+                <>Showing <span className="text-slate-900 dark:text-white font-bold">{filteredCount}</span> of <span className="text-slate-900 dark:text-white font-bold">{totalCount}</span> action items</>
+              )}
+            </span>
+
+            {/* Active Priority Tag */}
+            {filterPriority && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300">
+                Priority: {filterPriority}
+                <button type="button" onClick={() => { setFilterPriority(''); setKpiFilter(''); setPage(1); }} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Status Tag */}
+            {filterStatus && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                Status: {filterStatus}
+                <button type="button" onClick={() => { setFilterStatus(''); setKpiFilter(''); setPage(1); }} className="hover:text-blue-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Dept Tag */}
+            {filterDept && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300">
+                Dept: {deptOptions.find(d => d.value === filterDept)?.shortLabel || filterDept}
+                <button type="button" onClick={() => { setFilterDept(''); setPage(1); }} className="hover:text-brand-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Year Tag */}
+            {filterYear && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                Year: {filterYear}
+                <button type="button" onClick={() => { setFilterYear(''); setPage(1); }} className="hover:text-purple-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Staff Tag */}
+            {filterStaff && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300">
+                Mentor: {filterStaff}
+                <button type="button" onClick={() => { setFilterStaff(''); setPage(1); }} className="hover:text-indigo-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Overdue Tag */}
+            {filterOverdue && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+                Overdue
+                <button type="button" onClick={() => { setFilterOverdue(false); setPage(1); }} className="hover:text-red-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Escalated Tag */}
+            {filterEscalated && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                Escalated
+                <button type="button" onClick={() => { setFilterEscalated(false); setPage(1); }} className="hover:text-purple-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+
+            {/* Active Search Tag */}
+            {search && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300">
+                "{search}"
+                <button type="button" onClick={() => { setSearch(''); setPage(1); }} className="hover:text-slate-500 ml-0.5 cursor-pointer">✕</button>
+              </span>
+            )}
+          </div>
+
+          {(hasFilters || kpiFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterPriority('');
+                setFilterStatus('');
+                setFilterDept('');
+                setFilterYear('');
+                setFilterStaff('');
+                setSearch('');
+                setFilterOverdue(false);
+                setFilterEscalated(false);
+                setKpiFilter('');
+                setPage(1);
+              }}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 cursor-pointer transition-colors shrink-0"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
+            </button>
+          )}
+
+          <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-navy-800 shrink-0">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1 font-mono">Show:</span>
             {[10, 20, 50, 100, 200].map((sz) => (
               <button
@@ -1719,6 +2163,42 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Drawer (Portal) */}
+      <FacultyMobileFilterDrawer
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        filterPriority={filterPriority}
+        setFilterPriority={v => { setFilterPriority(v); setFilterStatus(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(v); setPage(1); }}
+        filterStatus={filterStatus}
+        setFilterStatus={v => { setFilterStatus(v); setFilterPriority(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(v); setPage(1); }}
+        filterDept={filterDept}
+        setFilterDept={v => { setFilterDept(v); setPage(1); }}
+        filterYear={filterYear}
+        setFilterYear={v => { setFilterYear(v); setPage(1); }}
+        filterStaff={filterStaff}
+        setFilterStaff={v => { setFilterStaff(v); setPage(1); }}
+        filterOverdue={filterOverdue}
+        setFilterOverdue={v => { setFilterOverdue(v); setPage(1); }}
+        filterEscalated={filterEscalated}
+        setFilterEscalated={v => { setFilterEscalated(v); setPage(1); }}
+        canFilterDepts={canFilterDepts}
+        deptOptions={deptOptions}
+        staffOptions={staffOptions}
+        activeFilterCount={activeFilterCount}
+        onResetAll={() => {
+          setFilterPriority('');
+          setFilterStatus('');
+          setFilterDept('');
+          setFilterYear('');
+          setFilterStaff('');
+          setSearch('');
+          setFilterOverdue(false);
+          setFilterEscalated(false);
+          setKpiFilter('');
+          setPage(1);
+        }}
+      />
 
       {/* Table Loading State */}
       {loading ? (

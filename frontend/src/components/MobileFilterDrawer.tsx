@@ -78,7 +78,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   const animatedPlaceholder = useTypewriterPlaceholder(
     [
       'Search by name...',
-      'Search by reg. no (e.g. 7376...)',
+      'Search by reg. no (e.g. 732224CC031)...',
       'Search by username...',
       'Search LeetCode handle...'
     ],

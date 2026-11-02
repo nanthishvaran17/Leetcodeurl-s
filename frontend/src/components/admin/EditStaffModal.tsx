@@ -81,25 +81,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const [terminateSuccessMsg, setTerminateSuccessMsg] = useState<string | null>(null);
   const [showPhotoZoom, setShowPhotoZoom] = useState(false);
 
-  // Role Dropdown Stacking State
+  // Tab State
   const [activeTab, setActiveTab] = useState<'identity' | 'scope' | 'access' | 'security' | 'all'>('identity');
-  const [roleOpen, setRoleOpen] = useState(false);
-  const [hodDeptOpen, setHodDeptOpen] = useState(false);
-  const roleRef = useRef<HTMLDivElement>(null);
-  const hodDeptRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (roleRef.current && !roleRef.current.contains(e.target as Node)) {
-        setRoleOpen(false);
-      }
-      if (hodDeptRef.current && !hodDeptRef.current.contains(e.target as Node)) {
-        setHodDeptOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   // Helper to convert any raw DOB string (ISO, YYYY-MM-DD, DD/MM/YYYY) to DD/MM/YYYY
   const parseDOBToDisplay = (rawDob: any): string => {
@@ -314,14 +297,14 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   }, [departments]);
 
   const roleOptions: DropdownOption[] = [
-    { value: 'Principal', label: 'Principal', badge: 'PRN', sublabel: 'Head of Institution', icon: Building2 },
-    { value: 'Management', label: 'Management', badge: 'MGT', sublabel: 'Institution Trust & Management', icon: Briefcase },
-    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', sublabel: 'Department-wide placement access', icon: Briefcase },
-    { value: 'Faculty Mentor', label: 'Proctor', badge: 'PRC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
-    { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
-    { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
-    { value: 'Administrator', label: 'Administrator', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
-    { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', sublabel: 'Full system control & root access', icon: Shield }
+    { value: 'Principal', label: 'Principal', badge: 'PRN', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', sublabel: 'Head of Institution', icon: Building2 },
+    { value: 'Management', label: 'Management', badge: 'MGT', badgeColor: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600', sublabel: 'Institution Trust & Management', icon: Briefcase },
+    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30', sublabel: 'Department-wide placement access', icon: Briefcase },
+    { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'PRC', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
+    { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', sublabel: 'Student support & academic guidance', icon: User },
+    { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', sublabel: 'Department-level academic oversight', icon: Building2 },
+    { value: 'Administrator', label: 'Administrator', badge: 'ADM', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', sublabel: 'Institutional administration & management', icon: Key },
+    { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30', sublabel: 'Full system control & root access', icon: Shield }
   ];
 
   const getRoleConfig = (role: string) => {
@@ -887,57 +870,26 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     </div>
 
                     {/* Institutional Role Dropdown */}
-                    <div className="space-y-1.5 sm:col-span-2 relative z-[105]" ref={roleRef}>
-                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100">Institutional Role *</label>
-                      {(() => {
-                        const rc = getRoleConfig(formData.role);
-                        const RoleIcon = rc.icon;
-                        return (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setRoleOpen(o => !o)}
-                              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-2xl border transition-all text-left cursor-pointer shadow-2xs ${
-                                roleOpen ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-brand-500/20 shadow-md` : `${rc.bgColor} border-slate-300 dark:border-navy-700 hover:${rc.borderColor}`
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <RoleIcon className={`w-4 h-4 ${rc.color}`} />
-                                <span className="text-xs font-black text-slate-900 dark:text-white">{formData.role}</span>
-                              </div>
-                              <ChevronDown className={`w-4 h-4 ${rc.color} transition-transform ${roleOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {roleOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 shadow-2xl p-2 space-y-1">
-                                {roleOptions.map(opt => {
-                                  const cfg = getRoleConfig(opt.value);
-                                  const OptIcon = cfg.icon;
-                                  const isSel = formData.role === opt.value;
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      type="button"
-                                      onClick={() => { setFormData({...formData, role: opt.value}); setRoleOpen(false); }}
-                                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                                        isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                                      }`}
-                                    >
-                                      <OptIcon className={`w-4 h-4 ${cfg.color}`} />
-                                      <div className="flex flex-col flex-1 min-w-0">
-                                        <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-900 dark:text-slate-100'}`}>{opt.label}</span>
-                                        <span className="text-[10px] text-slate-700 dark:text-slate-200 font-extrabold truncate">{opt.sublabel}</span>
-                                      </div>
-                                      {isSel && <Check className={`w-4 h-4 ${cfg.color}`} />}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
+                    {(() => {
+                      const rc = getRoleConfig(formData.role);
+                      const RoleIcon = rc.icon as any;
+                      return (
+                        <div className="space-y-1.5 sm:col-span-2 relative z-[105]">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">
+                            Institutional Role *
+                          </label>
+                          <CustomDropdown
+                            options={roleOptions}
+                            label=""
+                            value={formData.role}
+                            onChange={(val) => setFormData(prev => ({ ...prev, role: val }))}
+                            placeholder="Select Institutional Role..."
+                            icon={RoleIcon}
+                            triggerClassName={`w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border transition-all text-xs font-black shadow-2xs ${rc.bgColor} ${rc.borderColor} hover:border-brand-500/60`}
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
                 </section>
 
@@ -986,7 +938,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           onChange={(val) => setFormData({...formData, department_id: val, hod_department_ids: [val]})}
                           placeholder="Select Department..."
                           icon={Building2}
-                          triggerClassName="w-full h-11 min-h-[44px] py-2 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900"
+                          triggerClassName="w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-extrabold shadow-2xs"
                         />
                       )}
                     </div>
@@ -1007,7 +959,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           onChange={(val) => setFormData({...formData, academic_year: val})}
                           placeholder="Select Year Cohort..."
                           icon={GraduationCap}
-                          triggerClassName="w-full h-11 min-h-[44px] py-2 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-emerald-900"
+                          triggerClassName="w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 font-extrabold shadow-2xs"
                         />
                       )}
                     </div>

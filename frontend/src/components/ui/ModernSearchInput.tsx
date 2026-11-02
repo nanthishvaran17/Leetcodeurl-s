@@ -102,14 +102,14 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
       return [
         placeholder,
         'Search student name...',
-        'Search reg no (e.g. 7376...)',
+        'Search reg no (e.g. 732224CC031)...',
         'Search username...',
         'Search LeetCode handle...',
       ];
     }
     return [
       'Search student name...',
-      'Search reg no (e.g. 7376...)',
+      'Search reg no (e.g. 732224CC031)...',
       'Search username...',
       'Search LeetCode handle...',
       'Search department (Cyber Security, IoT, IT)...',

@@ -103,12 +103,18 @@ class FacultyActionEngine:
         if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
             query = query.filter(Student.year_level == year_level)
         if search and isinstance(search, str) and search.strip():
-            search_str = f"%{search.strip()}%"
+            import re
+            raw_s = search.strip()
+            search_str = f"%{raw_s}%"
+            clean_alphanum = re.sub(r'[^a-zA-Z0-9]', '', raw_s)
+            search_clean_str = f"%{clean_alphanum}%" if clean_alphanum else search_str
             query = query.filter(or_(
                 Student.name.ilike(search_str),
                 Student.reg_no.ilike(search_str),
+                Student.reg_no.ilike(search_clean_str),
                 Student.username.ilike(search_str),
-                Student.primary_leetcode_id.ilike(search_str)
+                Student.primary_leetcode_id.ilike(search_str),
+                FacultyActionQueueItem.assigned_faculty_name.ilike(search_str)
             ))
 
         items = query.all()
@@ -333,12 +339,18 @@ def get_faculty_actions_list(
     if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
         query = query.filter(Student.year_level == year_level)
     if search and isinstance(search, str) and search.strip():
-        search_str = f"%{search.strip()}%"
+        import re
+        raw_s = search.strip()
+        search_str = f"%{raw_s}%"
+        clean_alphanum = re.sub(r'[^a-zA-Z0-9]', '', raw_s)
+        search_clean_str = f"%{clean_alphanum}%" if clean_alphanum else search_str
         query = query.filter(or_(
             Student.name.ilike(search_str),
             Student.reg_no.ilike(search_str),
+            Student.reg_no.ilike(search_clean_str),
             Student.username.ilike(search_str),
-            Student.primary_leetcode_id.ilike(search_str)
+            Student.primary_leetcode_id.ilike(search_str),
+            FacultyActionQueueItem.assigned_faculty_name.ilike(search_str)
         ))
 
     filtered_count = query.count()
