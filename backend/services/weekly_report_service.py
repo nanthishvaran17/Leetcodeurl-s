@@ -7,6 +7,7 @@ No hardcoded contest IDs or counts. Server-side time in Asia/Kolkata timezone.
 import datetime
 import json
 import hashlib
+import uuid
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
 from sqlalchemy.orm import Session, joinedload
@@ -794,7 +795,8 @@ def generate_weekly_performance_data(
 
     # Generate Audit Record & Canonical SHA-256 Hash
     now_ts = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
-    report_id = f"REP-{curr_period_id}-{now_ts}"
+    rand_suffix = uuid.uuid4().hex[:6].upper()
+    report_id = f"REP-{curr_period_id}-{now_ts}-{rand_suffix}"
     
     canonical_hash_payload = {
         "report_id": report_id,

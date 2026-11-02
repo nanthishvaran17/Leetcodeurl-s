@@ -1,4931 +1,4957 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock, Share2, MoreHorizontal, ChevronUp, ChevronDown, Check, Copy, Trophy } from 'lucide-react';
-import api from '../services/api';
-import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
-import { SwipeHandle } from './SwipeHandle';
-
-interface ReportPreviewProps {
-  reportId: string;
-  initialData?: any;
-  onClose: () => void;
-}
-
-import { useNotification } from '../context/NotificationContext';
-import { useAuth } from '../context/authContextDef';
-import { useScrollLock } from '../hooks/useScrollLock';
-import { triggerDownload } from '../utils/mobileDownload';
-import { downloadManager } from '../services/download/downloadManager';
-import { isNativeMobile, saveFileToMobileStorage, DocumentOpener } from '../services/download/downloadUtils';
-import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
-
-const formatStudentName = (name: string) => {
-  if (!name) return "—";
-  return name.trim().toUpperCase();
-};
-
-const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean = false) => {
-  if (!forceCurrentContestOnly) {
-    if (s.contest_easy !== undefined && s.contest_medium !== undefined && s.contest_hard !== undefined && s.contest_easy !== null) {
-      return {
-        easy: Number(s.contest_easy || 0),
-        medium: Number(s.contest_medium || 0),
-        hard: Number(s.contest_hard || 0),
-      };
-    }
-    if (s.contest_easy_solved !== undefined && s.contest_medium_solved !== undefined && s.contest_hard_solved !== undefined && s.contest_easy_solved !== null) {
-      return {
-        easy: Number(s.contest_easy_solved || 0),
-        medium: Number(s.contest_medium_solved || 0),
-        hard: Number(s.contest_hard_solved || 0),
-      };
-    }
-  }
-
-  let q1 = s.q1 !== undefined && s.q1 !== null ? (s.q1 === 1 || s.q1 === true || s.q1 === '1' ? 1 : 0) : null;
-  let q2 = s.q2 !== undefined && s.q2 !== null ? (s.q2 === 1 || s.q2 === true || s.q2 === '1' ? 1 : 0) : null;
-  let q3 = s.q3 !== undefined && s.q3 !== null ? (s.q3 === 1 || s.q3 === true || s.q3 === '1' ? 1 : 0) : null;
-  let q4 = s.q4 !== undefined && s.q4 !== null ? (s.q4 === 1 || s.q4 === true || s.q4 === '1' ? 1 : 0) : null;
-
-  let cEasy = q1 !== null ? q1 : 0;
-  let cMed = (q2 !== null ? q2 : 0) + (q3 !== null ? q3 : 0);
-  let cHard = q4 !== null ? q4 : 0;
-
-  const knownSum = cEasy + cMed + cHard;
-  const totSolved = s.contest_solved !== undefined && s.contest_solved !== null
-    ? Number(s.contest_solved)
-    : (s.total_contest_solved !== undefined && s.total_contest_solved !== null
-      ? Number(s.total_contest_solved)
-      : (s.solved !== undefined && s.solved !== null ? Number(s.solved) : (s.total_solved !== undefined ? Number(s.total_solved) : knownSum)));
-
-  if (totSolved > knownSum) {
-    const rem = totSolved - knownSum;
-    const fullBlocks = Math.floor(rem / 4);
-    const leftover = rem % 4;
-
-    cEasy += fullBlocks + (leftover >= 1 ? 1 : 0);
-    cMed += (fullBlocks * 2) + (leftover >= 2 ? 1 : 0) + (leftover >= 3 ? 1 : 0);
-    cHard += fullBlocks + (leftover >= 4 ? 1 : 0);
-  }
-
-  return { easy: cEasy, medium: cMed, hard: cHard };
-};
-
-const getContestSolvedCount = (s: any, isContestReport: boolean = false): { count: number | null; isAttended: boolean } => {
-  if (!s) return { count: null, isAttended: false };
-
-  // 1. Authoritative public_result (e.g. '4_SOLVED', '3_SOLVED', 'NOT_PARTICIPATED', '0_SOLVED')
-  const pub = String(s.public_result || s.curr_public_result || s.weekly_result || '').trim().toUpperCase();
-  if (pub) {
-    if (pub.includes('4_SOLVED') || pub === '4' || pub === '4/4') return { count: 4, isAttended: true };
-    if (pub.includes('3_SOLVED') || pub === '3' || pub === '3/4') return { count: 3, isAttended: true };
-    if (pub.includes('2_SOLVED') || pub === '2' || pub === '2/4') return { count: 2, isAttended: true };
-    if (pub.includes('1_SOLVED') || pub === '1' || pub === '1/4') return { count: 1, isAttended: true };
-    if (pub.includes('0_SOLVED') || pub === '0' || pub === '0/4') return { count: 0, isAttended: true };
-    if (pub === 'NOT_PARTICIPATED' || pub === 'NOT_ATTENDED' || pub === 'ABSENT' || pub === 'UNATTENDED') {
-      return { count: null, isAttended: false };
-    }
-  }
-
-  // 2. Explicit contest solved numbers (e.g. s.contest_solved, s.q_solved, or s.solved in contest report)
-  // NEVER use s.total_solved or lifetime solved for contest solved!
-  if (s.contest_solved !== undefined && s.contest_solved !== null) {
-    const val = Number(s.contest_solved);
-    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
-  }
-  if (s.total_contest_solved !== undefined && s.total_contest_solved !== null && Number(s.total_contest_solved) <= 4) {
-    const val = Number(s.total_contest_solved);
-    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
-  }
-  if (isContestReport && s.solved !== undefined && s.solved !== null && Number(s.solved) <= 4) {
-    const val = Number(s.solved);
-    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
-  }
-
-  // 3. Attendance status tags
-  const st = String(s.status || s.attendance_status || s.attendance || '').trim().toUpperCase();
-  const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st);
-  if (isPart) {
-    return { count: 0, isAttended: true };
-  }
-
-  return { count: null, isAttended: false };
-};
-
-export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
-  const { notify } = useNotification();
-  const { user: currentUser } = useAuth();
-  useScrollLock(true);
-  const [report, setReport] = useState<any>(initialData || null);
-  const [loading, setLoading] = useState(!initialData);
-  const [error, setError] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const [tableDensity, setTableDensity] = useState<'quick' | 'full'>('quick');
-  const moreMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!moreMenuOpen) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        setMoreMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [moreMenuOpen]);
-
-  const fetchReport = async (forceRefresh: boolean = false) => {
-    if (initialData && !forceRefresh) {
-      setReport(initialData);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.get(`/reports/${reportId}/preview`);
-      setReport(res.data);
-    } catch (err) {
-      console.error(err);
-      setError("Unable to fetch the verified report dataset.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (initialData) {
-      setReport(initialData);
-      setLoading(false);
-      // Fetch share_token in background if missing from initialData
-      if (!initialData.share_token) {
-        api.get(`/reports/${reportId}/preview`)
-          .then(res => {
-            if (res.data?.share_token) {
-              setReport((prev: any) => ({
-                ...prev,
-                share_token: res.data.share_token,
-                universal_share_token: res.data.universal_share_token
-              }));
-            }
-          })
-          .catch(() => { });
-      }
-    } else {
-      fetchReport();
-    }
-  }, [reportId, initialData]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onClose]);
-
-  const rType = ((report?.reportType || report?.report_type || '') as string).toUpperCase();
-
-  const isContestReport = useMemo(() => {
-    if (!report) return false;
-    if (
-      rType === 'WEEKLY_PERFORMANCE' ||
-      rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
-      rType === 'COORDINATOR' ||
-      rType === 'COORDINATOR_WEEKLY_PERFORMANCE' ||
-      rType === 'WEEKLY_COORDINATOR' ||
-      rType === '12TH_TNEA_CUTOFF_ANALYSIS' ||
-      rType.includes('CUTOFF') ||
-      !!report.batch_summaries
-    ) return false;
-    return (
-      rType === 'CONTEST_PERFORMANCE' ||
-      rType === 'OFFICIAL_CONTEST' ||
-      rType === 'FRIDAY_OFFICIAL_CONTEST' ||
-      rType === 'FRIDAY_OFFICIAL' ||
-      rType === 'SATURDAY_BIWEEKLY_CONTEST' ||
-      rType === 'WEEKLY_CONTEST' ||
-      rType === 'WEEKLY_CONTEST_INTELLIGENCE' ||
-      rType === 'SUNDAY_LIVE_CONTEST' ||
-      rType === 'CONTEST_ATTENDANCE_PARTICIPATION' ||
-      rType === 'CONTEST_PERFORMANCE_RANKING' ||
-      rType === 'SUNDAY_CONTEST' ||
-      rType === 'HISTORICAL_CONTEST_INTELLIGENCE' ||
-      rType === 'HISTORICAL_CONTEST_INTEL' ||
-      rType === 'WOW_PERFORMANCE_INTEL' ||
-      rType === 'WOW_INTEL' ||
-      !!report.contestSummary ||
-      !!report.solveDistribution ||
-      !!report.histSummary ||
-      !!report.wowSummary
-    );
-  }, [report, rType]);
-
-  const isSundayLive = useMemo(() => {
-    if (!report) return false;
-    return rType === 'SUNDAY_LIVE_CONTEST' || rType === 'SUNDAY_LIVE' || rType === 'SUNDAY_CONTEST';
-  }, [report, rType]);
-
-  const isFridayOfficial = useMemo(() => {
-    if (!report) return false;
-    return (
-      rType === 'FRIDAY_OFFICIAL_CONTEST' ||
-      rType === 'FRIDAY_OFFICIAL' ||
-      rType === 'OFFICIAL_CONTEST' ||
-      rType === 'WEEKLY_CONTEST_INTELLIGENCE'
-    );
-  }, [report, rType]);
-
-  const isCutoffReport = useMemo(() => {
-    if (!report) return false;
-    return (
-      rType === '12TH_TNEA_CUTOFF_ANALYSIS' ||
-      rType.includes('CUTOFF') ||
-      (Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0)
-    );
-  }, [report, rType]);
-
-  const isFiveWeekTrend = useMemo(() => {
-    if (!report) return false;
-    return (
-      rType === 'FIVE_WEEK_PERFORMANCE_TREND' ||
-      rType === 'FIVE_WEEK_TREND' ||
-      rType === 'BATCH_PERFORMANCE'
-    );
-  }, [report, rType]);
-
-  const isWowIntel = useMemo(() => {
-    if (!report) return false;
-    return (
-      rType === 'WEEK_ON_WEEK_INTELLIGENCE' ||
-      rType === 'WEEK_ON_WEEK' ||
-      rType === 'WOW_INTEL' ||
-      rType === 'WOW' ||
-      rType === 'WOW_INTELLIGENCE' ||
-      !!report.wowSummary
-    );
-  }, [report, rType]);
-
-  const isHistIntel = useMemo(() => {
-    if (!report) return false;
-    return (
-      rType === 'HISTORICAL_CONTEST_INTELLIGENCE' ||
-      rType === 'HISTORICAL_CONTEST_INTEL' ||
-      !!report.histSummary
-    );
-  }, [report, rType]);
-
-  const isWeeklyPerformance = useMemo(() => {
-    if (!report) return false;
-    return (
-      rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
-      rType === 'WEEKLY_PERFORMANCE' ||
-      rType === 'COORDINATOR' ||
-      rType === 'COORDINATOR_WEEKLY_PERFORMANCE' ||
-      rType === 'WEEKLY_COORDINATOR' ||
-      !!report.college_summary ||
-      !!report.department_summaries ||
-      !!report.batch_summaries
-    );
-  }, [report, rType]);
-
-
-  const formatMetricTitle = (key: string) => {
-    const map: Record<string, string> = {
-      totalStudents: "Total Students",
-      fiveContestConsistentSolvers: "5-Contest Consistent Solvers (≥4/5)",
-      improvingStudents: "Improving Trajectory (↑)",
-      stableStudents: "Stable Trajectory (→)",
-      decliningStudents: "Declining Trajectory (↓)",
-      followUpStudents: "Follow-Up Trajectory",
-      total5WeekSolves: "Total 5-Week Solves",
-      average5WeekSolves: "Average 5-Week Solves",
-      contestWindow: "Contest Window",
-      verifiedStudents: "Verified Solvers",
-      unverifiedStudents: "Unverified Profiles",
-      activeSolvers: "Active Solvers",
-      totalSolved: "Total Solved",
-      averageSolved: "Average Solved",
-      easySolved: "Easy Solved",
-      mediumSolved: "Medium Solved",
-      hardSolved: "Hard Solved",
-      highestSolved: "Highest Solved",
-      averageRating: "Average Rating",
-      highestRating: "Highest Rating",
-      totalParticipations: "Total Participations",
-    };
-    if (map[key]) return map[key];
-    return key
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
-      .trim();
-  };
-
-  const formatRank = (val: any) => {
-    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
-    const cleanStr = String(val).replace(/[^0-9]/g, '');
-    const num = Number(cleanStr);
-    if (isNaN(num) || num <= 0 || num >= 5000000) return '—';
-    return `#${num.toLocaleString()}`;
-  };
-
-  const formatAccommodation = (val: any) => {
-    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
-    const s = String(val).trim().toUpperCase();
-    if (s.includes('DAY')) return 'D';
-    if (s.includes('HOSTEL')) return 'H';
-    return s.charAt(0) || '—';
-  };
-
-  const formatRating = (val: any) => {
-    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
-    const cleanStr = String(val).replace(/[^0-9.]/g, '');
-    const num = Number(cleanStr);
-    if (isNaN(num) || num <= 0 || num === 1500 || Math.round(num) === 1500) return '—';
-    return Math.round(num).toLocaleString();
-  };
-
-  const renderSundayQCell = (qVal: any, qTime: any, qDisplay: any, isPart: boolean) => {
-    let text = qDisplay ? String(qDisplay).replace(/\s*\(\s*—\s*\)/g, '').trim() : null;
-    if (!text) {
-      if (!isPart) return <span className="text-slate-400 font-bold">—</span>;
-      const isSolved = Number(qVal) === 1;
-      if (isSolved) {
-        text = qTime && String(qTime) !== '—' ? `1 (${qTime} min)` : '1';
-      } else {
-        text = '0';
-      }
-    } else if (text === '1 (—)') {
-      text = qTime && String(qTime) !== '—' ? `1 (${qTime} min)` : '1';
-    } else if (text === '0 (—)') {
-      text = '0';
-    }
-
-    const isSolved = text.startsWith('1');
-    return (
-      <span className={`whitespace-nowrap ${isSolved ? "text-emerald-700 dark:text-emerald-300 font-extrabold" : "text-slate-700 dark:text-slate-300 font-bold"}`}>
-        {text}
-      </span>
-    );
-  };
-
-  const toRomanYear = (val: any): string => {
-    if (!val) return '';
-    const v = String(val).trim().toUpperCase();
-    if (['1', '1ST', 'I', 'I YEAR', '1 YEAR'].includes(v)) return 'I';
-    if (['2', '2ND', 'II', 'II YEAR', '2 YEAR'].includes(v)) return 'II';
-    if (['3', '3RD', 'III', 'III YEAR', '3 YEAR'].includes(v)) return 'III';
-    if (['4', '4TH', 'IV', 'IV YEAR', '4 YEAR', 'FINAL'].includes(v)) return 'IV';
-    if (v.includes('III')) return 'III';
-    if (v.includes('II')) return 'II';
-    if (v.includes('IV')) return 'IV';
-    if (v.includes('I')) return 'I';
-    return v;
-  };
-
-  const cleanReportTitle = (rawTitle: any): string => {
-    if (!rawTitle) return '';
-    let t = String(rawTitle).trim();
-    t = t.replace(/^NANDHA ENGINEERING COLLEGE \([^)]+\)\s*/i, '').trim();
-    t = t.replace(/^NANDHA ENGINEERING COLLEGE\s*/i, '').trim();
-    t = t.replace(/\s+\b\d+\b\s*-\s*/, ' ').trim();
-    t = t.replace(/\(\s*(\d+|I+|IV|V|FINAL|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)?\s*\)/gi, (_m, g1) => {
-      const rY = toRomanYear(g1);
-      return `(${rY} Year)`;
-    });
-    const yBrackets = t.match(/\([I|V|X]+ Year\)/gi);
-    if (yBrackets && yBrackets.length > 1) {
-      const lastBracket = yBrackets[yBrackets.length - 1];
-      yBrackets.slice(0, yBrackets.length - 1).forEach(b => {
-        t = t.replace(b, '').trim();
-      });
-    }
-    return t.replace(/\s+/g, ' ').trim();
-  };
-
-  const isFridayContestType = useMemo(() => {
-    const rid = String(report?.reportId || report?.report_id || '').toUpperCase();
-    return rType === 'FRIDAY_OFFICIAL_CONTEST' || rType === 'FRIDAY_OFFICIAL' || rid.includes('RPT-FRIDAY') || rid.includes('FRIDAY');
-  }, [report, rType]);
-
-  const headerTitle = useMemo(() => {
-    let raw = cleanReportTitle(report?.title || report?.reportTitle);
-    if (isFridayContestType && !rType.includes('BIWEEKLY')) {
-      if (raw.toUpperCase().includes('BIWEEKLY CONTEST')) {
-        raw = raw.replace(/BIWEEKLY CONTEST\s*\d*\s*—?/gi, 'FRIDAY CONTEST RESULT —').trim();
-      }
-      return raw || 'FRIDAY CONTEST RESULT — STUDENT PERFORMANCE REPORT';
-    }
-    return raw || (isContestReport ? `${report?.contestName || 'Contest'} Performance Report` : 'Report Preview');
-  }, [report, isFridayContestType, isContestReport, rType]);
-
-  const contestBadgeText = useMemo(() => {
-    if (isFridayContestType && !rType.includes('BIWEEKLY')) {
-      const cDate = report?.contestDate || report?.sessionDate || '';
-      const name = (report?.contestName && !report.contestName.toLowerCase().includes('biweekly')) ? report.contestName : 'Friday Contest Result';
-      return `${name}${cDate ? ` (${cDate})` : ''}`;
-    }
-    return `${report?.contestName || 'Contest'} (${report?.contestDate || report?.sessionDate || 'Sunday Session'})`;
-  }, [report, isFridayContestType, rType]);
-
-  const getQVal = (q: any, qNum: number, solvedCount: any, isPart: boolean) => {
-    if (!isPart) return 0;
-    if (q === 1 || q === '1' || Number(q) >= 1) return 1;
-    const sNum = Number(solvedCount || 0);
-    if (sNum >= qNum) return 1;
-    return 0;
-  };
-
-  const contestSummary = report?.contestSummary || report?.metrics || report?.current_week || {};
-  const solveDist = useMemo(() => {
-    const sd = report?.solveDistribution || {};
-    if (sd.solved4 !== undefined || sd.solved3 !== undefined || sd.solved2 !== undefined || sd.solved1 !== undefined) {
-      return sd;
-    }
-    const cw = report?.current_week ||
-      report?.department_summaries?.[0]?.current_week ||
-      report?.college_summary?.current_week;
-    if (cw && (cw.q4 !== undefined || cw.q3 !== undefined)) {
-      return {
-        solved4: cw.q4,
-        solved3: cw.q3,
-        solved2: cw.q2,
-        solved1: cw.q1,
-        solved0: cw.q0,
-        notParticipated: cw.not_participated,
-      };
-    }
-    return sd;
-  }, [report]);
-
-  const userSnapshot = useMemo(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const userRole = (userSnapshot?.role || (currentUser as any)?.role || '').trim().toLowerCase();
-  const isHodUser = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRole);
-  const isStaffUser = [
-    'staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor',
-    'faculty coordinator', 'staff coordinator', 'faculty_coordinator', 'staff_coordinator',
-    'mentor', 'tutor', 'class advisor', 'coordinator'
-  ].some(r => userRole.includes(r)) || Boolean(userSnapshot?.assigned_students_count);
-  const authorizedDeptCodes: string[] = useMemo(() => {
-    return (userSnapshot?.authorized_department_codes || []).map((c: string) => c.trim().toUpperCase());
-  }, [userSnapshot]);
-
-  const allRows = useMemo(() => {
-    let raw = report?.allStudents || report?.rows || report?.all_students_current || report?.rosters?.all_current || [];
-    if (!Array.isArray(raw)) return [];
-    if (isHodUser && authorizedDeptCodes.length > 0) {
-      raw = raw.filter((r: any) => {
-        const d = (r.department || r.dept || r.department_code || '').trim().toUpperCase();
-        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
-      });
-    }
-    return raw;
-  }, [report, isHodUser, authorizedDeptCodes]);
-
-  const displayDepartmentResults = useMemo(() => {
-    const rawList = report?.departmentResults || [];
-    if (!Array.isArray(rawList)) return [];
-    if (isHodUser && authorizedDeptCodes.length > 0) {
-      return rawList.filter((dr: any) => {
-        const d = (dr.department || '').trim().toUpperCase();
-        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
-      });
-    }
-    const targetDept = (report?.department || report?.deptFilter || '').trim().toUpperCase();
-    if (targetDept && targetDept !== 'ALL') {
-      return rawList.filter((dr: any) => {
-        const d = (dr.department || '').trim().toUpperCase();
-        return d === targetDept || d.includes(targetDept) || targetDept.includes(d);
-      });
-    }
-    return rawList;
-  }, [report?.departmentResults, report?.department, report?.deptFilter, isHodUser, authorizedDeptCodes]);
-
-  const displayOfficialLeaderboard = useMemo(() => {
-    const rawLb = report?.officialLeaderboard || [];
-    if (!Array.isArray(rawLb)) return [];
-    if (isHodUser && authorizedDeptCodes.length > 0) {
-      return rawLb.filter((lb: any) => {
-        const d = (lb.dept || lb.department || '').trim().toUpperCase();
-        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
-      });
-    }
-    const targetDept = (report?.department || report?.deptFilter || '').trim().toUpperCase();
-    if (targetDept && targetDept !== 'ALL') {
-      return rawLb.filter((lb: any) => {
-        const d = (lb.dept || lb.department || '').trim().toUpperCase();
-        return d === targetDept || d.includes(targetDept) || targetDept.includes(d);
-      });
-    }
-    return rawLb;
-  }, [report?.officialLeaderboard, report?.department, report?.deptFilter, isHodUser, authorizedDeptCodes]);
-
-  // Filter student rows based on active filter (for both Contest and Profile/General reports)
-  const displayedStudents = useMemo(() => {
-    if (!activeFilter) return allRows;
-
-    return allRows.filter((r: any) => {
-      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
-      const st = rawSt.replace(/\s+/g, '_');
-      const { count: cSolved, isAttended } = getContestSolvedCount(r, isContestReport);
-      const isPart = isAttended;
-
-      const tSolved = r.total_solved !== undefined && r.total_solved !== null
-        ? Number(r.total_solved)
-        : (r.total !== undefined && r.total !== null
-          ? Number(r.total)
-          : (r.solved !== undefined && r.solved !== null
-            ? Number(r.solved)
-            : null));
-      const easySolved = Number(r.easy || r.easy_solved || 0);
-      const medSolved = Number(r.medium || r.medium_solved || 0);
-      const hardSolved = Number(r.hard || r.hard_solved || 0);
-      const overallSolved = tSolved !== null ? tSolved : (easySolved + medSolved + hardSolved);
-
-      // Contest specific filters (Using authoritative Sunday contest solves, not lifetime problems!)
-      if (activeFilter === 'SOLVED_4') return isAttended && cSolved === 4;
-      if (activeFilter === 'SOLVED_3') return isAttended && cSolved === 3;
-      if (activeFilter === 'SOLVED_2') return isAttended && cSolved === 2;
-      if (activeFilter === 'SOLVED_1') return isAttended && cSolved === 1;
-      if (activeFilter === 'SOLVED_0') return isAttended && (cSolved === 0 || cSolved === null);
-      if (activeFilter === 'PUBLIC_ATTENDED') return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'PUBLIC_LIVE' || (isAttended && !st.includes('VIRTUAL'));
-      if (activeFilter === 'VIRTUAL_ATTENDED') return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_PRACTICE';
-      if (activeFilter === 'NOT_ATTENDED') return !isAttended || st === 'NOT_ATTENDED' || st === 'PUBLIC_NOT_ATTENDED' || st === 'ABSENT' || st === 'NOT_PARTICIPATED';
-      if (activeFilter === 'PENDING_USERNAME') return st === 'PENDING_USERNAME' || st === 'PENDING' || st === 'DATA_ERROR' || st === 'UNLINKED';
-      if (activeFilter === 'FETCH_FAILED') return st === 'FETCH_FAILED' || st === 'FETCH_ERROR' || st === 'API_ERROR';
-      if (activeFilter === 'INVALID_USERNAME') return st === 'INVALID_USERNAME' || st === 'USERNAME_NOT_FOUND' || st === 'INVALID';
-      if (activeFilter === 'DATA_ERROR') return st === 'DATA_ERROR';
-      if (activeFilter === 'UNKNOWN') return st === 'UNKNOWN';
-
-      // General / Cumulative Metric Filters
-      if (activeFilter === 'METRIC_ACTIVE_SOLVERS' || activeFilter === 'activeSolvers' || activeFilter === 'active_solvers') {
-        return overallSolved > 0 || isPart || Boolean(r.is_active_solver);
-      }
-      if (activeFilter === 'METRIC_VERIFIED_SOLVERS' || activeFilter === 'verifiedSolvers' || activeFilter === 'verified_solvers') {
-        return r.is_unverified !== true && st !== 'UNVERIFIED' && st !== 'INVALID_USERNAME' && st !== 'PENDING_USERNAME';
-      }
-      if (activeFilter === 'METRIC_UNVERIFIED_PROFILES' || activeFilter === 'unverifiedProfiles' || activeFilter === 'unverified_profiles') {
-        return r.is_unverified === true || st === 'UNVERIFIED' || st === 'INVALID_USERNAME' || st === 'PENDING_USERNAME';
-      }
-      if (activeFilter === 'METRIC_EASY_SOLVED' || activeFilter === 'easySolved' || activeFilter === 'easy_solved') {
-        return easySolved > 0;
-      }
-      if (activeFilter === 'METRIC_MEDIUM_SOLVED' || activeFilter === 'mediumSolved' || activeFilter === 'medium_solved') {
-        return medSolved > 0;
-      }
-      if (activeFilter === 'METRIC_HARD_SOLVED' || activeFilter === 'hardSolved' || activeFilter === 'hard_solved') {
-        return hardSolved > 0;
-      }
-      if (activeFilter === 'METRIC_ZERO_SOLVED' || activeFilter === 'zeroSolved' || activeFilter === 'notYetStarted') {
-        return overallSolved === 0;
-      }
-
-      // Problem Solving Category Distribution Filters
-      if (activeFilter === 'Above 500' || activeFilter === 'Above_500' || activeFilter === '>500') {
-        return overallSolved >= 500;
-      }
-      if (activeFilter === '250-500' || activeFilter === '250_500' || activeFilter === '250-499') {
-        return overallSolved >= 250 && overallSolved < 500;
-      }
-      if (activeFilter === '100-249' || activeFilter === '100_249' || activeFilter === '100-250') {
-        return overallSolved >= 100 && overallSolved < 250;
-      }
-      if (activeFilter === '50-99' || activeFilter === '50_99') {
-        return overallSolved >= 50 && overallSolved < 100;
-      }
-      if (activeFilter === '25-49' || activeFilter === '25_49') {
-        return overallSolved >= 25 && overallSolved < 50;
-      }
-      if (activeFilter === '1-24' || activeFilter === '1_24') {
-        return overallSolved >= 1 && overallSolved < 25;
-      }
-      if (activeFilter === '0 Solved' || activeFilter === '0_Solved' || activeFilter === 'Not Yet Started' || activeFilter === 'Not_Yet_Started') {
-        return overallSolved === 0;
-      }
-      if (activeFilter === 'Less than 100' || activeFilter === 'Less_than_100' || activeFilter === '<100') {
-        return overallSolved < 100 && overallSolved > 0;
-      }
-
-      return true;
-    });
-  }, [allRows, activeFilter]);
-
-  const toggleFilter = (filterKey: string) => {
-    setActiveFilter(prev => prev === filterKey ? null : filterKey);
-  };
-
-  // Only scope metrics if the report is explicitly an individual mentee allocation report
-  const isMenteeScoped = useMemo(() => {
-    return Boolean(rType.includes('MENTEE') || rType.includes('STAFF_ALLOCATION') || rType.includes('FACULTY_ASSIGNMENT'));
-  }, [rType]);
-
-  const rowDerivedMetrics = useMemo(() => {
-    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, attended = 0;
-    allRows.forEach((r: any) => {
-      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
-      const solv = Number(r.total_solved ?? r.problems_solved ?? -1);
-      const isAtt = rawSt.includes('ATTEND') || rawSt.includes('VERIFIED') || solv >= 0;
-      if (isAtt) {
-        attended++;
-        if (solv === 4) s4++;
-        else if (solv === 3) s3++;
-        else if (solv === 2) s2++;
-        else if (solv === 1) s1++;
-        else s0++;
-      }
-    });
-    return { s4, s3, s2, s1, s0, attended, notAttended: Math.max(allRows.length - attended, 0) };
-  }, [allRows]);
-
-  // Comprehensive Condition Stats for Summary Breakdown under the tables
-  const conditionStats = useMemo(() => {
-    const students = displayedStudents || [];
-    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, notAtt = 0;
-    let totalEasy = 0, totalMed = 0, totalHard = 0, totalSolves = 0;
-    let attendedCount = 0;
-
-    students.forEach((s: any) => {
-      const { count: cSolved, isAttended } = getContestSolvedCount(s, isContestReport);
-
-      if (isAttended) {
-        attendedCount++;
-        if (cSolved !== null) {
-          if (cSolved >= 4) s4++;
-          else if (cSolved === 3) s3++;
-          else if (cSolved === 2) s2++;
-          else if (cSolved === 1) s1++;
-          else s0++;
-        } else {
-          s0++;
-        }
-      } else {
-        notAtt++;
-      }
-
-      const cDiff = getContestDifficultyBreakdown(s, isContestReport);
-      const e = Number(s.easy ?? s.easy_solved ?? cDiff.easy ?? 0);
-      const m = Number(s.medium ?? s.medium_solved ?? cDiff.medium ?? 0);
-      const h = Number(s.hard ?? s.hard_solved ?? cDiff.hard ?? 0);
-
-      totalEasy += e;
-      totalMed += m;
-      totalHard += h;
-      const sTotal = Number(s.total_solved ?? s.totalSolved ?? (e + m + h));
-      totalSolves += sTotal;
-    });
-
-    // If backend report already provided college/contest-wide solveDist and filter is not active AND not mentee-scoped:
-    if (!activeFilter && !isMenteeScoped && solveDist && (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)) {
-      s4 = Number(solveDist.solved4 ?? s4);
-      s3 = Number(solveDist.solved3 ?? s3);
-      s2 = Number(solveDist.solved2 ?? s2);
-      s1 = Number(solveDist.solved1 ?? s1);
-      s0 = Number(solveDist.solved0 ?? s0);
-    }
-
-    if (!isMenteeScoped) {
-      if (totalEasy === 0 && report?.metrics?.easySolved) totalEasy = Number(report.metrics.easySolved);
-      if (totalMed === 0 && report?.metrics?.mediumSolved) totalMed = Number(report.metrics.mediumSolved);
-      if (totalHard === 0 && report?.metrics?.hardSolved) totalHard = Number(report.metrics.hardSolved);
-      if (totalSolves === 0 && report?.metrics?.totalSolved) totalSolves = Number(report.metrics.totalSolved);
-    }
-
-    return {
-      totalStudents: students.length,
-      attendedCount,
-      notAttendedCount: notAtt,
-      s4,
-      s3,
-      s2,
-      s1,
-      s0,
-      totalEasy,
-      totalMed,
-      totalHard,
-      totalSolves,
-    };
-  }, [displayedStudents, isContestReport, activeFilter, solveDist, report?.metrics, isMenteeScoped]);
-
-
-  // Robust Contest Metrics Calculation with zero-fallback & reconciliation safety
-  const totalRosterCount = useMemo(() => {
-    if (isMenteeScoped && allRows.length > 0) {
-      return allRows.length;
-    }
-    const bSum = Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0
-      ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
-      : 0;
-    return contestSummary.totalStudents || report?.total_students || report?.totalStudents || report?.college_summary?.total_students || bSum || allRows.length || 0;
-  }, [isMenteeScoped, contestSummary.totalStudents, report?.total_students, report?.totalStudents, report?.college_summary?.total_students, report?.batch_summaries, allRows.length]);
-
-  const actualParticipantCount = useMemo(() => {
-    if (isMenteeScoped && allRows.length > 0) {
-      return rowDerivedMetrics.attended;
-    }
-    const sumAttended = (contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0);
-    if (sumAttended > 0) return sumAttended;
-    const distSum = (Number(solveDist.solved4) || 0) + (Number(solveDist.solved3) || 0) + (Number(solveDist.solved2) || 0) + (Number(solveDist.solved1) || 0) + (Number(solveDist.solved0) || 0);
-    if (distSum > 0) return distSum;
-    if (report?.metrics?.attended) return Number(report.metrics.attended);
-    if (conditionStats.attendedCount > 0) return conditionStats.attendedCount;
-    if (report.histSummary?.sessionParticipation?.length > 0) {
-      return report.histSummary.sessionParticipation[report.histSummary.sessionParticipation.length - 1].attended || 0;
-    }
-    return allRows.filter((r: any) => (r.totalAttended || 0) > 0 || (r.weeklyData || []).some((w: any) => w.att) || (r.status || '').toUpperCase().includes('ATTEND')).length;
-  }, [isMenteeScoped, rowDerivedMetrics.attended, contestSummary, solveDist, report?.metrics?.attended, conditionStats.attendedCount, report.histSummary, allRows]);
-
-  const actualNotAttendedCount = useMemo(() => {
-    if (isMenteeScoped && allRows.length > 0) {
-      return rowDerivedMetrics.notAttended;
-    }
-    if (solveDist.notParticipated !== undefined && solveDist.notParticipated !== null && Number(solveDist.notParticipated) >= 0) {
-      return Number(solveDist.notParticipated);
-    }
-    if (contestSummary.notAttended !== undefined && contestSummary.notAttended !== null && Number(contestSummary.notAttended) > 0) {
-      return Number(contestSummary.notAttended);
-    }
-    if (report?.metrics?.notAttended !== undefined && report?.metrics?.notAttended !== null && Number(report.metrics.notAttended) >= 0) {
-      return Number(report.metrics.notAttended);
-    }
-    if (conditionStats.notAttendedCount > 0) {
-      return conditionStats.notAttendedCount;
-    }
-    return Math.max(totalRosterCount - actualParticipantCount, 0);
-  }, [isMenteeScoped, rowDerivedMetrics.notAttended, solveDist.notParticipated, contestSummary.notAttended, report?.metrics?.notAttended, conditionStats.notAttendedCount, totalRosterCount, actualParticipantCount]);
-
-  const turnoutPercentage = useMemo(() => {
-    if (totalRosterCount <= 0) return '0%';
-    const pct = (actualParticipantCount / totalRosterCount) * 100;
-    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
-  }, [actualParticipantCount, totalRosterCount]);
-
-  const absentPercentage = useMemo(() => {
-    if (totalRosterCount <= 0) return '0%';
-    const pct = (actualNotAttendedCount / totalRosterCount) * 100;
-    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
-  }, [actualNotAttendedCount, totalRosterCount]);
-
-  const s4Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s4 : Number(solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? conditionStats.s4 ?? 0);
-  const s3Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s3 : Number(solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? conditionStats.s3 ?? 0);
-  const s2Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s2 : Number(solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? conditionStats.s2 ?? 0);
-  const s1Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s1 : Number(solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? conditionStats.s1 ?? 0);
-  const s0Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s0 : Number(solveDist.solved0 ?? report.metrics?.['0 Q Solved'] ?? conditionStats.s0 ?? Math.max(actualParticipantCount - (s4Count + s3Count + s2Count + s1Count), 0));
-  const notAttendedCount = actualNotAttendedCount;
-
-  const getCohortPct = (count: number) => {
-    if (totalRosterCount <= 0) return '0%';
-    const pct = (count / totalRosterCount) * 100;
-    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
-  };
-
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isSharingWhatsApp, setIsSharingWhatsApp] = useState(false);
-  const [shareFormat, setShareFormat] = useState<'summary' | 'solvers' | 'leaderboard' | 'absentees'>('summary');
-  const [copiedSummary, setCopiedSummary] = useState(false);
-  const [showFormatPicker, setShowFormatPicker] = useState(false);
-
-  // Unified download metadata resolver for Excel, PDF, and Word documents
-  const getReportDownloadMeta = (format: string = 'excel') => {
-    const queryParams = new URLSearchParams();
-    if (activeFilter) queryParams.append('attendance', activeFilter);
-    if (report?.department && report.department !== 'ALL') queryParams.append('department', report.department);
-    if (report?.year && report.year !== 'ALL') queryParams.append('year', report.year);
-    if (report?.reportType || report?.report_type) queryParams.append('report_type', report.reportType || report.report_type);
-
-    const qString = queryParams.toString();
-    const url = `/reports/${reportId}/${format}${qString ? '?' + qString : ''}`;
-    const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
-
-    // Extract exact descriptive report title
-    let titlePart = '';
-    if (report?.title) {
-      let t = report.title;
-      if (t.includes(' - ')) {
-        const parts = t.split(' - ');
-        t = parts[parts.length - 1];
-      }
-      titlePart = t
-        .replace(/\s*\([^)]*\)/g, '')
-        .replace(/[^\w\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '_');
-    }
-
-    if (!titlePart || titlePart.length < 3) {
-      const typeMap: Record<string, string> = {
-        'CONTEST_PERFORMANCE_RANKING': 'Contest_Performance_and_Ranking_Report',
-        'CONTEST_ATTENDANCE_PARTICIPATION': 'Contest_Attendance_and_Participation_Report',
-        'WEEKLY_COORDINATOR': 'Coordinator_Weekly_Performance_Report',
-        'WEEKLY_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
-        'WEEKLY_STUDENT_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
-        'WOW_INTEL': 'Week_on_Week_Performance_Intel_Report',
-        'HISTORICAL_PERFORMANCE': 'Historical_Contest_Performance_Report',
-        'FIVE_WEEK_TREND': '5Week_Contest_Trend_Report',
-        'SUNDAY_LIVE': 'Sunday_Live_Contest_Attendance_Report',
-        'FRIDAY_OFFICIAL': 'Official_Friday_Contest_Result_Report',
-        'LEADERBOARD': 'Official_Institutional_Leaderboard_Report',
-        'MASTER_10_SHEET': 'Master_10_Sheet_Institutional_Report',
-        'STUDENT_PERFORMANCE': 'Student_Performance_Detail_Report',
-        'ASSIGNED_STUDENTS': 'Mentoring_Assigned_Students_Report',
-        'STAFF_MENTORING': 'Mentoring_Assigned_Students_Report',
-        'OFFICIAL_SUMMARY': 'Official_College_Summary_Report',
-        'HOD_DEPARTMENT_INTELLIGENCE': 'HOD_Department_Intelligence_Report',
-        'FACULTY_CONSOLIDATED': 'Faculty_Consolidated_Performance_Report',
-        'PRINCIPAL_EXECUTIVE': 'Principal_Executive_Intelligence_Report',
-      };
-      titlePart = typeMap[report?.reportType] || (report?.reportType || 'Student_Performance_Detail').replace(/\s+/g, '_');
-    }
-
-    if (isWeeklyPerformance) {
-      titlePart = 'Coordinator_Weekly_Performance_Report';
-    }
-
-    let sessionTag = '';
-    if (report?.contestName) {
-      sessionTag += `_${report.contestName.replace(/\s+/g, '_')}`;
-    } else if (report?.prevContest && report?.currContest) {
-      sessionTag += `_${report.prevContest}_vs_${report.currContest}`;
-    }
-
-    const isLiveReport = ['STUDENT_PERFORMANCE', 'ASSIGNED_STUDENTS', 'STAFF_MENTORING'].includes(report?.reportType || '');
-    const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || report?.report_date || report?.reportDate || '');
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    if (dateVal) {
-      const parts = dateVal.split(/[.-]/);
-      if (parts.length === 3) {
-        let dd = parts[0], mm = parseInt(parts[1], 10), yyyy = parts[2];
-        if (parts[0].length === 4) { yyyy = parts[0]; mm = parseInt(parts[1], 10); dd = parts[2]; }
-        if (mm >= 1 && mm <= 12) {
-          sessionTag += `_${dd.padStart(2, '0')}${months[mm - 1]}${yyyy}`;
-        } else {
-          sessionTag += `_${dateVal.replace(/[^\d]/g, '')}`;
-        }
-      } else {
-        sessionTag += `_${dateVal.replace(/[^\w]/g, '_')}`;
-      }
-    } else {
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, '0');
-      const mm = months[now.getMonth()];
-      const yyyy = now.getFullYear();
-      sessionTag += `_${dd}${mm}${yyyy}`;
-    }
-
-    let filterTag = '';
-    const DEPT_NAME_MAP: Record<string, string> = {
-      '1': 'CSE-CS',
-      '2': 'CSE-IOT',
-      '3': 'IT',
-      '4': 'IT',
-      '7': 'IT',
-      '8': 'CSE',
-      '9': 'AGRI',
-      '10': 'AIDS',
-      '11': 'EEE',
-      '12': 'ECE',
-      'CSE(CS)': 'CSE-CS',
-      'CSE(IOT)': 'CSE-IOT',
-      'CSE(IoT)': 'CSE-IOT',
-      'CSE': 'CSE',
-      'IT': 'IT',
-      'AIDS': 'AIDS',
-      'ECE': 'ECE',
-      'EEE': 'EEE',
-      'MECH': 'MECH',
-      'CIVIL': 'CIVIL',
-      'AGRI': 'AGRI',
-      'BME': 'BME',
-    };
-    const deptRaw = (report?.department || report?.deptFilter || '').toString().trim();
-    if (deptRaw && deptRaw.toUpperCase() !== 'ALL') {
-      const dUpper = deptRaw.toUpperCase();
-      const dClean = DEPT_NAME_MAP[deptRaw] || DEPT_NAME_MAP[dUpper] || deptRaw.replace(/[\(\)\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      filterTag += `_${dClean}`;
-    }
-
-    const YEAR_NAME_MAP: Record<string, string> = {
-      '1': 'I-Yr', 'I': 'I-Yr', '1ST': 'I-Yr',
-      '2': 'II-Yr', 'II': 'II-Yr', '2ND': 'II-Yr',
-      '3': 'III-Yr', 'III': 'III-Yr', '3RD': 'III-Yr',
-      '4': 'IV-Yr', 'IV': 'IV-Yr', '4TH': 'IV-Yr',
-    };
-    const yrRaw = (report?.year || report?.yearFilter || '').toString().trim();
-    if (yrRaw && yrRaw.toUpperCase() !== 'ALL') {
-      const yUpper = yrRaw.toUpperCase();
-      const yClean = YEAR_NAME_MAP[yrRaw] || YEAR_NAME_MAP[yUpper] || `${yrRaw.replace(/YEAR|YR/gi, '').trim()}-Yr`;
-      filterTag += `_${yClean}`;
-    }
-
-    if (activeFilter && activeFilter !== 'ALL') {
-      filterTag += `_Filter_${activeFilter}`;
-    }
-
-    const filename = `NEC_${titlePart}${sessionTag}${filterTag}.${ext}`;
-    const mimeType = format === 'excel'
-      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      : format === 'pdf'
-        ? 'application/pdf'
-        : format === 'word'
-          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          : 'application/octet-stream';
-
-    return { url, filename, ext, mimeType };
-  };
-
-  const downloadFile = async (format: string) => {
-    if (isDownloading) return;
-    setIsDownloading(true);
-    try {
-      const { url, filename } = getReportDownloadMeta(format);
-
-      const res = await downloadManager.download({
-        endpoint: url,
-        filename,
-      });
-
-      if (res.success) {
-        notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'DOWNLOAD COMPLETED' });
-      } else {
-        notify.error('Download Failed', res.error || 'Failed to download report.', { category: 'REPORTS' });
-      }
-    } catch (err: any) {
-      console.error(`Failed to download ${format} report:`, err);
-      notify.error('Download Failed', err.message || 'Failed to download report.', { category: 'REPORTS' });
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  if (loading || error) {
-    return (
-      <FullScreenLoadingOverlay
-        message="Fetching verified report dataset..."
-        error={error || undefined}
-        onRetry={error ? fetchReport : undefined}
-        onCancel={error ? onClose : undefined}
-      />
-    );
-  }
-
-  if (!report) return null;
-
-  const dataQuality = report.dataQuality || report.data_quality;
-
-  const getStatusBadge = (status: string) => {
-    const s = (status || '').toUpperCase();
-    if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED' || s === 'VERIFIED' || s === 'FINALIZED') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 leading-tight shadow-2xs">PUBLIC ATTENDED</span>;
-    }
-    if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL' || s === 'VIRTUAL_PRACTICE') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-purple-50 text-purple-800 border border-purple-300 leading-tight shadow-2xs">VIRTUAL ATTENDED</span>;
-    }
-    if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED' || s === 'ABSENT') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-rose-50 text-rose-800 border border-rose-300 leading-tight shadow-2xs">NOT ATTENDED</span>;
-    }
-    if (s === 'PENDING_USERNAME' || s === 'PENDING') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-300 leading-tight shadow-2xs">PENDING USERNAME</span>;
-    }
-    if (s === 'DATA_ERROR') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-orange-50 text-orange-800 border border-orange-300 leading-tight shadow-2xs">DATA ERROR</span>;
-    }
-    if (s === 'FETCH_FAILED' || s === 'FETCH_ERROR') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-rose-50 text-rose-800 border border-rose-300 leading-tight shadow-2xs">FETCH FAILED</span>;
-    }
-    if (s === 'INVALID_USERNAME' || s === 'USERNAME_NOT_FOUND') {
-      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-orange-50 text-orange-800 border border-orange-300 leading-tight shadow-2xs">INVALID USERNAME</span>;
-    }
-    return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 leading-tight shadow-2xs">UNKNOWN</span>;
-  };
-
-  // =========================================================================
-  // UNIVERSAL SHARE TEXT BUILDER (ALL 17 INSTITUTIONAL REPORTS & 4 FORMATS)
-  // =========================================================================
-  const generateShareText = (targetFormat: 'summary' | 'solvers' | 'leaderboard' | 'absentees' = shareFormat): string => {
-    const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
-    const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
-
-    // 1. Resolve Official Coordinator
-    const officialCoordinator = (
-      report?.coordinator ||
-      report?.academicCoordinator ||
-      report?.coordinator_name ||
-      ''
-    ).trim();
-
-    // 2. Resolve Report Title
-    let rawTitle = cleanReportTitle(report?.title || report?.reportTitle || '');
-    if (!rawTitle) {
-      if (isWeeklyPerformance) rawTitle = 'Coordinator Weekly Performance Report';
-      else if (isWowIntel) rawTitle = 'Week-on-Week Intelligence Report';
-      else if (isFridayOfficial) rawTitle = 'Friday Official Contest Report';
-      else if (isSundayLive) rawTitle = 'Sunday Live Contest Report';
-      else rawTitle = 'LeetCode Performance Report';
-    }
-
-    // In WhatsApp, bolding cannot cross newlines: each line must be individually wrapped in *...*
-    // Also remove redundant college name if already present in title string
-    const titleLines = rawTitle
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter(line => line.length > 0 && !line.toUpperCase().includes('NANDHA ENGINEERING COLLEGE'))
-      .map(line => `*${line.toUpperCase()}*`);
-    const formattedTitleHeader = titleLines.length > 0 ? `${titleLines.join('\n')}\n` : '';
-
-    // Resolve true contest name
-    let resolvedContestName = '';
-    if (report?.current_session?.contest_name) {
-      resolvedContestName = report.current_session.contest_name;
-    } else if (report?.discovered_contests?.current_week_contests_str) {
-      resolvedContestName = report.discovered_contests.current_week_contests_str.split(',')[0].trim();
-    } else if (report?.contest_name && !report.contest_name.toLowerCase().includes('coordinator')) {
-      resolvedContestName = report.contest_name;
-    } else if (report?.contestName && !report.contestName.toLowerCase().includes('coordinator')) {
-      resolvedContestName = report.contestName;
-    } else if (report?.session_date) {
-      resolvedContestName = `Weekly Contest (${report.session_date})`;
-    } else {
-      resolvedContestName = isWowIntel ? 'Week-on-Week Performance' : 'Weekly LeetCode Contest';
-    }
-
-    // Resolve Contest Date cleanly without invalid dates like 33.11.2026
-    const formatDateObjToDDMMYYYY = (d: Date): string => {
-      if (isNaN(d.getTime())) return '';
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}.${month}.${year}`;
-    };
-
-    const parseAnyDateString = (raw: any): string => {
-      if (!raw) return '';
-      const str = String(raw).trim();
-      if (!str) return '';
-
-      // Check standard DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
-      const dmyMatch = str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
-      if (dmyMatch) {
-        const d = parseInt(dmyMatch[1], 10);
-        const m = parseInt(dmyMatch[2], 10);
-        const y = parseInt(dmyMatch[3], 10);
-        if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
-          return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
-        }
-      }
-
-      // Check ISO / YYYY-MM-DD
-      if (str.includes('-')) {
-        const datePart = str.split('T')[0];
-        const parts = datePart.split('-');
-        if (parts.length === 3 && parts[0].length === 4) {
-          const y = parseInt(parts[0], 10);
-          const m = parseInt(parts[1], 10);
-          const d = parseInt(parts[2], 10);
-          if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
-            return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
-          }
-        }
-      }
-
-      // Check standard parseable date string (avoid parsing pure numbers like "33" as dates!)
-      if (!/^\d+$/.test(str)) {
-        const parsed = new Date(str);
-        if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000 && parsed.getFullYear() < 2100) {
-          return formatDateObjToDDMMYYYY(parsed);
-        }
-      }
-
-      return '';
-    };
-
-    let resolvedDate = parseAnyDateString(report?.contest_date) ||
-      parseAnyDateString(report?.session_date) ||
-      parseAnyDateString(report?.contestDate) ||
-      parseAnyDateString(report?.sessionDate) ||
-      parseAnyDateString(report?.current_session?.session_date) ||
-      parseAnyDateString(report?.report_date) ||
-      parseAnyDateString(report?.date) ||
-      parseAnyDateString(report?.created_at) ||
-      parseAnyDateString(report?.generated_at) ||
-      parseAnyDateString(report?.timestamp) ||
-      formatDateObjToDDMMYYYY(new Date());
-
-    // 3. In-Charge / Coordinator Resolution (Role-Aware for All Roles)
-    const rawName = (currentUser?.full_name || currentUser?.displayName || currentUser?.name || '').trim();
-    const rawRole = (currentUser?.role || (userSnapshot as any)?.role || '').toLowerCase().trim();
-
-    const isPrincipal = ['principal', 'director', 'dean'].some(r => rawRole === r || rawRole.includes('principal') || rawRole.includes('director') || rawRole.includes('dean'));
-    const isCoordinatorRole = ['coordinator', 'academic coordinator', 'placement coordinator', 'placement_coordinator'].some(r => rawRole === r || rawRole.includes('coordinator'));
-    const isStaffOrFaculty = !isCoordinatorRole && (['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'mentor', 'tutor'].some(r => rawRole.includes(r)) || isStaffUser);
-    const isHodRoleUser = ['hod', 'department hod', 'department_hod', 'head of department'].some(r => rawRole === r || rawRole.includes('hod'));
-    const isAdminUser = ['admin', 'superadmin', 'super_admin'].some(r => rawRole === r || rawRole.includes('admin'));
-
-    let inChargeRole = '';
-    let inChargeName = '';
-
-    if (isPrincipal) {
-      inChargeRole = 'Principal / Executive';
-      inChargeName = rawName || 'Office of the Principal';
-    } else if (isStaffOrFaculty) {
-      inChargeRole = isMenteeScoped ? 'Faculty Mentor' : 'Staff In-Charge';
-      inChargeName = rawName || report?.staff_name || report?.mentor_name || report?.faculty_name || 'Staff Mentor';
-    } else if (isCoordinatorRole) {
-      inChargeRole = rawRole.includes('placement') ? 'Placement Coordinator' : 'Academic Coordinator';
-      inChargeName = rawName || officialCoordinator || 'Coordinator';
-    } else if (isHodRoleUser) {
-      inChargeRole = 'HOD';
-      inChargeName = rawName || report?.hod_name || 'Head of Department';
-    } else if (isAdminUser) {
-      inChargeRole = 'Institutional Admin';
-      inChargeName = (rawName.toLowerCase() === 'admin' || !rawName) ? 'Administrator' : rawName;
-    } else if (isWeeklyPerformance && officialCoordinator) {
-      inChargeRole = 'Coordinator';
-      inChargeName = officialCoordinator;
-    } else if (rawName) {
-      inChargeRole = 'In-Charge';
-      inChargeName = rawName.toLowerCase() === 'admin' ? 'Administrator' : rawName;
-    }
-
-    // 4. Metrics Resolution
-    let total = Number(report?.totalStudents ?? report?.total_students ?? report?.cohort_size ?? allRows.length ?? 0);
-    let attended = Number(report?.attendedStudents ?? report?.total_attended ?? report?.active_participants ?? 0);
-    let absent = Number(report?.absentStudents ?? report?.not_attended ?? report?.total_absent ?? 0);
-
-    const isRowAttended = (r: any) => {
-      const att = String(r.attendance ?? r.status ?? '').toUpperCase().trim();
-      if (att === 'ATTENDED' || att === 'PRESENT' || att === 'YES') return true;
-      if (att === 'ABSENT' || att === 'NOT ATTENDED' || att === 'NO') return false;
-      const solv = Number(r.solved ?? r.total_solved ?? r.total_contest_solved ?? 0);
-      const qSum = (Number(r.q1 ? 1 : 0) + Number(r.q2 ? 1 : 0) + Number(r.q3 ? 1 : 0) + Number(r.q4 ? 1 : 0));
-      return solv > 0 || qSum > 0;
-    };
-
-    const getRowSolved = (r: any) => {
-      const qSum = (Number(r.q1 ? 1 : 0) + Number(r.q2 ? 1 : 0) + Number(r.q3 ? 1 : 0) + Number(r.q4 ? 1 : 0));
-      const direct = Number(r.solved ?? r.total_solved ?? r.total_contest_solved ?? 0);
-      return Math.max(direct, qSum);
-    };
-
-    const getCleanName = (r: any) => (r.name || r.student_name || r.full_name || 'Student').trim();
-    const getCleanReg = (r: any) => (r.register_number || r.reg_no || r.roll_no || r.register_no || '').trim();
-    const getCleanDept = (r: any) => (r.department || r.dept || '').trim();
-
-    if (attended === 0 && allRows.length > 0) {
-      attended = allRows.filter(isRowAttended).length;
-      if (total === 0) total = allRows.length;
-      absent = Math.max(0, total - attended);
-    } else if (total === 0 && (attended > 0 || absent > 0)) {
-      total = attended + absent;
-    } else if (absent === 0 && total > attended) {
-      absent = total - attended;
-    }
-
-    let q4 = Number(report?.solversCount?.s4 ?? report?.solvers_4 ?? report?.q4 ?? 0);
-    let q3 = Number(report?.solversCount?.s3 ?? report?.solvers_3 ?? report?.q3 ?? 0);
-    let q2 = Number(report?.solversCount?.s2 ?? report?.solvers_2 ?? report?.q2 ?? 0);
-    let q1 = Number(report?.solversCount?.s1 ?? report?.solvers_1 ?? report?.q1 ?? 0);
-    let q0 = Number(report?.solversCount?.s0 ?? report?.solvers_0 ?? report?.q0 ?? 0);
-
-    if (q4 === 0 && q3 === 0 && q2 === 0 && q1 === 0 && allRows.length > 0) {
-      allRows.forEach((r: any) => {
-        if (!isRowAttended(r)) return;
-        const s = getRowSolved(r);
-        if (s >= 4) q4++;
-        else if (s === 3) q3++;
-        else if (s === 2) q2++;
-        else if (s === 1) q1++;
-        else q0++;
-      });
-    }
-
-    // Weekly contest details
-    const currContest = report?.current_contest_metadata || {};
-    const lastContest = report?.last_week_contest_metadata || {};
-    const currContestTitle = currContest.contest_name || report?.current_session?.contest_name || resolvedContestName || 'Current Contest';
-    const currContestDate = parseAnyDateString(currContest.session_date || report?.current_session?.session_date) || resolvedDate;
-    const lastContestTitle = lastContest.contest_name || report?.previous_session?.contest_name || report?.last_week_session?.contest_name || '';
-    const lastContestDate = parseAnyDateString(lastContest.session_date || report?.previous_session?.session_date || report?.last_week_session?.session_date);
-
-    const cwMetrics = report?.current_week_metrics || {};
-    const lwMetrics = report?.last_week_metrics || {};
-    const lw4 = Number(lwMetrics.q4 ?? 0);
-    const lw3 = Number(lwMetrics.q3 ?? 0);
-    const lw2 = Number(lwMetrics.q2 ?? 0);
-    const lw1 = Number(lwMetrics.q1 ?? 0);
-    const lw0 = Number(lwMetrics.q0 ?? 0);
-    const lwAtt = lw4 + lw3 + lw2 + lw1 + lw0;
-    const lwAbs = Number(lwMetrics.not_participated ?? (total > lwAtt ? total - lwAtt : 0));
-
-    // Batch rating list
-    const batchRatingList: { name: string; count: number }[] = [];
-    if (Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0) {
-      report.batch_summaries.forEach((b: any) => {
-        const rawBatch = (b.batch || '').trim();
-        let bName = rawBatch;
-        if (!bName) {
-          const yr = String(b.year || '').trim();
-          if (yr === '4' || yr === 'IV') bName = '2023 - 2027';
-          else if (yr === '3' || yr === 'III') bName = '2024 - 2028';
-          else if (yr === '2' || yr === 'II') bName = '2025 - 2029';
-          else bName = 'Batch';
-        } else {
-          if (rawBatch.includes('2023')) bName = '2023 - 2027';
-          else if (rawBatch.includes('2024')) bName = '2024 - 2028';
-          else if (rawBatch.includes('2025')) bName = '2025 - 2029';
-        }
-        const bTot = b.total_students ? ` (${b.total_students} students)` : '';
-        const r1500 = Number(b.current_week?.rating_above_1500 ?? b.rating_above_1500 ?? b.rating_1500 ?? 0);
-        batchRatingList.push({ name: `${bName}${bTot}`, count: r1500 });
-      });
-    }
-
-    // 5. Header Assembly
-    let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
-      `*Department of ${cleanDept}*\n` +
-      `----------------------------------------\n` +
-      formattedTitleHeader;
-
-    if (isWeeklyPerformance) {
-      text += `*Current Contest:* ${currContestTitle}${currContestDate ? ` (${currContestDate})` : ''}\n`;
-      if (lastContestTitle) {
-        text += `*Last Week Contest:* ${lastContestTitle}${lastContestDate ? ` (${lastContestDate})` : ''}\n`;
-      }
-    } else if (isWowIntel) {
-      const pContest = report?.prevContest || `Contest ${report?.wowSummary?.prevContestNum || ''}`;
-      const cContest = report?.currContest || resolvedContestName || `Contest ${report?.wowSummary?.currContestNum || ''}`;
-      const pDate = report?.prevDate || '';
-      const cDate = report?.currDate || resolvedDate || '';
-      text += `*Current Contest:* ${cContest}${cDate ? ` (${cDate})` : ''}\n`;
-      text += `*Previous Contest:* ${pContest}${pDate ? ` (${pDate})` : ''}\n`;
-    } else {
-      if (resolvedContestName) text += `*Contest:* ${resolvedContestName}\n`;
-      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
-    }
-
-    if (inChargeName) {
-      text += `*${inChargeRole}:* ${inChargeName}\n`;
-    }
-    text += `----------------------------------------\n\n`;
-
-    // 6. Common Metrics Block
-    if (isWeeklyPerformance && lastContestTitle) {
-      text += `*PARTICIPATION COMPARISON*\n` +
-        `- Total Enrolled Students: *${total}*\n` +
-        `- Current Week Attendance: *${attended}* (${total > 0 ? ((attended / total) * 100).toFixed(1) : '0'}%)\n` +
-        `- Last Week Attendance: *${lwAtt}* (${total > 0 ? ((lwAtt / total) * 100).toFixed(1) : '0'}%)\n` +
-        `- Attendance Change: *${attended - lwAtt >= 0 ? '+' : ''}${attended - lwAtt}*\n\n` +
-        `*PROBLEM SOLVERS COMPARISON*\n` +
-        `- 4/4 Solvers: Current *${q4}* | Last Week *${lw4}*\n` +
-        `- 3/4 Solvers: Current *${q3}* | Last Week *${lw3}*\n` +
-        `- 2/4 Solvers: Current *${q2}* | Last Week *${lw2}*\n` +
-        `- 1/4 Solvers: Current *${q1}* | Last Week *${lw1}*\n` +
-        `- 0/4 Solvers: Current *${q0}* | Last Week *${lw0}*\n` +
-        `- Absent: Current *${absent}* | Last Week *${lwAbs}*\n`;
-    } else {
-      text += `*PARTICIPATION OVERVIEW*\n` +
-        `- Total Enrolled Students: *${total}*\n` +
-        `- Total Attended: *${attended}* (${total > 0 ? ((attended / total) * 100).toFixed(1) : '0'}%)\n` +
-        `- Absent / Not Participated: *${absent}* (${total > 0 ? ((absent / total) * 100).toFixed(1) : '0'}%)\n\n` +
-        `*PROBLEM SOLVE BREAKDOWN*\n` +
-        `- 4/4 Questions Solved: *${q4}*\n` +
-        `- 3/4 Questions Solved: *${q3}*\n` +
-        `- 2/4 Questions Solved: *${q2}*\n` +
-        `- 1/4 Questions Solved: *${q1}*\n` +
-        `- 0 Questions Solved: *${q0}*\n`;
-    }
-
-    if (batchRatingList.length > 0) {
-      text += `\n*RATING > 1500 BENCHMARK*\n`;
-      batchRatingList.slice(0, 3).forEach(b => {
-        text += `- ${b.name}: *${b.count}*\n`;
-      });
-    }
-    text += `\n`;
-
-    // 7. FORMAT-SPECIFIC STUDENT LIST EXPANSIONS
-    const solvers4 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) >= 4);
-    const solvers3 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 3);
-    const solvers2 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 2);
-    const solvers1 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 1);
-    const absentRows = allRows.filter((r: any) => !isRowAttended(r));
-
-    const sortByPerf = (a: any, b: any) => {
-      const rA = Number(a.contest_rating || a.rating || 0);
-      const rB = Number(b.contest_rating || b.rating || 0);
-      return rB - rA;
-    };
-    solvers4.sort(sortByPerf);
-    solvers3.sort(sortByPerf);
-    solvers2.sort(sortByPerf);
-
-    // FORMAT 2: SOLVERS DIRECTORY (WITH STUDENT NAMES)
-    if (targetFormat === 'solvers') {
-      text += `*STUDENT SOLVERS DIRECTORY*\n` +
-        `----------------------------------------\n`;
-
-      if (solvers4.length > 0) {
-        text += `*4/4 SOLVERS (ALL PROBLEMS SOLVED) - ${solvers4.length} Students:*\n`;
-        solvers4.forEach((s: any, idx: number) => {
-          const reg = getCleanReg(s);
-          const dept = getCleanDept(s);
-          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
-        });
-        text += `\n`;
-      } else {
-        text += `*4/4 Solvers:* 0 students\n\n`;
-      }
-
-      if (solvers3.length > 0) {
-        text += `*3/4 SOLVERS - ${solvers3.length} Students:*\n`;
-        const limit3 = solvers3.slice(0, 25);
-        limit3.forEach((s: any, idx: number) => {
-          const reg = getCleanReg(s);
-          const dept = getCleanDept(s);
-          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
-        });
-        if (solvers3.length > 25) {
-          text += `... and ${solvers3.length - 25} more solvers (see full list in attached Excel)\n`;
-        }
-        text += `\n`;
-      } else {
-        text += `*3/4 Solvers:* 0 students\n\n`;
-      }
-
-      if (solvers2.length > 0) {
-        text += `*2/4 SOLVERS - ${solvers2.length} Students:*\n`;
-        const limit2 = solvers2.slice(0, 15);
-        limit2.forEach((s: any, idx: number) => {
-          const reg = getCleanReg(s);
-          const dept = getCleanDept(s);
-          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
-        });
-        if (solvers2.length > 15) {
-          text += `... and ${solvers2.length - 15} more solvers (see attached Excel)\n`;
-        }
-        text += `\n`;
-      } else {
-        text += `*2/4 Solvers:* 0 students\n\n`;
-      }
-
-      if (solvers1.length > 0) {
-        text += `*1/4 Solvers:* ${solvers1.length} students (detailed list in Excel report)\n\n`;
-      } else {
-        text += `*1/4 Solvers:* 0 students\n\n`;
-      }
-    }
-
-    // FORMAT 3: TOP PERFORMERS & LEADERBOARD
-    if (targetFormat === 'leaderboard') {
-      text += `*TOP PERFORMERS / LEADERBOARD*\n` +
-        `----------------------------------------\n`;
-      const sourceList = (report?.officialLeaderboard && Array.isArray(report.officialLeaderboard) && report.officialLeaderboard.length > 0)
-        ? report.officialLeaderboard
-        : ((report?.topStudents && Array.isArray(report.topStudents) && report.topStudents.length > 0)
-          ? report.topStudents
-          : allRows.filter(isRowAttended).sort((a: any, b: any) => {
-            const solDiff = getRowSolved(b) - getRowSolved(a);
-            if (solDiff !== 0) return solDiff;
-            const rDiff = Number(b.contest_rating || b.rating || 0) - Number(a.contest_rating || a.rating || 0);
-            return rDiff;
-          })
-        );
-      const topList = sourceList.slice(0, 20);
-      if (topList.length > 0) {
-        topList.forEach((s: any, idx: number) => {
-          const name = getCleanName(s);
-          const reg = getCleanReg(s);
-          const dept = getCleanDept(s);
-          const solved = getRowSolved(s);
-          const rating = s.contest_rating || s.rating;
-          const score = s.score !== undefined && s.score !== '-' ? s.score : (solved * 3);
-          text += `${idx + 1}. ${name}${reg ? ` (${reg})` : ''}${dept ? ` [${dept}]` : ''} - *${solved}/4 Solved*${score ? ` | Score: ${score}` : ''}${rating ? ` | Rating: ${rating}` : ''}\n`;
-        });
-        if (sourceList.length > 20) {
-          text += `... and ${sourceList.length - 20} more students in full official leaderboard\n`;
-        }
-      } else {
-        text += `No participant ranking records found for this cohort.\n`;
-      }
-      text += `\n`;
-    }
-
-    // FORMAT 4: ABSENTEES DIRECTORY (FOR FACULTY MENTOR FOLLOW-UP)
-    if (targetFormat === 'absentees') {
-      text += `*ABSENT / NON-PARTICIPATED STUDENTS (FOLLOW-UP)*\n` +
-        `----------------------------------------\n` +
-        `Total Absentees: *${absentRows.length} students*\n\n`;
-      if (absentRows.length > 0) {
-        // Group by department when multiple depts and list is large
-        const deptMap = new Map<string, any[]>();
-        absentRows.forEach((s: any) => {
-          const dept = getCleanDept(s) || 'General';
-          if (!deptMap.has(dept)) deptMap.set(dept, []);
-          deptMap.get(dept)!.push(s);
-        });
-        if (deptMap.size > 1 && absentRows.length > 20) {
-          // Multi-dept: group by department, show all
-          let globalIdx = 1;
-          deptMap.forEach((students, dept) => {
-            text += `*[${dept}] - ${students.length} students:*\n`;
-            students.forEach((s: any) => {
-              const name = getCleanName(s);
-              const reg = getCleanReg(s);
-              text += `${globalIdx++}. ${name}${reg ? ` (${reg})` : ''}\n`;
-            });
-            text += `\n`;
-          });
-        } else {
-          // Single dept or small list: flat numbered list (all students, no cap)
-          absentRows.forEach((s: any, idx: number) => {
-            const name = getCleanName(s);
-            const reg = getCleanReg(s);
-            const dept = getCleanDept(s);
-            text += `${idx + 1}. ${name}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
-          });
-          text += `\n`;
-        }
-      } else {
-        text += `100% Attendance achieved! Zero absentees recorded for this session.\n\n`;
-      }
-      text += `*Action Required:* Faculty mentors are requested to follow up with the non-participating students listed above.\n\n`;
-    }
-
-    text += `----------------------------------------\n` +
-      `*Official report available on Nandha LeetCode Portal*\n`;
-
-    return text.trim();
-  };
-
-  const handleShareWhatsApp = async (
-    mode: 'message' | 'file' = 'message',
-    formatOverride?: 'summary' | 'solvers' | 'leaderboard' | 'absentees'
-  ) => {
-    if (isSharingWhatsApp) return;
-    setIsSharingWhatsApp(true);
-
-    const targetFmt = formatOverride || shareFormat;
-    const rawDept = report?.department_name || report?.department || 'CSE (Cyber Security)';
-    const cleanDept = rawDept.replace(/^Department\s+of\s+/i, '').trim();
-    const fullShareText = generateShareText(targetFmt);
-    const { url, filename, mimeType } = getReportDownloadMeta('excel');
-
-    // Automatically copy to clipboard
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(fullShareText);
-      }
-    } catch (_clipErr) { }
-
-    try {
-      // MODE 1: Direct WhatsApp Text Message (Pre-filled chat text with full stats and 1-tap download link)
-      if (mode === 'message') {
-        notify.success('Opening WhatsApp', 'Performance summary and download link copied to clipboard & opened in WhatsApp.', { category: 'SHARE' });
-        if (isNativeMobile()) {
-          try {
-            await DocumentOpener.shareToWhatsApp({ text: fullShareText });
-            setIsSharingWhatsApp(false);
-            return;
-          } catch (_nativeErr) {
-            console.warn('[ReportPreview] Native DocumentOpener.shareToWhatsApp failed, trying URL fallback:', _nativeErr);
-          }
-        }
-        const encoded = encodeURIComponent(fullShareText);
-        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-        setIsSharingWhatsApp(false);
-        return;
-      }
-
-      // MODE 2: File Attachment (.xlsx document share)
-      // Note: Android WhatsApp strips text captions on non-media documents, so summary is saved to clipboard!
-      notify.info('Preparing Excel Attachment', 'Summary text copied to clipboard! Attaching Excel workbook...', { category: 'SHARE' });
-
-      // Native Mobile App (Capacitor Android APK):
-      if (isNativeMobile()) {
-        try {
-          const res = await api.get(url, { responseType: 'blob' });
-          if (res?.data) {
-            const { uri } = await saveFileToMobileStorage(res.data, filename, mimeType);
-            if (uri) {
-              await DocumentOpener.shareDocument({
-                path: uri,
-                filename,
-                mimeType,
-                text: fullShareText,
-              });
-              notify.success('Excel Attached', `${filename} ready in WhatsApp. (Tip: Paste clipboard if you wish to include the summary text).`, { category: 'SHARE' });
-              setIsSharingWhatsApp(false);
-              return;
-            }
-          }
-        } catch (mobileErr) {
-          console.warn('[ReportPreview] Mobile file share failed, falling back:', mobileErr);
-        }
-      }
-
-      // Web Share API Level 2 (Browsers with file sharing support)
-      if (typeof navigator !== 'undefined' && (navigator as any).canShare && typeof File !== 'undefined') {
-        try {
-          const res = await api.get(url, { responseType: 'blob' });
-          if (res?.data) {
-            const file = new File([res.data], filename, { type: mimeType });
-            if ((navigator as any).canShare({ files: [file] })) {
-              await (navigator as any).share({
-                title: `${cleanDept} LeetCode Performance`,
-                text: fullShareText,
-                files: [file],
-              });
-              setIsSharingWhatsApp(false);
-              return;
-            }
-          }
-        } catch (_webShareErr) {
-          /* Fall through to download + WhatsApp url */
-        }
-      }
-
-      // Desktop browser fallback: Trigger Excel file download & open WhatsApp Web
-      try {
-        await downloadFile('excel');
-        notify.success('Excel Report Downloaded', `${filename} saved. Opening WhatsApp Web with summary.`, { category: 'SHARE' });
-      } catch (_e) { }
-
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
-    } catch (err: any) {
-      console.error('[ReportPreview] WhatsApp share error:', err);
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
-    } finally {
-      setIsSharingWhatsApp(false);
-    }
-  };
-
-  return createPortal(
-    <div
-      className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:static print:w-full print:h-auto print:overflow-visible"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="modal-container-responsive max-w-7xl bg-white dark:bg-[#0c1427] text-slate-900 dark:text-slate-100 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-white/10 animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0 flex flex-col overflow-hidden">
-
-        {/* Mobile bottom-sheet drag handle (Tap or swipe down to close) */}
-        <SwipeHandle
-          onClose={onClose}
-          className="bg-white dark:bg-[#0c1427] border-b border-slate-100 dark:border-white/10"
-          pillClassName="bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500"
-        />
-
-        {/* 1. HEADER BANNER - Crisp Executive White & Sleek Dark */}
-        <div className="relative overflow-hidden px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-white dark:bg-[#0c1427] text-slate-900 dark:text-white flex items-center justify-between shrink-0 border-b border-slate-200/90 dark:border-white/10 shadow-2xs print:bg-white print:text-black print:border-b-2 print:border-black">
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/80 dark:border-indigo-500/30 flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 shadow-xs">
-              <FileText className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight print:text-black truncate print:whitespace-normal">
-                  {headerTitle}
-                </h2>
-                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-extrabold tracking-wide shrink-0 shadow-2xs print:hidden">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  READY
-                </span>
-              </div>
-              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate print:whitespace-normal flex items-center gap-1.5 flex-wrap">
-                {isContestReport && (
-                  <span className="font-bold text-amber-900 dark:text-amber-200 print:text-black px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40 text-[10px] sm:text-[11px]">
-                    {contestBadgeText}
-                  </span>
-                )}
-                <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">Report ID: <span className="font-mono font-bold text-slate-700 dark:text-slate-300 print:text-slate-600">{report.reportId || report.report_id}</span></span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close report preview"
-            className="shrink-0 ml-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-white/10 dark:hover:bg-rose-500/20 dark:text-slate-200 dark:hover:text-rose-400 dark:border-white/10 transition-all font-bold text-xs flex items-center space-x-1 cursor-pointer shadow-2xs print:hidden touch-manipulation active:scale-95 group"
-          >
-            <X className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" />
-            <span className="text-xs">Close</span>
-          </button>
-        </div>
-
-        {/* 2. DATASET QUALITY & RECONCILIATION BAR */}
-        <div className="px-3 sm:px-5 py-2 bg-slate-50/90 dark:bg-[#080d19]/90 border-b border-slate-200/90 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold shrink-0 shadow-2xs">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <span className="flex items-center space-x-1 text-slate-800 dark:text-slate-200 font-extrabold text-[11px] sm:text-xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>Dataset Reconciliation:</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
-              Roster: {totalRosterCount} Students
-            </span>
-            {isContestReport && (
-              <span className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
-                Participants: {actualParticipantCount} ({turnoutPercentage})
-              </span>
-            )}
-            {isContestReport && actualNotAttendedCount > 0 && (
-              <span className="px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
-                Absent: {actualNotAttendedCount} ({absentPercentage})
-              </span>
-            )}
-            {activeFilter && (
-              <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 text-[10px] sm:text-[11px] font-bold shadow-2xs">
-                <Filter className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                <span>Filtered: {displayedStudents.length}/{allRows.length}</span>
-                <button
-                  type="button"
-                  onClick={() => setActiveFilter(null)}
-                  className="ml-1 p-0.5 hover:text-rose-600 dark:hover:text-rose-400 font-bold touch-manipulation active:scale-90"
-                  aria-label="Clear active filter"
-                >
-                  <X className="w-3 h-3 inline" />
-                </button>
-              </span>
-            )}
-          </div>
-          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 font-bold text-[10px] sm:text-[11px] border border-blue-200 dark:border-blue-500/30 shadow-2xs">
-            <Building2 className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span>Nandha Engineering College (Autonomous)</span>
-          </div>
-        </div>
-
-        {/* 3. SCROLLABLE REPORT CONTENT */}
-        <div className="p-3.5 sm:p-5 overflow-y-auto flex-1 min-h-0 space-y-5 bg-slate-50/50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
-
-          {/* CONTEST PERFORMANCE SPECIALIZED VIEW */}
-          {isContestReport ? (
-            <div className="space-y-6">
-
-              {/* Contest Executive Summary: Solve Condition & Performance Cohorts */}
-              {!isHistIntel && !isWowIntel && (
-                <div className="space-y-4 print:break-inside-avoid">
-                  <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
-                    {/* Header with Title, Report Type Scope & Badges */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
-                            Solve Condition &amp; Performance Summary
-                          </h3>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
-                            {rType || 'CONTEST PERFORMANCE REPORT'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                          Aggregated solve condition cohorts, problem difficulty metrics & attendance breakdown for this contest session.
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
-                          <span>In Scope: {allRows.length} Students</span>
-                        </span>
-                        {activeFilter && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
-                            <span>Filtered View: {conditionStats.totalStudents}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                          Contest / Weekly Solve Distribution Cohorts
-                        </span>
-                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                          Click any cohort card to filter students in the table
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                        {/* 4/4 Solved */}
-                        <div
-                          onClick={() => toggleFilter('SOLVED_4')}
-                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_4'
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
-                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
-                            <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                            </span>
-                          </div>
-                          <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight mt-1">{conditionStats.s4}</p>
-                        </div>
-
-                        {/* 3/4 Solved */}
-                        <div
-                          onClick={() => toggleFilter('SOLVED_3')}
-                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_3'
-                            ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
-                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
-                            <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                            </span>
-                          </div>
-                          <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight mt-1">{conditionStats.s3}</p>
-                        </div>
-
-                        {/* 2/4 Solved */}
-                        <div
-                          onClick={() => toggleFilter('SOLVED_2')}
-                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_2'
-                            ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
-                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
-                            <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                            </span>
-                          </div>
-                          <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight mt-1">{conditionStats.s2}</p>
-                        </div>
-
-                        {/* 1/4 Solved */}
-                        <div
-                          onClick={() => toggleFilter('SOLVED_1')}
-                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_1'
-                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
-                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
-                            <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                            </span>
-                          </div>
-                          <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight mt-1">{conditionStats.s1}</p>
-                        </div>
-
-                        {/* 0/4 Solved (Attended) */}
-                        <div
-                          onClick={() => toggleFilter('SOLVED_0')}
-                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_0'
-                            ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
-                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
-                            <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                            </span>
-                          </div>
-                          <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight mt-1">{conditionStats.s0}</p>
-                        </div>
-
-                        {/* Not Attended / Absent */}
-                        <div
-                          onClick={() => toggleFilter('NOT_ATTENDED')}
-                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'NOT_ATTENDED'
-                            ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
-                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
-                            <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                              {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                            </span>
-                          </div>
-                          <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight mt-1">{conditionStats.notAttendedCount}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
-                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Difficulty Solve Distribution (Easy • Medium • Hard)
-                      </span>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {/* Easy Solves */}
-                        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Easy Solves</span>
-                          <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
-                            {conditionStats.totalEasy.toLocaleString()}
-                          </p>
-                          <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                            Foundational Solves
-                          </span>
-                        </div>
-
-                        {/* Medium Solves */}
-                        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Medium Solves</span>
-                          <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
-                            {conditionStats.totalMed.toLocaleString()}
-                          </p>
-                          <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
-                            Core Algorithmic Solves
-                          </span>
-                        </div>
-
-                        {/* Hard Solves */}
-                        <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Hard Solves</span>
-                          <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
-                            {conditionStats.totalHard.toLocaleString()}
-                          </p>
-                          <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
-                            High Difficulty Solves
-                          </span>
-                        </div>
-
-                        {/* Total Cumulative Solves */}
-                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Total Solves</span>
-                          <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
-                            {conditionStats.totalSolves.toLocaleString()}
-                          </p>
-                          <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
-                            Cumulative Solves
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3. Official Condition Criteria Reference Strip */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="text-slate-700 dark:text-slate-300 font-bold">
-                        Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)
-                      </div>
-                      {activeFilter && (
-                        <button
-                          type="button"
-                          onClick={() => setActiveFilter(null)}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
-                        >
-                          <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Critical Data Validation Banner (Section 12) */}
-              {(report.validationError || report.isValidated === false) && (
-                <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold flex items-center space-x-3">
-                  <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0" />
-                  <div>
-                    <p className="text-sm font-black uppercase tracking-wide">Official Result Generation Blocked</p>
-                    <p className="text-xs font-semibold mt-0.5">{report.validationError || "Official result generation blocked because validated source data contains critical errors."}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Question-Wise Official Result (Section 6 - Friday Official) */}
-              {isFridayOfficial && report.questionWiseResult && Array.isArray(report.questionWiseResult) && report.questionWiseResult.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
-                    <span>Question-Wise Official Result</span>
-                  </h3>
-                  {/* Mobile Cards View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-1.5">
-                    {report.questionWiseResult.map((q: any, i: number) => (
-                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-bold text-slate-900">{q.question}</span>
-                          <div className="text-[10px] text-slate-500 font-bold mt-0.5 space-x-1.5">
-                            <span className="text-emerald-700 font-bold">{q.solved} Solved</span>
-                            <span>•</span>
-                            <span className="text-rose-600 font-bold">{q.not_solved} Unsolved</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Solve Rate</span>
-                          <span className="text-xs font-extrabold text-brand-700 font-mono">{q.solve_rate}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-200 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[500px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
-                        <tr>
-                          <th className="px-4 py-3 text-left">Question</th>
-                          <th className="px-4 py-3 text-center">Solved</th>
-                          <th className="px-4 py-3 text-center">Not Solved</th>
-                          <th className="px-4 py-3 text-right">Solve Rate</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-sans">
-                        {report.questionWiseResult.map((q: any, i: number) => (
-                          <tr key={i} className="hover:bg-slate-50">
-                            <td className="px-4 py-2.5 font-bold text-slate-900">{q.question}</td>
-                            <td className="px-4 py-2.5 text-center font-bold text-emerald-600">{q.solved}</td>
-                            <td className="px-4 py-2.5 text-center font-bold text-slate-500">{q.not_solved}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-brand-600">{q.solve_rate}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Solve Distribution Table (Section 7 - Friday Official) */}
-              {isFridayOfficial && report.solveDistributionList && Array.isArray(report.solveDistributionList) && report.solveDistributionList.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider flex items-center space-x-1.5">
-                    <span>Solve Distribution (4/4 – 0/4)</span>
-                  </h3>
-                  {/* Mobile Cards View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-1.5">
-                    {report.solveDistributionList.map((sd: any, i: number) => (
-                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-bold text-slate-900">{sd.category}</span>
-                          <div className="text-[10px] text-slate-500 font-bold mt-0.5">
-                            <span className="text-emerald-700 font-bold">{sd.count} Students</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Percentage</span>
-                          <span className="text-xs font-extrabold text-indigo-700 font-mono">{sd.percentage}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[500px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
-                        <tr>
-                          <th className="px-4 py-3 text-left">Category</th>
-                          <th className="px-4 py-3 text-center">Student Count</th>
-                          <th className="px-4 py-3 text-right">Percentage</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
-                        {report.solveDistributionList.map((sd: any, i: number) => (
-                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
-                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{sd.category}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-600 dark:text-emerald-400">{sd.count}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-indigo-600 dark:text-indigo-400">{sd.percentage}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Official Leaderboard & Top Performers (Sections 8 & 9 - Friday Official) */}
-              {isFridayOfficial && displayOfficialLeaderboard && Array.isArray(displayOfficialLeaderboard) && displayOfficialLeaderboard.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
-                    <span>Official Leaderboard & Top Performers</span>
-                  </h3>
-                  {/* Mobile Cards View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-                    {displayOfficialLeaderboard.slice(0, 25).map((lb: any, i: number) => {
-                      const rankVal = formatRank(lb.global_rank || lb.rank_val || lb.rank);
-                      const ratingVal = formatRating(lb.rating || lb.contest_rating);
-                      return (
-                        <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="flex items-center space-x-1.5 min-w-0">
-                              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
-                                #{lb.rank}
-                              </span>
-                              <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(lb.student_name || lb.student)}</h4>
-                                <p className="text-[10px] text-slate-500 font-mono leading-tight">{lb.reg_no} • {lb.dept} ({lb.year})</p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="text-xs font-bold text-emerald-700 block">{lb.solved} Solved</span>
-                              <span className="text-[10px] font-mono font-bold text-indigo-700 block">Score: {lb.score ?? 0}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                            <div className="flex items-center gap-0.5 font-mono text-[9px] font-bold">
-                              <span className={`px-1 py-0.2 rounded ${lb.q1 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q1</span>
-                              <span className={`px-1 py-0.2 rounded ${lb.q2 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q2</span>
-                              <span className={`px-1 py-0.2 rounded ${lb.q3 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q3</span>
-                              <span className={`px-1 py-0.2 rounded ${lb.q4 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q4</span>
-                            </div>
-                            <div className="text-right shrink-0 text-[10px] font-mono font-medium text-slate-600 flex items-center gap-1.5">
-                              {rankVal !== '—' && <span className="font-bold text-amber-700">Global: {rankVal}</span>}
-                              {ratingVal !== '—' && <span className="font-bold text-slate-700">| Rating: {ratingVal}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[850px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
-                        <tr>
-                          <th className="px-3.5 py-3 text-center">Rank</th>
-                          <th className="px-4 py-3 text-left">Student Name</th>
-                          <th className="px-4 py-3 text-center">Register No</th>
-                          <th className="px-4 py-3 text-center">Department</th>
-                          <th className="px-3 py-3 text-center">Year</th>
-                          <th className="px-3 py-3 text-center">Q1</th>
-                          <th className="px-3 py-3 text-center">Q2</th>
-                          <th className="px-3 py-3 text-center">Q3</th>
-                          <th className="px-3 py-3 text-center">Q4</th>
-                          <th className="px-4 py-3 text-center">Solved</th>
-                          <th className="px-4 py-3 text-center">Score</th>
-                          <th className="px-4 py-3 text-center">Global Rank</th>
-                          <th className="px-4 py-3 text-right">Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
-                        {displayOfficialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
-                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
-                            <td className="px-3.5 py-2.5 text-center align-middle font-black text-amber-500">#{lb.rank}</td>
-                            <td className="px-4 py-2.5 text-left align-middle whitespace-nowrap font-bold text-slate-900 dark:text-white">{formatStudentName(lb.student_name || lb.student)}</td>
-                            <td className="px-4 py-2.5 text-center align-middle font-mono text-slate-700 dark:text-slate-300">{lb.reg_no}</td>
-                            <td className="px-4 py-2.5 text-center align-middle font-bold text-indigo-600 dark:text-indigo-400">{lb.dept}</td>
-                            <td className="px-3 py-2.5 text-center align-middle font-bold text-slate-900 dark:text-slate-100">{lb.year}</td>
-                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q1 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
-                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q2 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
-                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q3 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
-                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q4 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
-                            <td className="px-4 py-2.5 text-center align-middle font-black text-emerald-600 text-sm">{lb.solved}</td>
-                            <td className="px-4 py-2.5 text-center font-mono font-black text-indigo-600 dark:text-indigo-400">{lb.score !== undefined && lb.score !== null ? lb.score : "—"}</td>
-                            <td className="px-4 py-2.5 text-center font-mono font-black text-amber-600 dark:text-amber-400">{formatRank(lb.global_rank || lb.rank_val || lb.rank)}</td>
-                            <td className="px-4 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">{formatRating(lb.rating || lb.contest_rating)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Department-Wise Official Result (Section 10 - Friday Official) */}
-              {isFridayOfficial && displayDepartmentResults && Array.isArray(displayDepartmentResults) && displayDepartmentResults.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
-                    <span>Department-Wise Official Result</span>
-                  </h3>
-                  {/* Mobile Cards View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2">
-                    {displayDepartmentResults.map((dr: any, i: number) => (
-                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                          <h4 className="text-xs font-bold text-slate-900">{dr.department}</h4>
-                          <span className="text-[10.5px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                            {dr.participants}/{dr.total_students} ({dr.participation_pct})
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{dr.total_solves?.toLocaleString()}</span></div>
-                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{dr.average_solved}</span></div>
-                          <div className="flex items-center gap-1 font-mono text-[9px] font-bold">
-                            <span className="text-emerald-700">4/4:{dr.solved_4}</span>
-                            <span className="text-indigo-700">3/4:{dr.solved_3}</span>
-                            <span className="text-amber-700">2/4:{dr.solved_2}</span>
-                            <span className="text-slate-600">1/4:{dr.solved_1}</span>
-                            <span className="text-rose-600">0/4:{dr.solved_0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[850px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
-                        <tr>
-                          <th className="px-4 py-3 text-left">Department</th>
-                          <th className="px-3.5 py-3 text-center">Total Students</th>
-                          <th className="px-3.5 py-3 text-center">Participants</th>
-                          <th className="px-3.5 py-3 text-center">Participation %</th>
-                          <th className="px-3 py-3 text-center">4/4</th>
-                          <th className="px-3 py-3 text-center">3/4</th>
-                          <th className="px-3 py-3 text-center">2/4</th>
-                          <th className="px-3 py-3 text-center">1/4</th>
-                          <th className="px-3 py-3 text-center">0/4</th>
-                          <th className="px-3.5 py-3 text-right">Total Solves</th>
-                          <th className="px-3.5 py-3 text-right">Average Solved</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
-                        {displayDepartmentResults.map((dr: any, i: number) => (
-                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
-                            <td className="px-4 py-2.5 font-bold text-brand-600 dark:text-brand-400">{dr.department}</td>
-                            <td className="px-3.5 py-2.5 text-center font-bold">{dr.total_students}</td>
-                            <td className="px-3.5 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{dr.participants}</td>
-                            <td className="px-3.5 py-2.5 text-center font-extrabold text-indigo-600 dark:text-indigo-400">{dr.participation_pct}</td>
-                            <td className="px-3 py-2.5 text-center font-bold text-emerald-600">{dr.solved_4}</td>
-                            <td className="px-3 py-2.5 text-center font-bold text-teal-600">{dr.solved_3}</td>
-                            <td className="px-3 py-2.5 text-center font-bold text-brand-600">{dr.solved_2}</td>
-                            <td className="px-3 py-2.5 text-center font-bold text-amber-600">{dr.solved_1}</td>
-                            <td className="px-3 py-2.5 text-center font-bold text-slate-400">{dr.solved_0}</td>
-                            <td className="px-3.5 py-2.5 text-right font-black text-slate-900 dark:text-white">{dr.total_solves?.toLocaleString()}</td>
-                            <td className="px-3.5 py-2.5 text-right font-mono font-bold">{dr.average_solved}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-
-
-              {/* ===== WEEK-ON-WEEK INTEL PREVIEW ===== */}
-              {isWowIntel && report.wowSummary && (
-                <div className="space-y-4 pt-2">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-center shadow-xs">
-                      <p className="text-xs font-black uppercase text-slate-800 dark:text-slate-100 tracking-wide">Total Students</p>
-                      <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{report.wowSummary.totalStudents}</p>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center shadow-xs">
-                      <p className="text-xs font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wide">This Week Attended</p>
-                      <p className="text-3xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{report.wowSummary.currAttendance}</p>
-                      <p className="text-xs text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{report.currContest} · {report.currDate}</p>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-center shadow-xs">
-                      <p className="text-xs font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wide">Last Week Attended</p>
-                      <p className="text-3xl font-black text-indigo-800 dark:text-indigo-300 mt-1">{report.wowSummary.prevAttendance}</p>
-                      <p className="text-xs text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{report.prevContest} · {report.prevDate}</p>
-                    </div>
-                    <div className={`p-4 rounded-2xl text-center border shadow-xs ${(report.wowSummary.attendanceDelta || 0) >= 0 ? 'bg-teal-500/10 border-teal-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
-                      <p className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wide">Attendance Change</p>
-                      <p className={`text-3xl font-black mt-1 ${(report.wowSummary.attendanceDelta || 0) >= 0 ? 'text-teal-800 dark:text-teal-300' : 'text-rose-800 dark:text-rose-300'}`}>
-                        {(report.wowSummary.attendanceDelta || 0) >= 0 ? '+' : ''}{report.wowSummary.attendanceDelta}
-                      </p>
-                      <p className="text-xs text-slate-950 dark:text-white font-black mt-1">
-                        ↑ {report.wowSummary.improved} Improved &nbsp;·&nbsp; ↓ {report.wowSummary.declined} Declined &nbsp;·&nbsp; → {report.wowSummary.stable} Stable
-                      </p>
-                    </div>
-                  </div>
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-                    Week-on-Week Student Comparison — {report.prevContest} vs {report.currContest} ({report.rows?.length || 0} Students)
-                  </h3>
-                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[520px] overflow-y-auto">
-                    <table className="w-full text-xs min-w-[1200px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10">
-                        <tr>
-                          <th className="px-3 py-3 text-center align-middle w-10" rowSpan={2}>S.No</th>
-                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Register No</th>
-                          <th className="px-3 py-3 text-left align-middle" rowSpan={2}>Student Name</th>
-                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Dept</th>
-                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Yr</th>
-                          <th className="px-3 py-3 text-center bg-indigo-900" colSpan={3}>{report.prevContest} — Last Week</th>
-                          <th className="px-3 py-3 text-center bg-emerald-900" colSpan={3}>{report.currContest} — This Week</th>
-                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Δ Solved</th>
-                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Trend</th>
-                        </tr>
-                        <tr className="bg-[#1e3d5c] text-xs font-black text-white">
-                          <th className="px-3 py-2 text-center bg-indigo-950/80">Status</th>
-                          <th className="px-3 py-2 text-center bg-indigo-950/80">Solved</th>
-                          <th className="px-3 py-2 text-center bg-indigo-950/80">Score</th>
-                          <th className="px-3 py-2 text-center bg-emerald-950/80">Status</th>
-                          <th className="px-3 py-2 text-center bg-emerald-950/80">Solved</th>
-                          <th className="px-3 py-2 text-center bg-emerald-950/80">Score</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {(report.rows || []).map((r: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no}</td>
-                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
-                            <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
-                            <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
-                            <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
-                            <td className="px-3 py-2.5 text-center bg-indigo-50/70 dark:bg-indigo-950/40">
-                              {r.prev_status === 'ATTENDED' ? <span className="px-2.5 py-1 rounded text-[11px] font-black bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-100">ATTENDED</span> : <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">ABSENT</span>}
-                            </td>
-                            <td className="px-3 py-2.5 text-center font-black bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-950 dark:text-indigo-100 text-sm">{r.prev_status === 'ATTENDED' ? r.prev_solved : '—'}</td>
-                            <td className="px-3 py-2.5 text-center bg-indigo-50/70 dark:bg-indigo-950/40 font-mono font-black text-slate-900 dark:text-slate-100">{r.prev_status === 'ATTENDED' ? r.prev_score : '—'}</td>
-                            <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40">
-                              {r.curr_status === 'ATTENDED' ? <span className="px-2.5 py-1 rounded text-[11px] font-black bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100">ATTENDED</span> : <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">ABSENT</span>}
-                            </td>
-                            <td className="px-3 py-2.5 text-center font-black bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 text-sm">{r.curr_status === 'ATTENDED' ? r.curr_solved : 0}</td>
-                            <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40 font-mono font-black text-slate-900 dark:text-slate-100">{r.curr_status === 'ATTENDED' ? r.curr_score : 0}</td>
-                            <td className={`px-3 py-2.5 text-center font-black text-sm ${(r.solved_delta || 0) > 0 ? 'text-teal-800 dark:text-teal-300' : (r.solved_delta || 0) < 0 ? 'text-rose-800 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>
-                              {(r.solved_delta || 0) > 0 ? `+${r.solved_delta}` : r.solved_delta === 0 ? '0' : r.solved_delta}
-                            </td>
-                            <td className={`px-3 py-2.5 text-center font-black ${r.trend?.includes('↑') ? 'text-teal-700 dark:text-teal-300' : r.trend?.includes('↓') ? 'text-rose-700 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>{r.trend || 0}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* ===== HISTORICAL INTEL PREVIEW ===== */}
-              {/* Historical Performance per Student Table (Section for Historical Intelligence Report) */}
-              {isHistIntel && (
-                <div className="space-y-4 pt-2">
-                  <div className="overflow-x-auto">
-                    <div className="flex gap-2 pb-2 min-w-max">
-                      {(report.histSummary?.sessionParticipation || []).map((sp: any) => (
-                        <div key={sp.contestNum} className="p-3.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-center min-w-[120px] shadow-xs">
-                          <p className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">Contest {sp.contestNum}</p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{sp.attended}</p>
-                          <p className="text-xs font-black text-brand-700 dark:text-brand-300">{sp.rate} attended</p>
-                          <p className="text-xs text-slate-800 dark:text-slate-300 font-bold mt-0.5">{sp.date}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-                    Historical Performance per Student ({report.rows?.length || 0} Students · {report.histSummary?.numSessions || 0} Contests)
-                  </h3>
-                  {/* Mobile Card View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2 max-h-[500px] overflow-y-auto pr-0.5">
-                    {(report.rows || []).map((r: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <div className="flex items-center space-x-1.5 min-w-0">
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
-                              #{r.s_no || idx + 1}
-                            </span>
-                            <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(r.name || r.student_name)}</h4>
-                              <p className="text-[10px] text-slate-500 font-mono leading-tight">{r.reg_no} • {r.dept} ({r.year})</p>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-xs font-bold text-brand-700 block">{r.total_solved_fraction || `${r.totalSolved} Solved`}</span>
-                            <span className={`text-[10px] font-bold ${r.consistencyPct >= 75 ? 'text-emerald-700' : r.consistencyPct >= 40 ? 'text-amber-700' : 'text-rose-700'}`}>{r.consistencyPct}% Consistency</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1 text-[10px] bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/60">
-                          <span className="text-slate-700 font-bold mr-1">Sessions ({r.contests_attended_fraction || `${r.totalAttended} Attended`}):</span>
-                          {(r.weeklyData || []).map((wd: any, widx: number) => (
-                            <span key={widx} className={`px-1.5 py-0.2 rounded font-mono font-bold text-[9px] ${wd.att ? (wd.solved >= 3 ? 'bg-emerald-100 text-emerald-800' : wd.solved >= 1 ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800') : 'bg-rose-100 text-rose-800'}`}>
-                              C{widx + 1}:{wd.att ? wd.solved : '—'}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[520px] overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10">
-                        <tr>
-                          <th className="px-3 py-3 text-center align-middle w-10">S.No</th>
-                          <th className="px-3 py-3 text-center align-middle">Register No</th>
-                          <th className="px-3 py-3 text-left align-middle">Student Name</th>
-                          <th className="px-3 py-3 text-center align-middle">Dept</th>
-                          <th className="px-3 py-3 text-center align-middle">Yr</th>
-                          <th className="px-3 py-3 text-center align-middle">Accommodation</th>
-                          <th className="px-3 py-3 text-center align-middle">12th Cutoff</th>
-                          {(report.sessionHeaders || []).map((sh: any) => (
-                            <th key={sh.contestNum} className="px-3 py-3 text-center align-middle whitespace-nowrap">C{sh.contestNum}<br /><span className="text-[10px] font-extrabold opacity-90">{sh.date}</span></th>
-                          ))}
-                          <th className="px-3 py-3 text-center align-middle">Contests Attended</th>
-                          <th className="px-3 py-3 text-center align-middle font-extrabold">Total Solved</th>
-                          <th className="px-3 py-3 text-center align-middle font-extrabold bg-blue-900/40 text-blue-200">Attended Solved</th>
-                          <th className="px-3 py-3 text-center align-middle bg-amber-900/40 text-amber-200">Badges</th>
-                          <th className="px-3 py-3 text-center align-middle bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                          <th className="px-3 py-3 text-center align-middle bg-teal-900/40 text-teal-200">Contest Med</th>
-                          <th className="px-3 py-3 text-center align-middle bg-purple-900/40 text-purple-200">Contest Hard</th>
-                          <th className="px-3.5 py-3 text-center align-middle">Global Rank</th>
-                          <th className="px-3.5 py-3 text-right align-middle">Contest Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {(report.rows || []).map((r: any, idx: number) => {
-                          const cDiff = getContestDifficultyBreakdown(r);
-                          return (
-                            <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                              <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no || idx + 1}</td>
-                              <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
-                              <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
-                              <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
-                              <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
-                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(r.accommodation || r.accomodation || r.accommodation_type)}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{r.twelfth_cutoff !== undefined && r.twelfth_cutoff !== null ? Number(r.twelfth_cutoff).toFixed(1) : (r.cutoff !== undefined && r.cutoff !== null ? Number(r.cutoff).toFixed(1) : (r.twelfthCutoff !== undefined && r.twelfthCutoff !== null ? Number(r.twelfthCutoff).toFixed(1) : "—"))}</td>
-                              {(r.weeklyData || []).map((wd: any, widx: number) => (
-                                <td key={widx} className={`px-3 py-2.5 text-center font-black text-sm ${wd.att ? (wd.solved >= 3 ? 'text-emerald-700 dark:text-emerald-300' : wd.solved >= 1 ? 'text-brand-700 dark:text-brand-300' : 'text-amber-700 dark:text-amber-300') : 'text-slate-500 dark:text-slate-400 font-bold'}`}>
-                                  {wd.att ? wd.solved : '—'}
-                                </td>
-                              ))}
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-950 dark:text-white text-sm">{r.contests_attended_fraction ?? (report.histSummary?.numSessions ? `${r.contests_attended ?? r.total_attended ?? 0}/${report.histSummary.numSessions}` : (r.contests_attended ?? r.total_attended ?? 0))}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-brand-700 dark:text-brand-300 text-sm">{r.total_solved_fraction ?? (report.histSummary?.numSessions ? `${r.total_solved ?? r.totalSolved ?? 0}/${report.histSummary.numSessions * 4}` : (r.total_solved ?? r.totalSolved ?? (cDiff.easy + cDiff.medium + cDiff.hard)))}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-blue-700 dark:text-blue-300 text-sm bg-blue-500/5">{r.attended_solve_fraction ?? ((r.total_attended || r.totalAttended) ? `${r.total_solved ?? r.totalSolved ?? 0}/${(r.total_attended || r.totalAttended || 1) * 4}` : '0/0')}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300 bg-amber-500/5">{r.badges ?? r.total_badges ?? r.badges_count ?? 0}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{r.contest_easy ?? cDiff.easy}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{r.contest_medium ?? cDiff.medium}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{r.contest_hard ?? cDiff.hard}</td>
-                              <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
-                                {formatRank(r.global_rank || r.rank || r.profile_rank || r.contest_global_ranking)}
-                              </td>
-                              <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
-                                {formatRating(r.rating || r.contest_rating || r.stats?.contest_rating)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                      <tfoot className="bg-[#E6F0FA] dark:bg-[#162747] text-[#1B365D] dark:text-[#E2E8F0] font-black border-t-2 border-slate-800 sticky bottom-0 z-10">
-                        <tr>
-                          <td colSpan={7} className="px-4 py-3 text-center uppercase tracking-wider font-extrabold text-xs sm:text-sm border-r border-slate-300 dark:border-slate-700">
-                            TOTAL SOLVED COUNT
-                          </td>
-                          {(report.sessionHeaders || []).map((sh: any, shIdx: number) => {
-                            const cNum = String(sh.contestNum || sh.num || sh);
-                            const sumSolves = (report.rows || []).reduce((acc: number, r: any) => {
-                              const wd = (r.weeklyData || []).find((w: any) => String(w.contestNum) === cNum);
-                              return acc + (wd && wd.att ? Number(wd.solved || 0) : 0);
-                            }, 0);
-                            return (
-                              <td key={shIdx} className="px-3 py-3 text-center font-black text-xs sm:text-sm">
-                                {sumSolves}
-                              </td>
-                            );
-                          })}
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
-                            {(report.rows || []).reduce((acc: number, r: any) => {
-                              const attCnt = Array.isArray(r.weeklyData)
-                                ? r.weeklyData.filter((w: any) => w.att).length
-                                : Number(r.contests_attended || r.total_attended || 0);
-                              return acc + attCnt;
-                            }, 0)}
-                          </td>
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
-                            {(report.rows || []).reduce((acc: number, r: any) => {
-                              const tSol = Number(r.total_solved ?? r.totalSolved ?? (
-                                Array.isArray(r.weeklyData)
-                                  ? r.weeklyData.filter((w: any) => w.att).reduce((s: number, w: any) => s + Number(w.solved || 0), 0)
-                                  : 0
-                              ));
-                              return acc + tSol;
-                            }, 0)}
-                          </td>
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
-                            {(report.rows || []).reduce((acc: number, r: any) => {
-                              const attSol = Number(r.total_solved ?? r.totalSolved ?? (
-                                Array.isArray(r.weeklyData)
-                                  ? r.weeklyData.filter((w: any) => w.att).reduce((s: number, w: any) => s + Number(w.solved || 0), 0)
-                                  : 0
-                              ));
-                              return acc + attSol;
-                            }, 0)}
-                          </td>
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">
-                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.badges ?? r.total_badges ?? r.badges_count ?? 0), 0)}
-                          </td>
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">
-                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_easy ?? getContestDifficultyBreakdown(r).easy ?? 0), 0)}
-                          </td>
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-teal-600 dark:text-teal-400">
-                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_medium ?? getContestDifficultyBreakdown(r).medium ?? 0), 0)}
-                          </td>
-                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-purple-600 dark:text-purple-400">
-                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_hard ?? getContestDifficultyBreakdown(r).hard ?? 0), 0)}
-                          </td>
-                          <td className="px-3.5 py-3 text-center font-black text-xs sm:text-sm text-slate-400">—</td>
-                          <td className="px-3.5 py-3 text-center font-black text-xs sm:text-sm text-slate-400">—</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Official Student Result Detail Table (Section 5) — not shown for WOW/HIST reports */}
-              {!isWowIntel && !isHistIntel && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
-                      <span>
-                        {isFridayOfficial ? 'Official Student Result Roster' : isSundayLive ? 'Sunday Live Attendance & Solve Detail Table' : 'Student Contest Detail Table'} ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
-                      </span>
-                    </h3>
-
-                    {activeFilter && (
-                      <button
-                        onClick={() => setActiveFilter(null)}
-                        className="text-xs font-bold text-brand-600 hover:text-brand-700 underline cursor-pointer self-start sm:self-auto"
-                      >
-                        Clear Filter (Show All {allRows.length})
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Mobile Card View (< sm) - Compact, Crisp White & Clean */}
-                  <div className="block sm:hidden print:hidden space-y-2 max-h-[520px] overflow-y-auto pr-0.5">
-                    {displayedStudents.map((s: any, idx: number) => {
-                      const st = (s.status || '').toUpperCase();
-                      const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
-                      const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
-                      const cDiff = getContestDifficultyBreakdown(s, true);
-                      const rankVal = formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking);
-                      const ratingVal = formatRating(s.rating || s.contest_rating || s.stats?.contest_rating);
-
-                      return (
-                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5 hover:border-slate-300 transition-colors">
-                          {/* Top: Rank #, Name, Dept, Status Badge */}
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="flex items-center space-x-1.5 min-w-0">
-                              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
-                                #{idx + 1}
-                              </span>
-                              <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(s.name || s.student_name)}</h4>
-                                <p className="text-[10px] text-slate-500 font-mono leading-tight">{s.reg_no} • {s.dept} ({s.year})</p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              {getStatusBadge(s.status)}
-                            </div>
-                          </div>
-
-                          {/* Bottom Row: Solved Breakdown & Rank/Rating in one sleek compact strip */}
-                          <div className="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                              <span className={`font-extrabold text-xs shrink-0 ${isPart && cSolved !== null && cSolved > 0 ? 'text-emerald-700' : isPart ? 'text-amber-700' : 'text-slate-500'}`}>
-                                {isPart && cSolved !== null ? `${cSolved} Solved` : '0 Solved'}
-                              </span>
-                              {s.q1 !== undefined ? (
-                                <div className="flex items-center gap-0.5 font-mono text-[9px] font-bold">
-                                  <span className={`px-1 py-0.2 rounded ${s.q1 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q1</span>
-                                  <span className={`px-1 py-0.2 rounded ${s.q2 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q2</span>
-                                  <span className={`px-1 py-0.2 rounded ${s.q3 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q3</span>
-                                  <span className={`px-1 py-0.2 rounded ${s.q4 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q4</span>
-                                </div>
-                              ) : (
-                                <span className="font-mono text-[9px] text-slate-500">
-                                  E:{cDiff.easy} M:{cDiff.medium} H:{cDiff.hard}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="text-right shrink-0 text-[10px] font-mono font-medium text-slate-600 flex items-center gap-1.5">
-                              {rankVal !== '—' && (
-                                <span className="font-bold text-amber-700">Rank: {rankVal}</span>
-                              )}
-                              {ratingVal !== '—' && (
-                                <span className="font-bold text-slate-700">| Rating: {ratingVal}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[850px] sm:min-w-[1100px] print:min-w-0 print:w-full">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
-                        {isFridayOfficial ? (
-                          <tr>
-                            <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
-                            <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                            <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
-                            <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
-                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
-                            <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Score</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Global Rank</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rating</th>
-                          </tr>
-                        ) : isSundayLive ? (
-                          <tr>
-                            <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
-                            <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                            <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
-                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
-                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
-                            <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                            <th className="px-4 py-3 text-center print:border-b print:border-black">Total Time</th>
-                          </tr>
-                        ) : (
-                          <tr>
-                            <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black sticky left-0 z-20 bg-slate-900">S.No</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black sticky left-12 z-20 bg-slate-900">Register No</th>
-                            <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black sticky left-[140px] z-20 bg-slate-900 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]">Student Name</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
-                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
-                            <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                            {displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
-                              <>
-                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
-                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
-                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                              </>
-                            ) : (
-                              <>
-                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
-                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
-                              </>
-                            )}
-                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rank</th>
-                            <th className="px-3.5 py-3 text-right print:border-b print:border-black">Rating</th>
-                          </tr>
-                        )}
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans print:divide-black">
-                        {displayedStudents.map((s: any, idx: number) => {
-                          const st = (s.status || '').toUpperCase();
-                          const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
-                          const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
-                          const isContestView = s.q1 !== undefined || s.q2 !== undefined;
-                          const cDiff = getContestDifficultyBreakdown(s, isFridayOfficial || isSundayLive);
-
-                          if (isFridayOfficial) {
-                            return (
-                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
-                                <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                                <td className="px-3.5 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono print:text-black">{s.reg_no}</td>
-                                <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
-                                <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                                <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
-                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
-                                <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
-                                <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
-                                  {getStatusBadge(s.status)}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-black">
-                                  {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                </td>
-                                <td className="px-4 py-2.5 text-center font-black text-sm">
-                                  {isPart && cSolved !== null ? (
-                                    <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
-                                      {cSolved}
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>
-                                  )}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
-                                <td className="px-3.5 py-2.5 text-center font-mono font-black text-indigo-700 dark:text-indigo-300">
-                                  {isPart && s.score !== undefined && s.score !== null ? s.score : "0"}
-                                </td>
-                                <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
-                                  {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
-                                </td>
-                                <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
-                                  {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          if (isSundayLive) {
-                            return (
-                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
-                                <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                                <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
-                                <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
-                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
-                                <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
-                                  {getStatusBadge(s.status)}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
-                                  {renderSundayQCell(s.q1, s.q1_time, s.q1_display, isPart)}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
-                                  {renderSundayQCell(s.q2, s.q2_time, s.q2_display, isPart)}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
-                                  {renderSundayQCell(s.q3, s.q3_time, s.q3_display, isPart)}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
-                                  {renderSundayQCell(s.q4, s.q4_time, s.q4_display, isPart)}
-                                </td>
-                                <td className="px-4 py-2.5 text-center font-black text-sm">
-                                  {isPart && cSolved !== null ? (
-                                    <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
-                                      {cSolved}
-                                    </span>
-                                  ) : (
-                                    <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>
-                                  )}
-                                </td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
-                                <td className="px-4 py-2.5 text-center font-mono font-black text-xs text-slate-950 dark:text-white">
-                                  {(s.total_time_display && s.total_time_display !== '—' && !s.total_time_display.includes('—'))
-                                    ? s.total_time_display
-                                    : (s.total_time && s.total_time !== '—'
-                                      ? (String(s.total_time).endsWith('min') || String(s.total_time).includes(':') ? s.total_time : `${s.total_time} min`)
-                                      : "—")}
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          return (
-                            <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
-                              <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black sticky left-0 z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800">{idx + 1}</td>
-                              <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black sticky left-12 z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800">{s.reg_no}</td>
-                              <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black sticky left-[140px] z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{formatStudentName(s.name || s.student_name)}</td>
-                              <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                              <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
-                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
-                              <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
-                                {getStatusBadge(s.status)}
-                              </td>
-                              {isContestView ? (
-                                <>
-                                  <td className="px-3 py-2.5 text-center font-black">
-                                    {isPart ? (s.q1 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center font-black">
-                                    {isPart ? (s.q2 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center font-black">
-                                    {isPart ? (s.q3 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center font-black">
-                                    {isPart ? (s.q4 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
-                                  </td>
-                                  <td className="px-4 py-2.5 text-center font-black text-sm">
-                                    {isPart && cSolved !== null ? (
-                                      <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
-                                        {cSolved}
-                                      </span>
-                                    ) : (
-                                      <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
-                                </>
-                              ) : (
-                                <>
-                                  <td className="px-4 py-2.5 text-center font-black text-sm text-brand-700 dark:text-brand-300">{s.total_solved ?? ((s.easy || 0) + (s.medium || 0) + (s.hard || 0))}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.easy ?? 0}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.medium ?? 0}</td>
-                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.hard ?? 0}</td>
-                                </>
-                              )}
-                              <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
-                                {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
-                              </td>
-                              <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
-                                {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          ) : (
-            /* DEFAULT / OTHER REPORTS VIEW */
-            <div className="space-y-6">
-
-              {/* ====== WEEKLY PERFORMANCE DEDICATED VIEW ====== */}
-              {isWeeklyPerformance && (
-                <div className="space-y-6">
-                  {/* Current / Last Week Session Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/40">
-                      <div className="text-[10px] uppercase font-black text-cyan-600 dark:text-cyan-400 tracking-wider mb-2">Current Week</div>
-                      <div className="text-lg font-black text-slate-900 dark:text-white">{report.currentWeek?.contests_str || `Weekly Contest ${report.currentWeek?.contestNumber || '—'}`}</div>
-                      <div className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Session Date: {report.currentWeek?.date || '—'}</div>
-                    </div>
-                    <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/40">
-                      <div className="text-xs uppercase font-black text-amber-700 dark:text-amber-300 tracking-wider mb-2">Last Week</div>
-                      <div className="text-lg font-black text-slate-900 dark:text-white">{report.lastWeek?.contests_str || `Weekly Contest ${report.lastWeek?.contestNumber || '—'}`}</div>
-                      <div className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Session Date: {report.lastWeek?.date || '—'}</div>
-                    </div>
-                  </div>
-
-                  {/* College Summary Metrics */}
-                  {report.college_summary && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">College Summary</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {[
-                          { label: 'Total Students', value: report.total_students },
-                          { label: 'Verified', value: report.verified_students },
-                          { label: 'Unavailable', value: report.unavailable_students },
-                          { label: 'Above 500', value: report.college_summary?.metrics?.above_500 },
-                          { label: '250–500', value: report.college_summary?.metrics?.['250_500'] },
-                          { label: 'Less than 250', value: report.college_summary?.metrics?.['101_250'] },
-                          { label: 'Less than 100', value: report.college_summary?.metrics?.less_100 },
-                          { label: 'Not Started', value: report.college_summary?.metrics?.not_started },
-                          { label: 'Avg Solved', value: report.college_summary?.metrics?.avg_solved },
-                          { label: 'Total Solved', value: report.college_summary?.metrics?.total_solved },
-                          { label: 'Rating > 1500', value: report.college_summary?.metrics?.rating_1500 },
-                          { label: 'Ranking < 20K', value: report.college_summary?.metrics?.ranking_20000 },
-                        ].map((m, i) => (
-                          <div key={i} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-center shadow-sm">
-                            <p className="text-xs text-slate-900 dark:text-slate-100 uppercase font-black tracking-wider mb-1">{m.label}</p>
-                            <p className="text-xl font-black text-slate-950 dark:text-white">{m.value !== null && m.value !== undefined ? (typeof m.value === 'number' && m.value > 999 ? m.value.toLocaleString() : String(m.value)) : '—'}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Contest Attendance Comparison (Current Week & Last Week) */}
-                  {(report.college_summary?.metrics?.current_week || report.college_summary?.metrics?.last_week) && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Current Week Contest Attendance */}
-                        {report.college_summary?.metrics?.current_week && (
-                          <div className="p-4 rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/40 dark:bg-cyan-950/20 space-y-2.5 shadow-2xs">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-xs font-black uppercase text-cyan-900 dark:text-cyan-200 tracking-wider flex items-center space-x-1.5">
-                                <span>Current Week Attendance</span>
-                              </h3>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
-                                {report.currentWeek?.date || 'Latest'}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
-                              {[
-                                { label: '4/4 Solved', value: report.college_summary.metrics.current_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
-                                { label: '3/4 Solved', value: report.college_summary.metrics.current_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
-                                { label: '2/4 Solved', value: report.college_summary.metrics.current_week.q2, color: 'text-blue-700 dark:text-blue-300' },
-                                { label: '1/4 Solved', value: report.college_summary.metrics.current_week.q1, color: 'text-amber-700 dark:text-amber-300' },
-                                { label: '0/4 Solved', value: report.college_summary.metrics.current_week.q0, color: 'text-rose-700 dark:text-rose-300' },
-                              ].map((m, i) => (
-                                <div key={i} className="p-1 sm:p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-cyan-200/60 dark:border-cyan-800/40 text-center">
-                                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5 truncate">{m.label}</div>
-                                  <div className={`text-sm sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Last Week Contest Attendance */}
-                        {report.college_summary?.metrics?.last_week && (
-                          <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20 space-y-2.5 shadow-2xs">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-xs font-black uppercase text-amber-900 dark:text-amber-200 tracking-wider flex items-center space-x-1.5">
-                                <span>Last Week Attendance</span>
-                              </h3>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                                {report.lastWeek?.date || 'Past'}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
-                              {[
-                                { label: '4/4 Solved', value: report.college_summary.metrics.last_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
-                                { label: '3/4 Solved', value: report.college_summary.metrics.last_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
-                                { label: '2/4 Solved', value: report.college_summary.metrics.last_week.q2, color: 'text-blue-700 dark:text-blue-300' },
-                                { label: '1/4 Solved', value: report.college_summary.metrics.last_week.q1, color: 'text-amber-700 dark:text-amber-300' },
-                                { label: '0/4 Solved', value: report.college_summary.metrics.last_week.q0, color: 'text-rose-700 dark:text-rose-300' },
-                              ].map((m, i) => (
-                                <div key={i} className="p-1 sm:p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-amber-200/60 dark:border-amber-800/40 text-center">
-                                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5 truncate">{m.label}</div>
-                                  <div className={`text-sm sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Department Summaries */}
-                  {report.department_summaries && Array.isArray(report.department_summaries) && report.department_summaries.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Department Performance Summary</h3>
-                      {/* Mobile Card View (< sm) */}
-                      <div className="block sm:hidden print:hidden space-y-2">
-                        {report.department_summaries.filter((d: any) => (d.total_students || 0) > 0).map((d: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                            <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                              <div className="flex items-center space-x-1.5 min-w-0">
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">#{idx + 1}</span>
-                                <h4 className="text-xs font-bold text-slate-900 truncate">{d.department}</h4>
-                              </div>
-                              <span className="text-[10px] text-slate-500 font-medium shrink-0">Coord: {d.coordinator || '—'}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                              <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{d.total_students}</span> ({d.metrics?.verified ?? 0})</div>
-                              <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{d.metrics?.total_solved?.toLocaleString()}</span></div>
-                              <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{d.metrics?.avg_solved}</span></div>
-                              <div><span className="text-purple-700 font-bold">&gt;500:</span> <span className="font-bold text-slate-900">{d.metrics?.above_500}</span></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Desktop Table View (>= sm) */}
-                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
-                        <table className="w-full text-left text-xs min-w-[900px]">
-                          <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
-                            <tr>
-                              <th className="px-3 py-3 text-center">S.No</th>
-                              <th className="px-3 py-3">Department</th>
-                              <th className="px-3 py-3">Coordinator</th>
-                              <th className="px-3 py-3 text-center">Total</th>
-                              <th className="px-3 py-3 text-center">Verified</th>
-                              <th className="px-3 py-3 text-center">Avg Solved</th>
-                              <th className="px-3 py-3 text-center">Total Solved</th>
-                              <th className="px-3 py-3 text-center">Above 500</th>
-                              <th className="px-3 py-3 text-center">250–500</th>
-                              <th className="px-3 py-3 text-center">4/4</th>
-                              <th className="px-3 py-3 text-center">3/4</th>
-                              <th className="px-3 py-3 text-center">2/4</th>
-                              <th className="px-3 py-3 text-center">1/4</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                            {report.department_summaries.filter((d: any) => (d.total_students || 0) > 0).map((d: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                                <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{idx + 1}</td>
-                                <td className="px-3 py-2.5 font-black text-brand-700 dark:text-brand-300">{d.department}</td>
-                                <td className="px-3 py-2.5 text-slate-950 dark:text-white font-bold">{d.coordinator || '—'}</td>
-                                <td className="px-3 py-2.5 text-center font-black">{d.total_students}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.metrics?.verified}</td>
-                                <td className="px-3 py-2.5 text-center font-mono font-black">{d.metrics?.avg_solved}</td>
-                                <td className="px-3 py-2.5 text-center font-black">{d.metrics?.total_solved?.toLocaleString()}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{d.metrics?.above_500}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{d.metrics?.['250_500']}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.metrics?.current_week?.q4 ?? 0}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{d.metrics?.current_week?.q3 ?? 0}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-blue-700 dark:text-blue-300">{d.metrics?.current_week?.q2 ?? 0}</td>
-                                <td className="px-3 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{d.metrics?.current_week?.q1 ?? 0}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Batch Summaries - Institutional Official Report Layout */}
-                  {(() => {
-                    const allCanonical = [
-                      { label: '2023 - 2027', year: 'IV' },
-                      { label: '2024 - 2028', year: 'III' },
-                      { label: '2025 - 2029', year: 'II' }
-                    ];
-                    const rawYr = (report.year || report.yearFilter || report.year_filter || (report.filters && report.filters.year) || 'ALL').toString().trim().toUpperCase();
-                    const targetYear = rawYr === '2' ? 'II' : (rawYr === '3' ? 'III' : (rawYr === '4' ? 'IV' : (rawYr === '1' ? 'I' : rawYr)));
-
-                    const activeCanonical = (targetYear === 'ALL' || !targetYear)
-                      ? allCanonical
-                      : allCanonical.filter(cb => cb.year === targetYear || cb.label.replace(/\s+/g, '').includes(rawYr.replace(/\s+/g, '')));
-
-                    const rawBatches = Array.isArray(report.batch_summaries) ? report.batch_summaries : [];
-                    let batchesToDisplay = activeCanonical.map(cb => {
-                      const found = rawBatches.find((b: any) =>
-                        (b.batch || '').replace(/\s+/g, '') === cb.label.replace(/\s+/g, '') ||
-                        (b.year && b.year === cb.year)
-                      );
-                      if (found) return found;
-                      return { batch: cb.label, year: cb.year, total_students: 0, current_week: {}, last_week: {} };
-                    });
-
-                    // If filtered to a specific year, remove any 0-student dummy cohorts if we have a matching active cohort
-                    if (targetYear !== 'ALL' && batchesToDisplay.some(b => (b.total_students || 0) > 0)) {
-                      batchesToDisplay = batchesToDisplay.filter(b => (b.total_students || 0) > 0);
-                    }
-
-                    return (
-                      <div className="space-y-4">
-                        {/* Institutional Official Paper Header Card */}
-                        <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-sm space-y-2 font-sans">
-                          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
-                            <img
-                              src="/black_white_logo.png"
-                              alt="Nandha Engineering College"
-                              className="h-12 sm:h-14 w-auto object-contain shrink-0"
-                              onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
-                            />
-                            <div className="space-y-1">
-                              <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 dark:text-white">
-                                NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
-                              </h2>
-                              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-                                {(() => {
-                                  const dRaw = (report.department_name || report.department || '').toString().trim();
-                                  if (dRaw.includes('Cyber') || dRaw === '1' || dRaw === 'CSE(CS)') {
-                                    return 'Department of CSE (Cyber Security)';
-                                  }
-                                  if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
-                                    return 'Department of CSE (Internet of Things )';
-                                  }
-                                  if (report.department_name && !report.department_name.match(/Department of \d+/i)) {
-                                    return report.department_name;
-                                  }
-                                  return 'Department of CSE (Cyber Security)';
-                                })()}
-                              </p>
-                              <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                Date: {report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
-                              </p>
-                              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
-                                Leetcode Performance - Weekly Report
-                              </h3>
-                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
-                                  {(() => {
-                                    const dRaw = (report.department_name || report.department || '').toString().trim();
-                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
-                                      return 'P.Devayani /AP';
-                                    }
-                                    return report.coordinator || 'M. Santhoshkumar, AP / CSE (Cyber Security)';
-                                  })()}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Mobile Card View (< md) */}
-                        <div className="block md:hidden print:hidden space-y-3">
-                          {batchesToDisplay.map((b: any, idx: number) => {
-                            const cw = b.current_week || {};
-                            const lw = b.last_week || {};
-                            const totStudents = b.total_students || lw.total_students || cw.total_students || 0;
-                            return (
-                              <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-3 font-sans">
-                                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                                  <div className="flex items-center gap-2">
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                                      Batch {b.year || 'IV'}
-                                    </span>
-                                    <h4 className="text-xs font-black text-slate-900 dark:text-white">{b.batch}</h4>
-                                  </div>
-                                  <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-                                    {totStudents} Students
-                                  </span>
-                                </div>
-
-                                <div className="space-y-2">
-                                  {/* Last Week Row */}
-                                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/40 space-y-1.5">
-                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                      <span>(Last Week)</span>
-                                      <span className="text-[10px] text-slate-500">
-                                        Rating: {(lw.rating_above_1500 ?? lw.rating_1500 ?? 0) > 0 ? (lw.rating_above_1500 ?? lw.rating_1500) : '-'} | Rank: {(lw.rank_below_20000 ?? lw.ranking_20000 ?? 0) > 0 ? (lw.rank_below_20000 ?? lw.ranking_20000) : '-'}
-                                      </span>
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_above_500 ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_250_500 ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_100_249 ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_1_99 ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_0 ?? 0}</div></div>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[10px] pt-1 text-slate-600 dark:text-slate-400">
-                                      <span>Contests:</span>
-                                      <span className="font-mono font-bold">4Q: {lw.q4 ?? 0} | 3Q: {lw.q3 ?? 0} | 2Q: {lw.q2 ?? 0} | 1Q: {lw.q1 ?? 0}</span>
-                                    </div>
-                                  </div>
-
-                                  {/* Current Week Row */}
-                                  <div className="p-2.5 rounded-xl border border-cyan-300 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-950/20 space-y-1.5">
-                                    <div className="flex items-center justify-between text-[11px] font-black text-cyan-900 dark:text-cyan-200">
-                                      <span>(Current Week)</span>
-                                      <span className="text-[10px] text-cyan-700 dark:text-cyan-300">
-                                        Rating: {(cw.rating_above_1500 ?? cw.rating_1500 ?? 0) > 0 ? (cw.rating_above_1500 ?? cw.rating_1500) : '-'} | Rank: {(cw.rank_below_20000 ?? cw.ranking_20000 ?? 0) > 0 ? (cw.rank_below_20000 ?? cw.ranking_20000) : '-'}
-                                      </span>
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</div></div>
-                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</div></div>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[10px] pt-1 text-cyan-800 dark:text-cyan-300">
-                                      <span>Contests:</span>
-                                      <span className="font-mono font-black">4Q: {cw.q4 ?? 0} | 3Q: {cw.q3 ?? 0} | 2Q: {cw.q2 ?? 0} | 1Q: {cw.q1 ?? 0}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Desktop Multi-Level Institutional Table (>= md) */}
-                        <div className="hidden md:block print:block border-2 border-slate-400 dark:border-slate-600 rounded-xl overflow-x-auto shadow-sm bg-white dark:bg-navy-950">
-                          <table className="w-full text-left text-xs min-w-[980px] border-collapse font-sans">
-                            <thead>
-                              <tr className="bg-slate-100 dark:bg-navy-900 text-slate-950 dark:text-white font-black text-xs uppercase border-b-2 border-slate-400 dark:border-slate-600">
-                                <th rowSpan={2} className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                  Batch
-                                </th>
-                                <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[140px] leading-tight">
-                                  Number of Students (Total Count)
-                                </th>
-                                <th colSpan={5} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                  Number of Problems Solved
-                                </th>
-                                <th colSpan={4} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                  Weekly Contest Attended: (give the count here)
-                                </th>
-                                <th colSpan={2} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                  Leetcode Contest Rating and Ranking
-                                </th>
-                              </tr>
-                              <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
-                                {/* Problems Solved */}
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 500</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">250 - 500</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Less than 250</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Less than 100</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Not yet started</th>
-                                {/* Contests Attended */}
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">4 Q Solved</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">3 Q Solved</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">2 Q Solved</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">1 Q Solved</th>
-                                {/* Rating & Ranking */}
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Rating: Above 1500</th>
-                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Ranking: Below 20000</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-400 dark:divide-slate-600 font-sans text-xs">
-                              {batchesToDisplay.map((b: any, idx: number) => {
-                                const cw = b.current_week || {};
-                                const lw = b.last_week || {};
-                                const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
-                                const cwRating = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
-                                const cwRanking = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
-                                const lwRating = lw.rating_above_1500 ?? lw.rating_1500 ?? 0;
-                                const lwRanking = lw.rank_below_20000 ?? lw.ranking_20000 ?? 0;
-
-                                return (
-                                  <React.Fragment key={idx}>
-                                    {/* Row 1: Last Week */}
-                                    <tr className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
-                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center leading-tight">
-                                        <div className="font-extrabold">{b.batch}</div>
-                                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">(Last Week)</div>
-                                      </td>
-                                      {/* Total Students Cell (rowSpan=2) */}
-                                      <td rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white text-base align-middle bg-slate-50/40 dark:bg-navy-900/10">
-                                        {totalStudents}
-                                      </td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_above_500 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_250_500 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_100_249 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_1_99 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_0 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q4 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q3 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q2 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q1 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
-                                        {lwRating > 0 ? lwRating : '-'}
-                                      </td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
-                                        {lwRanking > 0 ? lwRanking : '-'}
-                                      </td>
-                                    </tr>
-
-                                    {/* Row 2: Current Week */}
-                                    <tr className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
-                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center leading-tight">
-                                        <div className="font-extrabold">{b.batch}</div>
-                                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">(Current Week)</div>
-                                      </td>
-                                      {/* Total Students omitted here due to rowSpan={2} */}
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q4 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q3 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q2 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q1 ?? 0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
-                                        {cwRating > 0 ? cwRating : '-'}
-                                      </td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
-                                        {cwRanking > 0 ? cwRanking : '-'}
-                                      </td>
-                                    </tr>
-                                  </React.Fragment>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* Institutional Table 2: Leetcode Contest Performance - Weekly Report (Image 2 Current Week Match) */}
-                        <div className="space-y-4 pt-4 border-t-2 border-dashed border-slate-300 dark:border-slate-700">
-                          {/* Institutional Header Card for Table 2 */}
-                          <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-sm space-y-2 font-sans">
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
-                              <img
-                                src="/black_white_logo.png"
-                                alt="Nandha Engineering College"
-                                className="h-12 sm:h-14 w-auto object-contain shrink-0"
-                                onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
-                              />
-                              <div className="space-y-1">
-                                <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 dark:text-white">
-                                  NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
-                                </h2>
-                                <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-                                  {(() => {
-                                    const dRaw = (report.department_name || report.department || '').toString().trim();
-                                    if (dRaw.includes('Cyber') || dRaw === '1' || dRaw === 'CSE(CS)') {
-                                      return 'Department of CSE(Cyber Security)';
-                                    }
-                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
-                                      return 'Department of CSE (Internet of Things )';
-                                    }
-                                    if (report.department_name && !report.department_name.match(/Department of \d+/i)) {
-                                      return report.department_name;
-                                    }
-                                    return 'Department of CSE(Cyber Security)';
-                                  })()}
-                                </p>
-                                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                  Date: {report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
-                                </p>
-                                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
-                                  Leetcode Contest Performance - Weekly Report
-                                </h3>
-                                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                  Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
-                                    {(() => {
-                                      const dRaw = (report.department_name || report.department || '').toString().trim();
-                                      if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
-                                        return 'P.Devayani /AP';
-                                      }
-                                      return report.coordinator || 'M.Santhosh Kumar/AP';
-                                    })()}
-                                  </span>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Mobile Card View (< md) */}
-                          <div className="block md:hidden print:hidden space-y-3">
-                            {batchesToDisplay.map((b: any, idx: number) => {
-                              const cw = b.current_week || {};
-                              const lw = b.last_week || {};
-                              const totStudents = b.total_students || lw.total_students || cw.total_students || 0;
-                              const cDate = b.contest_date || report.contest_date || report.session_date || '11.10.2026';
-                              const q4 = cw.q4 ?? 0;
-                              const q3 = cw.q3 ?? 0;
-                              const q2 = cw.q2 ?? 0;
-                              const q1 = cw.q1 ?? 0;
-                              const q0 = cw.q0 !== undefined && cw.q0 > 0 ? cw.q0 : Math.max(0, totStudents - (q4 + q3 + q2 + q1));
-                              const r2000 = cw.rating_above_2000 ?? cw.rating_2000 ?? 0;
-                              const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
-                              const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
-                              const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
-                              const rk5k = cw.rank_below_5000 ?? cw.ranking_5000 ?? cw.rank_below_5k ?? 0;
-
-                              return (
-                                <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-2.5 font-sans">
-                                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white">{b.batch}</span>
-                                    <span className="text-xs font-black px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200">
-                                      {totStudents} Students • {cDate}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
-                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">4 Q</div><div className="font-black text-slate-900 dark:text-white">{q4}</div></div>
-                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">3 Q</div><div className="font-black text-slate-900 dark:text-white">{q3}</div></div>
-                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">2 Q</div><div className="font-black text-slate-900 dark:text-white">{q2}</div></div>
-                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">1 Q</div><div className="font-black text-slate-900 dark:text-white">{q1}</div></div>
-                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">0 Q</div><div className="font-black text-slate-900 dark:text-white">{q0}</div></div>
-                                  </div>
-                                  <div className="flex items-center justify-between text-[11px] pt-1 text-slate-600 dark:text-slate-400 font-bold border-t border-slate-100 dark:border-slate-800">
-                                    <span>Ratings: &gt;2000: {r2000 > 0 ? r2000 : '—'} | &gt;1500: {r1500 > 0 ? r1500 : '—'} | &gt;1250: {r1250 > 0 ? r1250 : '—'}</span>
-                                    <span>Rank &lt;20k: {rk20k > 0 ? rk20k : '—'} | &lt;5k: {rk5k > 0 ? rk5k : '—'}</span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* Desktop Table (>= md) Matching Exact Uploaded Image */}
-                          <div className="hidden md:block print:block border-2 border-slate-400 dark:border-slate-600 rounded-xl overflow-x-auto shadow-sm bg-white dark:bg-navy-950">
-                            <table className="w-full text-left text-xs min-w-[980px] border-collapse font-sans">
-                              <thead>
-                                <tr className="bg-slate-100 dark:bg-navy-900 text-slate-950 dark:text-white font-black text-xs uppercase border-b-2 border-slate-400 dark:border-slate-600">
-                                  <th rowSpan={2} className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                    Batch
-                                  </th>
-                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[130px] leading-tight">
-                                    Number of Students<br />(Total Count)
-                                  </th>
-                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[130px] leading-tight">
-                                    Contest taken on -<br />---(Date)
-                                  </th>
-                                  <th colSpan={5} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                    Number of Problems Solved
-                                  </th>
-                                  <th colSpan={3} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
-                                    Leetcode Contest Rating and Ranking
-                                  </th>
-                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
-                                    Global Ranking<br />Below 20000
-                                  </th>
-                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
-                                    Contest Rank<br />Below 5000
-                                  </th>
-                                </tr>
-                                <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
-                                  {/* Problems Solved */}
-                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">4</th>
-                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">3</th>
-                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">2</th>
-                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">1</th>
-                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">0</th>
-                                  {/* Ratings */}
-                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 2000</th>
-                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 1500</th>
-                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 1250</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-400 dark:divide-slate-600 font-sans text-xs">
-                                {batchesToDisplay.map((b: any, idx: number) => {
-                                  const cw = b.current_week || {};
-                                  const lw = b.last_week || {};
-                                  const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
-                                  const cDate = b.contest_date || report.contest_date || report.session_date || '11.10.2026';
-                                  const q4 = cw.q4 ?? 0;
-                                  const q3 = cw.q3 ?? 0;
-                                  const q2 = cw.q2 ?? 0;
-                                  const q1 = cw.q1 ?? 0;
-                                  const q0 = cw.q0 !== undefined && cw.q0 > 0 ? cw.q0 : Math.max(0, totalStudents - (q4 + q3 + q2 + q1));
-                                  const r2000 = cw.rating_above_2000 ?? cw.rating_2000 ?? 0;
-                                  const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
-                                  const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
-                                  const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
-                                  const rk5k = cw.rank_below_5000 ?? cw.ranking_5000 ?? cw.rank_below_5k ?? 0;
-
-                                  return (
-                                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
-                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center">
-                                        {b.batch}
-                                      </td>
-                                      <td className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white text-sm">
-                                        {totalStudents}
-                                      </td>
-                                      <td className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">
-                                        {cDate}
-                                      </td>
-                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q4}</td>
-                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q3}</td>
-                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q2}</td>
-                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q1}</td>
-                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q0}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r2000 > 0 ? r2000 : '—'}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1500 > 0 ? r1500 : '—'}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1250 > 0 ? r1250 : '—'}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk20k > 0 ? rk20k : '—'}</td>
-                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk5k > 0 ? rk5k : '—'}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Student Roster with Contest Outcomes */}
-                  {(() => {
-                    const rosterList = report.all_students_current || report.allStudents || report.rows || report.student_list || [];
-                    if (!Array.isArray(rosterList) || rosterList.length === 0) return null;
-                    return (
-                      <div className="space-y-3">
-                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-                          Full Student Roster ({rosterList.length} Students)
-                        </h3>
-                        {/* Mobile Card View (< sm) */}
-                        <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-                          {rosterList.map((s: any, idx: number) => {
-                            const pubResult = typeof s.public_result === 'string' ? s.public_result : '';
-                            const lastPubResult = typeof s.last_public_result === 'string' ? s.last_public_result : '';
-                            const formatOutcome = (r: string) => {
-                              if (!r) return '—';
-                              if (r.includes('SOLVED')) return r.replace('_SOLVED', '/4');
-                              if (r === 'NOT_PARTICIPATED' || r === 'NOT_ATTENDED') return '—';
-                              return r;
-                            };
-                            return (
-                              <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5 transition-all active:scale-[0.98] touch-manipulation">
-                                <div className="flex items-center justify-between gap-1.5">
-                                  <div className="flex items-center space-x-1.5 min-w-0">
-                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
-                                      #{s.s_no || idx + 1}
-                                    </span>
-                                    <div className="min-w-0">
-                                      <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(s.name || s.student_name)}</h4>
-                                      <p className="text-[10px] text-slate-500 font-mono leading-tight">{s.reg_no} • {s.dept} ({s.year})</p>
-                                    </div>
-                                  </div>
-                                  <div className="text-right shrink-0">
-                                    <span className="text-xs font-bold text-brand-700 block">{s.total_solved ?? '—'} Solved</span>
-                                    <span className="text-[10px] text-slate-500 font-medium block">{s.category || '—'}</span>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-1 text-center text-[10px] pt-0.5">
-                                  <div className="p-1 rounded-lg bg-emerald-50 border border-emerald-200">
-                                    <div className="text-[8px] font-bold text-emerald-800 uppercase">E / M / H</div>
-                                    <div className="font-bold text-emerald-800">{s.easy ?? 0}/{s.medium ?? 0}/{s.hard ?? 0}</div>
-                                  </div>
-                                  <div className="p-1 rounded-lg bg-indigo-50 border border-indigo-200">
-                                    <div className="text-[8px] font-bold text-indigo-800 uppercase">Curr Week</div>
-                                    <div className="font-bold text-indigo-800">{formatOutcome(pubResult)}</div>
-                                  </div>
-                                  <div className="p-1 rounded-lg bg-purple-50 border border-purple-200">
-                                    <div className="text-[8px] font-bold text-purple-800 uppercase">Last Week</div>
-                                    <div className="font-bold text-purple-800">{formatOutcome(lastPubResult)}</div>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Desktop Table View (>= sm) */}
-                        <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto">
-                          <table className="w-full text-xs min-w-[1000px]">
-                            <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10">
-                              <tr>
-                                <th className="px-3 py-3 text-center w-10">S.No</th>
-                                <th className="px-3 py-3 text-center">Reg No</th>
-                                <th className="px-3 py-3">Name</th>
-                                <th className="px-3 py-3 text-center">Dept</th>
-                                <th className="px-3 py-3 text-center">Yr</th>
-                                <th className="px-3 py-3 text-center">Easy</th>
-                                <th className="px-3 py-3 text-center">Med</th>
-                                <th className="px-3 py-3 text-center">Hard</th>
-                                <th className="px-3 py-3 text-center">Total</th>
-                                <th className="px-3 py-3 text-center">Category</th>
-                                <th className="px-3 py-3 text-center">Curr Week</th>
-                                <th className="px-3 py-3 text-center">Last Week</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                              {rosterList.map((s: any, idx: number) => {
-                                const pubResult = strVal(s.public_result);
-                                const lastPubResult = strVal(s.last_public_result);
-                                function strVal(v: any): string { return typeof v === 'string' ? v : ''; }
-                                const getOutcomeColor = (r: string) => {
-                                  if (r === '4_SOLVED') return 'text-emerald-700 dark:text-emerald-300 font-black';
-                                  if (r === '3_SOLVED') return 'text-cyan-700 dark:text-cyan-300 font-black';
-                                  if (r === '2_SOLVED') return 'text-blue-700 dark:text-blue-300 font-black';
-                                  if (r === '1_SOLVED') return 'text-amber-700 dark:text-amber-300 font-black';
-                                  if (r === '0_SOLVED') return 'text-rose-700 dark:text-rose-300 font-black';
-                                  return 'text-slate-800 dark:text-slate-200 font-bold';
-                                };
-                                const formatOutcome = (r: string) => {
-                                  if (!r) return '—';
-                                  if (r.includes('SOLVED')) return r.replace('_SOLVED', '/4');
-                                  if (r === 'NOT_PARTICIPATED' || r === 'NOT_ATTENDED') return '—';
-                                  return r;
-                                };
-                                return (
-                                  <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                                    <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{s.s_no || (idx + 1)}</td>
-                                    <td className="px-3 py-2.5 font-black font-mono text-slate-950 dark:text-white text-center">{s.reg_no}</td>
-                                    <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
-                                    <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                                    <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
-                                    <td className="px-3 py-2.5 text-center text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? '—'}</td>
-                                    <td className="px-3 py-2.5 text-center text-amber-700 dark:text-amber-300 font-black">{s.medium ?? '—'}</td>
-                                    <td className="px-3 py-2.5 text-center text-rose-700 dark:text-rose-300 font-black">{s.hard ?? '—'}</td>
-                                    <td className="px-3 py-2.5 text-center font-black text-slate-950 dark:text-white">{s.total_solved ?? '—'}</td>
-                                    <td className="px-3 py-2.5 text-center text-xs font-black">{s.category || '—'}</td>
-                                    <td className={`px-3 py-2.5 text-center ${getOutcomeColor(pubResult)}`}>{formatOutcome(pubResult)}</td>
-                                    <td className={`px-3 py-2.5 text-center ${getOutcomeColor(lastPubResult)}`}>{formatOutcome(lastPubResult)}</td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-
-              {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
-              {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
-              {/* Metrics Overview Cards — 2026 SaaS Glassmorphic Matrix */}
-              {!isWeeklyPerformance && report.metrics && (
-                <div className="space-y-3.5 print:break-inside-avoid">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 rounded-full bg-brand-500 animate-ping"></div>
-                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-widest print:text-black">
-                        Executive Summary Metrics
-                      </h3>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 print:hidden px-2.5 py-1 rounded-full bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-xs">
-                      Tap tile to filter roster
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                    {Object.entries(report.metrics).map(([key, value]) => {
-                      const k = key.toLowerCase();
-
-                      let fKey: string | null = null;
-                      let icon = <FileText className="w-4 h-4" />;
-                      let lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
-                      let darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                      let borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
-                      let iconBox = 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
-                      let numColor = 'text-indigo-950 dark:text-white';
-                      let titleColor = 'text-indigo-800 dark:text-indigo-300';
-                      let chipLabel = 'Roster';
-
-                      if (k.includes('total_student') || k.includes('totalstudent') || k === 'total') {
-                        fKey = 'TOTAL_STUDENTS';
-                        icon = <Users className="w-4 h-4" />;
-                        lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
-                        darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
-                        iconBox = 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
-                        numColor = 'text-indigo-950 dark:text-white';
-                        titleColor = 'text-indigo-800 dark:text-indigo-300';
-                        chipLabel = 'All Enrolled';
-                      } else if (k.includes('verified_solver') || k.includes('verifiedsolver')) {
-                        fKey = 'METRIC_VERIFIED_SOLVERS';
-                        icon = <UserCheck className="w-4 h-4" />;
-                        lightGradient = 'from-emerald-50/90 via-white to-teal-50/50';
-                        darkGradient = 'dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-400 dark:hover:border-emerald-500/50';
-                        iconBox = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
-                        numColor = 'text-emerald-950 dark:text-emerald-300';
-                        titleColor = 'text-emerald-800 dark:text-emerald-300';
-                        chipLabel = 'Verified';
-                      } else if (k.includes('unverified')) {
-                        fKey = 'METRIC_UNVERIFIED_PROFILES';
-                        icon = <AlertTriangle className="w-4 h-4" />;
-                        lightGradient = 'from-rose-50/90 via-white to-red-50/50';
-                        darkGradient = 'dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-rose-200/90 dark:border-rose-500/25 hover:border-rose-400 dark:hover:border-rose-500/50';
-                        iconBox = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20';
-                        numColor = 'text-rose-950 dark:text-rose-300';
-                        titleColor = 'text-rose-800 dark:text-rose-300';
-                        chipLabel = 'Attention';
-                      } else if (k.includes('active_solver') || k.includes('activesolver') || k === 'active') {
-                        fKey = 'METRIC_ACTIVE_SOLVERS';
-                        icon = <UserCheck className="w-4 h-4" />;
-                        lightGradient = 'from-amber-50/90 via-white to-orange-50/50';
-                        darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
-                        iconBox = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
-                        numColor = 'text-amber-950 dark:text-amber-300';
-                        titleColor = 'text-amber-800 dark:text-amber-300';
-                        chipLabel = 'Active';
-                      } else if (k.includes('total_solved') || k.includes('totalsolved')) {
-                        fKey = null;
-                        icon = <CheckCircle2 className="w-4 h-4" />;
-                        lightGradient = 'from-cyan-50/90 via-white to-blue-50/50';
-                        darkGradient = 'dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-cyan-200/90 dark:border-cyan-500/25 hover:border-cyan-400 dark:hover:border-cyan-500/50';
-                        iconBox = 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/20';
-                        numColor = 'text-cyan-950 dark:text-cyan-300';
-                        titleColor = 'text-cyan-800 dark:text-cyan-300';
-                        chipLabel = 'Aggregate';
-                      } else if (k.includes('average_solved') || k.includes('averagesolved') || k.includes('avg')) {
-                        fKey = null;
-                        icon = <Target className="w-4 h-4" />;
-                        lightGradient = 'from-purple-50/90 via-white to-indigo-50/50';
-                        darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
-                        iconBox = 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20';
-                        numColor = 'text-purple-950 dark:text-purple-300';
-                        titleColor = 'text-purple-800 dark:text-purple-300';
-                        chipLabel = 'Mean Rate';
-                      } else if (k.includes('easy')) {
-                        fKey = 'METRIC_EASY_SOLVED';
-                        icon = <CheckCircle2 className="w-4 h-4" />;
-                        lightGradient = 'from-emerald-50/90 via-white to-teal-50/50';
-                        darkGradient = 'dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-400 dark:hover:border-emerald-500/50';
-                        iconBox = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
-                        numColor = 'text-emerald-950 dark:text-emerald-300';
-                        titleColor = 'text-emerald-800 dark:text-emerald-300';
-                        chipLabel = 'Easy Tier';
-                      } else if (k.includes('medium')) {
-                        fKey = 'METRIC_MEDIUM_SOLVED';
-                        icon = <Layers className="w-4 h-4" />;
-                        lightGradient = 'from-amber-50/90 via-white to-yellow-50/50';
-                        darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
-                        iconBox = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
-                        numColor = 'text-amber-950 dark:text-amber-300';
-                        titleColor = 'text-amber-800 dark:text-amber-300';
-                        chipLabel = 'Medium Tier';
-                      } else if (k.includes('hard')) {
-                        fKey = 'METRIC_HARD_SOLVED';
-                        icon = <AlertTriangle className="w-4 h-4" />;
-                        lightGradient = 'from-purple-50/90 via-white to-rose-50/50';
-                        darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
-                        iconBox = 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20';
-                        numColor = 'text-purple-950 dark:text-purple-300';
-                        titleColor = 'text-purple-800 dark:text-purple-300';
-                        chipLabel = 'Hard Tier';
-                      } else if (k.includes('not_yet_started') || k.includes('zero_solved') || k.includes('unlinked')) {
-                        fKey = 'METRIC_ZERO_SOLVED';
-                        icon = <AlertTriangle className="w-4 h-4" />;
-                        lightGradient = 'from-orange-50/90 via-white to-amber-50/50';
-                        darkGradient = 'dark:from-orange-950/40 dark:via-slate-900/90 dark:to-slate-950';
-                        borderColor = 'border-orange-200/90 dark:border-orange-500/25 hover:border-orange-400 dark:hover:border-orange-500/50';
-                        iconBox = 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20';
-                        numColor = 'text-orange-950 dark:text-orange-300';
-                        titleColor = 'text-orange-800 dark:text-orange-300';
-                        chipLabel = 'Zero Solves';
-                      }
-
-                      const isSelected = fKey ? (fKey === 'TOTAL_STUDENTS' ? activeFilter === null : activeFilter === fKey) : false;
-
-                      return (
-                        <div
-                          key={key}
-                          onClick={() => {
-                            if (fKey === 'TOTAL_STUDENTS') {
-                              setActiveFilter(null);
-                            } else if (fKey) {
-                              toggleFilter(fKey);
-                            }
-                          }}
-                          role={fKey ? "button" : undefined}
-                          title={fKey ? `Click to filter roster by ${formatMetricTitle(key)}` : undefined}
-                          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left print:bg-white print:border-slate-300 print:shadow-none print:break-inside-avoid ${fKey ? 'cursor-pointer hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]' : ''
-                            } ${isSelected
-                              ? 'bg-gradient-to-br from-indigo-500/20 via-brand-500/15 to-transparent dark:from-indigo-500/30 dark:via-brand-500/20 dark:to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/40 shadow-xl shadow-brand-500/15'
-                              : `bg-gradient-to-br ${lightGradient} ${darkGradient} ${borderColor} shadow-md shadow-slate-200/50 dark:shadow-black/40`
-                            } backdrop-blur-xl group`}
-                        >
-                          {/* Ambient glow in card corner */}
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.04] rounded-full blur-xl pointer-events-none" />
-
-                          {/* Top row: Label + Themed Icon Badge */}
-                          <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-                            <p className={`text-[11px] uppercase font-black tracking-wider truncate print:text-slate-700 ${isSelected ? 'text-brand-600 dark:text-brand-300' : titleColor
-                              }`}>
-                              {formatMetricTitle(key)}
-                            </p>
-                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-transform group-hover:scale-110 ${iconBox}`}>
-                              {icon}
-                            </div>
-                          </div>
-
-                          {/* Middle: Big high-contrast number */}
-                          <p className={`text-2xl sm:text-3xl font-black font-mono tracking-tight print:text-black my-1 relative z-10 ${isSelected ? 'text-brand-700 dark:text-white' : numColor
-                            }`}>
-                            {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
-                          </p>
-
-                          {/* Bottom: Active status or context chip */}
-                          <div className="mt-2.5 flex items-center justify-between text-[10px] relative z-10">
-                            {isSelected ? (
-                              <span className="inline-flex items-center gap-1.5 font-mono font-black uppercase text-brand-600 dark:text-brand-300 tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/40 shadow-xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
-                                FILTER ACTIVE
-                              </span>
-                            ) : (
-                              <span className="font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider text-[9.5px]">
-                                {fKey ? 'tap to filter' : chipLabel}
-                              </span>
-                            )}
-                            <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 opacity-60">
-                              {chipLabel}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Category Distribution Grid */}
-              {!isWeeklyPerformance && report.distribution && (
-                <div className="space-y-3 print:break-inside-avoid">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5 print:text-black">
-                      <Layers className="w-4 h-4 text-purple-500 print:text-black" />
-                      <span>Problem Solving Category Distribution</span>
-                    </h3>
-                    <span className="text-[10px] font-bold text-purple-400 print:hidden">Click category to filter</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                    {Object.entries(report.distribution).map(([cat, count]: [string, any]) => {
-                      const isCatSelected = activeFilter === cat;
-                      return (
-                        <div
-                          key={cat}
-                          onClick={() => toggleFilter(cat)}
-                          role="button"
-                          title={`Click to filter students with ${cat} solved`}
-                          className={`p-3.5 rounded-2xl border text-center transition-all duration-200 cursor-pointer hover:scale-[1.03] active:scale-[0.97] print:bg-white print:border-purple-300 print:break-inside-avoid ${isCatSelected
-                            ? 'bg-purple-100 dark:bg-purple-950/80 border-purple-600 dark:border-purple-400 ring-2 ring-purple-500/40 shadow-md'
-                            : 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500/60 shadow-xs'
-                            }`}
-                        >
-                          <div className={`text-xs font-black mb-1 print:text-slate-700 ${isCatSelected ? 'text-purple-950 dark:text-purple-100' : 'text-slate-900 dark:text-slate-100'
-                            }`}>
-                            {cat}
-                          </div>
-                          <div className={`text-xl font-black print:text-purple-900 ${isCatSelected ? 'text-purple-900 dark:text-purple-100' : 'text-purple-800 dark:text-purple-300'
-                            }`}>
-                            {count}
-                          </div>
-                          {isCatSelected && (
-                            <span className="inline-block mt-0.5 text-[9px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider">
-                              ● Filter Active
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* HOD Department Intelligence Summary Table */}
-              {!isWeeklyPerformance && (['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', 'FRIDAY_OFFICIAL_CONTEST'].includes(rType) || !rType) && report.departmentSummary && Array.isArray(report.departmentSummary) && report.departmentSummary.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Building2 className="w-4 h-4 text-brand-500" />
-                    <span>HOD Department Intelligence Summary</span>
-                  </h3>
-                  {/* Mobile Card View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2">
-                    {report.departmentSummary.map((d: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                          <div className="flex items-center space-x-1.5 min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
-                              #{idx + 1}
-                            </span>
-                            <h4 className="text-xs font-bold text-slate-900 truncate">{d.department}</h4>
-                          </div>
-                          <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{d.attendance_pct}% Active</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                          <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{d.total}</span> (Act: {d.active_solvers})</div>
-                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{d.total_solved?.toLocaleString()}</span></div>
-                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{d.avg_solved}</span></div>
-                          <div><span className="text-emerald-700 font-bold">4/4:</span> <span className="font-bold text-slate-900">{d.solvers_4}</span></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase table-header-group">
-                        <tr>
-                          <th className="px-4 py-3 text-center">S.No</th>
-                          <th className="px-4 py-3">Department</th>
-                          <th className="px-4 py-3 text-center">Total Students</th>
-                          <th className="px-4 py-3 text-center">Active Solvers</th>
-                          <th className="px-4 py-3 text-center">Participation %</th>
-                          <th className="px-4 py-3 text-right">Total Solved</th>
-                          <th className="px-4 py-3 text-right">Avg Solved</th>
-                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {report.departmentSummary.map((d: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-black text-brand-700 dark:text-brand-300">{d.department}</td>
-                            <td className="px-4 py-2.5 text-center font-black">{d.total}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.active_solvers}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{d.attendance_pct}%</td>
-                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{d.total_solved?.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-right font-mono font-black">{d.avg_solved}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.solvers_4}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Year-wise Intelligence Summary Table (HOD Report) */}
-              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY'].includes(rType) && report.yearSummary && Array.isArray(report.yearSummary) && report.yearSummary.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <GraduationCap className="w-4 h-4 text-indigo-500" />
-                    <span>Year-wise Intelligence Summary</span>
-                  </h3>
-                  {/* Mobile Card View */}
-                  <div className="block sm:hidden print:hidden space-y-2">
-                    {report.yearSummary.map((y: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                          <h4 className="text-xs font-bold text-indigo-700">{y.year}</h4>
-                          <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{y.attendance_pct}% Active</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                          <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{y.total}</span></div>
-                          <div><span className="text-slate-500 font-medium">Active:</span> <span className="font-bold text-emerald-700">{y.active_solvers}</span></div>
-                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{y.total_solved?.toLocaleString()}</span></div>
-                          <div><span className="text-emerald-700 font-bold">4/4:</span> <span className="font-bold text-slate-900">{y.solvers_4}</span></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Desktop Table View */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[520px]">
-                      <thead className="bg-[#2F5D8A] text-white font-black uppercase">
-                        <tr>
-                          <th className="px-4 py-3 text-center">S.No</th>
-                          <th className="px-4 py-3">Academic Year</th>
-                          <th className="px-4 py-3 text-center">Total Students</th>
-                          <th className="px-4 py-3 text-center">Active Solvers</th>
-                          <th className="px-4 py-3 text-center">Participation %</th>
-                          <th className="px-4 py-3 text-right">Total Solved</th>
-                          <th className="px-4 py-3 text-right">Avg Solved</th>
-                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {report.yearSummary.map((y: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-black text-indigo-700 dark:text-indigo-300">{y.year}</td>
-                            <td className="px-4 py-2.5 text-center font-black">{y.total}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{y.active_solvers}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{y.attendance_pct}%</td>
-                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{y.total_solved?.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-right font-mono font-black">{y.avg_solved}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{y.solvers_4}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Cutoff Band Intelligence Table */}
-              {!isWeeklyPerformance && (isCutoffReport || ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', '12TH_TNEA_CUTOFF_ANALYSIS'].includes(rType)) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Award className="w-4 h-4 text-rose-500" />
-                    <span>12th TNEA Cutoff Band Intelligence Summary</span>
-                  </h3>
-
-                  {/* Mobile Card View (Hidden on print) */}
-                  <div className="block sm:hidden print:hidden space-y-2">
-                    {(report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0).length > 0
-                      ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
-                      : report.cutoffBandSummary
-                    ).map((b: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                          <h4 className="text-xs font-bold text-rose-700">{b.band}</h4>
-                          <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{b.attendance_pct}% Active</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                          <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{b.total}</span></div>
-                          <div><span className="text-slate-500 font-medium">Attended:</span> <span className="font-bold text-emerald-700">{b.active_solvers}</span></div>
-                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{b.total_solved?.toLocaleString()}</span></div>
-                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{b.avg_solved}</span></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (Clean modern layout matching HOD & Year summaries) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[650px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase tracking-wider text-[10px]">
-                        <tr>
-                          <th className="px-4 py-3 text-center">S.No</th>
-                          <th className="px-4 py-3">12th Cutoff Band</th>
-                          <th className="px-4 py-3 text-center">Total Students</th>
-                          <th className="px-4 py-3 text-center">Attended</th>
-                          <th className="px-4 py-3 text-center">Not Attended</th>
-                          <th className="px-4 py-3 text-center">Participation %</th>
-                          <th className="px-4 py-3 text-center">Total Solved</th>
-                          <th className="px-4 py-3 text-center">Avg Solved</th>
-                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white">
-                        {(report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0).length > 0
-                          ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
-                          : report.cutoffBandSummary
-                        ).map((b: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-black text-rose-700 dark:text-rose-300">{b.band}</td>
-                            <td className="px-4 py-2.5 text-center font-black">{b.total}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.active_solvers}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-rose-600 dark:text-rose-400">{b.not_active}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-400">{b.attendance_pct}%</td>
-                            <td className="px-4 py-2.5 text-center font-black">{b.total_solved?.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-center font-mono font-black">{b.avg_solved}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.solvers_4}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-
-              {/* Faculty / Staff Allocation Performance Table */}
-              {!isWeeklyPerformance && (['FACULTY_CONSOLIDATED', 'FACULTY_COORDINATOR_CONSOLIDATED'].includes(rType) || !rType) && report.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <GraduationCap className="w-4 h-4 text-emerald-500" />
-                    <span>Faculty & Mentor Consolidated Performance</span>
-                  </h3>
-                  {/* Mobile Card View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2">
-                    {report.facultySummary.map((f: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
-                          <div className="flex items-center space-x-1.5 min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
-                              #{idx + 1}
-                            </span>
-                            <h4 className="text-xs font-bold text-slate-900 truncate">{f.staff_name}</h4>
-                          </div>
-                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">{f.department}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                          <div><span className="text-slate-500 font-medium">Assigned:</span> <span className="font-bold text-slate-900">{f.total_assigned}</span> (Act: {f.active_solvers})</div>
-                          <div><span className="text-slate-500 font-medium">Active:</span> <span className="font-bold text-emerald-700">{f.active_pct}%</span></div>
-                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{f.total_solved?.toLocaleString()}</span></div>
-                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{f.avg_solved}</span></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase table-header-group">
-                        <tr>
-                          <th className="px-4 py-3 text-center">S.No</th>
-                          <th className="px-4 py-3">Faculty / Mentor Name</th>
-                          <th className="px-4 py-3 text-center">Dept</th>
-                          <th className="px-4 py-3 text-center">Assigned Students</th>
-                          <th className="px-4 py-3 text-center">Active Solvers</th>
-                          <th className="px-4 py-3 text-center">Active %</th>
-                          <th className="px-4 py-3 text-right">Total Solved</th>
-                          <th className="px-4 py-3 text-right">Avg Solved</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {report.facultySummary.map((f: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white">{f.staff_name}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{f.department}</td>
-                            <td className="px-4 py-2.5 text-center font-black">{f.total_assigned}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{f.active_solvers}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-brand-700 dark:text-brand-300">{f.active_pct}%</td>
-                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{f.total_solved?.toLocaleString()}</td>
-                            <td className="px-4 py-2.5 text-right font-mono font-black">{f.avg_solved}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* 5-Week Performance Trend Matrix Table */}
-              {isFiveWeekTrend && report.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Clock className="w-4 h-4 text-indigo-500" />
-                    <span>Five-Week Longitudinal Performance Matrix</span>
-                  </h3>
-                  {/* Mobile Card View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
-                    {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
-                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <div className="flex items-center space-x-1.5 min-w-0">
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
-                              #{idx + 1}
-                            </span>
-                            <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-slate-900 truncate">
-                                {formatStudentName(s.name || s.student_name)}
-                              </h4>
-                              <p className="text-[10px] text-slate-500 font-mono leading-tight">
-                                {s.reg_no} • {s.dept} ({s.year})
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-xs font-bold text-emerald-700 block">{s.total_solved ?? 0} Solved ({s.attendance_rate || '0%'})</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/60">
-                          <span className="text-slate-600 font-bold">Contests 1–5:</span>
-                          <div className="flex items-center space-x-1.5 font-mono font-bold text-slate-800">
-                            <span>{s.c1_solved ?? 0}</span>
-                            <span>•</span>
-                            <span>{s.c2_solved ?? 0}</span>
-                            <span>•</span>
-                            <span>{s.c3_solved ?? 0}</span>
-                            <span>•</span>
-                            <span>{s.c4_solved ?? 0}</span>
-                            <span>•</span>
-                            <span>{s.c5_solved ?? 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[650px] sm:min-w-[950px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group">
-                        <tr>
-                          <th className="px-3.5 py-3 text-center w-12">S.No</th>
-                          <th className="px-3.5 py-3 text-center">Register No</th>
-                          <th className="px-3.5 py-3 text-left">Student Name</th>
-                          <th className="px-3.5 py-3 text-center">Dept</th>
-                          <th className="px-3.5 py-3 text-center">Year</th>
-                          {report.sessionHeaders.map((hdr: string, i: number) => (
-                            <th key={i} className="px-3.5 py-3 text-center">{hdr}</th>
-                          ))}
-                          <th className="px-4 py-3 text-right">5-W Solved</th>
-                          <th className="px-3.5 py-3 text-center">Attendance %</th>
-                          <th className="px-4 py-3 text-center">Trajectory</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{idx + 1}</td>
-                            <td className="px-3.5 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono">{s.reg_no}</td>
-                            <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
-                            <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                            <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
-                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c1_solved ?? 0}</td>
-                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c2_solved ?? 0}</td>
-                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c3_solved ?? 0}</td>
-                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c4_solved ?? 0}</td>
-                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c5_solved ?? 0}</td>
-                            <td className="px-4 py-2.5 text-right font-black text-emerald-700 dark:text-emerald-300 text-sm">{s.total_solved ?? 0}</td>
-                            <td className="px-3.5 py-2.5 text-center font-black text-brand-700 dark:text-brand-300">{s.attendance_rate || '0%'}</td>
-                            <td className="px-4 py-2.5 text-center">
-                              <span className={`px-2.5 py-1 text-[10px] font-black rounded-lg border ${s.trajectory?.includes('IMPROVING') ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' :
-                                s.trajectory?.includes('STABLE') ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30' :
-                                  s.trajectory?.includes('DECLINING') ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30' :
-                                    'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
-                                }`}>
-                                {s.trajectory || 'FOLLOW-UP'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Top Performers Table (Only shown for general cumulative reports) */}
-              {!isFiveWeekTrend && !isWeeklyPerformance && report.topStudents && report.topStudents.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
-                    <Award className="w-4 h-4 text-amber-500" />
-                    <span>Top Performers Leaderboard</span>
-                  </h3>
-                  {/* Mobile Card View (< sm) */}
-                  <div className="block sm:hidden print:hidden space-y-2">
-                    {report.topStudents.map((s: any, idx: number) => {
-                      const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
-                      const formattedRating = (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
-                        ? Math.round(Number(r)).toLocaleString()
-                        : "—";
-                      return (
-                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="flex items-center space-x-1.5 min-w-0">
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
-                                #{idx + 1}
-                              </span>
-                              <div className="min-w-0">
-                                <h4 className="text-xs font-bold text-slate-900 truncate">
-                                  {formatStudentName(s.name || s.student_name)}
-                                </h4>
-                                <p className="text-[10px] text-slate-500 font-mono leading-tight">
-                                  {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <span className="text-xs font-bold text-emerald-700 block">{s.total_solved ?? "—"} Solved</span>
-                              {formattedRating !== '—' && <span className="text-[10px] font-mono text-slate-600 block">Rating: {formattedRating}</span>}
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between gap-2 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-emerald-700 font-bold">E:{s.easy ?? "—"}</span>
-                              <span className="text-amber-700 font-bold">M:{s.medium ?? "—"}</span>
-                              <span className="text-rose-700 font-bold">H:{s.hard ?? "—"}</span>
-                            </div>
-                            <span className="text-slate-600 font-mono text-[10px]">Total: {s.total_solved ?? "—"}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Desktop Table View (>= sm) */}
-                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
-                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
-                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase table-header-group">
-                        <tr>
-                          <th className="px-4 py-3 text-center">Rank</th>
-                          <th className="px-4 py-3 text-center">Reg No</th>
-                          <th className="px-4 py-3 text-left">Name</th>
-                          <th className="px-4 py-3 text-center">Dept</th>
-                          <th className="px-4 py-3 text-center">Year</th>
-                          <th className="px-4 py-3 text-center">Easy</th>
-                          <th className="px-4 py-3 text-center">Medium</th>
-                          <th className="px-4 py-3 text-center">Hard</th>
-                          <th className="px-4 py-3 text-center">Total Solved</th>
-                          <th className="px-4 py-3 text-center">Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
-                        {report.topStudents.map((s: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
-                            <td className="px-4 py-2.5 text-center font-black text-amber-600 dark:text-amber-400">#{idx + 1}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono">{s.reg_no}</td>
-                            <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-center font-black text-brand-700 dark:text-brand-300 text-sm">{s.total_solved ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-center font-mono font-black text-slate-950 dark:text-white">
-                              {(() => {
-                                const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
-                                return (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
-                                  ? Math.round(Number(r)).toLocaleString()
-                                  : "—";
-                              })()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Full Student Roster Table (Only shown for general cumulative reports) */}
-              {!isFiveWeekTrend && !isHistIntel && !isWowIntel && !isWeeklyPerformance && allRows.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-brand-500" />
-                      <span>
-                        Full Student Performance Roster ({displayedStudents.length} {displayedStudents.length === allRows.length ? 'Students' : `of ${allRows.length} Students`})
-                      </span>
-                    </h3>
-                    {activeFilter && (
-                      <div className="flex items-center space-x-2 text-xs">
-                        <span className="font-extrabold text-indigo-700 dark:text-indigo-300">
-                          Active: <span className="underline font-black">{activeFilter.replace('METRIC_', '').replace('CAT_', '').replace(/_/g, ' ')}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setActiveFilter(null)}
-                          className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-black text-[10px] transition-all cursor-pointer flex items-center space-x-1"
-                        >
-                          <X className="w-3 h-3" />
-                          <span>Clear</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {activeFilter && (
-                    <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs shadow-2xs animate-fade-in print:hidden">
-                      <div className="flex items-center space-x-2">
-                        <Filter className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                        <span className="font-bold text-indigo-950 dark:text-indigo-200">
-                          Filtering students for: <span className="font-black text-indigo-700 dark:text-indigo-300">{activeFilter.replace('METRIC_', '').replace('CAT_', '').replace(/_/g, ' ')}</span>
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full font-black bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-200 text-[10px]">
-                          {displayedStudents.length} Solvers Found
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveFilter(null)}
-                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-black text-[11px] hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer flex items-center space-x-1 shadow-2xs"
-                      >
-                        <X className="w-3 h-3" />
-                        <span>Reset Table</span>
-                      </button>
-                    </div>
-                  )}
-
-                  {displayedStudents.length === 0 ? (
-                    <div className="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-950 text-center space-y-2">
-                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No students match the selected filter category ({activeFilter}).</p>
-                      <button
-                        type="button"
-                        onClick={() => setActiveFilter(null)}
-                        className="px-3 py-1.5 rounded-xl bg-brand-600 text-white text-xs font-black shadow-xs hover:bg-brand-700 transition-all cursor-pointer"
-                      >
-                        Show All Students
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Mobile Card View (< sm) */}
-                      <div className="block sm:hidden print:hidden space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                        {displayedStudents.map((s: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
-                            <div className="flex items-center justify-between gap-1.5">
-                              <div className="flex items-center space-x-1.5 min-w-0">
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0">
-                                  #{idx + 1}
-                                </span>
-                                <div className="min-w-0">
-                                  <h4 className="text-xs font-bold text-slate-900 truncate">
-                                    {formatStudentName(s.name || s.student_name)}
-                                  </h4>
-                                  <p className="text-[10px] text-slate-500 font-mono leading-tight">
-                                    {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <span className={`px-1.5 py-0.2 text-[9px] font-bold rounded-md block text-center mb-0.5 ${s.status === 'VERIFIED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
-                                  {s.status}
-                                </span>
-                                <span className="text-xs font-bold text-emerald-700 block">{s.total_solved !== null ? s.total_solved : "—"} Solved</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between gap-2 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
-                              <div className="flex items-center gap-2">
-                                <span className="text-emerald-700 font-bold">E:{s.easy ?? "—"}</span>
-                                <span className="text-amber-700 font-bold">M:{s.medium ?? "—"}</span>
-                                <span className="text-rose-700 font-bold">H:{s.hard ?? "—"}</span>
-                              </div>
-                              <span className="text-slate-500 font-mono text-[10px]">{s.reg_no}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Desktop Table View (>= sm) */}
-                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                        <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[800px] print:min-w-0 print:w-full">
-                          <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
-                            <tr>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">Reg No</th>
-                              <th className="px-4 py-3 text-left print:border-b print:border-black">Student Name</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
-                              {isCutoffReport && (
-                                <th className="px-4 py-3 text-center print:border-b print:border-black text-rose-300">12th Cutoff</th>
-                              )}
-                              <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
-                              <th className="px-4 py-3 text-right print:border-b print:border-black">Medium</th>
-                              <th className="px-4 py-3 text-right print:border-b print:border-black">Hard</th>
-                              <th className="px-4 py-3 text-right print:border-b print:border-black">Total Solved</th>
-                              <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans print:divide-black">
-                            {displayedStudents.map((s: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
-                                <td className="px-4 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
-                                <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
-                                <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
-                                <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
-                                <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
-                                {isCutoffReport && (
-                                  <td className="px-4 py-2.5 text-center font-mono font-bold text-rose-700 dark:text-rose-300">
-                                    {s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}
-                                  </td>
-                                )}
-                                <td className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? "—"}</td>
-                                <td className="px-4 py-2.5 text-right text-amber-700 dark:text-amber-300 font-black">{s.medium ?? "—"}</td>
-                                <td className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-300 font-black">{s.hard ?? "—"}</td>
-                                <td className="px-4 py-2.5 text-right font-black text-brand-700 dark:text-brand-300">{s.total_solved !== null ? s.total_solved : "—"}</td>
-                                <td className="px-4 py-2.5 text-center">
-                                  <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
-                                    {s.status}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-            </div>
-          )}
-
-          {/* UNIVERSAL SOLVE CONDITION & DIFFICULTY BREAKDOWN (TABLE FOOTER ANALYSIS) */}
-          {!isContestReport && (
-            <div className="pt-4 space-y-4 print:break-inside-avoid print:mt-6">
-              <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
-                {/* Header with Title, Report Type Scope & Badges */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
-                        Solve Condition &amp; Performance Summary
-                      </h3>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
-                        {rType || 'UNIVERSAL REPORT'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                      Aggregated solve condition cohorts, problem difficulty metrics & attendance breakdown for table data above.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
-                      <span>In Scope: {allRows.length} Students</span>
-                    </span>
-                    {activeFilter && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
-                        <span>Filtered View: {conditionStats.totalStudents}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Contest / Weekly Solve Distribution Cohorts
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                      Click any cohort card to filter students in the table
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                    {/* 4/4 Solved */}
-                    <div
-                      onClick={() => toggleFilter('SOLVED_4')}
-                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_4'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
-                        <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight mt-1">{conditionStats.s4}</p>
-                    </div>
-
-                    {/* 3/4 Solved */}
-                    <div
-                      onClick={() => toggleFilter('SOLVED_3')}
-                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_3'
-                        ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
-                        <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight mt-1">{conditionStats.s3}</p>
-                    </div>
-
-                    {/* 2/4 Solved */}
-                    <div
-                      onClick={() => toggleFilter('SOLVED_2')}
-                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_2'
-                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
-                        <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight mt-1">{conditionStats.s2}</p>
-                    </div>
-
-                    {/* 1/4 Solved */}
-                    <div
-                      onClick={() => toggleFilter('SOLVED_1')}
-                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_1'
-                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
-                        <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight mt-1">{conditionStats.s1}</p>
-                    </div>
-
-                    {/* 0/4 Solved (Attended) */}
-                    <div
-                      onClick={() => toggleFilter('SOLVED_0')}
-                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_0'
-                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
-                        <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight mt-1">{conditionStats.s0}</p>
-                    </div>
-
-                    {/* Not Attended / Absent */}
-                    <div
-                      onClick={() => toggleFilter('NOT_ATTENDED')}
-                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'NOT_ATTENDED'
-                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
-                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
-                        <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-md font-mono">
-                          {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight mt-1">{conditionStats.notAttendedCount}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Difficulty Solve Distribution (Easy • Medium • Hard)
-                  </span>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {/* Easy Solves */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Easy Solves</span>
-                      <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
-                        {conditionStats.totalEasy.toLocaleString()}
-                      </p>
-                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                        Foundational Solves
-                      </span>
-                    </div>
-
-                    {/* Medium Solves */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Medium Solves</span>
-                      <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
-                        {conditionStats.totalMed.toLocaleString()}
-                      </p>
-                      <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
-                        Core Algorithmic Solves
-                      </span>
-                    </div>
-
-                    {/* Hard Solves */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Hard Solves</span>
-                      <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
-                        {conditionStats.totalHard.toLocaleString()}
-                      </p>
-                      <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
-                        High Difficulty Solves
-                      </span>
-                    </div>
-
-                    {/* Total Cumulative Solves */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Total Solves</span>
-                      <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
-                        {conditionStats.totalSolves.toLocaleString()}
-                      </p>
-                      <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
-                        Cumulative Solves
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Official Condition Criteria Reference Strip */}
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div className="text-slate-700 dark:text-slate-300 font-bold">
-                    Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)
-                  </div>
-                  {activeFilter && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveFilter(null)}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
-                    >
-                      <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* 4. FOOTER / EXECUTIVE EXPORT ACTIONS - Compact Mobile UI with Excel + More */}
-        <div className="relative z-40 px-3.5 py-2.5 sm:px-5 sm:py-3 bg-white/95 dark:bg-[#0c1427]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-white/10 flex flex-row items-center justify-between gap-2 shrink-0 print:hidden shadow-lg pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
-          <div className="flex items-center space-x-1.5 min-w-0">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <div className="flex items-center gap-1.5 truncate">
-              <span className="hidden sm:inline font-extrabold tracking-wide text-slate-900 dark:text-white text-xs truncate">Official Dataset</span>
-              <span className="inline-block px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
-                {allRows.length} Records
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Primary Action: Excel */}
-            <button
-              onClick={() => downloadFile('excel')}
-              type="button"
-              disabled={isDownloading}
-              className="flex items-center justify-center space-x-1.5 px-3.5 sm:px-4 py-2 min-h-[38px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50 touch-manipulation group cursor-pointer"
-              title="Download Excel spreadsheet (.xlsx)"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
-              <span>Excel (.xlsx)</span>
-            </button>
-
-            {/* Secondary Action: More Menu Dropdown */}
-            <div ref={moreMenuRef} className="relative z-50">
-              <button
-                onClick={() => setMoreMenuOpen(prev => !prev)}
-                type="button"
-                className="flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-2 min-h-[38px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 active:scale-95 touch-manipulation cursor-pointer"
-                title="More export & share options"
-              >
-                <MoreHorizontal className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                <span className="hidden sm:inline">More</span>
-                <ChevronUp className={`w-3.5 h-3.5 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Responsive Export Action Sheet: Mobile Native Bottom Drawer & Desktop Luxury Popover */}
-              {moreMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity sm:hidden"
-                    onClick={() => setMoreMenuOpen(false)}
-                  />
-
-                  {/* MOBILE NATIVE BOTTOM SHEET (< sm) — FULL EXPORT & SHARE */}
-                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-[#0c1427] rounded-t-3xl border-t border-slate-200/90 dark:border-white/10 shadow-2xl p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,16px))] space-y-3 animate-in slide-in-from-bottom duration-250 max-h-[85vh] overflow-y-auto">
-                    {/* Bottom Sheet Handle */}
-                    <div className="flex flex-col items-center gap-1.5 pb-1">
-                      <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-                      <div className="flex items-center justify-between w-full pt-1">
-                        <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          Export &amp; Share Report
-                        </span>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                          {allRows.length} Rows
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 pt-1">
-                      {/* 1. PDF (.pdf) */}
-                      <button
-                        type="button"
-                        onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-100/70 dark:hover:bg-rose-950/60 border border-rose-200/90 dark:border-rose-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">PDF Document</div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Export print-ready PDF</div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200 shrink-0">
-                          .PDF
-                        </span>
-                      </button>
-
-                      {/* 2. Word (.docx) */}
-                      <button
-                        type="button"
-                        onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100/70 dark:hover:bg-blue-950/60 border border-blue-200/90 dark:border-blue-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">Word Document</div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Word report (.docx)</div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shrink-0">
-                          .DOCX
-                        </span>
-                      </button>
-
-                      {/* 3. WhatsApp — 4-format inline selector */}
-                      <div className="w-full rounded-2xl border border-green-200/90 dark:border-green-800/80 bg-green-50/60 dark:bg-green-950/30 overflow-hidden shadow-xs">
-                        {/* Header row — tap to expand/collapse */}
-                        <button
-                          type="button"
-                          onClick={() => setShowFormatPicker(p => !p)}
-                          className="w-full flex items-center justify-between p-3.5 hover:bg-green-100/50 dark:hover:bg-green-950/50 transition-colors cursor-pointer"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-green-500/20">
-                              <Share2 className="w-5 h-5" />
-                            </div>
-                            <div className="text-left min-w-0">
-                              <div className="text-xs font-black text-slate-900 dark:text-white">Share to WhatsApp</div>
-                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Full summary text + 1-tap Excel download</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              TEXT + LINK
-                            </span>
-                            <ChevronDown className={`w-4 h-4 text-green-600 transition-transform duration-200 ${showFormatPicker ? 'rotate-180' : ''}`} />
-                          </div>
-                        </button>
-
-                        {/* Format picker — collapsible */}
-                        {showFormatPicker && (
-                          <div className="border-t border-green-200/80 dark:border-green-800/60 p-3 space-y-2 bg-white/50 dark:bg-green-950/20">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">SUMMARY TEXT FORMAT</span>
-                              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
-                                {shareFormat === 'summary' ? 'NORMAL' : shareFormat === 'solvers' ? 'NAMES' : shareFormat === 'leaderboard' ? 'TOP' : 'ABSENT'}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                              {/* Normal Summary */}
-                              <button
-                                type="button"
-                                onClick={() => { handleShareWhatsApp('message', 'summary'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
-                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'summary' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
-                              >
-                                <div className="flex items-center justify-between w-full mb-0.5">
-                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Normal Summary</span>
-                                  {shareFormat === 'summary' && <Check className="w-3 h-3 text-green-600" />}
-                                </div>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400">KPIs without names</span>
-                              </button>
-
-                              {/* With Solvers */}
-                              <button
-                                type="button"
-                                onClick={() => { handleShareWhatsApp('message', 'solvers'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
-                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'solvers' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
-                              >
-                                <div className="flex items-center justify-between w-full mb-0.5">
-                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">With Solvers</span>
-                                  {shareFormat === 'solvers' && <Check className="w-3 h-3 text-green-600" />}
-                                </div>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Names for 4/4, 3/4, 2/4</span>
-                              </button>
-
-                              {/* Top Solvers */}
-                              <button
-                                type="button"
-                                onClick={() => { handleShareWhatsApp('message', 'leaderboard'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
-                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'leaderboard' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
-                              >
-                                <div className="flex items-center justify-between w-full mb-0.5">
-                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Top Solvers</span>
-                                  {shareFormat === 'leaderboard' && <Check className="w-3 h-3 text-green-600" />}
-                                </div>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Rank &amp; score leaders</span>
-                              </button>
-
-                              {/* Absentees List */}
-                              <button
-                                type="button"
-                                onClick={() => { handleShareWhatsApp('message', 'absentees'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
-                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'absentees' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
-                              >
-                                <div className="flex items-center justify-between w-full mb-0.5">
-                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Absentees List</span>
-                                  {shareFormat === 'absentees' && <Check className="w-3 h-3 text-green-600" />}
-                                </div>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Follow-up roster</span>
-                              </button>
-                            </div>
-
-                            {/* Copy Summary Text */}
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const txt = generateShareText(shareFormat);
-                                await navigator.clipboard.writeText(txt).catch(() => { });
-                                setCopiedSummary(true);
-                                setTimeout(() => setCopiedSummary(false), 2000);
-                              }}
-                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
-                            >
-                              {copiedSummary ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                              {copiedSummary ? 'Copied!' : 'Copy Summary Text'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 4. Attach Excel Document */}
-                      <button
-                        type="button"
-                        onClick={() => { downloadFile('excel'); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 hover:bg-teal-100/70 dark:hover:bg-teal-950/60 border border-teal-200/90 dark:border-teal-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-teal-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20">
-                            <FileSpreadsheet className="w-5 h-5" />
-                          </div>
-                          <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">Attach Excel Document</div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Direct .xlsx file &amp; copy text to clipboard</div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 shrink-0">
-                          .XLSX FILE
-                        </span>
-                      </button>
-
-                      {/* 5. Print View */}
-                      <button
-                        type="button"
-                        onClick={() => { window.print(); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700/80 transition-all cursor-pointer active:scale-98 shadow-xs"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-slate-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-slate-500/20">
-                            <Printer className="w-5 h-5" />
-                          </div>
-                          <div className="text-left min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">Print View</div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Print or save via browser</div>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 shrink-0">
-                          PRINT
-                        </span>
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setMoreMenuOpen(false)}
-                      className="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-xs cursor-pointer active:scale-98 transition-all text-center mt-1"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-
-                  {/* DESKTOP POPOVER MENU (>= sm) — FULL EXPORT & SHARE */}
-                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-72 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
-                    <div className="px-2 pt-1 pb-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Export &amp; Share</span>
-                    </div>
-
-                    <button
-                      onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-600 shrink-0">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="truncate">PDF (.pdf)</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Export print-ready PDF</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 shrink-0">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="truncate">Word (.docx)</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Word report document</span>
-                      </div>
-                    </button>
-
-                    <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-
-                    {/* WhatsApp 4-format sub-menu */}
-                    <button
-                      onClick={() => { handleShareWhatsApp('message', shareFormat); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-green-50 dark:hover:bg-green-950/40 hover:text-green-600 dark:hover:text-green-400 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 shrink-0">
-                        <Share2 className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="truncate">WhatsApp ({shareFormat === 'summary' ? 'Normal' : shareFormat === 'solvers' ? 'With Names' : shareFormat === 'leaderboard' ? 'Top Solvers' : 'Absentees'})</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Tap to share · change format below</span>
-                      </div>
-                    </button>
-                    {/* Format mini-grid */}
-                    <div className="grid grid-cols-2 gap-1 px-1 pb-1">
-                      {(['summary', 'solvers', 'leaderboard', 'absentees'] as const).map(fmt => (
-                        <button
-                          key={fmt}
-                          type="button"
-                          onClick={() => setShareFormat(fmt)}
-                          className={`text-[10px] font-bold py-1 px-2 rounded-lg border transition-all cursor-pointer ${shareFormat === fmt ? 'border-green-500 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-green-300'}`}
-                        >
-                          {fmt === 'summary' ? 'Normal' : fmt === 'solvers' ? 'With Names' : fmt === 'leaderboard' ? 'Top Solvers' : 'Absentees'}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-
-                    <button
-                      onClick={() => { downloadFile('excel'); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
-                        <FileSpreadsheet className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="truncate">Excel (.xlsx)</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Institutional spreadsheet</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => { window.print(); setMoreMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
-                        <Printer className="w-4 h-4" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="truncate">Print View</span>
-                        <span className="text-[10px] text-slate-400 font-normal truncate">Print or save via browser</span>
-                      </div>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>,
-    document.body
-  );
-};
-
-function max(a: number, b: number) {
-  return a > b ? a : b;
-}
-
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Filter, Building2, GraduationCap, Target, Printer, ShieldCheck, TrendingUp, UserX, Clock, Share2, MoreHorizontal, ChevronUp, ChevronDown, Check, Copy, Trophy } from 'lucide-react';
+import api from '../services/api';
+import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
+import { SwipeHandle } from './SwipeHandle';
+
+interface ReportPreviewProps {
+  reportId: string;
+  initialData?: any;
+  onClose: () => void;
+}
+
+import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/authContextDef';
+import { useScrollLock } from '../hooks/useScrollLock';
+import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
+import { isNativeMobile, saveFileToMobileStorage, DocumentOpener } from '../services/download/downloadUtils';
+import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
+
+const formatStudentName = (name: string) => {
+  if (!name) return "—";
+  return name.trim().toUpperCase();
+};
+
+const getContestDifficultyBreakdown = (s: any, forceCurrentContestOnly: boolean = false) => {
+  if (!forceCurrentContestOnly) {
+    if (s.contest_easy !== undefined && s.contest_medium !== undefined && s.contest_hard !== undefined && s.contest_easy !== null) {
+      return {
+        easy: Number(s.contest_easy || 0),
+        medium: Number(s.contest_medium || 0),
+        hard: Number(s.contest_hard || 0),
+      };
+    }
+    if (s.contest_easy_solved !== undefined && s.contest_medium_solved !== undefined && s.contest_hard_solved !== undefined && s.contest_easy_solved !== null) {
+      return {
+        easy: Number(s.contest_easy_solved || 0),
+        medium: Number(s.contest_medium_solved || 0),
+        hard: Number(s.contest_hard_solved || 0),
+      };
+    }
+  }
+
+  let q1 = s.q1 !== undefined && s.q1 !== null ? (s.q1 === 1 || s.q1 === true || s.q1 === '1' ? 1 : 0) : null;
+  let q2 = s.q2 !== undefined && s.q2 !== null ? (s.q2 === 1 || s.q2 === true || s.q2 === '1' ? 1 : 0) : null;
+  let q3 = s.q3 !== undefined && s.q3 !== null ? (s.q3 === 1 || s.q3 === true || s.q3 === '1' ? 1 : 0) : null;
+  let q4 = s.q4 !== undefined && s.q4 !== null ? (s.q4 === 1 || s.q4 === true || s.q4 === '1' ? 1 : 0) : null;
+
+  let cEasy = q1 !== null ? q1 : 0;
+  let cMed = (q2 !== null ? q2 : 0) + (q3 !== null ? q3 : 0);
+  let cHard = q4 !== null ? q4 : 0;
+
+  const knownSum = cEasy + cMed + cHard;
+  const totSolved = s.contest_solved !== undefined && s.contest_solved !== null
+    ? Number(s.contest_solved)
+    : (s.total_contest_solved !== undefined && s.total_contest_solved !== null
+      ? Number(s.total_contest_solved)
+      : (s.solved !== undefined && s.solved !== null ? Number(s.solved) : (s.total_solved !== undefined ? Number(s.total_solved) : knownSum)));
+
+  if (totSolved > knownSum) {
+    const rem = totSolved - knownSum;
+    const fullBlocks = Math.floor(rem / 4);
+    const leftover = rem % 4;
+
+    cEasy += fullBlocks + (leftover >= 1 ? 1 : 0);
+    cMed += (fullBlocks * 2) + (leftover >= 2 ? 1 : 0) + (leftover >= 3 ? 1 : 0);
+    cHard += fullBlocks + (leftover >= 4 ? 1 : 0);
+  }
+
+  return { easy: cEasy, medium: cMed, hard: cHard };
+};
+
+const getContestSolvedCount = (s: any, isContestReport: boolean = false): { count: number | null; isAttended: boolean } => {
+  if (!s) return { count: null, isAttended: false };
+
+  // 1. Authoritative public_result (e.g. '4_SOLVED', '3_SOLVED', 'NOT_PARTICIPATED', '0_SOLVED')
+  const pub = String(s.public_result || s.curr_public_result || s.weekly_result || '').trim().toUpperCase();
+  if (pub) {
+    if (pub.includes('4_SOLVED') || pub === '4' || pub === '4/4') return { count: 4, isAttended: true };
+    if (pub.includes('3_SOLVED') || pub === '3' || pub === '3/4') return { count: 3, isAttended: true };
+    if (pub.includes('2_SOLVED') || pub === '2' || pub === '2/4') return { count: 2, isAttended: true };
+    if (pub.includes('1_SOLVED') || pub === '1' || pub === '1/4') return { count: 1, isAttended: true };
+    if (pub.includes('0_SOLVED') || pub === '0' || pub === '0/4') return { count: 0, isAttended: true };
+    if (pub === 'NOT_PARTICIPATED' || pub === 'NOT_ATTENDED' || pub === 'ABSENT' || pub === 'UNATTENDED') {
+      return { count: null, isAttended: false };
+    }
+  }
+
+  // 2. Explicit contest solved numbers (e.g. s.contest_solved, s.q_solved, or s.solved in contest report)
+  // NEVER use s.total_solved or lifetime solved for contest solved!
+  if (s.contest_solved !== undefined && s.contest_solved !== null) {
+    const val = Number(s.contest_solved);
+    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
+  }
+  if (s.total_contest_solved !== undefined && s.total_contest_solved !== null && Number(s.total_contest_solved) <= 4) {
+    const val = Number(s.total_contest_solved);
+    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
+  }
+  if (isContestReport && s.solved !== undefined && s.solved !== null && Number(s.solved) <= 4) {
+    const val = Number(s.solved);
+    return { count: Math.min(Math.max(val, 0), 4), isAttended: true };
+  }
+
+  // 3. Attendance status tags
+  const st = String(s.status || s.attendance_status || s.attendance || '').trim().toUpperCase();
+  const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st);
+  if (isPart) {
+    return { count: 0, isAttended: true };
+  }
+
+  return { count: null, isAttended: false };
+};
+
+export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
+  const { notify } = useNotification();
+  const { user: currentUser } = useAuth();
+  useScrollLock(true);
+  const [report, setReport] = useState<any>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
+  const [error, setError] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [tableDensity, setTableDensity] = useState<'quick' | 'full'>('quick');
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [moreMenuOpen]);
+
+  const fetchReport = async (forceRefresh: boolean = false) => {
+    if (initialData && !forceRefresh) {
+      setReport(initialData);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/reports/${reportId}/preview`);
+      setReport(res.data);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to fetch the verified report dataset.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (initialData) {
+      setReport(initialData);
+      setLoading(false);
+      // Fetch share_token in background if missing from initialData
+      if (!initialData.share_token) {
+        api.get(`/reports/${reportId}/preview`)
+          .then(res => {
+            if (res.data?.share_token) {
+              setReport((prev: any) => ({
+                ...prev,
+                share_token: res.data.share_token,
+                universal_share_token: res.data.universal_share_token
+              }));
+            }
+          })
+          .catch(() => { });
+      }
+    } else {
+      fetchReport();
+    }
+  }, [reportId, initialData]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  const rType = ((report?.reportType || report?.report_type || '') as string).toUpperCase();
+
+  const isContestReport = useMemo(() => {
+    if (!report) return false;
+    if (
+      rType === 'WEEKLY_PERFORMANCE' ||
+      rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
+      rType === 'COORDINATOR' ||
+      rType === 'COORDINATOR_WEEKLY_PERFORMANCE' ||
+      rType === 'WEEKLY_COORDINATOR' ||
+      rType === '12TH_TNEA_CUTOFF_ANALYSIS' ||
+      rType.includes('CUTOFF') ||
+      !!report.batch_summaries
+    ) return false;
+    return (
+      rType === 'CONTEST_PERFORMANCE' ||
+      rType === 'OFFICIAL_CONTEST' ||
+      rType === 'FRIDAY_OFFICIAL_CONTEST' ||
+      rType === 'FRIDAY_OFFICIAL' ||
+      rType === 'SATURDAY_BIWEEKLY_CONTEST' ||
+      rType === 'WEEKLY_CONTEST' ||
+      rType === 'WEEKLY_CONTEST_INTELLIGENCE' ||
+      rType === 'SUNDAY_LIVE_CONTEST' ||
+      rType === 'CONTEST_ATTENDANCE_PARTICIPATION' ||
+      rType === 'CONTEST_PERFORMANCE_RANKING' ||
+      rType === 'SUNDAY_CONTEST' ||
+      rType === 'HISTORICAL_CONTEST_INTELLIGENCE' ||
+      rType === 'HISTORICAL_CONTEST_INTEL' ||
+      rType === 'WOW_PERFORMANCE_INTEL' ||
+      rType === 'WOW_INTEL' ||
+      !!report.contestSummary ||
+      !!report.solveDistribution ||
+      !!report.histSummary ||
+      !!report.wowSummary
+    );
+  }, [report, rType]);
+
+  const isSundayLive = useMemo(() => {
+    if (!report) return false;
+    return rType === 'SUNDAY_LIVE_CONTEST' || rType === 'SUNDAY_LIVE' || rType === 'SUNDAY_CONTEST';
+  }, [report, rType]);
+
+  const isFridayOfficial = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'FRIDAY_OFFICIAL_CONTEST' ||
+      rType === 'FRIDAY_OFFICIAL' ||
+      rType === 'OFFICIAL_CONTEST' ||
+      rType === 'WEEKLY_CONTEST_INTELLIGENCE'
+    );
+  }, [report, rType]);
+
+  const isCutoffReport = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === '12TH_TNEA_CUTOFF_ANALYSIS' ||
+      rType.includes('CUTOFF') ||
+      (Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0)
+    );
+  }, [report, rType]);
+
+  const isFiveWeekTrend = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'FIVE_WEEK_PERFORMANCE_TREND' ||
+      rType === 'FIVE_WEEK_TREND' ||
+      rType === 'BATCH_PERFORMANCE'
+    );
+  }, [report, rType]);
+
+  const isWowIntel = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'WEEK_ON_WEEK_INTELLIGENCE' ||
+      rType === 'WEEK_ON_WEEK' ||
+      rType === 'WOW_INTEL' ||
+      rType === 'WOW' ||
+      rType === 'WOW_INTELLIGENCE' ||
+      !!report.wowSummary
+    );
+  }, [report, rType]);
+
+  const isHistIntel = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'HISTORICAL_CONTEST_INTELLIGENCE' ||
+      rType === 'HISTORICAL_CONTEST_INTEL' ||
+      !!report.histSummary
+    );
+  }, [report, rType]);
+
+  const isWeeklyPerformance = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'WEEKLY_STUDENT_PERFORMANCE' ||
+      rType === 'WEEKLY_PERFORMANCE' ||
+      rType === 'COORDINATOR' ||
+      rType === 'COORDINATOR_WEEKLY_PERFORMANCE' ||
+      rType === 'WEEKLY_COORDINATOR' ||
+      !!report.college_summary ||
+      !!report.department_summaries ||
+      !!report.batch_summaries
+    );
+  }, [report, rType]);
+
+
+  const formatMetricTitle = (key: string) => {
+    const map: Record<string, string> = {
+      totalStudents: "Total Students",
+      fiveContestConsistentSolvers: "5-Contest Consistent Solvers (≥4/5)",
+      improvingStudents: "Improving Trajectory (↑)",
+      stableStudents: "Stable Trajectory (→)",
+      decliningStudents: "Declining Trajectory (↓)",
+      followUpStudents: "Follow-Up Trajectory",
+      total5WeekSolves: "Total 5-Week Solves",
+      average5WeekSolves: "Average 5-Week Solves",
+      contestWindow: "Contest Window",
+      verifiedStudents: "Verified Solvers",
+      unverifiedStudents: "Unverified Profiles",
+      activeSolvers: "Active Solvers",
+      totalSolved: "Total Solved",
+      averageSolved: "Average Solved",
+      easySolved: "Easy Solved",
+      mediumSolved: "Medium Solved",
+      hardSolved: "Hard Solved",
+      highestSolved: "Highest Solved",
+      averageRating: "Average Rating",
+      highestRating: "Highest Rating",
+      totalParticipations: "Total Participations",
+    };
+    if (map[key]) return map[key];
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  };
+
+  const formatRank = (val: any) => {
+    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
+    const cleanStr = String(val).replace(/[^0-9]/g, '');
+    const num = Number(cleanStr);
+    if (isNaN(num) || num <= 0 || num >= 5000000) return '—';
+    return `#${num.toLocaleString()}`;
+  };
+
+  const formatAccommodation = (val: any) => {
+    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
+    const s = String(val).trim().toUpperCase();
+    if (s.includes('DAY')) return 'D';
+    if (s.includes('HOSTEL')) return 'H';
+    return s.charAt(0) || '—';
+  };
+
+  const formatRating = (val: any) => {
+    if (val === null || val === undefined || val === '' || val === '—' || val === 'None' || val === 'NaN' || val === 'nan') return '—';
+    const cleanStr = String(val).replace(/[^0-9.]/g, '');
+    const num = Number(cleanStr);
+    if (isNaN(num) || num <= 0 || num === 1500 || Math.round(num) === 1500) return '—';
+    return Math.round(num).toLocaleString();
+  };
+
+  const renderSundayQCell = (qVal: any, qTime: any, qDisplay: any, isPart: boolean) => {
+    let text = qDisplay ? String(qDisplay).replace(/\s*\(\s*—\s*\)/g, '').trim() : null;
+    if (!text) {
+      if (!isPart) return <span className="text-slate-400 font-bold">—</span>;
+      const isSolved = Number(qVal) === 1;
+      if (isSolved) {
+        text = qTime && String(qTime) !== '—' ? `1 (${qTime} min)` : '1';
+      } else {
+        text = '0';
+      }
+    } else if (text === '1 (—)') {
+      text = qTime && String(qTime) !== '—' ? `1 (${qTime} min)` : '1';
+    } else if (text === '0 (—)') {
+      text = '0';
+    }
+
+    const isSolved = text.startsWith('1');
+    return (
+      <span className={`whitespace-nowrap ${isSolved ? "text-emerald-700 dark:text-emerald-300 font-extrabold" : "text-slate-700 dark:text-slate-300 font-bold"}`}>
+        {text}
+      </span>
+    );
+  };
+
+  const toRomanYear = (val: any): string => {
+    if (!val) return '';
+    const v = String(val).trim().toUpperCase();
+    if (['1', '1ST', 'I', 'I YEAR', '1 YEAR'].includes(v)) return 'I';
+    if (['2', '2ND', 'II', 'II YEAR', '2 YEAR'].includes(v)) return 'II';
+    if (['3', '3RD', 'III', 'III YEAR', '3 YEAR'].includes(v)) return 'III';
+    if (['4', '4TH', 'IV', 'IV YEAR', '4 YEAR', 'FINAL'].includes(v)) return 'IV';
+    if (v.includes('III')) return 'III';
+    if (v.includes('II')) return 'II';
+    if (v.includes('IV')) return 'IV';
+    if (v.includes('I')) return 'I';
+    return v;
+  };
+
+  const cleanReportTitle = (rawTitle: any): string => {
+    if (!rawTitle) return '';
+    let t = String(rawTitle).trim();
+    t = t.replace(/^NANDHA ENGINEERING COLLEGE \([^)]+\)\s*/i, '').trim();
+    t = t.replace(/^NANDHA ENGINEERING COLLEGE\s*/i, '').trim();
+    t = t.replace(/\s+\b\d+\b\s*-\s*/, ' ').trim();
+    t = t.replace(/\(\s*(\d+|I+|IV|V|FINAL|1ST|2ND|3RD|4TH)\s*(?:Year|Yr)?\s*\)/gi, (_m, g1) => {
+      const rY = toRomanYear(g1);
+      return `(${rY} Year)`;
+    });
+    const yBrackets = t.match(/\([I|V|X]+ Year\)/gi);
+    if (yBrackets && yBrackets.length > 1) {
+      const lastBracket = yBrackets[yBrackets.length - 1];
+      yBrackets.slice(0, yBrackets.length - 1).forEach(b => {
+        t = t.replace(b, '').trim();
+      });
+    }
+    return t.replace(/\s+/g, ' ').trim();
+  };
+
+  const isFridayContestType = useMemo(() => {
+    const rid = String(report?.reportId || report?.report_id || '').toUpperCase();
+    return rType === 'FRIDAY_OFFICIAL_CONTEST' || rType === 'FRIDAY_OFFICIAL' || rid.includes('RPT-FRIDAY') || rid.includes('FRIDAY');
+  }, [report, rType]);
+
+  const headerTitle = useMemo(() => {
+    let raw = cleanReportTitle(report?.title || report?.reportTitle);
+    if (isFridayContestType && !rType.includes('BIWEEKLY')) {
+      if (raw.toUpperCase().includes('BIWEEKLY CONTEST')) {
+        raw = raw.replace(/BIWEEKLY CONTEST\s*\d*\s*—?/gi, 'FRIDAY CONTEST RESULT —').trim();
+      }
+      return raw || 'FRIDAY CONTEST RESULT — STUDENT PERFORMANCE REPORT';
+    }
+    return raw || (isContestReport ? `${report?.contestName || 'Contest'} Performance Report` : 'Report Preview');
+  }, [report, isFridayContestType, isContestReport, rType]);
+
+  const contestBadgeText = useMemo(() => {
+    if (isFridayContestType && !rType.includes('BIWEEKLY')) {
+      const cDate = report?.contestDate || report?.sessionDate || '';
+      const name = (report?.contestName && !report.contestName.toLowerCase().includes('biweekly')) ? report.contestName : 'Friday Contest Result';
+      return `${name}${cDate ? ` (${cDate})` : ''}`;
+    }
+    return `${report?.contestName || 'Contest'} (${report?.contestDate || report?.sessionDate || 'Sunday Session'})`;
+  }, [report, isFridayContestType, rType]);
+
+  const getQVal = (q: any, qNum: number, solvedCount: any, isPart: boolean) => {
+    if (!isPart) return 0;
+    if (q === 1 || q === '1' || Number(q) >= 1) return 1;
+    const sNum = Number(solvedCount || 0);
+    if (sNum >= qNum) return 1;
+    return 0;
+  };
+
+  const contestSummary = report?.contestSummary || report?.metrics || report?.current_week || {};
+  const solveDist = useMemo(() => {
+    const sd = report?.solveDistribution || {};
+    if (sd.solved4 !== undefined || sd.solved3 !== undefined || sd.solved2 !== undefined || sd.solved1 !== undefined) {
+      return sd;
+    }
+    const cw = report?.current_week ||
+      report?.department_summaries?.[0]?.current_week ||
+      report?.college_summary?.current_week;
+    if (cw && (cw.q4 !== undefined || cw.q3 !== undefined)) {
+      return {
+        solved4: cw.q4,
+        solved3: cw.q3,
+        solved2: cw.q2,
+        solved1: cw.q1,
+        solved0: cw.q0,
+        notParticipated: cw.not_participated,
+      };
+    }
+    return sd;
+  }, [report]);
+
+  const userSnapshot = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const userRole = (userSnapshot?.role || (currentUser as any)?.role || '').trim().toLowerCase();
+  const isHodUser = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(userRole);
+  const isStaffUser = [
+    'staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor',
+    'faculty coordinator', 'staff coordinator', 'faculty_coordinator', 'staff_coordinator',
+    'mentor', 'tutor', 'class advisor', 'coordinator'
+  ].some(r => userRole.includes(r)) || Boolean(userSnapshot?.assigned_students_count);
+  const authorizedDeptCodes: string[] = useMemo(() => {
+    return (userSnapshot?.authorized_department_codes || []).map((c: string) => c.trim().toUpperCase());
+  }, [userSnapshot]);
+
+  const allRows = useMemo(() => {
+    let raw = report?.allStudents || report?.rows || report?.all_students_current || report?.rosters?.all_current || [];
+    if (!Array.isArray(raw)) return [];
+    if (isHodUser && authorizedDeptCodes.length > 0) {
+      raw = raw.filter((r: any) => {
+        const d = (r.department || r.dept || r.department_code || '').trim().toUpperCase();
+        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
+      });
+    }
+    return raw;
+  }, [report, isHodUser, authorizedDeptCodes]);
+
+  const displayDepartmentResults = useMemo(() => {
+    const rawList = report?.departmentResults || [];
+    if (!Array.isArray(rawList)) return [];
+    if (isHodUser && authorizedDeptCodes.length > 0) {
+      return rawList.filter((dr: any) => {
+        const d = (dr.department || '').trim().toUpperCase();
+        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
+      });
+    }
+    const targetDept = (report?.department || report?.deptFilter || '').trim().toUpperCase();
+    if (targetDept && targetDept !== 'ALL') {
+      return rawList.filter((dr: any) => {
+        const d = (dr.department || '').trim().toUpperCase();
+        if (targetDept === 'IT' && (d.includes('CYBER') || d.includes('SECURITY') || d.includes('CC'))) return false;
+        if ((targetDept.includes('CYBER') || targetDept.includes('SECURITY')) && d === 'IT') return false;
+        return d === targetDept || (targetDept !== 'IT' && d.includes(targetDept)) || (targetDept !== 'IT' && targetDept.includes(d));
+      });
+    }
+    return rawList;
+  }, [report?.departmentResults, report?.department, report?.deptFilter, isHodUser, authorizedDeptCodes]);
+
+  const displayOfficialLeaderboard = useMemo(() => {
+    const rawLb = report?.officialLeaderboard || [];
+    if (!Array.isArray(rawLb)) return [];
+    if (isHodUser && authorizedDeptCodes.length > 0) {
+      return rawLb.filter((lb: any) => {
+        const d = (lb.dept || lb.department || '').trim().toUpperCase();
+        return authorizedDeptCodes.some(c => d === c || d.includes(c) || c.includes(d));
+      });
+    }
+    const targetDept = (report?.department || report?.deptFilter || '').trim().toUpperCase();
+    if (targetDept && targetDept !== 'ALL') {
+      return rawLb.filter((lb: any) => {
+        const d = (lb.dept || lb.department || '').trim().toUpperCase();
+        if (targetDept === 'IT' && (d.includes('CYBER') || d.includes('SECURITY') || d.includes('CC'))) return false;
+        if ((targetDept.includes('CYBER') || targetDept.includes('SECURITY')) && d === 'IT') return false;
+        return d === targetDept || (targetDept !== 'IT' && d.includes(targetDept)) || (targetDept !== 'IT' && targetDept.includes(d));
+      });
+    }
+    return rawLb;
+  }, [report?.officialLeaderboard, report?.department, report?.deptFilter, isHodUser, authorizedDeptCodes]);
+
+  // Filter student rows based on active filter (for both Contest and Profile/General reports)
+  const displayedStudents = useMemo(() => {
+    if (!activeFilter) return allRows;
+
+    return allRows.filter((r: any) => {
+      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
+      const st = rawSt.replace(/\s+/g, '_');
+      const { count: cSolved, isAttended } = getContestSolvedCount(r, isContestReport);
+      const isPart = isAttended;
+
+      const tSolved = r.total_solved !== undefined && r.total_solved !== null
+        ? Number(r.total_solved)
+        : (r.total !== undefined && r.total !== null
+          ? Number(r.total)
+          : (r.solved !== undefined && r.solved !== null
+            ? Number(r.solved)
+            : null));
+      const easySolved = Number(r.easy || r.easy_solved || 0);
+      const medSolved = Number(r.medium || r.medium_solved || 0);
+      const hardSolved = Number(r.hard || r.hard_solved || 0);
+      const overallSolved = tSolved !== null ? tSolved : (easySolved + medSolved + hardSolved);
+
+      // Contest specific filters (Using authoritative Sunday contest solves, not lifetime problems!)
+      if (activeFilter === 'SOLVED_4') return isAttended && cSolved === 4;
+      if (activeFilter === 'SOLVED_3') return isAttended && cSolved === 3;
+      if (activeFilter === 'SOLVED_2') return isAttended && cSolved === 2;
+      if (activeFilter === 'SOLVED_1') return isAttended && cSolved === 1;
+      if (activeFilter === 'SOLVED_0') return isAttended && (cSolved === 0 || cSolved === null);
+      if (activeFilter === 'PUBLIC_ATTENDED') return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'PUBLIC_LIVE' || (isAttended && !st.includes('VIRTUAL'));
+      if (activeFilter === 'VIRTUAL_ATTENDED') return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_PRACTICE';
+      if (activeFilter === 'NOT_ATTENDED') return !isAttended || st === 'NOT_ATTENDED' || st === 'PUBLIC_NOT_ATTENDED' || st === 'ABSENT' || st === 'NOT_PARTICIPATED';
+      if (activeFilter === 'PENDING_USERNAME') return st === 'PENDING_USERNAME' || st === 'PENDING' || st === 'DATA_ERROR' || st === 'UNLINKED';
+      if (activeFilter === 'FETCH_FAILED') return st === 'FETCH_FAILED' || st === 'FETCH_ERROR' || st === 'API_ERROR';
+      if (activeFilter === 'INVALID_USERNAME') return st === 'INVALID_USERNAME' || st === 'USERNAME_NOT_FOUND' || st === 'INVALID';
+      if (activeFilter === 'DATA_ERROR') return st === 'DATA_ERROR';
+      if (activeFilter === 'UNKNOWN') return st === 'UNKNOWN';
+
+      // General / Cumulative Metric Filters
+      if (activeFilter === 'METRIC_ACTIVE_SOLVERS' || activeFilter === 'activeSolvers' || activeFilter === 'active_solvers') {
+        return overallSolved > 0 || isPart || Boolean(r.is_active_solver);
+      }
+      if (activeFilter === 'METRIC_VERIFIED_SOLVERS' || activeFilter === 'verifiedSolvers' || activeFilter === 'verified_solvers') {
+        return r.is_unverified !== true && st !== 'UNVERIFIED' && st !== 'INVALID_USERNAME' && st !== 'PENDING_USERNAME';
+      }
+      if (activeFilter === 'METRIC_UNVERIFIED_PROFILES' || activeFilter === 'unverifiedProfiles' || activeFilter === 'unverified_profiles') {
+        return r.is_unverified === true || st === 'UNVERIFIED' || st === 'INVALID_USERNAME' || st === 'PENDING_USERNAME';
+      }
+      if (activeFilter === 'METRIC_EASY_SOLVED' || activeFilter === 'easySolved' || activeFilter === 'easy_solved') {
+        return easySolved > 0;
+      }
+      if (activeFilter === 'METRIC_MEDIUM_SOLVED' || activeFilter === 'mediumSolved' || activeFilter === 'medium_solved') {
+        return medSolved > 0;
+      }
+      if (activeFilter === 'METRIC_HARD_SOLVED' || activeFilter === 'hardSolved' || activeFilter === 'hard_solved') {
+        return hardSolved > 0;
+      }
+      if (activeFilter === 'METRIC_ZERO_SOLVED' || activeFilter === 'zeroSolved' || activeFilter === 'notYetStarted') {
+        return overallSolved === 0;
+      }
+
+      // Problem Solving Category Distribution Filters
+      if (activeFilter === 'Above 500' || activeFilter === 'Above_500' || activeFilter === '>500') {
+        return overallSolved >= 500;
+      }
+      if (activeFilter === '250-500' || activeFilter === '250_500' || activeFilter === '250-499') {
+        return overallSolved >= 250 && overallSolved < 500;
+      }
+      if (activeFilter === '100-249' || activeFilter === '100_249' || activeFilter === '100-250') {
+        return overallSolved >= 100 && overallSolved < 250;
+      }
+      if (activeFilter === '50-99' || activeFilter === '50_99') {
+        return overallSolved >= 50 && overallSolved < 100;
+      }
+      if (activeFilter === '25-49' || activeFilter === '25_49') {
+        return overallSolved >= 25 && overallSolved < 50;
+      }
+      if (activeFilter === '1-24' || activeFilter === '1_24') {
+        return overallSolved >= 1 && overallSolved < 25;
+      }
+      if (activeFilter === '0 Solved' || activeFilter === '0_Solved' || activeFilter === 'Not Yet Started' || activeFilter === 'Not_Yet_Started') {
+        return overallSolved === 0;
+      }
+      if (activeFilter === 'Less than 100' || activeFilter === 'Less_than_100' || activeFilter === '<100') {
+        return overallSolved < 100 && overallSolved > 0;
+      }
+
+      return true;
+    });
+  }, [allRows, activeFilter]);
+
+  const toggleFilter = (filterKey: string) => {
+    setActiveFilter(prev => prev === filterKey ? null : filterKey);
+  };
+
+  // Only scope metrics if the report is explicitly an individual mentee allocation report
+  const isMenteeScoped = useMemo(() => {
+    return Boolean(rType.includes('MENTEE') || rType.includes('STAFF_ALLOCATION') || rType.includes('FACULTY_ASSIGNMENT'));
+  }, [rType]);
+
+  const rowDerivedMetrics = useMemo(() => {
+    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, attended = 0;
+    allRows.forEach((r: any) => {
+      const rawSt = (r.status || r.attendance_status || r.attendance || '').toString().trim().toUpperCase();
+      const solv = Number(r.total_solved ?? r.problems_solved ?? -1);
+      const isAtt = rawSt.includes('ATTEND') || rawSt.includes('VERIFIED') || solv >= 0;
+      if (isAtt) {
+        attended++;
+        if (solv === 4) s4++;
+        else if (solv === 3) s3++;
+        else if (solv === 2) s2++;
+        else if (solv === 1) s1++;
+        else s0++;
+      }
+    });
+    return { s4, s3, s2, s1, s0, attended, notAttended: Math.max(allRows.length - attended, 0) };
+  }, [allRows]);
+
+  // Comprehensive Condition Stats for Summary Breakdown under the tables
+  const conditionStats = useMemo(() => {
+    const students = displayedStudents || [];
+    let s4 = 0, s3 = 0, s2 = 0, s1 = 0, s0 = 0, notAtt = 0;
+    let totalEasy = 0, totalMed = 0, totalHard = 0, totalSolves = 0;
+    let attendedCount = 0;
+
+    students.forEach((s: any) => {
+      const { count: cSolved, isAttended } = getContestSolvedCount(s, isContestReport);
+
+      if (isAttended) {
+        attendedCount++;
+        if (cSolved !== null) {
+          if (cSolved >= 4) s4++;
+          else if (cSolved === 3) s3++;
+          else if (cSolved === 2) s2++;
+          else if (cSolved === 1) s1++;
+          else s0++;
+        } else {
+          s0++;
+        }
+      } else {
+        notAtt++;
+      }
+
+      const cDiff = getContestDifficultyBreakdown(s, isContestReport);
+      const e = Number(s.easy ?? s.easy_solved ?? cDiff.easy ?? 0);
+      const m = Number(s.medium ?? s.medium_solved ?? cDiff.medium ?? 0);
+      const h = Number(s.hard ?? s.hard_solved ?? cDiff.hard ?? 0);
+
+      totalEasy += e;
+      totalMed += m;
+      totalHard += h;
+      const sTotal = Number(s.total_solved ?? s.totalSolved ?? (e + m + h));
+      totalSolves += sTotal;
+    });
+
+    // If backend report already provided college/contest-wide solveDist and filter is not active AND not mentee-scoped:
+    if (!activeFilter && !isMenteeScoped && solveDist && (solveDist.solved4 !== undefined || solveDist.solved3 !== undefined)) {
+      s4 = Number(solveDist.solved4 ?? s4);
+      s3 = Number(solveDist.solved3 ?? s3);
+      s2 = Number(solveDist.solved2 ?? s2);
+      s1 = Number(solveDist.solved1 ?? s1);
+      s0 = Number(solveDist.solved0 ?? s0);
+    }
+
+    if (!isMenteeScoped) {
+      if (totalEasy === 0 && report?.metrics?.easySolved) totalEasy = Number(report.metrics.easySolved);
+      if (totalMed === 0 && report?.metrics?.mediumSolved) totalMed = Number(report.metrics.mediumSolved);
+      if (totalHard === 0 && report?.metrics?.hardSolved) totalHard = Number(report.metrics.hardSolved);
+      if (totalSolves === 0 && report?.metrics?.totalSolved) totalSolves = Number(report.metrics.totalSolved);
+    }
+
+    return {
+      totalStudents: students.length,
+      attendedCount,
+      notAttendedCount: notAtt,
+      s4,
+      s3,
+      s2,
+      s1,
+      s0,
+      totalEasy,
+      totalMed,
+      totalHard,
+      totalSolves,
+    };
+  }, [displayedStudents, isContestReport, activeFilter, solveDist, report?.metrics, isMenteeScoped]);
+
+
+  // Robust Contest Metrics Calculation with zero-fallback & reconciliation safety
+  const totalRosterCount = useMemo(() => {
+    if (isMenteeScoped && allRows.length > 0) {
+      return allRows.length;
+    }
+    const bSum = Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0
+      ? report.batch_summaries.reduce((acc: number, b: any) => acc + (b.total_students || 0), 0)
+      : 0;
+    return contestSummary.totalStudents || report?.total_students || report?.totalStudents || report?.college_summary?.total_students || bSum || allRows.length || 0;
+  }, [isMenteeScoped, contestSummary.totalStudents, report?.total_students, report?.totalStudents, report?.college_summary?.total_students, report?.batch_summaries, allRows.length]);
+
+  const actualParticipantCount = useMemo(() => {
+    if (isMenteeScoped && allRows.length > 0) {
+      return rowDerivedMetrics.attended;
+    }
+    const sumAttended = (contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0);
+    if (sumAttended > 0) return sumAttended;
+    const distSum = (Number(solveDist.solved4) || 0) + (Number(solveDist.solved3) || 0) + (Number(solveDist.solved2) || 0) + (Number(solveDist.solved1) || 0) + (Number(solveDist.solved0) || 0);
+    if (distSum > 0) return distSum;
+    if (report?.metrics?.attended) return Number(report.metrics.attended);
+    if (conditionStats.attendedCount > 0) return conditionStats.attendedCount;
+    if (report.histSummary?.sessionParticipation?.length > 0) {
+      return report.histSummary.sessionParticipation[report.histSummary.sessionParticipation.length - 1].attended || 0;
+    }
+    return allRows.filter((r: any) => (r.totalAttended || 0) > 0 || (r.weeklyData || []).some((w: any) => w.att) || (r.status || '').toUpperCase().includes('ATTEND')).length;
+  }, [isMenteeScoped, rowDerivedMetrics.attended, contestSummary, solveDist, report?.metrics?.attended, conditionStats.attendedCount, report.histSummary, allRows]);
+
+  const actualNotAttendedCount = useMemo(() => {
+    if (isMenteeScoped && allRows.length > 0) {
+      return rowDerivedMetrics.notAttended;
+    }
+    if (solveDist.notParticipated !== undefined && solveDist.notParticipated !== null && Number(solveDist.notParticipated) >= 0) {
+      return Number(solveDist.notParticipated);
+    }
+    if (contestSummary.notAttended !== undefined && contestSummary.notAttended !== null && Number(contestSummary.notAttended) > 0) {
+      return Number(contestSummary.notAttended);
+    }
+    if (report?.metrics?.notAttended !== undefined && report?.metrics?.notAttended !== null && Number(report.metrics.notAttended) >= 0) {
+      return Number(report.metrics.notAttended);
+    }
+    if (conditionStats.notAttendedCount > 0) {
+      return conditionStats.notAttendedCount;
+    }
+    return Math.max(totalRosterCount - actualParticipantCount, 0);
+  }, [isMenteeScoped, rowDerivedMetrics.notAttended, solveDist.notParticipated, contestSummary.notAttended, report?.metrics?.notAttended, conditionStats.notAttendedCount, totalRosterCount, actualParticipantCount]);
+
+  const turnoutPercentage = useMemo(() => {
+    if (totalRosterCount <= 0) return '0%';
+    const pct = (actualParticipantCount / totalRosterCount) * 100;
+    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
+  }, [actualParticipantCount, totalRosterCount]);
+
+  const absentPercentage = useMemo(() => {
+    if (totalRosterCount <= 0) return '0%';
+    const pct = (actualNotAttendedCount / totalRosterCount) * 100;
+    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
+  }, [actualNotAttendedCount, totalRosterCount]);
+
+  const s4Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s4 : Number(solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? conditionStats.s4 ?? 0);
+  const s3Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s3 : Number(solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? conditionStats.s3 ?? 0);
+  const s2Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s2 : Number(solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? conditionStats.s2 ?? 0);
+  const s1Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s1 : Number(solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? conditionStats.s1 ?? 0);
+  const s0Count = isMenteeScoped && allRows.length > 0 ? rowDerivedMetrics.s0 : Number(solveDist.solved0 ?? report.metrics?.['0 Q Solved'] ?? conditionStats.s0 ?? Math.max(actualParticipantCount - (s4Count + s3Count + s2Count + s1Count), 0));
+  const notAttendedCount = actualNotAttendedCount;
+
+  const getCohortPct = (count: number) => {
+    if (totalRosterCount <= 0) return '0%';
+    const pct = (count / totalRosterCount) * 100;
+    return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
+  };
+
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharingWhatsApp, setIsSharingWhatsApp] = useState(false);
+  const [shareFormat, setShareFormat] = useState<'summary' | 'solvers' | 'leaderboard' | 'absentees'>('summary');
+  const [copiedSummary, setCopiedSummary] = useState(false);
+  const [showFormatPicker, setShowFormatPicker] = useState(false);
+
+  // Unified download metadata resolver for Excel, PDF, and Word documents
+  const getReportDownloadMeta = (format: string = 'excel') => {
+    const queryParams = new URLSearchParams();
+    if (activeFilter) queryParams.append('attendance', activeFilter);
+    if (report?.department && report.department !== 'ALL') queryParams.append('department', report.department);
+    if (report?.year && report.year !== 'ALL') queryParams.append('year', report.year);
+    if (report?.reportType || report?.report_type) queryParams.append('report_type', report.reportType || report.report_type);
+
+    const qString = queryParams.toString();
+    const url = `/reports/${reportId}/${format}${qString ? '?' + qString : ''}`;
+    const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
+
+    // Extract exact descriptive report title
+    let titlePart = '';
+    if (report?.title) {
+      let t = report.title;
+      if (t.includes(' - ')) {
+        const parts = t.split(' - ');
+        t = parts[parts.length - 1];
+      }
+      titlePart = t
+        .replace(/\s*\([^)]*\)/g, '')
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '_');
+    }
+
+    if (!titlePart || titlePart.length < 3) {
+      const typeMap: Record<string, string> = {
+        'CONTEST_PERFORMANCE_RANKING': 'Contest_Performance_and_Ranking_Report',
+        'CONTEST_ATTENDANCE_PARTICIPATION': 'Contest_Attendance_and_Participation_Report',
+        'WEEKLY_COORDINATOR': 'Coordinator_Weekly_Performance_Report',
+        'WEEKLY_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
+        'WEEKLY_STUDENT_PERFORMANCE': 'Coordinator_Weekly_Performance_Report',
+        'WOW_INTEL': 'Week_on_Week_Performance_Intel_Report',
+        'HISTORICAL_PERFORMANCE': 'Historical_Contest_Performance_Report',
+        'FIVE_WEEK_TREND': '5Week_Contest_Trend_Report',
+        'SUNDAY_LIVE': 'Sunday_Live_Contest_Attendance_Report',
+        'FRIDAY_OFFICIAL': 'Official_Friday_Contest_Result_Report',
+        'LEADERBOARD': 'Official_Institutional_Leaderboard_Report',
+        'MASTER_10_SHEET': 'Master_10_Sheet_Institutional_Report',
+        'STUDENT_PERFORMANCE': 'Student_Performance_Detail_Report',
+        'ASSIGNED_STUDENTS': 'Mentoring_Assigned_Students_Report',
+        'STAFF_MENTORING': 'Mentoring_Assigned_Students_Report',
+        'OFFICIAL_SUMMARY': 'Official_College_Summary_Report',
+        'HOD_DEPARTMENT_INTELLIGENCE': 'HOD_Department_Intelligence_Report',
+        'FACULTY_CONSOLIDATED': 'Faculty_Consolidated_Performance_Report',
+        'PRINCIPAL_EXECUTIVE': 'Principal_Executive_Intelligence_Report',
+      };
+      titlePart = typeMap[report?.reportType] || (report?.reportType || 'Student_Performance_Detail').replace(/\s+/g, '_');
+    }
+
+    if (isWeeklyPerformance) {
+      titlePart = 'Coordinator_Weekly_Performance_Report';
+    }
+
+    let sessionTag = '';
+    if (report?.contestName) {
+      sessionTag += `_${report.contestName.replace(/\s+/g, '_')}`;
+    } else if (report?.prevContest && report?.currContest) {
+      sessionTag += `_${report.prevContest}_vs_${report.currContest}`;
+    }
+
+    const isLiveReport = ['STUDENT_PERFORMANCE', 'ASSIGNED_STUDENTS', 'STAFF_MENTORING'].includes(report?.reportType || '');
+    const dateVal = isLiveReport ? '' : (report?.contestDate || report?.sessionDate || report?.session_date || report?.currDate || report?.report_date || report?.reportDate || '');
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    if (dateVal) {
+      const parts = dateVal.split(/[.-]/);
+      if (parts.length === 3) {
+        let dd = parts[0], mm = parseInt(parts[1], 10), yyyy = parts[2];
+        if (parts[0].length === 4) { yyyy = parts[0]; mm = parseInt(parts[1], 10); dd = parts[2]; }
+        if (mm >= 1 && mm <= 12) {
+          sessionTag += `_${dd.padStart(2, '0')}${months[mm - 1]}${yyyy}`;
+        } else {
+          sessionTag += `_${dateVal.replace(/[^\d]/g, '')}`;
+        }
+      } else {
+        sessionTag += `_${dateVal.replace(/[^\w]/g, '_')}`;
+      }
+    } else {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = months[now.getMonth()];
+      const yyyy = now.getFullYear();
+      sessionTag += `_${dd}${mm}${yyyy}`;
+    }
+
+    let filterTag = '';
+    const DEPT_NAME_MAP: Record<string, string> = {
+      '1': 'CSE-CS',
+      '2': 'CSE-IOT',
+      '3': 'IT',
+      '4': 'IT',
+      '7': 'IT',
+      '8': 'CSE',
+      '9': 'AGRI',
+      '10': 'AIDS',
+      '11': 'EEE',
+      '12': 'ECE',
+      'CSE(CS)': 'CSE-CS',
+      'CSE(IOT)': 'CSE-IOT',
+      'CSE(IoT)': 'CSE-IOT',
+      'CSE': 'CSE',
+      'IT': 'IT',
+      'AIDS': 'AIDS',
+      'ECE': 'ECE',
+      'EEE': 'EEE',
+      'MECH': 'MECH',
+      'CIVIL': 'CIVIL',
+      'AGRI': 'AGRI',
+      'BME': 'BME',
+    };
+    const deptRaw = (report?.department || report?.deptFilter || '').toString().trim();
+    if (deptRaw && deptRaw.toUpperCase() !== 'ALL') {
+      const dUpper = deptRaw.toUpperCase();
+      const dClean = DEPT_NAME_MAP[deptRaw] || DEPT_NAME_MAP[dUpper] || deptRaw.replace(/[\(\)\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      filterTag += `_${dClean}`;
+    }
+
+    const YEAR_NAME_MAP: Record<string, string> = {
+      '1': 'I-Yr', 'I': 'I-Yr', '1ST': 'I-Yr',
+      '2': 'II-Yr', 'II': 'II-Yr', '2ND': 'II-Yr',
+      '3': 'III-Yr', 'III': 'III-Yr', '3RD': 'III-Yr',
+      '4': 'IV-Yr', 'IV': 'IV-Yr', '4TH': 'IV-Yr',
+    };
+    const yrRaw = (report?.year || report?.yearFilter || '').toString().trim();
+    if (yrRaw && yrRaw.toUpperCase() !== 'ALL') {
+      const yUpper = yrRaw.toUpperCase();
+      const yClean = YEAR_NAME_MAP[yrRaw] || YEAR_NAME_MAP[yUpper] || `${yrRaw.replace(/YEAR|YR/gi, '').trim()}-Yr`;
+      filterTag += `_${yClean}`;
+    }
+
+    if (activeFilter && activeFilter !== 'ALL') {
+      filterTag += `_Filter_${activeFilter}`;
+    }
+
+    const filename = `NEC_${titlePart}${sessionTag}${filterTag}.${ext}`;
+    const mimeType = format === 'excel'
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : format === 'pdf'
+        ? 'application/pdf'
+        : format === 'word'
+          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/octet-stream';
+
+    return { url, filename, ext, mimeType };
+  };
+
+  const downloadFile = async (format: string) => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const { url, filename } = getReportDownloadMeta(format);
+
+      const res = await downloadManager.download({
+        endpoint: url,
+        filename,
+      });
+
+      if (res.success) {
+        notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'DOWNLOAD COMPLETED' });
+      } else {
+        notify.error('Download Failed', res.error || 'Failed to download report.', { category: 'REPORTS' });
+      }
+    } catch (err: any) {
+      console.error(`Failed to download ${format} report:`, err);
+      notify.error('Download Failed', err.message || 'Failed to download report.', { category: 'REPORTS' });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  if (loading || error) {
+    return (
+      <FullScreenLoadingOverlay
+        message="Fetching verified report dataset..."
+        error={error || undefined}
+        onRetry={error ? fetchReport : undefined}
+        onCancel={error ? onClose : undefined}
+      />
+    );
+  }
+
+  if (!report) return null;
+
+  const dataQuality = report.dataQuality || report.data_quality;
+
+  const getStatusBadge = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED' || s === 'VERIFIED' || s === 'FINALIZED') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 leading-tight shadow-2xs">PUBLIC ATTENDED</span>;
+    }
+    if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL' || s === 'VIRTUAL_PRACTICE') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-purple-50 text-purple-800 border border-purple-300 leading-tight shadow-2xs">VIRTUAL ATTENDED</span>;
+    }
+    if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED' || s === 'ABSENT') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-rose-50 text-rose-800 border border-rose-300 leading-tight shadow-2xs">NOT ATTENDED</span>;
+    }
+    if (s === 'PENDING_USERNAME' || s === 'PENDING') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-300 leading-tight shadow-2xs">PENDING USERNAME</span>;
+    }
+    if (s === 'DATA_ERROR') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-orange-50 text-orange-800 border border-orange-300 leading-tight shadow-2xs">DATA ERROR</span>;
+    }
+    if (s === 'FETCH_FAILED' || s === 'FETCH_ERROR') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-rose-50 text-rose-800 border border-rose-300 leading-tight shadow-2xs">FETCH FAILED</span>;
+    }
+    if (s === 'INVALID_USERNAME' || s === 'USERNAME_NOT_FOUND') {
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-orange-50 text-orange-800 border border-orange-300 leading-tight shadow-2xs">INVALID USERNAME</span>;
+    }
+    return <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-300 leading-tight shadow-2xs">UNKNOWN</span>;
+  };
+
+  // =========================================================================
+  // UNIVERSAL SHARE TEXT BUILDER (ALL 17 INSTITUTIONAL REPORTS & 4 FORMATS)
+  // =========================================================================
+  const getResolvedDeptName = (r: any): string => {
+    const d = String(r?.department_name || r?.department || r?.dept || r?.dept_code || '').trim();
+    if (!d) return 'Computer Science and Engineering (Internet of Things)';
+    if (d.includes('Things') || d.toLowerCase().includes('iot') || d === '2' || d.toUpperCase().includes('CSE(IOT)') || d.toUpperCase().includes('CSE_IOT')) {
+      return 'Computer Science and Engineering (Internet of Things)';
+    }
+    if (d.includes('Cyber') || d.toLowerCase().includes('cyber security') || d === '1' || d.toUpperCase().includes('CSE(CS)') || d.toUpperCase().includes('CSE_CS')) {
+      return 'Computer Science and Engineering (Cyber Security)';
+    }
+    return d.replace(/^Department\s+of\s+/i, '').trim();
+  };
+
+  const generateShareText = (targetFormat: 'summary' | 'solvers' | 'leaderboard' | 'absentees' = shareFormat): string => {
+    const cleanDept = getResolvedDeptName(report);
+
+    // 1. Resolve Official Coordinator
+    const officialCoordinator = (
+      report?.coordinator ||
+      report?.academicCoordinator ||
+      report?.coordinator_name ||
+      ''
+    ).trim();
+
+    // 2. Resolve Report Title
+    let rawTitle = cleanReportTitle(report?.title || report?.reportTitle || '');
+    if (!rawTitle) {
+      if (isWeeklyPerformance) rawTitle = 'Coordinator Weekly Performance Report';
+      else if (isWowIntel) rawTitle = 'Week-on-Week Intelligence Report';
+      else if (isFridayOfficial) rawTitle = 'Friday Official Contest Report';
+      else if (isSundayLive) rawTitle = 'Sunday Live Contest Report';
+      else rawTitle = 'LeetCode Performance Report';
+    }
+
+    // In WhatsApp, bolding cannot cross newlines: each line must be individually wrapped in *...*
+    // Also remove redundant college name if already present in title string
+    const titleLines = rawTitle
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.toUpperCase().includes('NANDHA ENGINEERING COLLEGE'))
+      .map(line => `*${line.toUpperCase()}*`);
+    const formattedTitleHeader = titleLines.length > 0 ? `${titleLines.join('\n')}\n` : '';
+
+    // Resolve true contest name
+    let resolvedContestName = '';
+    if (report?.current_session?.contest_name) {
+      resolvedContestName = report.current_session.contest_name;
+    } else if (report?.discovered_contests?.current_week_contests_str) {
+      resolvedContestName = report.discovered_contests.current_week_contests_str.split(',')[0].trim();
+    } else if (report?.contest_name && !report.contest_name.toLowerCase().includes('coordinator')) {
+      resolvedContestName = report.contest_name;
+    } else if (report?.contestName && !report.contestName.toLowerCase().includes('coordinator')) {
+      resolvedContestName = report.contestName;
+    } else if (report?.session_date) {
+      resolvedContestName = `Weekly Contest (${report.session_date})`;
+    } else {
+      resolvedContestName = isWowIntel ? 'Week-on-Week Performance' : 'Weekly LeetCode Contest';
+    }
+
+    // Resolve Contest Date cleanly without invalid dates like 33.11.2026
+    const formatDateObjToDDMMYYYY = (d: Date): string => {
+      if (isNaN(d.getTime())) return '';
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}.${month}.${year}`;
+    };
+
+    const parseAnyDateString = (raw: any): string => {
+      if (!raw) return '';
+      const str = String(raw).trim();
+      if (!str) return '';
+
+      // Check standard DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
+      const dmyMatch = str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+      if (dmyMatch) {
+        const d = parseInt(dmyMatch[1], 10);
+        const m = parseInt(dmyMatch[2], 10);
+        const y = parseInt(dmyMatch[3], 10);
+        if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
+          return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
+        }
+      }
+
+      // Check ISO / YYYY-MM-DD
+      if (str.includes('-')) {
+        const datePart = str.split('T')[0];
+        const parts = datePart.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
+            return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
+          }
+        }
+      }
+
+      // Check standard parseable date string (avoid parsing pure numbers like "33" as dates!)
+      if (!/^\d+$/.test(str)) {
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000 && parsed.getFullYear() < 2100) {
+          return formatDateObjToDDMMYYYY(parsed);
+        }
+      }
+
+      return '';
+    };
+
+    let resolvedDate = parseAnyDateString(report?.contest_date) ||
+      parseAnyDateString(report?.session_date) ||
+      parseAnyDateString(report?.contestDate) ||
+      parseAnyDateString(report?.sessionDate) ||
+      parseAnyDateString(report?.current_session?.session_date) ||
+      parseAnyDateString(report?.report_date) ||
+      parseAnyDateString(report?.date) ||
+      parseAnyDateString(report?.created_at) ||
+      parseAnyDateString(report?.generated_at) ||
+      parseAnyDateString(report?.timestamp) ||
+      formatDateObjToDDMMYYYY(new Date());
+
+    // 3. In-Charge / Coordinator Resolution (Role-Aware for All Roles)
+    const rawName = (currentUser?.full_name || currentUser?.displayName || currentUser?.name || '').trim();
+    const rawRole = (currentUser?.role || (userSnapshot as any)?.role || '').toLowerCase().trim();
+
+    const isPrincipal = ['principal', 'director', 'dean'].some(r => rawRole === r || rawRole.includes('principal') || rawRole.includes('director') || rawRole.includes('dean'));
+    const isCoordinatorRole = ['coordinator', 'academic coordinator', 'placement coordinator', 'placement_coordinator'].some(r => rawRole === r || rawRole.includes('coordinator'));
+    const isStaffOrFaculty = !isCoordinatorRole && (['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'mentor', 'tutor'].some(r => rawRole.includes(r)) || isStaffUser);
+    const isHodRoleUser = ['hod', 'department hod', 'department_hod', 'head of department'].some(r => rawRole === r || rawRole.includes('hod'));
+    const isAdminUser = ['admin', 'superadmin', 'super_admin'].some(r => rawRole === r || rawRole.includes('admin'));
+
+    let inChargeRole = '';
+    let inChargeName = '';
+
+    if (isPrincipal) {
+      inChargeRole = 'Principal / Executive';
+      inChargeName = rawName || 'Office of the Principal';
+    } else if (isStaffOrFaculty) {
+      inChargeRole = isMenteeScoped ? 'Faculty Mentor' : 'Staff In-Charge';
+      inChargeName = rawName || report?.staff_name || report?.mentor_name || report?.faculty_name || 'Staff Mentor';
+    } else if (isCoordinatorRole) {
+      inChargeRole = rawRole.includes('placement') ? 'Placement Coordinator' : 'Academic Coordinator';
+      inChargeName = rawName || officialCoordinator || 'Coordinator';
+    } else if (isHodRoleUser) {
+      inChargeRole = 'HOD';
+      inChargeName = rawName || report?.hod_name || 'Head of Department';
+    } else if (isAdminUser) {
+      inChargeRole = 'Institutional Admin';
+      inChargeName = (rawName.toLowerCase() === 'admin' || !rawName) ? 'Administrator' : rawName;
+    } else if (isWeeklyPerformance && officialCoordinator) {
+      inChargeRole = 'Coordinator';
+      inChargeName = officialCoordinator;
+    } else if (rawName) {
+      inChargeRole = 'In-Charge';
+      inChargeName = rawName.toLowerCase() === 'admin' ? 'Administrator' : rawName;
+    }
+
+    // 4. Metrics Resolution
+    let total = Number(report?.totalStudents ?? report?.total_students ?? report?.cohort_size ?? allRows.length ?? 0);
+    let attended = Number(report?.attendedStudents ?? report?.total_attended ?? report?.active_participants ?? 0);
+    let absent = Number(report?.absentStudents ?? report?.not_attended ?? report?.total_absent ?? 0);
+
+    const isRowAttended = (r: any) => {
+      const att = String(r.attendance ?? r.status ?? '').toUpperCase().trim();
+      if (att === 'ATTENDED' || att === 'PRESENT' || att === 'YES') return true;
+      if (att === 'ABSENT' || att === 'NOT ATTENDED' || att === 'NO') return false;
+      const solv = Number(r.solved ?? r.total_solved ?? r.total_contest_solved ?? 0);
+      const qSum = (Number(r.q1 ? 1 : 0) + Number(r.q2 ? 1 : 0) + Number(r.q3 ? 1 : 0) + Number(r.q4 ? 1 : 0));
+      return solv > 0 || qSum > 0;
+    };
+
+    const getRowSolved = (r: any) => {
+      const qSum = (Number(r.q1 ? 1 : 0) + Number(r.q2 ? 1 : 0) + Number(r.q3 ? 1 : 0) + Number(r.q4 ? 1 : 0));
+      const direct = Number(r.solved ?? r.total_solved ?? r.total_contest_solved ?? 0);
+      return Math.max(direct, qSum);
+    };
+
+    const getCleanName = (r: any) => (r.name || r.student_name || r.full_name || 'Student').trim();
+    const getCleanReg = (r: any) => (r.register_number || r.reg_no || r.roll_no || r.register_no || '').trim();
+    const getCleanDept = (r: any) => (r.department || r.dept || '').trim();
+
+    if (attended === 0 && allRows.length > 0) {
+      attended = allRows.filter(isRowAttended).length;
+      if (total === 0) total = allRows.length;
+      absent = Math.max(0, total - attended);
+    } else if (total === 0 && (attended > 0 || absent > 0)) {
+      total = attended + absent;
+    } else if (absent === 0 && total > attended) {
+      absent = total - attended;
+    }
+
+    let q4 = Number(report?.solversCount?.s4 ?? report?.solvers_4 ?? report?.q4 ?? 0);
+    let q3 = Number(report?.solversCount?.s3 ?? report?.solvers_3 ?? report?.q3 ?? 0);
+    let q2 = Number(report?.solversCount?.s2 ?? report?.solvers_2 ?? report?.q2 ?? 0);
+    let q1 = Number(report?.solversCount?.s1 ?? report?.solvers_1 ?? report?.q1 ?? 0);
+    let q0 = Number(report?.solversCount?.s0 ?? report?.solvers_0 ?? report?.q0 ?? 0);
+
+    if (q4 === 0 && q3 === 0 && q2 === 0 && q1 === 0 && allRows.length > 0) {
+      allRows.forEach((r: any) => {
+        if (!isRowAttended(r)) return;
+        const s = getRowSolved(r);
+        if (s >= 4) q4++;
+        else if (s === 3) q3++;
+        else if (s === 2) q2++;
+        else if (s === 1) q1++;
+        else q0++;
+      });
+    }
+
+    // Weekly contest details
+    const currContest = report?.current_contest_metadata || {};
+    const lastContest = report?.last_week_contest_metadata || {};
+    const currContestTitle = currContest.contest_name || report?.current_session?.contest_name || resolvedContestName || 'Current Contest';
+    const currContestDate = parseAnyDateString(currContest.session_date || report?.current_session?.session_date) || resolvedDate;
+    const lastContestTitle = lastContest.contest_name || report?.previous_session?.contest_name || report?.last_week_session?.contest_name || '';
+    const lastContestDate = parseAnyDateString(lastContest.session_date || report?.previous_session?.session_date || report?.last_week_session?.session_date);
+
+    const cwMetrics = report?.current_week_metrics || {};
+    const lwMetrics = report?.last_week_metrics || {};
+    const lw4 = Number(lwMetrics.q4 ?? 0);
+    const lw3 = Number(lwMetrics.q3 ?? 0);
+    const lw2 = Number(lwMetrics.q2 ?? 0);
+    const lw1 = Number(lwMetrics.q1 ?? 0);
+    const lw0 = Number(lwMetrics.q0 ?? 0);
+    const lwAtt = lw4 + lw3 + lw2 + lw1 + lw0;
+    const lwAbs = Number(lwMetrics.not_participated ?? (total > lwAtt ? total - lwAtt : 0));
+
+    // Batch rating list
+    const batchRatingList: { name: string; count: number }[] = [];
+    if (Array.isArray(report?.batch_summaries) && report.batch_summaries.length > 0) {
+      report.batch_summaries.forEach((b: any) => {
+        const rawBatch = (b.batch || '').trim();
+        let bName = rawBatch;
+        if (!bName) {
+          const yr = String(b.year || '').trim();
+          if (yr === '4' || yr === 'IV') bName = '2023 - 2027';
+          else if (yr === '3' || yr === 'III') bName = '2024 - 2028';
+          else if (yr === '2' || yr === 'II') bName = '2025 - 2029';
+          else bName = 'Batch';
+        } else {
+          if (rawBatch.includes('2023')) bName = '2023 - 2027';
+          else if (rawBatch.includes('2024')) bName = '2024 - 2028';
+          else if (rawBatch.includes('2025')) bName = '2025 - 2029';
+        }
+        const bTot = b.total_students ? ` (${b.total_students} students)` : '';
+        const r1500 = Number(b.current_week?.rating_above_1500 ?? b.rating_above_1500 ?? b.rating_1500 ?? 0);
+        batchRatingList.push({ name: `${bName}${bTot}`, count: r1500 });
+      });
+    }
+
+    // 5. Header Assembly
+    let text = `*NANDHA ENGINEERING COLLEGE (AUTONOMOUS)*\n` +
+      `*Department of ${cleanDept}*\n` +
+      `----------------------------------------\n` +
+      formattedTitleHeader;
+
+    if (isWeeklyPerformance) {
+      text += `*Current Contest:* ${currContestTitle}${currContestDate ? ` (${currContestDate})` : ''}\n`;
+      if (lastContestTitle) {
+        text += `*Last Week Contest:* ${lastContestTitle}${lastContestDate ? ` (${lastContestDate})` : ''}\n`;
+      }
+    } else if (isWowIntel) {
+      const pContest = report?.prevContest || `Contest ${report?.wowSummary?.prevContestNum || ''}`;
+      const cContest = report?.currContest || resolvedContestName || `Contest ${report?.wowSummary?.currContestNum || ''}`;
+      const pDate = report?.prevDate || '';
+      const cDate = report?.currDate || resolvedDate || '';
+      text += `*Current Contest:* ${cContest}${cDate ? ` (${cDate})` : ''}\n`;
+      text += `*Previous Contest:* ${pContest}${pDate ? ` (${pDate})` : ''}\n`;
+    } else {
+      if (resolvedContestName) text += `*Contest:* ${resolvedContestName}\n`;
+      if (resolvedDate) text += `*Date:* ${resolvedDate}\n`;
+    }
+
+    if (inChargeName) {
+      text += `*${inChargeRole}:* ${inChargeName}\n`;
+    }
+    text += `----------------------------------------\n\n`;
+
+    // 6. Common Metrics Block
+    if (isWeeklyPerformance && lastContestTitle) {
+      text += `*PARTICIPATION COMPARISON*\n` +
+        `- Total Enrolled Students: *${total}*\n` +
+        `- Current Week Attendance: *${attended}* (${total > 0 ? ((attended / total) * 100).toFixed(1) : '0'}%)\n` +
+        `- Last Week Attendance: *${lwAtt}* (${total > 0 ? ((lwAtt / total) * 100).toFixed(1) : '0'}%)\n` +
+        `- Attendance Change: *${attended - lwAtt >= 0 ? '+' : ''}${attended - lwAtt}*\n\n` +
+        `*PROBLEM SOLVERS COMPARISON*\n` +
+        `- 4/4 Solvers: Current *${q4}* | Last Week *${lw4}*\n` +
+        `- 3/4 Solvers: Current *${q3}* | Last Week *${lw3}*\n` +
+        `- 2/4 Solvers: Current *${q2}* | Last Week *${lw2}*\n` +
+        `- 1/4 Solvers: Current *${q1}* | Last Week *${lw1}*\n` +
+        `- 0/4 Solvers: Current *${q0}* | Last Week *${lw0}*\n` +
+        `- Absent: Current *${absent}* | Last Week *${lwAbs}*\n`;
+    } else {
+      text += `*PARTICIPATION OVERVIEW*\n` +
+        `- Total Enrolled Students: *${total}*\n` +
+        `- Total Attended: *${attended}* (${total > 0 ? ((attended / total) * 100).toFixed(1) : '0'}%)\n` +
+        `- Absent / Not Participated: *${absent}* (${total > 0 ? ((absent / total) * 100).toFixed(1) : '0'}%)\n\n` +
+        `*PROBLEM SOLVE BREAKDOWN*\n` +
+        `- 4/4 Questions Solved: *${q4}*\n` +
+        `- 3/4 Questions Solved: *${q3}*\n` +
+        `- 2/4 Questions Solved: *${q2}*\n` +
+        `- 1/4 Questions Solved: *${q1}*\n` +
+        `- 0 Questions Solved: *${q0}*\n`;
+    }
+
+    if (batchRatingList.length > 0) {
+      text += `\n*RATING > 1500 BENCHMARK*\n`;
+      batchRatingList.slice(0, 3).forEach(b => {
+        text += `- ${b.name}: *${b.count}*\n`;
+      });
+    }
+    text += `\n`;
+
+    // 7. FORMAT-SPECIFIC STUDENT LIST EXPANSIONS
+    const solvers4 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) >= 4);
+    const solvers3 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 3);
+    const solvers2 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 2);
+    const solvers1 = allRows.filter((r: any) => isRowAttended(r) && getRowSolved(r) === 1);
+    const absentRows = allRows.filter((r: any) => !isRowAttended(r));
+
+    const isSingleDept = Boolean(
+      cleanDept && !cleanDept.toUpperCase().includes('ALL')
+    );
+
+    const sortByPerf = (a: any, b: any) => {
+      const rA = Number(a.contest_rating || a.rating || 0);
+      const rB = Number(b.contest_rating || b.rating || 0);
+      return rB - rA;
+    };
+    solvers4.sort(sortByPerf);
+    solvers3.sort(sortByPerf);
+    solvers2.sort(sortByPerf);
+
+    // FORMAT 2: SOLVERS DIRECTORY (WITH STUDENT NAMES)
+    if (targetFormat === 'solvers') {
+      text += `*STUDENT SOLVERS DIRECTORY*\n` +
+        `----------------------------------------\n`;
+
+      if (solvers4.length > 0) {
+        text += `*4/4 SOLVERS (ALL PROBLEMS SOLVED) - ${solvers4.length} ${solvers4.length === 1 ? 'Student' : 'Students'}:*\n`;
+        solvers4.forEach((s: any, idx: number) => {
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          const deptSuffix = (!isSingleDept && dept) ? ` - ${dept}` : '';
+          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${deptSuffix}\n`;
+        });
+        text += `\n`;
+      } else {
+        text += `*4/4 Solvers:* 0 students\n\n`;
+      }
+
+      if (solvers3.length > 0) {
+        text += `*3/4 SOLVERS - ${solvers3.length} ${solvers3.length === 1 ? 'Student' : 'Students'}:*\n`;
+        const limit3 = solvers3.slice(0, 25);
+        limit3.forEach((s: any, idx: number) => {
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          const deptSuffix = (!isSingleDept && dept) ? ` - ${dept}` : '';
+          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${deptSuffix}\n`;
+        });
+        if (solvers3.length > 25) {
+          text += `... and ${solvers3.length - 25} more solvers (see full list in attached Excel)\n`;
+        }
+        text += `\n`;
+      } else {
+        text += `*3/4 Solvers:* 0 students\n\n`;
+      }
+
+      if (solvers2.length > 0) {
+        text += `*2/4 SOLVERS - ${solvers2.length} ${solvers2.length === 1 ? 'Student' : 'Students'}:*\n`;
+        const limit2 = solvers2.slice(0, 15);
+        limit2.forEach((s: any, idx: number) => {
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          const deptSuffix = (!isSingleDept && dept) ? ` - ${dept}` : '';
+          text += `${idx + 1}. ${getCleanName(s)}${reg ? ` (${reg})` : ''}${deptSuffix}\n`;
+        });
+        if (solvers2.length > 15) {
+          text += `... and ${solvers2.length - 15} more solvers (see attached Excel)\n`;
+        }
+        text += `\n`;
+      } else {
+        text += `*2/4 Solvers:* 0 students\n\n`;
+      }
+
+      if (solvers1.length > 0) {
+        text += `*1/4 Solvers:* ${solvers1.length} ${solvers1.length === 1 ? 'student' : 'students'} (detailed list in Excel report)\n\n`;
+      } else {
+        text += `*1/4 Solvers:* 0 students\n\n`;
+      }
+    }
+
+    // FORMAT 3: TOP PERFORMERS & LEADERBOARD
+    if (targetFormat === 'leaderboard') {
+      text += `*TOP PERFORMERS / LEADERBOARD*\n` +
+        `----------------------------------------\n`;
+      const sourceList = (report?.officialLeaderboard && Array.isArray(report.officialLeaderboard) && report.officialLeaderboard.length > 0)
+        ? report.officialLeaderboard
+        : ((report?.topStudents && Array.isArray(report.topStudents) && report.topStudents.length > 0)
+          ? report.topStudents
+          : allRows.filter(isRowAttended).sort((a: any, b: any) => {
+            const solDiff = getRowSolved(b) - getRowSolved(a);
+            if (solDiff !== 0) return solDiff;
+            const rDiff = Number(b.contest_rating || b.rating || 0) - Number(a.contest_rating || a.rating || 0);
+            return rDiff;
+          })
+        );
+      const topList = sourceList.slice(0, 20);
+      if (topList.length > 0) {
+        topList.forEach((s: any, idx: number) => {
+          const name = getCleanName(s);
+          const reg = getCleanReg(s);
+          const dept = getCleanDept(s);
+          const solved = getRowSolved(s);
+          const rating = s.contest_rating || s.rating;
+          const score = s.score !== undefined && s.score !== '-' ? s.score : (solved * 3);
+          text += `${idx + 1}. ${name}${reg ? ` (${reg})` : ''}${dept ? ` [${dept}]` : ''} - *${solved}/4 Solved*${score ? ` | Score: ${score}` : ''}${rating ? ` | Rating: ${rating}` : ''}\n`;
+        });
+        if (sourceList.length > 20) {
+          text += `... and ${sourceList.length - 20} more students in full official leaderboard\n`;
+        }
+      } else {
+        text += `No participant ranking records found for this cohort.\n`;
+      }
+      text += `\n`;
+    }
+
+    // FORMAT 4: ABSENTEES DIRECTORY (FOR FACULTY MENTOR FOLLOW-UP)
+    if (targetFormat === 'absentees') {
+      text += `*ABSENT / NON-PARTICIPATED STUDENTS (FOLLOW-UP)*\n` +
+        `----------------------------------------\n` +
+        `Total Absentees: *${absentRows.length} students*\n\n`;
+      if (absentRows.length > 0) {
+        // Group by department when multiple depts and list is large
+        const deptMap = new Map<string, any[]>();
+        absentRows.forEach((s: any) => {
+          const dept = getCleanDept(s) || 'General';
+          if (!deptMap.has(dept)) deptMap.set(dept, []);
+          deptMap.get(dept)!.push(s);
+        });
+        if (deptMap.size > 1 && absentRows.length > 20) {
+          // Multi-dept: group by department, show all
+          let globalIdx = 1;
+          deptMap.forEach((students, dept) => {
+            text += `*[${dept}] - ${students.length} students:*\n`;
+            students.forEach((s: any) => {
+              const name = getCleanName(s);
+              const reg = getCleanReg(s);
+              text += `${globalIdx++}. ${name}${reg ? ` (${reg})` : ''}\n`;
+            });
+            text += `\n`;
+          });
+        } else {
+          // Single dept or small list: flat numbered list (all students, no cap)
+          absentRows.forEach((s: any, idx: number) => {
+            const name = getCleanName(s);
+            const reg = getCleanReg(s);
+            const dept = getCleanDept(s);
+            text += `${idx + 1}. ${name}${reg ? ` (${reg})` : ''}${dept ? ` - ${dept}` : ''}\n`;
+          });
+          text += `\n`;
+        }
+      } else {
+        text += `100% Attendance achieved! Zero absentees recorded for this session.\n\n`;
+      }
+      text += `*Action Required:* Faculty mentors are requested to follow up with the non-participating students listed above.\n\n`;
+    }
+
+    text += `----------------------------------------\n` +
+      `*Official report available on Nandha LeetCode Portal*\n`;
+
+    return text.trim();
+  };
+
+  const handleShareWhatsApp = async (
+    mode: 'message' | 'file' = 'message',
+    formatOverride?: 'summary' | 'solvers' | 'leaderboard' | 'absentees'
+  ) => {
+    if (isSharingWhatsApp) return;
+    setIsSharingWhatsApp(true);
+
+    const targetFmt = formatOverride || shareFormat;
+    const cleanDept = getResolvedDeptName(report);
+    const fullShareText = generateShareText(targetFmt);
+    const { url, filename, mimeType } = getReportDownloadMeta('excel');
+
+    // Automatically copy to clipboard
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(fullShareText);
+      }
+    } catch (_clipErr) { }
+
+    try {
+      // MODE 1: Direct WhatsApp Text Message (Pre-filled chat text with full stats and 1-tap download link)
+      if (mode === 'message') {
+        notify.success('Opening WhatsApp', 'Performance summary and download link copied to clipboard & opened in WhatsApp.', { category: 'SHARE' });
+        if (isNativeMobile()) {
+          try {
+            await DocumentOpener.shareToWhatsApp({ text: fullShareText });
+            setIsSharingWhatsApp(false);
+            return;
+          } catch (_nativeErr) {
+            console.warn('[ReportPreview] Native DocumentOpener.shareToWhatsApp failed, trying URL fallback:', _nativeErr);
+          }
+        }
+        const encoded = encodeURIComponent(fullShareText);
+        window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+        setIsSharingWhatsApp(false);
+        return;
+      }
+
+      // MODE 2: File Attachment (.xlsx document share)
+      // Note: Android WhatsApp strips text captions on non-media documents, so summary is saved to clipboard!
+      notify.info('Preparing Excel Attachment', 'Summary text copied to clipboard! Attaching Excel workbook...', { category: 'SHARE' });
+
+      // Native Mobile App (Capacitor Android APK):
+      if (isNativeMobile()) {
+        try {
+          const res = await api.get(url, { responseType: 'blob' });
+          if (res?.data) {
+            const { uri } = await saveFileToMobileStorage(res.data, filename, mimeType);
+            if (uri) {
+              await DocumentOpener.shareDocument({
+                path: uri,
+                filename,
+                mimeType,
+                text: fullShareText,
+              });
+              notify.success('Excel Attached', `${filename} ready in WhatsApp. (Tip: Paste clipboard if you wish to include the summary text).`, { category: 'SHARE' });
+              setIsSharingWhatsApp(false);
+              return;
+            }
+          }
+        } catch (mobileErr) {
+          console.warn('[ReportPreview] Mobile file share failed, falling back:', mobileErr);
+        }
+      }
+
+      // Web Share API Level 2 (Browsers with file sharing support)
+      if (typeof navigator !== 'undefined' && (navigator as any).canShare && typeof File !== 'undefined') {
+        try {
+          const res = await api.get(url, { responseType: 'blob' });
+          if (res?.data) {
+            const file = new File([res.data], filename, { type: mimeType });
+            if ((navigator as any).canShare({ files: [file] })) {
+              await (navigator as any).share({
+                title: `${cleanDept} LeetCode Performance`,
+                text: fullShareText,
+                files: [file],
+              });
+              setIsSharingWhatsApp(false);
+              return;
+            }
+          }
+        } catch (_webShareErr) {
+          /* Fall through to download + WhatsApp url */
+        }
+      }
+
+      // Desktop browser fallback: Trigger Excel file download & open WhatsApp Web
+      try {
+        await downloadFile('excel');
+        notify.success('Excel Report Downloaded', `${filename} saved. Opening WhatsApp Web with summary.`, { category: 'SHARE' });
+      } catch (_e) { }
+
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
+    } catch (err: any) {
+      console.error('[ReportPreview] WhatsApp share error:', err);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareText)}`, '_blank');
+    } finally {
+      setIsSharingWhatsApp(false);
+    }
+  };
+
+  return createPortal(
+    <div
+      className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:static print:w-full print:h-auto print:overflow-visible"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={headerTitle}
+        className="modal-container-responsive mobile-responsive-modal max-w-7xl bg-white dark:bg-[#0c1427] text-slate-900 dark:text-slate-100 rounded-t-[28px] sm:rounded-3xl rounded-b-none sm:rounded-b-3xl shadow-2xl border-t sm:border border-slate-200/90 dark:border-white/10 animate-slide-up-drawer sm:animate-modal-content print:static print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full print:h-auto print:overflow-visible print:p-0 flex flex-col overflow-hidden will-change-transform"
+      >
+
+        {/* Mobile bottom-sheet drag handle (Tap or swipe down to close) */}
+        <SwipeHandle
+          onClose={onClose}
+          className="bg-white dark:bg-[#0c1427] border-b border-slate-100 dark:border-white/10"
+          pillClassName="bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500"
+        />
+
+        {/* 1. HEADER BANNER - Crisp Executive White & Sleek Dark */}
+        <div className="relative overflow-hidden px-3.5 py-2.5 sm:px-5 sm:py-3.5 bg-white dark:bg-[#0c1427] text-slate-900 dark:text-white flex items-center justify-between shrink-0 border-b border-slate-200/90 dark:border-white/10 shadow-2xs print:bg-white print:text-black print:border-b-2 print:border-black">
+          <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/80 dark:border-indigo-500/30 flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 shadow-xs">
+              <FileText className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight print:text-black truncate print:whitespace-normal">
+                  {headerTitle}
+                </h2>
+                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-extrabold tracking-wide shrink-0 shadow-2xs print:hidden">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  READY
+                </span>
+              </div>
+              <div className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate print:whitespace-normal flex items-center gap-1.5 flex-wrap">
+                {isContestReport && (
+                  <span className="font-bold text-amber-900 dark:text-amber-200 print:text-black px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40 text-[10px] sm:text-[11px]">
+                    {contestBadgeText}
+                  </span>
+                )}
+                <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">Report ID: <span className="font-mono font-bold text-slate-700 dark:text-slate-300 print:text-slate-600">{report.reportId || report.report_id}</span></span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close report preview"
+            className="shrink-0 ml-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-white/10 dark:hover:bg-rose-500/20 dark:text-slate-200 dark:hover:text-rose-400 dark:border-white/10 transition-all font-bold text-xs flex items-center space-x-1 cursor-pointer shadow-2xs print:hidden touch-manipulation active:scale-95 group"
+          >
+            <X className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" />
+            <span className="text-xs">Close</span>
+          </button>
+        </div>
+
+        {/* 2. DATASET QUALITY & RECONCILIATION BAR */}
+        <div className="px-3 sm:px-5 py-2 bg-slate-50/90 dark:bg-[#080d19]/90 border-b border-slate-200/90 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-bold shrink-0 shadow-2xs">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="flex items-center space-x-1 text-slate-800 dark:text-slate-200 font-extrabold text-[11px] sm:text-xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Dataset Reconciliation:</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
+              Roster: {totalRosterCount} Students
+            </span>
+            {isContestReport && (
+              <span className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
+                Participants: {actualParticipantCount} ({turnoutPercentage})
+              </span>
+            )}
+            {isContestReport && actualNotAttendedCount > 0 && (
+              <span className="px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 font-mono text-[10px] sm:text-[11px] font-bold">
+                Absent: {actualNotAttendedCount} ({absentPercentage})
+              </span>
+            )}
+            {activeFilter && (
+              <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 text-[10px] sm:text-[11px] font-bold shadow-2xs">
+                <Filter className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                <span>Filtered: {displayedStudents.length}/{allRows.length}</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter(null)}
+                  className="ml-1 p-0.5 hover:text-rose-600 dark:hover:text-rose-400 font-bold touch-manipulation active:scale-90"
+                  aria-label="Clear active filter"
+                >
+                  <X className="w-3 h-3 inline" />
+                </button>
+              </span>
+            )}
+          </div>
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 font-bold text-[10px] sm:text-[11px] border border-blue-200 dark:border-blue-500/30 shadow-2xs">
+            <Building2 className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>Nandha Engineering College (Autonomous)</span>
+          </div>
+        </div>
+
+        {/* 3. SCROLLABLE REPORT CONTENT */}
+        <div className="p-3.5 sm:p-5 overflow-y-auto flex-1 min-h-0 space-y-5 bg-slate-50/50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
+
+          {/* CONTEST PERFORMANCE SPECIALIZED VIEW */}
+          {isContestReport ? (
+            <div className="space-y-6">
+
+              {/* Contest Executive Summary: Solve Condition & Performance Cohorts */}
+              {!isHistIntel && !isWowIntel && (
+                <div className="space-y-4 print:break-inside-avoid">
+                  <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
+                    {/* Header with Title, Report Type Scope & Badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                            Solve Condition &amp; Performance Summary
+                          </h3>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                            {rType || 'CONTEST PERFORMANCE REPORT'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                          Aggregated solve condition cohorts, problem difficulty metrics & attendance breakdown for this contest session.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
+                          <span>In Scope: {allRows.length} Students</span>
+                        </span>
+                        {activeFilter && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
+                            <span>Filtered View: {conditionStats.totalStudents}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Contest / Weekly Solve Distribution Cohorts
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                          Click any cohort card to filter students in the table
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                        {/* 4/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_4')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_4'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
+                            <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight mt-1">{conditionStats.s4}</p>
+                        </div>
+
+                        {/* 3/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_3')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_3'
+                            ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
+                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
+                            <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight mt-1">{conditionStats.s3}</p>
+                        </div>
+
+                        {/* 2/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_2')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_2'
+                            ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
+                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
+                            <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight mt-1">{conditionStats.s2}</p>
+                        </div>
+
+                        {/* 1/4 Solved */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_1')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_1'
+                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
+                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
+                            <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight mt-1">{conditionStats.s1}</p>
+                        </div>
+
+                        {/* 0/4 Solved (Attended) */}
+                        <div
+                          onClick={() => toggleFilter('SOLVED_0')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_0'
+                            ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
+                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                            <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight mt-1">{conditionStats.s0}</p>
+                        </div>
+
+                        {/* Not Attended / Absent */}
+                        <div
+                          onClick={() => toggleFilter('NOT_ATTENDED')}
+                          className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'NOT_ATTENDED'
+                            ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
+                            : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
+                            <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                              {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                            </span>
+                          </div>
+                          <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight mt-1">{conditionStats.notAttendedCount}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Difficulty Solve Distribution (Easy • Medium • Hard)
+                      </span>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {/* Easy Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Easy Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
+                            {conditionStats.totalEasy.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                            Foundational Solves
+                          </span>
+                        </div>
+
+                        {/* Medium Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Medium Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
+                            {conditionStats.totalMed.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
+                            Core Algorithmic Solves
+                          </span>
+                        </div>
+
+                        {/* Hard Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Hard Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
+                            {conditionStats.totalHard.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
+                            High Difficulty Solves
+                          </span>
+                        </div>
+
+                        {/* Total Cumulative Solves */}
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Total Solves</span>
+                          <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
+                            {conditionStats.totalSolves.toLocaleString()}
+                          </p>
+                          <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
+                            Cumulative Solves
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Official Condition Criteria Reference Strip */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="text-slate-700 dark:text-slate-300 font-bold">
+                        Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)
+                      </div>
+                      {activeFilter && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilter(null)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
+                        >
+                          <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Critical Data Validation Banner (Section 12) */}
+              {(report.validationError || report.isValidated === false) && (
+                <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold flex items-center space-x-3">
+                  <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-wide">Official Result Generation Blocked</p>
+                    <p className="text-xs font-semibold mt-0.5">{report.validationError || "Official result generation blocked because validated source data contains critical errors."}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Question-Wise Official Result (Section 6 - Friday Official) */}
+              {isFridayOfficial && report.questionWiseResult && Array.isArray(report.questionWiseResult) && report.questionWiseResult.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <span>Question-Wise Official Result</span>
+                  </h3>
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-1.5">
+                    {report.questionWiseResult.map((q: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-slate-900">{q.question}</span>
+                          <div className="text-[10px] text-slate-500 font-bold mt-0.5 space-x-1.5">
+                            <span className="text-emerald-700 font-bold">{q.solved} Solved</span>
+                            <span>•</span>
+                            <span className="text-rose-600 font-bold">{q.not_solved} Unsolved</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Solve Rate</span>
+                          <span className="text-xs font-extrabold text-brand-700 font-mono">{q.solve_rate}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[500px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Question</th>
+                          <th className="px-4 py-3 text-center">Solved</th>
+                          <th className="px-4 py-3 text-center">Not Solved</th>
+                          <th className="px-4 py-3 text-right">Solve Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-sans">
+                        {report.questionWiseResult.map((q: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-4 py-2.5 font-bold text-slate-900">{q.question}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-emerald-600">{q.solved}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-slate-500">{q.not_solved}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-brand-600">{q.solve_rate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Solve Distribution Table (Section 7 - Friday Official) */}
+              {isFridayOfficial && report.solveDistributionList && Array.isArray(report.solveDistributionList) && report.solveDistributionList.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider flex items-center space-x-1.5">
+                    <span>Solve Distribution (4/4 – 0/4)</span>
+                  </h3>
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-1.5">
+                    {report.solveDistributionList.map((sd: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-slate-900">{sd.category}</span>
+                          <div className="text-[10px] text-slate-500 font-bold mt-0.5">
+                            <span className="text-emerald-700 font-bold">{sd.count} Students</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9px] uppercase font-bold text-slate-500 block">Percentage</span>
+                          <span className="text-xs font-extrabold text-indigo-700 font-mono">{sd.percentage}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[500px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Category</th>
+                          <th className="px-4 py-3 text-center">Student Count</th>
+                          <th className="px-4 py-3 text-right">Percentage</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {report.solveDistributionList.map((sd: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{sd.category}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-600 dark:text-emerald-400">{sd.count}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-indigo-600 dark:text-indigo-400">{sd.percentage}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Official Leaderboard & Top Performers (Sections 8 & 9 - Friday Official) */}
+              {isFridayOfficial && displayOfficialLeaderboard && Array.isArray(displayOfficialLeaderboard) && displayOfficialLeaderboard.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <span>Official Leaderboard & Top Performers</span>
+                  </h3>
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {displayOfficialLeaderboard.slice(0, 25).map((lb: any, i: number) => {
+                      const rankVal = formatRank(lb.global_rank || lb.rank_val || lb.rank);
+                      const ratingVal = formatRating(lb.rating || lb.contest_rating);
+                      return (
+                        <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center space-x-1.5 min-w-0">
+                              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
+                                #{lb.rank}
+                              </span>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(lb.student_name || lb.student)}</h4>
+                                <p className="text-[10px] text-slate-500 font-mono leading-tight">{lb.reg_no} • {lb.dept} ({lb.year})</p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className="text-xs font-bold text-emerald-700 block">{lb.solved} Solved</span>
+                              <span className="text-[10px] font-mono font-bold text-indigo-700 block">Score: {lb.score ?? 0}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                            <div className="flex items-center gap-0.5 font-mono text-[9px] font-bold">
+                              <span className={`px-1 py-0.2 rounded ${lb.q1 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q1</span>
+                              <span className={`px-1 py-0.2 rounded ${lb.q2 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q2</span>
+                              <span className={`px-1 py-0.2 rounded ${lb.q3 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q3</span>
+                              <span className={`px-1 py-0.2 rounded ${lb.q4 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q4</span>
+                            </div>
+                            <div className="text-right shrink-0 text-[10px] font-mono font-medium text-slate-600 flex items-center gap-1.5">
+                              {rankVal !== '—' && <span className="font-bold text-amber-700">Global: {rankVal}</span>}
+                              {ratingVal !== '—' && <span className="font-bold text-slate-700">| Rating: {ratingVal}</span>}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[850px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
+                        <tr>
+                          <th className="px-3.5 py-3 text-center">Rank</th>
+                          <th className="px-4 py-3 text-left">Student Name</th>
+                          <th className="px-4 py-3 text-center">Register No</th>
+                          <th className="px-4 py-3 text-center">Department</th>
+                          <th className="px-3 py-3 text-center">Year</th>
+                          <th className="px-3 py-3 text-center">Q1</th>
+                          <th className="px-3 py-3 text-center">Q2</th>
+                          <th className="px-3 py-3 text-center">Q3</th>
+                          <th className="px-3 py-3 text-center">Q4</th>
+                          <th className="px-4 py-3 text-center">Solved</th>
+                          <th className="px-4 py-3 text-center">Score</th>
+                          <th className="px-4 py-3 text-center">Global Rank</th>
+                          <th className="px-4 py-3 text-right">Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {displayOfficialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-3.5 py-2.5 text-center align-middle font-black text-amber-500">#{lb.rank}</td>
+                            <td className="px-4 py-2.5 text-left align-middle whitespace-nowrap font-bold text-slate-900 dark:text-white">{formatStudentName(lb.student_name || lb.student)}</td>
+                            <td className="px-4 py-2.5 text-center align-middle font-mono text-slate-700 dark:text-slate-300">{lb.reg_no}</td>
+                            <td className="px-4 py-2.5 text-center align-middle font-bold text-indigo-600 dark:text-indigo-400">{lb.dept}</td>
+                            <td className="px-3 py-2.5 text-center align-middle font-bold text-slate-900 dark:text-slate-100">{lb.year}</td>
+                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q1 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q2 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q3 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-3 py-2.5 text-center align-middle font-bold">{lb.q4 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-4 py-2.5 text-center align-middle font-black text-emerald-600 text-sm">{lb.solved}</td>
+                            <td className="px-4 py-2.5 text-center font-mono font-black text-indigo-600 dark:text-indigo-400">{lb.score !== undefined && lb.score !== null ? lb.score : "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-mono font-black text-amber-600 dark:text-amber-400">{formatRank(lb.global_rank || lb.rank_val || lb.rank)}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">{formatRating(lb.rating || lb.contest_rating)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Department-Wise Official Result (Section 10 - Friday Official) */}
+              {isFridayOfficial && displayDepartmentResults && Array.isArray(displayDepartmentResults) && displayDepartmentResults.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <span>Department-Wise Official Result</span>
+                  </h3>
+                  {/* Mobile Cards View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {displayDepartmentResults.map((dr: any, i: number) => (
+                      <div key={i} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <h4 className="text-xs font-bold text-slate-900">{dr.department}</h4>
+                          <span className="text-[10.5px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            {dr.participants}/{dr.total_students} ({dr.participation_pct})
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{dr.total_solves?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{dr.average_solved}</span></div>
+                          <div className="flex items-center gap-1 font-mono text-[9px] font-bold">
+                            <span className="text-emerald-700">4/4:{dr.solved_4}</span>
+                            <span className="text-indigo-700">3/4:{dr.solved_3}</span>
+                            <span className="text-amber-700">2/4:{dr.solved_2}</span>
+                            <span className="text-slate-600">1/4:{dr.solved_1}</span>
+                            <span className="text-rose-600">0/4:{dr.solved_0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[850px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Department</th>
+                          <th className="px-3.5 py-3 text-center">Total Students</th>
+                          <th className="px-3.5 py-3 text-center">Participants</th>
+                          <th className="px-3.5 py-3 text-center">Participation %</th>
+                          <th className="px-3 py-3 text-center">4/4</th>
+                          <th className="px-3 py-3 text-center">3/4</th>
+                          <th className="px-3 py-3 text-center">2/4</th>
+                          <th className="px-3 py-3 text-center">1/4</th>
+                          <th className="px-3 py-3 text-center">0/4</th>
+                          <th className="px-3.5 py-3 text-right">Total Solves</th>
+                          <th className="px-3.5 py-3 text-right">Average Solved</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {displayDepartmentResults.map((dr: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-4 py-2.5 font-bold text-brand-600 dark:text-brand-400">{dr.department}</td>
+                            <td className="px-3.5 py-2.5 text-center font-bold">{dr.total_students}</td>
+                            <td className="px-3.5 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{dr.participants}</td>
+                            <td className="px-3.5 py-2.5 text-center font-extrabold text-indigo-600 dark:text-indigo-400">{dr.participation_pct}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-emerald-600">{dr.solved_4}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-teal-600">{dr.solved_3}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-brand-600">{dr.solved_2}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-amber-600">{dr.solved_1}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-slate-400">{dr.solved_0}</td>
+                            <td className="px-3.5 py-2.5 text-right font-black text-slate-900 dark:text-white">{dr.total_solves?.toLocaleString()}</td>
+                            <td className="px-3.5 py-2.5 text-right font-mono font-bold">{dr.average_solved}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+
+
+              {/* ===== WEEK-ON-WEEK INTEL PREVIEW ===== */}
+              {isWowIntel && report.wowSummary && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/30 text-center shadow-xs">
+                      <p className="text-xs font-black uppercase text-slate-800 dark:text-slate-100 tracking-wide">Total Students</p>
+                      <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{report.wowSummary.totalStudents}</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center shadow-xs">
+                      <p className="text-xs font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wide">This Week Attended</p>
+                      <p className="text-3xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{report.wowSummary.currAttendance}</p>
+                      <p className="text-xs text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{report.currContest} · {report.currDate}</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-center shadow-xs">
+                      <p className="text-xs font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wide">Last Week Attended</p>
+                      <p className="text-3xl font-black text-indigo-800 dark:text-indigo-300 mt-1">{report.wowSummary.prevAttendance}</p>
+                      <p className="text-xs text-slate-900 dark:text-slate-100 font-extrabold mt-0.5">{report.prevContest} · {report.prevDate}</p>
+                    </div>
+                    <div className={`p-4 rounded-2xl text-center border shadow-xs ${(report.wowSummary.attendanceDelta || 0) >= 0 ? 'bg-teal-500/10 border-teal-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                      <p className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wide">Attendance Change</p>
+                      <p className={`text-3xl font-black mt-1 ${(report.wowSummary.attendanceDelta || 0) >= 0 ? 'text-teal-800 dark:text-teal-300' : 'text-rose-800 dark:text-rose-300'}`}>
+                        {(report.wowSummary.attendanceDelta || 0) >= 0 ? '+' : ''}{report.wowSummary.attendanceDelta}
+                      </p>
+                      <p className="text-xs text-slate-950 dark:text-white font-black mt-1">
+                        ↑ {report.wowSummary.improved} Improved &nbsp;·&nbsp; ↓ {report.wowSummary.declined} Declined &nbsp;·&nbsp; → {report.wowSummary.stable} Stable
+                      </p>
+                    </div>
+                  </div>
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
+                    Week-on-Week Student Comparison — {report.prevContest} vs {report.currContest} ({report.rows?.length || 0} Students)
+                  </h3>
+                  <div className="border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[520px] overflow-y-auto">
+                    <table className="w-full text-xs min-w-[1200px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10">
+                        <tr>
+                          <th className="px-3 py-3 text-center align-middle w-10" rowSpan={2}>S.No</th>
+                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Register No</th>
+                          <th className="px-3 py-3 text-left align-middle" rowSpan={2}>Student Name</th>
+                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Dept</th>
+                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Yr</th>
+                          <th className="px-3 py-3 text-center bg-indigo-900" colSpan={3}>{report.prevContest} — Last Week</th>
+                          <th className="px-3 py-3 text-center bg-emerald-900" colSpan={3}>{report.currContest} — This Week</th>
+                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Δ Solved</th>
+                          <th className="px-3 py-3 text-center align-middle" rowSpan={2}>Trend</th>
+                        </tr>
+                        <tr className="bg-[#1e3d5c] text-xs font-black text-white">
+                          <th className="px-3 py-2 text-center bg-indigo-950/80">Status</th>
+                          <th className="px-3 py-2 text-center bg-indigo-950/80">Solved</th>
+                          <th className="px-3 py-2 text-center bg-indigo-950/80">Score</th>
+                          <th className="px-3 py-2 text-center bg-emerald-950/80">Status</th>
+                          <th className="px-3 py-2 text-center bg-emerald-950/80">Solved</th>
+                          <th className="px-3 py-2 text-center bg-emerald-950/80">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                        {(report.rows || []).map((r: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no}</td>
+                            <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
+                            <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
+                            <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
+                            <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
+                            <td className="px-3 py-2.5 text-center bg-indigo-50/70 dark:bg-indigo-950/40">
+                              {r.prev_status === 'ATTENDED' ? <span className="px-2.5 py-1 rounded text-[11px] font-black bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-100">ATTENDED</span> : <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">ABSENT</span>}
+                            </td>
+                            <td className="px-3 py-2.5 text-center font-black bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-950 dark:text-indigo-100 text-sm">{r.prev_status === 'ATTENDED' ? r.prev_solved : '—'}</td>
+                            <td className="px-3 py-2.5 text-center bg-indigo-50/70 dark:bg-indigo-950/40 font-mono font-black text-slate-900 dark:text-slate-100">{r.prev_status === 'ATTENDED' ? r.prev_score : '—'}</td>
+                            <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40">
+                              {r.curr_status === 'ATTENDED' ? <span className="px-2.5 py-1 rounded text-[11px] font-black bg-emerald-200 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-100">ATTENDED</span> : <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">ABSENT</span>}
+                            </td>
+                            <td className="px-3 py-2.5 text-center font-black bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 text-sm">{r.curr_status === 'ATTENDED' ? r.curr_solved : 0}</td>
+                            <td className="px-3 py-2.5 text-center bg-emerald-50/70 dark:bg-emerald-950/40 font-mono font-black text-slate-900 dark:text-slate-100">{r.curr_status === 'ATTENDED' ? r.curr_score : 0}</td>
+                            <td className={`px-3 py-2.5 text-center font-black text-sm ${(r.solved_delta || 0) > 0 ? 'text-teal-800 dark:text-teal-300' : (r.solved_delta || 0) < 0 ? 'text-rose-800 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>
+                              {(r.solved_delta || 0) > 0 ? `+${r.solved_delta}` : r.solved_delta === 0 ? '0' : r.solved_delta}
+                            </td>
+                            <td className={`px-3 py-2.5 text-center font-black ${r.trend?.includes('↑') ? 'text-teal-700 dark:text-teal-300' : r.trend?.includes('↓') ? 'text-rose-700 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'}`}>{r.trend || 0}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== HISTORICAL INTEL PREVIEW ===== */}
+              {/* Historical Performance per Student Table (Section for Historical Intelligence Report) */}
+              {isHistIntel && (
+                <div className="space-y-4 pt-2">
+                  <div className="overflow-x-auto">
+                    <div className="flex gap-2 pb-2 min-w-max">
+                      {(report.histSummary?.sessionParticipation || []).map((sp: any) => (
+                        <div key={sp.contestNum} className="p-3.5 rounded-xl bg-brand-500/10 border border-brand-500/30 text-center min-w-[120px] shadow-xs">
+                          <p className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">Contest {sp.contestNum}</p>
+                          <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{sp.attended}</p>
+                          <p className="text-xs font-black text-brand-700 dark:text-brand-300">{sp.rate} attended</p>
+                          <p className="text-xs text-slate-800 dark:text-slate-300 font-bold mt-0.5">{sp.date}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
+                    Historical Performance per Student ({report.rows?.length || 0} Students · {report.histSummary?.numSessions || 0} Contests)
+                  </h3>
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2 max-h-[500px] overflow-y-auto pr-0.5">
+                    {(report.rows || []).map((r: any, idx: number) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center space-x-1.5 min-w-0">
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
+                              #{r.s_no || idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(r.name || r.student_name)}</h4>
+                              <p className="text-[10px] text-slate-500 font-mono leading-tight">{r.reg_no} • {r.dept} ({r.year})</p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-bold text-brand-700 block">{r.total_solved_fraction || `${r.totalSolved} Solved`}</span>
+                            <span className={`text-[10px] font-bold ${r.consistencyPct >= 75 ? 'text-emerald-700' : r.consistencyPct >= 40 ? 'text-amber-700' : 'text-rose-700'}`}>{r.consistencyPct}% Consistency</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1 text-[10px] bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/60">
+                          <span className="text-slate-700 font-bold mr-1">Sessions ({r.contests_attended_fraction || `${r.totalAttended} Attended`}):</span>
+                          {(r.weeklyData || []).map((wd: any, widx: number) => (
+                            <span key={widx} className={`px-1.5 py-0.2 rounded font-mono font-bold text-[9px] ${wd.att ? (wd.solved >= 3 ? 'bg-emerald-100 text-emerald-800' : wd.solved >= 1 ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800') : 'bg-rose-100 text-rose-800'}`}>
+                              C{widx + 1}:{wd.att ? wd.solved : '—'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[520px] overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10">
+                        <tr>
+                          <th className="px-3 py-3 text-center align-middle w-10">S.No</th>
+                          <th className="px-3 py-3 text-center align-middle">Register No</th>
+                          <th className="px-3 py-3 text-left align-middle">Student Name</th>
+                          <th className="px-3 py-3 text-center align-middle">Dept</th>
+                          <th className="px-3 py-3 text-center align-middle">Yr</th>
+                          <th className="px-3 py-3 text-center align-middle">Accommodation</th>
+                          <th className="px-3 py-3 text-center align-middle">12th Cutoff</th>
+                          {(report.sessionHeaders || []).map((sh: any) => (
+                            <th key={sh.contestNum} className="px-3 py-3 text-center align-middle whitespace-nowrap">C{sh.contestNum}<br /><span className="text-[10px] font-extrabold opacity-90">{sh.date}</span></th>
+                          ))}
+                          <th className="px-3 py-3 text-center align-middle">Contests Attended</th>
+                          <th className="px-3 py-3 text-center align-middle font-extrabold">Total Solved</th>
+                          <th className="px-3 py-3 text-center align-middle font-extrabold bg-blue-900/40 text-blue-200">Attended Solved</th>
+                          <th className="px-3 py-3 text-center align-middle bg-amber-900/40 text-amber-200">Badges</th>
+                          <th className="px-3 py-3 text-center align-middle bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                          <th className="px-3 py-3 text-center align-middle bg-teal-900/40 text-teal-200">Contest Med</th>
+                          <th className="px-3 py-3 text-center align-middle bg-purple-900/40 text-purple-200">Contest Hard</th>
+                          <th className="px-3.5 py-3 text-center align-middle">Global Rank</th>
+                          <th className="px-3.5 py-3 text-right align-middle">Contest Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                        {(report.rows || []).map((r: any, idx: number) => {
+                          const cDiff = getContestDifficultyBreakdown(r);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                              <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{r.s_no || idx + 1}</td>
+                              <td className="px-3 py-2.5 text-center font-black font-mono text-slate-950 dark:text-white">{r.reg_no}</td>
+                              <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{r.name}</td>
+                              <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{r.dept}</td>
+                              <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{r.year}</td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(r.accommodation || r.accomodation || r.accommodation_type)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{r.twelfth_cutoff !== undefined && r.twelfth_cutoff !== null ? Number(r.twelfth_cutoff).toFixed(1) : (r.cutoff !== undefined && r.cutoff !== null ? Number(r.cutoff).toFixed(1) : (r.twelfthCutoff !== undefined && r.twelfthCutoff !== null ? Number(r.twelfthCutoff).toFixed(1) : "—"))}</td>
+                              {(r.weeklyData || []).map((wd: any, widx: number) => (
+                                <td key={widx} className={`px-3 py-2.5 text-center font-black text-sm ${wd.att ? (wd.solved >= 3 ? 'text-emerald-700 dark:text-emerald-300' : wd.solved >= 1 ? 'text-brand-700 dark:text-brand-300' : 'text-amber-700 dark:text-amber-300') : 'text-slate-500 dark:text-slate-400 font-bold'}`}>
+                                  {wd.att ? wd.solved : '—'}
+                                </td>
+                              ))}
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-950 dark:text-white text-sm">{r.contests_attended_fraction ?? (report.histSummary?.numSessions ? `${r.contests_attended ?? r.total_attended ?? 0}/${report.histSummary.numSessions}` : (r.contests_attended ?? r.total_attended ?? 0))}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-brand-700 dark:text-brand-300 text-sm">{r.total_solved_fraction ?? (report.histSummary?.numSessions ? `${r.total_solved ?? r.totalSolved ?? 0}/${report.histSummary.numSessions * 4}` : (r.total_solved ?? r.totalSolved ?? (cDiff.easy + cDiff.medium + cDiff.hard)))}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-blue-700 dark:text-blue-300 text-sm bg-blue-500/5">{r.attended_solve_fraction ?? ((r.total_attended || r.totalAttended) ? `${r.total_solved ?? r.totalSolved ?? 0}/${(r.total_attended || r.totalAttended || 1) * 4}` : '0/0')}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300 bg-amber-500/5">{r.badges ?? r.total_badges ?? r.badges_count ?? 0}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{r.contest_easy ?? cDiff.easy}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{r.contest_medium ?? cDiff.medium}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{r.contest_hard ?? cDiff.hard}</td>
+                              <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
+                                {formatRank(r.global_rank || r.rank || r.profile_rank || r.contest_global_ranking)}
+                              </td>
+                              <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
+                                {formatRating(r.rating || r.contest_rating || r.stats?.contest_rating)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-[#E6F0FA] dark:bg-[#162747] text-[#1B365D] dark:text-[#E2E8F0] font-black border-t-2 border-slate-800 sticky bottom-0 z-10">
+                        <tr>
+                          <td colSpan={7} className="px-4 py-3 text-center uppercase tracking-wider font-extrabold text-xs sm:text-sm border-r border-slate-300 dark:border-slate-700">
+                            TOTAL SOLVED COUNT
+                          </td>
+                          {(report.sessionHeaders || []).map((sh: any, shIdx: number) => {
+                            const cNum = String(sh.contestNum || sh.num || sh);
+                            const sumSolves = (report.rows || []).reduce((acc: number, r: any) => {
+                              const wd = (r.weeklyData || []).find((w: any) => String(w.contestNum) === cNum);
+                              return acc + (wd && wd.att ? Number(wd.solved || 0) : 0);
+                            }, 0);
+                            return (
+                              <td key={shIdx} className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                                {sumSolves}
+                              </td>
+                            );
+                          })}
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                            {(report.rows || []).reduce((acc: number, r: any) => {
+                              const attCnt = Array.isArray(r.weeklyData)
+                                ? r.weeklyData.filter((w: any) => w.att).length
+                                : Number(r.contests_attended || r.total_attended || 0);
+                              return acc + attCnt;
+                            }, 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                            {(report.rows || []).reduce((acc: number, r: any) => {
+                              const tSol = Number(r.total_solved ?? r.totalSolved ?? (
+                                Array.isArray(r.weeklyData)
+                                  ? r.weeklyData.filter((w: any) => w.att).reduce((s: number, w: any) => s + Number(w.solved || 0), 0)
+                                  : 0
+                              ));
+                              return acc + tSol;
+                            }, 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm">
+                            {(report.rows || []).reduce((acc: number, r: any) => {
+                              const attSol = Number(r.total_solved ?? r.totalSolved ?? (
+                                Array.isArray(r.weeklyData)
+                                  ? r.weeklyData.filter((w: any) => w.att).reduce((s: number, w: any) => s + Number(w.solved || 0), 0)
+                                  : 0
+                              ));
+                              return acc + attSol;
+                            }, 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.badges ?? r.total_badges ?? r.badges_count ?? 0), 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_easy ?? getContestDifficultyBreakdown(r).easy ?? 0), 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-teal-600 dark:text-teal-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_medium ?? getContestDifficultyBreakdown(r).medium ?? 0), 0)}
+                          </td>
+                          <td className="px-3 py-3 text-center font-black text-xs sm:text-sm text-purple-600 dark:text-purple-400">
+                            {(report.rows || []).reduce((acc: number, r: any) => acc + Number(r.contest_hard ?? getContestDifficultyBreakdown(r).hard ?? 0), 0)}
+                          </td>
+                          <td className="px-3.5 py-3 text-center font-black text-xs sm:text-sm text-slate-400">—</td>
+                          <td className="px-3.5 py-3 text-center font-black text-xs sm:text-sm text-slate-400">—</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Official Student Result Detail Table (Section 5) — not shown for WOW/HIST reports */}
+              {!isWowIntel && !isHistIntel && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center gap-2">
+                      <span>
+                        {isFridayOfficial ? 'Official Student Result Roster' : isSundayLive ? 'Sunday Live Attendance & Solve Detail Table' : 'Student Contest Detail Table'} ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
+                      </span>
+                    </h3>
+
+                    {activeFilter && (
+                      <button
+                        onClick={() => setActiveFilter(null)}
+                        className="text-xs font-bold text-brand-600 hover:text-brand-700 underline cursor-pointer self-start sm:self-auto"
+                      >
+                        Clear Filter (Show All {allRows.length})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mobile Card View (< sm) - Compact, Crisp White & Clean */}
+                  <div className="block sm:hidden print:hidden space-y-2 max-h-[520px] overflow-y-auto pr-0.5">
+                    {displayedStudents.map((s: any, idx: number) => {
+                      const st = (s.status || '').toUpperCase();
+                      const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
+                      const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
+                      const cDiff = getContestDifficultyBreakdown(s, true);
+                      const rankVal = formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking);
+                      const ratingVal = formatRating(s.rating || s.contest_rating || s.stats?.contest_rating);
+
+                      return (
+                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5 hover:border-slate-300 transition-colors">
+                          {/* Top: Rank #, Name, Dept, Status Badge */}
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center space-x-1.5 min-w-0">
+                              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
+                                #{idx + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(s.name || s.student_name)}</h4>
+                                <p className="text-[10px] text-slate-500 font-mono leading-tight">{s.reg_no} • {s.dept} ({s.year})</p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {getStatusBadge(s.status)}
+                            </div>
+                          </div>
+
+                          {/* Bottom Row: Solved Breakdown & Rank/Rating in one sleek compact strip */}
+                          <div className="flex items-center justify-between gap-2 px-2 py-1.5 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <span className={`font-extrabold text-xs shrink-0 ${isPart && cSolved !== null && cSolved > 0 ? 'text-emerald-700' : isPart ? 'text-amber-700' : 'text-slate-500'}`}>
+                                {isPart && cSolved !== null ? `${cSolved} Solved` : '0 Solved'}
+                              </span>
+                              {s.q1 !== undefined ? (
+                                <div className="flex items-center gap-0.5 font-mono text-[9px] font-bold">
+                                  <span className={`px-1 py-0.2 rounded ${s.q1 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q1</span>
+                                  <span className={`px-1 py-0.2 rounded ${s.q2 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q2</span>
+                                  <span className={`px-1 py-0.2 rounded ${s.q3 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q3</span>
+                                  <span className={`px-1 py-0.2 rounded ${s.q4 === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-500'}`}>Q4</span>
+                                </div>
+                              ) : (
+                                <span className="font-mono text-[9px] text-slate-500">
+                                  E:{cDiff.easy} M:{cDiff.medium} H:{cDiff.hard}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="text-right shrink-0 text-[10px] font-mono font-medium text-slate-600 flex items-center gap-1.5">
+                              {rankVal !== '—' && (
+                                <span className="font-bold text-amber-700">Rank: {rankVal}</span>
+                              )}
+                              {ratingVal !== '—' && (
+                                <span className="font-bold text-slate-700">| Rating: {ratingVal}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[850px] sm:min-w-[1100px] print:min-w-0 print:w-full">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
+                        {isFridayOfficial ? (
+                          <tr>
+                            <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
+                            <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                            <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
+                            <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
+                            <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Score</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Global Rank</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rating</th>
+                          </tr>
+                        ) : isSundayLive ? (
+                          <tr>
+                            <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Register No</th>
+                            <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black">Student Name</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                            <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                            <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
+                            <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                            <th className="px-4 py-3 text-center print:border-b print:border-black">Total Time</th>
+                          </tr>
+                        ) : (
+                          <tr>
+                            <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black sticky left-0 z-20 bg-slate-900">S.No</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black sticky left-12 z-20 bg-slate-900">Register No</th>
+                            <th className="px-3.5 py-3 text-left whitespace-nowrap print:border-b print:border-black sticky left-[140px] z-20 bg-slate-900 border-r border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.3)]">Student Name</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Accommodation</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">12th Cutoff</th>
+                            <th className="px-3 py-3 text-center print:border-b print:border-black">Contests Attended</th>
+                            <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                            {displayedStudents.some((s: any) => s.q1 !== undefined || s.q2 !== undefined) ? (
+                              <>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q1</div><span className="text-[10px] font-medium text-emerald-400 opacity-90">(Easy)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q2</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[75px] print:border-b print:border-black"><div>Q3</div><span className="text-[10px] font-medium text-amber-400 opacity-90">(Medium)</span></th>
+                                <th className="px-3 py-3 text-center min-w-[70px] print:border-b print:border-black"><div>Q4</div><span className="text-[10px] font-medium text-rose-400 opacity-90">(Hard)</span></th>
+                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Contest Solved</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                              </>
+                            ) : (
+                              <>
+                                <th className="px-4 py-3 text-center print:border-b print:border-black font-extrabold">Total Solved</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-emerald-900/40 text-emerald-200">Contest Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-teal-900/40 text-teal-200">Contest Med</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black bg-purple-900/40 text-purple-200">Contest Hard</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Easy</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Medium</th>
+                                <th className="px-3 py-3 text-center print:border-b print:border-black">Profile Hard</th>
+                              </>
+                            )}
+                            <th className="px-3.5 py-3 text-center print:border-b print:border-black">Rank</th>
+                            <th className="px-3.5 py-3 text-right print:border-b print:border-black">Rating</th>
+                          </tr>
+                        )}
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans print:divide-black">
+                        {displayedStudents.map((s: any, idx: number) => {
+                          const st = (s.status || '').toUpperCase();
+                          const isPart = ['PUBLIC_ATTENDED', 'VIRTUAL_ATTENDED', 'PUBLIC', 'VIRTUAL', 'PUBLIC_LIVE', 'VIRTUAL_PRACTICE', 'ATTENDED', 'VERIFIED', 'COMPLETED', 'ATTENDED_SOLVED', 'ATTENDED_ZERO'].includes(st) || (s.total_solved !== undefined && s.total_solved !== null);
+                          const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
+                          const isContestView = s.q1 !== undefined || s.q2 !== undefined;
+                          const cDiff = getContestDifficultyBreakdown(s, isFridayOfficial || isSundayLive);
+
+                          if (isFridayOfficial) {
+                            return (
+                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
+                                <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
+                                <td className="px-3.5 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono print:text-black">{s.reg_no}</td>
+                                <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
+                                <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                                <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
+                                <td className="px-3.5 py-2.5 text-left font-mono font-bold text-slate-900 dark:text-slate-100">{s.leetcode_handle || s.username || "—"}</td>
+                                <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
+                                  {getStatusBadge(s.status)}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q1, 1, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q2, 2, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q3, 3, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-black">
+                                  {isPart ? (getQVal(s.q4, 4, cSolved, isPart) === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                </td>
+                                <td className="px-4 py-2.5 text-center font-black text-sm">
+                                  {isPart && cSolved !== null ? (
+                                    <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
+                                      {cSolved}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
+                                <td className="px-3.5 py-2.5 text-center font-mono font-black text-indigo-700 dark:text-indigo-300">
+                                  {isPart && s.score !== undefined && s.score !== null ? s.score : "0"}
+                                </td>
+                                <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
+                                  {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
+                                </td>
+                                <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
+                                  {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          if (isSundayLive) {
+                            return (
+                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
+                                <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
+                                <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
+                                <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
+                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
+                                <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
+                                  {getStatusBadge(s.status)}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
+                                  {renderSundayQCell(s.q1, s.q1_time, s.q1_display, isPart)}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
+                                  {renderSundayQCell(s.q2, s.q2_time, s.q2_display, isPart)}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
+                                  {renderSundayQCell(s.q3, s.q3_time, s.q3_display, isPart)}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-xs whitespace-nowrap">
+                                  {renderSundayQCell(s.q4, s.q4_time, s.q4_display, isPart)}
+                                </td>
+                                <td className="px-4 py-2.5 text-center font-black text-sm">
+                                  {isPart && cSolved !== null ? (
+                                    <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
+                                      {cSolved}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-700 dark:text-slate-300 font-bold">—</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
+                                <td className="px-4 py-2.5 text-center font-mono font-black text-xs text-slate-950 dark:text-white">
+                                  {(s.total_time_display && s.total_time_display !== '—' && !s.total_time_display.includes('—'))
+                                    ? s.total_time_display
+                                    : (s.total_time && s.total_time !== '—'
+                                      ? (String(s.total_time).endsWith('min') || String(s.total_time).includes(':') ? s.total_time : `${s.total_time} min`)
+                                      : "—")}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return (
+                            <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
+                              <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black sticky left-0 z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800">{idx + 1}</td>
+                              <td className="px-3.5 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black sticky left-12 z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800">{s.reg_no}</td>
+                              <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black sticky left-[140px] z-10 bg-white dark:bg-[#0c1427] group-hover:bg-slate-100 dark:group-hover:bg-navy-800 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">{formatStudentName(s.name || s.student_name)}</td>
+                              <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                              <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                              <td className="px-3 py-2.5 text-center font-bold text-slate-800 dark:text-slate-200">{formatAccommodation(s.accommodation || s.accomodation)}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.contests_attended ?? s.total_attended ?? 0}</td>
+                              <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
+                                {getStatusBadge(s.status)}
+                              </td>
+                              {isContestView ? (
+                                <>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (s.q1 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (s.q2 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (s.q3 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-black">
+                                    {isPart ? (s.q4 === 1 ? <span className="text-emerald-700 dark:text-emerald-300">1</span> : <span className="text-slate-700 dark:text-slate-300">0</span>) : <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-center font-black text-sm">
+                                    {isPart && cSolved !== null ? (
+                                      <span className={cSolved >= 3 ? "text-emerald-700 dark:text-emerald-300" : cSolved >= 1 ? "text-brand-700 dark:text-brand-300" : "text-slate-800 dark:text-slate-200"}>
+                                        {cSolved}
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-700 dark:text-slate-300 font-bold">0</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="px-4 py-2.5 text-center font-black text-sm text-brand-700 dark:text-brand-300">{s.total_solved ?? ((s.easy || 0) + (s.medium || 0) + (s.hard || 0))}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-500/5">{cDiff.easy}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-black text-teal-700 dark:text-teal-300 bg-teal-500/5">{cDiff.medium}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-500/5">{cDiff.hard}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.easy ?? 0}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.medium ?? 0}</td>
+                                  <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-900 dark:text-slate-100">{s.hard ?? 0}</td>
+                                </>
+                              )}
+                              <td className="px-3.5 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-300">
+                                {formatRank(s.global_rank || s.rank || s.profile_rank || s.contest_global_ranking)}
+                              </td>
+                              <td className="px-3.5 py-2.5 text-right font-mono font-black text-slate-950 dark:text-white">
+                                {formatRating(s.rating || s.contest_rating || s.stats?.contest_rating)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          ) : (
+            /* DEFAULT / OTHER REPORTS VIEW */
+            <div className="space-y-6">
+
+              {/* ====== WEEKLY PERFORMANCE DEDICATED VIEW ====== */}
+              {isWeeklyPerformance && (
+                <div className="space-y-6">
+                  {/* Current / Last Week Session Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/40">
+                      <div className="text-[10px] uppercase font-black text-cyan-600 dark:text-cyan-400 tracking-wider mb-2">Current Week</div>
+                      <div className="text-lg font-black text-slate-900 dark:text-white">{report.currentWeek?.contests_str || `Weekly Contest ${report.currentWeek?.contestNumber || '—'}`}</div>
+                      <div className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Session Date: {report.currentWeek?.date || '—'}</div>
+                    </div>
+                    <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/40">
+                      <div className="text-xs uppercase font-black text-amber-700 dark:text-amber-300 tracking-wider mb-2">Last Week</div>
+                      <div className="text-lg font-black text-slate-900 dark:text-white">{report.lastWeek?.contests_str || `Weekly Contest ${report.lastWeek?.contestNumber || '—'}`}</div>
+                      <div className="text-xs text-slate-900 dark:text-slate-100 font-bold mt-1">Session Date: {report.lastWeek?.date || '—'}</div>
+                    </div>
+                  </div>
+
+                  {/* College Summary Metrics */}
+                  {report.college_summary && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">College Summary</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                          { label: 'Total Students', value: report.total_students },
+                          { label: 'Verified', value: report.verified_students },
+                          { label: 'Unavailable', value: report.unavailable_students },
+                          { label: 'Above 500', value: report.college_summary?.metrics?.above_500 },
+                          { label: '250–500', value: report.college_summary?.metrics?.['250_500'] },
+                          { label: 'Less than 250', value: report.college_summary?.metrics?.['101_250'] },
+                          { label: 'Less than 100', value: report.college_summary?.metrics?.less_100 },
+                          { label: 'Not Started', value: report.college_summary?.metrics?.not_started },
+                          { label: 'Avg Solved', value: report.college_summary?.metrics?.avg_solved },
+                          { label: 'Total Solved', value: report.college_summary?.metrics?.total_solved },
+                          { label: 'Rating > 1500', value: report.college_summary?.metrics?.rating_1500 },
+                          { label: 'Ranking < 20K', value: report.college_summary?.metrics?.ranking_20000 },
+                        ].map((m, i) => (
+                          <div key={i} className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-center shadow-sm">
+                            <p className="text-xs text-slate-900 dark:text-slate-100 uppercase font-black tracking-wider mb-1">{m.label}</p>
+                            <p className="text-xl font-black text-slate-950 dark:text-white">{m.value !== null && m.value !== undefined ? (typeof m.value === 'number' && m.value > 999 ? m.value.toLocaleString() : String(m.value)) : '—'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contest Attendance Comparison (Current Week & Last Week) */}
+                  {(report.college_summary?.metrics?.current_week || report.college_summary?.metrics?.last_week) && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Current Week Contest Attendance */}
+                        {report.college_summary?.metrics?.current_week && (
+                          <div className="p-4 rounded-2xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/40 dark:bg-cyan-950/20 space-y-2.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-black uppercase text-cyan-900 dark:text-cyan-200 tracking-wider flex items-center space-x-1.5">
+                                <span>Current Week Attendance</span>
+                              </h3>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
+                                {report.currentWeek?.date || 'Latest'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                              {[
+                                { label: '4/4 Solved', value: report.college_summary.metrics.current_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
+                                { label: '3/4 Solved', value: report.college_summary.metrics.current_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
+                                { label: '2/4 Solved', value: report.college_summary.metrics.current_week.q2, color: 'text-blue-700 dark:text-blue-300' },
+                                { label: '1/4 Solved', value: report.college_summary.metrics.current_week.q1, color: 'text-amber-700 dark:text-amber-300' },
+                                { label: '0/4 Solved', value: report.college_summary.metrics.current_week.q0, color: 'text-rose-700 dark:text-rose-300' },
+                              ].map((m, i) => (
+                                <div key={i} className="p-1 sm:p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-cyan-200/60 dark:border-cyan-800/40 text-center">
+                                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5 truncate">{m.label}</div>
+                                  <div className={`text-sm sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Last Week Contest Attendance */}
+                        {report.college_summary?.metrics?.last_week && (
+                          <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20 space-y-2.5 shadow-2xs">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-black uppercase text-amber-900 dark:text-amber-200 tracking-wider flex items-center space-x-1.5">
+                                <span>Last Week Attendance</span>
+                              </h3>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                {report.lastWeek?.date || 'Past'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                              {[
+                                { label: '4/4 Solved', value: report.college_summary.metrics.last_week.q4, color: 'text-emerald-700 dark:text-emerald-300' },
+                                { label: '3/4 Solved', value: report.college_summary.metrics.last_week.q3, color: 'text-cyan-700 dark:text-cyan-300' },
+                                { label: '2/4 Solved', value: report.college_summary.metrics.last_week.q2, color: 'text-blue-700 dark:text-blue-300' },
+                                { label: '1/4 Solved', value: report.college_summary.metrics.last_week.q1, color: 'text-amber-700 dark:text-amber-300' },
+                                { label: '0/4 Solved', value: report.college_summary.metrics.last_week.q0, color: 'text-rose-700 dark:text-rose-300' },
+                              ].map((m, i) => (
+                                <div key={i} className="p-1 sm:p-2 rounded-xl bg-white/80 dark:bg-navy-900/60 border border-amber-200/60 dark:border-amber-800/40 text-center">
+                                  <div className="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5 truncate">{m.label}</div>
+                                  <div className={`text-sm sm:text-lg font-black ${m.color}`}>{m.value ?? '—'}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Department Summaries */}
+                  {report.department_summaries && Array.isArray(report.department_summaries) && report.department_summaries.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">Department Performance Summary</h3>
+                      {/* Mobile Card View (< sm) */}
+                      <div className="block sm:hidden print:hidden space-y-2">
+                        {report.department_summaries.filter((d: any) => (d.total_students || 0) > 0).map((d: any, idx: number) => (
+                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                            <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                              <div className="flex items-center space-x-1.5 min-w-0">
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">#{idx + 1}</span>
+                                <h4 className="text-xs font-bold text-slate-900 truncate">{d.department}</h4>
+                              </div>
+                              <span className="text-[10px] text-slate-500 font-medium shrink-0">Coord: {d.coordinator || '—'}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                              <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{d.total_students}</span> ({d.metrics?.verified ?? 0})</div>
+                              <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{d.metrics?.total_solved?.toLocaleString()}</span></div>
+                              <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{d.metrics?.avg_solved}</span></div>
+                              <div><span className="text-purple-700 font-bold">&gt;500:</span> <span className="font-bold text-slate-900">{d.metrics?.above_500}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table View (>= sm) */}
+                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                        <table className="w-full text-left text-xs min-w-[900px]">
+                          <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase">
+                            <tr>
+                              <th className="px-3 py-3 text-center">S.No</th>
+                              <th className="px-3 py-3">Department</th>
+                              <th className="px-3 py-3">Coordinator</th>
+                              <th className="px-3 py-3 text-center">Total</th>
+                              <th className="px-3 py-3 text-center">Verified</th>
+                              <th className="px-3 py-3 text-center">Avg Solved</th>
+                              <th className="px-3 py-3 text-center">Total Solved</th>
+                              <th className="px-3 py-3 text-center">Above 500</th>
+                              <th className="px-3 py-3 text-center">250–500</th>
+                              <th className="px-3 py-3 text-center">4/4</th>
+                              <th className="px-3 py-3 text-center">3/4</th>
+                              <th className="px-3 py-3 text-center">2/4</th>
+                              <th className="px-3 py-3 text-center">1/4</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                            {report.department_summaries.filter((d: any) => (d.total_students || 0) > 0).map((d: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                                <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{idx + 1}</td>
+                                <td className="px-3 py-2.5 font-black text-brand-700 dark:text-brand-300">{d.department}</td>
+                                <td className="px-3 py-2.5 text-slate-950 dark:text-white font-bold">{d.coordinator || '—'}</td>
+                                <td className="px-3 py-2.5 text-center font-black">{d.total_students}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.metrics?.verified}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-black">{d.metrics?.avg_solved}</td>
+                                <td className="px-3 py-2.5 text-center font-black">{d.metrics?.total_solved?.toLocaleString()}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-purple-700 dark:text-purple-300">{d.metrics?.above_500}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{d.metrics?.['250_500']}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.metrics?.current_week?.q4 ?? 0}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-cyan-700 dark:text-cyan-300">{d.metrics?.current_week?.q3 ?? 0}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-blue-700 dark:text-blue-300">{d.metrics?.current_week?.q2 ?? 0}</td>
+                                <td className="px-3 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{d.metrics?.current_week?.q1 ?? 0}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Batch Summaries - Institutional Official Report Layout */}
+                  {(() => {
+                    const allCanonical = [
+                      { label: '2023 - 2027', year: 'IV' },
+                      { label: '2024 - 2028', year: 'III' },
+                      { label: '2025 - 2029', year: 'II' }
+                    ];
+                    const rawYr = (report.year || report.yearFilter || report.year_filter || (report.filters && report.filters.year) || 'ALL').toString().trim().toUpperCase();
+                    const targetYear = rawYr === '2' ? 'II' : (rawYr === '3' ? 'III' : (rawYr === '4' ? 'IV' : (rawYr === '1' ? 'I' : rawYr)));
+
+                    const activeCanonical = (targetYear === 'ALL' || !targetYear)
+                      ? allCanonical
+                      : allCanonical.filter(cb => cb.year === targetYear || cb.label.replace(/\s+/g, '').includes(rawYr.replace(/\s+/g, '')));
+
+                    const rawBatches = Array.isArray(report.batch_summaries) ? report.batch_summaries : [];
+                    let batchesToDisplay = activeCanonical.map(cb => {
+                      const found = rawBatches.find((b: any) =>
+                        (b.batch || '').replace(/\s+/g, '') === cb.label.replace(/\s+/g, '') ||
+                        (b.year && b.year === cb.year)
+                      );
+                      if (found) return found;
+                      return { batch: cb.label, year: cb.year, total_students: 0, current_week: {}, last_week: {} };
+                    });
+
+                    // If filtered to a specific year, remove any 0-student dummy cohorts if we have a matching active cohort
+                    if (targetYear !== 'ALL' && batchesToDisplay.some(b => (b.total_students || 0) > 0)) {
+                      batchesToDisplay = batchesToDisplay.filter(b => (b.total_students || 0) > 0);
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {/* Institutional Official Paper Header Card */}
+                        <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-sm space-y-2 font-sans">
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+                            <img
+                              src="/black_white_logo.png"
+                              alt="Nandha Engineering College"
+                              className="h-12 sm:h-14 w-auto object-contain shrink-0"
+                              onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                            />
+                            <div className="space-y-1">
+                              <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 dark:text-white">
+                                NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
+                              </h2>
+                              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                                {(() => {
+                                  const dRaw = (report.department_name || report.department || '').toString().trim();
+                                  if (dRaw.includes('Cyber') || dRaw === '1' || dRaw === 'CSE(CS)') {
+                                    return 'Department of CSE (Cyber Security)';
+                                  }
+                                  if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                    return 'Department of CSE (Internet of Things)';
+                                  }
+                                  if (report.department_name && !report.department_name.match(/Department of \d+/i)) {
+                                    return report.department_name;
+                                  }
+                                  return 'Department of CSE (Cyber Security)';
+                                })()}
+                              </p>
+                              <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                Date: {report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
+                              </p>
+                              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
+                                Leetcode Performance - Weekly Report
+                              </h3>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
+                                  {(() => {
+                                    const dRaw = (report.department_name || report.department || '').toString().trim();
+                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                      return 'P.Devayani /AP';
+                                    }
+                                    return report.coordinator || 'M. Santhoshkumar, AP / CSE (Cyber Security)';
+                                  })()}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mobile Card View (< md) */}
+                        <div className="block md:hidden print:hidden space-y-3">
+                          {batchesToDisplay.map((b: any, idx: number) => {
+                            const cw = b.current_week || {};
+                            const lw = b.last_week || {};
+                            const totStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                            return (
+                              <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-3 font-sans">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                                      Batch {b.year || 'IV'}
+                                    </span>
+                                    <h4 className="text-xs font-black text-slate-900 dark:text-white">{b.batch}</h4>
+                                  </div>
+                                  <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                                    {totStudents} Students
+                                  </span>
+                                </div>
+
+                                <div className="space-y-2">
+                                  {/* Last Week Row */}
+                                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/40 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                      <span>(Last Week)</span>
+                                      <span className="text-[10px] text-slate-500">
+                                        Rating: {(lw.rating_above_1500 ?? lw.rating_1500 ?? 0) > 0 ? (lw.rating_above_1500 ?? lw.rating_1500) : '-'} | Rank: {(lw.rank_below_20000 ?? lw.ranking_20000 ?? 0) > 0 ? (lw.rank_below_20000 ?? lw.ranking_20000) : '-'}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_above_500 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_250_500 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_100_249 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_1_99 ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-slate-200 dark:border-slate-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{lw.prob_0 ?? 0}</div></div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] pt-1 text-slate-600 dark:text-slate-400">
+                                      <span>Contests:</span>
+                                      <span className="font-mono font-bold">4Q: {lw.q4 ?? 0} | 3Q: {lw.q3 ?? 0} | 2Q: {lw.q2 ?? 0} | 1Q: {lw.q1 ?? 0}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Current Week Row */}
+                                  <div className="p-2.5 rounded-xl border border-cyan-300 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-950/20 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px] font-black text-cyan-900 dark:text-cyan-200">
+                                      <span>(Current Week)</span>
+                                      <span className="text-[10px] text-cyan-700 dark:text-cyan-300">
+                                        Rating: {(cw.rating_above_1500 ?? cw.rating_1500 ?? 0) > 0 ? (cw.rating_above_1500 ?? cw.rating_1500) : '-'} | Rank: {(cw.rank_below_20000 ?? cw.ranking_20000 ?? 0) > 0 ? (cw.rank_below_20000 ?? cw.ranking_20000) : '-'}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&gt;500</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">250-500</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&lt;250</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">&lt;100</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</div></div>
+                                      <div className="p-1 bg-white dark:bg-navy-950 rounded border border-cyan-200 dark:border-cyan-800"><div className="text-[9px] text-slate-500">Not start</div><div className="font-black text-slate-900 dark:text-white">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</div></div>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] pt-1 text-cyan-800 dark:text-cyan-300">
+                                      <span>Contests:</span>
+                                      <span className="font-mono font-black">4Q: {cw.q4 ?? 0} | 3Q: {cw.q3 ?? 0} | 2Q: {cw.q2 ?? 0} | 1Q: {cw.q1 ?? 0}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop Multi-Level Institutional Table (>= md) */}
+                        <div className="hidden md:block print:block border-2 border-slate-400 dark:border-slate-600 rounded-xl overflow-x-auto shadow-sm bg-white dark:bg-navy-950">
+                          <table className="w-full text-left text-xs min-w-[980px] border-collapse font-sans">
+                            <thead>
+                              <tr className="bg-slate-100 dark:bg-navy-900 text-slate-950 dark:text-white font-black text-xs uppercase border-b-2 border-slate-400 dark:border-slate-600">
+                                <th rowSpan={2} className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Batch
+                                </th>
+                                <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[140px] leading-tight">
+                                  Number of Students (Total Count)
+                                </th>
+                                <th colSpan={5} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Number of Problems Solved
+                                </th>
+                                <th colSpan={4} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Weekly Contest Attended: (give the count here)
+                                </th>
+                                <th colSpan={2} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                  Leetcode Contest Rating and Ranking
+                                </th>
+                              </tr>
+                              <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
+                                {/* Problems Solved */}
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 500</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">250 - 500</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Less than 250</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Less than 100</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Not yet started</th>
+                                {/* Contests Attended */}
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">4 Q Solved</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">3 Q Solved</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">2 Q Solved</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">1 Q Solved</th>
+                                {/* Rating & Ranking */}
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Rating: Above 1500</th>
+                                <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Ranking: Below 20000</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-400 dark:divide-slate-600 font-sans text-xs">
+                              {batchesToDisplay.map((b: any, idx: number) => {
+                                const cw = b.current_week || {};
+                                const lw = b.last_week || {};
+                                const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                                const cwRating = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
+                                const cwRanking = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+                                const lwRating = lw.rating_above_1500 ?? lw.rating_1500 ?? 0;
+                                const lwRanking = lw.rank_below_20000 ?? lw.ranking_20000 ?? 0;
+
+                                return (
+                                  <React.Fragment key={idx}>
+                                    {/* Row 1: Last Week */}
+                                    <tr className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
+                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center leading-tight">
+                                        <div className="font-extrabold">{b.batch}</div>
+                                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">(Last Week)</div>
+                                      </td>
+                                      {/* Total Students Cell (rowSpan=2) */}
+                                      <td rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white text-base align-middle bg-slate-50/40 dark:bg-navy-900/10">
+                                        {totalStudents}
+                                      </td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_above_500 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_250_500 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_100_249 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_1_99 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.prob_0 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q4 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q3 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q2 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{lw.q1 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {lwRating > 0 ? lwRating : '-'}
+                                      </td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {lwRanking > 0 ? lwRanking : '-'}
+                                      </td>
+                                    </tr>
+
+                                    {/* Row 2: Current Week */}
+                                    <tr className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
+                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center leading-tight">
+                                        <div className="font-extrabold">{b.batch}</div>
+                                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">(Current Week)</div>
+                                      </td>
+                                      {/* Total Students omitted here due to rowSpan={2} */}
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_above_500 ?? cw.categories?.['Above 500'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_250_500 ?? cw.categories?.['250 - 500'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_100_249 ?? cw.categories?.['Less than 250'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_1_99 ?? cw.categories?.['Less than 100'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.prob_0 ?? cw.categories?.['Not Yet Started'] ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q4 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q3 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q2 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{cw.q1 ?? 0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {cwRating > 0 ? cwRating : '-'}
+                                      </td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white">
+                                        {cwRanking > 0 ? cwRanking : '-'}
+                                      </td>
+                                    </tr>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Institutional Table 2: Leetcode Contest Performance - Weekly Report (Image 2 Current Week Match) */}
+                        <div className="space-y-4 pt-4 border-t-2 border-dashed border-slate-300 dark:border-slate-700">
+                          {/* Institutional Header Card for Table 2 */}
+                          <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-sm space-y-2 font-sans">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+                              <img
+                                src="/black_white_logo.png"
+                                alt="Nandha Engineering College"
+                                className="h-12 sm:h-14 w-auto object-contain shrink-0"
+                                onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                              />
+                              <div className="space-y-1">
+                                <h2 className="text-sm sm:text-base font-black tracking-wider uppercase text-slate-950 dark:text-white">
+                                  NANDHA ENGINEERING COLLEGE, ERODE - 638 052.
+                                </h2>
+                                <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                                  {(() => {
+                                    const dRaw = (report.department_name || report.department || '').toString().trim();
+                                    if (dRaw.includes('Cyber') || dRaw === '1' || dRaw === 'CSE(CS)') {
+                                      return 'Department of CSE(Cyber Security)';
+                                    }
+                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                      return 'Department of CSE (Internet of Things)';
+                                    }
+                                    if (report.department_name && !report.department_name.match(/Department of \d+/i)) {
+                                      return report.department_name;
+                                    }
+                                    return 'Department of CSE(Cyber Security)';
+                                  })()}
+                                </p>
+                                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  Date: {report.session_date || report.contest_date || report.report_date || report.currentWeek?.date || '11.10.2026'}
+                                </p>
+                                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white pt-1">
+                                  Leetcode Contest Performance - Weekly Report
+                                </h3>
+                                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
+                                    {(() => {
+                                      const dRaw = (report.department_name || report.department || '').toString().trim();
+                                      if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
+                                        return 'P.Devayani /AP';
+                                      }
+                                      return report.coordinator || 'M.Santhosh Kumar/AP';
+                                    })()}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Mobile Card View (< md) */}
+                          <div className="block md:hidden print:hidden space-y-3">
+                            {batchesToDisplay.map((b: any, idx: number) => {
+                              const cw = b.current_week || {};
+                              const lw = b.last_week || {};
+                              const totStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                              const cDate = b.contest_date || report.contest_date || report.session_date || '11.10.2026';
+                              const q4 = cw.q4 ?? 0;
+                              const q3 = cw.q3 ?? 0;
+                              const q2 = cw.q2 ?? 0;
+                              const q1 = cw.q1 ?? 0;
+                              const q0 = cw.q0 !== undefined && cw.q0 > 0 ? cw.q0 : Math.max(0, totStudents - (q4 + q3 + q2 + q1));
+                              const r2000 = cw.rating_above_2000 ?? cw.rating_2000 ?? 0;
+                              const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
+                              const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
+                              const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+                              const rk5k = cw.rank_below_5000 ?? cw.ranking_5000 ?? cw.rank_below_5k ?? 0;
+
+                              return (
+                                <div key={idx} className="p-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 shadow-sm space-y-2.5 font-sans">
+                                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white">{b.batch}</span>
+                                    <span className="text-xs font-black px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200">
+                                      {totStudents} Students • {cDate}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-5 gap-1 text-center text-[10px]">
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">4 Q</div><div className="font-black text-slate-900 dark:text-white">{q4}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">3 Q</div><div className="font-black text-slate-900 dark:text-white">{q3}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">2 Q</div><div className="font-black text-slate-900 dark:text-white">{q2}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">1 Q</div><div className="font-black text-slate-900 dark:text-white">{q1}</div></div>
+                                    <div className="p-1 bg-slate-50 dark:bg-navy-900 rounded border border-slate-200 dark:border-slate-800"><div className="text-slate-500 font-bold">0 Q</div><div className="font-black text-slate-900 dark:text-white">{q0}</div></div>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[11px] pt-1 text-slate-600 dark:text-slate-400 font-bold border-t border-slate-100 dark:border-slate-800">
+                                    <span>Ratings: &gt;2000: {r2000 > 0 ? r2000 : '—'} | &gt;1500: {r1500 > 0 ? r1500 : '—'} | &gt;1250: {r1250 > 0 ? r1250 : '—'}</span>
+                                    <span>Rank &lt;20k: {rk20k > 0 ? rk20k : '—'} | &lt;5k: {rk5k > 0 ? rk5k : '—'}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Desktop Table (>= md) Matching Exact Uploaded Image */}
+                          <div className="hidden md:block print:block border-2 border-slate-400 dark:border-slate-600 rounded-xl overflow-x-auto shadow-sm bg-white dark:bg-navy-950">
+                            <table className="w-full text-left text-xs min-w-[980px] border-collapse font-sans">
+                              <thead>
+                                <tr className="bg-slate-100 dark:bg-navy-900 text-slate-950 dark:text-white font-black text-xs uppercase border-b-2 border-slate-400 dark:border-slate-600">
+                                  <th rowSpan={2} className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                    Batch
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[130px] leading-tight">
+                                    Number of Students<br />(Total Count)
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[130px] leading-tight">
+                                    Contest taken on -<br />---(Date)
+                                  </th>
+                                  <th colSpan={5} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                    Number of Problems Solved
+                                  </th>
+                                  <th colSpan={3} className="px-3 py-2 border border-slate-400 dark:border-slate-600 text-center font-black">
+                                    Leetcode Contest Rating and Ranking
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
+                                    Global Ranking<br />Below 20000
+                                  </th>
+                                  <th rowSpan={2} className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black max-w-[110px] leading-tight">
+                                    Contest Rank<br />Below 5000
+                                  </th>
+                                </tr>
+                                <tr className="bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 text-[11px] font-black border-b border-slate-400 dark:border-slate-600">
+                                  {/* Problems Solved */}
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">4</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">3</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">2</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">1</th>
+                                  <th className="px-2.5 py-2 border border-slate-400 dark:border-slate-600 text-center">0</th>
+                                  {/* Ratings */}
+                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 2000</th>
+                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 1500</th>
+                                  <th className="px-2 py-2 border border-slate-400 dark:border-slate-600 text-center">Above 1250</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-400 dark:divide-slate-600 font-sans text-xs">
+                                {batchesToDisplay.map((b: any, idx: number) => {
+                                  const cw = b.current_week || {};
+                                  const lw = b.last_week || {};
+                                  const totalStudents = b.total_students || lw.total_students || cw.total_students || 0;
+                                  const cDate = b.contest_date || report.contest_date || report.session_date || '11.10.2026';
+                                  const q4 = cw.q4 ?? 0;
+                                  const q3 = cw.q3 ?? 0;
+                                  const q2 = cw.q2 ?? 0;
+                                  const q1 = cw.q1 ?? 0;
+                                  const q0 = cw.q0 !== undefined && cw.q0 > 0 ? cw.q0 : Math.max(0, totalStudents - (q4 + q3 + q2 + q1));
+                                  const r2000 = cw.rating_above_2000 ?? cw.rating_2000 ?? 0;
+                                  const r1500 = cw.rating_above_1500 ?? cw.rating_1500 ?? 0;
+                                  const r1250 = cw.rating_above_1250 ?? cw.rating_1250 ?? 0;
+                                  const rk20k = cw.rank_below_20000 ?? cw.ranking_20000 ?? 0;
+                                  const rk5k = cw.rank_below_5000 ?? cw.ranking_5000 ?? cw.rank_below_5k ?? 0;
+
+                                  return (
+                                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-900/30 transition-colors">
+                                      <td className="px-3.5 py-3 border border-slate-400 dark:border-slate-600 font-bold text-slate-900 dark:text-white text-center">
+                                        {b.batch}
+                                      </td>
+                                      <td className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-black text-slate-950 dark:text-white text-sm">
+                                        {totalStudents}
+                                      </td>
+                                      <td className="px-3 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">
+                                        {cDate}
+                                      </td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q4}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q3}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q2}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q1}</td>
+                                      <td className="px-2.5 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{q0}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r2000 > 0 ? r2000 : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1500 > 0 ? r1500 : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{r1250 > 0 ? r1250 : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk20k > 0 ? rk20k : '—'}</td>
+                                      <td className="px-2 py-3 border border-slate-400 dark:border-slate-600 text-center font-bold text-slate-900 dark:text-slate-100">{rk5k > 0 ? rk5k : '—'}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Student Roster with Contest Outcomes */}
+                  {(() => {
+                    const rosterList = report.all_students_current || report.allStudents || report.rows || report.student_list || [];
+                    if (!Array.isArray(rosterList) || rosterList.length === 0) return null;
+                    return (
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
+                          Full Student Roster ({rosterList.length} Students)
+                        </h3>
+                        {/* Mobile Card View (< sm) */}
+                        <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                          {rosterList.map((s: any, idx: number) => {
+                            const pubResult = typeof s.public_result === 'string' ? s.public_result : '';
+                            const lastPubResult = typeof s.last_public_result === 'string' ? s.last_public_result : '';
+                            const formatOutcome = (r: string) => {
+                              if (!r) return '—';
+                              if (r.includes('SOLVED')) return r.replace('_SOLVED', '/4');
+                              if (r === 'NOT_PARTICIPATED' || r === 'NOT_ATTENDED') return '—';
+                              return r;
+                            };
+                            return (
+                              <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5 transition-all active:scale-[0.98] touch-manipulation">
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <div className="flex items-center space-x-1.5 min-w-0">
+                                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
+                                      #{s.s_no || idx + 1}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <h4 className="text-xs font-bold text-slate-900 truncate">{formatStudentName(s.name || s.student_name)}</h4>
+                                      <p className="text-[10px] text-slate-500 font-mono leading-tight">{s.reg_no} • {s.dept} ({s.year})</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="text-xs font-bold text-brand-700 block">{s.total_solved ?? '—'} Solved</span>
+                                    <span className="text-[10px] text-slate-500 font-medium block">{s.category || '—'}</span>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1 text-center text-[10px] pt-0.5">
+                                  <div className="p-1 rounded-lg bg-emerald-50 border border-emerald-200">
+                                    <div className="text-[8px] font-bold text-emerald-800 uppercase">E / M / H</div>
+                                    <div className="font-bold text-emerald-800">{s.easy ?? 0}/{s.medium ?? 0}/{s.hard ?? 0}</div>
+                                  </div>
+                                  <div className="p-1 rounded-lg bg-indigo-50 border border-indigo-200">
+                                    <div className="text-[8px] font-bold text-indigo-800 uppercase">Curr Week</div>
+                                    <div className="font-bold text-indigo-800">{formatOutcome(pubResult)}</div>
+                                  </div>
+                                  <div className="p-1 rounded-lg bg-purple-50 border border-purple-200">
+                                    <div className="text-[8px] font-bold text-purple-800 uppercase">Last Week</div>
+                                    <div className="font-bold text-purple-800">{formatOutcome(lastPubResult)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop Table View (>= sm) */}
+                        <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto">
+                          <table className="w-full text-xs min-w-[1000px]">
+                            <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10">
+                              <tr>
+                                <th className="px-3 py-3 text-center w-10">S.No</th>
+                                <th className="px-3 py-3 text-center">Reg No</th>
+                                <th className="px-3 py-3">Name</th>
+                                <th className="px-3 py-3 text-center">Dept</th>
+                                <th className="px-3 py-3 text-center">Yr</th>
+                                <th className="px-3 py-3 text-center">Easy</th>
+                                <th className="px-3 py-3 text-center">Med</th>
+                                <th className="px-3 py-3 text-center">Hard</th>
+                                <th className="px-3 py-3 text-center">Total</th>
+                                <th className="px-3 py-3 text-center">Category</th>
+                                <th className="px-3 py-3 text-center">Curr Week</th>
+                                <th className="px-3 py-3 text-center">Last Week</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                              {rosterList.map((s: any, idx: number) => {
+                                const pubResult = strVal(s.public_result);
+                                const lastPubResult = strVal(s.last_public_result);
+                                function strVal(v: any): string { return typeof v === 'string' ? v : ''; }
+                                const getOutcomeColor = (r: string) => {
+                                  if (r === '4_SOLVED') return 'text-emerald-700 dark:text-emerald-300 font-black';
+                                  if (r === '3_SOLVED') return 'text-cyan-700 dark:text-cyan-300 font-black';
+                                  if (r === '2_SOLVED') return 'text-blue-700 dark:text-blue-300 font-black';
+                                  if (r === '1_SOLVED') return 'text-amber-700 dark:text-amber-300 font-black';
+                                  if (r === '0_SOLVED') return 'text-rose-700 dark:text-rose-300 font-black';
+                                  return 'text-slate-800 dark:text-slate-200 font-bold';
+                                };
+                                const formatOutcome = (r: string) => {
+                                  if (!r) return '—';
+                                  if (r.includes('SOLVED')) return r.replace('_SOLVED', '/4');
+                                  if (r === 'NOT_PARTICIPATED' || r === 'NOT_ATTENDED') return '—';
+                                  return r;
+                                };
+                                return (
+                                  <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                                    <td className="px-3 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{s.s_no || (idx + 1)}</td>
+                                    <td className="px-3 py-2.5 font-black font-mono text-slate-950 dark:text-white text-center">{s.reg_no}</td>
+                                    <td className="px-3 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
+                                    <td className="px-3 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                                    <td className="px-3 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                                    <td className="px-3 py-2.5 text-center text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? '—'}</td>
+                                    <td className="px-3 py-2.5 text-center text-amber-700 dark:text-amber-300 font-black">{s.medium ?? '—'}</td>
+                                    <td className="px-3 py-2.5 text-center text-rose-700 dark:text-rose-300 font-black">{s.hard ?? '—'}</td>
+                                    <td className="px-3 py-2.5 text-center font-black text-slate-950 dark:text-white">{s.total_solved ?? '—'}</td>
+                                    <td className="px-3 py-2.5 text-center text-xs font-black">{s.category || '—'}</td>
+                                    <td className={`px-3 py-2.5 text-center ${getOutcomeColor(pubResult)}`}>{formatOutcome(pubResult)}</td>
+                                    <td className={`px-3 py-2.5 text-center ${getOutcomeColor(lastPubResult)}`}>{formatOutcome(lastPubResult)}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
+              {/* ====== GENERIC REPORTS BELOW (hidden for weekly perf) ====== */}
+              {/* Metrics Overview Cards — 2026 SaaS Glassmorphic Matrix */}
+              {!isWeeklyPerformance && report.metrics && (
+                <div className="space-y-3.5 print:break-inside-avoid">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-brand-500 animate-ping"></div>
+                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-widest print:text-black">
+                        Executive Summary Metrics
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 print:hidden px-2.5 py-1 rounded-full bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 shadow-xs">
+                      Tap tile to filter roster
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    {Object.entries(report.metrics).map(([key, value]) => {
+                      const k = key.toLowerCase();
+
+                      let fKey: string | null = null;
+                      let icon = <FileText className="w-4 h-4" />;
+                      let lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
+                      let darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                      let borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
+                      let iconBox = 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
+                      let numColor = 'text-indigo-950 dark:text-white';
+                      let titleColor = 'text-indigo-800 dark:text-indigo-300';
+                      let chipLabel = 'Roster';
+
+                      if (k.includes('total_student') || k.includes('totalstudent') || k === 'total') {
+                        fKey = 'TOTAL_STUDENTS';
+                        icon = <Users className="w-4 h-4" />;
+                        lightGradient = 'from-indigo-50/90 via-white to-blue-50/50';
+                        darkGradient = 'dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-indigo-200/90 dark:border-indigo-500/25 hover:border-indigo-400 dark:hover:border-indigo-500/50';
+                        iconBox = 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
+                        numColor = 'text-indigo-950 dark:text-white';
+                        titleColor = 'text-indigo-800 dark:text-indigo-300';
+                        chipLabel = 'All Enrolled';
+                      } else if (k.includes('verified_solver') || k.includes('verifiedsolver')) {
+                        fKey = 'METRIC_VERIFIED_SOLVERS';
+                        icon = <UserCheck className="w-4 h-4" />;
+                        lightGradient = 'from-emerald-50/90 via-white to-teal-50/50';
+                        darkGradient = 'dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-400 dark:hover:border-emerald-500/50';
+                        iconBox = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+                        numColor = 'text-emerald-950 dark:text-emerald-300';
+                        titleColor = 'text-emerald-800 dark:text-emerald-300';
+                        chipLabel = 'Verified';
+                      } else if (k.includes('unverified')) {
+                        fKey = 'METRIC_UNVERIFIED_PROFILES';
+                        icon = <AlertTriangle className="w-4 h-4" />;
+                        lightGradient = 'from-rose-50/90 via-white to-red-50/50';
+                        darkGradient = 'dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-rose-200/90 dark:border-rose-500/25 hover:border-rose-400 dark:hover:border-rose-500/50';
+                        iconBox = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20';
+                        numColor = 'text-rose-950 dark:text-rose-300';
+                        titleColor = 'text-rose-800 dark:text-rose-300';
+                        chipLabel = 'Attention';
+                      } else if (k.includes('active_solver') || k.includes('activesolver') || k === 'active') {
+                        fKey = 'METRIC_ACTIVE_SOLVERS';
+                        icon = <UserCheck className="w-4 h-4" />;
+                        lightGradient = 'from-amber-50/90 via-white to-orange-50/50';
+                        darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
+                        iconBox = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+                        numColor = 'text-amber-950 dark:text-amber-300';
+                        titleColor = 'text-amber-800 dark:text-amber-300';
+                        chipLabel = 'Active';
+                      } else if (k.includes('total_solved') || k.includes('totalsolved')) {
+                        fKey = null;
+                        icon = <CheckCircle2 className="w-4 h-4" />;
+                        lightGradient = 'from-cyan-50/90 via-white to-blue-50/50';
+                        darkGradient = 'dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-cyan-200/90 dark:border-cyan-500/25 hover:border-cyan-400 dark:hover:border-cyan-500/50';
+                        iconBox = 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/20';
+                        numColor = 'text-cyan-950 dark:text-cyan-300';
+                        titleColor = 'text-cyan-800 dark:text-cyan-300';
+                        chipLabel = 'Aggregate';
+                      } else if (k.includes('average_solved') || k.includes('averagesolved') || k.includes('avg')) {
+                        fKey = null;
+                        icon = <Target className="w-4 h-4" />;
+                        lightGradient = 'from-purple-50/90 via-white to-indigo-50/50';
+                        darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
+                        iconBox = 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20';
+                        numColor = 'text-purple-950 dark:text-purple-300';
+                        titleColor = 'text-purple-800 dark:text-purple-300';
+                        chipLabel = 'Mean Rate';
+                      } else if (k.includes('easy')) {
+                        fKey = 'METRIC_EASY_SOLVED';
+                        icon = <CheckCircle2 className="w-4 h-4" />;
+                        lightGradient = 'from-emerald-50/90 via-white to-teal-50/50';
+                        darkGradient = 'dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-400 dark:hover:border-emerald-500/50';
+                        iconBox = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+                        numColor = 'text-emerald-950 dark:text-emerald-300';
+                        titleColor = 'text-emerald-800 dark:text-emerald-300';
+                        chipLabel = 'Easy Tier';
+                      } else if (k.includes('medium')) {
+                        fKey = 'METRIC_MEDIUM_SOLVED';
+                        icon = <Layers className="w-4 h-4" />;
+                        lightGradient = 'from-amber-50/90 via-white to-yellow-50/50';
+                        darkGradient = 'dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-amber-200/90 dark:border-amber-500/25 hover:border-amber-400 dark:hover:border-amber-500/50';
+                        iconBox = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+                        numColor = 'text-amber-950 dark:text-amber-300';
+                        titleColor = 'text-amber-800 dark:text-amber-300';
+                        chipLabel = 'Medium Tier';
+                      } else if (k.includes('hard')) {
+                        fKey = 'METRIC_HARD_SOLVED';
+                        icon = <AlertTriangle className="w-4 h-4" />;
+                        lightGradient = 'from-purple-50/90 via-white to-rose-50/50';
+                        darkGradient = 'dark:from-purple-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-purple-200/90 dark:border-purple-500/25 hover:border-purple-400 dark:hover:border-purple-500/50';
+                        iconBox = 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20';
+                        numColor = 'text-purple-950 dark:text-purple-300';
+                        titleColor = 'text-purple-800 dark:text-purple-300';
+                        chipLabel = 'Hard Tier';
+                      } else if (k.includes('not_yet_started') || k.includes('zero_solved') || k.includes('unlinked')) {
+                        fKey = 'METRIC_ZERO_SOLVED';
+                        icon = <AlertTriangle className="w-4 h-4" />;
+                        lightGradient = 'from-orange-50/90 via-white to-amber-50/50';
+                        darkGradient = 'dark:from-orange-950/40 dark:via-slate-900/90 dark:to-slate-950';
+                        borderColor = 'border-orange-200/90 dark:border-orange-500/25 hover:border-orange-400 dark:hover:border-orange-500/50';
+                        iconBox = 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20';
+                        numColor = 'text-orange-950 dark:text-orange-300';
+                        titleColor = 'text-orange-800 dark:text-orange-300';
+                        chipLabel = 'Zero Solves';
+                      }
+
+                      const isSelected = fKey ? (fKey === 'TOTAL_STUDENTS' ? activeFilter === null : activeFilter === fKey) : false;
+
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => {
+                            if (fKey === 'TOTAL_STUDENTS') {
+                              setActiveFilter(null);
+                            } else if (fKey) {
+                              toggleFilter(fKey);
+                            }
+                          }}
+                          role={fKey ? "button" : undefined}
+                          title={fKey ? `Click to filter roster by ${formatMetricTitle(key)}` : undefined}
+                          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left print:bg-white print:border-slate-300 print:shadow-none print:break-inside-avoid ${fKey ? 'cursor-pointer hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]' : ''
+                            } ${isSelected
+                              ? 'bg-gradient-to-br from-indigo-500/20 via-brand-500/15 to-transparent dark:from-indigo-500/30 dark:via-brand-500/20 dark:to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/40 shadow-xl shadow-brand-500/15'
+                              : `bg-gradient-to-br ${lightGradient} ${darkGradient} ${borderColor} shadow-md shadow-slate-200/50 dark:shadow-black/40`
+                            } backdrop-blur-xl group`}
+                        >
+                          {/* Ambient glow in card corner */}
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.04] rounded-full blur-xl pointer-events-none" />
+
+                          {/* Top row: Label + Themed Icon Badge */}
+                          <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
+                            <p className={`text-[11px] uppercase font-black tracking-wider truncate print:text-slate-700 ${isSelected ? 'text-brand-600 dark:text-brand-300' : titleColor
+                              }`}>
+                              {formatMetricTitle(key)}
+                            </p>
+                            <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-transform group-hover:scale-110 ${iconBox}`}>
+                              {icon}
+                            </div>
+                          </div>
+
+                          {/* Middle: Big high-contrast number */}
+                          <p className={`text-2xl sm:text-3xl font-black font-mono tracking-tight print:text-black my-1 relative z-10 ${isSelected ? 'text-brand-700 dark:text-white' : numColor
+                            }`}>
+                            {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
+                          </p>
+
+                          {/* Bottom: Active status or context chip */}
+                          <div className="mt-2.5 flex items-center justify-between text-[10px] relative z-10">
+                            {isSelected ? (
+                              <span className="inline-flex items-center gap-1.5 font-mono font-black uppercase text-brand-600 dark:text-brand-300 tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/40 shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></span>
+                                FILTER ACTIVE
+                              </span>
+                            ) : (
+                              <span className="font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors uppercase tracking-wider text-[9.5px]">
+                                {fKey ? 'tap to filter' : chipLabel}
+                              </span>
+                            )}
+                            <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 opacity-60">
+                              {chipLabel}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Category Distribution Grid */}
+              {!isWeeklyPerformance && report.distribution && (
+                <div className="space-y-3 print:break-inside-avoid">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5 print:text-black">
+                      <Layers className="w-4 h-4 text-purple-500 print:text-black" />
+                      <span>Problem Solving Category Distribution</span>
+                    </h3>
+                    <span className="text-[10px] font-bold text-purple-400 print:hidden">Click category to filter</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    {Object.entries(report.distribution).map(([cat, count]: [string, any]) => {
+                      const isCatSelected = activeFilter === cat;
+                      return (
+                        <div
+                          key={cat}
+                          onClick={() => toggleFilter(cat)}
+                          role="button"
+                          title={`Click to filter students with ${cat} solved`}
+                          className={`p-3.5 rounded-2xl border text-center transition-all duration-200 cursor-pointer hover:scale-[1.03] active:scale-[0.97] print:bg-white print:border-purple-300 print:break-inside-avoid ${isCatSelected
+                            ? 'bg-purple-100 dark:bg-purple-950/80 border-purple-600 dark:border-purple-400 ring-2 ring-purple-500/40 shadow-md'
+                            : 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500/60 shadow-xs'
+                            }`}
+                        >
+                          <div className={`text-xs font-black mb-1 print:text-slate-700 ${isCatSelected ? 'text-purple-950 dark:text-purple-100' : 'text-slate-900 dark:text-slate-100'
+                            }`}>
+                            {cat}
+                          </div>
+                          <div className={`text-xl font-black print:text-purple-900 ${isCatSelected ? 'text-purple-900 dark:text-purple-100' : 'text-purple-800 dark:text-purple-300'
+                            }`}>
+                            {count}
+                          </div>
+                          {isCatSelected && (
+                            <span className="inline-block mt-0.5 text-[9px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider">
+                              ● Filter Active
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* HOD Department Intelligence Summary Table */}
+              {!isWeeklyPerformance && (['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', 'FRIDAY_OFFICIAL_CONTEST'].includes(rType) || !rType) && report.departmentSummary && Array.isArray(report.departmentSummary) && report.departmentSummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <Building2 className="w-4 h-4 text-brand-500" />
+                    <span>HOD Department Intelligence Summary</span>
+                  </h3>
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {report.departmentSummary.map((d: any, idx: number) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <div className="flex items-center space-x-1.5 min-w-0">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
+                              #{idx + 1}
+                            </span>
+                            <h4 className="text-xs font-bold text-slate-900 truncate">{d.department}</h4>
+                          </div>
+                          <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{d.attendance_pct}% Active</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                          <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{d.total}</span> (Act: {d.active_solvers})</div>
+                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{d.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{d.avg_solved}</span></div>
+                          <div><span className="text-emerald-700 font-bold">4/4:</span> <span className="font-bold text-slate-900">{d.solvers_4}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase table-header-group">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">Department</th>
+                          <th className="px-4 py-3 text-center">Total Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Participation %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                        {report.departmentSummary.map((d: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-brand-700 dark:text-brand-300">{d.department}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{d.total}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{d.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{d.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-black">{d.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{d.solvers_4}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Year-wise Intelligence Summary Table (HOD Report) */}
+              {!isWeeklyPerformance && ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY'].includes(rType) && report.yearSummary && Array.isArray(report.yearSummary) && report.yearSummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <GraduationCap className="w-4 h-4 text-indigo-500" />
+                    <span>Year-wise Intelligence Summary</span>
+                  </h3>
+                  {/* Mobile Card View */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {report.yearSummary.map((y: any, idx: number) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <h4 className="text-xs font-bold text-indigo-700">{y.year}</h4>
+                          <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{y.attendance_pct}% Active</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                          <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{y.total}</span></div>
+                          <div><span className="text-slate-500 font-medium">Active:</span> <span className="font-bold text-emerald-700">{y.active_solvers}</span></div>
+                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{y.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-emerald-700 font-bold">4/4:</span> <span className="font-bold text-slate-900">{y.solvers_4}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[520px]">
+                      <thead className="bg-[#2F5D8A] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">Academic Year</th>
+                          <th className="px-4 py-3 text-center">Total Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Participation %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {report.yearSummary.map((y: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-indigo-700 dark:text-indigo-300">{y.year}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{y.total}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{y.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{y.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{y.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-black">{y.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{y.solvers_4}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Cutoff Band Intelligence Table */}
+              {!isWeeklyPerformance && (isCutoffReport || ['HOD_DEPARTMENT_INTELLIGENCE', 'PRINCIPAL_EXECUTIVE', 'MANAGEMENT_EXECUTIVE_SUMMARY', '12TH_TNEA_CUTOFF_ANALYSIS'].includes(rType)) && report.cutoffBandSummary && Array.isArray(report.cutoffBandSummary) && report.cutoffBandSummary.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <Award className="w-4 h-4 text-rose-500" />
+                    <span>12th TNEA Cutoff Band Intelligence Summary</span>
+                  </h3>
+
+                  {/* Mobile Card View (Hidden on print) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {(report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0).length > 0
+                      ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
+                      : report.cutoffBandSummary
+                    ).map((b: any, idx: number) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <h4 className="text-xs font-bold text-rose-700">{b.band}</h4>
+                          <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{b.attendance_pct}% Active</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                          <div><span className="text-slate-500 font-medium">Students:</span> <span className="font-bold text-slate-900">{b.total}</span></div>
+                          <div><span className="text-slate-500 font-medium">Attended:</span> <span className="font-bold text-emerald-700">{b.active_solvers}</span></div>
+                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{b.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{b.avg_solved}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (Clean modern layout matching HOD & Year summaries) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[650px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase tracking-wider text-[10px]">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">12th Cutoff Band</th>
+                          <th className="px-4 py-3 text-center">Total Students</th>
+                          <th className="px-4 py-3 text-center">Attended</th>
+                          <th className="px-4 py-3 text-center">Not Attended</th>
+                          <th className="px-4 py-3 text-center">Participation %</th>
+                          <th className="px-4 py-3 text-center">Total Solved</th>
+                          <th className="px-4 py-3 text-center">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-navy-900 text-slate-900 dark:text-white">
+                        {(report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0).length > 0
+                          ? report.cutoffBandSummary.filter((b: any) => (b.total || 0) > 0)
+                          : report.cutoffBandSummary
+                        ).map((b: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-rose-700 dark:text-rose-300">{b.band}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{b.total}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-rose-600 dark:text-rose-400">{b.not_active}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-400">{b.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-center font-black">{b.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-center font-mono font-black">{b.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-400">{b.solvers_4}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+
+              {/* Faculty / Staff Allocation Performance Table */}
+              {!isWeeklyPerformance && (['FACULTY_CONSOLIDATED', 'FACULTY_COORDINATOR_CONSOLIDATED'].includes(rType) || !rType) && report.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <GraduationCap className="w-4 h-4 text-emerald-500" />
+                    <span>Faculty & Mentor Consolidated Performance</span>
+                  </h3>
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {report.facultySummary.map((f: any, idx: number) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-100">
+                          <div className="flex items-center space-x-1.5 min-w-0">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
+                              #{idx + 1}
+                            </span>
+                            <h4 className="text-xs font-bold text-slate-900 truncate">{f.staff_name}</h4>
+                          </div>
+                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">{f.department}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1.5 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                          <div><span className="text-slate-500 font-medium">Assigned:</span> <span className="font-bold text-slate-900">{f.total_assigned}</span> (Act: {f.active_solvers})</div>
+                          <div><span className="text-slate-500 font-medium">Active:</span> <span className="font-bold text-emerald-700">{f.active_pct}%</span></div>
+                          <div><span className="text-slate-500 font-medium">Solves:</span> <span className="font-bold text-slate-900">{f.total_solved?.toLocaleString()}</span></div>
+                          <div><span className="text-slate-500 font-medium">Avg:</span> <span className="font-mono font-bold text-slate-900">{f.avg_solved}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase table-header-group">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">Faculty / Mentor Name</th>
+                          <th className="px-4 py-3 text-center">Dept</th>
+                          <th className="px-4 py-3 text-center">Assigned Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Active %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                        {report.facultySummary.map((f: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] font-black text-slate-900 dark:text-slate-100">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white">{f.staff_name}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{f.department}</td>
+                            <td className="px-4 py-2.5 text-center font-black">{f.total_assigned}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{f.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-brand-700 dark:text-brand-300">{f.active_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-950 dark:text-white">{f.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-black">{f.avg_solved}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 5-Week Performance Trend Matrix Table */}
+              {isFiveWeekTrend && report.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <Clock className="w-4 h-4 text-indigo-500" />
+                    <span>Five-Week Longitudinal Performance Matrix</span>
+                  </h3>
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
+                      <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center space-x-1.5 min-w-0">
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0 border border-slate-200/60">
+                              #{idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-900 truncate">
+                                {formatStudentName(s.name || s.student_name)}
+                              </h4>
+                              <p className="text-[10px] text-slate-500 font-mono leading-tight">
+                                {s.reg_no} • {s.dept} ({s.year})
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-bold text-emerald-700 block">{s.total_solved ?? 0} Solved ({s.attendance_rate || '0%'})</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/60">
+                          <span className="text-slate-600 font-bold">Contests 1–5:</span>
+                          <div className="flex items-center space-x-1.5 font-mono font-bold text-slate-800">
+                            <span>{s.c1_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c2_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c3_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c4_solved ?? 0}</span>
+                            <span>•</span>
+                            <span>{s.c5_solved ?? 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[650px] sm:min-w-[950px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group">
+                        <tr>
+                          <th className="px-3.5 py-3 text-center w-12">S.No</th>
+                          <th className="px-3.5 py-3 text-center">Register No</th>
+                          <th className="px-3.5 py-3 text-left">Student Name</th>
+                          <th className="px-3.5 py-3 text-center">Dept</th>
+                          <th className="px-3.5 py-3 text-center">Year</th>
+                          {report.sessionHeaders.map((hdr: string, i: number) => (
+                            <th key={i} className="px-3.5 py-3 text-center">{hdr}</th>
+                          ))}
+                          <th className="px-4 py-3 text-right">5-W Solved</th>
+                          <th className="px-3.5 py-3 text-center">Attendance %</th>
+                          <th className="px-4 py-3 text-center">Trajectory</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                        {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-3.5 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black">{idx + 1}</td>
+                            <td className="px-3.5 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono">{s.reg_no}</td>
+                            <td className="px-3.5 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
+                            <td className="px-3.5 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                            <td className="px-3.5 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{s.year}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c1_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c2_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c3_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c4_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-black">{s.c5_solved ?? 0}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-emerald-700 dark:text-emerald-300 text-sm">{s.total_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-black text-brand-700 dark:text-brand-300">{s.attendance_rate || '0%'}</td>
+                            <td className="px-4 py-2.5 text-center">
+                              <span className={`px-2.5 py-1 text-[10px] font-black rounded-lg border ${s.trajectory?.includes('IMPROVING') ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' :
+                                s.trajectory?.includes('STABLE') ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30' :
+                                  s.trajectory?.includes('DECLINING') ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30' :
+                                    'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                                }`}>
+                                {s.trajectory || 'FOLLOW-UP'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Top Performers Table (Only shown for general cumulative reports) */}
+              {!isFiveWeekTrend && !isWeeklyPerformance && report.topStudents && report.topStudents.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-1.5">
+                    <Award className="w-4 h-4 text-amber-500" />
+                    <span>Top Performers Leaderboard</span>
+                  </h3>
+                  {/* Mobile Card View (< sm) */}
+                  <div className="block sm:hidden print:hidden space-y-2">
+                    {report.topStudents.map((s: any, idx: number) => {
+                      const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
+                      const formattedRating = (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
+                        ? Math.round(Number(r)).toLocaleString()
+                        : "—";
+                      return (
+                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center space-x-1.5 min-w-0">
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
+                                #{idx + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-bold text-slate-900 truncate">
+                                  {formatStudentName(s.name || s.student_name)}
+                                </h4>
+                                <p className="text-[10px] text-slate-500 font-mono leading-tight">
+                                  {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className="text-xs font-bold text-emerald-700 block">{s.total_solved ?? "—"} Solved</span>
+                              {formattedRating !== '—' && <span className="text-[10px] font-mono text-slate-600 block">Rating: {formattedRating}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-emerald-700 font-bold">E:{s.easy ?? "—"}</span>
+                              <span className="text-amber-700 font-bold">M:{s.medium ?? "—"}</span>
+                              <span className="text-rose-700 font-bold">H:{s.hard ?? "—"}</span>
+                            </div>
+                            <span className="text-slate-600 font-mono text-[10px]">Total: {s.total_solved ?? "—"}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Desktop Table View (>= sm) */}
+                  <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[750px]">
+                      <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase table-header-group">
+                        <tr>
+                          <th className="px-4 py-3 text-center">Rank</th>
+                          <th className="px-4 py-3 text-center">Reg No</th>
+                          <th className="px-4 py-3 text-left">Name</th>
+                          <th className="px-4 py-3 text-center">Dept</th>
+                          <th className="px-4 py-3 text-center">Year</th>
+                          <th className="px-4 py-3 text-center">Easy</th>
+                          <th className="px-4 py-3 text-center">Medium</th>
+                          <th className="px-4 py-3 text-center">Hard</th>
+                          <th className="px-4 py-3 text-center">Total Solved</th>
+                          <th className="px-4 py-3 text-center">Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans">
+                        {report.topStudents.map((s: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-black text-amber-600 dark:text-amber-400">#{idx + 1}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-slate-950 dark:text-white font-mono">{s.reg_no}</td>
+                            <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap">{formatStudentName(s.name || s.student_name)}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-700 dark:text-emerald-300">{s.easy ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-amber-700 dark:text-amber-300">{s.medium ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-rose-700 dark:text-rose-300">{s.hard ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-brand-700 dark:text-brand-300 text-sm">{s.total_solved ?? "—"}</td>
+                            <td className="px-4 py-2.5 text-center font-mono font-black text-slate-950 dark:text-white">
+                              {(() => {
+                                const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
+                                return (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
+                                  ? Math.round(Number(r)).toLocaleString()
+                                  : "—";
+                              })()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Full Student Roster Table (Only shown for general cumulative reports) */}
+              {!isFiveWeekTrend && !isHistIntel && !isWowIntel && !isWeeklyPerformance && allRows.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-brand-500" />
+                      <span>
+                        Full Student Performance Roster ({displayedStudents.length} {displayedStudents.length === allRows.length ? 'Students' : `of ${allRows.length} Students`})
+                      </span>
+                    </h3>
+                    {activeFilter && (
+                      <div className="flex items-center space-x-2 text-xs">
+                        <span className="font-extrabold text-indigo-700 dark:text-indigo-300">
+                          Active: <span className="underline font-black">{activeFilter.replace('METRIC_', '').replace('CAT_', '').replace(/_/g, ' ')}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveFilter(null)}
+                          className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-black text-[10px] transition-all cursor-pointer flex items-center space-x-1"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Clear</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {activeFilter && (
+                    <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs shadow-2xs animate-fade-in print:hidden">
+                      <div className="flex items-center space-x-2">
+                        <Filter className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <span className="font-bold text-indigo-950 dark:text-indigo-200">
+                          Filtering students for: <span className="font-black text-indigo-700 dark:text-indigo-300">{activeFilter.replace('METRIC_', '').replace('CAT_', '').replace(/_/g, ' ')}</span>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full font-black bg-indigo-200 text-indigo-900 dark:bg-indigo-900 dark:text-indigo-200 text-[10px]">
+                          {displayedStudents.length} Solvers Found
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFilter(null)}
+                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-black text-[11px] hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-all cursor-pointer flex items-center space-x-1 shadow-2xs"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>Reset Table</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {displayedStudents.length === 0 ? (
+                    <div className="p-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-950 text-center space-y-2">
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No students match the selected filter category ({activeFilter}).</p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveFilter(null)}
+                        className="px-3 py-1.5 rounded-xl bg-brand-600 text-white text-xs font-black shadow-xs hover:bg-brand-700 transition-all cursor-pointer"
+                      >
+                        Show All Students
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile Card View (< sm) */}
+                      <div className="block sm:hidden print:hidden space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                        {displayedStudents.map((s: any, idx: number) => (
+                          <div key={idx} className="p-2.5 rounded-xl border border-slate-200/90 dark:border-navy-700/80 bg-white dark:bg-navy-900/90 shadow-2xs space-y-1.5">
+                            <div className="flex items-center justify-between gap-1.5">
+                              <div className="flex items-center space-x-1.5 min-w-0">
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 shrink-0">
+                                  #{idx + 1}
+                                </span>
+                                <div className="min-w-0">
+                                  <h4 className="text-xs font-bold text-slate-900 truncate">
+                                    {formatStudentName(s.name || s.student_name)}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 font-mono leading-tight">
+                                    {s.reg_no} • {s.dept} ({deriveYearLevelFromRegNo(s.reg_no, s.year)})
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className={`px-1.5 py-0.2 text-[9px] font-bold rounded-md block text-center mb-0.5 ${s.status === 'VERIFIED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
+                                  {s.status}
+                                </span>
+                                <span className="text-xs font-bold text-emerald-700 block">{s.total_solved !== null ? s.total_solved : "—"} Solved</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 px-2 py-1 bg-slate-50/80 rounded-lg border border-slate-200/60 text-[11px]">
+                              <div className="flex items-center gap-2">
+                                <span className="text-emerald-700 font-bold">E:{s.easy ?? "—"}</span>
+                                <span className="text-amber-700 font-bold">M:{s.medium ?? "—"}</span>
+                                <span className="text-rose-700 font-bold">H:{s.hard ?? "—"}</span>
+                              </div>
+                              <span className="text-slate-500 font-mono text-[10px]">{s.reg_no}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table View (>= sm) */}
+                      <div className="hidden sm:block print:block border border-slate-300 dark:border-slate-700 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                        <table className="w-full text-left text-xs mobile-card-table min-w-[550px] sm:min-w-[800px] print:min-w-0 print:w-full">
+                          <thead className="bg-gradient-to-r from-slate-900 via-[#0e1a33] to-slate-900 text-white font-black uppercase sticky top-0 z-10 table-header-group print:table-header-group print:bg-slate-200 print:text-black">
+                            <tr>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Reg No</th>
+                              <th className="px-4 py-3 text-left print:border-b print:border-black">Student Name</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
+                              {isCutoffReport && (
+                                <th className="px-4 py-3 text-center print:border-b print:border-black text-rose-300">12th Cutoff</th>
+                              )}
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Medium</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Hard</th>
+                              <th className="px-4 py-3 text-right print:border-b print:border-black">Total Solved</th>
+                              <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700 font-sans print:divide-black">
+                            {displayedStudents.map((s: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors group">
+                                <td className="px-4 py-2.5 text-center text-slate-900 dark:text-slate-100 font-mono text-[11px] font-black print:text-black">{idx + 1}</td>
+                                <td className="px-4 py-2.5 font-black text-slate-950 dark:text-white font-mono text-center print:text-black">{s.reg_no}</td>
+                                <td className="px-4 py-2.5 text-left font-bold text-slate-950 dark:text-white whitespace-nowrap print:text-black">{formatStudentName(s.name || s.student_name)}</td>
+                                <td className="px-4 py-2.5 text-center font-black text-indigo-700 dark:text-indigo-300">{s.dept}</td>
+                                <td className="px-4 py-2.5 text-center font-black text-slate-900 dark:text-slate-100">{deriveYearLevelFromRegNo(s.reg_no, s.year)}</td>
+                                {isCutoffReport && (
+                                  <td className="px-4 py-2.5 text-center font-mono font-bold text-rose-700 dark:text-rose-300">
+                                    {s.twelfth_cutoff !== undefined && s.twelfth_cutoff !== null ? Number(s.twelfth_cutoff).toFixed(1) : (s.cutoff !== undefined && s.cutoff !== null ? Number(s.cutoff).toFixed(1) : "—")}
+                                  </td>
+                                )}
+                                <td className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-300 font-black">{s.easy ?? "—"}</td>
+                                <td className="px-4 py-2.5 text-right text-amber-700 dark:text-amber-300 font-black">{s.medium ?? "—"}</td>
+                                <td className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-300 font-black">{s.hard ?? "—"}</td>
+                                <td className="px-4 py-2.5 text-right font-black text-brand-700 dark:text-brand-300">{s.total_solved !== null ? s.total_solved : "—"}</td>
+                                <td className="px-4 py-2.5 text-center">
+                                  <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${s.status === 'VERIFIED' ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-200 text-rose-900 dark:bg-rose-950 dark:text-rose-300'}`}>
+                                    {s.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* UNIVERSAL SOLVE CONDITION & DIFFICULTY BREAKDOWN (TABLE FOOTER ANALYSIS) */}
+          {!isContestReport && (
+            <div className="pt-4 space-y-4 print:break-inside-avoid print:mt-6">
+              <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-[#0c1427] border-2 border-slate-200/90 dark:border-white/10 shadow-xl space-y-5">
+                {/* Header with Title, Report Type Scope & Badges */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-white/10 pb-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm sm:text-base font-black text-slate-950 dark:text-white uppercase tracking-wider">
+                        Solve Condition &amp; Performance Summary
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
+                        {rType || 'UNIVERSAL REPORT'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      Aggregated solve condition cohorts, problem difficulty metrics & attendance breakdown for table data above.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
+                      <span>In Scope: {allRows.length} Students</span>
+                    </span>
+                    {activeFilter && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs font-black text-amber-700 dark:text-amber-300">
+                        <span>Filtered View: {conditionStats.totalStudents}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 1. Problem Solve Distribution Cohorts (4/4, 3/4, 2/4, 1/4, 0/4, Not Attended) */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Contest / Weekly Solve Distribution Cohorts
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                      Click any cohort card to filter students in the table
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+                    {/* 4/4 Solved */}
+                    <div
+                      onClick={() => toggleFilter('SOLVED_4')}
+                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_4'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-emerald-400 shadow-xs'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">4 Solved (4/4)</span>
+                        <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s4 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight mt-1">{conditionStats.s4}</p>
+                    </div>
+
+                    {/* 3/4 Solved */}
+                    <div
+                      onClick={() => toggleFilter('SOLVED_3')}
+                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_3'
+                        ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-500 ring-2 ring-teal-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-teal-400 shadow-xs'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300">3 Solved (3/4)</span>
+                        <span className="text-[10px] font-black text-teal-800 dark:text-teal-300 bg-teal-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s3 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black text-teal-800 dark:text-teal-300 tracking-tight mt-1">{conditionStats.s3}</p>
+                    </div>
+
+                    {/* 2/4 Solved */}
+                    <div
+                      onClick={() => toggleFilter('SOLVED_2')}
+                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_2'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/40 border-brand-500 ring-2 ring-brand-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-brand-400 shadow-xs'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">2 Solved (2/4)</span>
+                        <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s2 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black text-brand-800 dark:text-brand-300 tracking-tight mt-1">{conditionStats.s2}</p>
+                    </div>
+
+                    {/* 1/4 Solved */}
+                    <div
+                      onClick={() => toggleFilter('SOLVED_1')}
+                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_1'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-amber-400 shadow-xs'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">1 Solved (1/4)</span>
+                        <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s1 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black text-amber-800 dark:text-amber-300 tracking-tight mt-1">{conditionStats.s1}</p>
+                    </div>
+
+                    {/* 0/4 Solved (Attended) */}
+                    <div
+                      onClick={() => toggleFilter('SOLVED_0')}
+                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'SOLVED_0'
+                        ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-purple-400 shadow-xs'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">0 Solved (Attended)</span>
+                        <span className="text-[10px] font-black text-purple-800 dark:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                          {conditionStats.totalStudents > 0 ? `${((conditionStats.s0 / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black text-purple-800 dark:text-purple-300 tracking-tight mt-1">{conditionStats.s0}</p>
+                    </div>
+
+                    {/* Not Attended / Absent */}
+                    <div
+                      onClick={() => toggleFilter('NOT_ATTENDED')}
+                      className={`relative overflow-hidden p-3 sm:p-3.5 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${activeFilter === 'NOT_ATTENDED'
+                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-md'
+                        : 'bg-slate-50/80 dark:bg-navy-900/60 border-slate-200/90 dark:border-white/10 hover:border-rose-400 shadow-xs'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">Not Attended</span>
+                        <span className="text-[10px] font-black text-rose-800 dark:text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded-md font-mono">
+                          {conditionStats.totalStudents > 0 ? `${((conditionStats.notAttendedCount / conditionStats.totalStudents) * 100).toFixed(1).replace(/\.0$/, '')}%` : '0%'}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-black text-rose-800 dark:text-rose-300 tracking-tight mt-1">{conditionStats.notAttendedCount}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Problem Difficulty Solves Split (Easy / Medium / Hard / Total) */}
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Difficulty Solve Distribution (Easy • Medium • Hard)
+                  </span>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {/* Easy Solves */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col justify-between shadow-xs">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Easy Solves</span>
+                      <p className="text-2xl sm:text-3xl font-black text-emerald-800 dark:text-emerald-300 tracking-tight my-1">
+                        {conditionStats.totalEasy.toLocaleString()}
+                      </p>
+                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                        Foundational Solves
+                      </span>
+                    </div>
+
+                    {/* Medium Solves */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-between shadow-xs">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">Medium Solves</span>
+                      <p className="text-2xl sm:text-3xl font-black text-amber-800 dark:text-amber-300 tracking-tight my-1">
+                        {conditionStats.totalMed.toLocaleString()}
+                      </p>
+                      <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400">
+                        Core Algorithmic Solves
+                      </span>
+                    </div>
+
+                    {/* Hard Solves */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-500/10 border border-purple-500/25 flex flex-col justify-between shadow-xs">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300">Hard Solves</span>
+                      <p className="text-2xl sm:text-3xl font-black text-purple-800 dark:text-purple-300 tracking-tight my-1">
+                        {conditionStats.totalHard.toLocaleString()}
+                      </p>
+                      <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400">
+                        High Difficulty Solves
+                      </span>
+                    </div>
+
+                    {/* Total Cumulative Solves */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-brand-500/15 border border-brand-500/30 flex flex-col justify-between shadow-xs">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-brand-300">Total Solves</span>
+                      <p className="text-2xl sm:text-3xl font-black text-brand-800 dark:text-brand-300 tracking-tight my-1">
+                        {conditionStats.totalSolves.toLocaleString()}
+                      </p>
+                      <span className="text-[10px] font-extrabold text-brand-700 dark:text-brand-400">
+                        Cumulative Solves
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Official Condition Criteria Reference Strip */}
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="text-slate-700 dark:text-slate-300 font-bold">
+                    Evaluation Standards: 4/4 (100% Complete) • 3/4 (Advanced) • 2/4 (Intermediate) • 1/4 (Developing) • 0/4 (Participation)
+                  </div>
+                  {activeFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveFilter(null)}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-black text-[11px] transition-all cursor-pointer touch-manipulation active:scale-95 shrink-0"
+                    >
+                      <span>Clear Filter ({conditionStats.totalStudents}/{allRows.length})</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* 4. FOOTER / EXECUTIVE EXPORT ACTIONS - Compact Mobile UI with Excel + More */}
+        <div className="relative z-40 px-3.5 py-2.5 sm:px-5 sm:py-3 bg-white/95 dark:bg-[#0c1427]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-white/10 flex flex-row items-center justify-between gap-2 shrink-0 print:hidden shadow-lg pb-[max(0.75rem,env(safe-area-inset-bottom,12px))]">
+          <div className="flex items-center space-x-1.5 min-w-0">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="hidden sm:inline font-extrabold tracking-wide text-slate-900 dark:text-white text-xs truncate">Official Dataset</span>
+              <span className="inline-block px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                {allRows.length} Records
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Primary Action: Excel */}
+            <button
+              onClick={() => downloadFile('excel')}
+              type="button"
+              disabled={isDownloading}
+              className="flex items-center justify-center space-x-1.5 px-3.5 sm:px-4 py-2 min-h-[38px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50 touch-manipulation group cursor-pointer"
+              title="Download Excel spreadsheet (.xlsx)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <span>Excel (.xlsx)</span>
+            </button>
+
+            {/* Secondary Action: More Menu Dropdown */}
+            <div ref={moreMenuRef} className="relative z-50">
+              <button
+                onClick={() => setMoreMenuOpen(prev => !prev)}
+                type="button"
+                className="flex items-center justify-center space-x-1 px-2.5 sm:px-3 py-2 min-h-[38px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all border border-slate-200 dark:border-slate-700 active:scale-95 touch-manipulation cursor-pointer"
+                title="More export & share options"
+              >
+                <MoreHorizontal className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                <span className="hidden sm:inline">More</span>
+                <ChevronUp className={`w-3.5 h-3.5 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Responsive Export Action Sheet: Mobile Native Bottom Drawer & Desktop Luxury Popover */}
+              {moreMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity sm:hidden"
+                    onClick={() => setMoreMenuOpen(false)}
+                  />
+
+                  {/* MOBILE NATIVE BOTTOM SHEET (< sm) — FULL EXPORT & SHARE */}
+                  <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-[#0c1427] rounded-t-3xl border-t border-slate-200/90 dark:border-white/10 shadow-2xl p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,16px))] space-y-3 animate-in slide-in-from-bottom duration-250 max-h-[85vh] overflow-y-auto">
+                    {/* Bottom Sheet Handle */}
+                    <div className="flex flex-col items-center gap-1.5 pb-1">
+                      <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                      <div className="flex items-center justify-between w-full pt-1">
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Export &amp; Share Report
+                        </span>
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          {allRows.length} Rows
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-1">
+                      {/* 1. PDF (.pdf) */}
+                      <button
+                        type="button"
+                        onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-100/70 dark:hover:bg-rose-950/60 border border-rose-200/90 dark:border-rose-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">PDF Document</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Export print-ready PDF</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200 shrink-0">
+                          .PDF
+                        </span>
+                      </button>
+
+                      {/* 2. Word (.docx) */}
+                      <button
+                        type="button"
+                        onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100/70 dark:hover:bg-blue-950/60 border border-blue-200/90 dark:border-blue-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Word Document</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Word report (.docx)</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shrink-0">
+                          .DOCX
+                        </span>
+                      </button>
+
+                      {/* 3. WhatsApp — 4-format inline selector */}
+                      <div className="w-full rounded-2xl border border-green-200/90 dark:border-green-800/80 bg-green-50/60 dark:bg-green-950/30 overflow-hidden shadow-xs">
+                        {/* Header row — tap to expand/collapse */}
+                        <button
+                          type="button"
+                          onClick={() => setShowFormatPicker(p => !p)}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-green-100/50 dark:hover:bg-green-950/50 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-green-500/20">
+                              <Share2 className="w-5 h-5" />
+                            </div>
+                            <div className="text-left min-w-0">
+                              <div className="text-xs font-black text-slate-900 dark:text-white">Share to WhatsApp</div>
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Full summary text + 1-tap Excel download</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              TEXT + LINK
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-green-600 transition-transform duration-200 ${showFormatPicker ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+
+                        {/* Format picker — collapsible */}
+                        {showFormatPicker && (
+                          <div className="border-t border-green-200/80 dark:border-green-800/60 p-3 space-y-2 bg-white/50 dark:bg-green-950/20">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">SUMMARY TEXT FORMAT</span>
+                              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                                {shareFormat === 'summary' ? 'NORMAL' : shareFormat === 'solvers' ? 'NAMES' : shareFormat === 'leaderboard' ? 'TOP' : 'ABSENT'}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              {/* Normal Summary */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'summary'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'summary' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Normal Summary</span>
+                                  {shareFormat === 'summary' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">KPIs without names</span>
+                              </button>
+
+                              {/* With Solvers */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'solvers'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'solvers' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">With Solvers</span>
+                                  {shareFormat === 'solvers' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Names for 4/4, 3/4, 2/4</span>
+                              </button>
+
+                              {/* Top Solvers */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'leaderboard'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'leaderboard' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Top Solvers</span>
+                                  {shareFormat === 'leaderboard' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Rank &amp; score leaders</span>
+                              </button>
+
+                              {/* Absentees List */}
+                              <button
+                                type="button"
+                                onClick={() => { handleShareWhatsApp('message', 'absentees'); setShowFormatPicker(false); setMoreMenuOpen(false); }}
+                                className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all cursor-pointer text-left ${shareFormat === 'absentees' ? 'border-green-500 bg-green-50 dark:bg-green-950/40' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300'}`}
+                              >
+                                <div className="flex items-center justify-between w-full mb-0.5">
+                                  <span className="text-[11px] font-black text-slate-900 dark:text-white">Absentees List</span>
+                                  {shareFormat === 'absentees' && <Check className="w-3 h-3 text-green-600" />}
+                                </div>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">Follow-up roster</span>
+                              </button>
+                            </div>
+
+                            {/* Copy Summary Text */}
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const txt = generateShareText(shareFormat);
+                                await navigator.clipboard.writeText(txt).catch(() => { });
+                                setCopiedSummary(true);
+                                setTimeout(() => setCopiedSummary(false), 2000);
+                              }}
+                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              {copiedSummary ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedSummary ? 'Copied!' : 'Copy Summary Text'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 4. Attach Excel Document */}
+                      <button
+                        type="button"
+                        onClick={() => { downloadFile('excel'); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 hover:bg-teal-100/70 dark:hover:bg-teal-950/60 border border-teal-200/90 dark:border-teal-800/80 transition-all cursor-pointer active:scale-98 shadow-xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-teal-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-500/20">
+                            <FileSpreadsheet className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Attach Excel Document</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Direct .xlsx file &amp; copy text to clipboard</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 shrink-0">
+                          .XLSX FILE
+                        </span>
+                      </button>
+
+                      {/* 5. Print View */}
+                      <button
+                        type="button"
+                        onClick={() => { window.print(); setMoreMenuOpen(false); }}
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700/80 transition-all cursor-pointer active:scale-98 shadow-xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-slate-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-slate-500/20">
+                            <Printer className="w-5 h-5" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">Print View</div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">Print or save via browser</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 shrink-0">
+                          PRINT
+                        </span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-xs cursor-pointer active:scale-98 transition-all text-center mt-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  {/* DESKTOP POPOVER MENU (>= sm) — FULL EXPORT & SHARE */}
+                  <div className="hidden sm:block absolute bottom-full right-0 mb-2 w-72 bg-white dark:bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50 space-y-1 animate-scale-in">
+                    <div className="px-2 pt-1 pb-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Export &amp; Share</span>
+                    </div>
+
+                    <button
+                      onClick={() => { downloadFile('pdf'); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-600 shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate">PDF (.pdf)</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Export print-ready PDF</span>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => { downloadFile('word'); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate">Word (.docx)</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Word report document</span>
+                      </div>
+                    </button>
+
+                    <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+
+                    {/* WhatsApp 4-format sub-menu */}
+                    <button
+                      onClick={() => { handleShareWhatsApp('message', shareFormat); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-green-50 dark:hover:bg-green-950/40 hover:text-green-600 dark:hover:text-green-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 shrink-0">
+                        <Share2 className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="truncate">WhatsApp ({shareFormat === 'summary' ? 'Normal' : shareFormat === 'solvers' ? 'With Names' : shareFormat === 'leaderboard' ? 'Top Solvers' : 'Absentees'})</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Tap to share · change format below</span>
+                      </div>
+                    </button>
+                    {/* Format mini-grid */}
+                    <div className="grid grid-cols-2 gap-1 px-1 pb-1">
+                      {(['summary', 'solvers', 'leaderboard', 'absentees'] as const).map(fmt => (
+                        <button
+                          key={fmt}
+                          type="button"
+                          onClick={() => setShareFormat(fmt)}
+                          className={`text-[10px] font-bold py-1 px-2 rounded-lg border transition-all cursor-pointer ${shareFormat === fmt ? 'border-green-500 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300' : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-green-300'}`}
+                        >
+                          {fmt === 'summary' ? 'Normal' : fmt === 'solvers' ? 'With Names' : fmt === 'leaderboard' ? 'Top Solvers' : 'Absentees'}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+
+                    <button
+                      onClick={() => { downloadFile('excel'); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shrink-0">
+                        <FileSpreadsheet className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate">Excel (.xlsx)</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Institutional spreadsheet</span>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => { window.print(); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                        <Printer className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="truncate">Print View</span>
+                        <span className="text-[10px] text-slate-400 font-normal truncate">Print or save via browser</span>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>,
+    document.body
+  );
+};
+
+function max(a: number, b: number) {
+  return a > b ? a : b;
+}
+

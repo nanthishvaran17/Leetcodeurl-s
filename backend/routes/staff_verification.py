@@ -75,7 +75,7 @@ def get_reporting_managers(
     current_user: User = Depends(get_current_user)
 ):
     """Returns candidate staff/admin users for 'Reports To' dropdown."""
-    ELIGIBLE_ROLES = {"admin", "administrator", "staff", "faculty", "hod", "super admin"}
+    ELIGIBLE_ROLES = {"admin", "administrator", "hod", "super admin", "super_admin", "department hod", "head of department"}
     users = db.query(User).filter(
         User.is_active == True,
         User.id != current_user.id,

@@ -1,797 +1,808 @@
-import { StudentData } from '../components/LeaderboardTable';
-
-export type NormalizedDepartment = string;
-export type NormalizedAcademicYear = 'all' | 'II' | 'III' | 'IV' | string;
-export type PerformanceRangeKey = 'all' | '500_plus' | '251_500' | '101_250' | '1_100' | 'not_started';
-export type SortByKey = 'top_solved' | 'low_solved' | 'name_asc' | 'name_desc' | 'streak' | 'rating' | string;
-
-export const normalizeSearchValue = (value: unknown) =>
-  String(value ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, " ");
-
-
-/**
- * Normalizes any department reference (object, ID, name, code, string) to a canonical key.
- * Production Website operates strictly on CSE(CS) and CSE(IOT).
- */
-export function normalizeDepartment(dept: any): string {
-  if (!dept || dept === 'ALL' || dept === 'all' || dept === 'all_departments' || dept === 'ALL DEPARTMENTS') {
-    return 'all';
-  }
-
-  // If object with id, name, or code
-  if (typeof dept === 'object') {
-    const code = (dept.code || '').trim().toUpperCase();
-    const name = (dept.name || '').trim().toUpperCase();
-    const combined = `${code} ${name}`.trim();
-
-    if (dept.id === 1 || combined.includes('CYBER') || combined.includes('CSE(CS)') || combined.includes('CSE-CS') || combined.includes('CSE_CS') || combined.includes('CSE (CS)')) {
-      return 'cse_cs';
-    }
-    if (dept.id === 2 || combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
-      return 'cse_iot';
-    }
-    if (dept.id === 4 || dept.id === 7 || code === 'IT' || combined.includes('INFORMATION TECHNOLOGY') || combined.includes('INFO TECH') || combined.includes('B.TECH IT') || combined.includes('B.TECH (IT)')) {
-      return 'it';
-    }
-    if (code === 'AIDS' || combined.includes('ARTIFICIAL') || combined.includes('DATA SCIENCE')) {
-      return 'aids';
-    }
-    if (code === 'ECE' || combined.includes('ELECTRONICS AND COMM')) {
-      return 'ece';
-    }
-    if (code === 'EEE' || combined.includes('ELECTRICAL AND ELEC')) {
-      return 'eee';
-    }
-    if (code === 'AGRI' || combined.includes('AGRICULTUR')) {
-      return 'agri';
-    }
-    if (code === 'MECH' || combined.includes('MECHANICAL')) {
-      return 'mech';
-    }
-    if (code === 'CIVIL' || combined.includes('CIVIL')) {
-      return 'civil';
-    }
-    if (code === 'CSE' || combined.includes('COMPUTER SCIENCE AND ENGINEERING')) {
-      return 'cse';
-    }
-
-    if (code) return code.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    if (name) return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    if (dept.id) return String(dept.id);
-  }
-
-  // If numeric ID (1 = Cyber Security, 2 = IoT, 4/7 = Information Technology)
-  if (typeof dept === 'number' || (!isNaN(Number(dept)) && String(dept).trim() !== '')) {
-    const numId = Number(dept);
-    if (numId === 1) return 'cse_cs';
-    if (numId === 2) return 'cse_iot';
-    if (numId === 4 || numId === 7) return 'it';
-    return String(dept);
-  }
-
-  // If string
-  if (typeof dept === 'string') {
-    const clean = dept.trim().toUpperCase();
-    if (clean === 'ALL' || clean === 'ALL DEPARTMENTS' || clean === 'ALL_DEPARTMENTS') return 'all';
-
-    if (clean.includes('CYBER') || clean.includes('CSE(CS)') || clean.includes('CSE-CS') || clean.includes('CSE_CS') || clean.includes('CSE (CS)') || clean === 'CS') {
-      return 'cse_cs';
-    }
-    if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)') || clean.includes('INTERNET')) {
-      return 'cse_iot';
-    }
-    if (clean === 'IT' || clean === '4' || clean === '7' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFO TECH') || clean.includes('B.TECH IT') || clean.includes('B.TECH (IT)')) {
-      return 'it';
-    }
-    if (clean === 'AIDS' || clean.includes('DATA SCIENCE') || clean.includes('ARTIFICIAL')) {
-      return 'aids';
-    }
-    if (clean === 'ECE' || clean.includes('ELECTRONICS AND COMM')) {
-      return 'ece';
-    }
-    if (clean === 'EEE' || clean.includes('ELECTRICAL AND ELEC')) {
-      return 'eee';
-    }
-    if (clean === 'AGRI' || clean.includes('AGRICULTUR')) {
-      return 'agri';
-    }
-    if (clean === 'MECH' || clean.includes('MECHANICAL')) {
-      return 'mech';
-    }
-    if (clean === 'CIVIL' || clean.includes('CIVIL')) {
-      return 'civil';
-    }
-    if (clean === 'CSE' || clean.includes('COMPUTER SCIENCE AND ENGINEERING')) {
-      return 'cse';
-    }
-
-    return clean.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  }
-
-  return 'unknown';
-}
-
-/**
- * Derives canonical department code from student register number
- */
-export function deriveDepartmentFromRegNo(regNoStr?: string): string | null {
-  const norm = (regNoStr || '').trim().toUpperCase();
-  if (!norm) return null;
-
-  if (norm.includes('CC') || norm.includes('CYBER')) return 'CSE(CS)';
-  if (norm.includes('CI') || norm.includes('IOT')) return 'CSE(IOT)';
-  if (norm.includes('IT')) return 'IT';
-  if (norm.includes('AIDS') || norm.includes('AI') || norm.includes('AD')) return 'AIDS';
-  if (norm.includes('ECE') || norm.includes('EC')) return 'ECE';
-  if (norm.includes('EEE') || norm.includes('EE')) return 'EEE';
-  if (norm.includes('AGRI') || norm.includes('AG')) return 'AGRI';
-  if (norm.includes('MECH') || norm.includes('ME')) return 'MECH';
-  if (norm.includes('CIVIL') || norm.includes('CE')) return 'CIVIL';
-  if (norm.includes('CSE') || norm.includes('CS')) return 'CSE';
-
-  return null;
-}
-
-/**
- * Formats department for user display (Full Name)
- */
-export function formatDepartmentName(dept: any): string {
-  const norm = normalizeDepartment(dept);
-  if (norm === 'all') return 'All Departments';
-  if (norm === 'cse_cs') return 'Computer Science and Engineering (Cyber Security)';
-  if (norm === 'cse_iot') return 'Computer Science and Engineering (IoT)';
-  if (norm === 'it') return 'Information Technology';
-  if (norm === 'cse') return 'Computer Science and Engineering';
-  if (norm === 'eee') return 'Electrical and Electronics Engineering';
-  if (norm === 'ece') return 'Electronics and Communication Engineering';
-  if (norm === 'mech') return 'Mechanical Engineering';
-  if (norm === 'civil') return 'Civil Engineering';
-  if (norm === 'aids') return 'Artificial Intelligence and Data Science';
-  if (norm === 'aiml') return 'Artificial Intelligence and Machine Learning';
-  if (norm === 'agri') return 'Agricultural Engineering';
-  if (typeof dept === 'object' && dept) {
-    return dept.name || dept.code || String(dept);
-  }
-  if (typeof dept === 'string' && dept.trim()) {
-    const clean = dept.trim().toUpperCase();
-    if (clean === 'IT') return 'Information Technology';
-    if (clean === 'CSE') return 'Computer Science and Engineering';
-    if (clean === 'EEE') return 'Electrical and Electronics Engineering';
-    if (clean === 'ECE') return 'Electronics and Communication Engineering';
-    if (clean === 'MECH') return 'Mechanical Engineering';
-    if (clean === 'CIVIL') return 'Civil Engineering';
-    if (clean === 'AIDS') return 'Artificial Intelligence and Data Science';
-    if (clean === 'AIML') return 'Artificial Intelligence and Machine Learning';
-    if (clean === 'AGRI') return 'Agricultural Engineering';
-    return dept;
-  }
-  return String(dept || '');
-}
-
-/**
- * Formats department for short pill display (Code)
- */
-export function formatDepartmentCode(dept: any): string {
-  const norm = normalizeDepartment(dept);
-  if (norm === 'all') return 'ALL';
-  if (norm === 'cse_cs') return 'CSE(CS)';
-  if (norm === 'cse_iot') return 'CSE(IOT)';
-  if (norm === 'it') return 'IT';
-  if (norm === 'cse') return 'CSE';
-  if (norm === 'ece') return 'ECE';
-  if (norm === 'eee') return 'EEE';
-  if (norm === 'mech') return 'MECH';
-  if (norm === 'civil') return 'CIVIL';
-  if (norm === 'aids') return 'AIDS';
-  if (norm === 'aiml') return 'AIML';
-  if (norm === 'agri') return 'AGRI';
-  if (typeof dept === 'object' && dept) {
-    return dept.code || dept.name || String(dept);
-  }
-  if (typeof dept === 'string' && dept.trim()) {
-    return dept;
-  }
-  return String(dept || '');
-}
-
-
-/**
- * Derives canonical Roman numeral year level ('I' | 'II' | 'III' | 'IV') from a student object or reg_no string
- * - 23 (e.g. 732223..., 23CC...) -> IV Year (Final Year)
- * - 24 (e.g. 732224..., 24CC...) -> III Year (3rd Year)
- * - 25 (e.g. 732225..., 25CC...) -> II Year (2nd Year)
- * - 26 (e.g. 732226..., 26CC...) -> I Year (1st Year)
- */
-export function deriveYearLevelFromRegNo(regNoStr?: string, currentYearVal?: any): 'I' | 'II' | 'III' | 'IV' {
-  if (currentYearVal != null && currentYearVal !== '') {
-    const normYear = normalizeAcademicYear(currentYearVal);
-    if (normYear === '1') return 'I';
-    if (normYear === '2') return 'II';
-    if (normYear === '3') return 'III';
-    if (normYear === '4') return 'IV';
-  }
-
-  const norm = (regNoStr || '').trim().toUpperCase();
-  if (norm) {
-    if (norm.includes('732223') || norm.startsWith('23') || norm.includes('23CC') || norm.includes('23CI') || norm.includes('23CS') || norm.includes('23IT') || norm.includes('23AI') || norm.includes('23EC') || norm.includes('23EE') || norm.includes('23ME') || norm.includes('23AG')) {
-      return 'IV';
-    }
-    if (norm.includes('732224') || norm.startsWith('24') || norm.includes('24CC') || norm.includes('24CI') || norm.includes('24CS') || norm.includes('24IT') || norm.includes('24AI') || norm.includes('24EC') || norm.includes('24EE') || norm.includes('24ME') || norm.includes('24AG')) {
-      return 'III';
-    }
-    if (norm.includes('732225') || norm.includes('73225') || norm.startsWith('25') || norm.includes('25CC') || norm.includes('25CI') || norm.includes('25CS') || norm.includes('25IT') || norm.includes('25AI') || norm.includes('25EC') || norm.includes('25EE') || norm.includes('25ME') || norm.includes('25AG')) {
-      return 'II';
-    }
-    if (norm.includes('732226') || norm.startsWith('26') || norm.includes('26CC') || norm.includes('26CI') || norm.includes('26CS') || norm.includes('26IT') || norm.includes('26AI') || norm.includes('26EC') || norm.includes('26EE') || norm.includes('26ME') || norm.includes('26AG')) {
-      return 'I';
-    }
-  }
-
-  return 'III';
-}
-
-/**
- * Returns clean formatted year text (e.g. 'III Yr') for card badges and tables
- */
-export function formatStudentYearBadge(student: any): string {
-  if (!student) return 'III Yr';
-  const yr = deriveYearLevelFromRegNo(student.reg_no, student.year_level || student.year);
-  return `${yr} Yr`;
-}
-
-/**
- * Normalizes academic year variations to canonical '1' | '2' | '3' | '4' | 'all'
- */
-export function normalizeAcademicYear(yr: any): NormalizedAcademicYear {
-  if (!yr || yr === 'ALL' || yr === 'all' || yr === 'ALL YEARS' || yr === 'ALL_YEARS' || yr === 'ALL_YEAR') {
-    return 'all';
-  }
-
-  const raw = String(yr).trim().toUpperCase();
-  if (raw === 'ALL' || raw === 'ALL YEARS' || raw === 'ALL_YEARS' || raw === 'ALL COHORTS') return 'all';
-
-  if (
-    raw === 'Y4' ||
-    raw.includes('IV') ||
-    raw.includes('FINAL') ||
-    raw.includes('FOURTH') ||
-    /\b4(TH)?\b/.test(raw) ||
-    raw.startsWith('4') ||
-    raw.includes('2027') ||
-    raw.includes('2023')
-  ) {
-    return '4';
-  }
-
-  if (
-    raw === 'Y3' ||
-    raw.includes('III') ||
-    raw.includes('THIRD') ||
-    /\b3(RD)?\b/.test(raw) ||
-    raw.startsWith('3') ||
-    raw.includes('2028') ||
-    raw.includes('2024')
-  ) {
-    return '3';
-  }
-
-  if (
-    raw === 'Y2' ||
-    raw.includes('II') ||
-    raw.includes('SECOND') ||
-    /\b2(ND)?\b/.test(raw) ||
-    raw.startsWith('2') ||
-    raw.includes('2029') ||
-    raw.includes('2025')
-  ) {
-    return '2';
-  }
-
-  if (
-    raw === 'Y1' ||
-    raw.includes('1ST') ||
-    raw.includes('FIRST') ||
-    /\b1(ST)?\b/.test(raw) ||
-    raw.startsWith('1') ||
-    raw === 'I' ||
-    raw.includes('YEAR I') ||
-    raw.includes('YEAR 1') ||
-    raw.includes('I YEAR') ||
-    raw.includes('2030') ||
-    raw.includes('2026')
-  ) {
-    return '1';
-  }
-
-  const clean = raw.replace(/(YEAR|YR|BATCH|ST|ND|RD|TH)/gi, '').replace(/[\s\-\_\(\)]+/g, '').trim();
-  if (clean === '1' || clean === 'I') return '1';
-  if (clean === '2' || clean === 'II') return '2';
-  if (clean === '3' || clean === 'III') return '3';
-  if (clean === '4' || clean === 'IV') return '4';
-
-  return clean || raw;
-}
-
-/**
- * Formats a normalized academic year for display in the UI (e.g. 'Year III')
- */
-export function formatAcademicYear(yr: any): string {
-  const norm = normalizeAcademicYear(yr);
-  if (norm === 'all') return 'All Academic Years';
-  if (norm === '1') return 'Year I';
-  if (norm === '2') return 'Year II';
-  if (norm === '3') return 'Year III';
-  if (norm === '4') return 'Year IV';
-  return String(yr);
-}
-
-/**
- * Safely extracts numeric solved count from student object
- */
-export function getSolvedCount(student: StudentData): number {
-  if (!student) return 0;
-  const raw = student.stats?.total_solved ?? student.total_solved ?? (student as any).totalSolved;
-  if (raw === null || raw === undefined) return 0;
-  const num = Number(raw);
-  return isNaN(num) ? 0 : Math.max(0, num);
-}
-
-/**
- * Department filter matching predicate
- */
-export function matchesDepartment(student: StudentData, selectedDept: string | any): boolean {
-  const targetNorm = normalizeDepartment(selectedDept);
-  if (targetNorm === 'all') return true;
-
-  if (typeof selectedDept === 'number' && student.department_id === selectedDept) {
-    return true;
-  }
-  if (student.department_id != null && selectedDept != null && String(student.department_id) === String(selectedDept)) {
-    return true;
-  }
-  if (student.department_id != null && selectedDept?.id != null && String(student.department_id) === String(selectedDept.id)) {
-    return true;
-  }
-
-  const studentNorm = normalizeDepartment(student.department ?? student.department_id);
-  if (studentNorm === targetNorm) return true;
-
-  // Generic CSE selected: matches all specialized CSE branches (Cyber Security & IoT) in NEC
-  if (targetNorm === 'cse' && (studentNorm === 'cse_cs' || studentNorm === 'cse_iot' || studentNorm === 'cse')) {
-    return true;
-  }
-
-  const derivedDeptFromReg = deriveDepartmentFromRegNo(student.reg_no);
-  if (derivedDeptFromReg) {
-    const derivedNorm = normalizeDepartment(derivedDeptFromReg);
-    if (derivedNorm === targetNorm) return true;
-    if (targetNorm === 'cse' && (derivedNorm === 'cse_cs' || derivedNorm === 'cse_iot')) return true;
-  }
-
-  // Bulletproof fallback checks by student register number or canonical department ID
-  const regUpper = (student.reg_no || '').toUpperCase();
-  if (targetNorm === 'cse_cs' && (regUpper.includes('CC') || regUpper.includes('CYBER') || student.department_id === 1)) {
-    return true;
-  }
-  if (targetNorm === 'cse_iot' && (regUpper.includes('CI') || regUpper.includes('IOT') || student.department_id === 2)) {
-    return true;
-  }
-  if (targetNorm === 'it' && (regUpper.includes('IT') || student.department_id === 4 || student.department_id === 7)) {
-    return true;
-  }
-
-  const deptStr = typeof student.department === 'string' ? student.department : (student.department?.name || student.department?.code || '');
-  const selStr = typeof selectedDept === 'string' ? selectedDept : (selectedDept?.name || selectedDept?.code || '');
-  if (deptStr && selStr && String(deptStr).trim().toLowerCase() === String(selStr).trim().toLowerCase()) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Department Theme Color Mapping — Each department gets its own vibrant, distinct theme!
- */
-export function getDepartmentThemeColor(dept: any): { bg: string; text: string; border: string; pillBg: string; pillText: string } {
-  const norm = normalizeDepartment(dept);
-
-  if (norm === 'cse_iot') {
-    return {
-      bg: 'bg-orange-50 dark:bg-orange-950/40',
-      text: 'text-orange-700 dark:text-orange-300',
-      border: 'border-orange-200 dark:border-orange-800/60',
-      pillBg: 'bg-orange-100 dark:bg-orange-900/60',
-      pillText: 'text-orange-800 dark:text-orange-200'
-    };
-  }
-  if (norm === 'cse_cs') {
-    return {
-      bg: 'bg-purple-50 dark:bg-purple-950/40',
-      text: 'text-purple-700 dark:text-purple-300',
-      border: 'border-purple-200 dark:border-purple-800/60',
-      pillBg: 'bg-purple-100 dark:bg-purple-900/60',
-      pillText: 'text-purple-800 dark:text-purple-200'
-    };
-  }
-  if (norm === 'it') {
-    return {
-      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      border: 'border-emerald-200 dark:border-emerald-800/60',
-      pillBg: 'bg-emerald-100 dark:bg-emerald-900/60',
-      pillText: 'text-emerald-800 dark:text-emerald-200'
-    };
-  }
-  if (norm === 'ece') {
-    return {
-      bg: 'bg-fuchsia-50 dark:bg-fuchsia-950/40',
-      text: 'text-fuchsia-700 dark:text-fuchsia-300',
-      border: 'border-fuchsia-200 dark:border-fuchsia-800/60',
-      pillBg: 'bg-fuchsia-100 dark:bg-fuchsia-900/60',
-      pillText: 'text-fuchsia-800 dark:text-fuchsia-200'
-    };
-  }
-  if (norm === 'eee') {
-    return {
-      bg: 'bg-amber-50 dark:bg-amber-950/40',
-      text: 'text-amber-700 dark:text-amber-300',
-      border: 'border-amber-200 dark:border-amber-800/60',
-      pillBg: 'bg-amber-100 dark:bg-amber-900/60',
-      pillText: 'text-amber-900 dark:text-amber-200'
-    };
-  }
-  if (norm === 'aids' || norm === 'aiml') {
-    return {
-      bg: 'bg-teal-50 dark:bg-teal-950/40',
-      text: 'text-teal-700 dark:text-teal-300',
-      border: 'border-teal-200 dark:border-teal-800/60',
-      pillBg: 'bg-teal-100 dark:bg-teal-900/60',
-      pillText: 'text-teal-800 dark:text-teal-200'
-    };
-  }
-  if (norm === 'agri') {
-    return {
-      bg: 'bg-rose-50 dark:bg-rose-950/40',
-      text: 'text-rose-700 dark:text-rose-300',
-      border: 'border-rose-200 dark:border-rose-800/60',
-      pillBg: 'bg-rose-100 dark:bg-rose-900/60',
-      pillText: 'text-rose-800 dark:text-rose-200'
-    };
-  }
-
-  // Fallback (Indigo / Brand)
-  return {
-    bg: 'bg-indigo-50 dark:bg-indigo-950/40',
-    text: 'text-indigo-700 dark:text-indigo-300',
-    border: 'border-indigo-200 dark:border-indigo-800/60',
-    pillBg: 'bg-indigo-100 dark:bg-indigo-900/60',
-    pillText: 'text-indigo-800 dark:text-indigo-200'
-  };
-}
-
-/**
- * Campus filter matching predicate (NEC vs NCT vs ALL)
- */
-export function matchesCampus(student: any, selectedCampus: string): boolean {
-  return matchesCollege(student, selectedCampus);
-}
-
-/**
- * Academic Year filter matching predicate
- */
-export function matchesAcademicYear(student: StudentData, selectedYear: string): boolean {
-  const targetNorm = normalizeAcademicYear(selectedYear);
-  if (targetNorm === 'all') return true;
-
-  const derivedYear = deriveYearLevelFromRegNo(student.reg_no, student.year_level || (student as any).batch);
-  const studentNorm = normalizeAcademicYear(derivedYear);
-  if (studentNorm === targetNorm) return true;
-
-  if (student.year_level && normalizeAcademicYear(student.year_level) === targetNorm) return true;
-  if ((student as any).batch && normalizeAcademicYear((student as any).batch) === targetNorm) return true;
-
-  return false;
-}
-
-/**
- * Name & General search matching predicate.
- * Supports live-type search across all student fields including LeetCode handles.
- * Multi-token queries: each space-separated word must match at least one field.
- * e.g. "bharath cse" matches student "BHARATH K" in "CSE(CS)" department.
- */
-export function matchesNameSearch(student: StudentData, search: string): boolean {
-  const query = normalizeSearchValue(search);
-  if (!query) return true;
-
-  const deptStr = typeof student.department === 'string'
-    ? student.department
-    : (student.department?.name || '') + ' ' + (student.department?.code || '');
-
-  // Collect ALL searchable values independently (don't use || which skips fields)
-  const searchableValues: (string | number | null | undefined)[] = [
-    student.name,
-    student.reg_no,
-    (student as any).roll_no,
-    student.username,
-    student.canonical_username,
-    (student as any).leetcode_username,
-    (student as any).primary_leetcode_id,
-    (student as any).secondary_leetcode_id,
-    student.email,
-    (student as any).institutional_email,
-    deptStr,
-    student.year_level,
-    (student as any).batch,
-    student.section?.name || (student as any).section,
-  ];
-
-  // Include secondary LeetCode accounts from the leetcode_accounts array
-  const secAccounts = (student as any).leetcode_accounts || (student as any).secondary_accounts || [];
-  for (const acc of secAccounts) {
-    if (acc) searchableValues.push(acc.username || acc.leetcode_username);
-  }
-
-  // Build a single normalized haystack from all fields for efficient matching
-  const haystack = searchableValues
-    .map(v => normalizeSearchValue(v))
-    .filter(Boolean)
-    .join(' ');
-
-  // Multi-token search: every space-separated token must appear in the haystack
-  const tokens = query.split(/\s+/).filter(Boolean);
-  return tokens.every(token => haystack.includes(token));
-}
-
-/**
- * Performance Range matching predicate using numeric values
- */
-export function matchesPerformanceRange(student: StudentData, rangeKey: PerformanceRangeKey | string): boolean {
-  if (!rangeKey || rangeKey === 'all') return true;
-  const solved = getSolvedCount(student);
-
-  switch (rangeKey) {
-    case '500_plus':
-    case 'above500':
-      return solved >= 500;
-    case '251_500':
-    case 'between251And500':
-      return solved >= 251 && solved <= 500;
-    case '101_250':
-    case 'between101And250':
-      return solved >= 101 && solved <= 250;
-    case '1_100':
-    case 'between1And100':
-      return solved >= 1 && solved <= 100;
-    case 'not_started':
-    case 'notStarted':
-      return solved === 0;
-    default:
-      return true;
-  }
-}
-
-/**
- * Applies deterministic sorting to a student array
- */
-export function sortStudents(students: StudentData[], sortBy: SortByKey): StudentData[] {
-  const sorted = [...students];
-
-  switch (sortBy) {
-    case 'top_solved':
-      return sorted.sort((a, b) => {
-        const diff = getSolvedCount(b) - getSolvedCount(a);
-        if (diff !== 0) return diff;
-        return (a.name || '').localeCompare(b.name || '');
-      });
-
-    case 'low_solved':
-      return sorted.sort((a, b) => {
-        const diff = getSolvedCount(a) - getSolvedCount(b);
-        if (diff !== 0) return diff;
-        return (a.name || '').localeCompare(b.name || '');
-      });
-
-    case 'name_asc':
-      return sorted.sort((a, b) => {
-        const nameA = (a.name || (a as any).student_name || '').trim();
-        const nameB = (b.name || (b as any).student_name || '').trim();
-        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
-      });
-
-    case 'name_desc':
-      return sorted.sort((a, b) => {
-        const nameA = (a.name || (a as any).student_name || '').trim();
-        const nameB = (b.name || (b as any).student_name || '').trim();
-        return nameB.localeCompare(nameA, undefined, { sensitivity: 'base' });
-      });
-
-    case 'streak':
-      return sorted.sort((a, b) => {
-        const streakA = Number((a as any).streak_count ?? (a.stats as any)?.streak_count ?? (a as any).streak ?? 0);
-        const streakB = Number((b as any).streak_count ?? (b.stats as any)?.streak_count ?? (b as any).streak ?? 0);
-        return streakB - streakA;
-      });
-
-    case 'rating':
-      return sorted.sort((a, b) => {
-        const ratingA = Number((a.stats as any)?.contest_rating ?? (a as any).contest_rating ?? (a as any).rating ?? (a as any).contestRating ?? 0);
-        const ratingB = Number((b.stats as any)?.contest_rating ?? (b as any).contest_rating ?? (b as any).rating ?? (b as any).contestRating ?? 0);
-        return ratingB - ratingA;
-      });
-
-    default:
-      return sorted;
-  }
-}
-
-
-/**
- * Normalizes any college name to canonical uppercase format
- */
-export function normalizeCollege(c: any): string {
-  if (!c || c === 'all' || c === 'ALL' || c === 'all_colleges' || c === 'ALL COLLEGES') return 'all';
-  return String(c).trim().toUpperCase();
-}
-
-/**
- * Accurately derives whether a student belongs to NEC or NCT based on:
- * 1. student.college (explicit field)
- * 2. student.reg_no (7322 -> NEC, 7321 or contains NCT -> NCT)
- * 3. student.institutional_email / email domain (@nct -> NCT, @nandhaengg -> NEC)
- * 4. student.campus / institution_id
- */
-export function deriveStudentCollege(student: StudentData | any): 'NEC' | 'NCT' {
-  if (!student) return 'NEC';
-
-  // 1. Explicit college property
-  const explicit = String(student.college || '').trim().toUpperCase();
-  if (explicit === 'NCT') return 'NCT';
-  if (explicit === 'NEC') return 'NEC';
-
-  // 2. Campus / Institution ID
-  const campus = String(student.campus || student.institution_id || '').trim().toUpperCase();
-  if (campus.includes('NCT')) return 'NCT';
-  if (campus.includes('NEC')) return 'NEC';
-
-  // 3. Anna University Register Number prefix
-  const reg = String(student.reg_no || '').trim().toUpperCase();
-  if (reg.startsWith('7321') || reg.includes('NCT')) return 'NCT';
-  if (reg.startsWith('7322') || reg.includes('NEC')) return 'NEC';
-
-  // 4. Institutional email domain
-  const email = String(student.institutional_email || student.email || '').trim().toLowerCase();
-  if (email.includes('@nct') || email.includes('.nct.')) return 'NCT';
-  if (email.includes('nandhaengg') || email.includes('@nec') || email.includes('.nec.')) return 'NEC';
-
-  return 'NEC';
-}
-
-/**
- * College filter matching predicate
- */
-export function matchesCollege(student: StudentData, selectedCollege?: string): boolean {
-  if (!selectedCollege || selectedCollege === 'all' || selectedCollege === 'ALL') return true;
-  const target = normalizeCollege(selectedCollege);
-  const studentCollege = deriveStudentCollege(student);
-  return studentCollege === target;
-}
-
-export interface FilterAndSortOptions {
-  college?: string;
-  department?: string;
-  academicYear?: string;
-  nameSearch?: string;
-  performanceRange?: string;
-  sortBy?: string;
-}
-
-export interface PerformanceCounts {
-  all: number;
-  total: number;
-  above500: number;
-  between251And500: number;
-  between101And250: number;
-  between1And100: number;
-  notStarted: number;
-  '500_plus': number;
-  '251_500': number;
-  '101_250': number;
-  '1_100': number;
-  not_started: number;
-}
-
-export interface FilterAndSortResult {
-  filteredAndSorted: StudentData[];
-  counts: PerformanceCounts;
-}
-
-/**
- * Main filtering and sorting helper used by DepartmentDashboard & LandingPage
- */
-export function filterAndSortStudents(
-  students: StudentData[],
-  options: FilterAndSortOptions
-): FilterAndSortResult {
-  if (!students || students.length === 0) {
-    const emptyCounts: PerformanceCounts = {
-      all: 0,
-      total: 0,
-      above500: 0,
-      between251And500: 0,
-      between101And250: 0,
-      between1And100: 0,
-      notStarted: 0,
-      '500_plus': 0,
-      '251_500': 0,
-      '101_250': 0,
-      '1_100': 0,
-      not_started: 0
-    };
-    return {
-      filteredAndSorted: [],
-      counts: emptyCounts
-    };
-  }
-
-  const college = options.college || 'all';
-  const dept = options.department || 'all';
-  const year = options.academicYear || 'all';
-  const search = options.nameSearch || '';
-  const range = options.performanceRange || 'all';
-  const sort = options.sortBy || 'top_solved';
-
-  // Step 1: Base filter by College + Department + Academic Year + Search
-  const baseFiltered = students.filter(s => {
-    return (
-      matchesCollege(s, college) &&
-      matchesDepartment(s, dept) &&
-      matchesAcademicYear(s, year) &&
-      matchesNameSearch(s, search)
-    );
-  });
-
-  // Step 2: Compute performance counts on the base filtered cohort
-  let above500 = 0;
-  let between251And500 = 0;
-  let between101And250 = 0;
-  let between1And100 = 0;
-  let notStarted = 0;
-
-  for (const s of baseFiltered) {
-    const solved = getSolvedCount(s);
-    if (solved >= 500) above500++;
-    else if (solved >= 251) between251And500++;
-    else if (solved >= 101) between101And250++;
-    else if (solved >= 1) between1And100++;
-    else notStarted++;
-  }
-
-  const counts: PerformanceCounts = {
-    all: baseFiltered.length,
-    total: baseFiltered.length,
-    above500,
-    between251And500,
-    between101And250,
-    between1And100,
-    notStarted,
-    '500_plus': above500,
-    '251_500': between251And500,
-    '101_250': between101And250,
-    '1_100': between1And100,
-    not_started: notStarted
-  };
-
-  // Step 3: Filter by performance range
-  const performanceFiltered = baseFiltered.filter(s => matchesPerformanceRange(s, range));
-
-  // Step 4: Apply sort
-  const filteredAndSorted = sortStudents(performanceFiltered, sort);
-
-  return {
-    filteredAndSorted,
-    counts
-  };
-}
+import { StudentData } from '../components/LeaderboardTable';
+
+export type NormalizedDepartment = string;
+export type NormalizedAcademicYear = 'all' | 'II' | 'III' | 'IV' | string;
+export type PerformanceRangeKey = 'all' | '500_plus' | '251_500' | '101_250' | '1_100' | 'not_started';
+export type SortByKey = 'top_solved' | 'low_solved' | 'name_asc' | 'name_desc' | 'streak' | 'rating' | string;
+
+export const normalizeSearchValue = (value: unknown) =>
+  String(value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+
+
+/**
+ * Normalizes any department reference (object, ID, name, code, string) to a canonical key.
+ * Production Website operates strictly on CSE(CS) and CSE(IOT).
+ */
+export function normalizeDepartment(dept: any): string {
+  if (!dept || dept === 'ALL' || dept === 'all' || dept === 'all_departments' || dept === 'ALL DEPARTMENTS') {
+    return 'all';
+  }
+
+  // If object with id, name, or code
+  if (typeof dept === 'object') {
+    const code = (dept.code || '').trim().toUpperCase();
+    const name = (dept.name || '').trim().toUpperCase();
+    const combined = `${code} ${name}`.trim();
+
+    if (dept.id === 1 || combined.includes('CYBER') || combined.includes('CSE(CS)') || combined.includes('CSE-CS') || combined.includes('CSE_CS') || combined.includes('CSE (CS)')) {
+      return 'cse_cs';
+    }
+    if (dept.id === 2 || combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
+      return 'cse_iot';
+    }
+    if (dept.id === 4 || dept.id === 7 || code === 'IT' || combined.includes('INFORMATION TECHNOLOGY') || combined.includes('INFO TECH') || combined.includes('B.TECH IT') || combined.includes('B.TECH (IT)')) {
+      return 'it';
+    }
+    if (code === 'AIDS' || combined.includes('ARTIFICIAL') || combined.includes('DATA SCIENCE')) {
+      return 'aids';
+    }
+    if (code === 'ECE' || combined.includes('ELECTRONICS AND COMM')) {
+      return 'ece';
+    }
+    if (code === 'EEE' || combined.includes('ELECTRICAL AND ELEC')) {
+      return 'eee';
+    }
+    if (code === 'AGRI' || combined.includes('AGRICULTUR')) {
+      return 'agri';
+    }
+    if (code === 'MECH' || combined.includes('MECHANICAL')) {
+      return 'mech';
+    }
+    if (code === 'CIVIL' || combined.includes('CIVIL')) {
+      return 'civil';
+    }
+    if (code === 'CSE' || combined.includes('COMPUTER SCIENCE AND ENGINEERING')) {
+      return 'cse';
+    }
+
+    if (code) return code.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    if (name) return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    if (dept.id) return String(dept.id);
+  }
+
+  // If numeric ID (1 = Cyber Security, 2 = IoT, 4/7 = Information Technology)
+  if (typeof dept === 'number' || (!isNaN(Number(dept)) && String(dept).trim() !== '')) {
+    const numId = Number(dept);
+    if (numId === 1) return 'cse_cs';
+    if (numId === 2) return 'cse_iot';
+    if (numId === 4 || numId === 7) return 'it';
+    return String(dept);
+  }
+
+  // If string
+  if (typeof dept === 'string') {
+    const clean = dept.trim().toUpperCase();
+    if (clean === 'ALL' || clean === 'ALL DEPARTMENTS' || clean === 'ALL_DEPARTMENTS') return 'all';
+
+    if (clean.includes('CYBER') || clean.includes('CSE(CS)') || clean.includes('CSE-CS') || clean.includes('CSE_CS') || clean.includes('CSE (CS)') || clean === 'CS') {
+      return 'cse_cs';
+    }
+    if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)') || clean.includes('INTERNET')) {
+      return 'cse_iot';
+    }
+    if (clean === 'IT' || clean === '4' || clean === '7' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFO TECH') || clean.includes('B.TECH IT') || clean.includes('B.TECH (IT)')) {
+      return 'it';
+    }
+    if (clean === 'AIDS' || clean.includes('DATA SCIENCE') || clean.includes('ARTIFICIAL')) {
+      return 'aids';
+    }
+    if (clean === 'ECE' || clean.includes('ELECTRONICS AND COMM')) {
+      return 'ece';
+    }
+    if (clean === 'EEE' || clean.includes('ELECTRICAL AND ELEC')) {
+      return 'eee';
+    }
+    if (clean === 'AGRI' || clean.includes('AGRICULTUR')) {
+      return 'agri';
+    }
+    if (clean === 'MECH' || clean.includes('MECHANICAL')) {
+      return 'mech';
+    }
+    if (clean === 'CIVIL' || clean.includes('CIVIL')) {
+      return 'civil';
+    }
+    if (clean === 'CSE' || clean.includes('COMPUTER SCIENCE AND ENGINEERING')) {
+      return 'cse';
+    }
+
+    return clean.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  }
+
+  return 'unknown';
+}
+
+/**
+ * Derives canonical department code from student register number
+ */
+export function deriveDepartmentFromRegNo(regNoStr?: string): string | null {
+  const norm = (regNoStr || '').trim().toUpperCase();
+  if (!norm) return null;
+
+  if (norm.includes('CC') || norm.includes('CYBER')) return 'CSE(CS)';
+  if (norm.includes('CI') || norm.includes('IOT')) return 'CSE(IOT)';
+  if (norm.includes('IT')) return 'IT';
+  if (norm.includes('AIDS') || norm.includes('AI') || norm.includes('AD')) return 'AIDS';
+  if (norm.includes('ECE') || norm.includes('EC')) return 'ECE';
+  if (norm.includes('EEE') || norm.includes('EE')) return 'EEE';
+  if (norm.includes('AGRI') || norm.includes('AG')) return 'AGRI';
+  if (norm.includes('MECH') || norm.includes('ME')) return 'MECH';
+  if (norm.includes('CIVIL') || norm.includes('CE')) return 'CIVIL';
+  if (norm.includes('CSE') || norm.includes('CS')) return 'CSE';
+
+  return null;
+}
+
+/**
+ * Formats department for user display (Full Name)
+ */
+export function formatDepartmentName(dept: any): string {
+  const norm = normalizeDepartment(dept);
+  if (norm === 'all') return 'All Departments';
+  if (norm === 'cse_cs') return 'Computer Science and Engineering (Cyber Security)';
+  if (norm === 'cse_iot') return 'Computer Science and Engineering (IoT)';
+  if (norm === 'it') return 'Information Technology';
+  if (norm === 'cse') return 'Computer Science and Engineering';
+  if (norm === 'eee') return 'Electrical and Electronics Engineering';
+  if (norm === 'ece') return 'Electronics and Communication Engineering';
+  if (norm === 'mech') return 'Mechanical Engineering';
+  if (norm === 'civil') return 'Civil Engineering';
+  if (norm === 'aids') return 'Artificial Intelligence and Data Science';
+  if (norm === 'aiml') return 'Artificial Intelligence and Machine Learning';
+  if (norm === 'agri') return 'Agricultural Engineering';
+  if (typeof dept === 'object' && dept) {
+    return dept.name || dept.code || String(dept);
+  }
+  if (typeof dept === 'string' && dept.trim()) {
+    const clean = dept.trim().toUpperCase();
+    if (clean === 'IT') return 'Information Technology';
+    if (clean === 'CSE') return 'Computer Science and Engineering';
+    if (clean === 'EEE') return 'Electrical and Electronics Engineering';
+    if (clean === 'ECE') return 'Electronics and Communication Engineering';
+    if (clean === 'MECH') return 'Mechanical Engineering';
+    if (clean === 'CIVIL') return 'Civil Engineering';
+    if (clean === 'AIDS') return 'Artificial Intelligence and Data Science';
+    if (clean === 'AIML') return 'Artificial Intelligence and Machine Learning';
+    if (clean === 'AGRI') return 'Agricultural Engineering';
+    return dept;
+  }
+  return String(dept || '');
+}
+
+/**
+ * Formats department for short pill display (Code)
+ */
+export function formatDepartmentCode(dept: any): string {
+  const norm = normalizeDepartment(dept);
+  if (norm === 'all') return 'ALL';
+  if (norm === 'cse_cs') return 'CSE(CS)';
+  if (norm === 'cse_iot') return 'CSE(IOT)';
+  if (norm === 'it') return 'IT';
+  if (norm === 'cse') return 'CSE';
+  if (norm === 'ece') return 'ECE';
+  if (norm === 'eee') return 'EEE';
+  if (norm === 'mech') return 'MECH';
+  if (norm === 'civil') return 'CIVIL';
+  if (norm === 'aids') return 'AIDS';
+  if (norm === 'aiml') return 'AIML';
+  if (norm === 'agri') return 'AGRI';
+  if (typeof dept === 'object' && dept) {
+    return dept.code || dept.name || String(dept);
+  }
+  if (typeof dept === 'string' && dept.trim()) {
+    return dept;
+  }
+  return String(dept || '');
+}
+
+
+/**
+ * Derives canonical Roman numeral year level ('I' | 'II' | 'III' | 'IV') from a student object or reg_no string
+ * - 23 (e.g. 732223..., 23CC...) -> IV Year (Final Year)
+ * - 24 (e.g. 732224..., 24CC...) -> III Year (3rd Year)
+ * - 25 (e.g. 732225..., 25CC...) -> II Year (2nd Year)
+ * - 26 (e.g. 732226..., 26CC...) -> I Year (1st Year)
+ */
+export function deriveYearLevelFromRegNo(regNoStr?: string, currentYearVal?: any): 'I' | 'II' | 'III' | 'IV' {
+  if (currentYearVal != null && currentYearVal !== '') {
+    const normYear = normalizeAcademicYear(currentYearVal);
+    if (normYear === '1') return 'I';
+    if (normYear === '2') return 'II';
+    if (normYear === '3') return 'III';
+    if (normYear === '4') return 'IV';
+  }
+
+  const norm = (regNoStr || '').trim().toUpperCase();
+  if (norm) {
+    if (norm.includes('732223') || norm.startsWith('23') || norm.includes('23CC') || norm.includes('23CI') || norm.includes('23CS') || norm.includes('23IT') || norm.includes('23AI') || norm.includes('23EC') || norm.includes('23EE') || norm.includes('23ME') || norm.includes('23AG')) {
+      return 'IV';
+    }
+    if (norm.includes('732224') || norm.startsWith('24') || norm.includes('24CC') || norm.includes('24CI') || norm.includes('24CS') || norm.includes('24IT') || norm.includes('24AI') || norm.includes('24EC') || norm.includes('24EE') || norm.includes('24ME') || norm.includes('24AG')) {
+      return 'III';
+    }
+    if (norm.includes('732225') || norm.includes('73225') || norm.startsWith('25') || norm.includes('25CC') || norm.includes('25CI') || norm.includes('25CS') || norm.includes('25IT') || norm.includes('25AI') || norm.includes('25EC') || norm.includes('25EE') || norm.includes('25ME') || norm.includes('25AG')) {
+      return 'II';
+    }
+    if (norm.includes('732226') || norm.startsWith('26') || norm.includes('26CC') || norm.includes('26CI') || norm.includes('26CS') || norm.includes('26IT') || norm.includes('26AI') || norm.includes('26EC') || norm.includes('26EE') || norm.includes('26ME') || norm.includes('26AG')) {
+      return 'I';
+    }
+  }
+
+  return 'III';
+}
+
+/**
+ * Returns clean formatted year text (e.g. 'III Yr') for card badges and tables
+ */
+export function formatStudentYearBadge(student: any): string {
+  if (!student) return 'III Yr';
+  const yr = deriveYearLevelFromRegNo(student.reg_no, student.year_level || student.year);
+  return `${yr} Yr`;
+}
+
+/**
+ * Normalizes academic year variations to canonical '1' | '2' | '3' | '4' | 'all'
+ */
+export function normalizeAcademicYear(yr: any): NormalizedAcademicYear {
+  if (!yr || yr === 'ALL' || yr === 'all' || yr === 'ALL YEARS' || yr === 'ALL_YEARS' || yr === 'ALL_YEAR') {
+    return 'all';
+  }
+
+  const raw = String(yr).trim().toUpperCase();
+  if (raw === 'ALL' || raw === 'ALL YEARS' || raw === 'ALL_YEARS' || raw === 'ALL COHORTS') return 'all';
+
+  if (
+    raw === 'Y4' ||
+    raw.includes('IV') ||
+    raw.includes('FINAL') ||
+    raw.includes('FOURTH') ||
+    /\b4(TH)?\b/.test(raw) ||
+    raw.startsWith('4') ||
+    raw.includes('2027') ||
+    raw.includes('2023')
+  ) {
+    return '4';
+  }
+
+  if (
+    raw === 'Y3' ||
+    raw.includes('III') ||
+    raw.includes('THIRD') ||
+    /\b3(RD)?\b/.test(raw) ||
+    raw.startsWith('3') ||
+    raw.includes('2028') ||
+    raw.includes('2024')
+  ) {
+    return '3';
+  }
+
+  if (
+    raw === 'Y2' ||
+    raw.includes('II') ||
+    raw.includes('SECOND') ||
+    /\b2(ND)?\b/.test(raw) ||
+    raw.startsWith('2') ||
+    raw.includes('2029') ||
+    raw.includes('2025')
+  ) {
+    return '2';
+  }
+
+  if (
+    raw === 'Y1' ||
+    raw.includes('1ST') ||
+    raw.includes('FIRST') ||
+    /\b1(ST)?\b/.test(raw) ||
+    raw.startsWith('1') ||
+    raw === 'I' ||
+    raw.includes('YEAR I') ||
+    raw.includes('YEAR 1') ||
+    raw.includes('I YEAR') ||
+    raw.includes('2030') ||
+    raw.includes('2026')
+  ) {
+    return '1';
+  }
+
+  const clean = raw.replace(/(YEAR|YR|BATCH|ST|ND|RD|TH)/gi, '').replace(/[\s\-\_\(\)]+/g, '').trim();
+  if (clean === '1' || clean === 'I') return '1';
+  if (clean === '2' || clean === 'II') return '2';
+  if (clean === '3' || clean === 'III') return '3';
+  if (clean === '4' || clean === 'IV') return '4';
+
+  return clean || raw;
+}
+
+/**
+ * Formats a normalized academic year for display in the UI (e.g. 'Year III')
+ */
+export function formatAcademicYear(yr: any): string {
+  const norm = normalizeAcademicYear(yr);
+  if (norm === 'all') return 'All Academic Years';
+  if (norm === '1') return 'Year I';
+  if (norm === '2') return 'Year II';
+  if (norm === '3') return 'Year III';
+  if (norm === '4') return 'Year IV';
+  return String(yr);
+}
+
+/**
+ * Safely extracts numeric solved count from student object
+ */
+export function getSolvedCount(student: StudentData): number {
+  if (!student) return 0;
+  const raw = student.stats?.total_solved ?? student.total_solved ?? (student as any).totalSolved;
+  if (raw === null || raw === undefined) return 0;
+  const num = Number(raw);
+  return isNaN(num) ? 0 : Math.max(0, num);
+}
+
+/**
+ * Department filter matching predicate
+ */
+export function matchesDepartment(student: StudentData, selectedDept: string | any): boolean {
+  const targetNorm = normalizeDepartment(selectedDept);
+  if (targetNorm === 'all') return true;
+
+  const studentNorm = normalizeDepartment(student.department ?? student.department_id);
+
+  // Strict isolation: IT must NEVER match Cyber Security or IoT
+  if (targetNorm === 'it' && (studentNorm === 'cse_cs' || studentNorm === 'cse_iot')) {
+    return false;
+  }
+  if ((targetNorm === 'cse_cs' || targetNorm === 'cse_iot') && studentNorm === 'it') {
+    return false;
+  }
+
+  if (typeof selectedDept === 'number' && student.department_id === selectedDept) {
+    return true;
+  }
+  if (student.department_id != null && selectedDept != null && String(student.department_id) === String(selectedDept)) {
+    return true;
+  }
+  if (student.department_id != null && selectedDept?.id != null && String(student.department_id) === String(selectedDept.id)) {
+    return true;
+  }
+
+  if (studentNorm === targetNorm) return true;
+
+  // Generic CSE selected: matches all specialized CSE branches (Cyber Security & IoT) in NEC
+  if (targetNorm === 'cse' && (studentNorm === 'cse_cs' || studentNorm === 'cse_iot' || studentNorm === 'cse')) {
+    return true;
+  }
+
+  const derivedDeptFromReg = deriveDepartmentFromRegNo(student.reg_no);
+  if (derivedDeptFromReg) {
+    const derivedNorm = normalizeDepartment(derivedDeptFromReg);
+    if (targetNorm === 'it' && (derivedNorm === 'cse_cs' || derivedNorm === 'cse_iot')) return false;
+    if ((targetNorm === 'cse_cs' || targetNorm === 'cse_iot') && derivedNorm === 'it') return false;
+    if (derivedNorm === targetNorm) return true;
+    if (targetNorm === 'cse' && (derivedNorm === 'cse_cs' || derivedNorm === 'cse_iot')) return true;
+  }
+
+  // Bulletproof fallback checks by student register number or canonical department ID
+  const regUpper = (student.reg_no || '').toUpperCase();
+  if (targetNorm === 'cse_cs' && (regUpper.includes('CC') || regUpper.includes('CYBER') || student.department_id === 1)) {
+    return true;
+  }
+  if (targetNorm === 'cse_iot' && (regUpper.includes('CI') || regUpper.includes('IOT') || student.department_id === 2)) {
+    return true;
+  }
+  if (targetNorm === 'it' && (student.department_id === 4 || student.department_id === 7 || (regUpper.includes('IT') && !regUpper.includes('CC') && !regUpper.includes('CI') && student.department_id !== 1 && student.department_id !== 2))) {
+    return true;
+  }
+
+  const deptStr = typeof student.department === 'string' ? student.department : (student.department?.name || student.department?.code || '');
+  const selStr = typeof selectedDept === 'string' ? selectedDept : (selectedDept?.name || selectedDept?.code || '');
+  if (deptStr && selStr && String(deptStr).trim().toLowerCase() === String(selStr).trim().toLowerCase()) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Department Theme Color Mapping — Each department gets its own vibrant, distinct theme!
+ */
+export function getDepartmentThemeColor(dept: any): { bg: string; text: string; border: string; pillBg: string; pillText: string } {
+  const norm = normalizeDepartment(dept);
+
+  if (norm === 'cse_iot') {
+    return {
+      bg: 'bg-orange-50 dark:bg-orange-950/40',
+      text: 'text-orange-700 dark:text-orange-300',
+      border: 'border-orange-200 dark:border-orange-800/60',
+      pillBg: 'bg-orange-100 dark:bg-orange-900/60',
+      pillText: 'text-orange-800 dark:text-orange-200'
+    };
+  }
+  if (norm === 'cse_cs') {
+    return {
+      bg: 'bg-purple-50 dark:bg-purple-950/40',
+      text: 'text-purple-700 dark:text-purple-300',
+      border: 'border-purple-200 dark:border-purple-800/60',
+      pillBg: 'bg-purple-100 dark:bg-purple-900/60',
+      pillText: 'text-purple-800 dark:text-purple-200'
+    };
+  }
+  if (norm === 'it') {
+    return {
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      border: 'border-emerald-200 dark:border-emerald-800/60',
+      pillBg: 'bg-emerald-100 dark:bg-emerald-900/60',
+      pillText: 'text-emerald-800 dark:text-emerald-200'
+    };
+  }
+  if (norm === 'ece') {
+    return {
+      bg: 'bg-fuchsia-50 dark:bg-fuchsia-950/40',
+      text: 'text-fuchsia-700 dark:text-fuchsia-300',
+      border: 'border-fuchsia-200 dark:border-fuchsia-800/60',
+      pillBg: 'bg-fuchsia-100 dark:bg-fuchsia-900/60',
+      pillText: 'text-fuchsia-800 dark:text-fuchsia-200'
+    };
+  }
+  if (norm === 'eee') {
+    return {
+      bg: 'bg-amber-50 dark:bg-amber-950/40',
+      text: 'text-amber-700 dark:text-amber-300',
+      border: 'border-amber-200 dark:border-amber-800/60',
+      pillBg: 'bg-amber-100 dark:bg-amber-900/60',
+      pillText: 'text-amber-900 dark:text-amber-200'
+    };
+  }
+  if (norm === 'aids' || norm === 'aiml') {
+    return {
+      bg: 'bg-teal-50 dark:bg-teal-950/40',
+      text: 'text-teal-700 dark:text-teal-300',
+      border: 'border-teal-200 dark:border-teal-800/60',
+      pillBg: 'bg-teal-100 dark:bg-teal-900/60',
+      pillText: 'text-teal-800 dark:text-teal-200'
+    };
+  }
+  if (norm === 'agri') {
+    return {
+      bg: 'bg-rose-50 dark:bg-rose-950/40',
+      text: 'text-rose-700 dark:text-rose-300',
+      border: 'border-rose-200 dark:border-rose-800/60',
+      pillBg: 'bg-rose-100 dark:bg-rose-900/60',
+      pillText: 'text-rose-800 dark:text-rose-200'
+    };
+  }
+
+  // Fallback (Indigo / Brand)
+  return {
+    bg: 'bg-indigo-50 dark:bg-indigo-950/40',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-800/60',
+    pillBg: 'bg-indigo-100 dark:bg-indigo-900/60',
+    pillText: 'text-indigo-800 dark:text-indigo-200'
+  };
+}
+
+/**
+ * Campus filter matching predicate (NEC vs NCT vs ALL)
+ */
+export function matchesCampus(student: any, selectedCampus: string): boolean {
+  return matchesCollege(student, selectedCampus);
+}
+
+/**
+ * Academic Year filter matching predicate
+ */
+export function matchesAcademicYear(student: StudentData, selectedYear: string): boolean {
+  const targetNorm = normalizeAcademicYear(selectedYear);
+  if (targetNorm === 'all') return true;
+
+  const derivedYear = deriveYearLevelFromRegNo(student.reg_no, student.year_level || (student as any).batch);
+  const studentNorm = normalizeAcademicYear(derivedYear);
+  if (studentNorm === targetNorm) return true;
+
+  if (student.year_level && normalizeAcademicYear(student.year_level) === targetNorm) return true;
+  if ((student as any).batch && normalizeAcademicYear((student as any).batch) === targetNorm) return true;
+
+  return false;
+}
+
+/**
+ * Name & General search matching predicate.
+ * Supports live-type search across all student fields including LeetCode handles.
+ * Multi-token queries: each space-separated word must match at least one field.
+ * e.g. "bharath cse" matches student "BHARATH K" in "CSE(CS)" department.
+ */
+export function matchesNameSearch(student: StudentData, search: string): boolean {
+  const query = normalizeSearchValue(search);
+  if (!query) return true;
+
+  const deptStr = typeof student.department === 'string'
+    ? student.department
+    : (student.department?.name || '') + ' ' + (student.department?.code || '');
+
+  // Collect ALL searchable values independently (don't use || which skips fields)
+  const searchableValues: (string | number | null | undefined)[] = [
+    student.name,
+    student.reg_no,
+    (student as any).roll_no,
+    student.username,
+    student.canonical_username,
+    (student as any).leetcode_username,
+    (student as any).primary_leetcode_id,
+    (student as any).secondary_leetcode_id,
+    student.email,
+    (student as any).institutional_email,
+    deptStr,
+    student.year_level,
+    (student as any).batch,
+    student.section?.name || (student as any).section,
+  ];
+
+  // Include secondary LeetCode accounts from the leetcode_accounts array
+  const secAccounts = (student as any).leetcode_accounts || (student as any).secondary_accounts || [];
+  for (const acc of secAccounts) {
+    if (acc) searchableValues.push(acc.username || acc.leetcode_username);
+  }
+
+  // Build a single normalized haystack from all fields for efficient matching
+  const haystack = searchableValues
+    .map(v => normalizeSearchValue(v))
+    .filter(Boolean)
+    .join(' ');
+
+  // Multi-token search: every space-separated token must appear in the haystack
+  const tokens = query.split(/\s+/).filter(Boolean);
+  return tokens.every(token => haystack.includes(token));
+}
+
+/**
+ * Performance Range matching predicate using numeric values
+ */
+export function matchesPerformanceRange(student: StudentData, rangeKey: PerformanceRangeKey | string): boolean {
+  if (!rangeKey || rangeKey === 'all') return true;
+  const solved = getSolvedCount(student);
+
+  switch (rangeKey) {
+    case '500_plus':
+    case 'above500':
+      return solved >= 500;
+    case '251_500':
+    case 'between251And500':
+      return solved >= 251 && solved <= 500;
+    case '101_250':
+    case 'between101And250':
+      return solved >= 101 && solved <= 250;
+    case '1_100':
+    case 'between1And100':
+      return solved >= 1 && solved <= 100;
+    case 'not_started':
+    case 'notStarted':
+      return solved === 0;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Applies deterministic sorting to a student array
+ */
+export function sortStudents(students: StudentData[], sortBy: SortByKey): StudentData[] {
+  const sorted = [...students];
+
+  switch (sortBy) {
+    case 'top_solved':
+      return sorted.sort((a, b) => {
+        const diff = getSolvedCount(b) - getSolvedCount(a);
+        if (diff !== 0) return diff;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+    case 'low_solved':
+      return sorted.sort((a, b) => {
+        const diff = getSolvedCount(a) - getSolvedCount(b);
+        if (diff !== 0) return diff;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+    case 'name_asc':
+      return sorted.sort((a, b) => {
+        const nameA = (a.name || (a as any).student_name || '').trim();
+        const nameB = (b.name || (b as any).student_name || '').trim();
+        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+      });
+
+    case 'name_desc':
+      return sorted.sort((a, b) => {
+        const nameA = (a.name || (a as any).student_name || '').trim();
+        const nameB = (b.name || (b as any).student_name || '').trim();
+        return nameB.localeCompare(nameA, undefined, { sensitivity: 'base' });
+      });
+
+    case 'streak':
+      return sorted.sort((a, b) => {
+        const streakA = Number((a as any).streak_count ?? (a.stats as any)?.streak_count ?? (a as any).streak ?? 0);
+        const streakB = Number((b as any).streak_count ?? (b.stats as any)?.streak_count ?? (b as any).streak ?? 0);
+        return streakB - streakA;
+      });
+
+    case 'rating':
+      return sorted.sort((a, b) => {
+        const ratingA = Number((a.stats as any)?.contest_rating ?? (a as any).contest_rating ?? (a as any).rating ?? (a as any).contestRating ?? 0);
+        const ratingB = Number((b.stats as any)?.contest_rating ?? (b as any).contest_rating ?? (b as any).rating ?? (b as any).contestRating ?? 0);
+        return ratingB - ratingA;
+      });
+
+    default:
+      return sorted;
+  }
+}
+
+
+/**
+ * Normalizes any college name to canonical uppercase format
+ */
+export function normalizeCollege(c: any): string {
+  if (!c || c === 'all' || c === 'ALL' || c === 'all_colleges' || c === 'ALL COLLEGES') return 'all';
+  return String(c).trim().toUpperCase();
+}
+
+/**
+ * Accurately derives whether a student belongs to NEC or NCT based on:
+ * 1. student.college (explicit field)
+ * 2. student.reg_no (7322 -> NEC, 7321 or contains NCT -> NCT)
+ * 3. student.institutional_email / email domain (@nct -> NCT, @nandhaengg -> NEC)
+ * 4. student.campus / institution_id
+ */
+export function deriveStudentCollege(student: StudentData | any): 'NEC' | 'NCT' {
+  if (!student) return 'NEC';
+
+  // 1. Explicit college property
+  const explicit = String(student.college || '').trim().toUpperCase();
+  if (explicit === 'NCT') return 'NCT';
+  if (explicit === 'NEC') return 'NEC';
+
+  // 2. Campus / Institution ID
+  const campus = String(student.campus || student.institution_id || '').trim().toUpperCase();
+  if (campus.includes('NCT')) return 'NCT';
+  if (campus.includes('NEC')) return 'NEC';
+
+  // 3. Anna University Register Number prefix
+  const reg = String(student.reg_no || '').trim().toUpperCase();
+  if (reg.startsWith('7321') || reg.includes('NCT')) return 'NCT';
+  if (reg.startsWith('7322') || reg.includes('NEC')) return 'NEC';
+
+  // 4. Institutional email domain
+  const email = String(student.institutional_email || student.email || '').trim().toLowerCase();
+  if (email.includes('@nct') || email.includes('.nct.')) return 'NCT';
+  if (email.includes('nandhaengg') || email.includes('@nec') || email.includes('.nec.')) return 'NEC';
+
+  return 'NEC';
+}
+
+/**
+ * College filter matching predicate
+ */
+export function matchesCollege(student: StudentData, selectedCollege?: string): boolean {
+  if (!selectedCollege || selectedCollege === 'all' || selectedCollege === 'ALL') return true;
+  const target = normalizeCollege(selectedCollege);
+  const studentCollege = deriveStudentCollege(student);
+  return studentCollege === target;
+}
+
+export interface FilterAndSortOptions {
+  college?: string;
+  department?: string;
+  academicYear?: string;
+  nameSearch?: string;
+  performanceRange?: string;
+  sortBy?: string;
+}
+
+export interface PerformanceCounts {
+  all: number;
+  total: number;
+  above500: number;
+  between251And500: number;
+  between101And250: number;
+  between1And100: number;
+  notStarted: number;
+  '500_plus': number;
+  '251_500': number;
+  '101_250': number;
+  '1_100': number;
+  not_started: number;
+}
+
+export interface FilterAndSortResult {
+  filteredAndSorted: StudentData[];
+  counts: PerformanceCounts;
+}
+
+/**
+ * Main filtering and sorting helper used by DepartmentDashboard & LandingPage
+ */
+export function filterAndSortStudents(
+  students: StudentData[],
+  options: FilterAndSortOptions
+): FilterAndSortResult {
+  if (!students || students.length === 0) {
+    const emptyCounts: PerformanceCounts = {
+      all: 0,
+      total: 0,
+      above500: 0,
+      between251And500: 0,
+      between101And250: 0,
+      between1And100: 0,
+      notStarted: 0,
+      '500_plus': 0,
+      '251_500': 0,
+      '101_250': 0,
+      '1_100': 0,
+      not_started: 0
+    };
+    return {
+      filteredAndSorted: [],
+      counts: emptyCounts
+    };
+  }
+
+  const college = options.college || 'all';
+  const dept = options.department || 'all';
+  const year = options.academicYear || 'all';
+  const search = options.nameSearch || '';
+  const range = options.performanceRange || 'all';
+  const sort = options.sortBy || 'top_solved';
+
+  // Step 1: Base filter by College + Department + Academic Year + Search
+  const baseFiltered = students.filter(s => {
+    return (
+      matchesCollege(s, college) &&
+      matchesDepartment(s, dept) &&
+      matchesAcademicYear(s, year) &&
+      matchesNameSearch(s, search)
+    );
+  });
+
+  // Step 2: Compute performance counts on the base filtered cohort
+  let above500 = 0;
+  let between251And500 = 0;
+  let between101And250 = 0;
+  let between1And100 = 0;
+  let notStarted = 0;
+
+  for (const s of baseFiltered) {
+    const solved = getSolvedCount(s);
+    if (solved >= 500) above500++;
+    else if (solved >= 251) between251And500++;
+    else if (solved >= 101) between101And250++;
+    else if (solved >= 1) between1And100++;
+    else notStarted++;
+  }
+
+  const counts: PerformanceCounts = {
+    all: baseFiltered.length,
+    total: baseFiltered.length,
+    above500,
+    between251And500,
+    between101And250,
+    between1And100,
+    notStarted,
+    '500_plus': above500,
+    '251_500': between251And500,
+    '101_250': between101And250,
+    '1_100': between1And100,
+    not_started: notStarted
+  };
+
+  // Step 3: Filter by performance range
+  const performanceFiltered = baseFiltered.filter(s => matchesPerformanceRange(s, range));
+
+  // Step 4: Apply sort
+  const filteredAndSorted = sortStudents(performanceFiltered, sort);
+
+  return {
+    filteredAndSorted,
+    counts
+  };
+}

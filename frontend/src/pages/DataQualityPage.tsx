@@ -824,7 +824,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       {/* Fallback Student Profile Modal (if rendered standalone) */}
       {selectedStudentForProfile && (
         <div
-          className="fixed inset-0 z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/85 sm:backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudentForProfile(null); }}
         >

@@ -231,7 +231,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
           filteredStaff.map((s) => {
             const assigned = s.assigned_count || 0;
             const active = (s as any).active_count || 0;
-            const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
+            const sundayAttended = s.sunday_contest_attended ?? 0;
+            const sundayTurnoutPct = typeof s.sunday_contest_turnout_pct === 'number'
+              ? s.sunday_contest_turnout_pct
+              : (assigned > 0 ? Math.round((sundayAttended / assigned) * 100) : 0);
             const isSelected = selectedStaff === String(s.id);
             const deptCode = (s as any).department_code || 'DEPT';
             const deptBadge = getDeptBadgeStyle(deptCode);
@@ -302,37 +305,43 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       Sunday Contest
                     </span>
                     <span className="text-xs font-mono font-black text-indigo-600 dark:text-indigo-400">
-                      {assigned > 0 ? `${s.sunday_contest_attended ?? 0}/${assigned}` : '—'}
+                      {assigned > 0 ? `${sundayAttended}/${assigned}` : '—'}
                     </span>
                   </div>
                 </div>
 
-                {/* Progress Bar & Status Pill */}
+                {/* Progress Bar & Status Pill (Based on Sunday Contest Turnout) */}
                 <div className="flex items-center justify-between gap-3 pt-0.5">
                   <div className="flex-1 flex items-center gap-2">
                     <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-300 ${
-                          completionRate >= 80 ? 'bg-emerald-500' : completionRate > 0 ? 'bg-amber-500' : 'bg-slate-300'
+                          sundayTurnoutPct >= 80 ? 'bg-emerald-500' : sundayTurnoutPct >= 50 ? 'bg-indigo-500' : sundayTurnoutPct > 0 ? 'bg-amber-500' : 'bg-slate-300'
                         }`}
-                        style={{ width: `${completionRate}%` }}
+                        style={{ width: `${sundayTurnoutPct}%` }}
                       />
                     </div>
                     <span className={`text-[10px] font-mono font-black shrink-0 ${
-                      completionRate === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
+                      sundayTurnoutPct === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
                     }`}>
-                      {completionRate}%
+                      {sundayTurnoutPct}%
                     </span>
                   </div>
 
                   <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border shrink-0 ${
                     assigned === 0
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
-                      : active === assigned
+                      : sundayAttended === assigned
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                      : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                      : sundayAttended > 0
+                      ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                   }`}>
-                    {assigned === 0 ? 'Unallocated' : active === assigned ? '100% Active' : `Allocated (${assigned})`}
+                    {assigned === 0
+                      ? 'Unallocated'
+                      : sundayAttended === assigned
+                      ? '100% Contest'
+                      : `${sundayTurnoutPct}% Contest`}
                   </span>
                 </div>
 
@@ -417,8 +426,8 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
               <th className="py-4 px-3 text-center">Assigned</th>
               <th className="py-4 px-3 text-center">Active Solvers</th>
               <th className="py-4 px-3 text-center">Sunday Contest</th>
-              <th className="py-4 px-3 text-center">Completion Rate</th>
-              <th className="py-4 px-3 text-center">Workload Status</th>
+              <th className="py-4 px-3 text-center">Sunday Contest Rate</th>
+              <th className="py-4 px-3 text-center">Contest Status</th>
               <th className="py-4 px-4 text-center w-[275px] min-w-[275px]">Actions</th>
             </tr>
           </thead>
@@ -436,7 +445,11 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
               filteredStaff.map((s) => {
                 const assigned = s.assigned_count || 0;
                 const active = (s as any).active_count || 0;
-                const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
+                const activeRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
+                const sundayAttended = s.sunday_contest_attended ?? 0;
+                const sundayTurnoutPct = typeof s.sunday_contest_turnout_pct === 'number'
+                  ? s.sunday_contest_turnout_pct
+                  : (assigned > 0 ? Math.round((sundayAttended / assigned) * 100) : 0);
                 const isSelected = selectedStaff === String(s.id);
                 const deptCode = (s as any).department_code || (s as any).department || 'DEPT';
                 const deptBadge = getDeptBadgeStyle(deptCode);
@@ -525,7 +538,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${active > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                             <span>{active} / {assigned}</span>
-                            <span className="text-[10px] opacity-80 font-bold">({completionRate}%)</span>
+                            <span className="text-[10px] opacity-80 font-bold">({activeRate}%)</span>
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs inline-flex items-center gap-1 border border-slate-300/80 dark:border-slate-700">
@@ -544,21 +557,21 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                         {assigned > 0 ? (
                           <span
                             className={`px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1 border ${
-                              (s.sunday_contest_turnout_pct || 0) >= 80
+                              sundayTurnoutPct >= 80
                                 ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
-                                : (s.sunday_contest_turnout_pct || 0) >= 50
+                                : sundayTurnoutPct >= 50
                                 ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
-                                : (s.sunday_contest_attended || 0) > 0
+                                : sundayAttended > 0
                                 ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
                             }`}
-                            title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${s.sunday_contest_attended || 0} of ${assigned} attended`}
+                            title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${sundayAttended} of ${assigned} attended`}
                           >
                             <span>
-                              {s.sunday_contest_attended ?? 0} / {assigned}
+                              {sundayAttended} / {assigned}
                             </span>
                             <span className="text-[10px] opacity-80">
-                              ({s.sunday_contest_turnout_pct ?? 0}%)
+                              ({sundayTurnoutPct}%)
                             </span>
                           </span>
                         ) : (
@@ -567,58 +580,58 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       </div>
                     </td>
 
-                    {/* Completion Rate Gauge */}
+                    {/* Sunday Contest Rate Gauge */}
                     <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
                       <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Completion Rate
+                        Sunday Contest Rate
                       </span>
                       <div className="flex items-center justify-end md:justify-center gap-2">
                         <div className="relative w-16 sm:w-20 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
-                              completionRate >= 80
+                              sundayTurnoutPct >= 80
                                 ? 'bg-emerald-500'
-                                : completionRate >= 50
-                                ? 'bg-amber-500'
-                                : completionRate > 0
+                                : sundayTurnoutPct >= 50
+                                ? 'bg-indigo-500'
+                                : sundayTurnoutPct > 0
                                 ? 'bg-amber-400'
                                 : 'bg-slate-300'
                             }`}
-                            style={{ width: `${completionRate}%` }}
+                            style={{ width: `${sundayTurnoutPct}%` }}
                           />
                         </div>
                         <span className={`font-black text-xs ${
-                          completionRate === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
+                          sundayTurnoutPct === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
                         }`}>
-                          {completionRate}%
+                          {sundayTurnoutPct}%
                         </span>
                       </div>
                     </td>
 
-                    {/* Workload Status */}
+                    {/* Contest Status */}
                     <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center md:table-cell border-b border-slate-50 dark:border-white/5 md:border-none">
                       <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Workload Status
+                        Contest Status
                       </span>
                       <div className="text-right md:text-center">
                         <span
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-black border uppercase tracking-wider ${
                             assigned === 0
                               ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-slate-300/80 dark:border-slate-700 font-black'
-                              : active === assigned
+                              : sundayAttended === assigned
                               ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                              : active > 0
-                              ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
-                              : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                              : sundayAttended > 0
+                              ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                              : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
                           }`}
                         >
                           {assigned === 0
                             ? 'UNALLOCATED (0)'
-                            : active === assigned
-                            ? `100% ACTIVE (${assigned})`
-                            : active > 0
-                            ? `ALLOCATED (${assigned})`
-                            : `PENDING (${assigned})`}
+                            : sundayAttended === assigned
+                            ? `100% CONTEST (${assigned})`
+                            : sundayAttended > 0
+                            ? `${sundayTurnoutPct}% CONTEST (${sundayAttended}/${assigned})`
+                            : `0% CONTEST (0/${assigned})`}
                         </span>
                       </div>
                     </td>

@@ -601,6 +601,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   }, [isUserStaff, isUserHod, isUserGlobal, userDeptCode, initialDeptFilter, selectedDeptFilter, user?.authorized_department_codes]);
   const [selectedAttendanceFilter, setSelectedAttendanceFilter] = useState<string>('ALL');
+  const [showMobileStats, setShowMobileStats] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('wc_show_mobile_stats') !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [matrixRows, setMatrixRows] = useState<any[]>([]);
   const [allSessionRows, setAllSessionRows] = useState<any[]>([]);
   const [totalRows, setTotalRows] = useState<number>(0);
@@ -988,32 +995,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   };
 
 
-  // Sunday Live Contest Milestone & Snapshot Autopilot Alert System
-  const alertedMilestonesRef = useRef<Set<number>>(new Set());
+  // Sunday Live Contest Autopilot Snapshot State
   const snapshotAlertFiredRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (!matrixRows || matrixRows.length === 0) return;
-    const solvers = matrixRows.filter(r => (Number(r.total_contest_solved ?? r.total_solved) > 0)).length;
-    const milestones = [25, 50, 75, 100, 150, 200, 300, 400, 500];
-
-    for (const m of milestones) {
-      if (solvers >= m && !alertedMilestonesRef.current.has(m)) {
-        alertedMilestonesRef.current.add(m);
-        try { playContestAlertChime(); } catch (_) {}
-        if (m >= 50) {
-          try { triggerConfetti(); } catch (_) {}
-        }
-        setNotification({
-          isOpen: true,
-          type: 'success',
-          title: `Contest Milestone: ${m}+ Solvers!`,
-          message: `Phenomenal performance! ${solvers} students have solved problems in this Sunday Contest session.`
-        });
-        break;
-      }
-    }
-  }, [matrixRows]);
 
 
 
@@ -3626,184 +3609,259 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           );
         })()}
-        {/* ACTIVE SCOPE BANNER */}
+        {/* ACTIVE SCOPE BANNER - Dynamic & Clean: Only shows actively filtered dimensions */}
         {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL') && (
-          <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 shadow-sm animate-fade-in -mb-1 mt-4">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px]">Active Scope:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <span className={selectedDeptFilter !== 'ALL' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}>
-                  {selectedDeptFilter === 'ALL' ? 'All Departments' : selectedDeptFilter}
-                </span>
-                <span className="text-slate-300 dark:text-slate-700">•</span>
-                <span className={selectedYearFilter !== 'ALL' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-500'}>
-                  {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
-                </span>
-                <span className="text-slate-300 dark:text-slate-700">•</span>
-                <span className={selectedAttendanceFilter !== 'ALL' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}>
-                  {selectedAttendanceFilter === 'ALL' ? 'All Statuses' : selectedAttendanceFilter.replace('_', ' ')}
-                </span>
+          <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/80 dark:border-indigo-800/50 rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2.5 shadow-sm animate-fade-in -mb-1 mt-4">
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-indigo-500" />
+                Active Scope:
               </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedDeptFilter !== 'ALL' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold shadow-2xs">
+                    <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Dept:</span>
+                    <span>{selectedDeptFilter}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeptFilter('ALL')}
+                      className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      title="Clear Department Filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedYearFilter !== 'ALL' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold shadow-2xs">
+                    <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">Year:</span>
+                    <span>{selectedYearFilter === '1' ? 'I Year' : selectedYearFilter === '2' ? 'II Year' : selectedYearFilter === '3' ? 'III Year' : selectedYearFilter === '4' ? 'IV Year' : `${selectedYearFilter} Year`}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedYearFilter('ALL')}
+                      className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      title="Clear Year Filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedAttendanceFilter !== 'ALL' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold shadow-2xs">
+                    <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Status:</span>
+                    <span className="font-extrabold">{selectedAttendanceFilter.replace(/_/g, ' ')}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAttendanceFilter('ALL')}
+                      className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      title="Clear Status Filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
             </div>
             <button
+              type="button"
               onClick={() => {
                 setSelectedDeptFilter('ALL');
                 setSelectedYearFilter('ALL');
                 setSelectedAttendanceFilter('ALL');
               }}
-              className="text-[10px] font-black uppercase tracking-wider text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer flex items-center gap-1 bg-white dark:bg-navy-950 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm hover:shadow"
+              className="text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors cursor-pointer flex items-center gap-1.5 bg-white dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs hover:shadow-xs hover:border-rose-300"
             >
-              <X className="w-3 h-3" />
-              Clear Filters
+              <RotateCcw className="w-3 h-3" />
+              <span>Clear All</span>
             </button>
           </div>
         )}
 
-        {/* Headline 6 Stat Cards (2026 Bento glass cards, animated count-up, hover micro-interactions) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {/* Card 1: Total Students */}
-          <button
-            onClick={() => setSelectedAttendanceFilter('ALL')}
-            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL'
-              ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/10'
-              : 'hover:border-brand-400/40'
-              }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Total</span>
-              <div className="w-6 h-6 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform">
-                <Users className="w-3.5 h-3.5" />
+        {/* Headline Stat Cards - Collapsible on Mobile, Unchanged on Desktop */}
+        {(() => {
+          const showVirtualCard = stats.virtualRows > 0 || selectedAttendanceFilter === 'VIRTUAL_ATTENDED';
+          const cardCount = showVirtualCard ? 6 : 5;
+          return (
+            <div className="space-y-2.5">
+              {/* Mobile-Only Toggle Bar (Hidden on Desktop 'lg:hidden') */}
+              <div className="flex items-center justify-between lg:hidden pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !showMobileStats;
+                    setShowMobileStats(next);
+                    try { localStorage.setItem('wc_show_mobile_stats', String(next)); } catch {}
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 touch-manipulation"
+                >
+                  <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span>{showMobileStats ? 'Hide Overview Cards' : 'Show Overview Cards'}</span>
+                  <span className="text-[10px] font-bold text-slate-400">({cardCount})</span>
+                  {showMobileStats ? (
+                    <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  )}
+                </button>
+                {!showMobileStats && (
+                  <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                    {stats.attendedRows}/{stats.totalRows} Verified ({stats.totalParticipationPct}%)
+                  </span>
+                )}
               </div>
-            </div>
-            <div className="flex items-baseline justify-between w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
-                <AnimatedNumber value={stats.totalRows} />
-              </p>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Enrolled</span>
-            </div>
-          </button>
 
-          {/* Card 2: Public Attended */}
-          <button
-            onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
-            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-              ? 'border-emerald-500/80 ring-2 ring-emerald-500/30 shadow-glass-dark bg-emerald-500/15'
-              : 'hover:border-emerald-500/40'
-              }`}
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center">
-                Public
-              </span>
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                <Award className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
-                <AnimatedNumber value={stats.attendedRows} />
-              </p>
-              <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/60 uppercase tracking-widest">Verified</span>
-            </div>
-          </button>
+              {/* Grid: Hidden on mobile when collapsed, ALWAYS grid on desktop (lg:grid) */}
+              <div className={`${showMobileStats ? 'grid' : 'hidden lg:grid'} grid-cols-2 sm:grid-cols-3 ${showVirtualCard ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 animate-fade-in`}>
+                {/* Card 1: Total Students */}
+                <button
+                  onClick={() => setSelectedAttendanceFilter('ALL')}
+                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL'
+                    ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/10'
+                    : 'hover:border-brand-400/40'
+                    }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Total</span>
+                    <div className="w-6 h-6 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform">
+                      <Users className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between w-full">
+                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
+                      <AnimatedNumber value={stats.totalRows} />
+                    </p>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Enrolled</span>
+                  </div>
+                </button>
 
-          {/* Card 3: Virtual Attended */}
-          <button
-            onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
-            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-              ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-glass-dark bg-purple-500/15'
-              : 'hover:border-purple-500/40'
-              }`}
-          >
-            <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                Virtual
-              </span>
-              <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400">
-                <AnimatedNumber value={stats.virtualRows} />
-              </p>
-              <span className="text-[9px] font-bold text-purple-600/70 dark:text-purple-400/60 uppercase tracking-widest">Practice</span>
-            </div>
-          </button>
+                {/* Card 2: Public Attended */}
+                <button
+                  onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
+                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
+                    ? 'border-emerald-500/80 ring-2 ring-emerald-500/30 shadow-glass-dark bg-emerald-500/15'
+                    : 'hover:border-emerald-500/40'
+                    }`}
+                >
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center">
+                      Public
+                    </span>
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                      <Award className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between w-full">
+                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
+                      <AnimatedNumber value={stats.attendedRows} />
+                    </p>
+                    <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/60 uppercase tracking-widest">Verified</span>
+                  </div>
+                </button>
 
-          {/* Card 4: Not Attended */}
-          <button
-            onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
-            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-              ? 'border-rose-500/80 ring-2 ring-rose-500/30 shadow-glass-dark bg-rose-500/15'
-              : 'hover:border-rose-500/40'
-              }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400 tracking-wider">Absent</span>
-              <div className="w-6 h-6 rounded-lg bg-rose-500/15 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
-                <UserX className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400">
-                <AnimatedNumber value={stats.notAttendedRows} />
-              </p>
-              <span className="text-[9px] font-bold text-rose-600/70 dark:text-rose-400/60 uppercase tracking-widest">Inactive</span>
-            </div>
-          </button>
+                {/* Card 3: Virtual Attended (Only displayed when virtual participation exists or filter is active) */}
+                {showVirtualCard && (
+                  <button
+                    onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
+                    className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
+                      ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-glass-dark bg-purple-500/15'
+                      : 'hover:border-purple-500/40'
+                      }`}
+                  >
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                        Virtual
+                      </span>
+                      <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline justify-between w-full">
+                      <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400">
+                        <AnimatedNumber value={stats.virtualRows} />
+                      </p>
+                      <span className="text-[9px] font-bold text-purple-600/70 dark:text-purple-400/60 uppercase tracking-widest">Practice</span>
+                    </div>
+                  </button>
+                )}
 
-          {/* Card 5: Data Errors */}
-          <button
-            onClick={() => {
-              toggleAttendanceFilter('DATA_ERROR');
-              setShowDetailedView(true);
-              setSubTab('error_board');
-            }}
-            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'DATA_ERROR'
-              ? 'border-amber-500/80 ring-2 ring-amber-500/30 shadow-glass-dark bg-amber-500/15'
-              : 'hover:border-amber-500/40'
-              }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 tracking-wider">Errors</span>
-              <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
-                <AlertTriangle className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div className="flex items-baseline justify-between w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
-                <AnimatedNumber value={stats.errorRows} />
-              </p>
-              <span className="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/60 uppercase tracking-widest">Fixes</span>
-            </div>
-          </button>
+                {/* Card 4: Not Attended */}
+                <button
+                  onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
+                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
+                    ? 'border-rose-500/80 ring-2 ring-rose-500/30 shadow-glass-dark bg-rose-500/15'
+                    : 'hover:border-rose-500/40'
+                    }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400 tracking-wider">Absent</span>
+                    <div className="w-6 h-6 rounded-lg bg-rose-500/15 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
+                      <UserX className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between w-full">
+                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400">
+                      <AnimatedNumber value={stats.notAttendedRows} />
+                    </p>
+                    <span className="text-[9px] font-bold text-rose-600/70 dark:text-rose-400/60 uppercase tracking-widest">Inactive</span>
+                  </div>
+                </button>
 
-          {/* Card 6: Participation (count = public + virtual) */}
-          <button
-            onClick={() => toggleAttendanceFilter('ALL_ATTENDED')}
-            className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL_ATTENDED'
-              ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/15'
-              : 'hover:border-brand-500/40'
-              }`}
-          >
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Overall</span>
-              <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-3.5 h-3.5" />
+                {/* Card 5: Data Errors */}
+                <button
+                  onClick={() => {
+                    toggleAttendanceFilter('DATA_ERROR');
+                    setShowDetailedView(true);
+                    setSubTab('error_board');
+                  }}
+                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'DATA_ERROR'
+                    ? 'border-amber-500/80 ring-2 ring-amber-500/30 shadow-glass-dark bg-amber-500/15'
+                    : 'hover:border-amber-500/40'
+                    }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 tracking-wider">Errors</span>
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between w-full">
+                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
+                      <AnimatedNumber value={stats.errorRows} />
+                    </p>
+                    <span className="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/60 uppercase tracking-widest">Fixes</span>
+                  </div>
+                </button>
+
+                {/* Card 6: Participation (count = public + virtual) */}
+                <button
+                  onClick={() => toggleAttendanceFilter('ALL_ATTENDED')}
+                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
+                    !showVirtualCard ? 'col-span-2 sm:col-span-1' : ''
+                  } ${selectedAttendanceFilter === 'ALL_ATTENDED'
+                    ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/15'
+                    : 'hover:border-brand-500/40'
+                    }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Overall</span>
+                    <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline justify-between w-full">
+                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400 leading-none">
+                      <AnimatedNumber value={stats.attendedRows + stats.virtualRows} />
+                    </p>
+                    <span className="text-[10px] font-black font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">{stats.totalParticipationPct}%</span>
+                  </div>
+                </button>
               </div>
             </div>
-            <div className="flex items-baseline justify-between w-full">
-              <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400 leading-none">
-                <AnimatedNumber value={stats.attendedRows + stats.virtualRows} />
-              </p>
-              <span className="text-[10px] font-black font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">{stats.totalParticipationPct}%</span>
-            </div>
-          </button>
-        </div>
+          );
+        })()}
 
         {/* Feature Spotlight: Quick Statistics + Trend (Sparkline) + Top Performers */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -3887,7 +3945,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider">Active Solved</span>
                 </div>
                 <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug font-medium">
-                  <b className="text-slate-900 dark:text-white font-bold">{stats.attendedRows} Public</b> + <b className="text-purple-600 dark:text-purple-300 font-bold">{stats.virtualRows} Virtual</b> participants
+                  <b className="text-slate-900 dark:text-white font-bold">{stats.attendedRows} Public</b>
+                  {stats.virtualRows > 0 ? (
+                    <> + <b className="text-purple-600 dark:text-purple-300 font-bold">{stats.virtualRows} Virtual</b> participants</>
+                  ) : (
+                    <> Verified participants</>
+                  )}
                 </p>
               </div>
 
@@ -3946,29 +4009,29 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
 
-        {/* Virtual Students Detail Card (2026 Bento Glass Card with Purple Glow) */}
-        <div className="p-4 sm:p-6 rounded-3xl glass-panel relative overflow-hidden border border-purple-500/20 dark:border-purple-500/30 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="flex items-center space-x-3.5 relative z-10 min-w-0">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
-              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-black text-[10px] uppercase tracking-wider border border-purple-500/30">
-                  Virtual Practice Cohort
-                </span>
-                <span className="text-xs font-black text-slate-900 dark:text-white">
-                  {stats.virtualRows} Active Participants
-                </span>
+        {/* Virtual Students Detail Card (Conditionally shown only when virtual participants exist) */}
+        {stats.virtualRows > 0 && (
+          <div className="p-4 sm:p-6 rounded-3xl glass-panel relative overflow-hidden border border-purple-500/20 dark:border-purple-500/30 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex items-center space-x-3.5 relative z-10 min-w-0">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
+                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                Questions solved during virtual contest windows are tracked separately from live public contests.
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-black text-[10px] uppercase tracking-wider border border-purple-500/30">
+                    Virtual Practice Cohort
+                  </span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">
+                    {stats.virtualRows} Active Participants
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
+                  Questions solved during virtual contest windows are tracked separately from live public contests.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {stats.virtualRows > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full md:w-auto relative z-10">
               {[
                 { label: '4/4 Solved', count: stats.virtual4Solved, bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25' },
@@ -3982,12 +4045,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               ))}
             </div>
-          ) : (
-            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-4 py-2.5 rounded-2xl border border-purple-500/20 relative z-10 text-center w-full md:w-auto">
-              No virtual attendees recorded for this contest session yet.
-            </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Active Cohort Institutional Performance & Ranking Matrix */}
         <div className="p-5 sm:p-7 rounded-3xl glass-panel relative overflow-hidden border border-brand-500/20 dark:border-brand-500/30 shadow-glass flex flex-col gap-5">
@@ -5288,7 +5347,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
         >
-          <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content">
+          <div className="modal-container-responsive mobile-responsive-modal max-w-5xl bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl rounded-b-none sm:rounded-b-3xl shadow-lg border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up-drawer sm:animate-modal-content">
 
             {/* A. SLEEK GRADIENT HEADER (Matches Image 2) */}
             <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">

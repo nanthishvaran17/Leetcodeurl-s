@@ -91,7 +91,7 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 sm:backdrop-blur-md animate-fade-in"
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();

@@ -48,6 +48,8 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   const secondaryLogoImageRef = useRef<HTMLImageElement | null>(null);
   const [logoLoaded, setLogoLoaded] = useState(false);
   const [secondaryLogoLoaded, setSecondaryLogoLoaded] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [viewMode, setViewMode] = useState<'pass' | 'certificate'>('pass');
 
   useEffect(() => {
     const img = new Image();
@@ -104,19 +106,31 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     return 'Year II (2025–2029)';
   };
 
-  const drawCardOnCanvas = (canvas: HTMLCanvasElement) => {
+  const drawCardOnCanvas = (canvas: HTMLCanvasElement, exportMode: boolean = false) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // TRUE ULTRA-HD 8K RESOLUTION: 7680 x 4320 Landscape (33.2 Megapixels)
-    const W = 7680;
-    const H = 4320;
-    canvas.width = W;
-    canvas.height = H;
+    // For export/download: 4K (3840x2160) on mobile or 8K (7680x4320) on desktop
+    // For live on-screen preview: 1920x1080 (1080p Full HD, ultra-crisp, 16x faster, eliminates mobile VRAM lag)
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || /Android|iPhone|iPad/i.test(navigator.userAgent));
+    const targetW = exportMode ? (isMobile ? 3840 : 7680) : 1920;
+    const targetH = exportMode ? (isMobile ? 2160 : 4320) : 1080;
+    const scale = targetW / 7680;
+
+    canvas.width = targetW;
+    canvas.height = targetH;
 
     // Enable high-quality anti-aliasing & image smoothing
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
+
+    ctx.save();
+    if (scale !== 1) {
+      ctx.scale(scale, scale);
+    }
+
+    const W = 7680;
+    const H = 4320;
 
     ctx.clearRect(0, 0, W, H);
 
@@ -710,28 +724,28 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.fillStyle = '#64748B';
     ctx.font = '900 40px "Inter", sans-serif';
     ctx.fillText('Nandha Engineering College (Autonomous) • Erode', pad + innerW - 60, footerTextY);
+
+    ctx.restore();
   };
 
   useEffect(() => {
+    // Only render canvas if the user has actually toggled to 'certificate' view!
+    if (viewMode !== 'certificate') return;
+
+    let timerId: any;
     const renderCanvas = () => {
       if (canvasRef.current) {
-        drawCardOnCanvas(canvasRef.current);
+        drawCardOnCanvas(canvasRef.current, false);
       }
     };
 
     renderCanvas();
-    const t1 = setTimeout(renderCanvas, 100);
-    const t2 = setTimeout(renderCanvas, 400);
-
-    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(renderCanvas).catch(() => {});
-    }
+    timerId = setTimeout(renderCanvas, 200);
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      if (timerId) clearTimeout(timerId);
     };
-  }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount, leetcodeUsername, contestRating, easySolved, mediumSolved, hardSolved, lastVerifiedAt, officialContests, virtualContests, verificationSource, credentialStatus, logoLoaded, secondaryLogoLoaded]);
+  }, [viewMode, studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount, leetcodeUsername, contestRating, easySolved, mediumSolved, hardSolved, lastVerifiedAt, officialContests, virtualContests, verificationSource, credentialStatus, logoLoaded, secondaryLogoLoaded]);
 
   const cleanYear = yearLevel?.replace(/\s*year\b/gi, '').trim() || yearLevel || 'I';
   const credentialId = `NEC-PASS-2026-${regNo || '732225CC018'}`;
@@ -756,8 +770,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     params.set('type', 'student_pass');
     return `${resolvedOrigin}/verify/${encodeURIComponent(credentialId)}?${params.toString()}`;
   }, [resolvedOrigin, credentialId, regNo, studentName, deptName, cleanYear, leetcodeUsername, totalSolved, collegeRank, streakCount, contestRating, easySolved, mediumSolved, hardSolved]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [viewMode, setViewMode] = useState<'pass' | 'certificate'>('pass');
+
 
   const handleToggleView = (mode: 'pass' | 'certificate') => {
     setViewMode(mode);
@@ -773,29 +786,29 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
   const generateAndDownloadPass = () => {
     if (isGenerating) return;
     setIsGenerating(true);
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      setIsGenerating(false);
-      return;
-    }
-    drawCardOnCanvas(canvas);
+
+    const exportCanvas = document.createElement('canvas');
+    drawCardOnCanvas(exportCanvas, true);
 
     const cleanReg = (regNo || 'download').replace(/[^A-Za-z0-9_-]+/g, '_');
     const mimeType = 'image/png';
-    const filename = `Nandha_Executive_Student_Pass_8K_${cleanReg}.png`;
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || /Android|iPhone|iPad/i.test(navigator.userAgent));
+    const filename = `Nandha_Executive_Student_Pass_${isMobile ? '4K' : '8K'}_${cleanReg}.png`;
 
-    canvas.toBlob((blob) => {
+    exportCanvas.toBlob((blob) => {
       if (blob) {
         triggerDownload(blob, filename, mimeType);
       } else {
         const link = document.createElement('a');
         link.download = filename;
-        link.href = canvas.toDataURL(mimeType, 1.0);
+        link.href = exportCanvas.toDataURL(mimeType, 1.0);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       }
-      setTimeout(() => setIsGenerating(false), 1200);
+      exportCanvas.width = 0;
+      exportCanvas.height = 0;
+      setTimeout(() => setIsGenerating(false), 800);
     }, mimeType, 1.0);
   };
 
@@ -991,14 +1004,16 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
         </div>
       )}
 
-      {/* VIEW 2: Live Rendered 8K Canvas Preview (Always in DOM so ref exists) */}
-      <div className={`p-2 sm:p-3 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-inner overflow-x-auto ${viewMode === 'certificate' ? 'flex justify-center' : 'hidden'}`}>
-        <canvas
-          ref={canvasRef}
-          className="rounded-2xl shadow-xl max-w-full h-auto border border-slate-300 dark:border-navy-700"
-          style={{ width: '100%', maxWidth: '850px', imageRendering: 'crisp-edges' }}
-        />
-      </div>
+      {/* VIEW 2: Live Rendered Canvas Preview */}
+      {viewMode === 'certificate' && (
+        <div className="p-2 sm:p-3 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-inner overflow-x-auto flex justify-center">
+          <canvas
+            ref={canvasRef}
+            className="rounded-2xl shadow-xl max-w-full h-auto border border-slate-300 dark:border-navy-700"
+            style={{ width: '100%', maxWidth: '850px', imageRendering: 'crisp-edges' }}
+          />
+        </div>
+      )}
 
       <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
         <QRCodeCanvas

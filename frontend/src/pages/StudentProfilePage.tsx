@@ -153,7 +153,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     window.addEventListener('student_updated', handleStudentUpdated);
 
     // Defer heavy chart rendering to prevent modal opening scroll lag
-    const timer = setTimeout(() => setIsChartsReady(true), 150);
+    const timer = setTimeout(() => setIsChartsReady(true), 350);
 
     const handlePull = () => {
       clearApiCache();
@@ -725,8 +725,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Section: Rankings & Activity (7 columns) */}
-        <div className="lg:col-span-7 bg-white/80 dark:bg-slate-900/70 rounded-3xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/40 relative overflow-hidden backdrop-blur-xl transition-all duration-300">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br from-amber-500/10 via-indigo-500/10 to-transparent blur-3xl rounded-full pointer-events-none"></div>
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 sm:backdrop-blur-xl rounded-3xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/40 relative overflow-hidden transition-all duration-300">
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br from-amber-500/10 via-indigo-500/10 to-transparent blur-2xl sm:blur-3xl rounded-full pointer-events-none"></div>
           
           <div className="flex items-center justify-between mb-5 relative z-10">
             <div className="flex items-center space-x-2.5">
@@ -809,8 +809,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
 
         {/* Right Section: Contest Metrics (5 columns) */}
-        <div className="lg:col-span-5 bg-white/80 dark:bg-slate-900/70 rounded-3xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/40 relative overflow-hidden backdrop-blur-xl flex flex-col justify-between transition-all duration-300">
-          <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-indigo-600/15 blur-3xl rounded-full pointer-events-none"></div>
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 sm:backdrop-blur-xl rounded-3xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 shadow-xl shadow-slate-200/50 dark:shadow-black/40 relative overflow-hidden flex flex-col justify-between transition-all duration-300">
+          <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-indigo-600/15 blur-2xl sm:blur-3xl rounded-full pointer-events-none"></div>
           
           <div className="flex items-center justify-between mb-4 relative z-10">
             <div className="flex items-center space-x-2.5">
@@ -909,8 +909,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Pie Chart / Difficulty Architecture */}
-        <div className="bg-white/80 dark:bg-slate-900/70 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none"></div>
+        <div className="bg-white dark:bg-slate-900 sm:backdrop-blur-xl p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/10 blur-2xl sm:blur-3xl rounded-full pointer-events-none"></div>
 
           <div className="flex items-center justify-between mb-4 relative z-10">
             <div className="flex items-center space-x-2.5">
@@ -939,6 +939,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                     outerRadius={75}
                     paddingAngle={4}
                     dataKey="value"
+                    isAnimationActive={false}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -972,8 +973,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
 
         {/* Weak Topic AI Insights */}
-        <div className="bg-white/80 dark:bg-slate-900/70 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute -top-16 -right-16 w-52 h-52 bg-amber-500/10 blur-3xl rounded-full pointer-events-none"></div>
+        <div className="bg-white dark:bg-slate-900 sm:backdrop-blur-xl p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute -top-16 -right-16 w-52 h-52 bg-amber-500/10 blur-2xl sm:blur-3xl rounded-full pointer-events-none"></div>
 
           <div className="flex items-center justify-between mb-4 relative z-10">
             <div className="flex items-center space-x-2.5">

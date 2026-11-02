@@ -107,7 +107,8 @@ class FacultyActionEngine:
             query = query.filter(or_(
                 Student.name.ilike(search_str),
                 Student.reg_no.ilike(search_str),
-                Student.leetcode_username.ilike(search_str)
+                Student.username.ilike(search_str),
+                Student.primary_leetcode_id.ilike(search_str)
             ))
 
         items = query.all()
@@ -336,7 +337,8 @@ def get_faculty_actions_list(
         query = query.filter(or_(
             Student.name.ilike(search_str),
             Student.reg_no.ilike(search_str),
-            Student.leetcode_username.ilike(search_str)
+            Student.username.ilike(search_str),
+            Student.primary_leetcode_id.ilike(search_str)
         ))
 
     filtered_count = query.count()

@@ -19,8 +19,11 @@ interface CustomDropdownProps {
   id?: string;
   label: string;
   options: DropdownOption[];
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onChange?: (value: string) => void;
+  isMulti?: boolean;
+  values?: string[];
+  onMultiChange?: (values: string[]) => void;
   icon?: LucideIcon;
   placeholder?: string;
   align?: 'left' | 'right' | 'auto';
@@ -39,6 +42,9 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   options,
   value,
   onChange,
+  isMulti = false,
+  values,
+  onMultiChange,
   icon: HeaderIcon,
   placeholder = 'Select option...',
   align = 'auto',
@@ -69,8 +75,24 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Find selected option
-  const selectedOption = options.find((opt) => opt.value === value && !opt.label.toLowerCase().startsWith('select'));
+  // Find selected option(s)
+  const selectedOption = !isMulti
+    ? options.find((opt) => opt.value === value && !opt.label.toLowerCase().startsWith('select'))
+    : undefined;
+
+  const selectedOptionsList = isMulti
+    ? options.filter((opt) => values?.includes(opt.value) && opt.value !== 'none' && opt.value !== '')
+    : [];
+
+  const isOptionSelected = (optVal: string) => {
+    if (isMulti) {
+      if (optVal === 'none' || optVal === '') {
+        return !values || values.length === 0 || (values.length === 1 && values[0] === 'none');
+      }
+      return Boolean(values?.includes(optVal));
+    }
+    return optVal === value;
+  };
   
   // Filter out redundant placeholder options (e.g. value: '' with label 'Select ...') from selectable popover list
   const selectableOptions = options.filter((opt) => {
@@ -83,10 +105,11 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   // Keep focusedIndex in sync with selected value when opened
   useEffect(() => {
     if (isOpen) {
-      const idx = selectableOptions.findIndex((opt) => opt.value === value);
+      const targetVal = isMulti ? (values && values[0]) : value;
+      const idx = selectableOptions.findIndex((opt) => opt.value === targetVal);
       setFocusedIndex(idx >= 0 ? idx : 0);
     }
-  }, [isOpen, value, selectableOptions]);
+  }, [isOpen, value, values, isMulti, selectableOptions]);
 
   const updateCoords = useCallback(() => {
     if (dropdownRef.current) {
@@ -149,7 +172,20 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   }, [selectableOptions.length]);
 
   const handleSelect = (optionValue: string) => {
-    onChange(optionValue);
+    if (isMulti) {
+      if (optionValue === 'none' || optionValue === '') {
+        onMultiChange?.([]);
+        onChange?.('none');
+      } else {
+        const cur = (values || []).filter(v => v !== 'none' && v !== '');
+        const exists = cur.includes(optionValue);
+        const next = exists ? cur.filter(v => v !== optionValue) : [...cur, optionValue];
+        onMultiChange?.(next);
+        onChange?.(next[0] || 'none');
+      }
+      return;
+    }
+    onChange?.(optionValue);
     setIsOpen(false);
   };
 
@@ -268,9 +304,9 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
               </div>
 
               {/* Options List */}
-              <div className="p-3.5 overflow-y-auto space-y-2 max-h-[calc(80vh-90px)]">
+              <div className="p-3.5 overflow-y-auto space-y-2 max-h-[calc(80vh-140px)]">
                 {selectableOptions.map((opt) => {
-                  const isSelected = opt.value === value;
+                  const isSelected = isOptionSelected(opt.value);
                   const OptIcon = opt.icon;
 
                   return (
@@ -331,6 +367,18 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   );
                 })}
               </div>
+
+              {isMulti && (
+                <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 sticky bottom-0 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white font-extrabold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  >
+                    <Check className="w-4 h-4" /> Confirm Selection ({selectedOptionsList.length} Selected)
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         </AnimatePresence>,
@@ -358,7 +406,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
               className="overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] p-2 space-y-1 focus:outline-none scrollbar-thin"
             >
               {selectableOptions.map((opt, idx) => {
-                const isSelected = opt.value === value;
+                const isSelected = isOptionSelected(opt.value);
                 const isFocused = idx === focusedIndex;
                 const OptIcon = opt.icon;
 
@@ -430,6 +478,17 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   </button>
                 );
               })}
+              {isMulti && (
+                <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 rounded-b-xl sticky bottom-0 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Done ({selectedOptionsList.length} Selected)
+                  </button>
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>,
           document.body
@@ -504,12 +563,21 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 {selectedOption.badge}
               </span>
             )}
+            {isMulti && selectedOptionsList.length > 0 && !hideTriggerBadge && (
+              <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-indigo-100 text-indigo-700 dark:bg-indigo-900/80 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700">
+                {selectedOptionsList.length} Selected
+              </span>
+            )}
             <span className={`font-black truncate block min-w-0 flex-1 ${
               compact ? 'text-[11px] sm:text-xs' : 'text-xs'
             } ${
-              selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
+              (isMulti ? selectedOptionsList.length > 0 : selectedOption) ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
             }`}>
-              {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
+              {isMulti
+                ? (selectedOptionsList.length > 0
+                    ? selectedOptionsList.map(o => o.label).join(', ')
+                    : (options.find(o => o.value === 'none')?.label || 'None (Top Level)'))
+                : (selectedOption ? selectedOption.label : (placeholder || label || 'Select...'))}
             </span>
           </div>
         </div>

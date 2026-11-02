@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
+import { CustomMultiSelectDropdown } from '../CustomMultiSelectDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
@@ -47,6 +48,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     date_of_birth: '',
     mentoring_role: '',
     reporting_manager: 'none',
+    reporting_managers: [] as string[],
     institutional_id: '',
     profile_photo: ''
   });
@@ -155,7 +157,10 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         designation: staffObj.designation || '',
         date_of_birth: dobVal,
         mentoring_role: staffObj.mentoring_role || '',
-        reporting_manager: staffObj.reporting_manager ? String(staffObj.reporting_manager) : 'none',
+        reporting_manager: staffObj.reporting_manager_id ? String(staffObj.reporting_manager_id) : (staffObj.reporting_manager ? String(staffObj.reporting_manager) : 'none'),
+        reporting_managers: (staffObj.reporting_manager_ids && Array.isArray(staffObj.reporting_manager_ids) && staffObj.reporting_manager_ids.length > 0)
+          ? staffObj.reporting_manager_ids.map(String)
+          : (staffObj.reporting_manager_id ? [String(staffObj.reporting_manager_id)] : (staffObj.reporting_manager ? [String(staffObj.reporting_manager)] : [])),
         institutional_id: staffObj.institutional_id || '',
         profile_photo: staffObj.profile_photo || ''
       },
@@ -259,6 +264,27 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     ];
     return options;
   }, [storeVersion]);
+
+  // Reporting Manager Options - only Admin and HOD roles
+  const staffOptions: DropdownOption[] = useMemo(() => {
+    const isReportingRole = (role?: string) => {
+      const r = (role || '').trim().toLowerCase();
+      const isAdmin = r.includes('admin') || r === 'administrator';
+      const isHod = r.includes('hod') || r.includes('head of department') || r.includes('head');
+      return isAdmin || isHod;
+    };
+
+    const eligibleStaff = (staffList || []).filter(s => s.id !== staff?.id && isReportingRole(s.role));
+
+    return [
+      { value: 'none', label: 'None (Top Level)' },
+      ...eligibleStaff.map(s => ({
+        value: String(s.id),
+        label: s.full_name || s.username,
+        sublabel: s.role,
+      }))
+    ];
+  }, [staffList, staff?.id]);
 
   // Department Options
   const departmentOptions: DropdownOption[] = useMemo(() => {
@@ -464,7 +490,17 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         is_active: isActive,
         date_of_birth: formattedDOB,
         receive_email_reports: automatedReportsEnabled,
-        reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10),
+        reporting_manager_id: (() => {
+          const v = (formData.reporting_managers || []).filter(id => id && id !== 'none').map(id => parseInt(id, 10));
+          if (v.length > 0) return v[0];
+          return (!formData.reporting_manager || formData.reporting_manager === 'none') ? undefined : parseInt(formData.reporting_manager, 10);
+        })(),
+        reporting_manager_ids: (() => {
+          const v = (formData.reporting_managers || []).filter(id => id && id !== 'none').map(id => parseInt(id, 10));
+          if (v.length > 0) return v;
+          const s = (!formData.reporting_manager || formData.reporting_manager === 'none') ? undefined : parseInt(formData.reporting_manager, 10);
+          return s ? [s] : undefined;
+        })(),
         profile_photo: formData.profile_photo || undefined
       };
 
@@ -926,70 +962,22 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           <span>All Departments (Global Scope)</span>
                         </div>
                       ) : ['Department HOD', 'Placement Coordinator'].includes(formData.role) ? (
-                        <div className="relative" ref={hodDeptRef}>
-                          <button
-                            type="button"
-                            onClick={() => setHodDeptOpen(!hodDeptOpen)}
-                            className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 ${hodDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10 bg-indigo-50' : ''}`}
-                          >
-                            <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
-                              <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
-                                hodDeptOpen
-                                  ? 'bg-brand-500 border-brand-600 text-white'
-                                  : 'bg-indigo-100 dark:bg-indigo-800 border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 group-hover:text-indigo-700 group-hover:border-indigo-300'
-                              }`}>
-                                <Building2 className="w-3.5 h-3.5 shrink-0" />
-                              </div>
-                              <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
-                                {formData.hod_department_ids.length > 0 && (
-                                  <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-indigo-200 dark:bg-indigo-800 text-indigo-900 dark:text-indigo-100 border-indigo-300 dark:border-indigo-700">
-                                    {formData.hod_department_ids.length}
-                                  </span>
-                                )}
-                                <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.hod_department_ids.length > 0 ? 'text-indigo-950 dark:text-indigo-100' : 'text-indigo-800 dark:text-indigo-300'}`}>
-                                  {formData.hod_department_ids.length === 0
-                                    ? 'Select Departments...'
-                                    : formData.hod_department_ids
-                                        .map(id => {
-                                          const found = departmentOptions.find(d => d.value === id);
-                                          return found ? (found.badge || found.label) : `Dept ${id}`;
-                                        })
-                                        .join(', ')}
-                                </span>
-                              </div>
-                            </div>
-                            <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${hodDeptOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800'}`} />
-                          </button>
-                          {hodDeptOpen && (
-                            <div className="absolute left-0 right-0 z-[9999] mt-2 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl p-1.5 space-y-0.5">
-                              {departmentOptions.filter(d => d.value !== '0').map(opt => {
-                                const isSel = formData.hod_department_ids.includes(opt.value);
-                                return (
-                                  <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => {
-                                      const newIds = isSel 
-                                        ? formData.hod_department_ids.filter(id => id !== opt.value)
-                                        : [...formData.hod_department_ids, opt.value];
-                                      setFormData({ ...formData, hod_department_ids: newIds, department_id: newIds.length > 0 ? newIds[0] : '0' });
-                                    }}
-                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-indigo-50 dark:bg-indigo-900/30` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                                  >
-                                    <div className="flex items-center space-x-2 flex-1 pr-2">
-                                      <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                                        {opt.label}
-                                      </span>
-                                    </div>
-                                    <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-indigo-500 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
-                                      {isSel && <Check className="w-3 h-3 stroke-[3]" />}
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
+                        <CustomMultiSelectDropdown
+                          label=""
+                          options={departmentOptions.filter(d => d.value !== '0')}
+                          selectedValues={formData.hod_department_ids}
+                          onChange={(newIds) => {
+                            setFormData({
+                              ...formData,
+                              hod_department_ids: newIds,
+                              department_id: newIds.length > 0 ? newIds[0] : '0'
+                            });
+                          }}
+                          icon={Building2}
+                          placeholder="Select Departments..."
+                          colorTheme="indigo"
+                          triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-black cursor-pointer shadow-2xs"
+                        />
                       ) : (
                         <CustomDropdown
                           options={departmentOptions}
@@ -1033,6 +1021,33 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         onChange={(e) => setAssignedSections(e.target.value)}
                         placeholder="e.g. A, B, C (Global Access if empty)"
                         className="w-full h-11 px-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-extrabold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                      />
+                    </div>
+
+                    {/* Reporting Manager (Multi-Select HOD & Admin) */}
+                    <div className="space-y-1.5 relative sm:col-span-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">
+                          Reporting Manager / HOD (Optional)
+                        </label>
+                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                          Multi-select (Select HOD & Admin together)
+                        </span>
+                      </div>
+                      <CustomDropdown
+                        options={staffOptions}
+                        label=""
+                        isMulti={true}
+                        values={formData.reporting_managers}
+                        onMultiChange={(vals) => {
+                          setFormData({
+                            ...formData,
+                            reporting_managers: vals,
+                            reporting_manager: vals.length > 0 ? vals[0] : 'none'
+                          });
+                        }}
+                        placeholder="Select Reporting Manager(s) (HOD / Admin)..."
+                        icon={User}
                       />
                     </div>
                   </div>

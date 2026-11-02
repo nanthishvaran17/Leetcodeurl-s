@@ -890,6 +890,7 @@ class CreateStaffRequest(BaseModel):
     is_active: bool = True
     require_password_change: bool = True
     reporting_manager_id: Optional[int] = None
+    reporting_manager_ids: Optional[List[int]] = None
     send_email: bool = True
     profile_photo: Optional[str] = None
 
@@ -904,6 +905,7 @@ class UpdateStaffRequest(BaseModel):
     department_id: Optional[int] = None
     hod_department_ids: Optional[List[int]] = None
     reporting_manager_id: Optional[int] = None
+    reporting_manager_ids: Optional[List[int]] = None
     section_id: Optional[int] = None
     academic_year: Optional[str] = None
     mentoring_role: Optional[str] = None
@@ -1067,6 +1069,15 @@ def create_staff_user(
     }
     assigned_role = allowed_roles.get((payload.role or "").strip().lower(), payload.role or "Faculty Mentor")
 
+    # Determine all reporting manager IDs (supports multi-select of Admin & HOD)
+    rep_ids: List[int] = []
+    if payload.reporting_manager_ids:
+        rep_ids = [int(i) for i in payload.reporting_manager_ids if i]
+    elif payload.reporting_manager_id:
+        rep_ids = [int(payload.reporting_manager_id)]
+
+    primary_rep_id = rep_ids[0] if rep_ids else None
+
     staff_user = User(
         institutional_id=inst_id,
         full_name=payload.full_name.strip(),
@@ -1083,7 +1094,8 @@ def create_staff_user(
         date_of_birth=_parse_dob(payload.date_of_birth),
         require_password_change=payload.require_password_change,
         is_active=payload.is_active,
-        reporting_manager_id=payload.reporting_manager_id,
+        reporting_manager_id=primary_rep_id,
+        profile_metadata={"reporting_manager_ids": rep_ids} if rep_ids else None,
         profile_photo=payload.profile_photo
     )
     db.add(staff_user)
@@ -1188,6 +1200,34 @@ def create_staff_user(
                 admin_data=admin_data,
                 event_data=event_data
             )
+
+        # Dispatch notification & email to all assigned reporting managers (HOD and/or Admin)
+        from backend.services.email_notifications import notify_reporting_manager_staff_assigned
+        for mid in rep_ids:
+            try:
+                m_user = db.query(User).filter(User.id == mid, User.is_active == True).first()
+                if m_user:
+                    NotificationService.create_direct_notification(
+                        title="Staff Assigned Under You",
+                        message=f"'{staff_user.full_name}' ({staff_user.role}, {dept_name}) has been provisioned and assigned to report to you.",
+                        recipient_user_ids=[str(m_user.id), str(m_user.email)],
+                        notification_type="STAFF_ASSIGNED",
+                        priority="high",
+                        action_route="/settings",
+                        created_by=f"{current_user.username} ({current_user.role})",
+                        send_email_notification=False
+                    )
+                    if m_user.email and payload.send_email:
+                        background_tasks.add_task(
+                            notify_reporting_manager_staff_assigned,
+                            manager_email=str(m_user.email),
+                            manager_name=str(m_user.full_name or m_user.username),
+                            manager_role=str(m_user.role or "Reporting Manager"),
+                            staff_data=staff_data,
+                            admin_data=admin_data
+                        )
+            except Exception as _m_err:
+                _log.warning(f"Failed to notify manager {mid}: {_m_err}")
             
     except Exception as _notif_err:
         pass
@@ -1267,10 +1307,22 @@ def update_staff_user(
             changes_made['designation'] = payload.designation.strip()
             staff_user.designation = payload.designation.strip()  # type: ignore[assignment]
 
-    if payload.reporting_manager_id is not None:
+    if payload.reporting_manager_ids is not None:
+        up_rep_ids = [int(i) for i in payload.reporting_manager_ids if i]
+        primary_id = up_rep_ids[0] if up_rep_ids else None
+        if staff_user.reporting_manager_id != primary_id:
+            changes_made['reporting_manager_id'] = str(up_rep_ids)
+            staff_user.reporting_manager_id = primary_id
+        pm = staff_user.profile_metadata or {}
+        pm["reporting_manager_ids"] = up_rep_ids
+        staff_user.profile_metadata = pm
+    elif payload.reporting_manager_id is not None:
         if staff_user.reporting_manager_id != payload.reporting_manager_id:
             changes_made['reporting_manager_id'] = str(payload.reporting_manager_id)
             staff_user.reporting_manager_id = payload.reporting_manager_id  # type: ignore[assignment]
+            pm = staff_user.profile_metadata or {}
+            pm["reporting_manager_ids"] = [payload.reporting_manager_id]
+            staff_user.profile_metadata = pm
 
     if payload.username is not None and payload.username.strip():
         existing_username = db.query(User).filter(User.username.ilike(payload.username.strip()), User.id != staff_id).first()
@@ -1768,6 +1820,8 @@ def get_all_staff_users(
             "is_active": s.is_active,
             "profile_photo": getattr(s, "profile_photo", None) or "",
             "assigned_count": counts_map.get(s.id, 0),
+            "reporting_manager_id": s.reporting_manager_id,
+            "reporting_manager_ids": (s.profile_metadata or {}).get("reporting_manager_ids") or ([s.reporting_manager_id] if s.reporting_manager_id else []),
             "max_capacity": None,
             "capacity_remaining": None,
             "created_at": s.created_at.isoformat() if hasattr(s, 'created_at') and s.created_at else None,

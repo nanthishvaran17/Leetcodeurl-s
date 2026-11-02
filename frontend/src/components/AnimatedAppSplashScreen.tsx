@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -19,30 +19,41 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
 }) => {
   const [statusText, setStatusText] = useState('Connecting to Campus Roster...');
   const [progress, setProgress] = useState(25);
-  const [isReadyToExit, setIsReadyToExit] = useState(false);
-  const isExitingRef = useRef(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const hasExitedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
 
-  const triggerExit = () => {
-    if (isExitingRef.current) return;
-    isExitingRef.current = true;
-    setIsReadyToExit(true);
+  // Keep latest onComplete ref without triggering effect re-execution
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  const triggerExit = useCallback(() => {
+    if (hasExitedRef.current) return;
+    hasExitedRef.current = true;
+    setIsExiting(true);
     triggerHaptic('light');
-    if (onComplete) {
-      setTimeout(onComplete, 380);
-    }
-  };
+
+    // Trigger onComplete after the Framer Motion 380ms exit animation completes
+    setTimeout(() => {
+      onCompleteRef.current?.();
+    }, 400);
+  }, []);
 
   useEffect(() => {
     // 1. Initial micro-haptic upon app mount
     triggerHaptic('light');
 
     // 2. Asset pre-flight: ensure logo is pre-cached
-    const preloadImg = new Image();
-    preloadImg.src = '/round_logo.png';
+    const preloadImg1 = new Image();
+    preloadImg1.src = '/round_logo.png';
+    const preloadImg2 = new Image();
+    preloadImg2.src = '/nec_25_years_logo.png';
 
+    // Strictly monotonic progression: NEVER decreases
     const t1 = setTimeout(() => {
       setStatusText('Syncing Contest Forensics...');
-      setProgress(72);
+      setProgress(prev => Math.max(prev, 72));
     }, 450);
 
     const t2 = setTimeout(() => {
@@ -51,7 +62,7 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
       triggerHaptic('selection');
     }, 1050);
 
-    // Ensure the logo completes its full 360-degree rotation (1350ms) plus a brief 150ms settled rest
+    // Ensure the logo completes its full rotation plus a brief settled rest at 100%
     const tExit = setTimeout(() => {
       triggerExit();
     }, Math.max(minDurationMs, 1500));
@@ -67,11 +78,11 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
       clearTimeout(tExit);
       clearTimeout(hardSafety);
     };
-  }, [minDurationMs, onComplete]);
+  }, [minDurationMs, triggerExit]);
 
   return (
     <AnimatePresence>
-      {!isReadyToExit && (
+      {!isExiting && (
         <motion.div
           key="trending-light-splash-screen"
           initial={{ opacity: 1 }}
@@ -83,7 +94,9 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
               ease: [0.16, 1, 0.3, 1] // Apple Spring deceleration
             }
           }}
-          className={`fixed inset-0 z-[100099] flex flex-col items-center justify-center bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden ${isReadyToExit ? 'pointer-events-none opacity-0' : 'touch-none'}`}
+          className={`fixed inset-0 z-[100099] flex flex-col items-center justify-center bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-slate-900 select-none overflow-hidden ${
+            isExiting ? 'pointer-events-none' : 'touch-none'
+          }`}
         >
           {/* Subtle Ambient Light Gradients (Clean Pastel Atmosphere) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -103,8 +116,6 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
             />
           </div>
 
-          
-
           {/* Centerpiece: Clean White Ceramic Jewel Emblem */}
           <div className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 text-center w-full max-w-lg">
             {/* Floating Insignia Tile */}
@@ -115,7 +126,6 @@ export const AnimatedAppSplashScreen: React.FC<AnimatedAppSplashScreenProps> = (
               className="relative mb-6 flex items-center justify-center"
             >
               {/* Outer Golden/Cyan Aura Halo */}
-              {/* Outer Ambient Rotating Light Halo */}
               <motion.div 
                 animate={{ rotate: -360 }}
                 transition={{ duration: 14, repeat: Infinity, ease: "linear" }}

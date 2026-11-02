@@ -364,11 +364,16 @@ export const StaffVerificationSection: React.FC = () => {
 
   const reportsToOptions = [
     { value: '', label: 'Select Reporting Manager / HOD...', hidePill: true },
-    ...reporters.map((rep: any) => ({
-      value: String(rep.id),
-      label: `${rep.name} (${rep.designation})`,
-      hidePill: true
-    }))
+    ...reporters
+      .filter((rep: any) => {
+        const d = (rep.designation || rep.role || '').toLowerCase();
+        return d.includes('admin') || d.includes('hod') || d.includes('head');
+      })
+      .map((rep: any) => ({
+        value: String(rep.id),
+        label: `${rep.name} (${rep.designation})`,
+        hidePill: true
+      }))
   ];
 
   return (

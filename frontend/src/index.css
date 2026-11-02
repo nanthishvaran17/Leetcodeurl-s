@@ -982,6 +982,11 @@ html.global-scroll-lock {
   }
 }
 
+.animate-slide-up-drawer {
+  animation: slideUpMobileDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
 .modal-container-responsive {
   position: relative !important;
   width: min(100%, 1280px) !important;
@@ -1021,9 +1026,14 @@ html.global-scroll-lock {
   }
 
   .mobile-responsive-modal {
+    margin-top: auto !important;
     margin-bottom: 0 !important;
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    height: 94dvh !important;
+    max-height: calc(100dvh - env(safe-area-inset-top, 24px) - 1.25rem) !important;
   }
 
   /* Native Mobile Touch Pull-down Handle Indicator:
@@ -1905,18 +1915,23 @@ html.dark {
     -webkit-overflow-scrolling: touch;
     width: 100% !important;
     max-width: 100% !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+    height: 94dvh !important;
+    max-height: calc(100dvh - env(safe-area-inset-top, 24px) - 1.25rem) !important;
     margin: 0 !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
     border-radius: 0 !important;
-    border-top-left-radius: 1.5rem !important;
-    border-top-right-radius: 1.5rem !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     top: auto !important;
     transform: translateY(0) !important;
+    animation: slideUpMobileDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
 
   /* Reset overlay padding when hosting a mobile bottom sheet */
@@ -2211,18 +2226,23 @@ video {
     -webkit-overflow-scrolling: touch;
     width: 100% !important;
     max-width: 100% !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+    height: 94dvh !important;
+    max-height: calc(100dvh - env(safe-area-inset-top, 24px) - 1.25rem) !important;
     margin: 0 !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
     border-radius: 0 !important;
-    border-top-left-radius: 1.5rem !important;
-    border-top-right-radius: 1.5rem !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     top: auto !important;
     transform: translateY(0) !important;
+    animation: slideUpMobileDrawer 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
 
   /* Reset overlay padding when hosting a mobile bottom sheet */

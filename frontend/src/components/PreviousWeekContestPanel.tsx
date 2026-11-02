@@ -1441,52 +1441,68 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   return (
     <div className="space-y-4 sm:space-y-6 pb-52 sm:pb-32 px-1 sm:px-0">
 
-      {/* Sleek Compact Action Toolbar (Eliminates redundant stacked contest banner on mobile) */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 sm:p-3.5 rounded-2xl bg-white/80 dark:bg-navy-950/80 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-2xs mb-3">
+      {/* Sleek Compact Action Toolbar (Single-line modern telemetry bar) */}
+      <div className="flex items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border border-slate-200/80 dark:border-navy-800 shadow-xs mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                Authoritative Question Telemetry
+          <div className="relative flex items-center justify-center shrink-0">
+            <span className={`w-2.5 h-2.5 rounded-full ${wsStatus === 'LIVE' ? 'bg-emerald-500' : 'bg-indigo-500'} shrink-0`} />
+            <span className={`absolute w-2.5 h-2.5 rounded-full ${wsStatus === 'LIVE' ? 'bg-emerald-500' : 'bg-indigo-500'} animate-ping opacity-75`} />
+          </div>
+          <div className="min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 truncate">
+                {summary?.contest_title || 'Contest Telemetry'}
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-300 text-[10px] font-mono font-bold">
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-300 text-[10px] font-mono font-bold shrink-0">
                 <Calendar className="w-3 h-3 text-indigo-500" />
-                <span>{summary?.target_date_ist ? `Target: ${summary.target_date_ist}` : 'Verified Telemetry'}</span>
+                <span>{summary?.target_date_ist ? `Target: ${summary.target_date_ist}` : 'Live'}</span>
               </span>
             </div>
-            <p className="text-[10.5px] text-slate-600 dark:text-slate-300 truncate">
-              Real-time Ingestion • {lastSyncAt || 'Live Auto-Sync'}
-            </p>
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+              <span className="sm:hidden inline-flex items-center gap-1 font-mono font-bold text-slate-600 dark:text-slate-300">
+                <Calendar className="w-2.5 h-2.5 text-indigo-500 shrink-0" />
+                <span>{summary?.target_date_ist || 'Live'}</span>
+              </span>
+              <span className="sm:hidden text-slate-300 dark:text-slate-600">•</span>
+              <span className="hidden sm:inline">Real-time Ingestion</span>
+              <span className="hidden sm:inline text-slate-300 dark:text-slate-600">•</span>
+              <span className="font-mono text-slate-600 dark:text-slate-300 font-semibold truncate">
+                {lastSyncAt ? `Synced ${lastSyncAt}` : 'Live Auto-Sync'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => {
               triggerHaptic('medium');
               fetchPreviousWeekData(true);
             }}
             disabled={syncing}
-            className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-sm transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation"
+            className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 sm:gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation whitespace-nowrap"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             <span>
-              {syncing
-                ? (selectedDeptFilter !== 'ALL' && selectedYearFilter !== 'ALL'
-                    ? `Re-Syncing ${selectedDeptFilter} ${selectedYearFilter} Yr...`
-                    : selectedDeptFilter !== 'ALL'
-                    ? `Re-Syncing ${selectedDeptFilter} (All Years)...`
-                    : selectedYearFilter !== 'ALL'
-                    ? `Re-Syncing All Depts (${selectedYearFilter} Yr)...`
-                    : 'Re-Syncing Live...')
-                : (selectedDeptFilter !== 'ALL' && selectedYearFilter !== 'ALL'
-                    ? `Force Sync (${selectedDeptFilter} • ${selectedYearFilter} Yr)`
-                    : selectedDeptFilter !== 'ALL'
-                    ? `Force Sync (${selectedDeptFilter} • All Years)`
-                    : selectedYearFilter !== 'ALL'
-                    ? `Force Sync (All Depts • ${selectedYearFilter} Yr)`
-                    : 'Force Live Re-Sync')}
+              {syncing ? (
+                <>
+                  <span className="sm:hidden">Syncing...</span>
+                  <span className="hidden sm:inline">
+                    {selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL'
+                      ? `Re-Syncing (${selectedDeptFilter !== 'ALL' ? selectedDeptFilter : 'All'} • ${selectedYearFilter !== 'ALL' ? `${selectedYearFilter} Yr` : 'All'})...`
+                      : 'Re-Syncing Live...'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="sm:hidden">Force Sync</span>
+                  <span className="hidden sm:inline">
+                    {selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL'
+                      ? `Force Sync (${selectedDeptFilter !== 'ALL' ? selectedDeptFilter : 'All'} • ${selectedYearFilter !== 'ALL' ? `${selectedYearFilter} Yr` : 'All'})`
+                      : 'Force Live Re-Sync'}
+                  </span>
+                </>
+              )}
             </span>
           </button>
         </div>

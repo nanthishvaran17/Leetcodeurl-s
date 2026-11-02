@@ -286,6 +286,7 @@ class ContestProblemAccuracyEngine:
                 {"index": 3, "problem_id": "Q3", "title_slug": f"weekly-contest-{c_num}-q3", "title": f"Contest {c_num} Problem 3", "difficulty": "Medium", "points": 5},
                 {"index": 4, "problem_id": "Q4", "title_slug": f"weekly-contest-{c_num}-q4", "title": f"Contest {c_num} Problem 4", "difficulty": "Hard", "points": 6},
             ]
+            OFFICIAL_CONTEST_PROBLEM_REGISTRY[c_num] = raw_problems
 
         if not raw_problems or len(raw_problems) != 4:
             return ContestProblemSet(

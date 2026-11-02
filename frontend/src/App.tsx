@@ -194,6 +194,9 @@ const MainAppContent: React.FC = () => {
     if (p.startsWith('/admin') || p.startsWith('/verify')) return false;
     return true;
   });
+  const handleSplashComplete = useCallback(() => {
+    setShowSplashScreen(false);
+  }, []);
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       if (sessionStorage.getItem('admin_login_portal') === 'true' || localStorage.getItem('admin_login_portal') === 'true' || window.location.hash.includes('dev-studio')) {
@@ -1048,59 +1051,56 @@ const MainAppContent: React.FC = () => {
 
   const { logout } = useAuth();
 
-  // Biometric Native Lock Interceptor
-  if (isAppLocked) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-navy-950 flex flex-col items-center justify-center p-4">
-        <div className="bg-white dark:bg-navy-900 rounded-2xl shadow-xl p-8 max-w-sm w-full text-center flex flex-col items-center">
-          <div className="w-16 h-16 bg-brand-50 dark:bg-brand-500/10 rounded-full flex items-center justify-center mb-6">
-            <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">App Locked</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">
-            {isBiometricError ? "Authentication failed or was cancelled. Please try again." : "Unlock to continue your session"}
-          </p>
-          <div className="flex flex-col gap-3 w-full">
-            <button
-              onClick={() => {
-                import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
-                  NativeBiometric.verifyIdentity({
-                    reason: 'Unlock App Session',
-                    title: 'App Locked'
-                  }).then(() => {
-                    setIsAppLocked(false);
-                    setIsBiometricError(false);
-                  }).catch(() => setIsBiometricError(true));
-                });
-              }}
-              className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium transition-colors"
-            >
-              Use Biometrics
-            </button>
-            <button
-              onClick={() => {
-                setIsAppLocked(false);
-                logout();
-              }}
-              className="w-full py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl font-medium transition-colors"
-            >
-              Logout
-            </button>
+  // Main view renderer with unified root splash screen
+  return (
+    <>
+      {/* Signature Persistent Launch Splash Screen (Single Instance at App Root) */}
+      {showSplashScreen && (
+        <AnimatedAppSplashScreen onComplete={handleSplashComplete} />
+      )}
+
+      {isAppLocked ? (
+        <div className="min-h-screen bg-slate-50 dark:bg-navy-950 flex flex-col items-center justify-center p-4">
+          <div className="bg-white dark:bg-navy-900 rounded-2xl shadow-xl p-8 max-w-sm w-full text-center flex flex-col items-center">
+            <div className="w-16 h-16 bg-brand-50 dark:bg-brand-500/10 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">App Locked</h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">
+              {isBiometricError ? "Authentication failed or was cancelled. Please try again." : "Unlock to continue your session"}
+            </p>
+            <div className="flex flex-col gap-3 w-full">
+              <button
+                onClick={() => {
+                  import('@capgo/capacitor-native-biometric').then(({ NativeBiometric }) => {
+                    NativeBiometric.verifyIdentity({
+                      reason: 'Unlock App Session',
+                      title: 'App Locked'
+                    }).then(() => {
+                      setIsAppLocked(false);
+                      setIsBiometricError(false);
+                    }).catch(() => setIsBiometricError(true));
+                  });
+                }}
+                className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium transition-colors"
+              >
+                Use Biometrics
+              </button>
+              <button
+                onClick={() => {
+                  setIsAppLocked(false);
+                  logout();
+                }}
+                className="w-full py-3 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-xl font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Full-screen login for unauthenticated users
-  if (!isAuthenticated) {
-    return (
-      <>
-        {showSplashScreen && (
-          <AnimatedAppSplashScreen onComplete={() => setShowSplashScreen(false)} />
-        )}
+      ) : !isAuthenticated ? (
         <Suspense fallback={<PageSkeleton />}>
           <LoginPage
             onSuccess={() => {
@@ -1129,44 +1129,31 @@ const MainAppContent: React.FC = () => {
             }}
           />
         </Suspense>
-      </>
-    );
-  }
-
-  if (activeTab === 'dev-studio') {
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={<PageSkeleton />}>
-          <DeveloperStudio onClose={() => {
-            try {
-              sessionStorage.removeItem('admin_login_portal');
-              localStorage.removeItem('admin_login_portal');
-              if (window.location.hash.includes('dev-studio')) {
-                window.history.replaceState(null, '', window.location.pathname);
-              }
-            } catch {}
-            handleTabChange(isAuthenticated ? 'dashboard' : 'landing');
-          }} />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
-
-  return (
-    <div className={`overflow-x-clip max-w-full min-w-0 box-border bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
-      activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
-    }`}>
-      {/* Signature World-Class App Launch Splash Screen (Airtel / Swiggy / Cred style) */}
-      {showSplashScreen && (
-        <AnimatedAppSplashScreen onComplete={() => setShowSplashScreen(false)} />
-      )}
-
-      {/* Top Page Transition Progress Loader */}
-      {isNavigating && (
-        <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
-          <div className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-sky-400 shadow-[0_0_12px_rgba(59,130,246,0.9)] animate-top-loader" />
-        </div>
-      )}
+      ) : activeTab === 'dev-studio' ? (
+        <ErrorBoundary>
+          <Suspense fallback={<PageSkeleton />}>
+            <DeveloperStudio onClose={() => {
+              try {
+                sessionStorage.removeItem('admin_login_portal');
+                localStorage.removeItem('admin_login_portal');
+                if (window.location.hash.includes('dev-studio')) {
+                  window.history.replaceState(null, '', window.location.pathname);
+                }
+              } catch {}
+              handleTabChange(isAuthenticated ? 'dashboard' : 'landing');
+            }} />
+          </Suspense>
+        </ErrorBoundary>
+      ) : (
+        <div className={`overflow-x-clip max-w-full min-w-0 box-border bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
+          activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
+        }`}>
+          {/* Top Page Transition Progress Loader */}
+          {isNavigating && (
+            <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
+              <div className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-sky-400 shadow-[0_0_12px_rgba(59,130,246,0.9)] animate-top-loader" />
+            </div>
+          )}
 
       <a 
         href="#main-content" 
@@ -1482,7 +1469,7 @@ const MainAppContent: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 sm:backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
@@ -1626,6 +1613,8 @@ const MainAppContent: React.FC = () => {
       )}
 
     </div>
+      )}
+    </>
   );
 };
 

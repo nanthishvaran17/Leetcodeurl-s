@@ -875,7 +875,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   if (!student) {
     return createPortal(
       <div
-        className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
+        className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/85 sm:backdrop-blur-md modal-overlay-responsive"
         style={{ zIndex: 99999999 }}
         onClick={(e) => {
           e.stopPropagation();
@@ -904,7 +904,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
+      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto bg-slate-950/85 sm:backdrop-blur-md modal-overlay-responsive"
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();

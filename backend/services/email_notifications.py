@@ -398,3 +398,64 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     send_email(admin_email, subject_line, html_body=html_body)
 
 
+
+
+def notify_reporting_manager_staff_assigned(manager_email: str, manager_name: str, manager_role: str, staff_data: dict, admin_data: dict):
+    """Sends an email notification to the HOD/Admin reporting manager when a new staff member is assigned to them."""
+    staff_name = staff_data.get('full_name') or "Staff Member"
+    staff_role = staff_data.get('role') or "Faculty"
+    staff_dept = staff_data.get('department') or "General"
+    staff_email = staff_data.get('email') or "N/A"
+    created_by = admin_data.get('created_by') or "Institutional Administration"
+
+    title = "New Staff Member Assigned Under Your Reporting Line"
+    subject = f"Staff Assigned | {staff_name} ({staff_role}) | Nandha Engineering College"
+
+    content = f"""
+    <div style="text-align:center; margin-bottom:24px;">
+        <h2 style="margin:0; font-size:20px; color:#1e293b; letter-spacing:-0.5px;">Nandha Engineering College</h2>
+        <p style="margin:4px 0 0 0; font-size:14px; color:#64748b; font-weight:500;">LeetCode Intelligence System</p>
+    </div>
+
+    <p style="color:#334155; font-size:15px; line-height:1.6;">
+        Dear <strong>{manager_name}</strong> ({manager_role}),
+    </p>
+    <p style="color:#334155; font-size:14px; line-height:1.6;">
+        A new staff account has been created and assigned to report directly to you.
+    </p>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin:20px 0;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:13px;">
+            <tr>
+                <td style="padding:8px 0; color:#64748b; font-weight:600; width:35%;">Staff Name:</td>
+                <td style="padding:8px 0; color:#0f172a; font-weight:700;">{staff_name}</td>
+            </tr>
+            <tr>
+                <td style="padding:8px 0; color:#64748b; font-weight:600;">Designation / Role:</td>
+                <td style="padding:8px 0; color:#4f46e5; font-weight:700;">{staff_role}</td>
+            </tr>
+            <tr>
+                <td style="padding:8px 0; color:#64748b; font-weight:600;">Department:</td>
+                <td style="padding:8px 0; color:#0f172a; font-weight:600;">{staff_dept}</td>
+            </tr>
+            <tr>
+                <td style="padding:8px 0; color:#64748b; font-weight:600;">Email Address:</td>
+                <td style="padding:8px 0; color:#0f172a; font-family:monospace;">{staff_email}</td>
+            </tr>
+            <tr>
+                <td style="padding:8px 0; color:#64748b; font-weight:600;">Assigned By:</td>
+                <td style="padding:8px 0; color:#0f172a; font-weight:600;">{created_by}</td>
+            </tr>
+        </table>
+    </div>
+
+    <p style="color:#64748b; font-size:12px; margin-top:16px;">
+        As their designated Reporting Manager, you can monitor their assigned students, review verification requests, and coordinate departmental mentoring activities.
+    </p>
+    """
+
+    portal_url = f"{settings.FRONTEND_ORIGIN}/settings"
+    action_button = f'<a href="{portal_url}" class="btn" style="display:inline-block; background-color:#4f46e5; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:14px; text-align:center;">View in Portal</a>'
+    html_body = generate_professional_template(title, content, action_button, fallback_url=settings.FRONTEND_ORIGIN)
+
+    send_email(manager_email, subject, html_body=html_body)

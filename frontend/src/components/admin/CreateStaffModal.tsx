@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
+import { CustomMultiSelectDropdown } from '../CustomMultiSelectDropdown';
+import { LucideIcon } from 'lucide-react';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
@@ -142,9 +144,19 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   }, [departments]);
 
   const staffOptions: DropdownOption[] = useMemo(() => {
+    // Only Admin and HOD roles are eligible as Reporting Managers
+    const isReportingRole = (role?: string) => {
+      const r = (role || '').trim().toLowerCase();
+      const isAdmin = r.includes('admin') || r === 'administrator';
+      const isHod = r.includes('hod') || r.includes('head of department') || r.includes('head');
+      return isAdmin || isHod;
+    };
+
+    const eligibleStaff = (staffList || []).filter(s => isReportingRole(s.role));
+
     return [
       { value: 'none', label: 'None (Top Level)' },
-      ...staffList.map(s => ({
+      ...eligibleStaff.map(s => ({
         value: String(s.id),
         label: s.full_name || s.username,
         sublabel: s.role,
@@ -153,14 +165,14 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   }, [staffList]);
 
   const roleOptions: DropdownOption[] = [
-    { value: 'Principal', label: 'Principal', badge: 'PRN', sublabel: 'Head of Institution', icon: Building2 },
-    { value: 'Management', label: 'Management', badge: 'MGT', sublabel: 'Institution Trust & Management', icon: Briefcase },
-    { value: 'Faculty Mentor', label: 'Proctor', badge: 'PRC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
-    { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
-    { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
-    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', sublabel: 'Placement & recruitment oversight', icon: Briefcase },
-    { value: 'Administrator', label: 'Administrator', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
-    { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', sublabel: 'Full system control & root access', icon: Shield }
+    { value: 'Principal', label: 'Principal', badge: 'PRN', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', sublabel: 'Head of Institution', icon: Building2 },
+    { value: 'Management', label: 'Management', badge: 'MGT', badgeColor: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600', sublabel: 'Institution Trust & Management', icon: Briefcase },
+    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30', sublabel: 'Department-wide placement access', icon: Briefcase },
+    { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'PRC', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
+    { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', sublabel: 'Student support & academic guidance', icon: User },
+    { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', sublabel: 'Department-level academic oversight', icon: Building2 },
+    { value: 'Administrator', label: 'Administrator', badge: 'ADM', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', sublabel: 'Institutional administration & management', icon: Key },
+    { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30', sublabel: 'Full system control & root access', icon: Shield }
   ];
 
   const getRoleConfig = (role: string) => {
@@ -198,6 +210,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     date_of_birth: '',
     require_password_change: true,
     reporting_manager: 'none',
+    reporting_managers: [] as string[],
     account_status: 'Active',
     consent_checked: false,
     send_email: true
@@ -485,7 +498,17 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         date_of_birth: formattedDOB,
         is_active: formData.account_status === 'Active',
         require_password_change: true,
-        reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10),
+        reporting_manager_id: (() => {
+          const v = (formData.reporting_managers || []).filter(id => id && id !== 'none').map(id => parseInt(id, 10));
+          if (v.length > 0) return v[0];
+          return (!formData.reporting_manager || formData.reporting_manager === 'none') ? undefined : parseInt(formData.reporting_manager, 10);
+        })(),
+        reporting_manager_ids: (() => {
+          const v = (formData.reporting_managers || []).filter(id => id && id !== 'none').map(id => parseInt(id, 10));
+          if (v.length > 0) return v;
+          const s = (!formData.reporting_manager || formData.reporting_manager === 'none') ? undefined : parseInt(formData.reporting_manager, 10);
+          return s ? [s] : undefined;
+        })(),
         send_email: formData.send_email,
         profile_photo: profilePhotoPreview || undefined
       };
@@ -874,67 +897,21 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       {/* Staff Role Trigger */}
                       {(() => {
                         const rc = getRoleConfig(formData.role);
-                        const RoleIcon = rc.icon;
+                        const RoleIcon = rc.icon as LucideIcon;
                         return (
-                          <div className="space-y-1.5 relative col-span-1 sm:col-span-2" ref={roleRef}>
+                          <div className="space-y-1.5 relative col-span-1 sm:col-span-2">
                             <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">
                               Institutional Role *
                             </label>
-                            <button
-                              type="button"
-                              onClick={() => setRoleOpen(o => !o)}
-                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${roleOpen
-                                  ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-brand-500/20 shadow-md`
-                                  : `${rc.bgColor} border-slate-300 dark:border-navy-700 hover:${rc.borderColor}`
-                                }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${rc.bgColor} border ${rc.borderColor}`}>
-                                  <RoleIcon className={`w-5 h-5 ${rc.color}`} />
-                                </div>
-                                <div className="flex flex-col">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${rc.badgeColor}`}>
-                                      {roleOptions.find(r => r.value === formData.role)?.badge}
-                                    </span>
-                                    <span className="text-sm font-black text-slate-900 dark:text-white">{formData.role}</span>
-                                  </div>
-                                  <span className="text-xs text-slate-700 dark:text-slate-200 font-bold mt-0.5">{rc.desc}</span>
-                                </div>
-                              </div>
-                              <ChevronDown className={`w-4 h-4 shrink-0 ${rc.color} transition-transform duration-200 ${roleOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {roleOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-700 shadow-2xl p-2 space-y-1">
-                                {roleOptions.map(opt => {
-                                  const cfg = getRoleConfig(opt.value);
-                                  const OptIcon = cfg.icon;
-                                  const isSel = formData.role === opt.value;
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      type="button"
-                                      onClick={() => { setFormData({ ...formData, role: opt.value }); setRoleOpen(false); }}
-                                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `${cfg.bgColor} border ${cfg.borderColor}` : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                                        }`}
-                                    >
-                                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgColor} border ${cfg.borderColor}`}>
-                                        <OptIcon className={`w-4 h-4 ${cfg.color}`} />
-                                      </div>
-                                      <div className="flex flex-col flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${cfg.badgeColor}`}>{opt.badge}</span>
-                                          <span className={`text-xs font-black truncate ${isSel ? cfg.color : 'text-slate-900 dark:text-slate-100'}`}>{opt.label}</span>
-                                        </div>
-                                        <span className="text-[10px] text-slate-700 dark:text-slate-200 font-bold truncate mt-0.5">{opt.sublabel}</span>
-                                      </div>
-                                      {isSel && <Check className={`w-4 h-4 ${cfg.color} stroke-[2.5]`} />}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
+                            <CustomDropdown
+                              options={roleOptions}
+                              label=""
+                              value={formData.role}
+                              onChange={(val) => setFormData({ ...formData, role: val })}
+                              placeholder="Select Institutional Role..."
+                              icon={RoleIcon}
+                              triggerClassName={`w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border transition-all text-xs font-black shadow-2xs ${rc.bgColor} ${rc.borderColor} hover:border-brand-500/60`}
+                            />
                           </div>
                         );
                       })()}
@@ -950,70 +927,22 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setHodDeptOpen(!hodDeptOpen)}
-                              className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 ${hodDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10 bg-indigo-50' : ''}`}
-                            >
-                              <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
-                                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
-                                  hodDeptOpen
-                                    ? 'bg-brand-500 border-brand-600 text-white'
-                                    : 'bg-indigo-100 dark:bg-indigo-800 border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 group-hover:text-indigo-700 group-hover:border-indigo-300'
-                                }`}>
-                                  <Building2 className="w-3.5 h-3.5 shrink-0" />
-                                </div>
-                                <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
-                                  {formData.hod_department_ids.length > 0 && (
-                                    <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-indigo-200 dark:bg-indigo-800 text-indigo-900 dark:text-indigo-100 border-indigo-300 dark:border-indigo-700">
-                                      {formData.hod_department_ids.length}
-                                    </span>
-                                  )}
-                                  <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.hod_department_ids.length > 0 ? 'text-indigo-950 dark:text-indigo-100' : 'text-indigo-800 dark:text-indigo-300'}`}>
-                                    {formData.hod_department_ids.length === 0
-                                      ? 'Select Departments...'
-                                      : formData.hod_department_ids
-                                          .map(id => {
-                                            const found = departmentOptions.find(d => d.value === id);
-                                            return found ? (found.badge || found.label) : `Dept ${id}`;
-                                          })
-                                          .join(', ')}
-                                  </span>
-                                </div>
-                              </div>
-                              <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${hodDeptOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-800'}`} />
-                            </button>
-                            {hodDeptOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl p-1.5 space-y-0.5">
-                                {departmentOptions.filter(d => d.value !== '0').map(opt => {
-                                  const isSel = formData.hod_department_ids.includes(opt.value);
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      type="button"
-                                      onClick={() => {
-                                        const newIds = isSel 
-                                          ? formData.hod_department_ids.filter(id => id !== opt.value)
-                                          : [...formData.hod_department_ids, opt.value];
-                                        setFormData({ ...formData, hod_department_ids: newIds, department_id: newIds.length > 0 ? newIds[0] : '' });
-                                      }}
-                                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-indigo-50 dark:bg-indigo-900/30` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                                    >
-                                      <div className="flex items-center space-x-2 flex-1 pr-2">
-                                        <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                                          {opt.label}
-                                        </span>
-                                      </div>
-                                      <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-indigo-500 border-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
-                                        {isSel && <Check className="w-3 h-3 stroke-[3]" />}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
+                          <CustomMultiSelectDropdown
+                            label=""
+                            options={departmentOptions.filter(d => d.value !== '0')}
+                            selectedValues={formData.hod_department_ids}
+                            onChange={(newIds) => {
+                              setFormData({
+                                ...formData,
+                                hod_department_ids: newIds,
+                                department_id: newIds.length > 0 ? newIds[0] : ''
+                              });
+                            }}
+                            icon={Building2}
+                            placeholder="Select Departments..."
+                            colorTheme="indigo"
+                            triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-black cursor-pointer shadow-2xs"
+                          />
                         )}
                       </div>
 
@@ -1025,63 +954,18 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <span className="text-xs font-black text-slate-800 dark:text-slate-200">All Years (Global Access)</span>
                           </div>
                         ) : (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setAcademicYearOpen(!academicYearOpen)}
-                              className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 ${academicYearOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10 bg-emerald-50' : ''}`}
-                            >
-                              <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
-                                <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
-                                  academicYearOpen
-                                    ? 'bg-brand-500 border-brand-600 text-white'
-                                    : 'bg-emerald-100 dark:bg-emerald-800 border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-300 group-hover:text-emerald-700 group-hover:border-emerald-300'
-                                }`}>
-                                  <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-                                </div>
-                                <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
-                                  {formData.academic_year_ids.length > 0 && (
-                                    <span className="shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800">
-                                      {formData.academic_year_ids.length}
-                                    </span>
-                                  )}
-                                  <span className={`text-xs font-black truncate block min-w-0 flex-1 ${formData.academic_year_ids.length > 0 ? 'text-emerald-950 dark:text-emerald-100' : 'text-emerald-800 dark:text-emerald-300'}`}>
-                                    {formData.academic_year_ids.length === 0 ? 'Select Academic Year...' : `Selected`}
-                                  </span>
-                                </div>
-                              </div>
-                              <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${academicYearOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-800'}`} />
-                            </button>
-                            {academicYearOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-xl p-1.5 space-y-0.5">
-                                {academicYearOptions.filter(d => d.value !== '').map(opt => {
-                                  const isSel = formData.academic_year_ids.includes(opt.value);
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      type="button"
-                                      onClick={() => {
-                                        const newIds = isSel 
-                                          ? formData.academic_year_ids.filter(id => id !== opt.value)
-                                          : [...formData.academic_year_ids, opt.value];
-                                        setFormData({ ...formData, academic_year_ids: newIds });
-                                      }}
-                                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${isSel ? `bg-emerald-50 dark:bg-emerald-900/30` : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                                    >
-                                      <div className="flex items-center space-x-2 flex-1 pr-2">
-                                        <span className={`text-[11px] leading-snug font-black whitespace-normal break-words ${isSel ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                                          {opt.label}
-                                        </span>
-                                      </div>
-                                      <div className={`w-4 h-4 shrink-0 rounded flex items-center justify-center border transition-colors ${isSel ? 'bg-emerald-500 border-emerald-600 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
-                                        {isSel && <Check className="w-3 h-3 stroke-[3]" />}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
+                          <CustomMultiSelectDropdown
+                            label=""
+                            options={academicYearOptions.filter(d => d.value !== '' && d.value !== 'ALL')}
+                            selectedValues={formData.academic_year_ids}
+                            onChange={(newIds) => {
+                              setFormData({ ...formData, academic_year_ids: newIds });
+                            }}
+                            icon={GraduationCap}
+                            placeholder="Select Academic Year..."
+                            colorTheme="emerald"
+                            triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 font-black cursor-pointer shadow-2xs"
+                          />
                         )}
                         {formErrors.academic_year && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.academic_year}</p>}
                       </div>
@@ -1539,15 +1423,29 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         </label>
                       </div>
 
-                      {/* Reporting Manager */}
+                      {/* Reporting Manager (Multi-Select HOD & Admin) */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">Reporting Manager / HOD (Optional)</label>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">
+                            Reporting Manager / HOD (Optional)
+                          </label>
+                          <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                            Multi-select (Select HOD & Admin together)
+                          </span>
+                        </div>
                         <CustomDropdown
                           options={staffOptions}
                           label=""
-                          value={formData.reporting_manager}
-                          onChange={(val) => setFormData({ ...formData, reporting_manager: val })}
-                          placeholder="Select Reporting Manager..."
+                          isMulti={true}
+                          values={formData.reporting_managers}
+                          onMultiChange={(vals) => {
+                            setFormData({
+                              ...formData,
+                              reporting_managers: vals,
+                              reporting_manager: vals.length > 0 ? vals[0] : 'none'
+                            });
+                          }}
+                          placeholder="Select Reporting Manager(s) (HOD / Admin)..."
                           icon={User}
                         />
                       </div>

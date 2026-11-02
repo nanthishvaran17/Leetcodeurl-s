@@ -48,37 +48,37 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
     switch (toast.type) {
       case 'success':
         return {
-          bg: 'bg-white dark:bg-navy-950 border-emerald-500/30 dark:border-emerald-500/30',
-          badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-emerald-500/40 dark:border-emerald-500/30',
+          badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60',
           icon: CheckCircle2,
           iconColor: 'text-emerald-500',
-          progressBg: 'bg-emerald-500',
+          progressBg: 'bg-gradient-to-r from-emerald-500 to-teal-400',
           categoryColor: 'text-emerald-600 dark:text-emerald-400',
           defaultCategory: 'SUCCESS',
         };
       case 'error':
         return {
-          bg: 'bg-white dark:bg-navy-950 border-rose-500/30 dark:border-rose-500/30',
-          badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-rose-500/40 dark:border-rose-500/30',
+          badgeBg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60',
           icon: XCircle,
           iconColor: 'text-rose-500',
-          progressBg: 'bg-rose-500',
+          progressBg: 'bg-gradient-to-r from-rose-500 to-red-400',
           categoryColor: 'text-rose-600 dark:text-rose-400',
           defaultCategory: 'SYSTEM ERROR',
         };
       case 'warning':
         return {
-          bg: 'bg-white dark:bg-navy-950 border-amber-500/30 dark:border-amber-500/30',
-          badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-amber-500/40 dark:border-amber-500/30',
+          badgeBg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60',
           icon: AlertTriangle,
           iconColor: 'text-amber-500',
-          progressBg: 'bg-amber-500',
+          progressBg: 'bg-gradient-to-r from-amber-500 to-orange-400',
           categoryColor: 'text-amber-600 dark:text-amber-400',
           defaultCategory: 'ATTENTION REQUIRED',
         };
       case 'ai':
         return {
-          bg: 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/40 text-white',
+          bg: 'bg-gradient-to-r from-[#0F172A]/95 via-[#1E1B4B]/95 to-[#0F172A]/95 border-brand-500/40 text-white',
           badgeBg: 'bg-brand-500/20 text-brand-300 border-brand-400/30',
           icon: Bot,
           iconColor: 'text-amber-400 animate-pulse',
@@ -88,22 +88,22 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         };
       case 'loading':
         return {
-          bg: 'bg-white dark:bg-navy-950 border-brand-500/30 dark:border-brand-500/30',
-          badgeBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
+          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-indigo-500/40 dark:border-indigo-500/30',
+          badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-800/60',
           icon: Loader2,
-          iconColor: 'text-brand-500 animate-spin',
-          progressBg: 'bg-brand-500',
-          categoryColor: 'text-brand-600 dark:text-brand-400',
+          iconColor: 'text-indigo-500 animate-spin',
+          progressBg: 'bg-gradient-to-r from-indigo-500 to-blue-400',
+          categoryColor: 'text-indigo-600 dark:text-indigo-400',
           defaultCategory: 'PROCESSING',
         };
       case 'info':
       default:
         return {
-          bg: 'bg-white dark:bg-navy-950 border-indigo-500/30 dark:border-indigo-500/30',
-          badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-indigo-500/40 dark:border-indigo-500/30',
+          badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-800/60',
           icon: Info,
           iconColor: 'text-indigo-500',
-          progressBg: 'bg-indigo-500',
+          progressBg: 'bg-gradient-to-r from-indigo-500 to-blue-400',
           categoryColor: 'text-indigo-600 dark:text-indigo-400',
           defaultCategory: 'INFORMATION',
         };
@@ -171,11 +171,11 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         </button>
       </div>
 
-      {/* Auto-dismiss Progress Bar */}
+      {/* Auto-dismiss Inset Floating Micro-Progress Bar */}
       {toast.duration && toast.duration > 0 ? (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-navy-950 overflow-hidden">
+        <div className="absolute bottom-1 left-3.5 right-3.5 h-[2.5px] bg-slate-100/80 dark:bg-white/10 rounded-full overflow-hidden opacity-80">
           <div
-            className={`h-full transition-all ease-linear ${style.progressBg}`}
+            className={`h-full rounded-full transition-all ease-linear ${style.progressBg}`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -209,10 +209,10 @@ export const NotificationCenter: React.FC = () => {
 
   return createPortal(
     <>
-      {/* Toast Notification Stack Container (Top-Right Header-Aligned Stack) */}
+      {/* Toast Notification Stack Container (Top-Right Header-Aligned Stack / Center on Mobile) */}
       <div
         id="nec-toast-container"
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] right-3 sm:right-6 z-[99999999] flex flex-col gap-2.5 sm:gap-3.5 w-[calc(100vw-24px)] sm:w-[400px] pointer-events-none print:hidden no-print"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] sm:top-[4.25rem] left-3 sm:left-auto right-3 sm:right-6 z-[99999999] flex flex-col gap-2.5 sm:gap-3.5 w-auto sm:w-[380px] max-w-sm sm:max-w-md mx-auto sm:mx-0 pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >

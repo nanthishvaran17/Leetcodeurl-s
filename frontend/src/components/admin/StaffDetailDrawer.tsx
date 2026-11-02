@@ -502,7 +502,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                               <span className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Contest</span>
                               <div className="mt-0.5">
                                 {isContestAttended ? (
-                                  <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-blue-500 dark:bg-blue-600 text-white text-[10px] font-black shadow-xs">
+                                  <span title={standing ? `Sunday Contest Result: ${standing}` : "Attended"} className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-blue-500 dark:bg-blue-600 text-white text-[10px] font-black shadow-xs">
                                     {isFraction || isRank ? standing : 'Attended'}
                                   </span>
                                 ) : (
