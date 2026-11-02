@@ -14,7 +14,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNotification } from '../context/NotificationContext';
 import { AllocationConfirmationModal } from './admin/AllocationConfirmationModal';
 import { CustomDropdown, DropdownOption } from './CustomDropdown';
-import { normalizeAcademicYear, matchesAcademicYear, matchesDepartment } from '../utils/filterUtils';
+import { normalizeAcademicYear, matchesAcademicYear, matchesDepartment, normalizeDepartment } from '../utils/filterUtils';
 import { isRoleEligibleForMentees } from '../utils/staffRoleUtils';
 
 export const AdminStaffAllocationPanel: React.FC = () => {

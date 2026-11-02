@@ -1162,11 +1162,15 @@ export const FacultyActionCenter: React.FC = () => {
         getFacultyActionsList(params)
       ]);
       setKpis(kpiRes);
-      setItems(listRes.items);
+      setItems(listRes.items || []);
       setTotalCount(listRes.total_count ?? listRes.total);
       setFilteredCount(listRes.filtered_count ?? listRes.total);
     } catch (err) {
       console.error('Faculty Action Center load failed:', err);
+      if (search.trim()) {
+        setItems([]);
+        setFilteredCount(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -1377,6 +1381,7 @@ export const FacultyActionCenter: React.FC = () => {
           <ModernSearchInput
             value={search}
             onChange={val => { setSearch(val); setPage(1); }}
+            onSelectStudent={student => { setSearch(student.name); setPage(1); }}
             placeholder="Search by name, reg no, username..."
           />
         </div>
