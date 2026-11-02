@@ -16,6 +16,30 @@ import { copyToClipboard } from '../../utils/clipboard';
 
 let cachedStaffList: any[] | null = null;
 
+export const formatStaffName = (rawName?: string, rawUsername?: string): string => {
+  const name = (rawName || rawUsername || '').trim();
+  if (!name) return 'Staff Member';
+  // Insert space after dot if followed directly by an alphabet without space, e.g. "Dr.C.Siva" -> "Dr. C. Siva", "Mr.S.Mohan" -> "Mr. S. Mohan"
+  return name.replace(/\.([A-Za-z])/g, '. $1').replace(/\s+/g, ' ').trim();
+};
+
+export const getStaffInitials = (name: string): string => {
+  if (!name) return 'S';
+  const clean = name.replace(/^(Mr|Mrs|Ms|Dr|Prof)\.?\s*/i, '').trim();
+  const parts = clean.split(/[ ._\-]+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  if (parts.length === 1 && parts[0].length >= 2) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  const allParts = name.split(/[ ._\-]+/).filter(Boolean);
+  if (allParts.length >= 2) {
+    return (allParts[0][0] + allParts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase() || 'S';
+};
+
 export const StaffManagement: React.FC = () => {
   const [staffList, setStaffList] = useState<any[]>(cachedStaffList || []);
   const { departments } = useDepartments();
@@ -566,22 +590,17 @@ export const StaffManagement: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* MOBILE CARD VIEW (< 768px) - Sleek, Compact Modern Mobile UI */}
-                <div className="block md:hidden p-2 sm:p-2.5 space-y-1.5 bg-slate-100/60 dark:bg-navy-950/40">
+                {/* MOBILE CARD VIEW (< 768px) - Sleek, Clear Modern Mobile UI */}
+                <div className="block md:hidden p-2 sm:p-2.5 space-y-2 bg-slate-100/60 dark:bg-navy-950/40">
                   {filteredStaff.map((staff) => {
                     const isMenteeEligible = isRoleEligibleForMentees(staff.role, staff.mentoring_role);
                     const menteeCount = staff.assigned_count || 0;
-                    const initials = (staff.full_name || staff.username || 'S')
-                      .split(' ')
-                      .filter(Boolean)
-                      .map((n: string) => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2) || 'S';
+                    const displayName = formatStaffName(staff.full_name, staff.username);
+                    const initials = getStaffInitials(displayName);
 
                     const roleName = staff.role || 'Staff';
                     const isRoot = staff.role === 'Super Admin';
-                    const deptName = staff.department || 'INSTITUTIONAL';
+                    const deptBadges = getStaffDepartmentBadges(staff);
                     const instId = staff.institutional_id || `NEC-STAFF-${staff.id}`;
                     const emailStr = staff.email || `@${staff.username}`;
 
@@ -589,7 +608,7 @@ export const StaffManagement: React.FC = () => {
                       <div
                         key={staff.id}
                         onClick={() => setViewingStaff(staff)}
-                        className="group relative rounded-xl p-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-2xs hover:shadow-xs transition-all active:scale-[0.99] cursor-pointer space-y-1.5 overflow-hidden"
+                        className="group relative rounded-xl p-2.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 shadow-2xs hover:shadow-xs transition-all active:scale-[0.99] cursor-pointer space-y-2 overflow-hidden"
                       >
                         {/* Subtle Top Status Accent Line */}
                         <div className={`absolute top-0 left-0 right-0 h-0.5 ${
@@ -598,110 +617,132 @@ export const StaffManagement: React.FC = () => {
                             : 'bg-rose-500'
                         }`} />
 
-                        {/* Row 1: Avatar + Name + Role + Dept + Status */}
-                        <div className="flex items-center justify-between gap-2 min-w-0">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            {/* Avatar */}
-                            <div
-                              className="relative shrink-0"
-                              onClick={(e) => {
-                                if (staff.profile_photo) {
-                                  e.stopPropagation();
-                                  setPreviewingPhoto({
-                                    url: staff.profile_photo,
-                                    name: staff.full_name || staff.username,
-                                    role: staff.role,
-                                    id: instId
-                                  });
-                                }
-                              }}
-                            >
-                              {staff.profile_photo ? (
-                                <img
-                                  src={staff.profile_photo}
-                                  alt={staff.full_name || staff.username}
-                                  className="w-8 h-8 rounded-lg object-cover border border-indigo-500/30 shadow-2xs bg-white dark:bg-slate-950"
-                                />
-                              ) : (
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-[11px] flex items-center justify-center shadow-2xs uppercase tracking-wider border border-white/20">
-                                  {initials}
-                                </div>
-                              )}
-                              <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-slate-900 ${
-                                staff.is_active ? 'bg-emerald-500' : 'bg-rose-500'
-                              }`} />
-                            </div>
-
-                            {/* Name + Badges */}
-                            <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center gap-1.5 truncate">
-                                <h4
-                                  className="font-bold text-xs text-slate-900 dark:text-white truncate"
-                                  title={staff.full_name || staff.username}
-                                >
-                                  {staff.full_name || staff.username}
-                                </h4>
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleCopyStaffName(staff.full_name || staff.username, e)}
-                                  className="p-0.5 rounded text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
-                                  title="Copy Staff Name"
-                                >
-                                  {copiedStaffName === (staff.full_name || staff.username) ? (
-                                    <Check className="w-3 h-3 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="w-3 h-3" />
-                                  )}
-                                </button>
-                                <span
-                                  className={`px-1.5 py-0.2 rounded text-[8.5px] font-bold shrink-0 ${
-                                    roleName === 'Faculty'
-                                      ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
-                                      : roleName === 'HOD'
-                                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                                        : roleName?.includes('Admin')
-                                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                                          : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20'
-                                  }`}
-                                >
-                                  {roleName}
-                                </span>
-                                {isRoot && (
-                                  <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
-                                    ROOT
-                                  </span>
-                                )}
+                        {/* Row 1: Avatar + Name (Full width!) + Badges */}
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          {/* Avatar with Status Pip */}
+                          <div
+                            className="relative shrink-0 mt-0.5"
+                            onClick={(e) => {
+                              if (staff.profile_photo) {
+                                e.stopPropagation();
+                                setPreviewingPhoto({
+                                  url: staff.profile_photo,
+                                  name: displayName,
+                                  role: staff.role,
+                                  id: instId
+                                });
+                              }
+                            }}
+                          >
+                            {staff.profile_photo ? (
+                              <img
+                                src={staff.profile_photo}
+                                alt={displayName}
+                                className="w-9 h-9 rounded-lg object-cover border border-indigo-500/30 shadow-2xs bg-white dark:bg-slate-950"
+                              />
+                            ) : (
+                              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-[11px] flex items-center justify-center shadow-2xs uppercase tracking-wider border border-white/20">
+                                {initials}
                               </div>
-                            </div>
-                          </div>
-
-                          {/* Dept + Active Dot */}
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-                              {deptName}
-                            </span>
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${
+                            )}
+                            <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-slate-900 ${
                               staff.is_active ? 'bg-emerald-500' : 'bg-rose-500'
                             }`} title={staff.is_active ? 'Active' : 'Suspended'} />
+                          </div>
+
+                          {/* Identity & Badges Container */}
+                          <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+                            {/* Staff Name & Copy Button */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4
+                                className="font-extrabold text-xs text-slate-900 dark:text-white leading-tight break-words select-text"
+                                title={displayName}
+                              >
+                                {displayName}
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={(e) => handleCopyStaffName(displayName, e)}
+                                className="p-0.5 rounded text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
+                                title="Copy Staff Name"
+                              >
+                                {copiedStaffName === displayName ? (
+                                  <Check className="w-3 h-3 text-emerald-500" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                              {isRoot && (
+                                <span className="px-1 py-0.2 rounded text-[7.5px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
+                                  ROOT
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Badges: Role + Department(s) + Mentees */}
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              <span
+                                className={`px-1.5 py-0.2 rounded text-[8.5px] font-bold shrink-0 ${
+                                  roleName.includes('Faculty') || roleName === 'Faculty'
+                                    ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20'
+                                    : roleName.includes('HOD') || roleName === 'HOD'
+                                      ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                                      : roleName?.includes('Admin')
+                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                        : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20'
+                                }`}
+                              >
+                                {roleName}
+                              </span>
+
+                              {deptBadges.map((deptCode: string, idx: number) => {
+                                const upper = deptCode.toUpperCase();
+                                const isCS = upper.includes('CS') || upper.includes('CYBER');
+                                const isIOT = upper.includes('IOT');
+                                const isAIDS = upper.includes('AIDS') || upper.includes('AI');
+                                
+                                const colorClass = isCS
+                                  ? 'bg-cyan-50 text-cyan-800 border-cyan-300 dark:bg-cyan-950/70 dark:text-cyan-300 dark:border-cyan-800'
+                                  : isIOT
+                                  ? 'bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800'
+                                  : isAIDS
+                                  ? 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase tracking-wider border shrink-0 ${colorClass}`}
+                                  >
+                                    {deptCode}
+                                  </span>
+                                );
+                              })}
+
+                              {isMenteeEligible && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 shrink-0">
+                                  <Users className="w-2.5 h-2.5" />
+                                  {menteeCount} {menteeCount === 1 ? 'Mentee' : 'Mentees'}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
                         {/* Row 2: Staff ID & Email on left, Micro Action Buttons on right */}
                         <div
-                          className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60"
+                          className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/60"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="flex items-center gap-1.5 min-w-0 text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                          <div className="flex items-center gap-1.5 min-w-0 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                             <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
                               {instId}
                             </span>
-                            <span className="text-slate-300 dark:text-slate-600">&bull;</span>
-                            <span className="truncate">{emailStr}</span>
-                            {isMenteeEligible && (
+                            {emailStr && (
                               <>
-                                <span className="text-slate-300 dark:text-slate-600">&bull;</span>
-                                <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0">
-                                  {menteeCount} Mentees
+                                <span className="text-slate-300 dark:text-slate-600 shrink-0">&bull;</span>
+                                <span className="truncate max-w-[110px] sm:max-w-[180px]" title={emailStr}>
+                                  {emailStr}
                                 </span>
                               </>
                             )}
@@ -767,7 +808,10 @@ export const StaffManagement: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y-0">
-                      {filteredStaff.map((staff) => (
+                      {filteredStaff.map((staff) => {
+                        const displayName = formatStaffName(staff.full_name, staff.username);
+                        const initials = getStaffInitials(displayName);
+                        return (
                         <tr key={staff.id} className="bg-white dark:bg-navy-950 hover:bg-brand-50/30 dark:hover:bg-brand-900/10 transition-all duration-300 shadow-sm hover:shadow-md rounded-xl group border border-slate-100 dark:border-navy-800">
                           <td className="px-6 py-4">
                             <span className="font-mono text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 inline-block shadow-2xs">
@@ -782,7 +826,7 @@ export const StaffManagement: React.FC = () => {
                                   if (staff.profile_photo) {
                                     setPreviewingPhoto({
                                       url: staff.profile_photo,
-                                      name: staff.full_name || staff.username,
+                                      name: displayName,
                                       role: staff.role,
                                       id: staff.institutional_id || `NEC-STAFF-${staff.id}`
                                     });
@@ -793,18 +837,12 @@ export const StaffManagement: React.FC = () => {
                                 {staff.profile_photo ? (
                                   <img
                                     src={staff.profile_photo}
-                                    alt={staff.full_name || staff.username}
+                                    alt={displayName}
                                     className="w-10 h-10 rounded-xl object-cover border-2 border-indigo-500/40 shadow-xs bg-white dark:bg-navy-950"
                                   />
                                 ) : (
                                   <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs uppercase tracking-wider border border-white/20">
-                                    {(staff.full_name || staff.username || 'S')
-                                      .split(' ')
-                                      .filter(Boolean)
-                                      .map((n: string) => n[0])
-                                      .join('')
-                                      .toUpperCase()
-                                      .slice(0, 2) || 'S'}
+                                    {initials}
                                   </div>
                                 )}
                                 <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-navy-900 ${
@@ -813,14 +851,14 @@ export const StaffManagement: React.FC = () => {
                               </div>
                               <div className="min-w-0">
                                 <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 text-sm">
-                                  <span className="truncate select-text">{staff.full_name || staff.username}</span>
+                                  <span className="select-text" title={displayName}>{displayName}</span>
                                   <button
                                     type="button"
-                                    onClick={(e) => handleCopyStaffName(staff.full_name || staff.username, e)}
+                                    onClick={(e) => handleCopyStaffName(displayName, e)}
                                     className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer inline-flex items-center active:scale-95 shrink-0"
                                     title="Copy Staff Name"
                                   >
-                                    {copiedStaffName === (staff.full_name || staff.username) ? (
+                                    {copiedStaffName === displayName ? (
                                       <Check className="w-3.5 h-3.5 text-emerald-500" />
                                     ) : (
                                       <Copy className="w-3.5 h-3.5" />
@@ -939,7 +977,8 @@ export const StaffManagement: React.FC = () => {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      );
+                    })}
                     </tbody>
                   </table>
                 </div>
