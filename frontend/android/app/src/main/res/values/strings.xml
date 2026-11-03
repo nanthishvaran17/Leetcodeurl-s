@@ -3,5 +3,5 @@
     <string name="app_name">LeetCode Tracker</string>
     <string name="title_activity_main">LeetCode Tracker</string>
     <string name="package_name">org.nandhaengg.leetcodesync</string>
-    <string name="default_notification_channel_id">leetcode_alerts</string>
+    <string name="default_notification_channel_id">leetcode_intelligence_channel</string>
 </resources>
