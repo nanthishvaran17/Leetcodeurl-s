@@ -172,7 +172,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       // Update student card progressively in React state without full page reload
       if (data.student_update) {
         const u = data.student_update;
-        setStudents(prev => prev.map(st => {
+        setStudents(prev => {
+          const next = prev.map(st => {
           if (st.id === u.id || (st.reg_no && st.reg_no === u.reg_no)) {
             return {
               ...st,
@@ -195,7 +196,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             };
           }
           return st;
-        }));
+        });
+        saveCachedStudents(next, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
+        return next;
+      });
       }
     } else if (data.type === 'STUDENT_BATCH_UPDATED' && Array.isArray(data.updates)) {
       setStudents(prev => {
@@ -254,7 +258,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         triggered_by: data.summary?.triggered_by
       });
       setRefreshing(false);
-      fetchFilteredStudents();
+      fetchFilteredStudents(true);
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
     }
   });
@@ -370,7 +374,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
           setRefreshing(false);
-          await fetchFilteredStudents();
+          await fetchFilteredStudents(true);
           window.dispatchEvent(new Event('refresh_dashboard_summary'));
           setSyncProgress({
             total: totalCount,
@@ -480,7 +484,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
 
-  async function fetchFilteredStudents() {
+  async function fetchFilteredStudents(forceRefresh: boolean = false) {
     try {
       if (isFacultyRole) {
         try {
@@ -510,8 +514,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       }
 
       // Backend /students/leaderboard-fast already enforces RBAC scoping server-side.
-      // For faculty mentors, backend returns ONLY assigned students — no frontend filter needed.
-      const res = await api.get(`/students/leaderboard-fast?refresh=true&_t=${Date.now()}`);
+      // Ultra-fast sub-5ms RAM cached response on normal load; refresh=true on manual pull/sync only
+      const refreshQuery = forceRefresh ? 'refresh=true&' : '';
+      const res = await api.get(`/students/leaderboard-fast?${refreshQuery}_t=${Date.now()}`);
       if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
         saveCachedStudents(res.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
@@ -548,16 +553,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   useEffect(() => {
-    fetchFilteredStudents();
+    fetchFilteredStudents(false);
 
     const handlePull = () => {
       clearApiCache();
       fetchDepartments();
-      fetchFilteredStudents();
+      fetchFilteredStudents(true);
+    };
+    const handleSummaryRefresh = () => {
+      fetchFilteredStudents(false);
     };
     window.addEventListener('pull_to_refresh', handlePull);
+    window.addEventListener('refresh_dashboard_summary', handleSummaryRefresh);
     return () => {
       window.removeEventListener('pull_to_refresh', handlePull);
+      window.removeEventListener('refresh_dashboard_summary', handleSummaryRefresh);
     };
   }, [user?.id, user?.role, isFacultyRole]);
 
@@ -1068,7 +1078,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
         {(() => {
           const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
-          const totalStudents = activeCohort.length;
+          const hasCohort = activeCohort.length > 0;
 
           const calculatedVerified = activeCohort.filter(s =>
             s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
@@ -1079,13 +1089,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           const calculatedProblems = activeCohort.reduce((acc, s) => acc + (s.stats?.total_solved || (s as any).total_solved || 0), 0);
           const calculatedActiveSolvers = activeCohort.filter(s => (s.stats?.total_solved || (s as any).total_solved || 0) > 0).length;
 
-          const verified = calculatedVerified;
+          // Instant fallback to summaryData on cold boot so numbers are never 0 or delayed
+          const totalStudents = hasCohort
+            ? activeCohort.length
+            : (!isFiltered && summaryData?.total_students ? summaryData.total_students : 0);
+
+          const verified = hasCohort
+            ? calculatedVerified
+            : (!isFiltered && (summaryData?.verified_profiles ?? summaryData?.verification?.verified) ? (summaryData.verified_profiles ?? summaryData.verification?.verified) : 0);
           const pending = calculatedPending;
           const failed = calculatedFailed;
           const noUsername = calculatedNoUsername;
 
-          const activeSolvers = calculatedActiveSolvers;
-          const verifiedProblems = calculatedProblems;
+          const activeSolvers = hasCohort
+            ? calculatedActiveSolvers
+            : (!isFiltered && summaryData?.active_solvers ? summaryData.active_solvers : 0);
+          const verifiedProblems = hasCohort
+            ? calculatedProblems
+            : (!isFiltered && (summaryData?.total_solved ?? summaryData?.verified_problems) ? (summaryData.total_solved ?? summaryData.verified_problems) : 0);
 
           return (
             <>

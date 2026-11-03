@@ -421,6 +421,28 @@ const MainAppContent: React.FC = () => {
     const handleRefresh = () => fetchSummary();
     window.addEventListener('refresh_dashboard_summary', handleRefresh);
 
+    // Auto-update immediately when app is reopened, screen is unlocked, or window gains focus
+    const handleAppResume = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchSummary();
+        window.dispatchEvent(new Event('refresh_dashboard_summary'));
+        window.dispatchEvent(new Event('pull_to_refresh'));
+      }
+    };
+    window.addEventListener('focus', handleAppResume);
+    document.addEventListener('visibilitychange', handleAppResume);
+
+    let capListenerHandle: any = null;
+    try {
+      import('@capacitor/app').then(({ App: CapApp }) => {
+        CapApp.addListener('appStateChange', (state: any) => {
+          if (state && state.isActive) {
+            handleAppResume();
+          }
+        }).then((h: any) => { capListenerHandle = h; }).catch(() => {});
+      }).catch(() => {});
+    } catch {}
+
     let timer: any = null;
     if (isAuthenticated) {
       timer = setTimeout(() => {
@@ -496,6 +518,11 @@ const MainAppContent: React.FC = () => {
     return () => {
       if (timer) clearTimeout(timer);
       window.removeEventListener('refresh_dashboard_summary', handleRefresh);
+      window.removeEventListener('focus', handleAppResume);
+      document.removeEventListener('visibilitychange', handleAppResume);
+      if (capListenerHandle && typeof capListenerHandle.remove === 'function') {
+        try { capListenerHandle.remove(); } catch {}
+      }
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('navigate_to_route', handleDeepLinkNav);
     };
