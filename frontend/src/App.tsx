@@ -1073,7 +1073,7 @@ const MainAppContent: React.FC = () => {
 
     if (tab === 'dev-studio' || normalized === 'dev-studio') {
       const isAdminRole = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
-      return isAdminRole && isAdminOtpVerified();
+      return isAdminRole; // Direct admin access without requiring OTP
     }
 
     const isHodRole = roleClean.includes('hod') || ['head of department', 'head_of_department', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);

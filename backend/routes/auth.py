@@ -1298,28 +1298,8 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         except Exception:
             db.rollback()
 
-    # 2FA Enterprise Protection Gate
-    is_2fa_active = bool(getattr(user, "is_2fa_enabled", False))
-    if is_2fa_active:
-        totp_secret = getattr(user, "totp_secret", None)
-        totp_code_input = getattr(login_data, "totp_code", None)
-        if totp_code_input:
-            clean_code = str(totp_code_input).strip().replace(" ", "").replace("-", "")
-            if not totp_secret or not pyotp.TOTP(totp_secret).verify(clean_code, valid_window=2):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid 2FA verification code. Please check your authenticator app."
-                )
-        else:
-            temp_token = create_2fa_temp_token(user)
-            return {
-                "require_2fa": True,
-                "two_factor_temp_token": temp_token,
-                "user_id": user.id,
-                "username": user.username,
-                "message": "Two-factor authentication required. Please enter the 6-digit code from your authenticator app."
-            }
-
+    # 2FA Enterprise Protection Gate completely disabled
+    # Direct login without authenticator challenge
     _record_user_login(db, user, request)
 
     # Create Server Session & Set HttpOnly Cookie (Graceful fallback)
@@ -2497,29 +2477,44 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
     if user.role.lower() not in valid_roles:
         raise HTTPException(status_code=403, detail="Unauthorized access. Admins only.")
 
-    target_email = user.email or get_authoritative_admin_email()
-    from backend.services.otp_service import create_otp_transaction
-    
-    # Store in persistent database EmailOTPRecord to enable distributed multi-worker verification
-    plain_otp, otp_rec = create_otp_transaction(db, target_email, ip_address=client_ip, bypass_cooldown=True)
-    
-    # Memory fallback
-    _admin_otp_store[clean_lower] = {"otp": plain_otp, "expires_at": time.time() + 300, "password": clean_password}
-
-    # Send OTP asynchronously via BackgroundTasks so the HTTP endpoint returns in <20ms
+    # Direct Admin Login without 2FA OTP
+    _record_user_login(db, user, request)
+    session_id, refresh_token_value = None, None
     try:
-        from backend.services.email_service import send_fast_otp_email
-        background_tasks.add_task(send_fast_otp_email, target_email, plain_otp, str(otp_rec.request_id), "admin_login")
-    except Exception as e:
-        logger.error(f"[ADMIN_OTP] Could not queue OTP to {target_email}: {e}")
-    print(f"!!! ADMIN OTP FOR {user.username} IS: {plain_otp} !!!")
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
+    except Exception:
+        db.rollback()
 
-    masked = mask_email_str(target_email)
+    access_token = create_access_token(data={
+        "sub": user.username,
+        "role": user.role,
+        "email": user.email,
+        "user_id": user.id,
+        "admin_otp_verified": True,
+        "login_channel": "direct_admin"
+    })
+    dept_scope = _get_user_dept_scope(db, user)
+
     return {
         "success": True,
-        "otp_required": True,
-        "email": masked,
-        "message": f"A 6-digit verification code has been sent to {masked}."
+        "otp_required": False,
+        "access_token": access_token,
+        "refresh_token": refresh_token_value,
+        "token_type": "bearer",
+        "admin_otp_verified": True,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "full_name": getattr(user, "full_name", None) or user.username,
+            "email": user.email,
+            "role": user.role,
+            "admin_otp_verified": True,
+            "department_id": user.department_id,
+            "section_id": user.section_id,
+            "require_password_change": getattr(user, "require_password_change", False),
+            **_get_management_permission_flags(db),
+            **dept_scope
+        }
     }
 
 

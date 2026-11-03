@@ -75,7 +75,7 @@ export const DeveloperStudio: React.FC<DeveloperStudioProps> = ({ onClose }) => 
 
   const isAdmin = ['admin', 'super admin', 'administrator', 'super_admin'].includes(user?.role?.toLowerCase() || '');
   const isOtpVerified = isAdminOtpVerified();
-  const hasAccess = isAdmin && isOtpVerified;
+  const hasAccess = isAdmin; // Direct admin access without requiring OTP
 
   useEffect(() => {
     if (hasAccess) {

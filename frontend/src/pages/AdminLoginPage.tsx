@@ -24,7 +24,27 @@ export const AdminLoginPage = () => {
 
     try {
       const res = await api.post('/auth/admin-login', { username, password });
-      if (res.data?.success && res.data?.otp_required) {
+      if (res.data?.success && res.data?.access_token) {
+        // Direct login without OTP
+        const token = res.data.access_token;
+        localStorage.setItem('token', token);
+        localStorage.setItem('access_token', token);
+        if (res.data.refresh_token) {
+          localStorage.setItem('refresh_token', res.data.refresh_token);
+        }
+        setAdminOtpVerified(true);
+        sessionStorage.setItem('admin_login_portal', 'true');
+        localStorage.setItem('admin_login_portal', 'true');
+        if (res.data.user) {
+          const userWithOtp = {
+            ...res.data.user,
+            admin_otp_verified: true,
+          };
+          localStorage.setItem('user', JSON.stringify(userWithOtp));
+        }
+        window.location.href = '/#/dev-studio';
+        return;
+      } else if (res.data?.success && res.data?.otp_required) {
         setStep('OTP');
         const emailStr = res.data.email || res.data.masked_email || '';
         setTargetEmail(emailStr);
