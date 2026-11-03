@@ -125,7 +125,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       title: isPlacement ? 'PLACEMENT & MENTORING' : 'EXECUTIVE INTELLIGENCE',
       items: [
         { id: 'dashboard', label: isPlacement ? 'Placement Command Center' : 'Department Leadership', icon: LayoutDashboard },
-        { id: 'staff-dashboard', label: 'My Mentee Cohort', icon: Users, badge: 'MY STUDENTS', badgeColor: 'emerald' },
+        ...(isPlacement
+          ? [{ id: 'staff-dashboard', label: 'My Mentee Cohort', icon: Users, badge: 'MY STUDENTS' as const, badgeColor: 'emerald' as const }]
+          : []),
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'hr-candidate-finder', label: 'Placement Portal (HR)', icon: Briefcase, badge: 'HIRE', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Portal', icon: Activity, badge: 'FACULTY', badgeColor: 'indigo' },
