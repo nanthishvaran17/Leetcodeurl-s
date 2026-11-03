@@ -176,8 +176,21 @@ const MainAppContent: React.FC = () => {
       listenForForegroundMessages();
     }).catch(err => console.warn('[PUSH] Listener init note:', err));
 
-    // 2. Request permission and register device token whenever authenticated
-    if (isAuthenticated && user) {
+    // 2. On Native Mobile (Capacitor Android/iOS), prompt permission and register device IMMEDIATELY on boot
+    if (Capacitor.isNativePlatform()) {
+      import('./services/pushNotifications').then(({ requestPushPermissionAndSync }) => {
+        const primaryIdentifier = user ? String(
+          user.email || 
+          user.username || 
+          (user as any).reg_no || 
+          (user as any).registerNo || 
+          user.id || 
+          user.uid
+        ) : '';
+        requestPushPermissionAndSync(primaryIdentifier);
+      }).catch(err => console.warn('[PUSH] Mobile native registration note:', err));
+    } else if (isAuthenticated && user) {
+      // 3. For Web / PWA browser mode, prompt and register when authenticated
       import('./services/pushNotifications').then(({ requestPushPermissionAndSync }) => {
         const primaryIdentifier = String(
           user.email || 
@@ -188,7 +201,7 @@ const MainAppContent: React.FC = () => {
           user.uid
         );
         requestPushPermissionAndSync(primaryIdentifier);
-      }).catch(err => console.warn('[PUSH] Lazy load note:', err));
+      }).catch(err => console.warn('[PUSH] Web push registration note:', err));
     }
   }, [isAuthenticated, user]);
 

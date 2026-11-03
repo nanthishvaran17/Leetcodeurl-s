@@ -1,14 +1,15 @@
-# Mobile App Release Packages
+# Android Release Archive
 
-This directory contains the production-ready compiled Android APK builds for the **Nandha LeetCode Intelligence** mobile application.
+Latest Release: **v4.3.7 (VersionCode 87)**
 
-## Active Releases
-- **Latest Version:** `Nandha_LeetCode_Intelligence_v4.3.7_latest.apk` (VersionCode 87)
-- **Aliases:** `Nandha-LeetCode-Tracker-Latest.apk`, `nandha-leetcode.apk`
+Download the production signed APK:
+- [Nandha_LeetCode_Intelligence_v4.3.7_latest.apk](./Nandha_LeetCode_Intelligence_v4.3.7_latest.apk)
+- [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
+- [nandha-leetcode.apk](./nandha-leetcode.apk)
 
-## How To Build
-From the `frontend/` directory:
-```bash
-npm run build:apk
-```
-This automatically compiles the web assets, syncs Capacitor Android, builds the signed release APK, and places the output here and in `frontend/public/` for instant download.
+### Changelog v4.3.7
+- Immediate Native Mobile push notification permission prompt on boot.
+- Auto-registration of Android device token to server upon launch without requiring prior authentication.
+- Optimized global FCM announcement delivery (instant broadcast to all active mobile & desktop devices without N+1 query bottlenecks).
+- Full lock-screen & heads-up banner notifications with high-priority audio attributes & custom vibration on Android 13/14.
+- Post-login token auto-binding with user ID and role credentials.

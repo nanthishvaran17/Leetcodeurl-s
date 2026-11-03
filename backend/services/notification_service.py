@@ -490,48 +490,59 @@ class NotificationService:
                 base_site_url = os.environ.get("BASE_SITE_URL", "https://nandha-leetcode.duckdns.org").rstrip("/")
                 fcm_link = eff_route if eff_route.startswith("http") else f"{base_site_url}{eff_route}"
                 
+                is_global = (recipient_scope or "").upper() in ("ALL", "GLOBAL")
                 target_uids = set()
-                for r in recipients:
-                    uid = r.get("user_id")
-                    if uid:
-                        target_uids.add(str(uid))
-                        target_uids.add(str(uid).lower())
-                    em = r.get("email")
-                    if em:
-                        target_uids.add(str(em))
-                        target_uids.add(str(em).lower())
-                    
-                    lookup_val = em or uid
-                    if lookup_val:
-                        clean_val = str(lookup_val).strip()
-                        u_filters = [User.email.ilike(clean_val), User.username == clean_val]
-                        if clean_val.isdigit():
-                            u_filters.append(User.id == int(clean_val))
-                        elif clean_val.upper().startswith("STAFF_") and clean_val[6:].isdigit():
-                            u_filters.append(User.id == int(clean_val[6:]))
-                        u_match = db.query(User).filter(or_(*u_filters)).first()
-                        if u_match:
-                            if u_match.email:
-                                target_uids.add(str(u_match.email).lower())
-                                target_uids.add(str(u_match.email))
-                            if u_match.username:
-                                target_uids.add(str(u_match.username))
-                            target_uids.add(str(u_match.id))
-                            target_uids.add(f"STAFF_{u_match.id}")
+                if recipient_target:
+                    clean_tg = str(recipient_target).strip()
+                    target_uids.add(clean_tg)
+                    target_uids.add(clean_tg.lower())
+                    target_uids.add(clean_tg.upper())
+                    if clean_tg.isdigit():
+                        target_uids.add(f"STAFF_{clean_tg}")
 
-                        s_filters = [Student.email.ilike(clean_val), Student.reg_no == clean_val]
-                        if hasattr(Student, "username"):
-                            s_filters.append(Student.username == clean_val)
-                        if clean_val.isdigit():
-                            s_filters.append(Student.id == int(clean_val))
-                        s_match = db.query(Student).filter(or_(*s_filters)).first()
-                        if s_match:
-                            if s_match.email:
-                                target_uids.add(str(s_match.email).lower())
-                                target_uids.add(str(s_match.email))
-                            if s_match.reg_no:
-                                target_uids.add(str(s_match.reg_no))
-                            target_uids.add(str(s_match.id))
+                if not is_global:
+                    for r in recipients:
+                        uid = r.get("user_id")
+                        if uid:
+                            target_uids.add(str(uid))
+                            target_uids.add(str(uid).lower())
+                            target_uids.add(str(uid).upper())
+                        em = r.get("email")
+                        if em:
+                            target_uids.add(str(em))
+                            target_uids.add(str(em).lower())
+                        
+                        lookup_val = em or uid
+                        if lookup_val:
+                            clean_val = str(lookup_val).strip()
+                            u_filters = [User.email.ilike(clean_val), User.username == clean_val]
+                            if clean_val.isdigit():
+                                u_filters.append(User.id == int(clean_val))
+                            elif clean_val.upper().startswith("STAFF_") and clean_val[6:].isdigit():
+                                u_filters.append(User.id == int(clean_val[6:]))
+                            u_match = db.query(User).filter(or_(*u_filters)).first()
+                            if u_match:
+                                if u_match.email:
+                                    target_uids.add(str(u_match.email).lower())
+                                    target_uids.add(str(u_match.email))
+                                if u_match.username:
+                                    target_uids.add(str(u_match.username))
+                                target_uids.add(str(u_match.id))
+                                target_uids.add(f"STAFF_{u_match.id}")
+
+                            s_filters = [Student.email.ilike(clean_val), Student.reg_no == clean_val]
+                            if hasattr(Student, "username"):
+                                s_filters.append(Student.username == clean_val)
+                            if clean_val.isdigit():
+                                s_filters.append(Student.id == int(clean_val))
+                            s_match = db.query(Student).filter(or_(*s_filters)).first()
+                            if s_match:
+                                if s_match.email:
+                                    target_uids.add(str(s_match.email).lower())
+                                    target_uids.add(str(s_match.email))
+                                if s_match.reg_no:
+                                    target_uids.add(str(s_match.reg_no))
+                                target_uids.add(str(s_match.id))
 
                 from backend.models import NotificationPreference
 
@@ -552,9 +563,12 @@ class NotificationService:
                 }
                 eff_channel_id = CHANNEL_MAP.get(str(category).lower(), "messages_channel" if "message" in str(category).lower() else "academic_announcements")  # type: ignore
 
-                active_tokens_raw = db.query(FCMDevice).filter(
-                    and_(FCMDevice.user_id.in_(list(target_uids)), FCMDevice.is_active == True)
-                ).all()
+                if is_global:
+                    active_tokens_raw = db.query(FCMDevice).filter(FCMDevice.is_active == True).all()
+                else:
+                    active_tokens_raw = db.query(FCMDevice).filter(
+                        and_(FCMDevice.user_id.in_(list(target_uids)), FCMDevice.is_active == True)
+                    ).all()
 
                 # Filter out tokens where user opted out of non-critical notification categories
                 active_tokens = []

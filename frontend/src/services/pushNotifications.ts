@@ -151,7 +151,7 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
       user_id: userEmailOrId || undefined,
       device_token: deviceToken,
       platform: platform,
-      app_version: '4.3.6',
+      app_version: '4.3.7',
       device_model: navigator.userAgent,
     }, {
       headers: {
