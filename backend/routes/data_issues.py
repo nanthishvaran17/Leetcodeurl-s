@@ -20,7 +20,8 @@ router = APIRouter(prefix="/data-issues", tags=["Student Data Issues & Recovery"
 def matches_department_filter(c_dept_code: str, c_dept_name: str, target_dept: str) -> bool:
     """
     Robust department filter preventing substring false-positives
-    (e.g. prevents 'IT' from matching 'Cyber Security' or 'Communication').
+    (e.g. prevents 'IT' from matching 'Cyber Security' or 'Communication',
+    and strictly isolates 'CSE(CS)' from 'CSE(IOT)' or generic 'CSE').
     """
     code = (c_dept_code or "").strip().upper()
     name = (c_dept_name or "").strip().upper()
@@ -33,23 +34,27 @@ def matches_department_filter(c_dept_code: str, c_dept_name: str, target_dept: s
     if code == target:
         return True
 
-    # 2. Alphanumeric normalized code match (e.g. "CSECS", "CSEIOT", "IT")
+    # 2. Alphanumeric normalized code match (e.g. "CSECS" == "CSECS", "CSEIOT" == "CSEIOT")
     clean_code = re.sub(r'[^A-Z0-9]', '', code)
     clean_target = re.sub(r'[^A-Z0-9]', '', target)
-    if clean_code == clean_target:
+    if clean_code and clean_target and clean_code == clean_target:
         return True
 
     # 3. IT / Information Technology specific check (never match "Security" or "Communication")
     if target in ["IT", "BTECH IT", "B.TECH IT", "INFO TECH", "INFORMATION TECHNOLOGY"]:
         return code == "IT" or "INFORMATION TECHNOLOGY" in name
 
-    # 4. Cyber Security specific check
-    if target in ["CSE(CS)", "CSE-CS", "CSE_CS", "CYBER", "CYBER SECURITY", "CS"]:
-        return "CS" in code or "CYBER" in name
+    # 4. Cyber Security specific check (MUST NOT match IoT or generic CSE!)
+    if clean_target in ["CSECS", "CYBER", "CYBERSECURITY", "CS"]:
+        if "IOT" in clean_code or "INTERNET OF THINGS" in name:
+            return False
+        return clean_code == "CSECS" or "CYBER" in name or "(CS)" in code or "-CS" in code or "_CS" in code
 
-    # 5. IoT specific check
-    if target in ["CSE(IOT)", "CSE-IOT", "CSE_IOT", "IOT"]:
-        return "IOT" in code or "INTERNET OF THINGS" in name
+    # 5. IoT specific check (MUST NOT match Cyber Security!)
+    if clean_target in ["CSEIOT", "IOT", "INTERNETOFTHINGS"]:
+        if "CYBER" in clean_code or "CYBER" in name:
+            return False
+        return clean_code == "CSEIOT" or "IOT" in clean_code or "INTERNET OF THINGS" in name or "(IOT)" in code
 
     # 6. Word-boundary regex match on name or code to avoid substring collisions
     pattern = r'\b' + re.escape(target) + r'\b'
