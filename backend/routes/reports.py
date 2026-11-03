@@ -2128,6 +2128,7 @@ def _get_dataset_for_id(
         canon_college_summary = dataset.get("college_summary")
         canon_current_week = dataset.get("current_week")
 
+        is_user_scoped = False
         if current_user is not None and not hasattr(current_user, "dependency"):
             from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
             from backend.services.faculty_assignment_service import FacultyAssignmentService
@@ -2135,21 +2136,27 @@ def _get_dataset_for_id(
             u_id = getattr(current_user, "id", None)
             assigned_ids = set(FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(u_id))) if u_id else set()
             if assigned_ids and role_clean not in ("admin", "administrator", "super admin", "super_admin", "principal", "management"):
+                is_user_scoped = True
                 assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
                 assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
                 assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
                 assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
 
+                scoped_rows = []
                 for r in rows:
                     r_id = str(r.get("student_id") or r.get("id") or "").strip()
                     r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
                     r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
                     is_mine = (r_reg and r_reg in assigned_reg_nos) or (r_id and r_id in assigned_ids_str) or (r_uname and r_uname in assigned_usernames)
                     r["is_assigned_mentee"] = bool(is_mine)
+                    if is_mine:
+                        scoped_rows.append(r)
 
+                rows = scoped_rows
                 dataset["faculty_assigned_student_ids"] = list(assigned_ids)
                 dataset["assigned_mentees_count"] = len(assigned_ids)
             elif role_clean in _HOD_ROLES:
+                is_user_scoped = True
                 from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
                 from backend.services.contest_performance_service import matches_dept
                 hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
@@ -2175,21 +2182,59 @@ def _get_dataset_for_id(
         dataset["all_students_current"] = rows
 
         # Preserve verified canonical summary metrics so official counts remain 100% accurate regardless of viewer role
-        if canon_total is not None and not has_active_filters:
+        if canon_total is not None and not has_active_filters and not is_user_scoped:
             dataset["totalStudents"] = canon_total
             dataset["total_students"] = canon_total
         else:
             dataset["totalStudents"] = len(rows)
             dataset["total_students"] = len(rows)
 
-        if canon_batch_summaries and not has_active_filters:
+        if canon_batch_summaries and not has_active_filters and not is_user_scoped:
             dataset["batch_summaries"] = canon_batch_summaries
-        if canon_solve_dist and not has_active_filters:
+        if canon_solve_dist and not has_active_filters and not is_user_scoped:
             dataset["solveDistribution"] = canon_solve_dist
-        if canon_metrics and not has_active_filters:
+        elif is_user_scoped:
+            def _calc_row_solved_metric(r_item):
+                tot = r_item.get("total_solved") if r_item.get("total_solved") is not None else r_item.get("solved")
+                if tot is not None:
+                    try:
+                        return int(tot)
+                    except (ValueError, TypeError):
+                        pass
+                q_sum = 0
+                for qk in ("q1", "q2", "q3", "q4"):
+                    v = r_item.get(qk)
+                    if str(v).strip().lower() in ("1", "true", "yes", "solved"):
+                        q_sum += 1
+                return q_sum
+
+            s_q4 = sum(1 for r in rows if _calc_row_solved_metric(r) == 4)
+            s_q3 = sum(1 for r in rows if _calc_row_solved_metric(r) == 3)
+            s_q2 = sum(1 for r in rows if _calc_row_solved_metric(r) == 2)
+            s_q1 = sum(1 for r in rows if _calc_row_solved_metric(r) == 1)
+            s_q0 = sum(1 for r in rows if _calc_row_solved_metric(r) == 0)
+            dataset["solveDistribution"] = {
+                "solved4": s_q4, "solved3": s_q3, "solved2": s_q2, "solved1": s_q1, "solved0": s_q0
+            }
+
+        if canon_metrics and not has_active_filters and not is_user_scoped:
             dataset["metrics"] = canon_metrics
-        if canon_contest_summary and not has_active_filters:
+        if canon_contest_summary and not has_active_filters and not is_user_scoped:
             dataset["contestSummary"] = canon_contest_summary
+        elif is_user_scoped:
+            tot_r = len(rows)
+            pub_att = sum(1 for r in rows if str(r.get("status", "")).upper() in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
+            virt_att = sum(1 for r in rows if str(r.get("status", "")).upper() in ("VIRTUAL", "VIRTUAL_ATTENDED"))
+            not_att = sum(1 for r in rows if str(r.get("status", "")).upper() in ("NOT_ATTENDED", "NO_EVIDENCE", "ABSENT", "PUBLIC_NOT_ATTENDED"))
+            err_cnt = sum(1 for r in rows if str(r.get("status", "")).upper() in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR"))
+            dataset["contestSummary"] = {
+                "totalStudents": tot_r,
+                "total_students": tot_r,
+                "publicAttended": pub_att,
+                "virtualAttended": virt_att,
+                "notAttended": not_att,
+                "dataErrors": err_cnt
+            }
         if canon_college_summary and not has_active_filters:
             dataset["college_summary"] = canon_college_summary
         if canon_current_week and not has_active_filters:
@@ -2300,27 +2345,16 @@ def _get_dataset_for_id(
                     assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
                     assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
 
-                    is_mentee_only_report = report_type and any(k in str(report_type).upper() for k in ("MENTEE", "STAFF_ALLOCATION", "FACULTY_ASSIGNMENT"))
-                    if is_mentee_only_report:
-                        filtered_raw_rows = []
-                        for r in all_raw_rows:
-                            r_id = str(r.get("student_id") or r.get("id") or "").strip()
-                            r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
-                            r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
-                            if r_reg and r_reg in assigned_reg_nos:
-                                filtered_raw_rows.append(r)
-                            elif r_id and r_id in assigned_ids_str:
-                                filtered_raw_rows.append(r)
-                            elif r_uname and r_uname in assigned_usernames:
-                                filtered_raw_rows.append(r)
-                        all_raw_rows = filtered_raw_rows
-                    else:
-                        for r in all_raw_rows:
-                            r_id = str(r.get("student_id") or r.get("id") or "").strip()
-                            r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
-                            r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
-                            is_mine = (r_reg and r_reg in assigned_reg_nos) or (r_id and r_id in assigned_ids_str) or (r_uname and r_uname in assigned_usernames)
-                            r["is_assigned_mentee"] = bool(is_mine)
+                    filtered_raw_rows = []
+                    for r in all_raw_rows:
+                        r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                        r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                        r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                        is_mine = (r_reg and r_reg in assigned_reg_nos) or (r_id and r_id in assigned_ids_str) or (r_uname and r_uname in assigned_usernames)
+                        r["is_assigned_mentee"] = bool(is_mine)
+                        if is_mine:
+                            filtered_raw_rows.append(r)
+                    all_raw_rows = filtered_raw_rows
                 elif role_clean in _HOD_ROLES:
                     # HOD: filter by department (matches both department_id and department code)
                     from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes

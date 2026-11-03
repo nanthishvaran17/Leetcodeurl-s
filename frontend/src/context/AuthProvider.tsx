@@ -136,6 +136,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     queryClient.clear();
     clearAuthError();
     setAuthState('AUTHORIZED');
+
+    // Instantly sync mobile push notification device token to user account
+    try {
+      import('../services/pushNotifications').then(({ syncTokenToBackend, requestPushPermissionAndSync }) => {
+        const primaryId = formattedUser.email || formattedUser.username || formattedUser.registerNo || (formattedUser.id ? `STAFF_${formattedUser.id}` : undefined) || formattedUser.uid;
+        if (primaryId) {
+          requestPushPermissionAndSync(primaryId);
+          try {
+            const cachedToken = localStorage.getItem('fcm_device_token');
+            if (cachedToken) {
+              syncTokenToBackend(cachedToken, primaryId);
+            }
+          } catch (_e) {}
+        }
+      }).catch(() => {});
+    } catch (_err) {}
   }, [clearAuthError]);
 
   // Standard logout handler

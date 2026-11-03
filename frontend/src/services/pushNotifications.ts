@@ -151,8 +151,13 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
       user_id: userEmailOrId || undefined,
       device_token: deviceToken,
       platform: platform,
-      app_version: '2.2.0',
+      app_version: '4.3.6',
       device_model: navigator.userAgent,
+    }, {
+      headers: {
+        'X-Capacitor-Platform': platform,
+        'X-App-Origin': 'capacitor://localhost'
+      }
     });
     console.log(`[Push] FCM Device Token (${platform}) registered with backend server for user: ${userEmailOrId || 'current'}`);
     return true;

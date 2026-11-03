@@ -52,6 +52,12 @@ public class MainActivity extends BridgeActivity {
                 {"leetcode_intelligence_channel", "LeetCode General Alerts", "General system alerts, role updates, and real-time announcements"}
             };
 
+            android.media.AudioAttributes audioAttributes = new android.media.AudioAttributes.Builder()
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
+                .build();
+            android.net.Uri defaultSoundUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION);
+
             for (String[] ch : channels) {
                 android.app.NotificationChannel channel = new android.app.NotificationChannel(
                     ch[0],
@@ -60,8 +66,12 @@ public class MainActivity extends BridgeActivity {
                 );
                 channel.setDescription(ch[2]);
                 channel.enableVibration(true);
+                channel.setVibrationPattern(new long[]{0, 250, 150, 250});
                 channel.enableLights(true);
+                channel.setLightColor(android.graphics.Color.parseColor("#3b82f6"));
+                channel.setSound(defaultSoundUri, audioAttributes);
                 channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+                channel.setBypassDnd(true);
                 notificationManager.createNotificationChannel(channel);
             }
         }
