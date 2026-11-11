@@ -322,26 +322,63 @@ def get_all_brevo_keys() -> List[str]:
     return keys
 
 
+_BREVO_KEY_ACCOUNT_EMAILS: Dict[str, str] = {}
+
+
+def _fetch_brevo_account_email(api_key: str, timeout: int = 8) -> Optional[str]:
+    """Queries GET /v3/account to verify key status and discover its verified account email."""
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/account",
+        headers={"api-key": api_key.strip(), "Accept": "application/json"},
+        method="GET",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        body = json.loads(resp.read().decode("utf-8", errors="ignore") or "{}")
+        account_email = (body.get("email") or "").strip()
+        if account_email and "@" in account_email:
+            _BREVO_KEY_ACCOUNT_EMAILS[api_key.strip()] = account_email
+            return account_email
+        return None
+
+
+def _resolve_brevo_sender_for_key(api_key: str) -> str:
+    """
+    Resolves the right verified sender email for a given Brevo API key so multi-account rotation
+    works even when extra Brevo accounts only verify their own Gmail address.
+    """
+    clean_key = api_key.strip()
+    for idx in range(2, 6):
+        env_key = os.environ.get(f"BREVO_API_KEY_{idx}", "").strip() or getattr(settings, f"BREVO_API_KEY_{idx}", "").strip()
+        if env_key and env_key == clean_key:
+            override_sender = os.environ.get(f"BREVO_SENDER_EMAIL_{idx}", "").strip()
+            if override_sender and "@" in override_sender:
+                return override_sender
+            if clean_key in _BREVO_KEY_ACCOUNT_EMAILS:
+                return _BREVO_KEY_ACCOUNT_EMAILS[clean_key]
+
+    primary_env_key = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
+    if clean_key in _BREVO_KEY_ACCOUNT_EMAILS and clean_key != primary_env_key:
+        # If explicit BREVO_SENDER_EMAIL matches primary key or is default, prefer key's own verified email when cached
+        return _BREVO_KEY_ACCOUNT_EMAILS[clean_key]
+
+    brevo_configured_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
+    return brevo_configured_sender if (brevo_configured_sender and "@" in brevo_configured_sender) else "nanthishvaran0106@gmail.com"
+
+
 def keep_alive_brevo_keys() -> Dict[str, Any]:
     """
     Pings GET /v3/account for every configured Brevo API key (0 email credits spent).
-    Resets Brevo's 90-day inactivity expiration timer so keys remain permanently active.
+    Resets Brevo's 90-day inactivity expiration timer so keys remain permanently active,
+    and caches each key's verified account email for automatic multi-account rotation.
     """
     keys = get_all_brevo_keys()
     results = []
     for idx, api_key in enumerate(keys, 1):
         masked = f"***{api_key[-6:]}" if len(api_key) >= 6 else "***"
         try:
-            req = urllib.request.Request(
-                "https://api.brevo.com/v3/account",
-                headers={"api-key": api_key, "Accept": "application/json"},
-                method="GET",
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                body = json.loads(resp.read().decode("utf-8", errors="ignore") or "{}")
-                account_email = body.get("email", "unknown")
-                results.append({"key": masked, "status": resp.status, "active": True, "account": account_email})
-                logger.info(f"[BREVO_KEEPALIVE] Key #{idx} ({masked}) verified active ({account_email}).")
+            account_email = _fetch_brevo_account_email(api_key, timeout=10) or "unknown"
+            results.append({"key": masked, "status": 200, "active": True, "account": account_email})
+            logger.info(f"[BREVO_KEEPALIVE] Key #{idx} ({masked}) verified active ({account_email}).")
         except urllib.error.HTTPError as he:
             results.append({"key": masked, "status": he.code, "active": False})
             logger.warning(f"[BREVO_KEEPALIVE] Key #{idx} ({masked}) returned HTTP {he.code}.")
@@ -404,8 +441,8 @@ def send_email_via_brevo(
     Sends transactional email via Brevo Official HTTPS API (POST /v3/smtp/email).
     Optimized for ultra-fast OTP delivery (< 500ms) with lightweight payloads.
     """
-    brevo_configured_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
-    sender_email = brevo_configured_sender if (brevo_configured_sender and "@" in brevo_configured_sender) else "nanthishvaran0106@gmail.com"
+    sender_email = _resolve_brevo_sender_for_key(api_key)
+    sender_auto_resolved = False
 
     subject = strip_all_emojis(subject)
     if text_body:
@@ -445,50 +482,75 @@ def send_email_via_brevo(
     backoff_delays = [1, 2]
     actual_timeout = timeout_seconds or (45 if attachments else 8)
 
+    def _send_once(payload_bytes: bytes) -> Tuple[int, str]:
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=payload_bytes,
+            headers={
+                "api-key": api_key.strip(),
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=actual_timeout) as resp:
+            return resp.status, resp.read().decode("utf-8", errors="ignore")
+
     for attempt in range(1, max_retries + 1):
         try:
-            req = urllib.request.Request(
-                "https://api.brevo.com/v3/smtp/email",
-                data=req_data,
-                headers={
-                    "api-key": api_key.strip(),
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                method="POST"
-            )
-
-            with urllib.request.urlopen(req, timeout=actual_timeout) as resp:
-                resp_bytes = resp.read()
-                resp_json = {}
-                try:
-                    resp_json = json.loads(resp_bytes.decode('utf-8'))
-                except Exception:
-                    pass
-
-                message_id = resp_json.get("messageId") or f"BREVO-{int(time.time()*1000)}"
-
-                if resp.status in (200, 201):
-                    user_part, domain_part = recipient.split("@", 1) if "@" in recipient else (recipient, "")
-                    masked_r = f"{user_part[0]}*****{user_part[-1]}@{domain_part}" if len(user_part) > 2 else recipient
-                    logger.info(f"[BREVO_DELIVERY_SUCCESS] Attempt {attempt}/{max_retries} | MessageID: {message_id} | Recipient: {masked_r}")
-                    return True, message_id
+            try:
+                status_code, resp_text = _send_once(req_data)
+            except urllib.error.HTTPError as he:
+                body = he.read().decode("utf-8", errors="ignore")
+                if he.code == 400 and not sender_auto_resolved and "sender" in body.lower():
+                    sender_auto_resolved = True
+                    try:
+                        discovered_sender = _fetch_brevo_account_email(api_key, timeout=6)
+                    except Exception:
+                        discovered_sender = None
+                    if discovered_sender and discovered_sender != payload["sender"]["email"]:
+                        logger.info(f"[BREVO_SENDER_FALLBACK] Auto-switching sender to {discovered_sender} for key ***{api_key[-6:]}")
+                        payload["sender"]["email"] = discovered_sender
+                        req_data = json.dumps(payload).encode("utf-8")
+                        status_code, resp_text = _send_once(req_data)
+                    else:
+                        raise urllib.error.HTTPError(he.url, he.code, he.msg, he.headers, None)  # type: ignore
                 else:
-                    return False, f"BREVO_API_ERROR: HTTP status {resp.status}"
+                    logger.error(f"[BREVO_HTTP_ERROR] Code {he.code}: {body}")
+                    if he.code in (400, 401, 403):
+                        return False, f"BREVO_PERMANENT_ERROR ({he.code}): {body}"
+                    if attempt < max_retries:
+                        delay = backoff_delays[attempt - 1]
+                        logger.warning(f"[BREVO_RETRYABLE_HTTP_{he.code}] Retrying in {delay}s (Attempt {attempt}/{max_retries})...")
+                        time.sleep(delay)
+                        continue
+                    return False, f"BREVO_API_ERROR {he.code}: {body}"
 
-        except urllib.error.HTTPError as he:
-            body = he.read().decode('utf-8', errors='ignore')
-            logger.error(f"[BREVO_HTTP_ERROR] Code {he.code}: {body}")
-            # Permanent errors — do not retry 400, 401, 403
-            if he.code in (400, 401, 403):
-                return False, f"BREVO_PERMANENT_ERROR ({he.code}): {body}"
-            # Rate-limiting or 5xx — retry with backoff
+            resp_json = {}
+            try:
+                resp_json = json.loads(resp_text)
+            except Exception:
+                pass
+
+            message_id = resp_json.get("messageId") or f"BREVO-{int(time.time()*1000)}"
+            if status_code in (200, 201):
+                user_part, domain_part = recipient.split("@", 1) if "@" in recipient else (recipient, "")
+                masked_r = f"{user_part[0]}*****{user_part[-1]}@{domain_part}" if len(user_part) > 2 else recipient
+                logger.info(f"[BREVO_DELIVERY_SUCCESS] Attempt {attempt}/{max_retries} | MessageID: {message_id} | Recipient: {masked_r}")
+                return True, message_id
+            return False, f"BREVO_API_ERROR: HTTP status {status_code}"
+
+        except urllib.error.HTTPError as he2:
+            body2 = he2.read().decode("utf-8", errors="ignore") if he2.fp else ""
+            logger.error(f"[BREVO_HTTP_ERROR] Code {he2.code}: {body2}")
+            if he2.code in (400, 401, 403):
+                return False, f"BREVO_PERMANENT_ERROR ({he2.code}): {body2}"
             if attempt < max_retries:
                 delay = backoff_delays[attempt - 1]
-                logger.warning(f"[BREVO_RETRYABLE_HTTP_{he.code}] Retrying in {delay}s (Attempt {attempt}/{max_retries})...")
+                logger.warning(f"[BREVO_RETRYABLE_HTTP_{he2.code}] Retrying in {delay}s (Attempt {attempt}/{max_retries})...")
                 time.sleep(delay)
             else:
-                return False, f"BREVO_API_ERROR {he.code}: {body}"
+                return False, f"BREVO_API_ERROR {he2.code}: {body2}"
 
         except Exception as exc:
             err_str = str(exc)
