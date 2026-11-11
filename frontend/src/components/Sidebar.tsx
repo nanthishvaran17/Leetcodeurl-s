@@ -7,7 +7,7 @@ import { CollegeLogo } from './CollegeLogo';
 import { getApiUrl } from '../services/api';
 import { isAdminOtpVerified } from '../utils/adminOtpAuth';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { prefetchRoute } from '../utils/pagePrefetch';
+import { prefetchRoute, prefetchRouteData } from '../utils/pagePrefetch';
 import { triggerHaptic } from '../utils/haptics';
 
 interface SidebarProps {
@@ -330,8 +330,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             <button
                               key={item.id}
                               type="button"
-                              onMouseEnter={() => prefetchRoute(item.id)}
-                              onTouchStart={() => prefetchRoute(item.id)}
+                              onMouseEnter={() => { prefetchRoute(item.id); prefetchRouteData(item.id); }}
+                              onTouchStart={() => { prefetchRoute(item.id); prefetchRouteData(item.id); }}
                               onClick={() => {
                                 if (item.id === 'ai-copilot') {
                                   window.dispatchEvent(new CustomEvent('open_ai_widget'));

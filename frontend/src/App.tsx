@@ -205,12 +205,12 @@ const MainAppContent: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
-  // Instant 0ms Route Warmup Engine: Staggered preloading only when authenticated
+  // Instant 0ms Route & Data Warmup Engine: Staggered preloading only when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      warmupPriorityRoutes();
+      warmupPriorityRoutes(user?.role);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.role]);
   const queryClient = useQueryClient();
   const { refreshAllData } = useGlobalData();
   const [showSplashScreen, setShowSplashScreen] = useState<boolean>(() => {
@@ -486,7 +486,9 @@ const MainAppContent: React.FC = () => {
             setActiveTab('dev-studio');
             return;
           }
-          setActiveTab(tab);
+          startTransition(() => {
+      setActiveTab(tab);
+    });
         }
       } else if (isAdminPortal) {
         setActiveTab('dev-studio');
@@ -925,7 +927,9 @@ const MainAppContent: React.FC = () => {
     if (tab !== 'profile' && selectedStudent) {
       setSelectedStudent(null);
     }
-    setActiveTab(tab);
+    startTransition(() => {
+      setActiveTab(tab);
+    });
     try {
       if (window.history && window.history.replaceState) {
         window.history.replaceState(null, '', `#/${tab}`);

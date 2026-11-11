@@ -976,44 +976,92 @@ app.add_middleware(
 # =====================================================================
 # ULTRA-FAST SUB-MILLISECOND IN-MEMORY API RESPONSE CACHE
 # =====================================================================
+import hashlib as _hashlib
+import re as _re
+
 _API_MEMORY_CACHE: dict = {}
-_MAX_CACHE_ENTRIES = 500
+_MAX_CACHE_ENTRIES = 600
 _CACHE_TTL_MAP: dict = {
     "/api/public/stats": 300,
-    "/api/public/leaderboard": 300,
-    "/api/sessions/dashboard-summary": 300,
-    "/api/students": 300,
-    "/api/students/leaderboard-fast": 300,
-    "/api/departments": 600,
-    "/api/analytics/department-comparison": 300,
-    "/api/analytics/data-quality": 300,
-    "/api/weekly-contests/active-contest": 120,
-    "/api/placement-eligibility/students": 300,
-    "/api/gamification/leaderboard": 300,
-    "/api/hr-candidate-finder/candidates": 120,
-    "/api/growth/improvers": 300,
-    "/api/growth/college-delta": 300,
-    "/api/growth/options": 600,
-    "/api/command-center/summary": 300,
-    "/api/institutional-dashboards/executive-summary": 300,
-    "/api/institutional-dashboards/department-matrix": 300,
-    "/api/contest-integrity/analysis": 300,
-    "/api/sync/status": 30,
-    "/api/stats/version": 600,
-    "/api/system/health": 60,
-    "/api/data/freshness": 120,
-    "/api/admin/staff-list": 600,
-    "/api/settings": 600,
-    "/api/settings/audit-logs": 300,
-    "/api/settings/system-health": 120,
-    "/api/auth/session": 60,
-    "/api/reports/dashboard": 300,
-    "/api/reports/all": 300,
+    "/api/public/leaderboard": 120,
+    "/api/sessions/current": 60,
+    "/api/sessions/dashboard-summary": 60,
+    "/api/students": 60,
+    "/api/students/leaderboard-fast": 90,
+    "/api/departments": 300,
+    "/api/leaderboard": 90,
+    "/api/analytics/dashboard": 60,
+    "/api/analytics/department-comparison": 90,
+    "/api/analytics/data-quality": 60,
+    "/api/analytics/performance-chart": 90,
+    "/api/analytics/contest/aggregate": 90,
+    "/api/analytics/activity/aggregate": 90,
+    "/api/contests/current-session": 30,
+    "/api/contests/sessions": 60,
+    "/api/contests/post-930-solvers": 45,
+    "/api/weekly-contests/active-contest": 60,
+    "/api/placement-eligibility/students": 120,
+    "/api/gamification/leaderboard": 120,
+    "/api/hr-candidate-finder/candidates": 90,
+    "/api/growth/improvers": 120,
+    "/api/growth/college-delta": 120,
+    "/api/growth/options": 300,
+    "/api/command-center/summary": 60,
+    "/api/command-center/departments": 120,
+    "/api/command-center/year-matrix": 90,
+    "/api/institutional-dashboards/executive-summary": 120,
+    "/api/institutional-dashboards/department-matrix": 120,
+    "/api/contest-integrity/analysis": 120,
+    "/api/data-issues/summary": 60,
+    "/api/notifications": 30,
+    "/api/stats/version": 300,
+    "/api/system/health": 45,
+    "/api/data/freshness": 60,
+    "/api/admin/staff-list": 120,
+    "/api/admin/scheduler-health": 30,
+    "/api/settings": 180,
+    "/api/settings/audit-logs": 60,
+    "/api/settings/system-health": 60,
+    "/api/auth/session": 30,
+    "/api/reports/dashboard": 120,
+    "/api/reports/all": 120,
 }
+_CONTEST_SESSION_CACHE_RE = _re.compile(r"^/api/contests/sessions/\d+/(summary|questions|matrix)$")
+_NON_MUTATING_POST_PATHS = (
+    "/api/admin/log-activity",
+    "/api/auth/biometric/device-enroll",
+    "/api/auth/login",
+    "/api/auth/refresh",
+)
+_DASHBOARD_CASCADE_PREFIXES = (
+    "/api/students",
+    "/api/sync",
+    "/api/contests",
+    "/api/sessions",
+    "/api/analytics",
+    "/api/command-center",
+    "/api/data-issues",
+    "/api/leaderboard",
+    "/api/public",
+    "/api/departments",
+    "/api/reports",
+    "/api/growth",
+)
+
+
+def _get_cache_ttl_for_path(path: str) -> int:
+    ttl = _CACHE_TTL_MAP.get(path)
+    if ttl is not None:
+        return ttl
+    if _CONTEST_SESSION_CACHE_RE.match(path):
+        return 45
+    return 0
+
 
 def purge_api_memory_cache():
     """Purges in-memory API response cache on data mutation (POST/PUT/DELETE)."""
     _API_MEMORY_CACHE.clear()
+
 
 def _cleanup_expired_cache_entries(now: float):
     """Purges stale cache items to keep RAM strictly bounded."""
@@ -1022,10 +1070,10 @@ def _cleanup_expired_cache_entries(now: float):
         for sk in stale_keys:
             _API_MEMORY_CACHE.pop(sk, None)
         if len(_API_MEMORY_CACHE) > _MAX_CACHE_ENTRIES:
-            # Drop oldest 20% if still over limit
             sorted_keys = sorted(_API_MEMORY_CACHE.keys(), key=lambda k: _API_MEMORY_CACHE[k].get("expires_at", 0))
-            for k in sorted_keys[:60]:
+            for k in sorted_keys[:80]:
                 _API_MEMORY_CACHE.pop(k, None)
+
 
 def _add_cors_headers_to_response(request, response_headers) -> None:
     """Attaches origin-specific CORS headers to response headers dict or MutableHeaders."""
@@ -1037,26 +1085,31 @@ def _add_cors_headers_to_response(request, response_headers) -> None:
         response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder"
         response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
 
+
 @app.middleware("http")
 async def ultra_fast_memory_cache_middleware(request, call_next):
     method = request.method
     path = request.url.path
 
-    # Selective cache invalidation on mutations (only invalidate related cache entries)
+    # Selective cache invalidation on mutations (skip non-mutating telemetry/auth posts)
     if method in ("POST", "PUT", "DELETE", "PATCH"):
-        # Extract the route prefix to selectively invalidate only related cache entries
-        # e.g., POST /api/students/... only invalidates /api/students cache, not /api/analytics
-        path_parts = path.strip("/").split("/")
-        # Build prefix: /api/<resource> (e.g., /api/students, /api/sessions, /api/settings)
-        if len(path_parts) >= 2:
-            invalidation_prefix = f"/{path_parts[0]}/{path_parts[1]}"
-        else:
-            invalidation_prefix = path
-        
-        keys_to_remove = [k for k in _API_MEMORY_CACHE if k.startswith(invalidation_prefix)]
-        for k in keys_to_remove:
-            del _API_MEMORY_CACHE[k]
-        
+        if not any(path.startswith(p) for p in _NON_MUTATING_POST_PATHS):
+            path_parts = path.strip("/").split("/")
+            invalidation_prefix = f"/{path_parts[0]}/{path_parts[1]}" if len(path_parts) >= 2 else path
+            is_student_or_sync_mutation = any(
+                invalidation_prefix.startswith(p)
+                for p in ("/api/students", "/api/sync", "/api/contests", "/api/sessions", "/api/data-issues", "/api/departments")
+            )
+            if is_student_or_sync_mutation:
+                keys_to_remove = [
+                    k for k in _API_MEMORY_CACHE
+                    if k.startswith(_DASHBOARD_CASCADE_PREFIXES)
+                ]
+            else:
+                keys_to_remove = [k for k in _API_MEMORY_CACHE if k.startswith(invalidation_prefix)]
+            for k in keys_to_remove:
+                _API_MEMORY_CACHE.pop(k, None)
+
         response = await call_next(request)
         _add_cors_headers_to_response(request, response.headers)
         return response
@@ -1066,29 +1119,70 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
         _add_cors_headers_to_response(request, response.headers)
         return response
 
-    # Serve cached responses in < 1ms for high-frequency GET queries with parameter & role isolation
-    if method == "GET" and path in _CACHE_TTL_MAP:
+    ttl = _get_cache_ttl_for_path(path) if method == "GET" else 0
+    if ttl > 0:
         import time
+        from fastapi.responses import Response as FastResponse
         from backend.middleware.performance_profiler import record_cache_hit, record_cache_miss
+
         now = time.time()
         auth_hdr = request.headers.get("authorization", "")
-        cache_key = f"{path}?{request.url.query}#auth:{hash(auth_hdr)}"
-        cached_item = _API_MEMORY_CACHE.get(cache_key)
+        sess_cookie = request.cookies.get("admin_session_token", "") or request.cookies.get("session_token", "")
+        auth_sig = _hashlib.sha1(f"{auth_hdr}|{sess_cookie}".encode("utf-8")).hexdigest()[:16] if (auth_hdr or sess_cookie) else "anon"
+        accept_enc = request.headers.get("accept-encoding", "").lower()
+        enc_key = "gzip" if "gzip" in accept_enc else "plain"
+        cache_key = f"{path}?{request.url.query}#auth:{auth_sig}#enc:{enc_key}"
 
-        if cached_item and now < cached_item["expires_at"]:
-            record_cache_hit()
-            from fastapi.responses import Response as FastResponse
-            res_headers = dict(cached_item.get("headers", {}))
-            res_headers["X-Cache"] = "HIT-FASTAPI-RAM"
-            res_headers["Cache-Control"] = f"private, max-age={_CACHE_TTL_MAP[path]}"
-            _add_cors_headers_to_response(request, res_headers)
-            return FastResponse(
-                content=cached_item["body"],
-                status_code=cached_item["status"],
-                headers=res_headers
-            )
+        force_bypass = (
+            request.query_params.get("refresh", "").lower() in ("true", "1")
+            or request.query_params.get("force_refresh", "").lower() in ("true", "1")
+            or "no-cache" in request.headers.get("cache-control", "").lower()
+        )
+        if force_bypass:
+            _API_MEMORY_CACHE.pop(cache_key, None)
         else:
-            record_cache_miss()
+            cached_item = _API_MEMORY_CACHE.get(cache_key)
+            if cached_item and now < cached_item["expires_at"]:
+                record_cache_hit()
+                res_headers = dict(cached_item.get("headers", {}))
+                res_headers["X-Cache"] = "HIT-FASTAPI-RAM"
+                res_headers["Cache-Control"] = f"private, max-age={ttl}"
+                _add_cors_headers_to_response(request, res_headers)
+                return FastResponse(
+                    content=cached_item["body"],
+                    status_code=cached_item["status"],
+                    headers=res_headers,
+                )
+
+        record_cache_miss()
+        response = await call_next(request)
+        if response.status_code == 200 and hasattr(response, "body_iterator"):
+            chunks = [chunk async for chunk in response.body_iterator]
+            body = b"".join(chunks)
+            raw_headers = {
+                k.lower(): v for k, v in response.headers.items()
+                if k.lower() not in ("content-length", "x-cache")
+            }
+            if len(body) <= 3_000_000:
+                _API_MEMORY_CACHE[cache_key] = {
+                    "body": body,
+                    "status": response.status_code,
+                    "headers": raw_headers,
+                    "expires_at": time.time() + ttl,
+                }
+                _cleanup_expired_cache_entries(now)
+
+            out_headers = dict(raw_headers)
+            out_headers["X-Cache"] = "MISS-POPULATED"
+            _add_cors_headers_to_response(request, out_headers)
+            return FastResponse(
+                content=body,
+                status_code=response.status_code,
+                headers=out_headers,
+            )
+
+        _add_cors_headers_to_response(request, response.headers)
+        return response
 
     response = await call_next(request)
     _add_cors_headers_to_response(request, response.headers)

@@ -42,6 +42,44 @@ const pageImportMap: Record<string, () => Promise<any>> = {
 
 const prefetchedPages = new Set<string>();
 
+import api from '../services/api';
+
+/**
+ * Prefetches primary API payload on hover/touch intent so tab clicks render in < 1ms from memory
+ */
+const prefetchedRouteData = new Map<string, number>();
+const ROUTE_API_PREFETCH_MAP: Record<string, string[]> = {
+  'dashboard': ['/sessions/dashboard-summary', '/analytics/department-comparison'],
+  'students': ['/students/leaderboard-fast'],
+  'departments': ['/departments', '/analytics/department-comparison'],
+  'weekly-contest': ['/contests/current-session', '/contests/sessions'],
+  'quality': ['/analytics/data-quality'],
+  'data-issues': ['/data-issues/summary'],
+  'issues': ['/data-issues/summary'],
+  'hod-command-center': ['/command-center/summary', '/command-center/departments'],
+  'hod': ['/command-center/summary'],
+  'command-center': ['/command-center/summary'],
+  'system-health': ['/system/health'],
+  'growth': ['/growth/improvers'],
+  'public': ['/public/leaderboard'],
+};
+
+export function prefetchRouteData(routeId: string): void {
+  if (typeof window === 'undefined') return;
+  const normalized = routeId.trim().toLowerCase();
+  const urls = ROUTE_API_PREFETCH_MAP[normalized];
+  if (!urls || urls.length === 0) return;
+
+  const now = Date.now();
+  const lastAt = prefetchedRouteData.get(normalized) || 0;
+  if (now - lastAt < 30_000) return;
+  prefetchedRouteData.set(normalized, now);
+
+  urls.forEach((url) => {
+    api.get(url).catch(() => {});
+  });
+}
+
 /**
  * Prefetches a specific route bundle on hover or touch intent
  */
@@ -59,9 +97,9 @@ export function prefetchRoute(routeId: string): void {
 }
 
 /**
- * Automatically warms up all core application views during browser idle time
+ * Automatically warms up all core application views & key APIs during browser idle time
  */
-export function warmupPriorityRoutes(): void {
+export function warmupPriorityRoutes(userRole?: string): void {
   if (typeof window === 'undefined') return;
 
   // Never run automatic batch prefetching during synthetic audits (Lighthouse/PageSpeed) or bot crawls
@@ -102,21 +140,38 @@ export function warmupPriorityRoutes(): void {
     'public'
   ];
 
+  const roleLower = (userRole || '').trim().toLowerCase();
+  const isExecOrHod = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'hod', 'department hod', 'department_hod'].includes(roleLower);
+  const priorityDataRoutes = [
+    'students',
+    'weekly-contest',
+    'departments',
+    'quality',
+    'data-issues',
+    ...(isExecOrHod ? ['hod-command-center'] : []),
+  ];
+
   const runWarmup = () => {
     let index = 0;
     const interval = setInterval(() => {
-      if (index >= coreRoutes.length) {
-        clearInterval(interval);
-        return;
+      if (index < coreRoutes.length) {
+        prefetchRoute(coreRoutes[index]);
+      } else {
+        const apiIdx = index - coreRoutes.length;
+        if (apiIdx < priorityDataRoutes.length) {
+          prefetchRouteData(priorityDataRoutes[apiIdx]);
+        } else {
+          clearInterval(interval);
+          return;
+        }
       }
-      prefetchRoute(coreRoutes[index]);
       index++;
-    }, 250); // Staggered interval to prevent network congestion
+    }, 200); // Staggered 200ms interval to warm JS chunks + API data gently in background
   };
 
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => setTimeout(runWarmup, 1800), { timeout: 5000 });
+    (window as any).requestIdleCallback(() => setTimeout(runWarmup, 1200), { timeout: 3500 });
   } else {
-    setTimeout(runWarmup, 2500);
+    setTimeout(runWarmup, 1500);
   }
 }

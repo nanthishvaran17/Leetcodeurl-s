@@ -43,12 +43,18 @@ const CACHE_TTL_MS = 120_000; // 2 minutes — fast-enough for live staff use, e
 
 // Per-URL TTL overrides (milliseconds). Heavier endpoints get longer cache.
 const URL_TTL_OVERRIDES: Record<string, number> = {
-  '/students/leaderboard-fast': 120_000,   // 2 min
-  '/public/leaderboard': 120_000,           // 2 min
+  '/students/leaderboard-fast': 180_000,    // 3 min
+  '/public/leaderboard': 180_000,           // 3 min
   '/analytics/department-comparison': 300_000, // 5 min
   '/analytics/data-quality': 300_000,       // 5 min
-  '/sessions/dashboard-summary': 60_000,   // 1 min (synced more often)
-  '/public/stats': 300_000,                // 5 min
+  '/data-issues/summary': 180_000,          // 3 min
+  '/command-center/summary': 180_000,       // 3 min
+  '/command-center/departments': 300_000,   // 5 min
+  '/contests/': 120_000,                    // 2 min
+  '/departments': 300_000,                  // 5 min
+  '/sessions/dashboard-summary': 60_000,    // 1 min
+  '/system/health': 60_000,                 // 1 min
+  '/public/stats': 300_000,                 // 5 min
 };
 
 const getEffectiveTtl = (url: string): number => {
@@ -58,18 +64,18 @@ const getEffectiveTtl = (url: string): number => {
   return CACHE_TTL_MS;
 };
 
-export const getCachedData = (key: string, url?: string, allowStaleIfOffline: boolean = false) => {
+export const getCachedData = (key: string, url?: string, allowStaleIfOffline: boolean = false, allowStaleForSwr: boolean = false) => {
   const cached = responseCache.get(key);
   const ttl = url ? getEffectiveTtl(url) : CACHE_TTL_MS;
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-  if (cached && (isOffline || allowStaleIfOffline || Date.now() - cached.timestamp < ttl)) {
+  if (cached && (isOffline || allowStaleIfOffline || allowStaleForSwr || Date.now() - cached.timestamp < ttl)) {
     return cached.data;
   }
   try {
     const sessionItem = sessionStorage.getItem(`swr_${key}`);
     if (sessionItem) {
       const parsed = JSON.parse(sessionItem);
-      if (parsed && (isOffline || allowStaleIfOffline || Date.now() - parsed.timestamp < ttl)) {
+      if (parsed && (isOffline || allowStaleIfOffline || allowStaleForSwr || Date.now() - parsed.timestamp < ttl)) {
         responseCache.set(key, parsed);
         return parsed.data;
       }
@@ -82,9 +88,9 @@ export const setCachedData = (key: string, data: any) => {
   const entry = { timestamp: Date.now(), data };
   responseCache.set(key, entry);
   try {
-    // Persist small-to-medium JSON in sessionStorage for instant sub-millisecond tab restores
+    // Persist small-to-large JSON in sessionStorage for instant sub-millisecond tab & reload restores
     const serialized = JSON.stringify(entry);
-    if (serialized.length < 500_000) {
+    if (serialized.length < 1_200_000) {
       sessionStorage.setItem(`swr_${key}`, serialized);
     }
   } catch (_e) {}
@@ -382,9 +388,14 @@ api.get = async function (url: string, config?: any) {
   }
 
   const key = getRequestKey(url, config);
-  let cached = responseCache.get(key);
-  if (!cached) {
-    const sessionData = getCachedData(key, url);
+  const forceRefresh = Boolean(
+    config?.params?.refresh ||
+    config?.params?.force_refresh ||
+    config?.headers?.['Cache-Control'] === 'no-cache'
+  );
+  let cached = !forceRefresh ? responseCache.get(key) : undefined;
+  if (!cached && !forceRefresh) {
+    const sessionData = getCachedData(key, url, false, true);
     if (sessionData !== null) {
       cached = responseCache.get(key);
     }
