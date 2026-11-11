@@ -564,6 +564,19 @@ async def daily_db_cleanup_job():
         db.close()
 
 
+async def weekly_brevo_keepalive_job():
+    """
+    Scheduled weekly to ping GET /v3/account on all configured Brevo API keys.
+    Uses zero email credits and prevents Brevo's 90-day inactivity key deactivation.
+    """
+    try:
+        from backend.services.email_service import keep_alive_brevo_keys
+        summary = await asyncio.to_thread(keep_alive_brevo_keys)
+        logger.info(f"[SCHEDULER] Brevo API keep-alive complete: checked {summary.get('checked', 0)} key(s).")
+    except Exception as e:
+        logger.warning(f"[SCHEDULER] Brevo API keep-alive error: {e}")
+
+
 last_public_run_time = None
 last_virtual_run_time = None
 
@@ -1305,6 +1318,16 @@ def start_scheduler():
         id='daily_db_cleanup_0300',
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # Brevo API Keep-Alive: Every Wednesday at 06:00 AM IST (plus 45s post-boot)
+    scheduler.add_job(
+        weekly_brevo_keepalive_job,
+        CronTrigger(day_of_week='wed', hour=6, minute=0, timezone=IST),
+        id='weekly_brevo_keepalive',
+        replace_existing=True,
+        next_run_time=datetime.datetime.now(IST) + datetime.timedelta(seconds=45),
+        max_instances=1, coalesce=True, misfire_grace_time=7200
     )
 
     scheduler.start()

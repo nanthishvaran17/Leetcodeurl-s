@@ -272,58 +272,83 @@ def send_email_via_resend(
         logger.error(f"OTP_EMAIL_PROVIDER=RESEND_API OTP_PROVIDER_ACCEPTED=false Error: {exc}")
         return False, f"RESEND_API_ERROR: {exc}"
 
+def _is_valid_brevo_key(key: Optional[str]) -> bool:
+    """Validates that a configured Brevo key is structurally real (ignores typos like '=' or placeholders)."""
+    if not key:
+        return False
+    cleaned = key.strip()
+    return len(cleaned) >= 20 and cleaned.startswith("xkeysib-")
+
+
+def _is_brevo_rotatable_error(err: Optional[str]) -> bool:
+    """Returns True when a Brevo failure (quota, rate limit, or revoked/expired 401 key) should rotate to the next key."""
+    if not err:
+        return False
+    err_lower = err.lower()
+    return any(
+        token in err_lower
+        for token in ("401", "402", "403", "429", "unauthorized", "key not found", "quota", "limit")
+    )
+
+
 def get_all_brevo_keys() -> List[str]:
-    """Returns a list of all available Brevo API keys for rotating when quotas are exceeded."""
-    keys = []
-    
-    # 1. Primary configured key
+    """Returns a deduplicated list of valid Brevo API keys for quota rotation and failover."""
+    keys: List[str] = []
+
+    # 1. Primary configured key (with verified fallback if env key is unset or malformed)
     k1 = os.environ.get("BREVO_API_KEY", "").strip() or getattr(settings, "BREVO_API_KEY", "").strip()
-    if not k1:
+    if not _is_valid_brevo_key(k1):
         try:
             k1 = 'wrDobdfWB9qOxlJv-e64910bfafe3e010a198b55863b85bb90a7d818c92f44d569007f34370916cb0-bisyekx'[::-1]
         except Exception:
-            pass
-    if k1 and k1 not in keys:
+            k1 = ""
+    if _is_valid_brevo_key(k1) and k1 not in keys:
         keys.append(k1)
-        
-    # 2. Hardcoded Secondary Key (For 301-600 emails)
-    try:
-        k2 = 'KJojDPFEf5Zr2Cc-8b728963332e2a494e61f9180475badaf02aeab6c2b2a0ae4f182d2c8faf1737-bisyekx'[::-1]
-        if k2 and k2 not in keys:
-            keys.append(k2)
-    except Exception:
-        pass
 
-    # 3. Hardcoded Tertiary Key (For 601-900 emails)
-    try:
-        k3 = 'bAyt9SFMTvFzgIGj-f8fcc3dd7f27317652cab0e61e3106ad65d9e5e64323dff0edb57632a6caac7-bisyekx'[::-1]
-        if k3 and k3 not in keys:
-            keys.append(k3)
-    except Exception:
-        pass
-
-    # 4. Hardcoded Quaternary Key (For 901-1200 emails)
-    try:
-        k4 = 'irdMjXp0E4wD9kAO-f8fcc3dd7f27317652cab0e61e3106ad65d9e5e64323dff0edb57632a6caac7-bisyekx'[::-1]
-        if k4 and k4 not in keys:
-            keys.append(k4)
-    except Exception:
-        pass
-    # 2. Secondary/Fallback keys
+    # 2. Secondary/Fallback keys from environment
     for key_name in ["BREVO_API_KEY_2", "BREVO_API_KEY_3", "BREVO_API_KEY_4", "BREVO_API_KEY_5"]:
         k = os.environ.get(key_name, "").strip() or getattr(settings, key_name, "").strip()
-        if k and k not in keys:
+        if _is_valid_brevo_key(k) and k not in keys:
             keys.append(k)
-            
+
     # 3. Bulk comma-separated keys
     bulk = os.environ.get("BREVO_API_KEYS", "").strip()
     if bulk:
         for k in bulk.split(","):
             k = k.strip()
-            if k and k not in keys:
+            if _is_valid_brevo_key(k) and k not in keys:
                 keys.append(k)
-                
+
     return keys
+
+
+def keep_alive_brevo_keys() -> Dict[str, Any]:
+    """
+    Pings GET /v3/account for every configured Brevo API key (0 email credits spent).
+    Resets Brevo's 90-day inactivity expiration timer so keys remain permanently active.
+    """
+    keys = get_all_brevo_keys()
+    results = []
+    for idx, api_key in enumerate(keys, 1):
+        masked = f"***{api_key[-6:]}" if len(api_key) >= 6 else "***"
+        try:
+            req = urllib.request.Request(
+                "https://api.brevo.com/v3/account",
+                headers={"api-key": api_key, "Accept": "application/json"},
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                body = json.loads(resp.read().decode("utf-8", errors="ignore") or "{}")
+                account_email = body.get("email", "unknown")
+                results.append({"key": masked, "status": resp.status, "active": True, "account": account_email})
+                logger.info(f"[BREVO_KEEPALIVE] Key #{idx} ({masked}) verified active ({account_email}).")
+        except urllib.error.HTTPError as he:
+            results.append({"key": masked, "status": he.code, "active": False})
+            logger.warning(f"[BREVO_KEEPALIVE] Key #{idx} ({masked}) returned HTTP {he.code}.")
+        except Exception as exc:
+            results.append({"key": masked, "status": "ERROR", "active": False, "error": str(exc)})
+            logger.warning(f"[BREVO_KEEPALIVE] Key #{idx} ({masked}) ping failed: {exc}")
+    return {"checked": len(keys), "results": results}
 
 def get_active_email_provider() -> Dict[str, Any]:
     """Returns runtime metadata for the active email delivery provider."""
@@ -657,11 +682,10 @@ def send_email(
                 _log_to_db(generated_msg_id, recipient, subject, "SENT", err, None, "BREVO", "AUTOMATED")
                 return True, err
             
-            # If error is quota or rate limit related (402, 403, 429), try next key
+            # If error is quota, rate limit, or unauthorized/expired key (401/402/403/429), try next key
             last_error = err
-            err_lower = (err or "").lower()
-            if "402" in err_lower or "403" in err_lower or "429" in err_lower or "quota" in err_lower or "limit" in err_lower:
-                logger.warning(f"[BREVO_QUOTA_OR_AUTH] Key {b_key[:5]}... failed/exhausted. Trying next key if available.")
+            if _is_brevo_rotatable_error(err):
+                logger.warning(f"[BREVO_QUOTA_OR_AUTH] Key ***{b_key[-6:]} failed/exhausted. Trying next key if available.")
                 continue
                 
             # If it's another error (like invalid email), do not retry next keys
@@ -1129,9 +1153,8 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                     )
                     return True, STATUS_SMTP_ACCEPTED, msg_id_or_err
                 
-                err_lower = (msg_id_or_err or "").lower()
-                if "402" in err_lower or "403" in err_lower or "429" in err_lower or "quota" in err_lower or "limit" in err_lower:
-                    logger.warning(f"[{now_iso}] [OTP] Key {b_key[:5]}... exhausted. Trying next key.")
+                if _is_brevo_rotatable_error(msg_id_or_err):
+                    logger.warning(f"[{now_iso}] [OTP] Key ***{b_key[-6:]} exhausted or unauthorized. Trying next key.")
                     continue
                 break
                 
