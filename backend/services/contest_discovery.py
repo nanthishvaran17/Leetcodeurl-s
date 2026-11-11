@@ -104,6 +104,7 @@ def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.d
     else:
         return "FINALIZED"
 
+import threading
 import time
 import urllib.request
 import json
@@ -124,15 +125,15 @@ _top_contests_cache = None
 _top_contests_cached_at = 0.0
 _CACHE_TTL_SUCCESS = 600.0  # 10 minutes cache on success
 _CACHE_TTL_FAILURE = 120.0  # 2 minutes cache on network failure
+_top_contests_refresh_lock = threading.Lock()
+_top_contests_refreshing = False
+_questions_refresh_lock = threading.Lock()
+_questions_refreshing: set = set()
 
-def _get_leetcode_top_contests() -> list:
-    global _top_contests_cache, _top_contests_cached_at
+
+def _fetch_leetcode_top_contests_sync() -> list:
+    global _top_contests_cache, _top_contests_cached_at, _top_contests_refreshing
     now = time.time()
-    if _top_contests_cache is not None:
-        ttl = _CACHE_TTL_SUCCESS if _top_contests_cache else _CACHE_TTL_FAILURE
-        if now - _top_contests_cached_at < ttl:
-            return _top_contests_cache
-
     try:
         req = urllib.request.Request(
             "https://leetcode.com/graphql",
@@ -148,21 +149,50 @@ def _get_leetcode_top_contests() -> list:
             data = json.loads(resp.read().decode('utf-8'))
             contests = data.get("data", {}).get("topTwoContests", [])
             _top_contests_cache = contests
-            _top_contests_cached_at = now
+            _top_contests_cached_at = time.time()
             return _top_contests_cache
     except Exception as e:
         logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode GraphQL query failed: {e}. Falling back to date arithmetic.")
-        _top_contests_cache = []
+        if _top_contests_cache is None:
+            _top_contests_cache = []
         _top_contests_cached_at = now
-        return []
+        return _top_contests_cache or []
+    finally:
+        with _top_contests_refresh_lock:
+            _top_contests_refreshing = False
 
-def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str, Any]:  # type: ignore
+
+def _trigger_top_contests_background_refresh() -> None:
+    global _top_contests_refreshing
+    with _top_contests_refresh_lock:
+        if _top_contests_refreshing:
+            return
+        _top_contests_refreshing = True
+    threading.Thread(target=_fetch_leetcode_top_contests_sync, daemon=True).start()
+
+
+def _get_leetcode_top_contests(allow_live_network: bool = True) -> list:
+    global _top_contests_cache, _top_contests_cached_at
+    now = time.time()
+    if _top_contests_cache is not None:
+        ttl = _CACHE_TTL_SUCCESS if _top_contests_cache else _CACHE_TTL_FAILURE
+        if now - _top_contests_cached_at < ttl:
+            return _top_contests_cache
+
+    if not allow_live_network:
+        _trigger_top_contests_background_refresh()
+        return _top_contests_cache or []
+
+    return _fetch_leetcode_top_contests_sync()
+
+
+def fetch_leetcode_live_contest_info(target_contest_num: int = None, allow_live_network: bool = True) -> Dict[str, Any]:  # type: ignore
     """
     Attempts to fetch live contest metadata directly from LeetCode GraphQL API.
     Uses global top-contests TTL caching (10 mins) to prevent repetitive network requests.
     Returns metadata dict if successful, or empty dict on failure.
     """
-    contests = _get_leetcode_top_contests()
+    contests = _get_leetcode_top_contests(allow_live_network=allow_live_network)
     for c in contests:
         title = c.get("title", "")
         if target_contest_num:
@@ -174,18 +204,10 @@ def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str
 
 _contest_questions_cache = {}
 
-def fetch_leetcode_contest_questions(title_slug: str) -> list:
-    """
-    Fetches real problem titles and scores for a specific contest from Leetcode GraphQL.
-    Uses memory caching with 15-minute TTL to prevent blocking HTTP endpoints.
-    """
+
+def _fetch_leetcode_contest_questions_sync(title_slug: str) -> list:
     global _contest_questions_cache
     now = time.time()
-    if title_slug in _contest_questions_cache:
-        cached_data, cached_at = _contest_questions_cache[title_slug]
-        if now - cached_at < 900.0:
-            return cached_data
-
     query = """
     query getContest($titleSlug: String!) {
       contest(titleSlug: $titleSlug) {
@@ -212,12 +234,42 @@ def fetch_leetcode_contest_questions(title_slug: str) -> list:
             data = json.loads(resp.read().decode('utf-8'))
             qs = data.get("data", {}).get("contest", {}).get("questions", [])
             if qs:
-                _contest_questions_cache[title_slug] = (qs, now)
+                _contest_questions_cache[title_slug] = (qs, time.time())
             return qs
     except Exception as e:
         logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode questions fetch failed for {title_slug}: {e}")
         _contest_questions_cache[title_slug] = ([], now)
         return []
+    finally:
+        with _questions_refresh_lock:
+            _questions_refreshing.discard(title_slug)
+
+
+def fetch_leetcode_contest_questions(title_slug: str, allow_live_network: bool = True) -> list:
+    """
+    Fetches real problem titles and scores for a specific contest from Leetcode GraphQL.
+    Uses memory caching with 15-minute TTL to prevent blocking HTTP endpoints.
+    """
+    global _contest_questions_cache
+    now = time.time()
+    cached_entry = _contest_questions_cache.get(title_slug)
+    if cached_entry is not None:
+        cached_data, cached_at = cached_entry
+        if now - cached_at < 900.0:
+            return cached_data
+
+    if not allow_live_network:
+        with _questions_refresh_lock:
+            if title_slug not in _questions_refreshing:
+                _questions_refreshing.add(title_slug)
+                threading.Thread(
+                    target=_fetch_leetcode_contest_questions_sync,
+                    args=(title_slug,),
+                    daemon=True,
+                ).start()
+        return cached_entry[0] if cached_entry else []
+
+    return _fetch_leetcode_contest_questions_sync(title_slug)
 
 def calculate_biweekly_contest_number(contest_date: datetime.date) -> int:
     """
@@ -242,7 +294,7 @@ def get_most_recent_saturday_date(target_dt: datetime.datetime = None) -> dateti
     saturday_dt = target_dt - datetime.timedelta(days=days_since_saturday)
     return saturday_dt.date()
 
-def discover_biweekly_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:  # type: ignore
+def discover_biweekly_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None, allow_live_network: bool = True) -> Dict[str, Any]:  # type: ignore
     """
     Dynamic LeetCode Biweekly Contest Discovery Engine.
     Discovers contest ID, title, date, start time (20:00 IST), end time (21:30 IST), and problem list.
@@ -269,7 +321,7 @@ def discover_biweekly_contest_metadata(target_date: datetime.date = None, overri
     contest_name = f"Biweekly Contest {contest_num}"
     status = calculate_contest_status(target_date)
 
-    raw_questions = fetch_leetcode_contest_questions(contest_id)
+    raw_questions = fetch_leetcode_contest_questions(contest_id, allow_live_network=allow_live_network)
     if raw_questions and len(raw_questions) >= 4:
         problems = [
             {"problem_index": 1, "title": raw_questions[0].get("title", "Q1 (Easy)"), "difficulty": "Easy", "max_score": raw_questions[0].get("credit", 3)},
@@ -304,14 +356,18 @@ def discover_biweekly_contest_metadata(target_date: datetime.date = None, overri
         "problems": problems
     }
 
-def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None, contest_type: str = "weekly") -> Dict[str, Any]:  # type: ignore
+def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None, contest_type: str = "weekly", allow_live_network: bool = True) -> Dict[str, Any]:  # type: ignore
     """
     Dynamic LeetCode Contest Discovery Engine (Supports both Weekly and Biweekly contests).
     Discovers contest ID, title, date, start time, end time, and dynamic problem list.
     Evaluates real-time contest status (SCHEDULED, LIVE, FINALIZED) dynamically based on Asia/Kolkata IST.
     """
     if contest_type.lower() == "biweekly":
-        return discover_biweekly_contest_metadata(target_date=target_date, override_contest_num=override_contest_num)
+        return discover_biweekly_contest_metadata(
+            target_date=target_date,
+            override_contest_num=override_contest_num,
+            allow_live_network=allow_live_network,
+        )
 
     if target_date is None:
         target_date = get_most_recent_sunday_date()
@@ -331,7 +387,7 @@ def discover_contest_metadata(target_date: datetime.date = None, override_contes
     else:
         contest_num = calculate_contest_number(target_date)
         # Attempt live API discovery cross-check
-        live_info = fetch_leetcode_live_contest_info(contest_num)
+        live_info = fetch_leetcode_live_contest_info(contest_num, allow_live_network=allow_live_network)
         if live_info:
             discovery_source = "LEETCODE_API_DISCOVERED"
             logger.info(f"[CONTEST_DISCOVERY] Successfully verified contest via LeetCode GraphQL API: {live_info.get('title')}")
@@ -340,7 +396,7 @@ def discover_contest_metadata(target_date: datetime.date = None, override_contes
     contest_name = f"Weekly Contest {contest_num}"
     status = calculate_contest_status(target_date)
 
-    raw_questions = fetch_leetcode_contest_questions(contest_id)
+    raw_questions = fetch_leetcode_contest_questions(contest_id, allow_live_network=allow_live_network)
     if raw_questions and len(raw_questions) >= 4:
         problems = [
             {"problem_index": 1, "title": raw_questions[0].get("title", "Q1 (Easy)"), "difficulty": "Easy", "max_score": raw_questions[0].get("credit", 3)},

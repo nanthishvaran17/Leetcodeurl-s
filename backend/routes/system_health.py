@@ -164,47 +164,53 @@ def get_system_health(db: Session = Depends(get_db)):
         "action": None if firestore_ok else "Verify Firebase credentials and network connection"
     }
 
-    # 3. LeetCode GraphQL Source Reachability
-    leetcode_ok = True
-    leetcode_err = None
-    leetcode_code = None
-    leetcode_latency_ms = 45.0
-    try:
-        import urllib.request
-        req = urllib.request.Request("https://leetcode.com/graphql", headers={"User-Agent": "Mozilla/5.0"})
-        import urllib.error
-        try:
-            with urllib.request.urlopen(req, timeout=3.0) as response:
-                if response.status not in (200, 400, 405):
-                    leetcode_ok = False
-                    leetcode_code = "LEETCODE_API_ERROR"
-                    leetcode_err = f"LeetCode GraphQL endpoint returned HTTP {response.status}"
-        except urllib.error.HTTPError as he:
-            if he.code in (200, 400, 405):
-                leetcode_ok = True
-            elif he.code == 429:
-                leetcode_ok = False
-                has_warnings = True
-                leetcode_code = "LEETCODE_RATE_LIMITED"
-                leetcode_err = "LeetCode API rate limit encountered"
-            else:
-                leetcode_ok = False
-                has_warnings = True
-                leetcode_code = "LEETCODE_API_ERROR"
-                leetcode_err = f"LeetCode GraphQL endpoint returned HTTP {he.code}"
-    except Exception as le:
-        leetcode_ok = False
+    # 3. LeetCode GraphQL Source Reachability (Non-blocking cached probe)
+    lc_probe = cache.get("system:leetcode_reachability")
+    if lc_probe is None:
+        # Probe asynchronously in background so dashboard/system health returns immediately
+        import threading
+        def _probe_leetcode_bg():
+            res = {"ok": True, "err": None, "code": None, "latency_ms": 45.0}
+            try:
+                import time as _time
+                import urllib.request
+                import urllib.error
+                t_lc = _time.perf_counter()
+                req = urllib.request.Request("https://leetcode.com/graphql", headers={"User-Agent": "Mozilla/5.0"})
+                try:
+                    with urllib.request.urlopen(req, timeout=2.0) as response:
+                        res["latency_ms"] = round((_time.perf_counter() - t_lc) * 1000, 1)
+                        if response.status not in (200, 400, 405):
+                            res.update({"ok": False, "code": "LEETCODE_API_ERROR", "err": f"LeetCode GraphQL endpoint returned HTTP {response.status}"})
+                except urllib.error.HTTPError as he:
+                    res["latency_ms"] = round((_time.perf_counter() - t_lc) * 1000, 1)
+                    if he.code in (200, 400, 405):
+                        res["ok"] = True
+                    elif he.code == 429:
+                        res.update({"ok": False, "code": "LEETCODE_RATE_LIMITED", "err": "LeetCode API rate limit encountered"})
+                    else:
+                        res.update({"ok": False, "code": "LEETCODE_API_ERROR", "err": f"LeetCode GraphQL endpoint returned HTTP {he.code}"})
+            except Exception as le:
+                err_str = str(le).lower()
+                if "timed out" in err_str or "timeout" in err_str:
+                    res.update({"ok": False, "code": "LEETCODE_TIMEOUT", "err": "LeetCode GraphQL request timed out"})
+                elif "429" in err_str or "rate" in err_str:
+                    res.update({"ok": False, "code": "LEETCODE_RATE_LIMITED", "err": "LeetCode API rate limit encountered"})
+                else:
+                    res.update({"ok": False, "code": "LEETCODE_SOURCE_UNAVAILABLE", "err": "LeetCode GraphQL endpoint is temporarily unreachable"})
+            cache.set("system:leetcode_reachability", res, ttl_seconds=120)
+
+        # Avoid launching multiple simultaneous probes on burst traffic
+        cache.set("system:leetcode_reachability", {"ok": True, "err": None, "code": None, "latency_ms": 45.0}, ttl_seconds=15)
+        threading.Thread(target=_probe_leetcode_bg, daemon=True).start()
+        lc_probe = cache.get("system:leetcode_reachability") or {"ok": True, "err": None, "code": None, "latency_ms": 45.0}
+
+    leetcode_ok = bool(lc_probe.get("ok", True))
+    leetcode_err = lc_probe.get("err")
+    leetcode_code = lc_probe.get("code")
+    leetcode_latency_ms = lc_probe.get("latency_ms", 45.0)
+    if not leetcode_ok:
         has_warnings = True
-        err_str = str(le).lower()
-        if "timed out" in err_str or "timeout" in err_str:
-            leetcode_code = "LEETCODE_TIMEOUT"
-            leetcode_err = "LeetCode GraphQL request timed out after 5 seconds"
-        elif "429" in err_str or "rate" in err_str:
-            leetcode_code = "LEETCODE_RATE_LIMITED"
-            leetcode_err = "LeetCode API rate limit encountered"
-        else:
-            leetcode_code = "LEETCODE_SOURCE_UNAVAILABLE"
-            leetcode_err = "LeetCode GraphQL endpoint is temporarily unreachable"
 
     components["leetcode_source"] = {
         "name": "LeetCode GraphQL API",
@@ -1097,7 +1103,7 @@ def get_evidence_audit_summary(db: Session = Depends(get_db)):
     snapshot_count = db.query(OfficialWeeklySnapshot).count()
     sessions = db.query(WeeklySession).order_by(WeeklySession.id.desc()).limit(5).all()
 
-    discovery = discover_contest_metadata()
+    discovery = discover_contest_metadata(allow_live_network=False)
 
     return {
         "status": "healthy",

@@ -36,13 +36,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=Fals
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _get_management_permission_flags(db: Session) -> dict:
+    from backend.cache import cache
     from backend.models import AdminSettingsModel
-    mgmt_audit = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_AUDIT_ACCESS").first()
-    mgmt_settings = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == "ALLOW_MANAGEMENT_ADMIN_SETTINGS").first()
-    return {
-        "allow_management_audit_access": str(mgmt_audit.value).strip().lower() in ["true", "1", "yes"] if mgmt_audit else False,
-        "allow_management_admin_settings": str(mgmt_settings.value).strip().lower() in ["true", "1", "yes"] if mgmt_settings else False,
-    }
+
+    def _compute():
+        rows = db.query(AdminSettingsModel).filter(
+            AdminSettingsModel.key.in_(["ALLOW_MANAGEMENT_AUDIT_ACCESS", "ALLOW_MANAGEMENT_ADMIN_SETTINGS"])
+        ).all()
+        vals = {r.key: r.value for r in rows}
+        return {
+            "allow_management_audit_access": str(vals.get("ALLOW_MANAGEMENT_AUDIT_ACCESS", "")).strip().lower() in ["true", "1", "yes"],
+            "allow_management_admin_settings": str(vals.get("ALLOW_MANAGEMENT_ADMIN_SETTINGS", "")).strip().lower() in ["true", "1", "yes"],
+        }
+
+    return cache.get_or_compute("auth:mgmt_permission_flags", _compute, ttl_seconds=15, tags=["settings"])
 
 
 def _get_user_dept_scope(db: Session, user: User) -> dict:
@@ -199,7 +206,7 @@ def create_server_admin_session(db: Session, user: User, request: Request, respo
     return raw_token, s_id
 
 
-def _record_user_login(db: Session, user: User, request: Optional[Request] = None):
+def _record_user_login(db: Session, user: User, request: Optional[Request] = None, commit: bool = True):
     """Records authenticated login event with real client IP, user agent, and timestamp."""
     try:
         now = _utcnow()
@@ -210,9 +217,11 @@ def _record_user_login(db: Session, user: User, request: Optional[Request] = Non
             ua_str = request.headers.get("User-Agent", "Web Browser")
             setattr(user, "last_login_ip", client_ip)
             setattr(user, "last_login_device", ua_str[:250] if ua_str else "Web Browser")
-        db.commit()
+        if commit:
+            db.commit()
     except Exception as e:
-        db.rollback()
+        if commit:
+            db.rollback()
         logger.warning(f"[AUTH_LOGIN_RECORD_FAIL] Could not update last_login: {e}")
 
 
@@ -1218,14 +1227,24 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     from sqlalchemy import or_, func
     clean_lower = clean_username.lower()
     alias_email = clean_lower.replace("saravnan", "saravanan")
+    # Fast indexed exact-match lookup first; fall back to case-insensitive scan only on miss
     user = db.query(User).filter(
         or_(
-            func.lower(User.username) == clean_lower,
-            func.lower(User.email) == clean_lower,
-            func.lower(User.email) == alias_email,
-            func.lower(User.institutional_id) == clean_lower
+            User.username == clean_username,
+            User.username == clean_lower,
+            User.email == clean_lower,
+            User.email == alias_email,
         )
     ).first()
+    if not user:
+        user = db.query(User).filter(
+            or_(
+                func.lower(User.username) == clean_lower,
+                func.lower(User.email) == clean_lower,
+                func.lower(User.email) == alias_email,
+                func.lower(User.institutional_id) == clean_lower
+            )
+        ).first()
 
     # Fallback to Student table if not found in User table
     if not user:
@@ -1300,7 +1319,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
     # 2FA Enterprise Protection Gate completely disabled
     # Direct login without authenticator challenge
-    _record_user_login(db, user, request)
+    _record_user_login(db, user, request, commit=False)
 
     # Create Server Session & Set HttpOnly Cookie (Graceful fallback)
     session_id = None

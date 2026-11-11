@@ -254,78 +254,67 @@ def get_data_issues_summary(
     Computes real, ground-truth issue counts across Cyber Security and IoT students.
     """
     from backend.services.authorization_service import apply_role_based_student_filter
-    
-    query = db.query(Student).outerjoin(Department, Student.department_id == Department.id).options(
-        joinedload(Student.stats),
-        joinedload(Student.department)
-    )
-    
-    if current_user and hasattr(current_user, "role"):
-        query = apply_role_based_student_filter(query, current_user, db)
-    students = query.all()
+    from backend.cache import cache
 
-    from collections import Counter
-    all_usernames = [s.username.strip().lower() for s in students if s.username and s.username.strip()]
-    dup_usernames = {u for u, cnt in Counter(all_usernames).items() if cnt > 1}
+    user_scope = f"{getattr(current_user, 'id', 'anon')}:{getattr(current_user, 'role', '')}" if current_user else "public"
+    cache_key = f"data_issues_summary_v1:{user_scope}"
 
-    classified = [classify_student_issue(s, dup_usernames) for s in students]
-    all_classified = list(classified)
+    def _compute():
+        query = db.query(Student).outerjoin(Department, Student.department_id == Department.id).options(
+            joinedload(Student.stats),
+            joinedload(Student.department)
+        )
 
-    counts = {
-        "total_students": len(classified),
-        "not_started": sum(1 for c in classified if c["issue_category"] == "NOT_STARTED"),
-        "sync_failed": sum(1 for c in classified if c["issue_category"] == "SYNC_FAILED"),
-        "never_synced": sum(1 for c in classified if c["issue_category"] == "NEVER_SYNCED"),
-        "missing_username": sum(1 for c in classified if c["issue_category"] == "MISSING_USERNAME"),
-        "duplicate_username": sum(1 for c in classified if c["issue_category"] == "DUPLICATE_USERNAME"),
-        "invalid_username": sum(1 for c in classified if c["issue_category"] == "INVALID_USERNAME"),
-        "invalid_url": sum(1 for c in classified if c["issue_category"] == "INVALID_URL"),
-        "stale_data": sum(1 for c in classified if c["issue_category"] == "STALE_DATA"),
-        "data_mismatch": sum(1 for c in classified if c["issue_category"] == "DATA_MISMATCH"),
-        "healthy": sum(1 for c in classified if c["issue_category"] == "HEALTHY"),
-        "critical_issues": sum(1 for c in classified if c["severity"] == "CRITICAL"),
-        "warning_issues": sum(1 for c in classified if c["severity"] == "WARNING"),
-    }
+        if current_user and hasattr(current_user, "role"):
+            query = apply_role_based_student_filter(query, current_user, db)
+        students = query.all()
 
-    # Department breakdown matrix
-    dept_matrix = {}
-    for c in classified:
-        d = c["department_short"]
-        if d not in dept_matrix:
-            dept_matrix[d] = {
-                "department": d,
-                "total": 0,
-                "sync_failed": 0,
-                "missing_username": 0,
-                "not_started": 0,
-                "never_synced": 0,
-                "stale_data": 0,
-                "healthy": 0
-            }
-        dept_matrix[d]["total"] += 1
-        cat = c["issue_category"].lower()
-        if cat in dept_matrix[d]:
-            dept_matrix[d][cat] += 1
+        from collections import Counter
+        all_usernames = [s.username.strip().lower() for s in students if s.username and s.username.strip()]
+        dup_usernames = {u for u, cnt in Counter(all_usernames).items() if cnt > 1}
 
-    # Year breakdown matrix with canonical year normalization
-    CANONICAL_YEARS = ["I Year", "II Year", "III Year", "IV Year"]
-    year_matrix = {
-        y: {
-            "year": y,
-            "total": 0,
-            "sync_failed": 0,
-            "missing_username": 0,
-            "not_started": 0,
-            "never_synced": 0,
-            "stale_data": 0,
-            "healthy": 0
-        } for y in CANONICAL_YEARS
-    }
+        classified = [classify_student_issue(s, dup_usernames) for s in students]
 
-    for c in classified:
-        y = normalize_canonical_year(c["year_level"])
-        if y not in year_matrix:
-            year_matrix[y] = {
+        counts = {
+            "total_students": len(classified),
+            "not_started": sum(1 for c in classified if c["issue_category"] == "NOT_STARTED"),
+            "sync_failed": sum(1 for c in classified if c["issue_category"] == "SYNC_FAILED"),
+            "never_synced": sum(1 for c in classified if c["issue_category"] == "NEVER_SYNCED"),
+            "missing_username": sum(1 for c in classified if c["issue_category"] == "MISSING_USERNAME"),
+            "duplicate_username": sum(1 for c in classified if c["issue_category"] == "DUPLICATE_USERNAME"),
+            "invalid_username": sum(1 for c in classified if c["issue_category"] == "INVALID_USERNAME"),
+            "invalid_url": sum(1 for c in classified if c["issue_category"] == "INVALID_URL"),
+            "stale_data": sum(1 for c in classified if c["issue_category"] == "STALE_DATA"),
+            "data_mismatch": sum(1 for c in classified if c["issue_category"] == "DATA_MISMATCH"),
+            "healthy": sum(1 for c in classified if c["issue_category"] == "HEALTHY"),
+            "critical_issues": sum(1 for c in classified if c["severity"] == "CRITICAL"),
+            "warning_issues": sum(1 for c in classified if c["severity"] == "WARNING"),
+        }
+
+        # Department breakdown matrix
+        dept_matrix = {}
+        for c in classified:
+            d = c["department_short"]
+            if d not in dept_matrix:
+                dept_matrix[d] = {
+                    "department": d,
+                    "total": 0,
+                    "sync_failed": 0,
+                    "missing_username": 0,
+                    "not_started": 0,
+                    "never_synced": 0,
+                    "stale_data": 0,
+                    "healthy": 0
+                }
+            dept_matrix[d]["total"] += 1
+            cat = c["issue_category"].lower()
+            if cat in dept_matrix[d]:
+                dept_matrix[d][cat] += 1
+
+        # Year breakdown matrix with canonical year normalization
+        CANONICAL_YEARS = ["I Year", "II Year", "III Year", "IV Year"]
+        year_matrix = {
+            y: {
                 "year": y,
                 "total": 0,
                 "sync_failed": 0,
@@ -334,19 +323,36 @@ def get_data_issues_summary(
                 "never_synced": 0,
                 "stale_data": 0,
                 "healthy": 0
-            }
-        year_matrix[y]["total"] += 1
-        cat = c["issue_category"].lower()
-        if cat in year_matrix[y]:
-            year_matrix[y][cat] += 1
+            } for y in CANONICAL_YEARS
+        }
 
-    final_year_breakdown = [row for row in year_matrix.values() if row["total"] > 0]
+        for c in classified:
+            y = normalize_canonical_year(c["year_level"])
+            if y not in year_matrix:
+                year_matrix[y] = {
+                    "year": y,
+                    "total": 0,
+                    "sync_failed": 0,
+                    "missing_username": 0,
+                    "not_started": 0,
+                    "never_synced": 0,
+                    "stale_data": 0,
+                    "healthy": 0
+                }
+            year_matrix[y]["total"] += 1
+            cat = c["issue_category"].lower()
+            if cat in year_matrix[y]:
+                year_matrix[y][cat] += 1
 
-    return {
-        "counts": counts,
-        "dept_breakdown": list(dept_matrix.values()),
-        "year_breakdown": final_year_breakdown
-    }
+        final_year_breakdown = [row for row in year_matrix.values() if row["total"] > 0]
+
+        return {
+            "counts": counts,
+            "dept_breakdown": list(dept_matrix.values()),
+            "year_breakdown": final_year_breakdown
+        }
+
+    return cache.get_or_compute(cache_key, _compute, ttl_seconds=45, tags=["students", "data_issues"])
 
 
 @router.get("/students")

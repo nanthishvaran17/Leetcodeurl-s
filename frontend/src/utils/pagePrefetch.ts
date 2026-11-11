@@ -83,12 +83,22 @@ export function warmupPriorityRoutes(): void {
     return;
   }
 
-  // Only warm up a lightweight initial set during idle
+  // Warm up core & operational routes cleanly during idle so sidebar navigation is instant
   const coreRoutes = [
     'dashboard',
     'students',
     'weekly-contest',
     'departments',
+    'hod-command-center',
+    'faculty-action-center',
+    'quality',
+    'data-issues',
+    'compare',
+    'growth',
+    'reports',
+    'hr-candidate-finder',
+    'messages',
+    'system-health',
     'public'
   ];
 
@@ -101,12 +111,12 @@ export function warmupPriorityRoutes(): void {
       }
       prefetchRoute(coreRoutes[index]);
       index++;
-    }, 400); // 400ms interval to prevent network congestion
+    }, 250); // Staggered interval to prevent network congestion
   };
 
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => setTimeout(runWarmup, 4000), { timeout: 8000 });
+    (window as any).requestIdleCallback(() => setTimeout(runWarmup, 1800), { timeout: 5000 });
   } else {
-    setTimeout(runWarmup, 5000);
+    setTimeout(runWarmup, 2500);
   }
 }

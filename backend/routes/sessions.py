@@ -36,8 +36,8 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(
             raise
 
 def _get_dashboard_summary_impl(db: Session, current_user):
-    from sqlalchemy import func
-    
+    from sqlalchemy import func, case, and_, or_
+
     user_id = current_user.id if current_user else "public"
     cache_key = f"dashboard_summary_{user_id}"
     cached = cache.get(cache_key)
@@ -48,53 +48,55 @@ def _get_dashboard_summary_impl(db: Session, current_user):
     base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if current_user:
         base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
-    
-    total_students = base_student_query.count()
-    
+
     total_departments = db.query(func.count(Department.id)).scalar() or 0
     total_sections = db.query(func.count(Section.id)).scalar() or 0
 
     current_session = get_or_create_current_session(db)
 
-    # 2. Strict Mathematical Sync State Invariants (Mutually Exclusive)
-    verified = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-        .filter(Student.id.in_(base_student_query))\
-        .filter(
-            Student.username != None, 
-            Student.username != "",
-            (LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified', 'not_started'])) |
-            (LeetCodeProfileStats.status.in_(['verified', 'OK', 'pending'])) |
-            (LeetCodeProfileStats.total_solved > 0) |
-            (LeetCodeProfileStats.total_solved.isnot(None))
-        ).scalar() or 0
+    # 2 & 3. Consolidated single-pass sync-state & performance aggregation
+    has_username_expr = and_(Student.username.isnot(None), Student.username != "")
+    no_username_expr = or_(Student.username.is_(None), Student.username == "")
+    verified_expr = and_(
+        has_username_expr,
+        or_(
+            LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified', 'not_started']),
+            LeetCodeProfileStats.status.in_(['verified', 'OK', 'pending']),
+            LeetCodeProfileStats.total_solved > 0,
+            LeetCodeProfileStats.total_solved.isnot(None),
+        ),
+    )
+    failed_expr = and_(
+        has_username_expr,
+        LeetCodeProfileStats.sync_status.in_(['failed', 'mismatch', 'TIMEOUT', 'IDENTITY_MISMATCH', 'INVALID_USERNAME']),
+    )
 
-    no_username = db.query(func.count(Student.id))\
-        .filter(Student.id.in_(base_student_query))\
-        .filter(
-            (Student.username == None) | 
-            (Student.username == "")
-        ).scalar() or 0
+    agg_result = (
+        db.query(
+            func.count(Student.id).label("total_students"),
+            func.sum(case((verified_expr, 1), else_=0)).label("verified"),
+            func.sum(case((no_username_expr, 1), else_=0)).label("no_username"),
+            func.sum(case((failed_expr, 1), else_=0)).label("failed"),
+            func.sum(LeetCodeProfileStats.total_solved).label("total_problems"),
+            func.max(LeetCodeProfileStats.contest_rating).label("highest_rating"),
+            func.sum(case((LeetCodeProfileStats.total_solved > 0, 1), else_=0)).label("active_students"),
+        )
+        .select_from(Student)
+        .outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)
+        .filter(Student.id.in_(base_student_query))
+        .first()
+    )
 
-    failed = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-        .filter(Student.id.in_(base_student_query))\
-        .filter(Student.username != None, Student.username != "")\
-        .filter(LeetCodeProfileStats.sync_status.in_(['failed', 'mismatch', 'TIMEOUT', 'IDENTITY_MISMATCH', 'INVALID_USERNAME'])).scalar() or 0
-
-    pending = total_students - (verified + no_username + failed)
-    if pending < 0: pending = 0
-
-    # 3. Performance Aggregations
-    agg_result = db.query(
-        func.sum(LeetCodeProfileStats.total_solved).label("total_problems"),
-        func.max(LeetCodeProfileStats.contest_rating).label("highest_rating"),
-        func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.total_solved > 0).label("active_students")
-    ).select_from(Student).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-     .filter(Student.id.in_(base_student_query)).first()
+    total_students = int(agg_result.total_students or 0) if agg_result else 0
+    verified = int(agg_result.verified or 0) if agg_result else 0
+    no_username = int(agg_result.no_username or 0) if agg_result else 0
+    failed = int(agg_result.failed or 0) if agg_result else 0
+    pending = max(0, total_students - (verified + no_username + failed))
 
     total_problems = int(agg_result.total_problems) if agg_result and agg_result.total_problems else 0
     highest_rating = float(agg_result.highest_rating) if agg_result and agg_result.highest_rating else 0.0
-    active_students = int(agg_result.active_students) if agg_result and agg_result.active_students else 0
-    
+    active_students = int(agg_result.active_students or 0) if agg_result else 0
+
     # 4. Top ranker
     top_college_ranker = None
     top_student = db.query(Student.name).join(LeetCodeProfileStats).filter(Student.id.in_(base_student_query)).order_by(LeetCodeProfileStats.total_solved.desc().nullslast()).first()

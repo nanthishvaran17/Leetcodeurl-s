@@ -712,153 +712,161 @@ def get_data_quality(
     if not hasattr(current_user, "id"):
         current_user = None
 
-    query = (
-        db.query(Student)
-        .options(joinedload(Student.department), joinedload(Student.stats))
-        .filter((Student.is_active == True) | (Student.is_active.is_(None)))
-    )
+    user_scope = f"{current_user.id}:{getattr(current_user, 'role', '')}" if current_user else "public"
+    dq_cache_key = f"analytics_dq_v2:{user_scope}:{college or 'ALL'}:{dept}:{year}:{attendance}:{(search or '').strip().lower()}"
+    if force_refresh:
+        cache.delete(dq_cache_key)
 
-    if current_user:
-        from backend.services.authorization_service import apply_role_based_student_filter
-        query = apply_role_based_student_filter(query, current_user, db)
+    def _compute_dq():
+        query = (
+            db.query(Student)
+            .options(joinedload(Student.department), joinedload(Student.stats))
+            .filter((Student.is_active == True) | (Student.is_active.is_(None)))
+        )
 
-    students = query.order_by(Student.name.asc()).all()
+        if current_user:
+            from backend.services.authorization_service import apply_role_based_student_filter
+            query = apply_role_based_student_filter(query, current_user, db)
 
-    # Filter students in memory by college, dept, year, search
-    if college and college.strip().upper() not in ("ALL", ""):
-        col_target = college.strip().upper()
-        if col_target == "NCT":
-            students = [s for s in students if (getattr(s, "college", "") or "").upper() == "NCT" or (s.reg_no or "").startswith("7321") or "@nct" in (s.email or "").lower()]
-        elif col_target == "NEC":
-            students = [s for s in students if (getattr(s, "college", "NEC") or "NEC").upper() != "NCT" and not (s.reg_no or "").startswith("7321") and "@nct" not in (s.email or "").lower()]
-        else:
-            students = [s for s in students if (getattr(s, "college", "") or "").upper() == col_target]
-    if dept and dept.strip().upper() not in ("ALL", ""):
-        d_upper = dept.strip().upper()
-        if d_upper in ("CSE(CS)", "CS", "CYBER"):
-            students = [s for s in students if (s.department and ("CS" in s.department.code.upper() or "CYBER" in s.department.code.upper())) or ("CC" in (s.reg_no or "").upper())]
-        elif d_upper in ("CSE(IOT)", "IOT"):
-            students = [s for s in students if (s.department and "IOT" in s.department.code.upper()) or ("CI" in (s.reg_no or "").upper())]
-        else:
-            students = [s for s in students if (s.department and s.department.code.upper() == d_upper) or str(getattr(s, "department_id", "")) == dept or (s.department and str(s.department.id) == dept)]
+        students = query.order_by(Student.name.asc()).all()
 
-    if year and year.strip().upper() not in ("ALL", ""):
-        from backend.config.report_config import normalize_year_roman
-        target_year_clean = year.strip().upper()
-        TARGET_YEAR_MAP = {
-            "1": "I", "I": "I", "1ST": "I", "FIRST": "I", "YEAR 1": "I", "I YEAR": "I",
-            "2": "II", "II": "II", "2ND": "II", "SECOND": "II", "YEAR 2": "II", "II YEAR": "II",
-            "3": "III", "III": "III", "3RD": "III", "THIRD": "III", "YEAR 3": "III", "III YEAR": "III",
-            "4": "IV", "IV": "IV", "4TH": "IV", "FOURTH": "IV", "YEAR 4": "IV", "IV YEAR": "IV",
-        }
-        target_roman = TARGET_YEAR_MAP.get(target_year_clean, target_year_clean)
-        students = [s for s in students if normalize_year_roman(s.year_level, s.reg_no) == target_roman]
+        # Filter students in memory by college, dept, year, search
+        if college and college.strip().upper() not in ("ALL", ""):
+            col_target = college.strip().upper()
+            if col_target == "NCT":
+                students = [s for s in students if (getattr(s, "college", "") or "").upper() == "NCT" or (s.reg_no or "").startswith("7321") or "@nct" in (s.email or "").lower()]
+            elif col_target == "NEC":
+                students = [s for s in students if (getattr(s, "college", "NEC") or "NEC").upper() != "NCT" and not (s.reg_no or "").startswith("7321") and "@nct" not in (s.email or "").lower()]
+            else:
+                students = [s for s in students if (getattr(s, "college", "") or "").upper() == col_target]
+        if dept and dept.strip().upper() not in ("ALL", ""):
+            d_upper = dept.strip().upper()
+            if d_upper in ("CSE(CS)", "CS", "CYBER"):
+                students = [s for s in students if (s.department and ("CS" in s.department.code.upper() or "CYBER" in s.department.code.upper())) or ("CC" in (s.reg_no or "").upper())]
+            elif d_upper in ("CSE(IOT)", "IOT"):
+                students = [s for s in students if (s.department and "IOT" in s.department.code.upper()) or ("CI" in (s.reg_no or "").upper())]
+            else:
+                students = [s for s in students if (s.department and s.department.code.upper() == d_upper) or str(getattr(s, "department_id", "")) == dept or (s.department and str(s.department.id) == dept)]
 
-    if search:
-        s_lower = search.strip().lower()
-        students = [s for s in students if s_lower in (s.name or "").lower() or s_lower in (s.reg_no or "").lower() or s_lower in (s.username or "").lower()]
+        if year and year.strip().upper() not in ("ALL", ""):
+            from backend.config.report_config import normalize_year_roman
+            target_year_clean = year.strip().upper()
+            TARGET_YEAR_MAP = {
+                "1": "I", "I": "I", "1ST": "I", "FIRST": "I", "YEAR 1": "I", "I YEAR": "I",
+                "2": "II", "II": "II", "2ND": "II", "SECOND": "II", "YEAR 2": "II", "II YEAR": "II",
+                "3": "III", "III": "III", "3RD": "III", "THIRD": "III", "YEAR 3": "III", "III YEAR": "III",
+                "4": "IV", "IV": "IV", "4TH": "IV", "FOURTH": "IV", "YEAR 4": "IV", "IV YEAR": "IV",
+            }
+            target_roman = TARGET_YEAR_MAP.get(target_year_clean, target_year_clean)
+            students = [s for s in students if normalize_year_roman(s.year_level, s.reg_no) == target_roman]
 
-    total = len(students)
-    if total == 0:
+        if search:
+            s_lower = search.strip().lower()
+            students = [s for s in students if s_lower in (s.name or "").lower() or s_lower in (s.reg_no or "").lower() or s_lower in (s.username or "").lower()]
+
+        total = len(students)
+        if total == 0:
+            return {
+                "health_score_percentage": 100,
+                "valid_profiles": 0,
+                "total_students": 0,
+                "missing_links": 0,
+                "profile_not_found": 0,
+                "network_errors": 0,
+                "invalid_urls": 0,
+                "issues_count": 0,
+                "issues_list": [],
+                "source_status": "AVAILABLE"
+            }
+
+        issues_list = []
+        valid_count = 0
+        missing_links_count = 0
+        profile_not_found_count = 0
+        network_errors_count = 0
+        invalid_urls_count = 0
+
+        for s in students:
+            dept_code = s.department.code if s.department else (s.department.name if s.department else "CSE")
+            stats = s.stats
+
+            username = (s.username or "").strip()
+            url = (s.leetcode_url or "").strip()
+
+            status = "VALID_PROFILE"
+            issue_desc = "Verified Handle & Record"
+            action_req = "Verified Record"
+
+            if not username and not url:
+                status = "MISSING_USERNAME"
+                issue_desc = "Missing LeetCode Username & Link"
+                action_req = "Assign LeetCode Handle"
+                missing_links_count += 1
+            elif url and ("leetcode.com" in url) and ("/u/" not in url and "leetcode.com/" not in url):
+                status = "INVALID_PROFILE_URL"
+                issue_desc = "Invalid URL Syntax"
+                action_req = "Fix Profile Link Syntax"
+                invalid_urls_count += 1
+            elif stats and (stats.error_code == "PROFILE_NOT_FOUND" or stats.status == "PROFILE NOT FOUND" or stats.sync_status == "failed_404"):
+                status = "PROFILE_NOT_FOUND"
+                issue_desc = "LeetCode Profile Not Found (404)"
+                action_req = "Verify Username on LeetCode"
+                profile_not_found_count += 1
+            elif stats and (stats.error_code in ("NETWORK_TIMEOUT", "FETCH_ERROR") or stats.sync_status == "failed_network"):
+                status = "NETWORK_ERROR"
+                issue_desc = "Sync Network / Timeout Error"
+                action_req = "Retry Profile Sync"
+                network_errors_count += 1
+            elif stats and stats.validation_status == "identity_mismatch":
+                status = "INVALID_PROFILE_URL"
+                issue_desc = "Identity Mismatch"
+                action_req = "Audit Student Identity"
+                invalid_urls_count += 1
+            else:
+                valid_count += 1
+
+            issues_list.append({
+                "id": s.id,
+                "reg_no": s.reg_no or f"ID-{s.id}",
+                "name": s.name,
+                "username": s.username or "",
+                "leetcode_url": s.leetcode_url or "",
+                "dept": dept_code,
+                "department": {"code": dept_code, "name": s.department.name if s.department else dept_code},
+                "year": s.year_level or "III",
+                "year_level": s.year_level or "III",
+                "status": status,
+                "issue": issue_desc,
+                "action_required": action_req,
+                "stats": {
+                    "total_solved": stats.total_solved if stats else 0,
+                    "easy_solved": stats.easy_solved if stats else 0,
+                    "medium_solved": stats.medium_solved if stats else 0,
+                    "hard_solved": stats.hard_solved if stats else 0,
+                    "contest_rating": stats.contest_rating if stats else 0,
+                    "sync_status": stats.sync_status if stats else "pending",
+                } if stats else None
+            })
+
+        # Sort so action-required items appear at the top, followed by verified valid profiles
+        issues_list.sort(key=lambda x: 0 if x["status"] != "VALID_PROFILE" else 1)
+
+        score = int((valid_count / total) * 100) if total > 0 else 100
+
         return {
-            "health_score_percentage": 100,
-            "valid_profiles": 0,
-            "total_students": 0,
-            "missing_links": 0,
-            "profile_not_found": 0,
-            "network_errors": 0,
-            "invalid_urls": 0,
-            "issues_count": 0,
-            "issues_list": [],
+            "health_score_percentage": score,
+            "valid_profiles": valid_count,
+            "total_students": total,
+            "missing_links": missing_links_count,
+            "profile_not_found": profile_not_found_count,
+            "network_errors": network_errors_count,
+            "invalid_urls": invalid_urls_count,
+            "issues_count": len([i for i in issues_list if i["status"] != "VALID_PROFILE"]),
+            "issues_list": issues_list,
             "source_status": "AVAILABLE"
         }
-        
-    issues_list = []
-    valid_count = 0
-    missing_links_count = 0
-    profile_not_found_count = 0
-    network_errors_count = 0
-    invalid_urls_count = 0
 
-    for s in students:
-        dept_code = s.department.code if s.department else (s.department.name if s.department else "CSE")
-        stats = s.stats
-        
-        username = (s.username or "").strip()
-        url = (s.leetcode_url or "").strip()
-        
-        status = "VALID_PROFILE"
-        issue_desc = "Verified Handle & Record"
-        action_req = "Verified Record"
-        
-        if not username and not url:
-            status = "MISSING_USERNAME"
-            issue_desc = "Missing LeetCode Username & Link"
-            action_req = "Assign LeetCode Handle"
-            missing_links_count += 1
-        elif url and ("leetcode.com" in url) and ("/u/" not in url and "leetcode.com/" not in url):
-            status = "INVALID_PROFILE_URL"
-            issue_desc = "Invalid URL Syntax"
-            action_req = "Fix Profile Link Syntax"
-            invalid_urls_count += 1
-        elif stats and (stats.error_code == "PROFILE_NOT_FOUND" or stats.status == "PROFILE NOT FOUND" or stats.sync_status == "failed_404"):
-            status = "PROFILE_NOT_FOUND"
-            issue_desc = "LeetCode Profile Not Found (404)"
-            action_req = "Verify Username on LeetCode"
-            profile_not_found_count += 1
-        elif stats and (stats.error_code in ("NETWORK_TIMEOUT", "FETCH_ERROR") or stats.sync_status == "failed_network"):
-            status = "NETWORK_ERROR"
-            issue_desc = "Sync Network / Timeout Error"
-            action_req = "Retry Profile Sync"
-            network_errors_count += 1
-        elif stats and stats.validation_status == "identity_mismatch":
-            status = "INVALID_PROFILE_URL"
-            issue_desc = "Identity Mismatch"
-            action_req = "Audit Student Identity"
-            invalid_urls_count += 1
-        else:
-            valid_count += 1
-
-        issues_list.append({
-            "id": s.id,
-            "reg_no": s.reg_no or f"ID-{s.id}",
-            "name": s.name,
-            "username": s.username or "",
-            "leetcode_url": s.leetcode_url or "",
-            "dept": dept_code,
-            "department": {"code": dept_code, "name": s.department.name if s.department else dept_code},
-            "year": s.year_level or "III",
-            "year_level": s.year_level or "III",
-            "status": status,
-            "issue": issue_desc,
-            "action_required": action_req,
-            "stats": {
-                "total_solved": stats.total_solved if stats else 0,
-                "easy_solved": stats.easy_solved if stats else 0,
-                "medium_solved": stats.medium_solved if stats else 0,
-                "hard_solved": stats.hard_solved if stats else 0,
-                "contest_rating": stats.contest_rating if stats else 0,
-                "sync_status": stats.sync_status if stats else "pending",
-            } if stats else None
-        })
-
-    # Sort so action-required items appear at the top, followed by verified valid profiles
-    issues_list.sort(key=lambda x: 0 if x["status"] != "VALID_PROFILE" else 1)
-
-    score = int((valid_count / total) * 100) if total > 0 else 100
-
-    return {
-        "health_score_percentage": score,
-        "valid_profiles": valid_count,
-        "total_students": total,
-        "missing_links": missing_links_count,
-        "profile_not_found": profile_not_found_count,
-        "network_errors": network_errors_count,
-        "invalid_urls": invalid_urls_count,
-        "issues_count": len([i for i in issues_list if i["status"] != "VALID_PROFILE"]),
-        "issues_list": issues_list,
-        "source_status": "AVAILABLE"
-    }
+    return cache.get_or_compute(dq_cache_key, _compute_dq, ttl_seconds=45, tags=["students", "analytics"])
 
 from backend.services.high_concurrency_cache import global_response_cache
 

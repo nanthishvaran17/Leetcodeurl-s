@@ -17,25 +17,25 @@ from backend.logger import logger
 def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
     """
     Retrieves or creates the active/upcoming weekly contest session.
-    Fast path: returns existing session from DB with dynamic IST status check.
+    Fast path: computes target Sunday/session_code purely in memory and returns
+    existing DB row without blocking on live LeetCode GraphQL HTTP calls.
     """
-    try:
-        meta = discover_contest_metadata()
-        session_code = meta["session_code"]
-    except Exception as e:
-        logger.warning(f"Contest discovery fallback note: {e}")
-        return db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    from backend.services.contest_discovery import calculate_contest_status
+
+    target_date = get_most_recent_sunday_date()
+    session_code = f"WEEK-{target_date.strftime('%Y-%m-%d')}"
+    dynamic_status = calculate_contest_status(target_date)
 
     latest_session: Any = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    
+
     if latest_session and latest_session.session_code == session_code:
         # 100/10 Self-Healing: Repair missing contest metadata that was created prematurely
         if not latest_session.contest_name or not latest_session.contest_id:
+            meta = discover_contest_metadata(target_date, allow_live_network=False)
             setattr(latest_session, "contest_name", str(meta.get("contest_name") or ""))
             setattr(latest_session, "contest_id", str(meta.get("contest_id") or ""))
             db.commit()
 
-        dynamic_status = meta.get("status", "SCHEDULED")
         if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE", "SCHEDULED"):
             setattr(latest_session, "status", "FINALIZED")
             db.commit()
@@ -82,7 +82,7 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
         return latest_session
 
     try:
-        meta = discover_contest_metadata()
+        meta = discover_contest_metadata(target_date, allow_live_network=False)
         session_code = meta["session_code"]
         session = db.query(WeeklySession).filter(WeeklySession.session_code == session_code).first()
         if not session:

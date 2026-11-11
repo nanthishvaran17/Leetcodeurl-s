@@ -266,7 +266,13 @@ api.interceptors.response.use(
     const method = response.config?.method?.toLowerCase();
     if (method && ['post', 'put', 'patch', 'delete'].includes(method)) {
       const url = response.config?.url || '';
-      invalidateApiCache(url);
+      const isNonMutatingTelemetry =
+        url.includes('/admin/log-activity') ||
+        url.includes('/auth/biometric/device-enroll') ||
+        url.includes('/auth/refresh');
+      if (!isNonMutatingTelemetry) {
+        invalidateApiCache(url);
+      }
     }
     return response;
   },

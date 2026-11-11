@@ -421,33 +421,37 @@ const MainAppContent: React.FC = () => {
     const handleRefresh = () => fetchSummary();
     window.addEventListener('refresh_dashboard_summary', handleRefresh);
 
-    // Auto-update immediately when app is reopened, screen is unlocked, or window gains focus
-    const handleAppResume = () => {
+    // Gentle throttled resume check: avoid wiping API caches or firing duplicate requests on every focus/click
+    let lastResumeRefreshAt = Date.now();
+    const handleVisibilityResume = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        fetchSummary();
-        window.dispatchEvent(new Event('refresh_dashboard_summary'));
-        window.dispatchEvent(new Event('pull_to_refresh'));
+        const now = Date.now();
+        if (now - lastResumeRefreshAt > 60_000) {
+          lastResumeRefreshAt = now;
+          fetchSummary();
+        }
       }
     };
-    window.addEventListener('focus', handleAppResume);
-    document.addEventListener('visibilitychange', handleAppResume);
+    document.addEventListener('visibilitychange', handleVisibilityResume);
 
     let capListenerHandle: any = null;
     try {
       import('@capacitor/app').then(({ App: CapApp }) => {
         CapApp.addListener('appStateChange', (state: any) => {
           if (state && state.isActive) {
-            handleAppResume();
+            handleVisibilityResume();
           }
         }).then((h: any) => { capListenerHandle = h; }).catch(() => {});
       }).catch(() => {});
     } catch {}
 
     let timer: any = null;
-    if (isAuthenticated) {
+    const isAdminUser = ['admin', 'super admin', 'super_admin', 'administrator'].includes((user?.role || '').trim().toLowerCase());
+    if (isAuthenticated && isAdminUser && typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('cloud_sync_done')) {
       timer = setTimeout(() => {
+        sessionStorage.setItem('cloud_sync_done', '1');
         triggerCloudSync();
-      }, 4000);
+      }, 12000);
     }
 
     const preloadTimer = setTimeout(() => {
@@ -518,8 +522,7 @@ const MainAppContent: React.FC = () => {
     return () => {
       if (timer) clearTimeout(timer);
       window.removeEventListener('refresh_dashboard_summary', handleRefresh);
-      window.removeEventListener('focus', handleAppResume);
-      document.removeEventListener('visibilitychange', handleAppResume);
+      document.removeEventListener('visibilitychange', handleVisibilityResume);
       if (capListenerHandle && typeof capListenerHandle.remove === 'function') {
         try { capListenerHandle.remove(); } catch {}
       }

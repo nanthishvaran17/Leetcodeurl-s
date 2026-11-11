@@ -353,7 +353,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         api.post('/auth/biometric/device-enroll').then(r => {
           if (r.data?.device_key) localStorage.setItem('nec_device_biometric_key', r.data.device_key);
         }).catch(() => {});
-        setTimeout(() => { onSuccess(); }, 480);
+        onSuccess();
       }
     } catch (err: any) {
       const status = err?.response?.status;
