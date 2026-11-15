@@ -1551,7 +1551,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       )}
 
       {/* Student Showcase Display */}
-      <div className="mt-6 space-y-4 px-1 sm:px-0 md:px-4 lg:px-6 xl:px-8">
+      <div className="mt-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
           <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
             <div className="flex flex-col min-w-0">
@@ -1725,7 +1725,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           </div>
         ) : viewMode === 'cards' ? (
-          <div className="space-y-6 md:px-2 lg:px-4 xl:px-6 pb-8 md:pb-14">
+          <div className="space-y-6 pb-8 md:pb-14">
             <motion.div
               initial="hidden"
               animate="show"
@@ -1736,7 +1736,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   transition: { staggerChildren: 0.025 }
                 }
               }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5"
             >
               <AnimatePresence mode="popLayout">
                 {sortedList.slice(0, displayCount).map((st, idx) => (

@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { compression } from 'vite-plugin-compression2'
 import path from 'path'
 import fs from 'fs'
 
@@ -8,12 +7,7 @@ const rootDir = fs.realpathSync?.native ? fs.realpathSync.native(__dirname) : __
 
 export default defineConfig({
   plugins: [
-    react(),
-    compression({
-      algorithms: ['brotliCompress', 'gzip'],
-      exclude: [/\.(br)$/, /\.(gz)$/, /\.(apk)$/, /\.(exe)$/, /\.(png)$/, /\.(jpg)$/, /\.(ico)$/],
-      threshold: 1024,
-    }),
+    react()
   ],
   resolve: {
     alias: {
@@ -45,7 +39,7 @@ export default defineConfig({
               try {
                 res.writeHead(503, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Backend service unavailable or starting up', detail: err.message }));
-              } catch {}
+              } catch { }
             }
           });
         },
@@ -61,11 +55,11 @@ export default defineConfig({
             if (['ECONNRESET', 'ECONNABORTED', 'EPIPE'].includes(err?.code)) return;
           });
           proxy.on('proxyReqWs', (proxyReq, _req, socket) => {
-            if (proxyReq) proxyReq.on('error', () => {});
-            if (socket) socket.on('error', () => {});
+            if (proxyReq) proxyReq.on('error', () => { });
+            if (socket) socket.on('error', () => { });
           });
           (proxy as any).on('open', (proxySocket: any) => {
-            if (proxySocket) proxySocket.on('error', () => {});
+            if (proxySocket) proxySocket.on('error', () => { });
           });
         },
       },

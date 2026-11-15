@@ -172,7 +172,7 @@ export const HallOfFameKioskPage: React.FC = () => {
       <main className="relative z-10 flex-1 px-8 py-6 flex flex-col justify-center">
         {/* SLIDE 0: INSTITUTIONAL TOP 10 OVERALL CHAMPIONS */}
         {currentSlide === 0 && (
-          <div className="animate-in fade-in zoom-in-95 duration-500 max-w-7xl mx-auto w-full">
+          <div className="animate-in fade-in zoom-in-95 duration-500 w-full max-w-full mx-auto">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold uppercase tracking-wider mb-2">
                 <Award className="w-4 h-4 text-amber-400" /> Grandmaster Honor Roll
