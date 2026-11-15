@@ -1071,7 +1071,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Official Window: 08:00 AM – 09:30 AM IST
           </span>
         </div>
-        <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds || 86400} isLive={summaryData?.is_session_live} />
+        <CountdownTimer targetSeconds={summaryData?.next_session_countdown_seconds ?? 0} isLive={summaryData?.is_session_live} />
       </motion.div>
 
       {/* Stat Cards Grid — 2026 Bento Grid Architecture */}

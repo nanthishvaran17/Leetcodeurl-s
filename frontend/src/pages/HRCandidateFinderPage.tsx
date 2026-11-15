@@ -966,7 +966,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           const hrd = stats.hard_solved ?? s.hard_solved ?? 0;
           const easy = stats.easy_solved ?? s.easy_solved ?? 0;
           const rat = Number(stats.contest_rating ?? stats.rating ?? s.contest_rating ?? s.rating ?? 0);
-          const acc = stats.acceptance_rate ?? s.acceptance_rate ?? 55;
+          const acc = Number(stats.acceptance_rate ?? s.acceptance_rate ?? 0);
           const lang = inferLanguage(s);
 
           const perf = Math.min(100, Math.round(tot * 0.3 + med * 0.4 + hrd * 0.8 + rat * 0.02));
