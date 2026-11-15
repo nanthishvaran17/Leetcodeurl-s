@@ -702,7 +702,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   }
 
   const hero = data?.heroMetrics || {};
-  const trustScore = data?.trustScore || 99.5;
+  const trustScore = data?.trustScore ?? 0;
   const livePulse = data?.livePulse || {};
   const dataFreshness = data?.dataFreshness || {};
   const attentionItems = data?.attentionRequired || [];

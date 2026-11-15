@@ -4792,7 +4792,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <div className="flex items-center space-x-2">
                       <span className="text-slate-400 font-medium">Rows per page:</span>
                       <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                        {[10, 20, 50, 100, 200, 1450].map(sz => (
+                        {[10, 20, 50, 100, 200, 99999].map(sz => (
                           <button
                             key={sz}
                             type="button"
@@ -4803,7 +4803,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
                             }`}
                           >
-                            {sz === 1450 ? 'All' : sz}
+                            {sz >= 99999 ? 'All' : sz}
                           </button>
                         ))}
                       </div>

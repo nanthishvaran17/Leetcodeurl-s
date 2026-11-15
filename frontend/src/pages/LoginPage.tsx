@@ -189,8 +189,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
     } catch (e) {}
     return {
-      totalStudents: 593,
-      verifiedStudents: 521,
+      totalStudents: 0,
+      verifiedStudents: 0,
       integrityStatus: 'PASS',
       lastUpdated: 'Live'
     };
