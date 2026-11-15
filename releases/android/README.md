@@ -1,13 +1,20 @@
 # Android Release Archive
 
-Latest Release: **v4.5.2 (VersionCode 93)**
+Latest Release: **v4.5.3 (VersionCode 94)**
 
 Download the production signed APK:
-- [Nandha_LeetCode_Intelligence_v4.5.2_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.2_latest.apk)
+- [Nandha_LeetCode_Intelligence_v4.5.3_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.3_latest.apk)
 - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
 - [nandha-leetcode.apk](./nandha-leetcode.apk)
 
-### Changelog v4.5.2 (Latest)
+### Changelog v4.5.3 (Latest)
+- **Universal Multi-Department & Multi-Batch Provisioning Engine**:
+  - Full department selection (including one-click "All Departments - Global Scope") enabled across all institutional roles (`PLC`, `STC`, `Faculty Mentor`, `Staff Mentor`, and `Department HOD`).
+  - Full academic year cohort selection (including "All Academic Years / Batches - I, II, III, IV Year") enabled across all roles in both Create Staff and Edit Staff panels.
+  - Multi-select dropdown upgraded with auto-sync and instant toggle for global all-scope.
+  - Backend authorization and session routing fully updated to persist and map multi-department access without restriction.
+
+### Changelog v4.5.2
 - **Extreme High-Velocity Performance (10,000,000x Speedup across all pages)**:
   - Settings, Reports, WeeklyContest, FacultyActionCenter, HRFinder, Dashboard, and Landing split into lazy chunks.
   - Initial bundle overhead reduced by up to 74% (App shell Brotli is ~2.6 KB).
