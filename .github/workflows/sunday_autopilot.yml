@@ -58,7 +58,9 @@ jobs:
       - name: Install System Dependencies (Cairo & Pango for PDF generation)
         run: |
           sudo apt-get update -o Acquire::Retries=3 || true
-          sudo apt-get install -y --no-install-recommends libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
+          # Compatible with Ubuntu 24.04+ (libgdk-pixbuf-2.0-0) and Ubuntu 22.04 (libgdk-pixbuf2.0-0)
+          sudo apt-get install -y --no-install-recommends libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libffi-dev shared-mime-info || \
+          sudo apt-get install -y --no-install-recommends libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info || true
 
       - name: Install Python Dependencies
         run: |
