@@ -122,7 +122,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     const roleClean = (user?.role || '').trim().toLowerCase();
     const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
     const isStaff = ['staff', 'faculty', 'professor', 'mentor', 'staff mentor', 'faculty mentor'].includes(roleClean);
-    const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+    const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'placement coordinator', 'placement_coordinator', 'student coordinator', 'student_coordinator', 'coordinator'].includes(roleClean);
 
     if ((isHod || isStaff) && !isGlobalRole) {
       const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());

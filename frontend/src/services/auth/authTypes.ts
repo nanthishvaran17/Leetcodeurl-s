@@ -83,7 +83,8 @@ export function isGlobalAccessRole(user: AuthUser | null): boolean {
   const r = (user.role || '').trim().toLowerCase();
   return [
     'admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive',
-    'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'
+    'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer',
+    'student coordinator', 'student_coordinator', 'coordinator', 'academic coordinator'
   ].includes(r);
 }
 

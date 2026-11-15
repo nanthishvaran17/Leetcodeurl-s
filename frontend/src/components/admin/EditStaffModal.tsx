@@ -471,7 +471,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         mentoring_role: formData.mentoring_role ? formData.mentoring_role.trim() : undefined,
         role: formData.role,
         department_id: deptIdToSend,
-        hod_department_ids: ['Department HOD', 'Placement Coordinator'].includes(formData.role) && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
+        hod_department_ids: ['Department HOD', 'Placement Coordinator', 'Student Coordinator'].includes(formData.role) && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
         is_active: isActive,
         date_of_birth: formattedDOB,
         receive_email_reports: automatedReportsEnabled,
@@ -915,7 +915,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                           <span>All Departments (Global Scope)</span>
                         </div>
-                      ) : ['Department HOD', 'Placement Coordinator'].includes(formData.role) ? (
+                      ) : ['Department HOD', 'Placement Coordinator', 'Student Coordinator'].includes(formData.role) ? (
                         <CustomMultiSelectDropdown
                           label=""
                           options={departmentOptions.filter(d => d.value !== '0')}

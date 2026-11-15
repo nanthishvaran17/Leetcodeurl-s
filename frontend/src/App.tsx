@@ -1064,6 +1064,11 @@ const MainAppContent: React.FC = () => {
     'staff mentor':   ALL_ACADEMIC_TABS,
     staff_mentor:     ALL_ACADEMIC_TABS,
     professor:        ALL_ACADEMIC_TABS,
+    // COORDINATOR ROLES: Full multi-department & year analytics
+    'student coordinator': ALL_ACADEMIC_TABS,
+    student_coordinator:   ALL_ACADEMIC_TABS,
+    coordinator:           ALL_ACADEMIC_TABS,
+    'academic coordinator': ALL_ACADEMIC_TABS,
     // Student: minimal access
     student:          ['dashboard','landing','public','profile','account-settings','post930','post-930'],
   }), [ALL_ACADEMIC_TABS]);
