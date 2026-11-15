@@ -442,22 +442,22 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
         )}
       </div>
 
-      {/* DESKTOP TABLE VIEW (hidden md:block) */}
-      <div className="hidden md:block w-full overflow-x-auto pb-6 sm:pb-8">
-        <table className="w-full text-left text-xs border-collapse">
+      {/* DESKTOP TABLE VIEW (hidden md:block) - High-Definition Institutional Layout */}
+      <div className="hidden md:block w-full overflow-x-auto pb-4 sm:pb-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs bg-white dark:bg-navy-900/40">
+        <table className="w-full text-left text-xs border-collapse min-w-[1080px]">
           <thead>
-            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-white/10">
-              <th className="py-4 px-4">Faculty Mentor</th>
-              <th className="py-4 px-3">Dept</th>
-              <th className="py-4 px-3 text-center">Assigned</th>
-              <th className="py-4 px-3 text-center">Active Solvers</th>
-              <th className="py-4 px-3 text-center">Sunday Contest</th>
-              <th className="py-4 px-3 text-center">Sunday Contest Rate</th>
-              <th className="py-4 px-3 text-center">Contest Status</th>
-              <th className="py-4 px-4 text-center w-[275px] min-w-[275px]">Actions</th>
+            <tr className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 bg-slate-50/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-white/10 select-none">
+              <th className="py-3.5 px-4 min-w-[240px]">Faculty Mentor</th>
+              <th className="py-3.5 px-3 min-w-[130px]">Dept / Role</th>
+              <th className="py-3.5 px-3 text-center min-w-[95px]">Mentees</th>
+              <th className="py-3.5 px-3 text-center min-w-[135px]">Active Solvers</th>
+              <th className="py-3.5 px-3 text-center min-w-[130px]">Sunday Contest</th>
+              <th className="py-3.5 px-3 text-center min-w-[140px]">Contest Rate</th>
+              <th className="py-3.5 px-3 text-center min-w-[130px]">Status</th>
+              <th className="py-3.5 px-4 text-center min-w-[220px]">Actions</th>
             </tr>
           </thead>
-          <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-white/5 font-mono">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-sans">
             {filteredStaff.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-12 text-center text-slate-500 dark:text-slate-400 font-bold font-sans">
@@ -486,139 +486,114 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                   <tr
                     key={s.id}
                     onClick={() => setSelectedStaffDetail(s)}
-                    className={`block md:table-row hover:bg-indigo-50/50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors bg-white dark:bg-transparent mb-3.5 md:mb-0 p-4 md:p-0 rounded-2xl shadow-sm md:shadow-none border border-slate-200/80 dark:border-white/5 md:border-none ${
+                    className={`hover:bg-indigo-50/40 dark:hover:bg-slate-800/40 cursor-pointer transition-colors ${
                       isSelected
-                        ? 'md:bg-indigo-50/80 dark:md:bg-indigo-950/30 ring-2 ring-indigo-500/50 rounded-2xl'
+                        ? 'bg-indigo-50/80 dark:bg-indigo-950/30 ring-1 ring-inset ring-indigo-500/50'
                         : ''
                     }`}
                   >
                     {/* Faculty Mentor Info */}
-                    <td className="flex items-center gap-3 pb-3 md:pb-0 md:py-3.5 md:px-4 font-bold text-slate-900 dark:text-white font-sans border-b border-slate-100 dark:border-white/5 md:border-none md:table-cell">
+                    <td className="py-3.5 px-4 align-middle">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-brand-500/20 text-indigo-600 dark:text-indigo-400 font-black flex items-center justify-center text-sm border border-indigo-400/30 shadow-sm shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/20 to-brand-500/20 text-indigo-600 dark:text-indigo-400 font-black flex items-center justify-center text-xs border border-indigo-400/30 shadow-xs shrink-0">
                           {initial}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5 truncate">
+                          <div className="font-extrabold text-slate-900 dark:text-white text-[13px] flex items-center gap-1.5 truncate leading-snug">
                             <span>{s.full_name || s.username}</span>
                             {isSelected && (
-                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider">
+                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider shrink-0">
                                 Active Filter
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-600 dark:text-slate-300 font-mono font-medium truncate flex items-center gap-1.5">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate flex items-center gap-1.5 leading-tight mt-0.5">
                             {s.full_name && s.full_name !== s.username && (
                               <>
-                                <span className="text-slate-600 dark:text-slate-300 font-semibold">@{s.username}</span>
-                                <span className="text-slate-400 dark:text-slate-600">•</span>
+                                <span className="font-mono text-slate-600 dark:text-slate-300">@{s.username}</span>
+                                <span className="text-slate-300 dark:text-slate-600">•</span>
                               </>
                             )}
-                            <span className="truncate text-slate-600 dark:text-slate-300 font-medium">{s.email}</span>
+                            <span className="truncate">{s.email}</span>
                           </div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Department Badge */}
-                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
-                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Department
-                      </span>
-                      <div className="flex items-center justify-end md:justify-start gap-1.5">
+                    {/* Department & Role Badge */}
+                    <td className="py-3.5 px-3 align-middle whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 whitespace-nowrap">
                         {roleBadge && (
-                          <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-extrabold inline-block border shadow-xs ${roleBadge.color}`}>
+                          <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-black border shadow-2xs whitespace-nowrap ${roleBadge.color}`}>
                             {roleBadge.label}
                           </span>
                         )}
-                        <span className={`px-2.5 py-0.5 rounded-lg font-mono text-[11px] font-extrabold inline-block border shadow-xs ${deptBadge}`}>
+                        <span className={`px-2.5 py-0.5 rounded-lg font-mono text-[11px] font-black border shadow-2xs whitespace-nowrap ${deptBadge}`}>
                           {deptCode}
                         </span>
                       </div>
                     </td>
 
                     {/* Assigned Mentees */}
-                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
-                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Assigned Mentees
-                      </span>
-                      <div className="text-right md:text-center">
-                        {assigned > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-black">
-                            <span>{assigned}</span>
-                            <span className="text-[10px] text-slate-500 font-sans font-bold">Mentees</span>
-                          </span>
-                        ) : (
-                          <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">0 Mentees</span>
-                        )}
-                      </div>
+                    <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
+                      {assigned > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-black whitespace-nowrap">
+                          <span className="font-mono">{assigned}</span>
+                          <span className="text-[10px] text-slate-500 font-sans font-bold">Mentees</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500 font-medium text-xs whitespace-nowrap">0 Mentees</span>
+                      )}
                     </td>
 
                     {/* Active Solvers */}
-                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
-                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Active Solvers
-                      </span>
-                      <div className="text-right md:text-center">
-                        {assigned > 0 ? (
-                          <span className={`px-2.5 py-1 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5 border ${
-                            active === assigned
-                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                              : active > 0
-                              ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${active > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                            <span>{active} / {assigned}</span>
-                            <span className="text-[10px] opacity-80 font-bold">({activeRate}%)</span>
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs inline-flex items-center gap-1 border border-slate-300/80 dark:border-slate-700">
-                            0 / 0
-                          </span>
-                        )}
-                      </div>
+                    <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
+                      {assigned > 0 ? (
+                        <span className={`px-2.5 py-1 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5 border whitespace-nowrap ${
+                          active === assigned
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                            : active > 0
+                            ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                          <span className="font-mono font-black">{active}/{assigned}</span>
+                          <span className="font-mono text-[10.5px] font-bold opacity-80">({activeRate}%)</span>
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-mono font-bold text-xs inline-flex items-center border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                          0/0
+                        </span>
+                      )}
                     </td>
 
                     {/* Sunday Contest Attendance */}
-                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
-                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Sunday Contest
-                      </span>
-                      <div className="text-right md:text-center">
-                        {assigned > 0 ? (
-                          <span
-                            className={`px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1 border ${
-                              sundayTurnoutPct >= 80
-                                ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
-                                : sundayTurnoutPct >= 50
-                                ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
-                                : sundayAttended > 0
-                                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
-                            }`}
-                            title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${sundayAttended} of ${assigned} attended`}
-                          >
-                            <span>
-                              {sundayAttended} / {assigned}
-                            </span>
-                            <span className="text-[10px] opacity-80">
-                              ({sundayTurnoutPct}%)
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-slate-600 dark:text-slate-300 font-bold text-xs">—</span>
-                        )}
-                      </div>
+                    <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
+                      {assigned > 0 ? (
+                        <span
+                          className={`px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1.5 border whitespace-nowrap ${
+                            sundayTurnoutPct >= 80
+                              ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
+                              : sundayTurnoutPct >= 50
+                              ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                              : sundayAttended > 0
+                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+                          }`}
+                          title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${sundayAttended} of ${assigned} attended`}
+                        >
+                          <span className="font-mono font-black">{sundayAttended}/{assigned}</span>
+                          <span className="font-mono text-[10.5px] font-bold opacity-80">({sundayTurnoutPct}%)</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500 font-bold text-xs whitespace-nowrap">—</span>
+                      )}
                     </td>
 
                     {/* Sunday Contest Rate Gauge */}
-                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center font-mono border-b border-slate-50 dark:border-white/5 md:border-none md:table-cell">
-                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Sunday Contest Rate
-                      </span>
-                      <div className="flex items-center justify-end md:justify-center gap-2">
-                        <div className="relative w-16 sm:w-20 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
+                    <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                        <div className="relative w-16 sm:w-20 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner shrink-0">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               sundayTurnoutPct >= 80
@@ -632,8 +607,8 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             style={{ width: `${sundayTurnoutPct}%` }}
                           />
                         </div>
-                        <span className={`font-black text-xs ${
-                          sundayTurnoutPct === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
+                        <span className={`font-mono font-black text-xs shrink-0 w-9 text-right ${
+                          sundayTurnoutPct === 0 ? 'text-slate-400 dark:text-slate-500 font-bold' : 'text-slate-800 dark:text-white font-bold'
                         }`}>
                           {sundayTurnoutPct}%
                         </span>
@@ -641,19 +616,18 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     </td>
 
                     {/* Contest Status */}
-                    <td className="flex items-center justify-between py-2 md:py-3.5 md:px-3 text-center md:table-cell border-b border-slate-50 dark:border-white/5 md:border-none">
-                      <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Contest Status
-                      </span>
-                      <div className="text-right md:text-center">
+                    <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
+                      <div className="text-center whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-black border uppercase tracking-wider ${
+                          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black border uppercase tracking-wider whitespace-nowrap inline-block ${
                             assigned === 0
-                              ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-slate-300/80 dark:border-slate-700 font-black'
+                              ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                               : sundayAttended === assigned
                               ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                              : sundayAttended > 0
+                              : sundayTurnoutPct >= 50
                               ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                              : sundayAttended > 0
+                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
                               : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
                           }`}
                         >
@@ -670,7 +644,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
 
                     {/* Action Buttons — Perfectly Aligned Fixed Slot Dock */}
                     <td
-                      className="py-3 md:py-3.5 md:px-4 text-center w-[275px] min-w-[275px]"
+                      className="py-3.5 px-4 align-middle text-center whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
@@ -680,7 +654,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             e.stopPropagation();
                             setSelectedStaffDetail(s);
                           }}
-                          className="h-8 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-500 hover:to-brand-500 text-white text-xs font-bold transition-all shadow-xs shadow-indigo-600/20 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0"
+                          className="h-8 px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-500 hover:to-brand-500 text-white text-[11px] font-bold transition-all shadow-xs shadow-indigo-600/20 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0"
                           title="Open full profile & performance popup drawer"
                         >
                           <Eye size={12} className="shrink-0" />
@@ -693,7 +667,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             e.stopPropagation();
                             handleFilterByStaff(s.id, s.username);
                           }}
-                          className={`h-8 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0 ${
+                          className={`h-8 px-2.5 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0 ${
                             isSelected
                               ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shadow-emerald-600/30'
                               : 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 font-extrabold border border-slate-300/80 dark:border-slate-700'
