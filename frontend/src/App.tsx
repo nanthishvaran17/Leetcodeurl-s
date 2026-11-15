@@ -1267,7 +1267,7 @@ const MainAppContent: React.FC = () => {
       <div className={`w-full max-w-full min-w-0 mx-auto relative flex flex-col overflow-x-clip box-border ${
         activeTab === 'messages'
           ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-2 sm:pt-4 pb-36 sm:pb-6 md:pb-12 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 max-w-7xl mx-auto w-full'
+          : 'pt-2 sm:pt-4 pb-36 sm:pb-8 md:pb-16 lg:pb-20 px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 2xl:px-20 max-w-7xl mx-auto w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}

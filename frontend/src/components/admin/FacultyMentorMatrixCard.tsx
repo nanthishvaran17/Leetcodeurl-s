@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  Users, RotateCcw, Eye, Award, CheckCircle2, 
+import {
+  Users, RotateCcw, Eye, Award, CheckCircle2,
   Clock, ArrowRightLeft, UserX, Search, Filter,
   ShieldCheck, AlertCircle, ChevronRight, X, Activity,
   ExternalLink, CheckCircle, TrendingUp
@@ -59,8 +59,8 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
   const unallocatedStaff = totalStaff - allocatedStaff;
   const totalAssignedMentees = staffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
   const totalActiveSolvers = staffList.reduce((acc, s) => acc + ((s as any).active_count || 0), 0);
-  const overallActiveRate = totalAssignedMentees > 0 
-    ? Math.round((totalActiveSolvers / totalAssignedMentees) * 100) 
+  const overallActiveRate = totalAssignedMentees > 0
+    ? Math.round((totalActiveSolvers / totalAssignedMentees) * 100)
     : 0;
 
   const filteredStaff = staffList.filter((s) => {
@@ -136,7 +136,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
         {/* 2. Micro Executive Summary Strip (All Interactive) - Compact */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 pt-1 min-w-0 max-w-full">
           {/* Total Mentors Card */}
-          <div 
+          <div
             onClick={() => {
               setStaffWorkloadFilter('ALL');
               setShowStaffAllocationModal(true);
@@ -161,13 +161,12 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
           </div>
 
           {/* Allocated Mentors Filter Card */}
-          <div 
+          <div
             onClick={() => setStaffWorkloadFilter(staffWorkloadFilter === 'COMPLETED' ? 'ALL' : 'COMPLETED')}
-            className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
-              staffWorkloadFilter === 'COMPLETED'
+            className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${staffWorkloadFilter === 'COMPLETED'
                 ? 'bg-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/20'
                 : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200/70 dark:border-white/5 hover:border-emerald-500/30'
-            }`}
+              }`}
             title="Click to toggle filter for Allocated faculty mentors"
           >
             <div className="flex items-center justify-between">
@@ -181,13 +180,12 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
           </div>
 
           {/* Unallocated Mentors Filter Card */}
-          <div 
+          <div
             onClick={() => setStaffWorkloadFilter(staffWorkloadFilter === 'PENDING' ? 'ALL' : 'PENDING')}
-            className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${
-              staffWorkloadFilter === 'PENDING'
+            className={`p-2 sm:p-2.5 rounded-xl border transition-all cursor-pointer active:scale-[0.98] shadow-xs ${staffWorkloadFilter === 'PENDING'
                 ? 'bg-amber-500/10 border-amber-500/40 ring-2 ring-amber-500/20'
                 : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200/70 dark:border-white/5 hover:border-amber-500/30'
-            }`}
+              }`}
             title="Click to toggle filter for Unallocated faculty mentors"
           >
             <div className="flex items-center justify-between">
@@ -201,7 +199,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
           </div>
 
           {/* Mentees Active Card */}
-          <div 
+          <div
             onClick={() => setShowActiveMenteesModal(true)}
             className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
             title="Click to open Active Mentees & Solver Participation Telemetry"
@@ -263,11 +261,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
               <div
                 key={s.id}
                 onClick={() => setSelectedStaffDetail(s)}
-                className={`p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border transition-all cursor-pointer shadow-xs active:scale-[0.99] space-y-3 ${
-                  isSelected
+                className={`p-3.5 rounded-2xl bg-white dark:bg-slate-900/90 border transition-all cursor-pointer shadow-xs active:scale-[0.99] space-y-3 ${isSelected
                     ? 'border-indigo-500 ring-2 ring-indigo-500/30'
                     : 'border-slate-200/80 dark:border-white/10 hover:border-slate-300'
-                }`}
+                  }`}
               >
                 {/* Header: Avatar, Name, Email, Dept Badge */}
                 <div className="flex items-center justify-between gap-2.5">
@@ -341,33 +338,30 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                   <div className="flex-1 flex items-center gap-2">
                     <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          sundayTurnoutPct >= 80 ? 'bg-emerald-500' : sundayTurnoutPct >= 50 ? 'bg-indigo-500' : sundayTurnoutPct > 0 ? 'bg-amber-500' : 'bg-slate-300'
-                        }`}
+                        className={`h-full rounded-full transition-all duration-300 ${sundayTurnoutPct >= 80 ? 'bg-emerald-500' : sundayTurnoutPct >= 50 ? 'bg-indigo-500' : sundayTurnoutPct > 0 ? 'bg-amber-500' : 'bg-slate-300'
+                          }`}
                         style={{ width: `${sundayTurnoutPct}%` }}
                       />
                     </div>
-                    <span className={`text-[10px] font-mono font-black shrink-0 ${
-                      sundayTurnoutPct === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
-                    }`}>
+                    <span className={`text-[10px] font-mono font-black shrink-0 ${sundayTurnoutPct === 0 ? 'text-slate-600 dark:text-slate-300 font-bold' : 'text-slate-800 dark:text-white font-bold'
+                      }`}>
                       {sundayTurnoutPct}%
                     </span>
                   </div>
 
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border shrink-0 ${
-                    assigned === 0
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border shrink-0 ${assigned === 0
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
                       : sundayAttended === assigned
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                      : sundayAttended > 0
-                      ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
-                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
-                  }`}>
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                        : sundayAttended > 0
+                          ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                    }`}>
                     {assigned === 0
                       ? 'Unallocated'
                       : sundayAttended === assigned
-                      ? '100% Contest'
-                      : `${sundayTurnoutPct}% Contest`}
+                        ? '100% Contest'
+                        : `${sundayTurnoutPct}% Contest`}
                   </span>
                 </div>
 
@@ -391,11 +385,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       e.stopPropagation();
                       handleFilterByStaff(s.id, s.username);
                     }}
-                    className={`h-8 px-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${
-                      isSelected
+                    className={`h-8 px-2.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95 ${isSelected
                         ? 'bg-emerald-600 text-white shadow-xs shadow-emerald-600/30'
                         : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-                    }`}
+                      }`}
                   >
                     <Filter size={11} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-400'} />
                     <span>{isSelected ? 'Scoped' : 'Scope'}</span>
@@ -486,11 +479,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                   <tr
                     key={s.id}
                     onClick={() => setSelectedStaffDetail(s)}
-                    className={`hover:bg-indigo-50/40 dark:hover:bg-slate-800/40 cursor-pointer transition-colors ${
-                      isSelected
+                    className={`hover:bg-indigo-50/40 dark:hover:bg-slate-800/40 cursor-pointer transition-colors ${isSelected
                         ? 'bg-indigo-50/80 dark:bg-indigo-950/30 ring-1 ring-inset ring-indigo-500/50'
                         : ''
-                    }`}
+                      }`}
                   >
                     {/* Faculty Mentor Info */}
                     <td className="py-3.5 px-4 align-middle">
@@ -549,13 +541,12 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     {/* Active Solvers */}
                     <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
                       {assigned > 0 ? (
-                        <span className={`px-2.5 py-1 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5 border whitespace-nowrap ${
-                          active === assigned
+                        <span className={`px-2.5 py-1 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5 border whitespace-nowrap ${active === assigned
                             ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
                             : active > 0
-                            ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                        }`}>
+                              ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}>
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                           <span className="font-mono font-black">{active}/{assigned}</span>
                           <span className="font-mono text-[10.5px] font-bold opacity-80">({activeRate}%)</span>
@@ -571,15 +562,14 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
                       {assigned > 0 ? (
                         <span
-                          className={`px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1.5 border whitespace-nowrap ${
-                            sundayTurnoutPct >= 80
+                          className={`px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1.5 border whitespace-nowrap ${sundayTurnoutPct >= 80
                               ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30'
                               : sundayTurnoutPct >= 50
-                              ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
-                              : sundayAttended > 0
-                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
-                          }`}
+                                ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                                : sundayAttended > 0
+                                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+                            }`}
                           title={`${s.sunday_contest_session_name || 'Sunday Contest'}: ${sundayAttended} of ${assigned} attended`}
                         >
                           <span className="font-mono font-black">{sundayAttended}/{assigned}</span>
@@ -595,21 +585,19 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       <div className="flex items-center justify-center gap-2 whitespace-nowrap">
                         <div className="relative w-16 sm:w-20 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner shrink-0">
                           <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              sundayTurnoutPct >= 80
+                            className={`h-full rounded-full transition-all duration-300 ${sundayTurnoutPct >= 80
                                 ? 'bg-emerald-500'
                                 : sundayTurnoutPct >= 50
-                                ? 'bg-indigo-500'
-                                : sundayTurnoutPct > 0
-                                ? 'bg-amber-400'
-                                : 'bg-slate-300'
-                            }`}
+                                  ? 'bg-indigo-500'
+                                  : sundayTurnoutPct > 0
+                                    ? 'bg-amber-400'
+                                    : 'bg-slate-300'
+                              }`}
                             style={{ width: `${sundayTurnoutPct}%` }}
                           />
                         </div>
-                        <span className={`font-mono font-black text-xs shrink-0 w-9 text-right ${
-                          sundayTurnoutPct === 0 ? 'text-slate-400 dark:text-slate-500 font-bold' : 'text-slate-800 dark:text-white font-bold'
-                        }`}>
+                        <span className={`font-mono font-black text-xs shrink-0 w-9 text-right ${sundayTurnoutPct === 0 ? 'text-slate-400 dark:text-slate-500 font-bold' : 'text-slate-800 dark:text-white font-bold'
+                          }`}>
                           {sundayTurnoutPct}%
                         </span>
                       </div>
@@ -619,25 +607,24 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
                       <div className="text-center whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black border uppercase tracking-wider whitespace-nowrap inline-block ${
-                            assigned === 0
+                          className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black border uppercase tracking-wider whitespace-nowrap inline-block ${assigned === 0
                               ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                               : sundayAttended === assigned
-                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                              : sundayTurnoutPct >= 50
-                              ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
-                              : sundayAttended > 0
-                              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                              : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
-                          }`}
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                : sundayTurnoutPct >= 50
+                                  ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
+                                  : sundayAttended > 0
+                                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                            }`}
                         >
                           {assigned === 0
                             ? 'UNALLOCATED (0)'
                             : sundayAttended === assigned
-                            ? `100% CONTEST (${assigned})`
-                            : sundayAttended > 0
-                            ? `${sundayTurnoutPct}% CONTEST (${sundayAttended}/${assigned})`
-                            : `0% CONTEST (0/${assigned})`}
+                              ? `100% CONTEST (${assigned})`
+                              : sundayAttended > 0
+                                ? `${sundayTurnoutPct}% CONTEST (${sundayAttended}/${assigned})`
+                                : `0% CONTEST (0/${assigned})`}
                         </span>
                       </div>
                     </td>
@@ -667,11 +654,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                             e.stopPropagation();
                             handleFilterByStaff(s.id, s.username);
                           }}
-                          className={`h-8 px-2.5 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0 ${
-                            isSelected
+                          className={`h-8 px-2.5 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shrink-0 ${isSelected
                               ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shadow-emerald-600/30'
                               : 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 font-extrabold border border-slate-300/80 dark:border-slate-700'
-                          }`}
+                            }`}
                           title={
                             isSelected
                               ? 'Currently filtering dashboard by this mentor (Click to reset)'
@@ -772,8 +758,8 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                 </p>
               </div>
 
-              <button 
-                onClick={() => setShowActiveMenteesModal(false)} 
+              <button
+                onClick={() => setShowActiveMenteesModal(false)}
                 className="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer shrink-0"
                 title="Close modal"
               >
@@ -804,11 +790,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
 
               <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
                 <div className="text-[10px] font-mono uppercase font-bold text-slate-500 dark:text-slate-400">Completion Rate</div>
-                <div className={`text-xl sm:text-2xl font-black font-mono mt-1 ${
-                  overallActiveRate >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
-                  overallActiveRate >= 50 ? 'text-amber-600 dark:text-amber-400' :
-                  'text-rose-600 dark:text-rose-400'
-                }`}>
+                <div className={`text-xl sm:text-2xl font-black font-mono mt-1 ${overallActiveRate >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                    overallActiveRate >= 50 ? 'text-amber-600 dark:text-amber-400' :
+                      'text-rose-600 dark:text-rose-400'
+                  }`}>
                   {overallActiveRate}%
                 </div>
                 <div className="text-[10px] text-slate-500 font-sans">Solver engagement</div>
@@ -881,19 +866,17 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                                 <span className="text-indigo-600 dark:text-indigo-400">{active}</span>
                                 <span className="text-slate-400">/</span>
                                 <span className="text-slate-700 dark:text-slate-200">{assigned} Active</span>
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-                                  rate >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
-                                  rate >= 50 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
-                                  'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
-                                }`}>
+                                <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${rate >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' :
+                                    rate >= 50 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' :
+                                      'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                                  }`}>
                                   {rate}%
                                 </span>
                               </div>
                               <div className="w-24 sm:w-28 h-1.5 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full transition-all duration-300 ${
-                                    rate >= 80 ? 'bg-emerald-500' : rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'
-                                  }`}
+                                  className={`h-full rounded-full transition-all duration-300 ${rate >= 80 ? 'bg-emerald-500' : rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                                    }`}
                                   style={{ width: `${rate}%` }}
                                 />
                               </div>

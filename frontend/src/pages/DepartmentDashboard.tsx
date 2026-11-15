@@ -954,8 +954,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             onDeleteStudent={handleDeleteStudent}
           />
         ) : (
-          <div className="space-y-6 md:px-2 lg:px-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+          <div className="space-y-6 md:px-3 lg:px-6 xl:px-8 pb-8 md:pb-14">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
               {finalStudentList.slice(0, displayCount).map((st) => (
                 <StudentFlipCard
                   key={st.id}
