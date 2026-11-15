@@ -6,6 +6,7 @@ from typing import List, Optional
 from backend.routes.auth import get_current_user
 from backend.config import settings
 from backend.models import User
+from backend.logger import logger
 
 router = APIRouter()
 
@@ -64,11 +65,23 @@ class SaveFileRequest(BaseModel):
 
 AUDIT_LOG_PATH = os.path.join(PROJECT_ROOT, "backend", "logs", "dev_studio_audit.json")
 
+FORBIDDEN_FILES = {
+    ".env", ".env.local", ".env.production", ".env.development", ".env.example",
+    "serviceaccountkey.json", "firebase-key.json", "leetcode_tracker.db"
+}
+FORBIDDEN_EXTENSIONS = {".env", ".db", ".sqlite", ".sqlite3", ".key", ".pem", ".pfx", ".p12"}
+
 def get_safe_path(requested_path: str) -> str:
     # Ensure the requested path is within the project root
     safe_path = os.path.abspath(os.path.join(PROJECT_ROOT, requested_path))
     if not safe_path.startswith(PROJECT_ROOT):
         raise HTTPException(status_code=403, detail="Access denied")
+        
+    base = os.path.basename(safe_path).lower()
+    _, ext = os.path.splitext(base)
+    if base in FORBIDDEN_FILES or ext in FORBIDDEN_EXTENSIONS or ".env" in base or "secret" in base:
+        raise HTTPException(status_code=403, detail="Security Violation: Access to system credentials, environment files, or database binaries is strictly forbidden.")
+        
     return safe_path
 
 @router.get("/tree")
@@ -94,7 +107,8 @@ def get_file_tree(path: str = "", current_user: User = Depends(verify_dev_studio
             })
         return sorted(files, key=lambda x: (not x["is_dir"], x["name"].lower()))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[DEV_STUDIO_ERROR] Tree error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load file directory tree.")
 
 @router.get("/file")
 def read_file(path: str, current_user: User = Depends(verify_dev_studio_access)):
@@ -111,7 +125,8 @@ def read_file(path: str, current_user: User = Depends(verify_dev_studio_access))
     except UnicodeDecodeError:
         raise HTTPException(status_code=400, detail="Cannot read binary file")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[DEV_STUDIO_ERROR] Tree error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load file directory tree.")
 
 @router.post("/file")
 def save_file(req: SaveFileRequest, current_user: User = Depends(verify_dev_studio_access)):
@@ -158,7 +173,8 @@ def save_file(req: SaveFileRequest, current_user: User = Depends(verify_dev_stud
                 os.remove(target_path + ".tmp")
             except:
                 pass
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"[DEV_STUDIO_ERROR] Save error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save file changes.")
 
 import json
 import datetime

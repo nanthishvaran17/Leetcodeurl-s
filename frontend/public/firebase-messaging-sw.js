@@ -145,7 +145,7 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // PWA Service Worker Core Lifecycle & Caching
-const CACHE_NAME = 'nec-leetcode-pwa-v2';
+const CACHE_NAME = 'nec-leetcode-pwa-v3-ultrafast';
 const STATIC_ASSETS = [
   '/',
   '/site.webmanifest',
@@ -176,23 +176,48 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-First with Cache Fallback for Static Assets
+// Ultra-Fast Cache-First for Hashed Static Assets (JS, CSS, WebP, WOFF2, PNG)
+// Network-First with Cache Fallback for HTML Navigation
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Skip API calls, web socket connections, and non-http schemes
-  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/ws') || !url.protocol.startsWith('http')) {
+  // Skip non-GET, API calls, web socket connections, and non-http schemes
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/api') || url.pathname.startsWith('/ws') || !url.protocol.startsWith('http')) {
     return;
   }
 
+  // 1. IMMUTABLE HASHED ASSETS: Cache-First (Instant 0ms response)
+  const isStaticHashed = url.pathname.startsWith('/assets/') || 
+                         url.pathname.endsWith('.woff2') || 
+                         url.pathname.endsWith('.webp') || 
+                         url.pathname.endsWith('.png') || 
+                         url.pathname.endsWith('.svg');
+
+  if (isStaticHashed) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // 2. HTML & Navigation: Network-First with Cache Fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response.status === 200 && event.request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone).catch(() => {});
-          });
+        if (response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
         }
         return response;
       })

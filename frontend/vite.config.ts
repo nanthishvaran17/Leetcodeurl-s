@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { compression } from 'vite-plugin-compression2'
 import path from 'path'
 import fs from 'fs'
 
@@ -8,11 +7,7 @@ const rootDir = fs.realpathSync?.native ? fs.realpathSync.native(__dirname) : __
 
 export default defineConfig({
   plugins: [
-    react(),
-    compression({
-      algorithms: ['brotliCompress', 'gzip'],
-      threshold: 512,
-    }),
+    react()
   ],
   resolve: {
     alias: {
@@ -190,8 +185,7 @@ export default defineConfig({
     minify: 'esbuild',
   },
   esbuild: {
-    drop: ['debugger'],
-    pure: ['console.debug', 'console.log', 'console.warn', 'console.info'],
+    drop: ['console', 'debugger'],
     legalComments: 'none',
   },
   optimizeDeps: {

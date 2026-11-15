@@ -119,13 +119,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   });
 
   useEffect(() => {
-    // Strictly prevent loading public 302 canonical roster for faculty/staff mentors
+    // Fast instant hydration from cached students
     if (!isFacultyRole && (!students || students.length === 0)) {
-      import('../data/canonicalRoster').then(m => {
-        if (m.CANONICAL_ROSTER && m.CANONICAL_ROSTER.length > 0) {
-          setStudents(m.CANONICAL_ROSTER);
-        }
-      }).catch(() => {});
+      const cached = getCachedStudents();
+      if (cached && cached.length > 0) {
+        setStudents(cached);
+      }
     }
   }, [isFacultyRole]);
 
