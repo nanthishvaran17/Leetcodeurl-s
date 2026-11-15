@@ -1,13 +1,25 @@
 # Android Release Archive
 
-Latest Release: **v4.5.3 (VersionCode 94)**
+Latest Release: **v4.5.5 (VersionCode 96)**
 
 Download the production signed APK:
-- [Nandha_LeetCode_Intelligence_v4.5.3_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.3_latest.apk)
+- [Nandha_LeetCode_Intelligence_v4.5.5_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.5_latest.apk)
 - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
 - [nandha-leetcode.apk](./nandha-leetcode.apk)
 
-### Changelog v4.5.3 (Latest)
+### Changelog v4.5.5 (Latest Production)
+- **Mobile Bottom Sheet Drawer & Z-Index Overlay Hardening**:
+  - Re-architected multi-select dropdown for Department and Academic Year cohorts with mobile-native Bottom Sheet Drawer.
+  - Lifted dropdown popup z-index from `99999` to `99999999` to eliminate behind-modal clipping in all administrative dialogs.
+  - Added live search filter and quick "Select All" / "Clear All" toggles for swift management of 12+ departmental entities.
+  - Fully auto-provisions all 11 active engineering departments and all cohorts for `Placement Coordinator` and `Student Coordinator`.
+
+### Changelog v4.5.4
+- **Enhanced Badge Display & Type Safety**:
+  - Added colored pill badges (`[CS]`, `[IT]`, `[ALL]`, `[ECE]`, etc.) directly inside dropdown options.
+  - Unified `MultiSelectOption` interface across creation and edit workflows.
+
+### Changelog v4.5.3
 - **Universal Multi-Department & Multi-Batch Provisioning Engine**:
   - Full department selection (including one-click "All Departments - Global Scope") enabled across all institutional roles (`PLC`, `STC`, `Faculty Mentor`, `Staff Mentor`, and `Department HOD`).
   - Full academic year cohort selection (including "All Academic Years / Batches - I, II, III, IV Year") enabled across all roles in both Create Staff and Edit Staff panels.
