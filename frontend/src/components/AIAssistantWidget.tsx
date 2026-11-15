@@ -488,13 +488,13 @@ export const AIAssistantWidget: React.FC<AIAssistantWidgetProps> = ({
   }, [isOpen, pushContext, popContext, registerEscHandler]);
 
   const [telemetry, setTelemetry] = useState<any>({
-    total_students: 302,
-    verified_students: 237,
-    pending_students: 21,
-    failed_students: 44,
+    total_students: 0,
+    verified_students: 0,
+    pending_students: 0,
+    failed_students: 0,
     database: 'SQLite WAL Production Mode',
-    last_successful_fetch: '19 Aug 2026, 11:58 AM IST',
-    llm_engine: 'OLLAMA (llama3.2)',
+    last_successful_fetch: 'Live Sync Active',
+    llm_engine: 'Production Engine',
   });
   const [loadingTelemetry, setLoadingTelemetry] = useState(false);
 
