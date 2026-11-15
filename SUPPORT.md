@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College" width="100" style="border-radius: 50%; margin-bottom: 8px;" />
+<img src="https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="120" style="border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-bottom: 12px;" />
 
 ### Nandha Engineering College (Autonomous) • LeetCode Intelligence Platform
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*

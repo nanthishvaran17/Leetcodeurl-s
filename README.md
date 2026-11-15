@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="160" style="border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.12); margin-bottom: 16px;" />
+<img src="https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="160" style="border-radius: 50%; box-shadow: 0 10px 25px rgba(0,0,0,0.12); margin-bottom: 16px;" />
 
 # NANDHA LEETCODE INTELLIGENCE (NLCI)
 ### Autonomous Institutional Contest Intelligence • Level 4 Forensic Verification • Student Mentorship Platform
