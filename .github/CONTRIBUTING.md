@@ -9,11 +9,11 @@
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
 [![Version](https://img.shields.io/badge/Production-v4.5.5-blue.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.5%20(VC%2096)-3DDC84.svg?style=flat-square)](../releases/android/)
-[![Windows EXE](https://img.shields.io/badge/Windows%20EXE-v4.5.2-0078D6.svg?style=flat-square)](../releases/windows/)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.5%20(VC%2096)-3DDC84.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android)
+[![Windows EXE](https://img.shields.io/badge/Windows%20EXE-v4.5.2-0078D6.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/windows)
 [![Code Style: Black](https://img.shields.io/badge/Code%20Style-Black-000000.svg?style=flat-square)](https://github.com/psf/black)
 [![TypeScript: Strict](https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6.svg?style=flat-square)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](../LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE)
 
 </div>
 
@@ -232,10 +232,10 @@ npm --prefix frontend run build:apk
 
 ## 🛡️ Reporting Security Issues
 
-Please **do not disclose security vulnerabilities publicly**. Follow our responsible disclosure guidelines detailed in [`SECURITY.md`](../SECURITY.md):
+Please **do not disclose security vulnerabilities publicly**. Follow our responsible disclosure guidelines detailed in [`SECURITY.md`](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md):
 * **Private Advisory:** Submit via [GitHub Security Advisories](https://github.com/nanthishvaran17/Leetcodeurl-s/security/advisories/new).
 * **Direct Email:** Encrypted report to Institutional Maintainer: `nanthishvaran17@gmail.com`.
-* Review the [Security Policy](../SECURITY.md) for our guaranteed response SLAs and Security Hall of Fame criteria.
+* Review the [Security Policy](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md) for our guaranteed response SLAs and Security Hall of Fame criteria.
 
 ---
 

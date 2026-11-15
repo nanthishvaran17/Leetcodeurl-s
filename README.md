@@ -444,7 +444,8 @@ Leetcodeurl-s/
 
 ---
 
-## License & Contributing
+## License, Security & Contributing
 
-* **License**: This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-* **Contributing**: Contributions and improvements are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) guide before opening pull requests.
+* **License**: This project is licensed under the **MIT License** — see the [LICENSE](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE) file for details.
+* **Security Policy**: Read our Zero-Trust [SECURITY.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md) for vulnerability reporting and patch SLAs.
+* **Contributing**: Contributions and improvements are welcome! Please read our [CONTRIBUTING.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CONTRIBUTING.md) guide before opening pull requests.
