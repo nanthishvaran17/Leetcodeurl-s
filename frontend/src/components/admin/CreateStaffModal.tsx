@@ -384,11 +384,11 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     setFormData(prev => {
       const updated = { ...prev, role: newRole };
       if (formErrors.role) setFormErrors(e => ({ ...e, role: '' }));
-      if (newRole === 'Placement Coordinator') {
+      if (newRole === 'Placement Coordinator' || newRole === 'Student Coordinator') {
         updated.hod_department_ids = ['0', ...departments.map(d => String(d.id))];
         updated.department_id = '0';
         updated.academic_year_ids = ['ALL'];
-      } else if (newRole === 'Student Coordinator' || newRole === 'Department HOD') {
+      } else if (newRole === 'Department HOD') {
         if (updated.academic_year_ids.length === 0) updated.academic_year_ids = ['ALL'];
         if (updated.hod_department_ids.length === 0 && departments.length > 0) {
           updated.hod_department_ids = [String(departments[0].id)];
