@@ -22,7 +22,8 @@ import java.util.Map;
 /**
  * Authoritative Android Firebase Cloud Messaging Service.
  * Guarantees reliable notification delivery, heads-up presentation,
- * audio chimes, and deep linking EVEN WHEN THE APP IS COMPLETELY CLOSED OR KILLED.
+ * audio chimes, and deep linking EVEN WHEN THE APP IS COMPLETELY CLOSED OR
+ * KILLED.
  */
 public class FCMService extends FirebaseMessagingService {
     private static final String TAG = "FCMService";
@@ -51,18 +52,21 @@ public class FCMService extends FirebaseMessagingService {
             Log.w(TAG, "PushNotificationsPlugin sendRemoteMessage forward note: " + e.getMessage());
         }
 
-        // 2. Check if Capacitor Push Notifications Plugin instance is alive (App is in foreground)
+        // 2. Check if Capacitor Push Notifications Plugin instance is alive (App is in
+        // foreground)
         try {
             PushNotificationsPlugin pushPlugin = PushNotificationsPlugin.getPushNotificationsInstance();
             if (pushPlugin != null) {
                 Log.d(TAG, "App is OPEN in foreground. Handled by Capacitor in-app listeners.");
                 return;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         // 3. APP IS CLOSED / KILLED!
         // When app is closed, Capacitor does NOT show any notification.
-        // We build and display an authoritative native heads-up notification banner with sound and vibration.
+        // We build and display an authoritative native heads-up notification banner
+        // with sound and vibration.
         Log.d(TAG, "App is CLOSED / KILLED. Triggering native Android system notification banner.");
         showNativeNotification(remoteMessage);
     }
@@ -105,7 +109,8 @@ public class FCMService extends FirebaseMessagingService {
 
             if (data.containsKey("channel_id") && data.get("channel_id") != null && !data.get("channel_id").isEmpty()) {
                 channelId = data.get("channel_id");
-            } else if (data.containsKey("channelId") && data.get("channelId") != null && !data.get("channelId").isEmpty()) {
+            } else if (data.containsKey("channelId") && data.get("channelId") != null
+                    && !data.get("channelId").isEmpty()) {
                 channelId = data.get("channelId");
             } else if (data.containsKey("category") && data.get("category") != null) {
                 String cat = data.get("category").toLowerCase();
@@ -132,34 +137,34 @@ public class FCMService extends FirebaseMessagingService {
             }
 
             String actionRoute = data.get("actionRoute");
-            if (actionRoute == null) actionRoute = data.get("route");
+            if (actionRoute == null)
+                actionRoute = data.get("route");
             if (actionRoute != null) {
                 intent.putExtra("actionRoute", actionRoute);
             }
 
             int requestCode = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
             PendingIntent pendingIntent = PendingIntent.getActivity(
-                this,
-                requestCode,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
+                    this,
+                    requestCode,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
             Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_stat_notification)
-                .setColor(Color.parseColor("#3b82f6"))
-                .setContentTitle(title)
-                .setContentText(body)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setVibrate(new long[]{0, 250, 150, 250})
-                .setContentIntent(pendingIntent);
+                    .setSmallIcon(R.drawable.ic_stat_notification)
+                    .setColor(Color.parseColor("#3b82f6"))
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setAutoCancel(true)
+                    .setSound(defaultSoundUri)
+                    .setVibrate(new long[] { 0, 250, 150, 250 })
+                    .setContentIntent(pendingIntent);
 
             int notificationId = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
             String notifIdStr = data.get("notificationId");
@@ -169,7 +174,8 @@ public class FCMService extends FirebaseMessagingService {
 
             NotificationManagerCompat manager = NotificationManagerCompat.from(this);
             manager.notify(notificationId, builder.build());
-            Log.d(TAG, "Authoritative native notification successfully posted while app was closed. ID=" + notificationId);
+            Log.d(TAG,
+                    "Authoritative native notification successfully posted while app was closed. ID=" + notificationId);
 
         } catch (SecurityException se) {
             Log.e(TAG, "Notification permission missing on Android 13+: " + se.getMessage());
@@ -181,34 +187,41 @@ public class FCMService extends FirebaseMessagingService {
     private void ensureNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            if (notificationManager == null) return;
+            if (notificationManager == null)
+                return;
 
             String[][] channels = {
-                {"messages_channel", "Messages & Chat", "Real-time direct messages, staff discussions, and student chat alerts"},
-                {"account_security", "Account & Security", "Critical security alerts, password changes, and account activity"},
-                {"contest_updates", "Contest Updates", "Live contest alerts, reminders, and contest result announcements"},
-                {"weekly_reports", "Weekly Performance Reports", "Weekly student performance reports and analytical summaries"},
-                {"performance_updates", "Performance Milestones", "Rating changes, milestones, and performance velocity updates"},
-                {"academic_announcements", "Academic Announcements", "Institutional, department, and academic announcements"},
-                {"system_status", "System Status", "Maintenance schedules and system status updates"},
-                {"leetcode_intelligence_channel", "LeetCode General Alerts", "General system alerts, role updates, and real-time announcements"}
+                    { "messages_channel", "Messages & Chat",
+                            "Real-time direct messages, staff discussions, and student chat alerts" },
+                    { "account_security", "Account & Security",
+                            "Critical security alerts, password changes, and account activity" },
+                    { "contest_updates", "Contest Updates",
+                            "Live contest alerts, reminders, and contest result announcements" },
+                    { "weekly_reports", "Weekly Performance Reports",
+                            "Weekly student performance reports and analytical summaries" },
+                    { "performance_updates", "Performance Milestones",
+                            "Rating changes, milestones, and performance velocity updates" },
+                    { "academic_announcements", "Academic Announcements",
+                            "Institutional, department, and academic announcements" },
+                    { "system_status", "System Status", "Maintenance schedules and system status updates" },
+                    { "leetcode_intelligence_channel", "LeetCode General Alerts",
+                            "General system alerts, role updates, and real-time announcements" }
             };
 
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
-                .build();
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
+                    .build();
             Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
             for (String[] ch : channels) {
                 NotificationChannel channel = new NotificationChannel(
-                    ch[0],
-                    ch[1],
-                    NotificationManager.IMPORTANCE_HIGH
-                );
+                        ch[0],
+                        ch[1],
+                        NotificationManager.IMPORTANCE_HIGH);
                 channel.setDescription(ch[2]);
                 channel.enableVibration(true);
-                channel.setVibrationPattern(new long[]{0, 250, 150, 250});
+                channel.setVibrationPattern(new long[] { 0, 250, 150, 250 });
                 channel.enableLights(true);
                 channel.setLightColor(Color.parseColor("#3b82f6"));
                 channel.setSound(defaultSoundUri, audioAttributes);
@@ -219,4 +232,3 @@ public class FCMService extends FirebaseMessagingService {
         }
     }
 }
-
