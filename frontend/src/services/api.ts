@@ -299,7 +299,10 @@ api.interceptors.response.use(
       if (!config._triedFallback && typeof window !== 'undefined') {
         config._triedFallback = true;
         const currentBase = config.baseURL || '';
-        const fallbackBase = currentBase.includes('duckdns.org') ? 'https://leetcodeurl-s-roan.vercel.app/api' : 'https://nandha-leetcode.duckdns.org/api';
+        let fallbackBase = 'https://nandha-leetcode.duckdns.org/api';
+        if (isCapacitorNative() || isElectron()) {
+          fallbackBase = currentBase.includes('duckdns.org') ? 'http://13.53.231.6/api' : 'https://nandha-leetcode.duckdns.org/api';
+        }
         console.warn(`[AUTH_FAILOVER] Primary auth server returned ${error.response?.status || 'Network Error'}. Retrying via ${fallbackBase}...`);
         config.baseURL = fallbackBase;
         return api(config);

@@ -940,8 +940,8 @@ origins = [
     "https://leetcodeurl-s-roan.vercel.app",
     "https://nandha-leetcode.duckdns.org",
     "http://nandha-leetcode.duckdns.org",
-    "https://nandha-leetcode.duckdns.org",
-    "https://nandha-leetcode.duckdns.org",
+    "http://13.53.231.6",
+    "https://13.53.231.6",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
@@ -973,7 +973,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://(leetcodeurl-s|nandha-leetcode)[a-zA-Z0-9-]*\.(vercel\.app|web\.app|firebaseapp\.com|duckdns\.org)|https://.*\.nandhaengg\.org|http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?",
+    allow_origin_regex=r"https://(leetcodeurl-s|nandha-leetcode)[a-zA-Z0-9-]*\.(vercel\.app|web\.app|firebaseapp\.com|duckdns\.org)|https://.*\.nandhaengg\.org|http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?|https?://13\.53\.231\.6(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1088,12 +1088,35 @@ def _cleanup_expired_cache_entries(now: float):
 def _add_cors_headers_to_response(request, response_headers) -> None:
     """Attaches origin-specific CORS headers to response headers dict or MutableHeaders."""
     origin = request.headers.get("origin")
-    if origin:
+    if origin and origin != "null":
         response_headers["Access-Control-Allow-Origin"] = origin
         response_headers["Access-Control-Allow-Credentials"] = "true"
-        response_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder"
-        response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
+    else:
+        app_origin = request.headers.get("x-app-origin")
+        if app_origin and app_origin != "null":
+            response_headers["Access-Control-Allow-Origin"] = app_origin
+            response_headers["Access-Control-Allow-Credentials"] = "true"
+        elif origin:
+            response_headers["Access-Control-Allow-Origin"] = origin
+            response_headers["Access-Control-Allow-Credentials"] = "true"
+
+    response_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
+    
+    req_headers = request.headers.get("access-control-request-headers")
+    base_headers = (
+        "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, "
+        "X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder, X-App-Origin, "
+        "X-Capacitor-Platform, X-Electron-Platform, X-Device-Key, X-Client-Version, "
+        "X-CSRF-Token, X-Forwarded-For, X-Real-IP, Accept-Encoding, Accept-Language, "
+        "Sec-Ch-Ua, Sec-Ch-Ua-Mobile, Sec-Ch-Ua-Platform"
+    )
+    if req_headers:
+        response_headers["Access-Control-Allow-Headers"] = f"{base_headers}, {req_headers}"
+    else:
+        response_headers["Access-Control-Allow-Headers"] = base_headers
+
+    response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache, X-Report-Cache-Hit, X-Report-Lookup-Ms"
+    response_headers["Access-Control-Max-Age"] = "86400"
 
 
 @app.middleware("http")

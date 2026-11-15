@@ -16,7 +16,9 @@ echo "1. Pulling latest Git changes..."
 git pull origin main
 
 echo "2. Updating Python backend dependencies & migrations..."
-if [ -d "venv" ]; then
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "venv" ]; then
     source venv/bin/activate
 elif [ -d "/opt/nandha_leetcode_intelligence/venv" ]; then
     source /opt/nandha_leetcode_intelligence/venv/bin/activate

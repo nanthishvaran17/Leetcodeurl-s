@@ -6,12 +6,35 @@ import re
 async def global_csrf_middleware(request: Request, call_next):
     def _add_cors_headers_to_response(req: Request, res_headers) -> None:
         origin = req.headers.get("origin")
-        if origin:
+        if origin and origin != "null":
             res_headers["Access-Control-Allow-Origin"] = origin
             res_headers["Access-Control-Allow-Credentials"] = "true"
-            res_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            res_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder, X-App-Origin"
-            res_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
+        else:
+            app_origin = req.headers.get("x-app-origin")
+            if app_origin and app_origin != "null":
+                res_headers["Access-Control-Allow-Origin"] = app_origin
+                res_headers["Access-Control-Allow-Credentials"] = "true"
+            elif origin:
+                res_headers["Access-Control-Allow-Origin"] = origin
+                res_headers["Access-Control-Allow-Credentials"] = "true"
+
+        res_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
+        
+        req_headers = req.headers.get("access-control-request-headers")
+        base_headers = (
+            "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, "
+            "X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder, X-App-Origin, "
+            "X-Capacitor-Platform, X-Electron-Platform, X-Device-Key, X-Client-Version, "
+            "X-CSRF-Token, X-Forwarded-For, X-Real-IP, Accept-Encoding, Accept-Language, "
+            "Sec-Ch-Ua, Sec-Ch-Ua-Mobile, Sec-Ch-Ua-Platform"
+        )
+        if req_headers:
+            res_headers["Access-Control-Allow-Headers"] = f"{base_headers}, {req_headers}"
+        else:
+            res_headers["Access-Control-Allow-Headers"] = base_headers
+
+        res_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache, X-Report-Cache-Hit, X-Report-Lookup-Ms"
+        res_headers["Access-Control-Max-Age"] = "86400"
 
 
     if request.method in ("POST", "PUT", "PATCH", "DELETE"):

@@ -10,7 +10,7 @@ export const PRODUCTION_BACKEND_URL = RAW_ENV_URL
   ? RAW_ENV_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
   : 'https://nandha-leetcode.duckdns.org'; // Primary production backend (HTTPS)
 
-export const FALLBACK_BACKEND_URL = 'https://nandha-leetcode.duckdns.org';
+export const FALLBACK_BACKEND_URL = 'http://13.53.231.6'; // Direct AWS EC2 fallback if DuckDNS encounters DNS issues
 
 
 /**
