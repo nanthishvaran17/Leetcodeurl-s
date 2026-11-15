@@ -62,6 +62,11 @@ const ROUTE_API_PREFETCH_MAP: Record<string, string[]> = {
   'system-health': ['/system/health'],
   'growth': ['/growth/improvers'],
   'public': ['/public/leaderboard'],
+  'reports': ['/reports/all', '/reports/dashboard'],
+  'settings': ['/settings', '/settings/audit-logs'],
+  'hr-candidate-finder': ['/hr-candidate-finder/candidates'],
+  'faculty-action-center': ['/intelligence/faculty-actions'],
+  'faculty': ['/intelligence/faculty-actions'],
 };
 
 export function prefetchRouteData(routeId: string): void {

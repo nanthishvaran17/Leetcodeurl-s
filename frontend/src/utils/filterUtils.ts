@@ -806,3 +806,22 @@ export function filterAndSortStudents(
     counts
   };
 }
+
+
+export const normalizeYear = (val: string | null | undefined, regNo?: string | null): string => {
+  if (regNo) {
+    const r = String(regNo).toUpperCase().trim();
+    if (r.includes('732225') || r.includes('73225') || r.includes('25IT') || r.includes('25CC') || r.includes('25CI') || r.includes('25CS')) return 'II';
+    if (r.includes('732224') || r.includes('24IT') || r.includes('24CC') || r.includes('24CI') || r.includes('24CS')) return 'III';
+    if (r.includes('732223') || r.includes('23IT') || r.includes('23CC') || r.includes('23CI') || r.includes('23CS')) return 'IV';
+    if (r.includes('732226') || r.includes('26IT') || r.includes('26CC') || r.includes('26CI') || r.includes('26CS')) return 'I';
+  }
+  if (val) {
+    const s = String(val).trim().toUpperCase();
+    if (s === '1' || s === 'I' || s === 'FIRST' || s === '1ST') return 'I';
+    if (s === '2' || s === 'II' || s === 'SECOND' || s === '2ND') return 'II';
+    if (s === '3' || s === 'III' || s === 'THIRD' || s === '3RD') return 'III';
+    if (s === '4' || s === 'IV' || s === 'FOURTH' || s === '4TH') return 'IV';
+  }
+  return 'II';
+};

@@ -73,7 +73,7 @@ messaging.onBackgroundMessage((payload) => {
   };
 
   if ('setAppBadge' in self.navigator) {
-    self.navigator.setAppBadge().catch(() => {});
+    self.navigator.setAppBadge().catch(() => { });
   }
 
   self.registration.showNotification(notificationTitle, notificationOptions);
@@ -158,7 +158,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch(() => {});
+      return cache.addAll(STATIC_ASSETS).catch(() => { });
     })
   );
 });
@@ -187,11 +187,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 1. IMMUTABLE HASHED ASSETS: Cache-First (Instant 0ms response)
-  const isStaticHashed = url.pathname.startsWith('/assets/') || 
-                         url.pathname.endsWith('.woff2') || 
-                         url.pathname.endsWith('.webp') || 
-                         url.pathname.endsWith('.png') || 
-                         url.pathname.endsWith('.svg');
+  const isStaticHashed = url.pathname.startsWith('/assets/') ||
+    url.pathname.endsWith('.woff2') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.svg');
 
   if (isStaticHashed) {
     event.respondWith(
@@ -202,7 +202,7 @@ self.addEventListener('fetch', (event) => {
         return fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => { }));
           }
           return networkResponse;
         });
@@ -217,7 +217,7 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         if (response.status === 200) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => { }));
         }
         return response;
       })

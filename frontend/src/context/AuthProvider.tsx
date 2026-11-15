@@ -4,7 +4,7 @@ import api, { clearApiCache } from '../services/api';
 import { clearContestCache } from '../services/contestCache';
 import { queryClient } from '../lib/react-query';
 import { AuthState, AuthUser } from '../services/auth/authTypes';
-import { isMobileBrowser } from '../services/googleAuth';
+import { isMobileBrowser } from '../utils/deviceDetect';
 import { AuthContext } from './authContextDef';
 import { clearAdminOtpVerification } from '../utils/adminOtpAuth';
 

@@ -8,11 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
 const LiveStudentMonitor = React.lazy(() => import('../components/LiveStudentMonitor').then(m => ({ default: m.LiveStudentMonitor })));
-import { Post930SolversView } from './Post930SolversView';
+const Post930SolversView = React.lazy(() => import('./Post930SolversView').then(m => ({ default: m.Post930SolversView })));
+const PreviousWeekContestPanel = React.lazy(() => import('../components/PreviousWeekContestPanel').then(m => ({ default: m.PreviousWeekContestPanel })));
+import { normalizeYear } from '../utils/filterUtils';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
-import { PreviousWeekContestPanel, normalizeYear } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
@@ -730,11 +731,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, []);
 
 
-  // Ultra-Fast Virtualized Pagination States
+  // Ultra-Fast Virtualized Pagination States (20 rows on mobile for 120Hz butter-smooth scrolling)
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(100);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return 20;
+    return 50;
+  });
   const [previewPage, setPreviewPage] = useState<number>(1);
-  const [previewPageSize, setPreviewPageSize] = useState<number>(50);
+  const [previewPageSize, setPreviewPageSize] = useState<number>(25);
 
   // Automatically reset to page 1 when search or filters change
   useEffect(() => {
@@ -2962,7 +2966,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
         <div className="mt-4 sm:mt-6 px-1 sm:px-0">
-          <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || sessionsList[0]?.sessionId || sessionsList[0]?.id || 1} onStudentClick={onSelectStudent} />
+          <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading previous contest analysis...</div>}>
+            <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || sessionsList[0]?.sessionId || sessionsList[0]?.id || 1} onStudentClick={onSelectStudent} />
+          </React.Suspense>
         </div>
       )}
 
@@ -5428,7 +5434,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {/* Tab 4: Post-9:30 AM Activity Solvers Report */}
           {subTab === 'post_930_activity' && (
             <div className="animate-fade-in">
-              <Post930SolversView />
+              <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading solvers report...</div>}>
+                <Post930SolversView />
+              </React.Suspense>
             </div>
           )}
         </div>

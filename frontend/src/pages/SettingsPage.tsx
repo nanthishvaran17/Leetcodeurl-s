@@ -10,14 +10,14 @@ import {
   Camera, Play, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, Info, X, Copy, Code, FileCode, Bell, RotateCcw, Trash2, User, Settings as SettingsIcon
 } from 'lucide-react';
 import api from '../services/api';
-import { SecurityActivitySection } from '../components/SecurityActivitySection';
+const SecurityActivitySection = React.lazy(() => import('../components/SecurityActivitySection').then(m => ({ default: m.SecurityActivitySection })));
+const StaffManagement = React.lazy(() => import('../components/admin/StaffManagement').then(m => ({ default: m.StaffManagement })));
+const AdminStaffAllocationPanel = React.lazy(() => import('../components/AdminStaffAllocationPanel').then(m => ({ default: m.AdminStaffAllocationPanel })));
+const StaffVerificationSection = React.lazy(() => import('../components/StaffVerificationSection').then(m => ({ default: m.StaffVerificationSection })));
+const NotificationPreferencesSection = React.lazy(() => import('../components/NotificationPreferencesSection').then(m => ({ default: m.NotificationPreferencesSection })));
+const AccountProfileSettings = React.lazy(() => import('../components/AccountProfileSettings').then(m => ({ default: m.AccountProfileSettings })));
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
-import { StaffManagement } from '../components/admin/StaffManagement';
-import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
-import { StaffVerificationSection } from '../components/StaffVerificationSection';
-import { NotificationPreferencesSection } from '../components/NotificationPreferencesSection';
-import { AccountProfileSettings } from '../components/AccountProfileSettings';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
@@ -1031,31 +1031,41 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
         {/* SECTION: MY ACCOUNT & PROFILE */}
         {activeSectionFilter === 'profile' && (
           <div className="animate-fade-in">
-            <AccountProfileSettings />
+            <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading account settings...</div>}>
+              <AccountProfileSettings />
+            </React.Suspense>
           </div>
         )}
 
         {/* SECTION: NOTIFICATIONS */}
         {activeSectionFilter === 'notifications' && (
-          <NotificationPreferencesSection />
+          <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading notification preferences...</div>}>
+            <NotificationPreferencesSection />
+          </React.Suspense>
         )}
 
         {/* SECTION: STAFF VERIFICATION */}
         {activeSectionFilter === 'staff_verification' && (
-          <StaffVerificationSection />
+          <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading verification suite...</div>}>
+            <StaffVerificationSection />
+          </React.Suspense>
         )}
 
         {/* SECTION: STAFF MANAGEMENT */}
         {activeSectionFilter === 'staff' && (
           <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-700 animate-fade-in">
-            <StaffManagement />
+            <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading staff management...</div>}>
+              <StaffManagement />
+            </React.Suspense>
           </div>
         )}
 
         {/* SECTION: STUDENT ALLOCATION */}
         {activeSectionFilter === 'allocation' && (
           <div className="w-full animate-fade-in">
-            <AdminStaffAllocationPanel />
+            <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading allocation panel...</div>}>
+              <AdminStaffAllocationPanel />
+            </React.Suspense>
           </div>
         )}
 
@@ -2776,7 +2786,9 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       {/* 13. SECTION X — SECURITY ACTIVITY */}
       {activeSectionFilter === 'security' && (
         <div className="mt-8 animate-fade-in">
-          <SecurityActivitySection />
+          <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Loading security activity...</div>}>
+            <SecurityActivitySection />
+          </React.Suspense>
         </div>
       )}
 

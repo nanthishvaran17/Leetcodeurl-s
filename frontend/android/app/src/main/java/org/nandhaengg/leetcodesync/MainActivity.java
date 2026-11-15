@@ -16,8 +16,30 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DocumentOpenerPlugin.class);
         super.onCreate(savedInstanceState);
         configureEdgeToEdgeStatusBar();
+        configureWebViewPerformance();
         createNotificationChannels();
         handleNotificationAction(getIntent());
+    }
+
+    private void configureWebViewPerformance() {
+        try {
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DISPLAY);
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                android.webkit.WebView webView = getBridge().getWebView();
+                android.webkit.WebSettings settings = webView.getSettings();
+                settings.setDomStorageEnabled(true);
+                settings.setDatabaseEnabled(true);
+                settings.setCacheMode(android.webkit.WebSettings.LOAD_DEFAULT);
+                // Hardware accelerated layer for 120Hz smooth scrolling
+                webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
+                webView.setOverScrollMode(android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "WebView performance configuration note: " + e.getMessage());
+        }
     }
 
     private void configureEdgeToEdgeStatusBar() {
@@ -91,7 +113,29 @@ public class MainActivity extends BridgeActivity {
     private void handleNotificationAction(Intent intent) {
         if (intent == null) return;
 
-        // 1. Resolve Action ID from all possible Intent extras
+        // 1. Handle Deep Linking / Route Navigation from FCM Push Notifications
+        String actionRoute = intent.getStringExtra("actionRoute");
+        if (actionRoute == null || actionRoute.isEmpty()) {
+            actionRoute = intent.getStringExtra("route");
+        }
+        if (actionRoute != null && !actionRoute.isEmpty()) {
+            final String targetRoute = actionRoute;
+            Log.d(TAG, "Navigating to deep link route from notification: " + targetRoute);
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        String js = "window.location.hash = ''; " +
+                                    "window.history.pushState({}, '', '" + targetRoute + "'); " +
+                                    "window.dispatchEvent(new CustomEvent('nec_deep_link_navigate', { detail: { route: '" + targetRoute + "' } }));";
+                        getBridge().getWebView().evaluateJavascript(js, null);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to navigate to deep link: " + e.getMessage());
+                }
+            }, 1200);
+        }
+
+        // 2. Resolve Action ID from all possible Intent extras
         String action = intent.getStringExtra("LocalNotificationUserAction");
         if (action == null || action.isEmpty()) {
             action = intent.getStringExtra("actionId");

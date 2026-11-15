@@ -5,8 +5,8 @@ import { Search, RefreshCw, Filter, ChevronUp, ChevronDown, ChevronLeft, Chevron
 import api from "../services/api";
 import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
-import { StudentIntelligenceProfileModal } from "../components/StudentIntelligenceProfileModal";
-import { ReportPreview } from "../components/ReportPreview";
+const StudentIntelligenceProfileModal = React.lazy(() => import("../components/StudentIntelligenceProfileModal").then(m => ({ default: m.StudentIntelligenceProfileModal })));
+const ReportPreview = React.lazy(() => import("../components/ReportPreview").then(m => ({ default: m.ReportPreview })));
 import { SwipeHandle } from "../components/SwipeHandle";
 import { useScrollLock, forceUnlockScroll } from "../hooks/useScrollLock";
 
@@ -3311,24 +3311,28 @@ export const HRCandidateFinderPage: React.FC = () => {
 
       {/* 4. STUDENT INTELLIGENCE DEEP PROFILE MODAL */}
       {selectedCandidate && (
-        <StudentIntelligenceProfileModal
-          studentId={selectedCandidate.id}
-          initialStudent={selectedCandidate}
-          onClose={() => setSelectedCandidate(null)}
-          onRefreshList={handleFind}
-        />
+        <React.Suspense fallback={null}>
+          <StudentIntelligenceProfileModal
+            studentId={selectedCandidate.id}
+            initialStudent={selectedCandidate}
+            onClose={() => setSelectedCandidate(null)}
+            onRefreshList={handleFind}
+          />
+        </React.Suspense>
       )}
 
       {/* 5. MANAGEMENT REPORT IN-BROWSER PREVIEW MODAL */}
       {previewReportId && (
-        <ReportPreview
-          reportId={previewReportId}
-          initialData={previewReportData}
-          onClose={() => {
-            setPreviewReportId(null);
-            setPreviewReportData(null);
-          }}
-        />
+        <React.Suspense fallback={null}>
+          <ReportPreview
+            reportId={previewReportId}
+            initialData={previewReportData}
+            onClose={() => {
+              setPreviewReportId(null);
+              previewReportData && setPreviewReportData(null);
+            }}
+          />
+        </React.Suspense>
       )}
 
     </div>

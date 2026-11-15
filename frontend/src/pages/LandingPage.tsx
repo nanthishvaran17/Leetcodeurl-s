@@ -6,7 +6,9 @@ import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { AnimatedNumber } from '../components/AnimatedNumber';
-import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
+const LeaderboardTable = React.lazy(() => import('../components/LeaderboardTable').then(m => ({ default: m.LeaderboardTable })));
+import type { StudentData } from '../components/LeaderboardTable';
+export type { StudentData };
 import api, { triggerFullSync, triggerTargetedSync, getSyncStatus, clearApiCache } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from '../utils/filterUtils';
@@ -15,7 +17,7 @@ import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { studentLiveStore } from '../stores/studentLiveStore';
-import { MobileStudentShowcaseFilters } from '../components/mobile/MobileStudentShowcaseFilters';
+const MobileStudentShowcaseFilters = React.lazy(() => import('../components/mobile/MobileStudentShowcaseFilters').then(m => ({ default: m.MobileStudentShowcaseFilters })));
 import { StudentPerformanceSearch } from '../components/StudentPerformanceSearch';
 
 function parseUtcTime(ts?: string): number {
@@ -95,9 +97,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [loggedInUser?.role, user?.role]);
 
   const userAllocatedDept = useMemo(() => {
-    return loggedInUser?.department_code 
-      || loggedInUser?.department 
-      || (Array.isArray(loggedInUser?.authorized_department_codes) && loggedInUser.authorized_department_codes[0]) 
+    return loggedInUser?.department_code
+      || loggedInUser?.department
+      || (Array.isArray(loggedInUser?.authorized_department_codes) && loggedInUser.authorized_department_codes[0])
       || '';
   }, [loggedInUser]);
 
@@ -113,7 +115,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         if (cached && cached.length > 0) return cached;
         return [];
       }
-    } catch {}
+    } catch { }
     const cached = getCachedStudents();
     return (cached && cached.length > 0) ? cached : [];
   });
@@ -173,32 +175,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         const u = data.student_update;
         setStudents(prev => {
           const next = prev.map(st => {
-          if (st.id === u.id || (st.reg_no && st.reg_no === u.reg_no)) {
-            return {
-              ...st,
-              username: u.username || st.username,
-              total_solved: u.total_solved ?? st.total_solved,
-              easy_solved: u.easy_solved ?? st.easy_solved,
-              medium_solved: u.medium_solved ?? st.medium_solved,
-              hard_solved: u.hard_solved ?? st.hard_solved,
-              stats: {
-                ...st.stats,
-                total_solved: u.total_solved ?? st.stats?.total_solved,
-                easy_solved: u.easy_solved ?? st.stats?.easy_solved,
-                medium_solved: u.medium_solved ?? st.stats?.medium_solved,
-                hard_solved: u.hard_solved ?? st.stats?.hard_solved,
-                contest_rating: u.contest_rating ?? st.stats?.contest_rating,
-                sync_status: u.sync_status || st.stats?.sync_status,
-                status: u.status || st.stats?.status,
-                last_verified_at: new Date().toISOString()
-              }
-            };
-          }
-          return st;
+            if (st.id === u.id || (st.reg_no && st.reg_no === u.reg_no)) {
+              return {
+                ...st,
+                username: u.username || st.username,
+                total_solved: u.total_solved ?? st.total_solved,
+                easy_solved: u.easy_solved ?? st.easy_solved,
+                medium_solved: u.medium_solved ?? st.medium_solved,
+                hard_solved: u.hard_solved ?? st.hard_solved,
+                stats: {
+                  ...st.stats,
+                  total_solved: u.total_solved ?? st.stats?.total_solved,
+                  easy_solved: u.easy_solved ?? st.stats?.easy_solved,
+                  medium_solved: u.medium_solved ?? st.stats?.medium_solved,
+                  hard_solved: u.hard_solved ?? st.stats?.hard_solved,
+                  contest_rating: u.contest_rating ?? st.stats?.contest_rating,
+                  sync_status: u.sync_status || st.stats?.sync_status,
+                  status: u.status || st.stats?.status,
+                  last_verified_at: new Date().toISOString()
+                }
+              };
+            }
+            return st;
+          });
+          saveCachedStudents(next, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
+          return next;
         });
-        saveCachedStudents(next, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
-        return next;
-      });
       }
     } else if (data.type === 'STUDENT_BATCH_UPDATED' && Array.isArray(data.updates)) {
       setStudents(prev => {
@@ -514,8 +516,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       // Backend /students/leaderboard-fast already enforces RBAC scoping server-side.
       // Ultra-fast sub-5ms RAM cached response on normal load; refresh=true on manual pull/sync only
-      const refreshQuery = forceRefresh ? 'refresh=true&' : '';
-      const res = await api.get(`/students/leaderboard-fast?${refreshQuery}_t=${Date.now()}`);
+      const leaderboardUrl = forceRefresh ? `/students/leaderboard-fast?refresh=true&_t=${Date.now()}` : '/students/leaderboard-fast';
+      const res = await api.get(leaderboardUrl);
       if (res.data && Array.isArray(res.data)) {
         setStudents(res.data);
         saveCachedStudents(res.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
@@ -752,7 +754,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       const syncStatus = String(st.stats?.sync_status || '').toLowerCase().trim();
       const status = String(st.stats?.status || (st as any).status || '').toLowerCase().trim();
       const hasSolved = (st.stats?.total_solved !== null && st.stats?.total_solved !== undefined && Number(st.stats.total_solved) > 0) ||
-                        (st.total_solved !== null && st.total_solved !== undefined && Number(st.total_solved) > 0);
+        (st.total_solved !== null && st.total_solved !== undefined && Number(st.total_solved) > 0);
       const rawUsername = st.username || (st as any).canonical_username || (st as any).leetcode_username;
       const hasUsername = Boolean(rawUsername && String(rawUsername).trim() && String(rawUsername).trim().toUpperCase() !== 'N/A');
 
@@ -835,7 +837,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     // 1. If user is a Global Executive (Principal, Management, Director, Super Admin)
     if (isGlobalLeader) {
       if (selectedDept && selectedDept !== 'all') {
-        const matchedDept = departments.find(d => 
+        const matchedDept = departments.find(d =>
           (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) ||
           normalizeDepartment(d.code || d.name) === normalizeDepartment(selectedDept)
         );
@@ -878,12 +880,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
     // 3. If user selected a specific department from the dropdown filter (not 'all')
     if (selectedDept && selectedDept !== 'all') {
-      const matchedDept = departments.find(d => 
+      const matchedDept = departments.find(d =>
         (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) ||
         normalizeDepartment(d.code || d.name) === normalizeDepartment(selectedDept)
       );
       const deptFullName = matchedDept ? formatDepartmentName(matchedDept) : formatDepartmentName(selectedDept);
-      
+
       if (userName) {
         return (
           <>
@@ -904,8 +906,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       const deptText = userDeptNames.length === 1
         ? <span className="font-bold text-white">{userDeptNames[0]}</span>
         : userDeptNames.length === 2
-        ? <><span className="font-bold text-white">{userDeptNames[0]}</span> &amp; <span className="font-bold text-white">{userDeptNames[1]}</span></>
-        : <><span className="font-bold text-white">{userDeptNames.slice(0, -1).join(', ')}</span> &amp; <span className="font-bold text-white">{userDeptNames[userDeptNames.length - 1]}</span></>;
+          ? <><span className="font-bold text-white">{userDeptNames[0]}</span> &amp; <span className="font-bold text-white">{userDeptNames[1]}</span></>
+          : <><span className="font-bold text-white">{userDeptNames.slice(0, -1).join(', ')}</span> &amp; <span className="font-bold text-white">{userDeptNames[userDeptNames.length - 1]}</span></>;
 
       if (userName) {
         return (
@@ -1062,11 +1064,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {summaryData?.is_session_live ? 'Live Sunday Monitoring Session' : 'Next Sunday Session Timer'}
             </span>
           </div>
-          <span className={`text-[11px] sm:text-xs font-extrabold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors ${
-            summaryData?.is_session_live
+          <span className={`text-[11px] sm:text-xs font-extrabold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors ${summaryData?.is_session_live
               ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/90 dark:border-emerald-500/40 shadow-xs'
               : 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 border-brand-200/80 dark:border-brand-500/40 shadow-xs'
-          }`}>
+            }`}>
             Official Window: 08:00 AM – 09:30 AM IST
           </span>
         </div>
@@ -1324,11 +1325,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 setMobileFilterTab('college');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                selectedCollege !== 'all'
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${selectedCollege !== 'all'
                   ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
                   : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+                }`}
             >
               <Building2 className="w-3 h-3 shrink-0" />
               <span>College: {activeCollegeLabel}</span>
@@ -1344,11 +1344,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 setMobileFilterTab('department');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                selectedDept !== 'all'
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${selectedDept !== 'all'
                   ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border-brand-500/30'
                   : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+                }`}
             >
               <Building2 className="w-3 h-3 shrink-0" />
               <span>Dept: {activeDeptLabel}</span>
@@ -1364,11 +1363,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 setMobileFilterTab('year');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                yearLevel !== 'all'
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${yearLevel !== 'all'
                   ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border-indigo-500/30'
                   : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+                }`}
             >
               <GraduationCap className="w-3 h-3 shrink-0" />
               <span>Year: {activeYearLabel}</span>
@@ -1384,11 +1382,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 setMobileFilterTab('performance');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                solvedFilter !== 'all'
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${solvedFilter !== 'all'
                   ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30'
                   : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+                }`}
             >
               <Award className="w-3 h-3 shrink-0" />
               <span>Solved: {activePerformanceLabel}</span>
@@ -1512,297 +1509,302 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
       {/* 2026 Modern Mobile Filter & Sorting Bottom Sheet Drawer */}
-      <MobileStudentShowcaseFilters
-        isOpen={isMobileFilterOpen}
-        onClose={() => setIsMobileFilterOpen(false)}
-        initialTab={mobileFilterTab}
-        selectedCollege={selectedCollege}
-        onSelectCollege={(val) => {
-          setSelectedCollege(val);
-          setDisplayCount(32);
-        }}
-        collegeOptions={collegeOptions}
-        selectedDept={selectedDept}
-        onSelectDept={(val) => {
-          setSelectedDept(val);
-          setDisplayCount(32);
-        }}
-        yearLevel={yearLevel}
-        onSelectYear={(val) => {
-          setYearLevel(val);
-          setDisplayCount(32);
-        }}
-        solvedFilter={solvedFilter}
-        onSelectSolvedFilter={(val) => {
-          setSolvedFilter(val);
-          setDisplayCount(32);
-        }}
-        sortBy={sortBy}
-        onSelectSortBy={(val) => setSortBy(val)}
-        departments={isFacultyRole && userAllocatedDept ? departments.filter((d: any) => normalizeDepartment(d) === normalizeDepartment(userAllocatedDept)) : (activeDepartmentsWithCounts.length > 0 ? activeDepartmentsWithCounts : departments)}
-        yearOptions={yearOptions}
-        performanceOptions={performanceOptions}
-        sortOptions={sortOptions}
-        performanceCounts={performanceCounts}
-        totalResults={sortedList.length}
-        onReset={handleResetFilters}
-        isFacultyRole={isFacultyRole}
-      />
+      {isMobileFilterOpen && (
+        <React.Suspense fallback={null}>
+          <MobileStudentShowcaseFilters
+            isOpen={isMobileFilterOpen}
+            onClose={() => setIsMobileFilterOpen(false)}
+            initialTab={mobileFilterTab}
+            selectedCollege={selectedCollege}
+            onSelectCollege={(val) => {
+              setSelectedCollege(val);
+              setDisplayCount(32);
+            }}
+            collegeOptions={collegeOptions}
+            selectedDept={selectedDept}
+            onSelectDept={(val) => {
+              setSelectedDept(val);
+              setDisplayCount(32);
+            }}
+            yearLevel={yearLevel}
+            onSelectYear={(val) => {
+              setYearLevel(val);
+              setDisplayCount(32);
+            }}
+            solvedFilter={solvedFilter}
+            onSelectSolvedFilter={(val) => {
+              setSolvedFilter(val);
+              setDisplayCount(32);
+            }}
+            sortBy={sortBy}
+            onSelectSortBy={(val) => setSortBy(val)}
+            departments={isFacultyRole && userAllocatedDept ? departments.filter((d: any) => normalizeDepartment(d) === normalizeDepartment(userAllocatedDept)) : (activeDepartmentsWithCounts.length > 0 ? activeDepartmentsWithCounts : departments)}
+            yearOptions={yearOptions}
+            performanceOptions={performanceOptions}
+            sortOptions={sortOptions}
+            performanceCounts={performanceCounts}
+            totalResults={sortedList.length}
+            onReset={handleResetFilters}
+            isFacultyRole={isFacultyRole}
+          />
+        </React.Suspense>
+      )}
 
-        {/* Student Showcase Display */}
-        <div className="mt-6 space-y-4 px-1 sm:px-0">
-          <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
-            <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
-              <div className="flex flex-col min-w-0">
-                <span className="break-words">Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
-                {(selectedCollege !== 'all' || selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-words [overflow-wrap:anywhere]">
-                    Filtered by: {[
-                      selectedCollege !== 'all' ? `College: ${selectedCollege}` : null,
-                      selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
-                      yearLevel !== 'all' ? `${yearLevel} Year` : null,
-                      solvedFilter !== 'all' ? `${{
-                        '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
-                        '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
-                      }[solvedFilter] ?? ''} Solved` : null
-                    ].filter(Boolean).join(' • ')}
-                  </span>
-                )}
-              </div>
-            </h3>
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={handleRefreshAll}
-                disabled={refreshing || syncProgress?.is_running}
-                className={`flex-1 sm:flex-initial min-h-[40px] flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 ${refreshing || syncProgress?.is_running
-                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
-                  }`}
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
-                <span className="truncate">
-                  {syncProgress?.is_running
-                    ? `Syncing... ${displayProcessed} / ${displayTotal}`
-                    : refreshing 
-                      ? 'Refreshing...' 
-                      : isFiltered 
-                        ? `Refresh Filtered (${sortedList.length})` 
-                        : (isFacultyRole ? `Refresh My Allocated Students (${sortedList.length})` : 'Refresh Allocated Students')
-                  }
+      {/* Student Showcase Display */}
+      <div className="mt-6 space-y-4 px-1 sm:px-0">
+        <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
+          <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
+            <div className="flex flex-col min-w-0">
+              <span className="break-words">Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
+              {(selectedCollege !== 'all' || selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-words [overflow-wrap:anywhere]">
+                  Filtered by: {[
+                    selectedCollege !== 'all' ? `College: ${selectedCollege}` : null,
+                    selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
+                    yearLevel !== 'all' ? `${yearLevel} Year` : null,
+                    solvedFilter !== 'all' ? `${{
+                      '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
+                      '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
+                    }[solvedFilter] ?? ''} Solved` : null
+                  ].filter(Boolean).join(' • ')}
                 </span>
-              </button>
-
-              {syncProgress && (
-                <button
-                  type="button"
-                  onClick={() => setShowSyncDetails(prev => !prev)}
-                  className={`min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center space-x-1.5 shrink-0 ${
-                    showSyncDetails 
-                      ? 'bg-brand-500/10 border-brand-500/30 text-brand-600 dark:text-brand-400' 
-                      : 'bg-slate-100 dark:bg-navy-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
-                  }`}
-                  title={showSyncDetails ? "Hide sync progress report" : "Show sync progress report"}
-                >
-                  <Activity className="w-3.5 h-3.5 text-brand-500" />
-                  <span className="hidden sm:inline">{showSyncDetails ? 'Hide Sync Status' : 'Sync Status'}</span>
-                  <span className="sm:hidden">{showSyncDetails ? 'Hide' : 'Status'}</span>
-                  {showSyncDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                </button>
               )}
             </div>
-          </div>
+          </h3>
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={handleRefreshAll}
+              disabled={refreshing || syncProgress?.is_running}
+              className={`flex-1 sm:flex-initial min-h-[40px] flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95 ${refreshing || syncProgress?.is_running
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
+                }`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+              <span className="truncate">
+                {syncProgress?.is_running
+                  ? `Syncing... ${displayProcessed} / ${displayTotal}`
+                  : refreshing
+                    ? 'Refreshing...'
+                    : isFiltered
+                      ? `Refresh Filtered (${sortedList.length})`
+                      : (isFacultyRole ? `Refresh My Allocated Students (${sortedList.length})` : 'Refresh Allocated Students')
+                }
+              </span>
+            </button>
 
-          {/* Premium Live Sync Progress Bar (Collapsible on demand) */}
-          <AnimatePresence>
-            {syncProgress && (syncProgress.is_running || showSyncDetails) && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, scale: 0.98 }}
-                animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                exit={{ opacity: 0, height: 0, scale: 0.98 }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md sm:shadow-lg space-y-3.5 overflow-hidden relative"
-              >
-                <div className="flex justify-between items-start gap-2 relative z-10">
-                  <div className="space-y-1 min-w-0 pr-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
-                      <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
-                      <span className="truncate">
-                        {syncProgress.is_running 
-                          ? `Syncing ${isFacultyRole ? 'Allocated ' : isFiltered ? 'Filtered ' : ''}Students (${displayProcessed} / ${displayTotal})` 
-                          : isFacultyRole
-                            ? `Allocated Students Sync Complete (${displayTotal} of ${displayTotal})`
-                            : isFiltered
-                              ? `Filtered Students Sync Complete (${displayTotal} of ${displayTotal})`
-                              : 'Sync Process Complete'
-                        }
-                      </span>
-                    </span>
-                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
-                      {syncProgress.is_running
-                        ? `Processing Profile (${displayProcessed} / ${displayTotal}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
-                        : isFacultyRole
-                          ? `All ${displayTotal} allocated student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
-                          : isFiltered
-                            ? `All ${displayTotal} filtered student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
-                            : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
-                      }
-                    </p>
-                  </div>
-
-                  <div className="flex items-center space-x-2 shrink-0">
-                    <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
-                      {displayPercent}%
-                    </span>
-                    {!syncProgress.is_running && (
-                      <button
-                        type="button"
-                        onClick={() => setShowSyncDetails(false)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 transition-colors cursor-pointer"
-                        title="Hide sync report"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="w-full bg-slate-100 dark:bg-navy-900 h-2 sm:h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
-                  <div
-                    className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
-                    style={{ width: `${displayPercent}%` }}
-                  >
-                    {syncProgress.is_running && (
-                      <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Successful</span>
-                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                      {displaySuccessful}
-                    </span>
-                  </div>
-                  <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
-                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Pending</span>
-                    <span className="text-sm font-black text-amber-500">
-                      {displayPending}
-                    </span>
-                  </div>
-                  <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
-                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Failed</span>
-                    <span className="text-sm font-black text-rose-500">
-                      {displayFailed}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {sortedList.length === 0 ? (
-            <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
-                <Users className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-base font-black text-slate-900 dark:text-white">
-                  {isFacultyRole ? 'No Students Allocated to Your Mentorship Scope' : 'No Student Records in Database'}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  {isFacultyRole
-                    ? 'You do not have any students assigned to your mentoring portfolio at this time. Please contact your Department HOD or Administrator to allocate mentees to you.'
-                    : 'All previous student records have been wiped cleanly. Ready for fresh new student dataset import.'}
-                </p>
-              </div>
+            {syncProgress && (
               <button
-                onClick={handleResetFilters}
-                className="w-full sm:w-auto min-h-[42px] justify-center px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5 touch-manipulation active:scale-95"
+                type="button"
+                onClick={() => setShowSyncDetails(prev => !prev)}
+                className={`min-h-[40px] px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center space-x-1.5 shrink-0 ${showSyncDetails
+                    ? 'bg-brand-500/10 border-brand-500/30 text-brand-600 dark:text-brand-400'
+                    : 'bg-slate-100 dark:bg-navy-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
+                  }`}
+                title={showSyncDetails ? "Hide sync progress report" : "Show sync progress report"}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset View</span>
+                <Activity className="w-3.5 h-3.5 text-brand-500" />
+                <span className="hidden sm:inline">{showSyncDetails ? 'Hide Sync Status' : 'Sync Status'}</span>
+                <span className="sm:hidden">{showSyncDetails ? 'Hide' : 'Status'}</span>
+                {showSyncDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
-            </div>
-          ) : viewMode === 'cards' ? (
-            <div className="space-y-6">
-              <motion.div
-                initial="hidden"
-                animate="show"
-                variants={{
-                  hidden: { opacity: 0 },
-                  show: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.025 }
-                  }
-                }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6"
-              >
-                <AnimatePresence mode="popLayout">
-                  {sortedList.slice(0, displayCount).map((st, idx) => (
-                    <motion.div
-                      key={st.id}
-                      variants={{
-                        hidden: { opacity: 0, y: 16, scale: 0.98 },
-                        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: "easeOut" } }
-                      }}
-                    >
-                      <StudentFlipCard
-                        student={st}
-                        onSelectStudent={onSelectStudent}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
+            )}
+          </div>
+        </div>
 
-              {displayCount < sortedList.length ? (
-                <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                  <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold text-center px-2 break-words">
-                    Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-black text-slate-900 dark:text-white">{sortedList.length}</span> Students
+        {/* Premium Live Sync Progress Bar (Collapsible on demand) */}
+        <AnimatePresence>
+          {syncProgress && (syncProgress.is_running || showSyncDetails) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, scale: 0.98 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md sm:shadow-lg space-y-3.5 overflow-hidden relative"
+            >
+              <div className="flex justify-between items-start gap-2 relative z-10">
+                <div className="space-y-1 min-w-0 pr-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
+                    <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
+                    <span className="truncate">
+                      {syncProgress.is_running
+                        ? `Syncing ${isFacultyRole ? 'Allocated ' : isFiltered ? 'Filtered ' : ''}Students (${displayProcessed} / ${displayTotal})`
+                        : isFacultyRole
+                          ? `Allocated Students Sync Complete (${displayTotal} of ${displayTotal})`
+                          : isFiltered
+                            ? `Filtered Students Sync Complete (${displayTotal} of ${displayTotal})`
+                            : 'Sync Process Complete'
+                      }
+                    </span>
+                  </span>
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                    {syncProgress.is_running
+                      ? `Processing Profile (${displayProcessed} / ${displayTotal}): ${syncProgress.current_student || syncProgress.current_username || 'Initializing...'}`
+                      : isFacultyRole
+                        ? `All ${displayTotal} allocated student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                        : isFiltered
+                          ? `All ${displayTotal} filtered student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                          : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                    }
                   </p>
-                  <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:space-x-3 w-full sm:w-auto px-4 sm:px-0">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setDisplayCount(prev => prev + 32)}
-                      className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer touch-manipulation"
-                    >
-                      <span>Load More Students (+32)</span>
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => setDisplayCount(sortedList.length)}
-                      className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer touch-manipulation"
-                    >
-                      Show All {sortedList.length} Students
-                    </motion.button>
-                  </div>
                 </div>
-              ) : sortedList.length > 32 ? (
-                <div className="flex flex-col items-center justify-center pt-6 space-y-3">
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold text-center px-2 break-words">
-                    Showing all <span className="font-black text-brand-600 dark:text-brand-400">{sortedList.length}</span> students
-                  </p>
+
+                <div className="flex items-center space-x-2 shrink-0">
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
+                    {displayPercent}%
+                  </span>
+                  {!syncProgress.is_running && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSyncDetails(false)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 transition-colors cursor-pointer"
+                      title="Hide sync report"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="w-full bg-slate-100 dark:bg-navy-900 h-2 sm:h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
+                <div
+                  className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
+                  style={{ width: `${displayPercent}%` }}
+                >
+                  {syncProgress.is_running && (
+                    <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Successful</span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    {displaySuccessful}
+                  </span>
+                </div>
+                <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
+                  <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Pending</span>
+                  <span className="text-sm font-black text-amber-500">
+                    {displayPending}
+                  </span>
+                </div>
+                <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-2 sm:pl-3">
+                  <span className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">Failed</span>
+                  <span className="text-sm font-black text-rose-500">
+                    {displayFailed}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {sortedList.length === 0 ? (
+          <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
+              <Users className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-base font-black text-slate-900 dark:text-white">
+                {isFacultyRole ? 'No Students Allocated to Your Mentorship Scope' : 'No Student Records in Database'}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                {isFacultyRole
+                  ? 'You do not have any students assigned to your mentoring portfolio at this time. Please contact your Department HOD or Administrator to allocate mentees to you.'
+                  : 'All previous student records have been wiped cleanly. Ready for fresh new student dataset import.'}
+              </p>
+            </div>
+            <button
+              onClick={handleResetFilters}
+              className="w-full sm:w-auto min-h-[42px] justify-center px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5 touch-manipulation active:scale-95"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset View</span>
+            </button>
+          </div>
+        ) : viewMode === 'cards' ? (
+          <div className="space-y-6">
+            <motion.div
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.025 }
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 lg:gap-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {sortedList.slice(0, displayCount).map((st, idx) => (
+                  <motion.div
+                    key={st.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 16, scale: 0.98 },
+                      show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: "easeOut" } }
+                    }}
+                  >
+                    <StudentFlipCard
+                      student={st}
+                      onSelectStudent={onSelectStudent}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {displayCount < sortedList.length ? (
+              <div className="flex flex-col items-center justify-center pt-4 space-y-2">
+                <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold text-center px-2 break-words">
+                  Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-black text-slate-900 dark:text-white">{sortedList.length}</span> Students
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:space-x-3 w-full sm:w-auto px-4 sm:px-0">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setDisplayCount(prev => prev + 32)}
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-black text-xs shadow-xl shadow-brand-600/30 transition-all cursor-pointer touch-manipulation"
+                  >
+                    <span>Load More Students (+32)</span>
+                  </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => setDisplayCount(32)}
-                    className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer inline-flex items-center space-x-2 shadow-sm"
+                    onClick={() => setDisplayCount(sortedList.length)}
+                    className="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer touch-manipulation"
                   >
-                    <ChevronDown className="w-4 h-4 rotate-180" />
-                    <span>Collapse to Top 32</span>
+                    Show All {sortedList.length} Students
                   </motion.button>
                 </div>
-              ) : null}
+              </div>
+            ) : sortedList.length > 32 ? (
+              <div className="flex flex-col items-center justify-center pt-6 space-y-3">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-extrabold text-center px-2 break-words">
+                  Showing all <span className="font-black text-brand-600 dark:text-brand-400">{sortedList.length}</span> students
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setDisplayCount(32)}
+                  className="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer inline-flex items-center space-x-2 shadow-sm"
+                >
+                  <ChevronDown className="w-4 h-4 rotate-180" />
+                  <span>Collapse to Top 32</span>
+                </motion.button>
+              </div>
+            ) : null}
           </div>
         ) : (
-          <LeaderboardTable
-            students={sortedList}
-            onSelectStudent={onSelectStudent}
-            onRefreshStudent={handleRefreshStudent}
-          />
+          <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading directory table...</div>}>
+            <LeaderboardTable
+              students={sortedList}
+              onSelectStudent={onSelectStudent}
+              onRefreshStudent={handleRefreshStudent}
+            />
+          </React.Suspense>
         )}
       </div>
 

@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom';
 import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, RefreshCw, Search, X } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api, { getApiUrl } from '../services/api';
-import { ReportPreview } from '../components/ReportPreview';
-import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
-import { CertificateManagementModal } from '../components/CertificateManagementModal';
-import { SyncStatusModal } from '../components/SyncStatusModal';
+const ReportPreview = React.lazy(() => import('../components/ReportPreview').then(m => ({ default: m.ReportPreview })));
+const EmailDeliveryTab = React.lazy(() => import('../components/EmailDeliveryTab').then(m => ({ default: m.EmailDeliveryTab })));
+const CertificateManagementModal = React.lazy(() => import('../components/CertificateManagementModal').then(m => ({ default: m.CertificateManagementModal })));
+const SyncStatusModal = React.lazy(() => import('../components/SyncStatusModal').then(m => ({ default: m.SyncStatusModal })));
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -546,7 +546,9 @@ export const ReportsPage: React.FC = () => {
 
 
       {activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email' ? (
-        <EmailDeliveryTab defaultSection="manual" />
+        <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading email center...</div>}>
+          <EmailDeliveryTab defaultSection="manual" />
+        </React.Suspense>
       ) : (
         <>
 
@@ -1585,29 +1587,37 @@ export const ReportsPage: React.FC = () => {
 
           {/* Universal Report Previewer */}
           {activeUniversalPreviewId && (
-            <ReportPreview
-              reportId={activeUniversalPreviewId}
-              initialData={activeUniversalPreviewData}
-              onClose={() => {
-                setActiveUniversalPreviewId(null);
-                setActiveUniversalPreviewData(null);
-              }}
-            />
+            <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading report preview...</div>}>
+              <ReportPreview
+                reportId={activeUniversalPreviewId}
+                initialData={activeUniversalPreviewData}
+                onClose={() => {
+                  setActiveUniversalPreviewId(null);
+                  setActiveUniversalPreviewData(null);
+                }}
+              />
+            </React.Suspense>
           )}
 
           {/* Certificate Management Modal */}
           {showCertModal && (
-            <CertificateManagementModal
-              isOpen={showCertModal}
-              onClose={() => setShowCertModal(false)}
-            />
+            <React.Suspense fallback={null}>
+              <CertificateManagementModal
+                isOpen={showCertModal}
+                onClose={() => setShowCertModal(false)}
+              />
+            </React.Suspense>
           )}
 
           {/* Sync Status Modal */}
-          <SyncStatusModal 
-            isOpen={showSyncModal} 
-            onClose={() => setShowSyncModal(false)} 
-          />
+          {showSyncModal && (
+            <React.Suspense fallback={null}>
+              <SyncStatusModal 
+                isOpen={showSyncModal} 
+                onClose={() => setShowSyncModal(false)} 
+              />
+            </React.Suspense>
+          )}
 
           {/* Premium Floating Center Confirmation Modal */}
           {deleteModalItem && (

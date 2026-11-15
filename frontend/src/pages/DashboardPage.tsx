@@ -5,10 +5,10 @@ import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
 const PerformanceChart = React.lazy(() => import('../components/PerformanceChart').then(m => ({ default: m.PerformanceChart })));
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
-import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
+const DepartmentDetailDrawer = React.lazy(() => import('../components/admin/DepartmentDetailDrawer').then(m => ({ default: m.DepartmentDetailDrawer })));
 import { getCommandCenterDepartments, DepartmentRecord, DeptBenchmark } from '../services/commandCenterService';
-import { SyncHistoryModal } from '../components/SyncHistoryModal';
-import { FailedSyncModal } from '../components/FailedSyncModal';
+const SyncHistoryModal = React.lazy(() => import('../components/SyncHistoryModal').then(m => ({ default: m.SyncHistoryModal })));
+const FailedSyncModal = React.lazy(() => import('../components/FailedSyncModal').then(m => ({ default: m.FailedSyncModal })));
 import api, { triggerSingleStudentSync, clearApiCache } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -1496,15 +1496,23 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
 
       {/* Modals */}
-      <SyncHistoryModal
-        isOpen={showSyncHistory}
-        onClose={() => setShowSyncHistory(false)}
-      />
+      {showSyncHistory && (
+        <React.Suspense fallback={null}>
+          <SyncHistoryModal
+            isOpen={showSyncHistory}
+            onClose={() => setShowSyncHistory(false)}
+          />
+        </React.Suspense>
+      )}
 
-      <FailedSyncModal
-        isOpen={showFailedModal}
-        onClose={() => setShowFailedModal(false)}
-      />
+      {showFailedModal && (
+        <React.Suspense fallback={null}>
+          <FailedSyncModal
+            isOpen={showFailedModal}
+            onClose={() => setShowFailedModal(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* MODERN MOBILE BOTTOM SHEET FOR CONTEST PICKER — Rendered via Portal above Mobile Navigation */}
       {showContestPicker && typeof document !== 'undefined' && createPortal(
@@ -1626,10 +1634,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       )}
 
       {/* Department Detail Drawer with HOD & Staff Drill-Down */}
-      <DepartmentDetailDrawer
-        department={selectedDeptForDrawer}
-        onClose={() => setSelectedDeptForDrawer(null)}
-      />
+      {selectedDeptForDrawer && (
+        <React.Suspense fallback={null}>
+          <DepartmentDetailDrawer
+            department={selectedDeptForDrawer}
+            onClose={() => setSelectedDeptForDrawer(null)}
+          />
+        </React.Suspense>
+      )}
 
     </div>
   );

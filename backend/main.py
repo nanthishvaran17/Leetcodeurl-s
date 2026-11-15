@@ -1157,6 +1157,13 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
                 res_headers = dict(cached_item.get("headers", {}))
                 res_headers["X-Cache"] = "HIT-FASTAPI-RAM"
                 res_headers["Cache-Control"] = f"private, max-age={ttl}"
+                etag = cached_item.get("etag")
+                if etag:
+                    res_headers["ETag"] = etag
+                    if_none_match = request.headers.get("if-none-match")
+                    if if_none_match and if_none_match.strip() == etag:
+                        _add_cors_headers_to_response(request, res_headers)
+                        return FastResponse(status_code=304, headers=res_headers)
                 _add_cors_headers_to_response(request, res_headers)
                 return FastResponse(
                     content=cached_item["body"],
@@ -1173,11 +1180,14 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
                 k.lower(): v for k, v in response.headers.items()
                 if k.lower() not in ("content-length", "x-cache")
             }
+            etag = f'"{_hashlib.sha1(body).hexdigest()[:16]}"'
+            raw_headers["etag"] = etag
             if len(body) <= 3_000_000:
                 _API_MEMORY_CACHE[cache_key] = {
                     "body": body,
                     "status": response.status_code,
                     "headers": raw_headers,
+                    "etag": etag,
                     "expires_at": time.time() + ttl,
                 }
                 _cleanup_expired_cache_entries(now)

@@ -1,7 +1,5 @@
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import { PushNotifications, Channel } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
-import { getOrInitApp } from './firebase';
 import api from './api';
 
 const vapidKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_VAPID_KEY) || undefined;
@@ -119,7 +117,7 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
   if (!deviceToken) return false;
   try {
     if (!userEmailOrId) {
-      userEmailOrId = currentTargetUserId || undefined;
+      userEmailOrId = currentTargetUserId || localStorage.getItem('fcm_target_user_id') || undefined;
     }
     if (!userEmailOrId) {
       try {
@@ -145,6 +143,9 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
     try {
       localStorage.setItem('fcm_device_token', deviceToken);
       localStorage.setItem('fcm_platform', platform);
+      if (userEmailOrId) {
+        localStorage.setItem('fcm_target_user_id', userEmailOrId);
+      }
     } catch (_e) {}
 
     await api.post('/notifications/register-device', {
@@ -170,6 +171,9 @@ export const syncTokenToBackend = async (deviceToken: string, userEmailOrId?: st
 export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
   if (userEmailOrId) {
     currentTargetUserId = userEmailOrId;
+    try {
+      localStorage.setItem('fcm_target_user_id', userEmailOrId);
+    } catch (_e) {}
   }
 
   // 1. Native Capacitor App (Android / iOS)
@@ -216,6 +220,7 @@ export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
   }
 
   try {
+    const { isSupported, getMessaging, getToken } = await import('firebase/messaging');
     const supported = await isSupported();
     if (!supported) return false;
 
@@ -229,6 +234,7 @@ export const requestPushPermissionAndSync = async (userEmailOrId: string) => {
         console.warn('[Push] Explicit SW registration note:', swErr);
       }
 
+      const { getOrInitApp } = await import('./firebase');
       const app = getOrInitApp();
       const messaging = getMessaging(app);
       
@@ -272,7 +278,8 @@ export const listenForForegroundMessages = () => {
       // FCM Token registration listener
       PushNotifications.addListener('registration', (token) => {
         if (token.value) {
-          syncTokenToBackend(token.value, currentTargetUserId || undefined);
+          const resolvedUser = currentTargetUserId || localStorage.getItem('fcm_target_user_id') || undefined;
+          syncTokenToBackend(token.value, resolvedUser);
         }
       });
 
@@ -326,9 +333,11 @@ export const listenForForegroundMessages = () => {
   }
 
   // 2. Web Browser FCM Listener
-  isSupported().then((supported) => {
+  import('firebase/messaging').then(async ({ isSupported, getMessaging, onMessage }) => {
+    const supported = await isSupported();
     if (supported) {
       try {
+        const { getOrInitApp } = await import('./firebase');
         const app = getOrInitApp();
         const messaging = getMessaging(app);
         onMessage(messaging, (payload) => {
@@ -358,5 +367,5 @@ export const listenForForegroundMessages = () => {
         console.warn('[Push] Web FCM listener note:', err);
       }
     }
-  });
+  }).catch(() => {});
 };

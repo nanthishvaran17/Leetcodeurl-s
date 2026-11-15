@@ -16,36 +16,8 @@ export interface GoogleAuthResult {
   };
 }
 
-/** Check whether running inside native Android/iOS Capacitor container */
-export const isNativeMobile = (): boolean => {
-  try {
-    // @ts-ignore — window.Capacitor is injected by native runtime bridge
-    return !!(window?.Capacitor?.isNativePlatform?.());
-  } catch {
-    return false;
-  }
-};
-
-/** Check whether running in a mobile web browser (e.g. Chrome on Android, Safari on iOS) */
-export const isMobileBrowser = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
-  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-  const isTouchScreen = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
-  const isSmallScreen = window.innerWidth <= 768;
-  return isMobileUA || (isTouchScreen && isSmallScreen);
-};
-
-/** Detect common in-app browsers that block OAuth (Instagram, FB, LinkedIn, TikTok, etc.) */
-export const isInAppBrowser = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
-  const inAppSignatures = [
-    'FBAN', 'FBAV', 'Instagram', 'LinkedIn', 'Snapchat',
-    'TikTok', 'Twitter', 'Bytedance', 'Line', 'MicroMessenger', 'WeChat'
-  ];
-  return inAppSignatures.some(sig => ua.includes(sig));
-};
+export { isNativeMobile, isMobileBrowser, isInAppBrowser } from '../utils/deviceDetect';
+import { isNativeMobile, isMobileBrowser, isInAppBrowser } from '../utils/deviceDetect';
 
 /** Probe if local storage / IndexedDB is available (detect Safari Private Browsing / Partitioning blocks) */
 export const isStorageAvailable = (): boolean => {

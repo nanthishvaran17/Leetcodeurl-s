@@ -6,7 +6,11 @@ import { useNotification as useToastNotification } from './NotificationContext';
 import { API_BASE_URL, getApiUrl } from '../config/apiConfig';
 import { playNotificationChime } from '../utils/audioChime';
 import { triggerConfetti } from '../utils/confettiCelebration';
-import { triggerSystemNotification } from '../services/systemNotification';
+const notifySystem = (opts: any) => {
+  import('../services/systemNotification')
+    .then(({ triggerSystemNotification }) => triggerSystemNotification(opts))
+    .catch(() => {});
+};
 import { Capacitor } from '@capacitor/core';
 
 export interface Notification {
@@ -289,7 +293,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       });
 
       // Official Mobile System Heads-Up Notification (Status Bar / Lock Screen with Sound & Vibration)
-      triggerSystemNotification({
+      notifySystem({
         title,
         body: msgContent,
         actionRoute,
@@ -382,7 +386,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     });
 
     // Dispatch official system status-bar notification with sound & vibration
-    triggerSystemNotification({
+    notifySystem({
       title,
       body: message,
       actionRoute,
@@ -450,7 +454,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         }
       });
 
-      triggerSystemNotification({
+      notifySystem({
         title,
         body: message,
         actionRoute,

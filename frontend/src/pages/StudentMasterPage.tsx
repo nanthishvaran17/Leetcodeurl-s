@@ -20,7 +20,7 @@ import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
 import { useFilters } from '../context/FilterContext';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeKey } from '../hooks/useEscapeKey';
-import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
+const MobileFilterDrawer = React.lazy(() => import('../components/MobileFilterDrawer').then(m => ({ default: m.MobileFilterDrawer })));
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 
@@ -782,11 +782,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       </div>
 
       {/* Mobile Filter Bottom Drawer */}
-      <MobileFilterDrawer
-        isOpen={showMobileFilters}
-        onClose={() => setShowMobileFilters(false)}
-        departments={departments}
-      />
+      {showMobileFilters && (
+        <React.Suspense fallback={null}>
+          <MobileFilterDrawer
+            isOpen={showMobileFilters}
+            onClose={() => setShowMobileFilters(false)}
+            departments={departments}
+          />
+        </React.Suspense>
+      )}
 
       {isTableLoading ? (
         <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white dark:border-navy-700 dark:bg-navy-950">

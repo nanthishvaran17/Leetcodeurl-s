@@ -600,7 +600,12 @@ class NotificationService:
                                 "notificationId": eff_event_id,
                                 "type": str(event_type),  # type: ignore
                                 "category": str(category),  # type: ignore
+                                "title": str(title),
+                                "body": str(body),
                                 "actionRoute": eff_route,
+                                "route": eff_route,
+                                "channelId": str(eff_channel_id),
+                                "channel_id": str(eff_channel_id),
                                 "entityType": str(entity_type or ""),  # type: ignore
                                 "entityId": str(entity_id or ""),  # type: ignore
                                 "fileId": str(file_id or ""),  # type: ignore
@@ -622,6 +627,20 @@ class NotificationService:
                                     priority="max",
                                     notification_count=1,
                                     tag=f"conv_{metadata.get('conversation_id')}" if (metadata and metadata.get("conversation_id")) else eff_event_id
+                                )
+                            ),
+                            apns=messaging.APNSConfig(
+                                headers={
+                                    "apns-priority": "10",
+                                    "apns-push-type": "alert"
+                                },
+                                payload=messaging.APNSPayload(
+                                    aps=messaging.Aps(
+                                        alert=messaging.ApsAlert(title=title, body=body),
+                                        sound="default",
+                                        badge=1,
+                                        content_available=True
+                                    )
                                 )
                             ),
                             webpush=messaging.WebpushConfig(

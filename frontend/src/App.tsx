@@ -519,12 +519,15 @@ const MainAppContent: React.FC = () => {
 
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('navigate_to_route', handleDeepLinkNav);
+    window.addEventListener('nec_deep_link_navigate', handleDeepLinkNav);
     handleHashChange();
 
     return () => {
       if (timer) clearTimeout(timer);
       window.removeEventListener('refresh_dashboard_summary', handleRefresh);
       document.removeEventListener('visibilitychange', handleVisibilityResume);
+      window.removeEventListener('navigate_to_route', handleDeepLinkNav);
+      window.removeEventListener('nec_deep_link_navigate', handleDeepLinkNav);
       if (capListenerHandle && typeof capListenerHandle.remove === 'function') {
         try { capListenerHandle.remove(); } catch {}
       }

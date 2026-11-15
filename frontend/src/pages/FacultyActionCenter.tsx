@@ -12,9 +12,9 @@ import {
   escalateAction, getActionTimeline, triggerSignalDetection,
   FacultyActionKPIs, FacultyActionItem, ActionTimelineEvent, UpdateActionPayload
 } from '../services/intelligenceService';
-import { BulkWhatsAppModal } from '../components/BulkWhatsAppModal';
-import { StudentWhatsAppModal } from '../components/StudentWhatsAppModal';
-import { IDCardGenerator } from '../components/IDCardGenerator';
+const BulkWhatsAppModal = React.lazy(() => import('../components/BulkWhatsAppModal').then(m => ({ default: m.BulkWhatsAppModal })));
+const StudentWhatsAppModal = React.lazy(() => import('../components/StudentWhatsAppModal').then(m => ({ default: m.StudentWhatsAppModal })));
+const IDCardGenerator = React.lazy(() => import('../components/IDCardGenerator').then(m => ({ default: m.IDCardGenerator })));
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
@@ -1016,16 +1016,18 @@ const StudentViewModal: React.FC<{
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6 custom-scrollbar bg-white dark:bg-transparent">
           {activeViewTab === 'pass' && (
             <div className="space-y-4">
-              <IDCardGenerator
-                studentName={item.student_name}
-                regNo={item.reg_no}
-                deptName={item.department_name}
-                yearLevel={item.year_level}
-                totalSolved={item.total_solved}
-                collegeRank={1}
-                streakCount={item.last_active_days_ago <= 1 ? 5 : 0}
-                leetcodeUsername={item.leetcode_username}
-              />
+              <React.Suspense fallback={<div className="p-8 text-center text-slate-400 animate-pulse">Generating pass preview...</div>}>
+                <IDCardGenerator
+                  studentName={item.student_name}
+                  regNo={item.reg_no}
+                  deptName={item.department_name}
+                  yearLevel={item.year_level}
+                  totalSolved={item.total_solved}
+                  collegeRank={1}
+                  streakCount={item.last_active_days_ago <= 1 ? 5 : 0}
+                  leetcodeUsername={item.leetcode_username}
+                />
+              </React.Suspense>
             </div>
           )}
 
@@ -2746,20 +2748,24 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* Single Student WhatsApp Mentoring Modal (10 Message Templates & Custom Edit) */}
       {whatsAppStudent && (
-        <StudentWhatsAppModal
-          isOpen={!!whatsAppStudent}
-          onClose={() => setWhatsAppStudent(null)}
-          student={whatsAppStudent}
-        />
+        <React.Suspense fallback={null}>
+          <StudentWhatsAppModal
+            isOpen={!!whatsAppStudent}
+            onClose={() => setWhatsAppStudent(null)}
+            student={whatsAppStudent}
+          />
+        </React.Suspense>
       )}
 
       {/* Bulk WhatsApp Outreach Modal */}
       {showBulkWhatsAppModal && (
-        <BulkWhatsAppModal
-          isOpen={showBulkWhatsAppModal}
-          onClose={() => setShowBulkWhatsAppModal(false)}
-          selectedStudents={selectedStudentsList.length > 0 ? selectedStudentsList : visibleItems.slice(0, 50)}
-        />
+        <React.Suspense fallback={null}>
+          <BulkWhatsAppModal
+            isOpen={showBulkWhatsAppModal}
+            onClose={() => setShowBulkWhatsAppModal(false)}
+            selectedStudents={selectedStudentsList.length > 0 ? selectedStudentsList : visibleItems.slice(0, 50)}
+          />
+        </React.Suspense>
       )}
     </div>
   );

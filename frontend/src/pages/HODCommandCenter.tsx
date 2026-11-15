@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { Building2, RefreshCw, Search, Plus, Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users, Activity, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight, BookOpen, RotateCcw, ShieldCheck, Clock, Download, SlidersHorizontal, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Loader2, FileSpreadsheet, FileText, HelpCircle, Eye, Compass, Target, PieChart, Layers, BrainCircuit, Award, Filter, ChevronDown, ChevronUp, Check, AlertCircle, ArrowRight, Sliders, User, CheckCircle, XCircle, ExternalLink, Calendar, Info, UserPlus, UserMinus, Shuffle, Printer, Share2, TrendingDown, Minus, Copy } from 'lucide-react';
 import { Mail, UserX, GraduationCap, Trophy } from 'lucide-react';
 import { SwipeHandle } from '../components/SwipeHandle';
-import { StaffDetailDrawer } from '../components/admin/StaffDetailDrawer';
-import { DepartmentDetailDrawer } from '../components/admin/DepartmentDetailDrawer';
+const StaffDetailDrawer = React.lazy(() => import('../components/admin/StaffDetailDrawer').then(m => ({ default: m.StaffDetailDrawer })));
+const DepartmentDetailDrawer = React.lazy(() => import('../components/admin/DepartmentDetailDrawer').then(m => ({ default: m.DepartmentDetailDrawer })));
 import { FacultyMentorMatrixCard } from '../components/admin/FacultyMentorMatrixCard';
 import { GlobalFilter } from '../components/GlobalFilter';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
@@ -17,8 +17,8 @@ import {
 } from '../services/commandCenterService';
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
-import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
-import { PerformanceChart } from '../components/PerformanceChart';
+const AnalyticsDashboard = React.lazy(() => import('../components/analytics/AnalyticsDashboard').then(m => ({ default: m.AnalyticsDashboard })));
+const PerformanceChart = React.lazy(() => import('../components/PerformanceChart').then(m => ({ default: m.PerformanceChart })));
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useDebounce } from '../hooks/useDebounce';
@@ -1328,8 +1328,15 @@ export const HODCommandCenter: React.FC = () => {
    }
  }, [isHod, isGlobalAdmin, defaultDeptValue, selectedDept, user?.authorized_department_ids, user?.department_id]);
 
- // Summary & Metadata
- const [summary, setSummary] = useState<CommandCenterSummary | null>(null);
+ // Summary & Metadata with Instant SWR Session Hydration
+ const [summary, setSummary] = useState<CommandCenterSummary | null>(() => {
+   try {
+     const cached = sessionStorage.getItem('swr_hod_summary');
+     return cached ? JSON.parse(cached) : null;
+   } catch {
+     return null;
+   }
+ });
  const [departments, setDepartments] = useState<DepartmentRecord[]>([]);
 
  const filteredDepartments = useMemo(() => {
@@ -1488,6 +1495,7 @@ export const HODCommandCenter: React.FC = () => {
  refresh: isRefresh
  });
  setSummary(summaryData);
+ try { sessionStorage.setItem('swr_hod_summary', JSON.stringify(summaryData)); } catch {}
  if (summaryData.staff_list) setStaffList(summaryData.staff_list);
  setLastLiveTimestamp(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
  } catch (err: any) {
@@ -1503,7 +1511,6 @@ export const HODCommandCenter: React.FC = () => {
  // Load Students List
  const loadStudents = useCallback(async () => {
  setStudentsLoading(true);
- clearApiCache();
  const deptId = selectedDept !== 'ALL' ? Number(selectedDept) : undefined;
  const staffId = selectedStaff !== 'ALL' ? Number(selectedStaff) : undefined;
  const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
@@ -2647,11 +2654,15 @@ export const HODCommandCenter: React.FC = () => {
 
   {/* 6. REAL-TIME INSTITUTIONAL PERFORMANCE TRAJECTORY */}
   <div className="my-4 sm:my-8">
-    <PerformanceChart department={selectedDept} yearLevel={selectedYear} />
+    <React.Suspense fallback={<div className="h-64 rounded-2xl bg-slate-800/40 animate-pulse flex items-center justify-center text-slate-400">Loading performance trajectory...</div>}>
+      <PerformanceChart department={selectedDept} yearLevel={selectedYear} />
+    </React.Suspense>
   </div>
 
   {/* 6. GRAPH ANALYTICS LAYER */}
-  <AnalyticsDashboard />
+  <React.Suspense fallback={<div className="h-64 rounded-2xl bg-slate-800/40 animate-pulse flex items-center justify-center text-slate-400">Loading analytics dashboard...</div>}>
+    <AnalyticsDashboard />
+  </React.Suspense>
 
   {/* 7. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
   <Card id="student-directory-section" className="p-3.5 sm:p-5 space-y-3 sm:space-y-4 scroll-mt-20">
@@ -3458,24 +3469,28 @@ export const HODCommandCenter: React.FC = () => {
 
  {/* Department Detail Drawer */}
  {selectedDeptIntelligence && (
-   <DepartmentDetailDrawer
-     department={selectedDeptIntelligence}
-     onClose={() => setSelectedDeptIntelligence(null)}
-   />
+   <React.Suspense fallback={null}>
+     <DepartmentDetailDrawer
+       department={selectedDeptIntelligence}
+       onClose={() => setSelectedDeptIntelligence(null)}
+     />
+   </React.Suspense>
  )}
 
  {/* Staff Detail Drawer */}
  {selectedStaffDetail && (
-   <StaffDetailDrawer
-     staff={selectedStaffDetail}
-     studentList={students}
-     onClose={() => setSelectedStaffDetail(null)}
-     onManageAllocation={() => {
-       setSelectedStaffDetail(null);
-       setShowStaffAllocationModal(true);
-     }}
-     onFilterDashboard={(staffId) => handleFilterByStaff(staffId, selectedStaffDetail?.username)}
-   />
+   <React.Suspense fallback={null}>
+     <StaffDetailDrawer
+       staff={selectedStaffDetail}
+       studentList={students}
+       onClose={() => setSelectedStaffDetail(null)}
+       onManageAllocation={() => {
+         setSelectedStaffDetail(null);
+         setShowStaffAllocationModal(true);
+       }}
+       onFilterDashboard={(staffId) => handleFilterByStaff(staffId, selectedStaffDetail?.username)}
+     />
+   </React.Suspense>
  )}
 
  {/* HOD Staff Allocation Manager Modal */}
