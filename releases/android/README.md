@@ -1,11 +1,17 @@
 # Android Release Archive
 
-Latest Release: **v4.5.0 (VersionCode 91)**
+Latest Release: **v4.5.1 (VersionCode 92)**
 
 Download the production signed APK:
-- [Nandha_LeetCode_Intelligence_v4.5.0_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.0_latest.apk)
+- [Nandha_LeetCode_Intelligence_v4.5.1_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.1_latest.apk)
 - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
 - [nandha-leetcode.apk](./nandha-leetcode.apk)
+
+### Changelog v4.5.1 (Latest)
+- **New Institutional Roles**: Added **Placement Coordinator** (`PLC`) with cross-department global access and **Student Coordinator** (`STC`) for cohort guidance.
+- **HOD Command Center Integration**: Instant matrix role indicators (`PLC`, `STC`, `HOD`, `FAC`), staff creation/edit modals with automatic ID prefix generation (`NEC-<DEPT>-PLC-###`).
+- **Contest Telemetry**: Full sync with dynamic student rosters (Weekly Contest 527) and Roman numeral cohort normalization.
+- **Performance & Security**: Hardened authorization checks and zero-downtime database session management.
 
 ### Changelog v4.5.0
 - Turbo performance engine: true <1ms SWR cache, background idle & sidebar hover data/route prefetching, and instant login redirect without artificial delay.

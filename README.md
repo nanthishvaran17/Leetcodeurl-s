@@ -10,24 +10,34 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="docs/assets/badges/live_platform.svg"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.2.0" src="https://img.shields.io/badge/Release-v4.2.0-blue.svg?style=flat-square"></a>
-  <a href="releases/android/Nandha_LeetCode_Intelligence_v4.2.0_latest.apk"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.5.1" src="https://img.shields.io/badge/Release-v4.5.1-blue.svg?style=flat-square"></a>
+  <a href="releases/android/Nandha_LeetCode_Intelligence_v4.5.1_latest.apk"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square"></a>
 </p>
 
 <p align="center">
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.100%2B-teal.svg?style=flat-square">
-  <img alt="React 18" src="https://img.shields.io/badge/React-18-61DAFB.svg?style=flat-square">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6.svg?style=flat-square">
-  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-336791.svg?style=flat-square">
+  <img alt="Python 3.12+" src="https://img.shields.io/badge/Python-3.12%2B-blue.svg?style=flat-square">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-0.115%2B-teal.svg?style=flat-square">
+  <img alt="React 18" src="https://img.shields.io/badge/React-18.3-61DAFB.svg?style=flat-square">
+  <img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5.6-3178C6.svg?style=flat-square">
+  <img alt="Database" src="https://img.shields.io/badge/Database-SQLite%20WAL%20%7C%20Postgres-336791.svg?style=flat-square">
   <img alt="Capacitor 7" src="https://img.shields.io/badge/Capacitor-7.0-119EFF.svg?style=flat-square">
+  <img alt="Android APK" src="https://img.shields.io/badge/Android-API%2034%2B-3DDC84.svg?style=flat-square">
+  <img alt="Vite 5" src="https://img.shields.io/badge/Vite-5.4-646CFF.svg?style=flat-square">
   <img alt="Docker" src="https://img.shields.io/badge/Docker-Ready-2496ED.svg?style=flat-square">
 </p>
 
 ### *Every contest tracked. Every solve verified. 1,500+ student engineering careers empowered.*
 
 </div>
+
+> [!IMPORTANT]
+> ### 📢 What's New in Version 4.5.1 (Production Release)
+> - **🎯 Placement Coordinator (`PLC`) & Student Coordinator (`STC`) Roles**: Full-scope institution-wide placement tracking across all departments, plus dedicated batch guidance and cohort mentoring.
+> - **⚡ HOD Command Center & Mentor Matrix**: Instant role badges (`PLC`, `STC`, `HOD`, `FAC`), dynamic student allocation, and real-time workload completion benchmarks.
+> - **📊 Autonomous Contest Telemetry & Completeness Report**: Live Sunday contest ingestion (Weekly Contest 527), Roman numeral cohort normalization (Years I, II, III, IV), and zero-loss audit logging.
+> - **📱 Production Android Release v4.5.1 (VersionCode 92)**: Native Capacitor 7 APK with high-priority background notifications, biometric authentication, and offline-first caching.
+> - **⚡ Sub-1ms High Efficiency Engine**: SWR caching, instant login transitions, and database-level immutability triggers.
 
 ---
 
@@ -224,7 +234,7 @@ flowchart TD
 
     subgraph Presentation ["Presentation & Client Delivery"]
         WEB["React 18 / Tailwind Web PWA"]
-        APK["Capacitor 7 Native Android App (v4.2.0)"]
+        APK["Capacitor 7 Native Android App (v4.5.1)"]
         KIOSK["4K Smart TV Kiosk Mode"]
         EXCEL["15-Sheet OpenPyXL Institutional Workbook"]
         WA["Meta WhatsApp Notification Dispatch"]
@@ -365,7 +375,7 @@ npm run build
 # Build signed Android Release APK (Capacitor 7)
 npm run build:apk
 ```
-The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.2.0_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.2.0_latest.apk).
+The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.5.1_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.5.1_latest.apk).
 
 ---
 
