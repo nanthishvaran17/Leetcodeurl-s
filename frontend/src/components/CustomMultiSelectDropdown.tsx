@@ -8,6 +8,8 @@ export interface MultiSelectOption {
   value: string;
   label: string;
   sublabel?: string;
+  badge?: string;
+  badgeColor?: string;
 }
 
 export interface CustomMultiSelectDropdownProps {
@@ -229,13 +231,20 @@ export const CustomMultiSelectDropdown: React.FC<CustomMultiSelectDropdownProps>
                       }`}
                     >
                       <div className="flex flex-col flex-1 pr-2">
-                        <span
-                          className={`text-[11px] leading-snug font-black whitespace-normal break-words ${
-                            isSel ? theme.activeText : 'text-slate-700 dark:text-slate-300'
-                          }`}
-                        >
-                          {opt.label}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`text-[11px] leading-snug font-black whitespace-normal break-words ${
+                              isSel ? theme.activeText : 'text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {opt.label}
+                          </span>
+                          {opt.badge && (
+                            <span className={`inline-flex items-center px-1.5 py-0 rounded text-[9px] font-black leading-4 shrink-0 ${opt.badgeColor || 'bg-slate-100 text-slate-600 dark:bg-navy-700 dark:text-slate-300 border border-slate-200 dark:border-navy-600'}`}>
+                              {opt.badge}
+                            </span>
+                          )}
+                        </div>
                         {opt.sublabel && (
                           <span className="text-[10px] text-slate-400 dark:text-navy-400">
                             {opt.sublabel}

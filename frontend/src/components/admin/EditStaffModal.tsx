@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
-import { CustomMultiSelectDropdown } from '../CustomMultiSelectDropdown';
+import { CustomMultiSelectDropdown, MultiSelectOption } from '../CustomMultiSelectDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
@@ -208,7 +208,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     });
     
     const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
-    const options: DropdownOption[] = [
+    const options: MultiSelectOption[] = [
       {
         value: 'ALL',
         label: 'All Academic Years / Batches',
@@ -270,8 +270,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   }, [staffList, staff?.id]);
 
   // Department Options
-  const departmentOptions: DropdownOption[] = useMemo(() => {
-    const opts: DropdownOption[] = [
+  const departmentOptions: MultiSelectOption[] = useMemo(() => {
+    const opts: MultiSelectOption[] = [
       {
         value: '0',
         label: 'All Departments (Global Scope)',

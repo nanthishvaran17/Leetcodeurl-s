@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
-import { CustomMultiSelectDropdown } from '../CustomMultiSelectDropdown';
+import { CustomMultiSelectDropdown, MultiSelectOption } from '../CustomMultiSelectDropdown';
 import { LucideIcon } from 'lucide-react';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
@@ -93,7 +93,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
     const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
 
-    const options: DropdownOption[] = [
+    const options: MultiSelectOption[] = [
       {
         value: 'ALL',
         label: 'All Academic Years / Batches',
@@ -116,9 +116,9 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     return options;
   }, [storeVersion]);
 
-  // Transform Departments into DropdownOptions
-  const departmentOptions: DropdownOption[] = useMemo(() => {
-    const opts: DropdownOption[] = [
+  // Transform Departments into MultiSelectOptions
+  const departmentOptions: MultiSelectOption[] = useMemo(() => {
+    const opts: MultiSelectOption[] = [
       {
         value: '0',
         label: 'All Departments (Global)',
