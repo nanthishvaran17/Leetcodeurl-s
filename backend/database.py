@@ -68,7 +68,7 @@ if ("postgresql" in db_url or "postgres" in db_url):
             if "supabase.co" in hostname and hostname.startswith("db."):
                 print("[DB_FALLBACK] Note: Direct Supabase hostname 'db.*.supabase.co' is IPv6-only. In IPv4 environments (such as GitHub Actions runners or certain cloud hosts), use the Supabase Connection Pooler: aws-0-[region].pooler.supabase.com:6543 or Neon Database URL.")
 
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, QueuePool
 
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
@@ -101,7 +101,11 @@ if "postgresql" in db_url or "postgres" in db_url:
     })
 else:
     engine_kwargs.update({
-        "poolclass": NullPool,
+        "poolclass": QueuePool,
+        "pool_size": 25,
+        "max_overflow": 20,
+        "pool_timeout": 30,
+        "pool_recycle": 300,
         "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
@@ -119,7 +123,11 @@ except Exception as _engine_exc:
     engine = create_engine(
         db_url,
         echo=False,
-        poolclass=NullPool,
+        poolclass=QueuePool,
+        pool_size=25,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=300,
         connect_args={"check_same_thread": False, "timeout": 60}
     )
     try:

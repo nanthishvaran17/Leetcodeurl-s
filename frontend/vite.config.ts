@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { compression } from 'vite-plugin-compression2'
 import path from 'path'
 import fs from 'fs'
 
@@ -7,7 +8,11 @@ const rootDir = fs.realpathSync?.native ? fs.realpathSync.native(__dirname) : __
 
 export default defineConfig({
   plugins: [
-    react()
+    react(),
+    compression({
+      algorithms: ['brotliCompress', 'gzip'],
+      threshold: 512,
+    }),
   ],
   resolve: {
     alias: {
@@ -160,9 +165,15 @@ export default defineConfig({
           if (id.includes('/src/context/') || id.includes('/src/hooks/')) {
             return 'app-state';
           }
-          // Shared services, API layer, and stores
-          if (id.includes('/src/services/') || id.includes('/src/lib/') || id.includes('/src/stores/')) {
-            return 'app-services';
+          // Shared services, utils, types, API layer, and stores (bundled together to eliminate circular chunking)
+          if (
+            id.includes('/src/services/') ||
+            id.includes('/src/lib/') ||
+            id.includes('/src/stores/') ||
+            id.includes('/src/utils/') ||
+            id.includes('/src/types/')
+          ) {
+            return 'app-core-services';
           }
           // Large static roster dataset — isolated so initial bundle doesn't load 1MB JSON
           if (id.includes('/src/data/canonicalRosterData')) {
@@ -171,10 +182,6 @@ export default defineConfig({
           // Shared static data / templates
           if (id.includes('/src/data/')) {
             return 'app-data';
-          }
-          // Shared utility functions & types
-          if (id.includes('/src/utils/') || id.includes('/src/types/')) {
-            return 'app-utils';
           }
         },
       },

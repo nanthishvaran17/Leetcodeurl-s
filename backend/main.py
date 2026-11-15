@@ -19,9 +19,16 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse
-ORJSONResponse = JSONResponse  # type: ignore
+try:
+    from fastapi.responses import ORJSONResponse
+except ImportError:
+    from fastapi.responses import JSONResponse as ORJSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+try:
+    from brotli_asgi import BrotliMiddleware
+except ImportError:
+    BrotliMiddleware = None
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -267,7 +274,7 @@ app = FastAPI(
     title="College LeetCode Weekly Tracker API",
     description="Backend API for LeetCode weekly tracking, analytics, leaderboards, Excel/PDF reporting and notifications.",
     version="2.2.0",
-    default_response_class=JSONResponse,
+    default_response_class=ORJSONResponse,
     lifespan=lifespan
 )
 
@@ -957,6 +964,9 @@ from backend.middleware.idempotency import IdempotencyMiddleware
 # Add idempotency protection for mutation retries
 app.add_middleware(IdempotencyMiddleware)
 
+# Enable ultra-fast Brotli (20-30% smaller than GZip) with fallback to GZip
+if BrotliMiddleware is not None:
+    app.add_middleware(BrotliMiddleware, quality=5, minimum_size=500)
 # Enable fast, lightweight GZip compression on responses >= 500 bytes (10x-14x smaller network payload)
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 
@@ -1130,7 +1140,7 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
         sess_cookie = request.cookies.get("admin_session_token", "") or request.cookies.get("session_token", "")
         auth_sig = _hashlib.sha1(f"{auth_hdr}|{sess_cookie}".encode("utf-8")).hexdigest()[:16] if (auth_hdr or sess_cookie) else "anon"
         accept_enc = request.headers.get("accept-encoding", "").lower()
-        enc_key = "gzip" if "gzip" in accept_enc else "plain"
+        enc_key = "br" if "br" in accept_enc else ("gzip" if "gzip" in accept_enc else "plain")
         cache_key = f"{path}?{request.url.query}#auth:{auth_sig}#enc:{enc_key}"
 
         force_bypass = (

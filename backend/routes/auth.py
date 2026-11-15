@@ -651,12 +651,71 @@ async def test_admin_otp_delivery(db: Session = Depends(get_db)):
     }
 
 
+def get_real_client_ip(request: Request) -> str:
+    if not request:
+        return "127.0.0.1"
+    forwarded = request.headers.get("x-forwarded-for") or request.headers.get("cf-connecting-ip") or request.headers.get("x-real-ip")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+
+# IP-Level & Account-Level Brute Force Defense
+_IP_FAILED_ATTEMPTS: dict[str, list[float]] = {}
+_IP_LOCKOUT_UNTIL: dict[str, float] = {}
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+LOGIN_LOCKOUT_DURATION = 900  # 15 minutes lockout in seconds
+LOGIN_ATTEMPT_WINDOW = 600    # 10 minutes sliding window
+
+def check_ip_login_lockout(client_ip: str):
+    """Enforces strict IP-level lockout after 5 failed login attempts."""
+    now = time.time()
+    lockout_time = _IP_LOCKOUT_UNTIL.get(client_ip, 0)
+    if lockout_time > now:
+        remaining_sec = int(lockout_time - now)
+        remaining_min = max(1, (remaining_sec + 59) // 60)
+        logger.warning(f"[SECURITY_BLOCKED] Request blocked from locked IP: {client_ip}. Remaining: {remaining_min}m")
+        raise HTTPException(
+            status_code=429,
+            detail=f"Security Alert: Your IP has been temporarily blocked due to 5 consecutive failed login attempts. Please try again in {remaining_min} minute(s)."
+        )
+    elif lockout_time > 0 and lockout_time <= now:
+        _IP_LOCKOUT_UNTIL.pop(client_ip, None)
+        _IP_FAILED_ATTEMPTS.pop(client_ip, None)
+
+def record_failed_login_attempt(client_ip: str, username: str = ""):
+    """Records a failed login attempt and locks the IP for 15 minutes after 5 failures."""
+    now = time.time()
+    attempts = _IP_FAILED_ATTEMPTS.setdefault(client_ip, [])
+    attempts = [t for t in attempts if now - t < LOGIN_ATTEMPT_WINDOW]
+    attempts.append(now)
+    _IP_FAILED_ATTEMPTS[client_ip] = attempts
+
+    count = len(attempts)
+    logger.warning(f"[FAILED_LOGIN] IP {client_ip} attempt {count}/{MAX_FAILED_LOGIN_ATTEMPTS} for user '{username}'")
+
+    if count >= MAX_FAILED_LOGIN_ATTEMPTS:
+        _IP_LOCKOUT_UNTIL[client_ip] = now + LOGIN_LOCKOUT_DURATION
+        logger.error(f"[IP_LOCKED] IP {client_ip} has been LOCKED OUT for 15 minutes due to {count} failed attempts.")
+        raise HTTPException(
+            status_code=429,
+            detail="Security Alert: Too many failed login attempts. Your IP has been temporarily blocked for 15 minutes. Please try again later."
+        )
+
+def record_successful_login(client_ip: str):
+    """Clears failed attempts on successful authentication."""
+    _IP_FAILED_ATTEMPTS.pop(client_ip, None)
+    _IP_LOCKOUT_UNTIL.pop(client_ip, None)
+
+
 @router.post("/send-otp")
 @router.post("/resend-otp")
 @router.post("/request-otp")
 @router.post("/admin/request-otp")
 @router.post("/admin/auth/request-otp")
 async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = get_real_client_ip(request)
+    check_ip_login_lockout(client_ip)
     validate_csrf_origin(request)
     raw_input = (req.email or "").strip().lower()
     if not raw_input or "@" not in raw_input:
@@ -774,18 +833,21 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
 
 @router.post("/verify-otp")
 def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: Session = Depends(get_db)):
+    client_ip = get_real_client_ip(request)
+    check_ip_login_lockout(client_ip)
     validate_csrf_origin(request)
     clean_email = (req.email or "").strip().lower()
     raw_otp = (req.otp or "").strip()
 
     if not clean_email or not raw_otp:
+        record_failed_login_attempt(client_ip, clean_email)
         raise HTTPException(status_code=400, detail="Email and verification code are required.")
 
     # 1. Verify OTP record & expiration in database
     is_valid, msg, otp_rec = verify_otp_transaction(db, clean_email, raw_otp, req.request_id)
-    client_ip = request.client.host if request and request.client else "127.0.0.1"
 
     if not is_valid:
+        record_failed_login_attempt(client_ip, clean_email)
         logger.warning(f"[OTP_VERIFY_FAILURE] Failed OTP verification for {clean_email}: {msg}")
         from backend.services.audit_service import log_admin_action
         from backend.security import evaluate_security_alert_threshold
@@ -884,6 +946,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
         metadata_json=metadata, event_id=event_id
     )
 
+    record_successful_login(client_ip)
     dept_scope = _get_user_dept_scope(db, user)
     return {
         "success": True,
@@ -1161,6 +1224,7 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
 
+    record_successful_login(client_ip)
     dept_scope = _get_user_dept_scope(db, user)
     return {
         "authenticated": True,
@@ -1207,6 +1271,7 @@ _login_attempts = {}
 @router.post("/login")
 def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     client_ip = get_real_client_ip(request)
+    check_ip_login_lockout(client_ip)
     clean_user_key = (login_data.username or "").strip().lower()
     rate_key = f"{client_ip}:{clean_user_key}"
     now = time.time()
@@ -1224,6 +1289,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     clean_password = login_data.password.strip()
 
     if not clean_username or not clean_password:
+        record_failed_login_attempt(client_ip, clean_username)
         raise HTTPException(status_code=400, detail="Invalid username or password.")
 
     from sqlalchemy import or_, func
@@ -1275,12 +1341,12 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     if not user or not is_pass_valid:
         configured_username = (os.environ.get("ADMIN_USERNAME") or getattr(settings, "ADMIN_USERNAME", "") or "admin").strip()
         configured_email = (os.environ.get("ADMIN_EMAIL") or getattr(settings, "ADMIN_EMAIL", "") or "nanthishvaran17@gmail.com").strip().lower()
-        configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "AdminPass123!").strip()
+        configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "").strip()
 
         is_super_admin_attempt = (
             clean_username.lower() in (configured_email.lower(), configured_username.lower(), "nanthishvaran17@gmail.com", "nanthishvaran17", "admin")
         )
-        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", True) and not os.environ.get("ADMIN_PASSWORD")
+        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False) and not os.environ.get("ADMIN_PASSWORD")
         is_pass_match = bool(configured_password and clean_password == configured_password) or (is_default_allowed and clean_password in ("AdminPass123!", "admin123"))
 
         if is_super_admin_attempt and is_pass_match:
@@ -1303,11 +1369,13 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
             db.commit()
             db.refresh(user)
         else:
-            logger.warning(f"[ADMIN_LOGIN_FAILURE] Invalid credentials for username: {clean_username}")
+            record_failed_login_attempt(client_ip, clean_username)
+            logger.warning(f"[LOGIN_FAILURE] Invalid credentials for username: {clean_username}")
             raise HTTPException(status_code=401, detail="Invalid username or password.")
 
     if not user.is_active:
-        logger.warning(f"[ADMIN_LOGIN_FAILURE] Account deactivated for username: {clean_username}")
+        record_failed_login_attempt(client_ip, clean_username)
+        logger.warning(f"[LOGIN_FAILURE] Account deactivated for username: {clean_username}")
         raise HTTPException(status_code=403, detail="Account is currently deactivated.")
 
     # Ensure password is strictly encrypted with bcrypt in the database (auto-upgrades any plain/legacy passwords)
@@ -1351,6 +1419,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
 
+    record_successful_login(client_ip)
     dept_scope = _get_user_dept_scope(db, user)
     return {
         "success": True,
@@ -2438,6 +2507,7 @@ _admin_otp_store = {}
 @router.post("/admin-login")
 def admin_login_init(login_data: UserLogin, request: Request, response: Response, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     client_ip = get_real_client_ip(request)
+    check_ip_login_lockout(client_ip)
     clean_user_key = (login_data.username or "").strip().lower()
     rate_key = f"admin_{client_ip}:{clean_user_key}"
     now = time.time()
@@ -2452,6 +2522,7 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
     clean_password = login_data.password.strip()
 
     if not clean_username or not clean_password:
+        record_failed_login_attempt(client_ip, clean_username)
         raise HTTPException(status_code=400, detail="Invalid username or password.")
 
     from sqlalchemy import or_, func
@@ -2470,13 +2541,13 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
     if not user or not is_pass_valid:
         configured_username = (os.environ.get("ADMIN_USERNAME") or getattr(settings, "ADMIN_USERNAME", "") or "admin").strip()
         configured_email = (os.environ.get("ADMIN_EMAIL") or getattr(settings, "ADMIN_EMAIL", "") or "nanthishvaran17@gmail.com").strip().lower()
-        configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "AdminPass123!").strip()
+        configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "").strip()
 
         is_super_admin_attempt = (
             clean_username.lower() in (configured_email.lower(), configured_username.lower(), "nanthishvaran17@gmail.com", "nanthishvaran17", "admin")
         )
-        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", True) and not os.environ.get("ADMIN_PASSWORD")
-        is_pass_match = bool(configured_password and clean_password == configured_password) or (is_default_allowed and clean_password == "AdminPass123!")
+        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False) and not os.environ.get("ADMIN_PASSWORD")
+        is_pass_match = bool(configured_password and clean_password == configured_password) or (is_default_allowed and clean_password in ("AdminPass123!", "admin123"))
 
         if is_super_admin_attempt and is_pass_match:
             if not user:
@@ -2489,14 +2560,19 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
                 db.commit()
                 db.refresh(user)
         else:
+            record_failed_login_attempt(client_ip, clean_username)
             raise HTTPException(status_code=401, detail="Invalid admin username or password.")
 
     if not user.is_active:
+        record_failed_login_attempt(client_ip, clean_username)
         raise HTTPException(status_code=403, detail="Account is deactivated.")
 
     valid_roles = ["super admin", "admin"]
     if user.role.lower() not in valid_roles:
+        record_failed_login_attempt(client_ip, clean_username)
         raise HTTPException(status_code=403, detail="Unauthorized access. Admins only.")
+
+    record_successful_login(client_ip)
 
     # Direct Admin Login without 2FA OTP
     _record_user_login(db, user, request)
@@ -2541,6 +2617,8 @@ def admin_login_init(login_data: UserLogin, request: Request, response: Response
 
 @router.post("/admin-verify-otp")
 def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Response, db: Session = Depends(get_db)):
+    client_ip = get_real_client_ip(request)
+    check_ip_login_lockout(client_ip)
     clean_user = data.username.strip().lower()
     
     from sqlalchemy import or_, func
@@ -2549,18 +2627,20 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
     ).first()
     
     if not user:
+        record_failed_login_attempt(client_ip, clean_user)
         raise HTTPException(status_code=404, detail="User not found.")
 
     # 1. Verify Password Credentials
     clean_password = data.password.strip()
     is_pass_valid = verify_password(clean_password, str(user.hashed_password or ""))
     if not is_pass_valid:
-        configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "AdminPass123!").strip()
-        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", True) and not os.environ.get("ADMIN_PASSWORD")
-        if (configured_password and clean_password == configured_password) or (is_default_allowed and clean_password == "AdminPass123!"):
+        configured_password = (os.environ.get("ADMIN_PASSWORD") or getattr(settings, "ADMIN_PASSWORD", "") or "").strip()
+        is_default_allowed = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False) and not os.environ.get("ADMIN_PASSWORD")
+        if (configured_password and clean_password == configured_password) or (is_default_allowed and clean_password in ("AdminPass123!", "admin123")):
             is_pass_valid = True
             
     if not is_pass_valid:
+        record_failed_login_attempt(client_ip, clean_user)
         raise HTTPException(status_code=400, detail="Invalid credentials.")
 
     # 2. Verify OTP (Database persistent record first, fallback to memory cache)
@@ -2578,7 +2658,10 @@ def admin_verify_otp(data: AdminVerifyOTPRequest, request: Request, response: Re
         del _admin_otp_store[clean_user]
         
     if not otp_valid:
+        record_failed_login_attempt(client_ip, clean_user)
         raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
+        
+    record_successful_login(client_ip)
         
     _record_user_login(db, user, request)
     
