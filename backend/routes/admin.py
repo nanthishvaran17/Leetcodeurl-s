@@ -1119,9 +1119,17 @@ def create_staff_user(
     db.commit()
     db.refresh(staff_user)
 
-    if payload.role in ["HOD", "Department HOD", "Placement Coordinator"] and payload.hod_department_ids:
-        from backend.models import HODDepartmentAllocation
-        for dept_id in payload.hod_department_ids:
+    if payload.hod_department_ids:
+        from backend.models import HODDepartmentAllocation, Department
+        dept_ids = []
+        for did in payload.hod_department_ids:
+            if did == 0:
+                all_active = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
+                dept_ids.extend(all_active)
+            else:
+                dept_ids.append(did)
+        dept_ids = list(dict.fromkeys(dept_ids))
+        for dept_id in dept_ids:
             alloc = HODDepartmentAllocation(
                 user_id=staff_user.id,
                 department_id=dept_id,
@@ -1429,17 +1437,24 @@ def update_staff_user(
     db.refresh(staff_user)
 
     if payload.hod_department_ids is not None:
-        if payload.role in ["HOD", "Department HOD", "Placement Coordinator"] or (not payload.role and staff_user.role in ["HOD", "Department HOD", "Placement Coordinator"]):
-            from backend.models import HODDepartmentAllocation
-            db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id == staff_user.id).delete()
-            for dept_id in payload.hod_department_ids:
-                alloc = HODDepartmentAllocation(
-                    user_id=staff_user.id,
-                    department_id=dept_id,
-                    created_by=current_user.id
-                )
-                db.add(alloc)
-            db.commit()
+        from backend.models import HODDepartmentAllocation, Department
+        db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id == staff_user.id).delete()
+        dept_ids = []
+        for did in payload.hod_department_ids:
+            if did == 0:
+                all_active = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
+                dept_ids.extend(all_active)
+            else:
+                dept_ids.append(did)
+        dept_ids = list(dict.fromkeys(dept_ids))
+        for dept_id in dept_ids:
+            alloc = HODDepartmentAllocation(
+                user_id=staff_user.id,
+                department_id=dept_id,
+                created_by=current_user.id
+            )
+            db.add(alloc)
+        db.commit()
 
 
     from backend.cache import cache

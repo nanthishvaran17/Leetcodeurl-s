@@ -124,17 +124,40 @@ export const CustomMultiSelectDropdown: React.FC<CustomMultiSelectDropdownProps>
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  const isAllOption = (val: string) => val === '0' || val.toUpperCase() === 'ALL';
+
   const toggleOption = (val: string) => {
-    if (selectedValues.includes(val)) {
-      onChange(selectedValues.filter(v => v !== val));
-    } else {
-      onChange([...selectedValues, val]);
+    const hasAll = isAllOption(val);
+    if (hasAll) {
+      if (selectedValues.includes(val) || selectedValues.length >= options.length - 1) {
+        onChange([]);
+      } else {
+        onChange(options.map(o => o.value));
+      }
+      return;
     }
+
+    let next: string[];
+    if (selectedValues.includes(val)) {
+      next = selectedValues.filter(v => v !== val && !isAllOption(v));
+    } else {
+      next = [...selectedValues.filter(v => !isAllOption(v)), val];
+      const nonAllOpts = options.filter(o => !isAllOption(o.value));
+      if (nonAllOpts.length > 0 && next.length === nonAllOpts.length) {
+        const allOpt = options.find(o => isAllOption(o.value));
+        if (allOpt) next.push(allOpt.value);
+      }
+    }
+    onChange(next);
   };
 
-  const selectedLabels = options
-    .filter(opt => selectedValues.includes(opt.value))
-    .map(opt => opt.label);
+  const allSelectedOption = options.find(opt => isAllOption(opt.value) && selectedValues.includes(opt.value));
+
+  const selectedLabels = allSelectedOption
+    ? [allSelectedOption.label]
+    : options
+        .filter(opt => selectedValues.includes(opt.value) && !isAllOption(opt.value))
+        .map(opt => opt.label);
 
   return (
     <div className={`relative ${className}`}>

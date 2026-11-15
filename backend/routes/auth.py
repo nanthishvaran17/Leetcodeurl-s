@@ -93,13 +93,15 @@ def _get_user_dept_scope(db: Session, user: User) -> dict:
         "designation": desig
     }
     role = (getattr(user, "override_role", None) or getattr(user, "role", "") or "").strip().lower()
-    if role in ("hod", "department hod", "department_hod", "placement coordinator", "placement_coordinator", "student coordinator", "student_coordinator", "coordinator"):
+    if role in ("hod", "department hod", "department_hod", "placement coordinator", "placement_coordinator", "student coordinator", "student_coordinator", "coordinator", "faculty", "staff", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
         from backend.services.authorization_service import (
             get_hod_authorized_department_ids,
             get_hod_authorized_department_codes
         )
-        scope["authorized_department_ids"] = get_hod_authorized_department_ids(db, user)
-        scope["authorized_department_codes"] = get_hod_authorized_department_codes(db, user)
+        auth_dept_ids = get_hod_authorized_department_ids(db, user)
+        if auth_dept_ids:
+            scope["authorized_department_ids"] = auth_dept_ids
+            scope["authorized_department_codes"] = get_hod_authorized_department_codes(db, user)
 
     # For staff / faculty / mentors: strictly lock scope to their allocated department!
     u_dept_id = getattr(user, "department_id", None)

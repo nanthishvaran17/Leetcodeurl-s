@@ -471,7 +471,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         mentoring_role: formData.mentoring_role ? formData.mentoring_role.trim() : undefined,
         role: formData.role,
         department_id: deptIdToSend,
-        hod_department_ids: ['Department HOD', 'Placement Coordinator', 'Student Coordinator'].includes(formData.role) && formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
+        hod_department_ids: formData.hod_department_ids.length > 0 ? formData.hod_department_ids.map(id => parseInt(id, 10)) : (formData.department_id && formData.department_id !== '0' ? [parseInt(formData.department_id, 10)] : undefined),
         is_active: isActive,
         date_of_birth: formattedDOB,
         receive_email_reports: automatedReportsEnabled,
@@ -915,32 +915,23 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                           <span>All Departments (Global Scope)</span>
                         </div>
-                      ) : ['Department HOD', 'Placement Coordinator', 'Student Coordinator'].includes(formData.role) ? (
+                      ) : (
                         <CustomMultiSelectDropdown
                           label=""
-                          options={departmentOptions.filter(d => d.value !== '0')}
+                          options={departmentOptions}
                           selectedValues={formData.hod_department_ids}
                           onChange={(newIds) => {
+                            const cleanIds = newIds.filter(id => id !== '0');
                             setFormData({
                               ...formData,
                               hod_department_ids: newIds,
-                              department_id: newIds.length > 0 ? newIds[0] : '0'
+                              department_id: cleanIds.length > 0 ? cleanIds[0] : (newIds.includes('0') ? '0' : '0')
                             });
                           }}
                           icon={Building2}
-                          placeholder="Select Departments..."
+                          placeholder="Select Departments or All..."
                           colorTheme="indigo"
                           triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-black cursor-pointer shadow-2xs"
-                        />
-                      ) : (
-                        <CustomDropdown
-                          options={departmentOptions}
-                          label=""
-                          value={formData.department_id}
-                          onChange={(val) => setFormData({...formData, department_id: val, hod_department_ids: [val]})}
-                          placeholder="Select Department..."
-                          icon={Building2}
-                          triggerClassName="w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-extrabold shadow-2xs"
                         />
                       )}
                     </div>

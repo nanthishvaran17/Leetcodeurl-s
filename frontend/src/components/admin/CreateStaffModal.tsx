@@ -206,7 +206,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     confirm_password: '',
     role: 'Faculty Mentor',
     department_id: departments.length > 0 ? String(departments[0].id) : '1',
-    hod_department_ids: [] as string[],
+    hod_department_ids: departments.length > 0 ? [String(departments[0].id)] : ['1'],
     academic_year_ids: [] as string[],
     designation: '',
     date_of_birth: '',
@@ -380,12 +380,38 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
   const isGlobalRole = ['Principal', 'Management', 'Administrator', 'Super Admin'].includes(formData.role);
 
+  const handleRoleChange = (newRole: string) => {
+    setFormData(prev => {
+      const updated = { ...prev, role: newRole };
+      if (formErrors.role) setFormErrors(e => ({ ...e, role: '' }));
+      if (newRole === 'Placement Coordinator') {
+        updated.hod_department_ids = ['0', ...departments.map(d => String(d.id))];
+        updated.department_id = '0';
+        updated.academic_year_ids = ['ALL'];
+      } else if (newRole === 'Student Coordinator' || newRole === 'Department HOD') {
+        if (updated.academic_year_ids.length === 0) updated.academic_year_ids = ['ALL'];
+        if (updated.hod_department_ids.length === 0 && departments.length > 0) {
+          updated.hod_department_ids = [String(departments[0].id)];
+          updated.department_id = String(departments[0].id);
+        }
+      } else if (['Principal', 'Management', 'Administrator', 'Super Admin'].includes(newRole)) {
+        updated.hod_department_ids = ['0', ...departments.map(d => String(d.id))];
+        updated.department_id = '0';
+        updated.academic_year_ids = ['ALL'];
+      }
+      return updated;
+    });
+  };
+
   // Validate step completion
   const validateCurrentStep = (step: number): boolean => {
     const errors: Record<string, string> = {};
     if (step === 1) {
+      if (formData.hod_department_ids.length === 0 && (!formData.department_id || formData.department_id === '')) {
+        errors.department = 'Department / Academic Scope is required';
+      }
       if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && (!formData.academic_year_ids || formData.academic_year_ids.length === 0)) {
-        errors.academic_year = 'Academic Year is required for Mentors';
+        errors.academic_year = 'Academic Year is required for Mentors (Select batch or All Years)';
       }
     } else if (step === 2) {
       if (!formData.full_name.trim()) errors.full_name = 'Full legal name is required';
@@ -476,8 +502,25 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
     try {
       const isGlobalAdmin = ['Administrator', 'Super Admin', 'Principal', 'Management'].includes(formData.role);
-      const rawDeptId = formData.department_id ? parseInt(formData.department_id, 10) : 0;
-      const deptIdToSend = (rawDeptId > 0 && !isGlobalAdmin) ? rawDeptId : null;
+      const isAllDepts = formData.hod_department_ids.includes('0') || formData.department_id === '0';
+
+      let deptIdsToSend: number[] | undefined = undefined;
+      if (isAllDepts) {
+        deptIdsToSend = departments.map(d => Number(d.id)).filter(id => id > 0);
+      } else if (formData.hod_department_ids.length > 0) {
+        deptIdsToSend = formData.hod_department_ids.filter(id => id !== '0').map(id => parseInt(id, 10));
+      }
+
+      const primaryDeptId = (deptIdsToSend && deptIdsToSend.length > 0) 
+        ? deptIdsToSend[0] 
+        : (formData.department_id && formData.department_id !== '0' ? parseInt(formData.department_id, 10) : (isGlobalAdmin ? null : (departments[0]?.id || 1)));
+
+      let academicYearToSend: string | undefined = undefined;
+      if (formData.academic_year_ids.includes('ALL') || (isGlobalAdmin && formData.academic_year_ids.length === 0)) {
+        academicYearToSend = 'All Years';
+      } else if (formData.academic_year_ids.length > 0) {
+        academicYearToSend = formData.academic_year_ids.join(', ');
+      }
 
       let formattedDOB = undefined;
       if (formData.date_of_birth && formData.date_of_birth.length === 10) {
@@ -493,9 +536,9 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         phone_number: formData.phone_number.trim(),
         password: formData.password?.trim() || undefined,
         role: formData.role,
-        department_id: deptIdToSend,
-        hod_department_ids: formData.hod_department_ids.length > 0 && !isGlobalAdmin ? formData.hod_department_ids.map(id => parseInt(id, 10)) : undefined,
-        academic_year: isGlobalRole ? 'All Years' : (formData.academic_year_ids.length > 0 ? formData.academic_year_ids.join(', ') : undefined),
+        department_id: primaryDeptId,
+        hod_department_ids: deptIdsToSend,
+        academic_year: academicYearToSend,
         designation: formData.designation || undefined,
         date_of_birth: formattedDOB,
         is_active: formData.account_status === 'Active',
@@ -909,7 +952,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                               options={roleOptions}
                               label=""
                               value={formData.role}
-                              onChange={(val) => setFormData({ ...formData, role: val })}
+                              onChange={handleRoleChange}
                               placeholder="Select Institutional Role..."
                               icon={RoleIcon}
                               triggerClassName={`w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border transition-all text-xs font-black shadow-2xs ${rc.bgColor} ${rc.borderColor} hover:border-brand-500/60`}
@@ -920,55 +963,58 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Department */}
                       <div className="space-y-1.5" ref={hodDeptRef}>
-                        <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">Department / Academic Scope *</label>
-                        {isGlobalRole ? (
-                          <div className="w-full min-h-[48px] flex items-center px-4 py-2.5 rounded-2xl border-2 border-dashed border-brand-300 dark:border-brand-500/40 bg-brand-50/50 dark:bg-brand-500/5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">ALL</span>
-                              <span className="text-xs font-black text-brand-900 dark:text-brand-200">All Departments (Global Scope)</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <CustomMultiSelectDropdown
-                            label=""
-                            options={departmentOptions.filter(d => d.value !== '0')}
-                            selectedValues={formData.hod_department_ids}
-                            onChange={(newIds) => {
-                              setFormData({
-                                ...formData,
-                                hod_department_ids: newIds,
-                                department_id: newIds.length > 0 ? newIds[0] : ''
-                              });
-                            }}
-                            icon={Building2}
-                            placeholder="Select Departments..."
-                            colorTheme="indigo"
-                            triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-black cursor-pointer shadow-2xs"
-                          />
-                        )}
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">
+                            Department / Academic Scope *
+                          </label>
+                          <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                            {formData.hod_department_ids.includes('0') ? 'All Depts Selected' : `${formData.hod_department_ids.filter(id => id !== '0').length} Selected`}
+                          </span>
+                        </div>
+                        <CustomMultiSelectDropdown
+                          label=""
+                          options={departmentOptions}
+                          selectedValues={formData.hod_department_ids}
+                          onChange={(newIds) => {
+                            const cleanIds = newIds.filter(id => id !== '0');
+                            setFormData({
+                              ...formData,
+                              hod_department_ids: newIds,
+                              department_id: cleanIds.length > 0 ? cleanIds[0] : (newIds.includes('0') ? '0' : '')
+                            });
+                            if (formErrors.department) setFormErrors(prev => ({ ...prev, department: '' }));
+                          }}
+                          icon={Building2}
+                          placeholder="Select Departments or All..."
+                          colorTheme="indigo"
+                          triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700/50 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/50 text-indigo-900 dark:text-indigo-100 font-black cursor-pointer shadow-2xs"
+                        />
+                        {formErrors.department && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.department}</p>}
                       </div>
 
                       {/* Academic Year */}
                       <div className="space-y-1.5" ref={academicYearRef}>
-                        <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1">Academic Year *</label>
-                        {isGlobalRole ? (
-                          <div className="w-full min-h-[48px] flex items-center px-4 py-2.5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-800/40">
-                            <span className="text-xs font-black text-slate-800 dark:text-slate-200">All Years (Global Access)</span>
-                          </div>
-                        ) : (
-                          <CustomMultiSelectDropdown
-                            label=""
-                            options={academicYearOptions.filter(d => d.value !== '' && d.value !== 'ALL')}
-                            selectedValues={formData.academic_year_ids}
-                            onChange={(newIds) => {
-                              setFormData({ ...formData, academic_year_ids: newIds });
-                            }}
-                            icon={GraduationCap}
-                            placeholder="Select Academic Year..."
-                            colorTheme="emerald"
-                            triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 font-black cursor-pointer shadow-2xs"
-                          />
-                        )}
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-black text-slate-900 dark:text-slate-100">
+                            Academic Year / Cohort *
+                          </label>
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            {formData.academic_year_ids.includes('ALL') ? 'All Years Selected' : `${formData.academic_year_ids.filter(id => id !== 'ALL').length} Selected`}
+                          </span>
+                        </div>
+                        <CustomMultiSelectDropdown
+                          label=""
+                          options={academicYearOptions}
+                          selectedValues={formData.academic_year_ids}
+                          onChange={(newIds) => {
+                            setFormData({ ...formData, academic_year_ids: newIds });
+                            if (formErrors.academic_year) setFormErrors(prev => ({ ...prev, academic_year: '' }));
+                          }}
+                          icon={GraduationCap}
+                          placeholder="Select Academic Year or All..."
+                          colorTheme="emerald"
+                          triggerClassName="flex items-center justify-between w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100 font-black cursor-pointer shadow-2xs"
+                        />
                         {formErrors.academic_year && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.academic_year}</p>}
                       </div>
 
