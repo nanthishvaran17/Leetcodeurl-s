@@ -33,7 +33,7 @@ def calculate_student_skill_map(db: Session, student: Student) -> Dict[str, Any]
         easy = stats.easy_solved or 0
         med = stats.medium_solved or 0
         hard = stats.hard_solved or 0
-        rating = stats.contest_rating or 1450.0
+        rating = stats.contest_rating or 0.0
 
     # Baseline topic score calculations using total/easy/med/hard distributions
     # Base multiplier scales with total solved count

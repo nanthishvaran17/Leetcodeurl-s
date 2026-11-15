@@ -945,7 +945,7 @@ class AIKnowledgeEngine:
         # 12. CONTEST SPECIFIC STATS (PUBLIC / VIRTUAL / NOT ATTENDED / UNKNOWN / ERRORS) 
         target_sess = AIKnowledgeEngine._extract_session(db, clean_q, history=history)
         if target_sess and any(k in clean_q for k in ["contest", "public", "virtual", "not attended", "attended", "how many", "count", "stat", "result", "pending", "error", "unverified", "unknown"]):
-            total_cnt = db.query(func.count(WeeklyPublicResult.id)).filter(WeeklyPublicResult.session_id == target_sess.id).scalar() or 300
+            total_cnt = db.query(func.count(WeeklyPublicResult.id)).filter(WeeklyPublicResult.session_id == target_sess.id).scalar() or db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
             pub_att = db.query(func.count(WeeklyPublicResult.id)).filter(
                 WeeklyPublicResult.session_id == target_sess.id,
                 WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED"])
