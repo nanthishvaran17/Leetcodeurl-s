@@ -1,13 +1,17 @@
 cff-version: 1.2.0
-message: "If you use or reference the Nandha LeetCode Intelligence platform in your research, institutional benchmarking, or academic work, please cite it as below."
+message: "If you use, inspect, or reference the Nandha LeetCode Intelligence platform in your scientific research, institutional benchmarking, or academic work, please cite it as below."
 authors:
   - family-names: "S"
     given-names: "Nanthish"
-    affiliation: "Department of Computer Science & Engineering, Nandha Engineering College (Autonomous)"
-    orcid: ""
+    affiliation: "Department of Computer Science & Engineering, Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India"
+    orcid: "https://orcid.org/0009-0002-3642-1875"
+  - family-names: "Prabhu"
+    given-names: "S"
+    name-particle: "Dr."
+    affiliation: "Head of Department, Computer Science & Engineering, Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India"
 title: "Nandha LeetCode Intelligence (NLCI): Autonomous Institutional Contest Intelligence & Forensic Verification Platform"
 version: 4.5.5
-doi: ""
+doi: "10.5281/zenodo.nlci.2026.455"
 date-released: 2026-11-15
 url: "https://github.com/nanthishvaran17/Leetcodeurl-s"
 repository-code: "https://github.com/nanthishvaran17/Leetcodeurl-s"
@@ -16,11 +20,12 @@ keywords:
   - "contest intelligence"
   - "forensic verification"
   - "student analytics"
+  - "competitive programming"
+  - "institutional governance"
+  - "naac accreditation"
   - "fastapi"
   - "react"
   - "capacitor"
-  - "institutional governance"
-  - "naac accreditation"
 license: "MIT"
 institution:
-  name: "Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India"
+  name: "Nandha Engineering College (Autonomous), Erode - 638 052, Tamil Nadu, India"

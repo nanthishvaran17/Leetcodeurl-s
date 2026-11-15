@@ -1,15 +1,24 @@
 # 🛡️ Institutional Security Policy & Zero-Trust Governance
 
-> **Nandha Engineering College (Autonomous)**  
-> **Autonomous LeetCode Intelligence & Forensic Telemetry Platform**  
-> *Certified for Continuous Institutional Governance & Academic Integrity*
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/nanthishvaran17/Leetcodeurl-s/main/docs/assets/nec_25_years_logo.png" alt="Nandha Engineering College 25 Years" width="130" style="border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-bottom: 14px;" />
+
+## NANDHA LEETCODE INTELLIGENCE (NLCI)
+### Autonomous Institutional Contest Intelligence & Forensic Verification Platform
+**Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**  
+*Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
+
+[![Security Framework](https://img.shields.io/badge/Security_Standard-NIST_CSF_%26_ISO_27001-blue.svg?style=flat-square&logo=shield)](https://nandhaengg.org)
+[![Zero Trust](https://img.shields.io/badge/Architecture-Zero--Trust_Level_4-emerald.svg?style=flat-square&logo=auth0)](https://nandha-leetcode.duckdns.org)
+[![Cryptographic Audit](https://img.shields.io/badge/Forensic_Ledger-SHA--256_Immutable-purple.svg?style=flat-square&logo=databricks)](https://nandha-leetcode.duckdns.org)
+[![Responsible Disclosure](https://img.shields.io/badge/Vulnerability_SLA-P0_%3C_12_Hours-rose.svg?style=flat-square&logo=target)](mailto:nanthishvaran17@gmail.com)
 
 ---
 
-[![Security Framework](https://img.shields.io/badge/Security_Standard-NIST_CSF_%26_ISO_27001-blue.svg?style=for-the-badge&logo=shield)](https://nandhaengg.org)
-[![Zero Trust](https://img.shields.io/badge/Architecture-Zero--Trust_Level_4-emerald.svg?style=for-the-badge&logo=auth0)](https://nandha-leetcode.duckdns.org)
-[![Cryptographic Audit](https://img.shields.io/badge/Forensic_Ledger-SHA--256_Immutable-purple.svg?style=for-the-badge&logo=databricks)](https://nandha-leetcode.duckdns.org)
-[![Responsible Disclosure](https://img.shields.io/badge/Vulnerability_SLA-P0_%3C_12_Hours-rose.svg?style=for-the-badge&logo=target)](mailto:nanthishvaran17@gmail.com)
+### *“Certified for Continuous Institutional Governance, Academic Integrity, and Zero-Trust Telemetry.”*
+
+</div>
 
 ---
 
