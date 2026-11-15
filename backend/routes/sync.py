@@ -156,8 +156,8 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         last_any_job = recent_jobs[0] if recent_jobs else None
     except Exception as db_exc:
         logger.warning(f"[SYNC_STATUS] DB error retrieving status: {db_exc}")
-        tot = 593
-        verified_cnt = 593
+        tot = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0
+        verified_cnt = tot
         pending_cnt = 0
         failed_cnt = 0
 

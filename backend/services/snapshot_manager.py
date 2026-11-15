@@ -54,7 +54,7 @@ class AuthoritativeSnapshotEngine:
                     "synced_at": snap.finalized_at.isoformat() if snap.finalized_at else datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "status": "SUCCESS",
                     "contest_name": snap.contest_name,
-                    "student_count": snap.student_count or 1450,
+                    "student_count": snap.student_count or 0,
                     "dataset_hash": snap.dataset_hash
                 }
         except Exception as _snap_exc:
@@ -79,7 +79,7 @@ class AuthoritativeSnapshotEngine:
             "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "status": "SUCCESS",
             "contest_name": disc.get("contest_name", "Weekly Contest"),
-            "student_count": 1450,
+            "student_count": (db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0),
             "dataset_hash": "0b77f4480d586b392495a6da9d25f89e395d254bfbcc4590a5d9e560a6584108"
         }
 

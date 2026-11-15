@@ -80,7 +80,7 @@ class SundayLiveIngestionEngine:
         - No Handle != Not Attended
         Invariant: PUBLIC + VIRTUAL + NOT_PARTICIPATED + NOT_VERIFIED + MISSING = TOTAL
         """
-        active_total = db.query(Student).filter(Student.is_active == True).count() or 593
+        active_total = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
 
         records = db.query(PreviousWeekParticipationRecord).filter(
             PreviousWeekParticipationRecord.session_id == session_id,

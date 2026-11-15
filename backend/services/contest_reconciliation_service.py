@@ -796,7 +796,7 @@ class UniversalContestReconciliationEngine:
         total_classified = live_attended + virtual_attended + post_contest_practice_count + not_attended + evidence_pending + data_errors + evidence_unavailable
 
         # 7. Check Mathematical Invariants
-        invariant_pass = (total_classified == total_roster) and (total_roster == 1450 or total_roster > 0)
+        invariant_pass = (total_classified == total_roster) and (total_roster > 0)
         math_formula = f"{live_attended} (Live) + {virtual_attended} (Virtual) + {post_contest_practice_count} (Practice) + {not_attended} (Absent) + {evidence_pending} (Pending) + {data_errors} (Data Errors) = {total_classified} (Total: {total_roster})"
 
         # 8. Calculate Solve Distribution on Live Attendees

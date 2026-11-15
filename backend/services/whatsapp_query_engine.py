@@ -250,7 +250,8 @@ class WhatsAppQueryEngine:
 
         # D. PRINCIPAL CONTEST
         elif identity.role == "PRINCIPAL":
-            total_students = latest_session.total_students or 3517
+            active_roster_count = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0
+            total_students = (latest_session.total_students if latest_session and latest_session.total_students and latest_session.total_students > 0 else active_roster_count) or active_roster_count
             official = latest_session.official_participants or 0
             virtual = latest_session.virtual_participants or 0
             total_part = official + virtual

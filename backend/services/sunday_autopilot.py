@@ -375,7 +375,7 @@ class UniversalWeeklyContestAutopilot:
                     start_time="08:00",
                     end_time="09:30",
                     status="SCHEDULED",
-                    total_students=1450,
+                    total_students=db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0,
                     sync_status=" Verified"
                 )
                 db.add(session)
@@ -567,7 +567,7 @@ class UniversalWeeklyContestAutopilot:
             )
             live_attended = reconciliation.get("live_attended", 0)
             data_errors = reconciliation.get("data_errors", 0)
-            total_roster = reconciliation.get("total_roster", 1450)
+            total_roster = reconciliation.get("total_roster", db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0)
 
             now_utc = datetime.datetime.now(datetime.timezone.utc)
             session.last_fetch_at = now_utc
@@ -1001,7 +1001,7 @@ class UniversalWeeklyContestAutopilot:
                     start_time="08:00",
                     end_time="09:30",
                     status="SCHEDULED",
-                    total_students=1450,
+                    total_students=db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0,
                     sync_status=" Verified"
                 )
                 session.pipeline_state = "DISCOVERED"
@@ -1068,11 +1068,11 @@ class UniversalWeeklyContestAutopilot:
                     "contest_name": latest_session.contest_name if latest_session else "Weekly Contest",
                     "session_date": latest_session.session_date if latest_session else "23.08.2026",
                     "status": latest_session.status if latest_session else "FINALIZED",
-                    "total_students": latest_session.total_students if latest_session else 1450,
-                    "live_attended": latest_session.official_participants if latest_session else 767,
+                    "total_students": latest_session.total_students if latest_session else (db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0),
+                    "live_attended": latest_session.official_participants if latest_session else 0,
                     "virtual_attended": latest_session.virtual_participants if latest_session else 0,
-                    "not_attended": latest_session.not_participated if latest_session else 668,
-                    "data_errors": latest_session.failed_verification if latest_session else 15,
+                    "not_attended": latest_session.not_participated if latest_session else 0,
+                    "data_errors": latest_session.failed_verification if latest_session else 0,
                     "sync_status": latest_session.sync_status if latest_session else " Verified"
                 },
                 "next_contest": {

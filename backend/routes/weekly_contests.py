@@ -832,7 +832,7 @@ def get_session_live_telemetry(
             WeeklyPublicResult.student_id.in_(authorized_ids)
         )
     else:
-        active_student_cnt = db.query(Student).filter(Student.is_active == True).count() or 593
+        active_student_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
         total_students = (session.total_students if session and session.total_students and session.total_students > 0 else active_student_cnt) or active_student_cnt
         public_results_query = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id)
         

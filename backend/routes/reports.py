@@ -3506,8 +3506,8 @@ def get_friday_pipeline_status(
     latest_session = candidates[0][2] if candidates else None
 
     c_num = extract_contest_number(latest_session) if latest_session else None
-    period_id = f"W{c_num}" if c_num else (f"S{latest_session.id}" if latest_session else "W518")
-    contest_label = latest_session.contest_name if latest_session else f"Weekly Contest {c_num or 518}"
+    period_id = f"W{c_num}" if c_num else (f"S{latest_session.id}" if latest_session else "ALL")
+    contest_label = latest_session.contest_name if latest_session else (f"Weekly Contest {c_num}" if c_num else "Weekly Contest")
 
     pipeline_rec = db.query(WeeklyPipelineStatus).filter(WeeklyPipelineStatus.period_id == period_id).first()
     gate_res = check_contest_finalization(latest_session, db) if latest_session else {"status": "NO_SESSION"}
@@ -3539,7 +3539,7 @@ def get_friday_pipeline_status(
 
     clean_date = (latest_session.session_date or "").replace(".", "").replace("-", "") if latest_session else ""
     return {
-        "current_contest": f"W{c_num}" if c_num else "W518",
+        "current_contest": f"W{c_num}" if c_num else (f"S{latest_session.id}" if latest_session else "ALL"),
         "contest_name": contest_label,
         "session_date": latest_session.session_date if latest_session else None,
         "period_id": period_id,
@@ -3589,7 +3589,7 @@ def get_weekly_intelligence_download_info(
     candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
     latest_session = candidates[0][2] if candidates else None
     c_num = extract_contest_number(latest_session) if latest_session else None
-    target_period = period if (isinstance(period, str) and period) else (f"W{c_num}" if c_num else "W518")
+    target_period = period if (isinstance(period, str) and period) else (f"W{c_num}" if c_num else (f"S{latest_session.id}" if latest_session else "ALL"))
 
     pdf_entry = db.query(ReportCache).filter(
         ReportCache.week_id.ilike(f"%{target_period}%"),
@@ -3605,7 +3605,7 @@ def get_weekly_intelligence_download_info(
 
     return {
         "period": target_period,
-        "contest_name": latest_session.contest_name if latest_session else f"Weekly Contest {c_num or 518}",
+        "contest_name": latest_session.contest_name if latest_session else (f"Weekly Contest {c_num}" if c_num else "Weekly Contest"),
         "session_date": latest_session.session_date if latest_session else None,
         "pdf_ready": bool(pdf_entry and pdf_entry.download_url),
         "pdf_download_url": pdf_entry.download_url if pdf_entry else None,
