@@ -976,12 +976,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     department_name: d.name,
                     department_code: d.code,
                     student_count: d.student_count,
-                    active_count: Math.round(d.student_count * ((d.completion_rate || 75) / 100)),
-                    avg_rating: 1500,
-                    avg_solved: 0,
+                    active_count: Math.round(d.student_count * ((d.completion_rate || 0) / 100)),
+                    avg_rating: 0,
+                    avg_solved: d.total_solved ? Math.round(d.total_solved / Math.max(1, d.student_count)) : 0,
                     participation_rate_pct: d.completion_rate || 0,
-                    health_score: 92,
-                    growth_rate_pct: '+14%',
+                    health_score: d.completion_rate ? Math.round(d.completion_rate) : 0,
+                    growth_rate_pct: '0%',
                     completion_rate: d.completion_rate || 0
                   });
                 }}

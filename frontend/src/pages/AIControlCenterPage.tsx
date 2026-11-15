@@ -364,15 +364,15 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
             </div>
             <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
               <span className="text-[10px] font-black uppercase text-slate-400 block">Scanned</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white">{liveSync.records_checked || db.roster_records || 302}</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">{liveSync.records_checked ?? (db.roster_records || db.students || 0)}</span>
             </div>
             <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
               <span className="text-[10px] font-black uppercase text-slate-400 block">Updated</span>
-              <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">{liveSync.records_updated || 17}</span>
+              <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">{liveSync.records_updated ?? 0}</span>
             </div>
             <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
               <span className="text-[10px] font-black uppercase text-slate-400 block">Duration</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white">{liveSync.duration_seconds || 12.4}s</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">{liveSync.duration_seconds !== undefined ? `${liveSync.duration_seconds}s` : '0s'}</span>
             </div>
           </div>
 

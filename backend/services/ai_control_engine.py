@@ -627,13 +627,15 @@ class AIControlEngine:
         diff = c2_att - c1_att
         trend_str = f" +{diff} participants increase" if diff > 0 else (f" {abs(diff)} decrease" if diff < 0 else " Equal attendance")
 
+        from backend.models import Student
+        active_student_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
         answer = (
             f"**Contest Performance Comparison: {s_old.contest_name} vs {s_new.contest_name}**\n\n"
             f"• **{s_old.contest_name}**: {c1_att} Public Live Participants\n"
             f"• **{s_new.contest_name}**: {c2_att} Public Live Participants\n"
             f"• **Attendance Trend**: {trend_str}\n\n"
             f"**Key Metrics Comparison:**\n"
-            f"- Total Enrolled Students: {s_new.total_students or 302}\n"
+            f"- Total Enrolled Students: {s_new.total_students or active_student_cnt}\n"
             f"- Data Parity Score: 100% Matched across formats"
         )
 

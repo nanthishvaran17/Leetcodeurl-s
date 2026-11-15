@@ -2619,7 +2619,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
                   <span className="text-[10px] uppercase font-black text-slate-300 block">Data Errors</span>
-                  <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount || 20}</span>
+                  <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount ?? 0}</span>
                   <span className="text-[10px] text-amber-300 block font-bold">Auto-Retry Eligible</span>
                 </div>
               </div>
@@ -2962,7 +2962,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
         <div className="mt-4 sm:mt-6 px-1 sm:px-0">
-          <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || 18} onStudentClick={onSelectStudent} />
+          <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || sessionsList[0]?.sessionId || sessionsList[0]?.id || 1} onStudentClick={onSelectStudent} />
         </div>
       )}
 
@@ -3428,12 +3428,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {(() => {
             const yearOptions: GlobalFilterOption[] = [
               { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' },
+              { value: 'I',   label: 'I Year (2026–2030)',  pillText: 'I' },
               { value: 'II',  label: 'II Year (2025–2029)', pillText: 'II' },
               { value: 'III', label: 'III Year (2024–2028)', pillText: 'III' },
               { value: 'IV',  label: 'IV Year (2023–2027)', pillText: 'IV' },
             ];
 
-            const normalizedYear = selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
+            const normalizedYear = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
 
             return (
               <div className="space-y-1 min-w-0 w-full">

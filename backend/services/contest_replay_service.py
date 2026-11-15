@@ -39,7 +39,9 @@ class ContestReplayService:
             WeeklyPublicResult.session_id == (session.id if session else 1)
         ).all() if session else []
 
-        total_participants = len(results) if results else 302
+        from backend.models import Student
+        active_student_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+        total_participants = len(results) if results else active_student_cnt
         
         # 18 five-minute timeline buckets from 08:00 AM to 09:30 AM
         timeline_slices = []

@@ -411,9 +411,10 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
     # Check if DB has a session for this date
     session = db.query(WeeklySession).filter(WeeklySession.session_code == meta["session_code"]).first()
     if not session:
-        active_cnt = db.query(Student).filter(Student.is_active == True).count() or 593
+        active_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+        acad_yr = f"{upcoming_sunday.year}-{str(upcoming_sunday.year + 1)[2:]}" if upcoming_sunday.month >= 6 else f"{upcoming_sunday.year - 1}-{str(upcoming_sunday.year)[2:]}"
         session = WeeklySession(
-            academic_year="2026-27",
+            academic_year=acad_yr,
             week_number=upcoming_sunday.isocalendar()[1],
             session_code=meta["session_code"],
             session_date=meta["session_date"],
@@ -439,6 +440,8 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
     countdown_sec = max(0, int((start_dt - now_ist).total_seconds())) if now_ist < start_dt else 0
     time_remaining_sec = max(0, int((end_dt - now_ist).total_seconds())) if (now_ist >= start_dt and now_ist < end_dt) else 0
 
+    active_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+
     return {
         "sessionId": session.id,
         "sessionCode": session.session_code,
@@ -454,7 +457,7 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
         "endEpochMs": int(end_dt.timestamp() * 1000),
         "startFormattedIst": "08:00 AM IST",
         "endFormattedIst": "09:30 AM IST",
-        "totalStudents": session.total_students or 302
+        "totalStudents": session.total_students or active_cnt
     }
 
 
@@ -981,8 +984,9 @@ async def execute_admin_live_control(
                     rank=rank,
                     rank_change=random.randint(15, 120)
                 )
-            sunday_live_engine.processed_count = min(302, sunday_live_engine.processed_count + 15)
-            sunday_live_engine.successful_count = min(302, sunday_live_engine.successful_count + 15)
+            active_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+            sunday_live_engine.processed_count = min(active_cnt, sunday_live_engine.processed_count + 15)
+            sunday_live_engine.successful_count = min(active_cnt, sunday_live_engine.successful_count + 15)
             sunday_live_engine.worker_state = "RUNNING"
             return {
                 "success": True,
@@ -993,7 +997,8 @@ async def execute_admin_live_control(
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
             dataset = build_canonical_contest_dataset(session_id, db)
             metrics = dataset.get("metrics", {})
-            total = metrics.get("totalStudents", 302)
+            active_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+            total = metrics.get("totalStudents") or active_cnt
             pub = metrics.get("officialParticipants", 0)
             virt = metrics.get("virtualParticipants", 0)
             not_att = metrics.get("notParticipated", 0)
@@ -1033,13 +1038,16 @@ def execute_historical_resync(db: Session = Depends(get_db)):
 
 @router.get("/historical-completeness-report")
 def get_historical_completeness_report(
-    contest_slug: str = Query("weekly-contest-515", description="Contest slug e.g. weekly-contest-515"),
+    contest_slug: Optional[str] = Query(None, description="Contest slug (defaults to latest active contest)"),
     db: Session = Depends(get_db)
 ):
     """
-    Generates Section 21 300-Student Completeness Dashboard Report.
+    Generates Completeness Dashboard Report.
     """
     from backend.services.historical_resync_engine import historical_resync_engine
+    if not contest_slug:
+        latest = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        contest_slug = latest.contest_id if (latest and latest.contest_id) else "weekly-contest-527"
     return historical_resync_engine.generate_completeness_report(db, contest_slug=contest_slug)
 
 @router.get("/current-session")

@@ -273,7 +273,8 @@ class AIKnowledgeEngine:
                 ]
 
                 subject = f"Nandha Engineering College – HOD Weekly LeetCode Performance Summary"
-                total_enrolled = dataset.get("metrics", {}).get("totalStudents", 300)
+                active_student_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+                total_enrolled = dataset.get("metrics", {}).get("totalStudents") or active_student_cnt
                 official_att = dataset.get("metrics", {}).get("officialAttended", 0)
                 total_solved = dataset.get("metrics", {}).get("totalSolvedProblems", 0)
 
@@ -1097,7 +1098,8 @@ class AIKnowledgeEngine:
         # 12. CONTEST SPECIFIC STATS (PUBLIC / VIRTUAL / NOT ATTENDED / UNKNOWN / ERRORS) 
         target_sess = AIKnowledgeEngine._extract_session(db, clean_q, history=history)
         if target_sess and any(k in clean_q for k in ["contest", "public", "virtual", "not attended", "attended", "how many", "count", "stat", "result", "pending", "error", "unverified", "unknown"]):
-            total_cnt = db.query(func.count(WeeklyPublicResult.id)).filter(WeeklyPublicResult.session_id == target_sess.id).scalar() or 300
+            active_student_cnt = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() or 1
+            total_cnt = db.query(func.count(WeeklyPublicResult.id)).filter(WeeklyPublicResult.session_id == target_sess.id).scalar() or active_student_cnt
             pub_att = db.query(func.count(WeeklyPublicResult.id)).filter(
                 WeeklyPublicResult.session_id == target_sess.id,
                 WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED"])

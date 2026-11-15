@@ -239,8 +239,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         const res = await api.get('/public/stats', { timeout: 10000 });
         const data = res.data;
         if (data && !data.error) {
-          const total = Number(data?.active || data?.total || 593);
-          const verified = Number(data?.verified || data?.with_leetcode_handle || 521);
+          const total = Number(data?.active || data?.total || 0);
+          const verified = Number(data?.verified || data?.with_leetcode_handle || 0);
 
           if (total > 0) {
             const newStats = {

@@ -412,6 +412,7 @@ class FacultyAssignmentService:
                 User.role.in_([
                     "Faculty", "faculty", "Staff", "staff", "HOD", "hod",
                     "Placement Coordinator", "placement coordinator", "placement_coordinator",
+                    "Student Coordinator", "student coordinator", "student_coordinator",
                     "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator",
                     "Staff Mentor", "staff mentor", "Faculty Mentor", "faculty mentor", "Professor", "professor"
                 ]),
@@ -613,6 +614,7 @@ class FacultyAssignmentService:
                 User.role.in_([
                     "Faculty", "faculty", "Staff", "staff", "HOD", "hod",
                     "Placement Coordinator", "placement coordinator", "placement_coordinator",
+                    "Student Coordinator", "student coordinator", "student_coordinator",
                     "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator",
                     "Staff Mentor", "staff mentor", "Faculty Mentor", "faculty mentor", "Professor", "professor"
                 ]),

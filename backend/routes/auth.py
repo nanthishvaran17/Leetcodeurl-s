@@ -965,7 +965,9 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         "ADMIN", "SUPER ADMIN", "SUPER_ADMIN", "ADMINISTRATOR",
         "FACULTY", "STAFF", "INSTRUCTOR", "MENTOR",
         "FACULTY MENTOR", "STAFF MENTOR", "DEPARTMENT HOD",
-        "HOD", "PRINCIPAL", "STUDENT"
+        "PLACEMENT COORDINATOR", "PLACEMENT_COORDINATOR", "PLACEMENT OFFICER",
+        "STUDENT COORDINATOR", "STUDENT_COORDINATOR", "COORDINATOR",
+        "HOD", "PRINCIPAL", "MANAGEMENT", "DIRECTOR", "STUDENT"
     }
     user_role_upper = (user.role or "").strip().upper()
     if user_role_upper not in VALID_ROLES:

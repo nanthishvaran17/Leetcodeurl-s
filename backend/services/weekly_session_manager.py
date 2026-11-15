@@ -633,7 +633,7 @@ def seed_institutional_historical_sessions(db: Session):
 
         c_date = ref_date + datetime.timedelta(weeks=(c_num - 514))
         meta = discover_contest_metadata(c_date)
-        canonical_sess.academic_year = "2026-27"
+        canonical_sess.academic_year = f"{c_date.year}-{str(c_date.year + 1)[2:]}" if c_date.month >= 6 else f"{c_date.year - 1}-{str(c_date.year)[2:]}"
         canonical_sess.week_number = c_date.isocalendar()[1]
         canonical_sess.session_code = meta["session_code"]
         canonical_sess.session_date = meta["session_date"]

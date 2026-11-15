@@ -34,6 +34,8 @@ _STAFF_ROLES = frozenset({
     "faculty_mentor", "staff_mentor",
     "faculty coordinator", "staff coordinator",
     "faculty_coordinator", "staff_coordinator",
+    "student coordinator", "student_coordinator",
+    "coordinator", "academic coordinator",
     "mentor", "tutor", "class advisor"
 })
 

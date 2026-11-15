@@ -1352,12 +1352,12 @@ export const HRCandidateFinderPage: React.FC = () => {
   // Single Candidate Executive PDF Report Export
   const exportCandidateReportPDF = (c: Candidate, intel: any) => {
 
-    const perfScore = intel?.performance?.score ?? intel?.performance_score ?? c.performance_score ?? 85;
-    const interviewScore = intel?.performance?.interview_readiness ?? intel?.interview_readiness ?? c.interview_readiness ?? 80;
+    const perfScore = intel?.performance?.score ?? intel?.performance_score ?? c.performance_score ?? 0;
+    const interviewScore = intel?.performance?.interview_readiness ?? intel?.interview_readiness ?? c.interview_readiness ?? 0;
     const readiness = intel?.placement?.readiness ?? intel?.placement_readiness ?? c.placement_readiness ?? "READY";
     const riskLevel = intel?.risk?.level ?? intel?.risk_level ?? c.risk_level ?? "Safe";
     const trend = (intel?.trend ?? c.trend ?? "UP").toUpperCase();
-    const accRate = intel?.coding_metrics?.acceptance_rate ?? `${c.acceptance_rate || 68.5}%`;
+    const accRate = intel?.coding_metrics?.acceptance_rate ?? (c.acceptance_rate ? `${c.acceptance_rate}%` : 'N/A');
     const totSolved = intel?.coding_metrics?.total_solved ?? c.total_solved ?? 0;
     const easySolved = intel?.coding_metrics?.easy_solved ?? c.easy_solved ?? 0;
     const medSolved = intel?.coding_metrics?.medium_solved ?? c.medium_solved ?? 0;

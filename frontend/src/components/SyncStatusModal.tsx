@@ -63,8 +63,8 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
         status: 'COMPLETED',
         progress_percentage: 100,
         progress_percent: 100,
-        completed: prev?.total || 300,
-        processed: prev?.total || 300
+        completed: prev?.total || prev?.total_students || 0,
+        processed: prev?.total || prev?.total_students || 0
       }));
       fetchStatus(false);
     }
@@ -141,7 +141,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
   const isRunning = syncStatus?.is_running ?? false;
   const systemStatus = syncStatus?.system_status || 'Operational';
   const lastSyncTime = syncStatus?.last_sync_timestamp || freshness?.last_sync_timestamp || 'Just now';
-  const totalStudents = syncStatus?.total || syncStatus?.total_students || freshness?.total_students || 300;
+  const totalStudents = syncStatus?.total || syncStatus?.total_students || freshness?.total_students || 0;
   const processed = syncStatus?.processed ?? syncStatus?.completed ?? (isRunning ? 0 : totalStudents);
   const successful = syncStatus?.successful ?? syncStatus?.success ?? (isRunning ? 0 : totalStudents);
   const pending = syncStatus?.pending ?? syncStatus?.pending_usernames ?? 0;

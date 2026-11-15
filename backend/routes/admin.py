@@ -1019,7 +1019,19 @@ def create_staff_user(
         from backend.models import Department
         dept = db.query(Department).filter(Department.id == payload.department_id).first() if payload.department_id else None
         dept_code = (dept.code if dept and dept.code else "GEN").replace("(", "").replace(")", "").replace("-", "").upper()
-        role_prefix = "PRN" if payload.role == "Principal" else ("MGT" if payload.role == "Management" else ("FAC" if payload.role in ["Faculty", "Staff", "Faculty Mentor", "Staff Mentor"] else ("HOD" if payload.role in ["HOD", "Department HOD"] else "ADM")))
+        role_prefix = (
+            "PRN" if payload.role == "Principal" else (
+                "MGT" if payload.role == "Management" else (
+                    "PLC" if payload.role in ["Placement Coordinator", "Placement Officer"] else (
+                        "STC" if payload.role in ["Student Coordinator"] else (
+                            "FAC" if payload.role in ["Faculty", "Staff", "Faculty Mentor", "Staff Mentor"] else (
+                                "HOD" if payload.role in ["HOD", "Department HOD"] else "ADM"
+                            )
+                        )
+                    )
+                )
+            )
+        )
         prefix = f"NEC-{dept_code}-{role_prefix}-"
         existing_users = db.query(User).filter(User.institutional_id.like(f"{prefix}%")).all()
         max_num = 0
@@ -1056,6 +1068,11 @@ def create_staff_user(
         "administrator": "Administrator",
         "department hod": "Department HOD",
         "placement coordinator": "Placement Coordinator",
+        "placement_coordinator": "Placement Coordinator",
+        "placement officer": "Placement Coordinator",
+        "student coordinator": "Student Coordinator",
+        "student_coordinator": "Student Coordinator",
+        "coordinator": "Student Coordinator",
         "staff mentor": "Staff Mentor",
         "faculty mentor": "Faculty Mentor",
         "admin": "Admin",
@@ -1348,6 +1365,11 @@ def update_staff_user(
             "administrator": "Administrator",
             "department hod": "Department HOD",
             "placement coordinator": "Placement Coordinator",
+            "placement_coordinator": "Placement Coordinator",
+            "placement officer": "Placement Coordinator",
+            "student coordinator": "Student Coordinator",
+            "student_coordinator": "Student Coordinator",
+            "coordinator": "Student Coordinator",
             "staff mentor": "Staff Mentor",
             "faculty mentor": "Faculty Mentor",
             "admin": "Admin",

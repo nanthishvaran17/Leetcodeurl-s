@@ -4,7 +4,7 @@ import {
   X, Briefcase, ChevronRight, ChevronLeft, Hash, Mail, Phone, Calendar,
   Search, RefreshCw, Eye, EyeOff, AlertCircle, GraduationCap, ChevronDown,
   Lock, AlertTriangle, ArrowRight, UploadCloud, FileText, CheckCircle2, ShieldCheck,
-  Camera, Trash2, Image as ImageIcon, Copy
+  Camera, Trash2, Image as ImageIcon, Copy, Users
 } from 'lucide-react';
 import api from '../../services/api';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
@@ -167,7 +167,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const roleOptions: DropdownOption[] = [
     { value: 'Principal', label: 'Principal', badge: 'PRN', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', sublabel: 'Head of Institution', icon: Building2 },
     { value: 'Management', label: 'Management', badge: 'MGT', badgeColor: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600', sublabel: 'Institution Trust & Management', icon: Briefcase },
-    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30', sublabel: 'Department-wide placement access', icon: Briefcase },
+    { value: 'Placement Coordinator', label: 'Placement Coordinator', badge: 'PLC', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30', sublabel: 'Institution-wide placement & recruitment access', icon: Briefcase },
+    { value: 'Student Coordinator', label: 'Student Coordinator', badge: 'STC', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30', sublabel: 'Student cohort coordination & guidance', icon: Users },
     { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'PRC', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
     { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', sublabel: 'Student support & academic guidance', icon: User },
     { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', sublabel: 'Department-level academic oversight', icon: Building2 },
@@ -182,7 +183,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
       'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
       'Staff Mentor': { icon: User, color: 'text-brand-600 dark:text-brand-400', bgColor: 'bg-brand-50 dark:bg-brand-500/10', borderColor: 'border-brand-200 dark:border-brand-500/30', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', desc: 'Student support & academic guidance' },
       'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
-      'Placement Coordinator': { icon: Briefcase, color: 'text-teal-600 dark:text-teal-400', bgColor: 'bg-teal-50 dark:bg-teal-500/10', borderColor: 'border-teal-200 dark:border-teal-500/30', badgeColor: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300 border-teal-200 dark:border-teal-500/30', desc: 'Placement & recruitment oversight' },
+      'Placement Coordinator': { icon: Briefcase, color: 'text-cyan-600 dark:text-cyan-400', bgColor: 'bg-cyan-50 dark:bg-cyan-500/10', borderColor: 'border-cyan-200 dark:border-cyan-500/30', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30', desc: 'Institution-wide placement & recruitment access' },
+      'Student Coordinator': { icon: Users, color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-500/10', borderColor: 'border-emerald-200 dark:border-emerald-500/30', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30', desc: 'Student cohort coordination & guidance' },
       'Administrator': { icon: Key, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10', borderColor: 'border-amber-200 dark:border-amber-500/30', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', desc: 'Institutional administration & management' },
       'Super Admin': { icon: Shield, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-50 dark:bg-rose-500/10', borderColor: 'border-rose-200 dark:border-rose-500/30', badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30', desc: 'Full system control & root access' },
     };
@@ -278,8 +280,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     const deptObj = departments.find(d => String(d.id) === String(formData.department_id));
     const deptCode = (deptObj?.code || deptObj?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    const isMentor = ['Faculty Mentor', 'Staff Mentor'].includes(formData.role);
-    const roleTag = isMentor ? 'fac' : ['Department HOD'].includes(formData.role) ? 'hod' : 'adm';
+    const isMentor = ['Faculty Mentor', 'Staff Mentor', 'Student Coordinator'].includes(formData.role);
+    const roleTag = isMentor ? (formData.role === 'Student Coordinator' ? 'stc' : 'fac') : ['Department HOD'].includes(formData.role) ? 'hod' : formData.role === 'Placement Coordinator' ? 'plc' : 'adm';
 
     const rawCandidates: string[] = [];
 
@@ -1286,6 +1288,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                                 let rolePrefix = 'STAFF';
                                 if (formData.role === 'Department HOD') rolePrefix = 'HOD';
                                 else if (formData.role === 'Placement Coordinator') rolePrefix = 'PLC';
+                                else if (formData.role === 'Student Coordinator') rolePrefix = 'STC';
                                 else if (formData.role === 'Administrator') rolePrefix = 'ADMIN';
                                 else if (formData.role === 'Super Admin') rolePrefix = 'SUPERADMIN';
                                 else if (formData.role === 'Principal') rolePrefix = 'PRIN';

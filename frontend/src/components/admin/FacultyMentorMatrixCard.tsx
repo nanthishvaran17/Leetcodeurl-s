@@ -20,6 +20,24 @@ interface FacultyMentorMatrixCardProps {
   onViewActiveMentees?: () => void;
 }
 
+// Helper to extract role badge
+const getStaffRoleBadge = (role?: string) => {
+  const r = (role || '').trim().toLowerCase();
+  if (r.includes('placement')) {
+    return { label: 'PLC', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30' };
+  }
+  if (r.includes('student coordinator') || r === 'stc') {
+    return { label: 'STC', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30' };
+  }
+  if (r.includes('hod')) {
+    return { label: 'HOD', color: 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30' };
+  }
+  if (r.includes('mentor') || r.includes('faculty') || r.includes('staff')) {
+    return { label: 'FAC', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30' };
+  }
+  return null;
+};
+
 export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = ({
   staffList,
   staffWorkloadFilter,
@@ -238,6 +256,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             const isSelected = selectedStaff === String(s.id);
             const deptCode = (s as any).department_code || 'DEPT';
             const deptBadge = getDeptBadgeStyle(deptCode);
+            const roleBadge = getStaffRoleBadge(s.role);
             const initial = (s.username || 'F').charAt(0).toUpperCase();
 
             return (
@@ -277,9 +296,16 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                     </div>
                   </div>
 
-                  <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-extrabold border shrink-0 ${deptBadge}`}>
-                    {deptCode}
-                  </span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {roleBadge && (
+                      <span className={`px-1.5 py-0.5 rounded-lg font-mono text-[9px] font-extrabold border ${roleBadge.color}`}>
+                        {roleBadge.label}
+                      </span>
+                    )}
+                    <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-extrabold border ${deptBadge}`}>
+                      {deptCode}
+                    </span>
+                  </div>
                 </div>
 
                 {/* 3-Cell Inset Metric Grid */}
@@ -453,6 +479,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                 const isSelected = selectedStaff === String(s.id);
                 const deptCode = (s as any).department_code || (s as any).department || 'DEPT';
                 const deptBadge = getDeptBadgeStyle(deptCode);
+                const roleBadge = getStaffRoleBadge(s.role);
                 const initial = ((s.full_name || s.username || 'F').trim().charAt(0)).toUpperCase();
 
                 return (
@@ -498,7 +525,12 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                       <span className="md:hidden text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                         Department
                       </span>
-                      <div className="text-right md:text-left">
+                      <div className="flex items-center justify-end md:justify-start gap-1.5">
+                        {roleBadge && (
+                          <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-extrabold inline-block border shadow-xs ${roleBadge.color}`}>
+                            {roleBadge.label}
+                          </span>
+                        )}
                         <span className={`px-2.5 py-0.5 rounded-lg font-mono text-[11px] font-extrabold inline-block border shadow-xs ${deptBadge}`}>
                           {deptCode}
                         </span>

@@ -56,16 +56,35 @@ export function isHodRole(user: AuthUser | null): boolean {
   return r === 'hod' || r === 'department hod' || r === 'department_hod' || r === 'head of department' || r === 'placement coordinator' || r === 'placement_coordinator' || r === 'placement officer' || r === 'placement_officer' || r === 'placement';
 }
 
+export function isPlacementCoordinator(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const r = (user.role || '').trim().toLowerCase();
+  return ['placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer', 'placement'].includes(r);
+}
+
+export function isStudentCoordinator(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const r = (user.role || '').trim().toLowerCase();
+  return ['student coordinator', 'student_coordinator'].includes(r);
+}
+
 export function isStaffRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return ['staff', 'faculty', 'professor', 'mentor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'].includes(r);
+  return [
+    'staff', 'faculty', 'professor', 'mentor', 'faculty mentor', 'staff mentor',
+    'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor',
+    'student coordinator', 'student_coordinator', 'coordinator', 'academic coordinator'
+  ].includes(r);
 }
 
 export function isGlobalAccessRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
-  return ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive'].includes(r);
+  return [
+    'admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive',
+    'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer'
+  ].includes(r);
 }
 
 /**

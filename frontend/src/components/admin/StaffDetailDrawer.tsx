@@ -323,7 +323,17 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                     {staff.role || 'Executive'}
                   </div>
                   <div className="mt-2 text-[10.5px] font-bold text-purple-700 dark:text-purple-300">
-                    {staff.role === 'Department HOD' ? 'Department-Level Academic Oversight' : staff.role === 'Principal' ? 'Head of Institution & Governance' : 'Institutional System Administration'}
+                    {staff.role === 'Department HOD'
+                      ? 'Department-Level Academic Oversight'
+                      : staff.role === 'Placement Coordinator'
+                      ? 'Institution-wide Placement & Recruitment Oversight'
+                      : staff.role === 'Student Coordinator'
+                      ? 'Student Cohort Coordination & Mentorship'
+                      : staff.role === 'Principal'
+                      ? 'Head of Institution & Governance'
+                      : staff.role === 'Management'
+                      ? 'Institutional Executive Governance'
+                      : 'Institutional System Administration'}
                   </div>
                 </div>
 

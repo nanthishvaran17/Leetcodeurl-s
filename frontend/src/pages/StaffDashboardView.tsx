@@ -212,8 +212,8 @@ export const StaffDashboardView: React.FC = () => {
   const handleLiveSync = async () => {
     if (liveSyncing) return;
     setLiveSyncing(true);
-    setSyncStatusMsg(`FETCHING LIVE DATA... Checking ${myStudents.length || 30} assigned profiles from LeetCode...`);
-    notify.info('Live Sync Started', `Fetching live LeetCode data strictly for your ${myStudents.length || 30} assigned students...`);
+    setSyncStatusMsg(`FETCHING LIVE DATA... Checking ${myStudents.length} assigned profiles from LeetCode...`);
+    notify.info('Live Sync Started', `Fetching live LeetCode data strictly for your ${myStudents.length} assigned students...`);
     try {
       const res = await api.post('/faculty-assignments/live-sync');
       if (res.data?.status === 'ALREADY_RUNNING') {

@@ -602,6 +602,10 @@ def require_security_access(
         role_alias_map = {
             "faculty mentor": "faculty",
             "staff mentor": "staff",
+            "student coordinator": "staff",
+            "student_coordinator": "staff",
+            "coordinator": "staff",
+            "academic coordinator": "staff",
             "department hod": "hod",
             "department_hod": "hod",
             "placement": "hod",
@@ -803,7 +807,11 @@ def get_authenticated_user_scope(db: Session, user: User) -> dict:
         dept_ids = get_hod_authorized_department_ids(db, user)
         return {"type": "DEPARTMENT", "dept_ids": dept_ids, "dept_id": dept_ids[0] if dept_ids else None}
         
-    elif role in ["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]:
+    elif role in [
+        "faculty", "staff", "professor", "faculty mentor", "staff mentor",
+        "faculty_mentor", "staff_mentor", "student coordinator", "student_coordinator",
+        "coordinator", "academic coordinator"
+    ]:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
         assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(getattr(user, "id")))
         return {"type": "FACULTY", "student_ids": assigned_ids}

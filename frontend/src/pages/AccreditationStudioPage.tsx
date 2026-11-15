@@ -163,7 +163,7 @@ export const AccreditationStudioPage: React.FC = () => {
               <div>
                 <span className="text-xs text-slate-400">Participation Rate</span>
                 <div className="text-3xl font-black text-emerald-400">
-                  {data?.naac_criteria_2_3.participation_percentage || 82.4}%
+                  {data?.naac_criteria_2_3?.participation_percentage ?? 0}%
                 </div>
               </div>
               <span className="text-xs font-bold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
@@ -187,7 +187,7 @@ export const AccreditationStudioPage: React.FC = () => {
               <div>
                 <span className="text-xs text-slate-400">Placement Ready Coders</span>
                 <div className="text-3xl font-black text-cyan-400">
-                  {data?.naac_criteria_5_1.advanced_tier_coders || 428}
+                  {data?.naac_criteria_5_1?.advanced_tier_coders ?? 0}
                 </div>
               </div>
               <span className="text-xs font-mono font-bold text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">

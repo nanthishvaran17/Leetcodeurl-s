@@ -276,7 +276,8 @@ def get_command_center_summary(
             "faculty", "staff", "professor", "faculty mentor", "staff mentor",
             "faculty_mentor", "staff_mentor", "faculty coordinator", "staff coordinator",
             "faculty_coordinator", "staff_coordinator", "placement coordinator",
-            "placement_coordinator", "coordinator", "academic coordinator",
+            "placement_coordinator", "student coordinator", "student_coordinator",
+            "coordinator", "academic coordinator",
             "mentor", "tutor", "proctor", "class advisor", "hod", "department hod", "department_hod"
         ]
         assigned_faculty_ids_subq = db.query(FacultyStudentAssignment.faculty_id).filter(
@@ -2060,6 +2061,7 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
         "Faculty", "faculty", "Staff", "staff", "Professor", "professor",
         "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor",
         "Placement Coordinator", "placement coordinator", "placement_coordinator",
+        "Student Coordinator", "student coordinator", "student_coordinator",
         "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator"
     ]
     faculty_counts_query = db.query(
@@ -2256,6 +2258,7 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
         "Faculty", "faculty", "Staff", "staff", "Professor", "professor",
         "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor",
         "Placement Coordinator", "placement coordinator", "placement_coordinator",
+        "Student Coordinator", "student coordinator", "student_coordinator",
         "Coordinator", "coordinator", "Academic Coordinator", "academic coordinator"
     ]
     staff_users = db.query(User).filter(
@@ -2328,6 +2331,7 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
             "name": u.full_name or u.username,
             "username": u.username,
             "email": u.email,
+            "role": u.role or "Faculty Mentor",
             "assigned_count": assigned_cnt,
             "active_students": active_cnt,
             "completed_students": completed_cnt,
