@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🛡️ Security Vulnerability Reporting
+    url: https://github.com/nanthishvaran17/Leetcodeurl-s/security/advisories/new
+    about: Privately disclose sensitive vulnerabilities or credential concerns.
+  - name: 💬 Community Discussions & Mentorship
+    url: https://github.com/nanthishvaran17/Leetcodeurl-s/discussions
+    about: Ask questions, discuss contest algorithms, or share ideas.

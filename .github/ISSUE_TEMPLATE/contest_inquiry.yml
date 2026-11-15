@@ -1,0 +1,26 @@
+name: 🏆 Contest Telemetry Inquiry
+description: Inquire about Sunday contest telemetry, attendance sync, or score verification.
+title: "[CONTEST]: "
+labels: ["contest-telemetry", "inquiry"]
+body:
+  - type: input
+    id: contest_number
+    attributes:
+      label: Contest Name / Number
+      placeholder: e.g. Weekly Contest 527 / Biweekly Contest 143
+    validations:
+      required: true
+  - type: input
+    id: leetcode_handle
+    attributes:
+      label: LeetCode Public Username
+      placeholder: e.g. student_handle
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Inquiry Details
+      description: Provide the problem solve status or sync discrepancy observed.
+    validations:
+      required: true

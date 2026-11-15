@@ -1,0 +1,37 @@
+name: 💡 Feature Request
+description: Propose a new institutional capability, contest visualization, or analytics feature.
+title: "[FEATURE]: "
+labels: ["enhancement", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggesting an enhancement for **Nandha LeetCode Intelligence**? We welcome faculty and student ideas!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a specific institutional workflow or contest bottleneck?
+      placeholder: Describe the current limitation or problem you are trying to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Feature
+      description: Describe what you would like to see happen.
+      placeholder: Detailed description of the feature and how it should look or behave.
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Target Stakeholders
+      options:
+        - Students & Contest Solvers
+        - Faculty Mentors & Class Advisors
+        - Department HODs & Academic Deans
+        - Placement & Career Directorate
+        - System Administrators
+    validations:
+      required: true

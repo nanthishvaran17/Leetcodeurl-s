@@ -11,7 +11,10 @@
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="docs/assets/badges/live_platform.svg"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.5.5" src="https://img.shields.io/badge/Release-v4.5.5-blue.svg?style=flat-square"></a>
-  <a href="releases/android/Nandha_LeetCode_Intelligence_v4.5.5_latest.apk"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CODE_OF_CONDUCT.md"><img alt="Code of Conduct" src="https://img.shields.io/badge/Code%20of%20Conduct-v2.1-4baaaa.svg?style=flat-square"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CONTRIBUTING.md"><img alt="Contributing" src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md"><img alt="Security Zero-Trust" src="https://img.shields.io/badge/Security-Zero%20Trust-red.svg?style=flat-square"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square"></a>
 </p>
 
@@ -444,8 +447,54 @@ Leetcodeurl-s/
 
 ---
 
-## License, Security & Contributing
+## 🏛️ Institutional Governance, Community & Policies
 
-* **License**: This project is licensed under the **MIT License** — see the [LICENSE](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE) file for details.
-* **Security Policy**: Read our Zero-Trust [SECURITY.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md) for vulnerability reporting and patch SLAs.
-* **Contributing**: Contributions and improvements are welcome! Please read our [CONTRIBUTING.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CONTRIBUTING.md) guide before opening pull requests.
+| Policy Document | Description | Direct Link |
+| :--- | :--- | :--- |
+| **README** | Institutional Overview & Quick Start | [README.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/README.md) |
+| **Code of Conduct** | Academic & Contributor Covenant v2.1 | [CODE_OF_CONDUCT.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CODE_OF_CONDUCT.md) |
+| **Contributing** | Multi-Platform Development Guide & PR Rules | [CONTRIBUTING.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CONTRIBUTING.md) |
+| **Security Policy** | Zero-Trust SLAs, Disclosure & Hall of Fame | [SECURITY.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md) |
+| **Help & Support** | Help Desk, Mentorship & Contact Channels | [SUPPORT.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SUPPORT.md) |
+| **Changelog** | Production Release Notes (v4.5.5) | [CHANGELOG.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CHANGELOG.md) |
+| **Citation** | Academic & Institutional Citation Metadata | [CITATION.cff](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CITATION.cff) |
+| **License** | Open-Source Permissive License | [MIT License](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE) |
+
+---
+
+## 🔍 Frequently Asked Questions (FAQ) & Search Directory
+
+<details>
+<summary><b>1. What is Nandha LeetCode Intelligence (NLCI)?</b></summary>
+
+**Nandha LeetCode Intelligence (NLCI)** is an autonomous institutional telemetry and contest tracking platform engineered for **Nandha Engineering College (Autonomous)**. It monitors 1,500+ engineering students across CSE, IT, ECE, AIDS, EEE, MECH, and Civil engineering departments, capturing real-time problem solves, Sunday contest submissions, attendance forensics, and automated accreditation records.
+</details>
+
+<details>
+<summary><b>2. How does the automated Sunday Contest Tracker work?</b></summary>
+
+Every Sunday at 08:00 AM IST, the autonomous contest engine ingests LeetCode Weekly and Biweekly contests. Telemetry is verified at Level 4 forensic depth (detecting submission timestamps, difficulty distributions, and solve persistence), preventing attendance fraud and providing instantaneous leaderboard updates across departments.
+</details>
+
+<details>
+<summary><b>3. Can other autonomous engineering colleges or universities use this LeetCode Tracker?</b></summary>
+
+Yes! The platform is licensed under the permissive **MIT License**. It features full multi-tenancy, dynamic department provisioning (HOD, Placement Coordinator, Student Coordinator, Faculty Mentors), Docker readiness, and SQLite/PostgreSQL database compatibility.
+</details>
+
+<details>
+<summary><b>4. Where can I download the latest Android Mobile App (.APK) and Windows Desktop (.EXE)?</b></summary>
+
+* **Android Native App (v4.5.5, VersionCode 96):** [Releases Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android)
+* **Windows Desktop App (v4.5.2):** [Windows Setup Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/windows)
+* **Live Cloud Web Interface:** [https://nandha-leetcode.duckdns.org](https://nandha-leetcode.duckdns.org)
+</details>
+
+---
+
+<div align="center">
+
+<sub>**Keywords & Semantic Topics for Search Engines:**  
+*LeetCode Tracker • College LeetCode Tracker • Institutional Contest Intelligence • Autonomous LeetCode Leaderboard • Nandha Engineering College LeetCode • Student Coding Analytics • Level 4 Forensic Verification • Sunday Contest Autopilot • FastAPI LeetCode GraphQL • React LeetCode Dashboard • Capacitor 7 Android APK • NAAC A+ Accreditation Coding Matrix • Placement Coordinator Matrix • Nanthish S • Leetcodeurl-s*</sub>
+
+</div>

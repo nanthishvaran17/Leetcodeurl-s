@@ -1,0 +1,47 @@
+name: 🐛 Bug Report
+description: Report a broken feature, UI glitch, or unexpected platform behavior.
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue with **Nandha LeetCode Intelligence**! Please ensure this issue does not involve security vulnerabilities (use [Security Advisories](https://github.com/nanthishvaran17/Leetcodeurl-s/security/advisories/new) for sensitive disclosures).
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Affected Platform / Client
+      options:
+        - Web PWA (Chrome, Edge, Safari, Firefox)
+        - Android Native APK (Capacitor 7)
+        - Windows Desktop EXE (Electron 34)
+        - Backend FastAPI REST API
+        - Sunday Contest Autopilot Pipeline
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Navigate to '...'
+        2. Click on '...'
+        3. Observe error '...'
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Platform Version
+      placeholder: e.g. v4.5.5 (or latest commit)
+    validations:
+      required: false

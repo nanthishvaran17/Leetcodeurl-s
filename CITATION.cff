@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use or reference the Nandha LeetCode Intelligence platform in your research, institutional benchmarking, or academic work, please cite it as below."
+authors:
+  - family-names: "S"
+    given-names: "Nanthish"
+    affiliation: "Department of Computer Science & Engineering, Nandha Engineering College (Autonomous)"
+    orcid: ""
+title: "Nandha LeetCode Intelligence (NLCI): Autonomous Institutional Contest Intelligence & Forensic Verification Platform"
+version: 4.5.5
+doi: ""
+date-released: 2026-11-15
+url: "https://github.com/nanthishvaran17/Leetcodeurl-s"
+repository-code: "https://github.com/nanthishvaran17/Leetcodeurl-s"
+keywords:
+  - "leetcode tracker"
+  - "contest intelligence"
+  - "forensic verification"
+  - "student analytics"
+  - "fastapi"
+  - "react"
+  - "capacitor"
+  - "institutional governance"
+  - "naac accreditation"
+license: "MIT"
+institution:
+  name: "Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India"
