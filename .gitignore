@@ -214,10 +214,12 @@ tools/video_production/*.png
 tools/video_production/test_rec_output/
 tools/video_production/full_video_audit/
 
-# Mobile APK Builds (distributed via GitHub Releases and local releases/ folder)
+# Mobile APK & AAB Builds (distributed via GitHub Releases and local releases/ folder)
 *.apk
+*.aab
 frontend/public/*.apk
 releases/android/*.apk
+releases/android/*.aab
 
 
 
