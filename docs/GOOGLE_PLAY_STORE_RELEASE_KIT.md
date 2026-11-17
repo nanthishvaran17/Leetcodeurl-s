@@ -17,7 +17,7 @@
 | **Category** | Education |
 | **Tags** | Education, Coding, Performance Tracking, College, Analytics |
 | **Content Rating** | Everyone (PEGI 3 / ESRB Everyone) |
-| **Contact Email** | `nanthishvaran17@gmail.com` / `support@nandhaengg.org` |
+| **Contact Email** | `nanthishvaran17@gmail.com` |
 | **Privacy Policy URL** | `https://nandha-leetcode.duckdns.org/privacy-policy.html` |
 
 ---
@@ -87,7 +87,7 @@ When completing the **Data safety form** in Google Play Console:
 |---|---|---|
 | **Does your app collect or share any user data?** | **Yes** | Required for academic contest tracking |
 | **Is all user data encrypted in transit?** | **Yes** | All network traffic uses TLS 1.3 / HTTPS |
-| **Do you provide a way for users to request data deletion?** | **Yes** | Via email to support@nandhaengg.org or via HOD |
+| **Do you provide a way for users to request data deletion?** | **Yes** | Via email to nanthishvaran17@gmail.com or via HOD |
 | **Personal Info — Name** | Collected (Optional/Admin) | App functionality (Student identity) |
 | **Personal Info — Email address** | Collected | Account management, report delivery |
 | **Personal Info — User IDs** | Collected | College Roll Number & LeetCode Username |
