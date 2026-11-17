@@ -5,7 +5,7 @@
 
 **Application Name:** Nandha LeetCode Intelligence  
 **Developer/Institution:** Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India  
-**Contact Email:** support@nandhaengg.org / nanthishvaran17@gmail.com  
+**Contact Email:** nanthishvaran17@gmail.com  
 
 ---
 
@@ -72,7 +72,7 @@ Students and staff have the right to:
 - Access and review their tracked academic and contest records.
 - Request correction of mismatched registration numbers or LeetCode usernames.
 - Request account deletion and data removal:
-  - Users can request deletion by emailing **support@nandhaengg.org** or contacting their Department HOD / Faculty Mentor.
+  - Users can request deletion by emailing **nanthishvaran17@gmail.com** or contacting their Department HOD / Faculty Mentor.
   - Upon institutional verification, the student's profile, session logs, and associated personal records will be permanently removed from the active database within 30 business days.
 
 ---
@@ -95,5 +95,5 @@ We may update this Privacy Policy from time to time to reflect operational or re
 ## 10. Contact Us
 If you have any questions regarding this Privacy Policy or wish to exercise your data rights, please contact:
 - **Data Protection Officer / Admin:** Nandha Engineering College (Autonomous)
-- **Email:** support@nandhaengg.org / nanthishvaran17@gmail.com
+- **Email:** nanthishvaran17@gmail.com
 - **Address:** Perundurai Main Road, Erode - 638 052, Tamil Nadu, India

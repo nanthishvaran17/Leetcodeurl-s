@@ -24,9 +24,9 @@ android {
     signingConfigs {
         release {
             storeFile file(System.getenv("KEYSTORE_PATH") ?: project.findProperty("KEYSTORE_PATH") ?: '../nandha-release-key.jks')
-            storePassword System.getenv("KEYSTORE_STORE_PASSWORD") ?: project.findProperty("KEYSTORE_STORE_PASSWORD") ?: ''
+            storePassword System.getenv("KEYSTORE_STORE_PASSWORD") ?: project.findProperty("KEYSTORE_STORE_PASSWORD") ?: 'NEC@2024secure'
             keyAlias System.getenv("KEYSTORE_KEY_ALIAS") ?: project.findProperty("KEYSTORE_KEY_ALIAS") ?: 'nandha-key'
-            keyPassword System.getenv("KEYSTORE_KEY_PASSWORD") ?: project.findProperty("KEYSTORE_KEY_PASSWORD") ?: ''
+            keyPassword System.getenv("KEYSTORE_KEY_PASSWORD") ?: project.findProperty("KEYSTORE_KEY_PASSWORD") ?: 'NEC@2024secure'
             v1SigningEnabled true
             v2SigningEnabled true
         }
