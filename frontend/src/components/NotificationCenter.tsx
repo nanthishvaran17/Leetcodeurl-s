@@ -48,37 +48,37 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
     switch (toast.type) {
       case 'success':
         return {
-          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-emerald-500/40 dark:border-emerald-500/30',
-          badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/60',
+          bg: 'bg-white dark:bg-[#0F172A] border-emerald-500/50 dark:border-emerald-500/40',
+          badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200/80 dark:border-emerald-800/60',
           icon: CheckCircle2,
-          iconColor: 'text-emerald-500',
+          iconColor: 'text-emerald-600 dark:text-emerald-400',
           progressBg: 'bg-gradient-to-r from-emerald-500 to-teal-400',
           categoryColor: 'text-emerald-600 dark:text-emerald-400',
           defaultCategory: 'SUCCESS',
         };
       case 'error':
         return {
-          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-rose-500/40 dark:border-rose-500/30',
-          badgeBg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60',
+          bg: 'bg-white dark:bg-[#0F172A] border-rose-500/50 dark:border-rose-500/40',
+          badgeBg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200/80 dark:border-rose-800/60',
           icon: XCircle,
-          iconColor: 'text-rose-500',
+          iconColor: 'text-rose-600 dark:text-rose-400',
           progressBg: 'bg-gradient-to-r from-rose-500 to-red-400',
           categoryColor: 'text-rose-600 dark:text-rose-400',
           defaultCategory: 'SYSTEM ERROR',
         };
       case 'warning':
         return {
-          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-amber-500/40 dark:border-amber-500/30',
-          badgeBg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/60',
+          bg: 'bg-white dark:bg-[#0F172A] border-amber-500/50 dark:border-amber-500/40',
+          badgeBg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-800/60',
           icon: AlertTriangle,
-          iconColor: 'text-amber-500',
+          iconColor: 'text-amber-600 dark:text-amber-400',
           progressBg: 'bg-gradient-to-r from-amber-500 to-orange-400',
           categoryColor: 'text-amber-600 dark:text-amber-400',
           defaultCategory: 'ATTENTION REQUIRED',
         };
       case 'ai':
         return {
-          bg: 'bg-gradient-to-r from-[#0F172A]/95 via-[#1E1B4B]/95 to-[#0F172A]/95 border-brand-500/40 text-white',
+          bg: 'bg-[#0F172A] dark:bg-[#0B0F19] border-brand-500/50 text-white',
           badgeBg: 'bg-brand-500/20 text-brand-300 border-brand-400/30',
           icon: Bot,
           iconColor: 'text-amber-400 animate-pulse',
@@ -88,10 +88,10 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         };
       case 'loading':
         return {
-          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-indigo-500/40 dark:border-indigo-500/30',
-          badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-800/60',
+          bg: 'bg-white dark:bg-[#0F172A] border-indigo-500/50 dark:border-indigo-500/40',
+          badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200/80 dark:border-indigo-800/60',
           icon: Loader2,
-          iconColor: 'text-indigo-500 animate-spin',
+          iconColor: 'text-indigo-600 dark:text-indigo-400 animate-spin',
           progressBg: 'bg-gradient-to-r from-indigo-500 to-blue-400',
           categoryColor: 'text-indigo-600 dark:text-indigo-400',
           defaultCategory: 'PROCESSING',
@@ -99,10 +99,10 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
       case 'info':
       default:
         return {
-          bg: 'bg-white/95 dark:bg-[#1C1C1E]/95 border-indigo-500/40 dark:border-indigo-500/30',
-          badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-800/60',
+          bg: 'bg-white dark:bg-[#0F172A] border-indigo-500/50 dark:border-indigo-500/40',
+          badgeBg: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200/80 dark:border-indigo-800/60',
           icon: Info,
-          iconColor: 'text-indigo-500',
+          iconColor: 'text-indigo-600 dark:text-indigo-400',
           progressBg: 'bg-gradient-to-r from-indigo-500 to-blue-400',
           categoryColor: 'text-indigo-600 dark:text-indigo-400',
           defaultCategory: 'INFORMATION',
@@ -115,7 +115,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
   return (
     <div
-      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-2xl p-4 shadow-2xl border backdrop-blur-2xl transition-all duration-300 transform hover:-translate-y-0.5 animate-slide-down-fade ring-1 ring-black/5 dark:ring-white/10 ${style.bg}`}
+      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-2xl p-3.5 sm:p-4 shadow-2xl shadow-slate-900/20 dark:shadow-black/80 border transition-all duration-300 transform hover:-translate-y-0.5 animate-slide-down-fade ring-1 ring-black/5 dark:ring-white/10 ${style.bg}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       role="alert"
@@ -130,7 +130,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
             <span className={`text-[10px] font-black uppercase tracking-wider ${style.categoryColor}`}>
               {toast.category || style.defaultCategory}
             </span>
-            <span className="text-[10px] text-slate-600 dark:text-slate-300 font-bold shrink-0">{toast.timestamp}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold shrink-0">{toast.timestamp}</span>
           </div>
 
           <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug tracking-tight">
@@ -163,7 +163,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
             e.stopPropagation();
             onDismiss(toast.id);
           }}
-          className="p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors shrink-0 cursor-pointer active:scale-95"
+          className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer active:scale-95"
           title="Dismiss notification"
           aria-label="Dismiss notification"
         >
@@ -173,9 +173,9 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
       {/* Auto-dismiss Inset Floating Micro-Progress Bar */}
       {toast.duration && toast.duration > 0 ? (
-        <div className="absolute bottom-1 left-3.5 right-3.5 h-[2.5px] bg-slate-100/80 dark:bg-white/10 rounded-full overflow-hidden opacity-80">
+        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-slate-100 dark:bg-slate-800 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ease-linear ${style.progressBg}`}
+            className={`h-full transition-all ease-linear ${style.progressBg}`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -209,10 +209,10 @@ export const NotificationCenter: React.FC = () => {
 
   return createPortal(
     <>
-      {/* Toast Notification Stack Container (Top-Right Header-Aligned Stack / Center on Mobile) */}
+      {/* Toast Notification Stack Container (Top-Right Header-Aligned Stack / Below Navbar on Mobile) */}
       <div
         id="nec-toast-container"
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] sm:top-[4.25rem] left-3 sm:left-auto right-3 sm:right-6 z-[99999999] flex flex-col gap-2.5 sm:gap-3.5 w-auto sm:w-[380px] max-w-sm sm:max-w-md mx-auto sm:mx-0 pointer-events-none print:hidden no-print"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] left-3 sm:left-auto right-3 sm:right-6 z-[99999999] flex flex-col gap-2.5 sm:gap-3.5 w-auto sm:w-[380px] max-w-sm sm:max-w-md mx-auto sm:mx-0 pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >
