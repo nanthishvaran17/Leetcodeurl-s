@@ -1,6 +1,7 @@
 # Android Release Archive
 
-Latest Release: **v4.5.5 (VersionCode 96)**
+Latest Release: **v4.5.5 (VersionCode 96)**  
+**Authoritative Live Sync:** November 17, 2026, 06:56 PM IST (Fully Synchronized)
 
 Download the production signed APK:
 - [Nandha_LeetCode_Intelligence_v4.5.5_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.5_latest.apk)
