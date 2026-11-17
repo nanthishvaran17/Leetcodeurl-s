@@ -1144,6 +1144,17 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
             {"topic": "Greedy", "score": min(100, round((greedy_cnt / 20.0) * 100)), "solved": greedy_cnt},
             {"topic": "Binary Search", "score": min(100, round((bs_cnt / 20.0) * 100)), "solved": bs_cnt},
         ]
+    elif (st_out.stats and st_out.stats.total_solved and st_out.stats.total_solved > 0) or (student.stats and student.stats.total_solved and student.stats.total_solved > 0):
+        tot = (st_out.stats.total_solved if (st_out.stats and st_out.stats.total_solved) else student.stats.total_solved) or 0
+        factor = min(tot / 150.0, 1.0)
+        st_out.dsa_skills = [
+            {"topic": "Arrays", "score": min(100, round(75 * factor)), "solved": max(1, round(tot * 0.35))},
+            {"topic": "Strings", "score": min(100, round(60 * factor)), "solved": max(1, round(tot * 0.22))},
+            {"topic": "DP", "score": min(100, round(40 * factor)), "solved": max(0, round(tot * 0.12))},
+            {"topic": "Trees & Graphs", "score": min(100, round(50 * factor)), "solved": max(0, round(tot * 0.15))},
+            {"topic": "Greedy", "score": min(100, round(45 * factor)), "solved": max(0, round(tot * 0.08))},
+            {"topic": "Binary Search", "score": min(100, round(55 * factor)), "solved": max(0, round(tot * 0.08))},
+        ]
     else:
         st_out.dsa_skills = [
             {"topic": "Arrays", "score": 0, "solved": 0},

@@ -24,7 +24,8 @@ export const SkillRadarChart: React.FC<SkillRadarChartProps> = ({ skills, totalS
     { topic: 'Binary Search', score: totalSolved > 0 ? Math.min(Math.round(55 * factor), 100) : 0, solved: Math.round(totalSolved * 0.08) },
   ];
 
-  const data: SkillData[] = skills && skills.length > 0 ? skills : defaultSkills;
+  const hasRealSkills = Boolean(skills && skills.length > 0 && skills.some(d => (d.score || 0) > 0 || (d.solved || 0) > 0));
+  const data: SkillData[] = hasRealSkills ? skills! : defaultSkills;
 
   const size = 280;
   const center = size / 2;
