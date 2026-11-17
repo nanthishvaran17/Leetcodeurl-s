@@ -655,8 +655,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       )}
 
       {/* Floating Segmented Tab Navigation — Clean 2026 Style */}
-      <div className="w-full bg-slate-50 dark:bg-navy-950 p-1.5 sm:p-2 border-b border-slate-200/80 dark:border-navy-800 shrink-0 relative z-10 shadow-xs">
-        <div className="flex sm:grid sm:grid-cols-5 items-center gap-1.5 sm:gap-2 w-full max-w-4xl mx-auto overflow-x-auto no-scrollbar scrollbar-none px-1 py-0.5">
+      <div className="w-full bg-slate-50 dark:bg-navy-950 p-1 sm:p-2 border-b border-slate-200/80 dark:border-navy-800 shrink-0 relative z-10 shadow-xs">
+        <div className="flex sm:grid sm:grid-cols-5 items-center gap-1 sm:gap-2 w-full max-w-4xl mx-auto overflow-x-auto no-scrollbar scrollbar-none px-1 py-0.5 touch-pan-x">
           {[
             { id: 'overview', label: 'Overview', icon: <FileText className="w-3.5 h-3.5 shrink-0" /> },
             { id: 'analytics', label: 'Analytics', icon: <BarChart2 className="w-3.5 h-3.5 shrink-0" /> },
@@ -670,7 +670,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 key={tab.id}
                 type="button"
                 onClick={() => startTransition(() => setActiveTab(tab.id as TabId))}
-                className={`flex flex-row sm:flex-row items-center justify-center gap-1.5 px-3 py-2 sm:px-3 sm:py-2.5 rounded-xl text-xs font-black transition-all outline-none text-center cursor-pointer shrink-0 sm:shrink min-h-[38px] sm:min-h-[42px] touch-manipulation active:scale-95 select-none whitespace-nowrap ${
+                className={`flex flex-row items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black transition-all outline-none text-center cursor-pointer shrink-0 sm:shrink min-h-[34px] sm:min-h-[42px] touch-manipulation active:scale-95 select-none whitespace-nowrap ${
                   isActive
                     ? 'bg-white dark:bg-navy-800 text-brand-600 dark:text-brand-300 shadow-sm border border-slate-200/80 dark:border-navy-700'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-900/50'
@@ -690,7 +690,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       </div>
 
       {/* Scrollable Body Content */}
-      <div className="px-4 sm:px-6 pt-2 pb-28 sm:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar bg-white dark:bg-navy-950">
+      <div className="px-3 sm:px-6 pt-3 pb-28 sm:pb-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-4 sm:space-y-6 custom-scrollbar bg-white dark:bg-navy-950">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

@@ -622,10 +622,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowBatchDeleteModal(true)}
-                className="col-span-2 sm:col-span-1 min-h-[42px] px-3 sm:px-3.5 py-2 rounded-xl bg-rose-600/30 hover:bg-rose-600/40 border border-rose-400/30 text-rose-100 hover:text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
+                className="col-span-2 sm:col-span-1 min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/20 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
                 title="Delete Students by Department and Academic Year"
               >
-                <Trash2 className="w-4 h-4 text-rose-300 shrink-0" />
+                <Trash2 className="w-4 h-4 text-rose-400 shrink-0" />
                 <span className="truncate">Delete by Dept/Year</span>
               </button>
 

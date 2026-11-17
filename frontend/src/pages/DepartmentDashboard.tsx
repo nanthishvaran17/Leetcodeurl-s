@@ -312,7 +312,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   };
 
   return (
-    <div className="space-y-4 sm:space-y-8 pb-32 sm:pb-20 animate-fade-in">
+    <div className="space-y-4 sm:space-y-8 pb-44 sm:pb-24 animate-fade-in">
 
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
@@ -336,10 +336,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
             <button
               onClick={() => setShowBatchDeleteModal(true)}
-              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 bg-rose-600/30 hover:bg-rose-600/40 text-rose-100 hover:text-white rounded-2xl text-xs font-black shadow-lg shadow-rose-900/20 transition-all duration-200 active:scale-95 cursor-pointer border border-rose-400/30"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 active:bg-white/25 text-white rounded-2xl text-xs font-black shadow-md shadow-black/10 transition-all duration-200 active:scale-95 cursor-pointer border border-white/20 backdrop-blur-md"
               title="Delete Students by Department and Academic Year"
             >
-              <Trash2 className="w-4 h-4 text-rose-300" />
+              <Trash2 className="w-4 h-4 text-rose-400" />
               <span>Delete by Dept/Year</span>
             </button>
             <button
@@ -923,7 +923,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         </div>
 
         {finalStudentList.length === 0 ? (
-          <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="text-center py-12 sm:py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 mb-10">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
               <AlertCircle className="w-6 h-6" />
             </div>

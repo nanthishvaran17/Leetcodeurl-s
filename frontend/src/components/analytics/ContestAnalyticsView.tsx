@@ -1174,7 +1174,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
             </div>
           </div>
 
-          {/* Table Container - Fits 100% on same page with ZERO horizontal scroll */}
+          {/* Table Container - Mobile Responsive Card View & Desktop Table */}
           {filteredContests.length === 0 ? (
             <div className="py-10 text-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-navy-800/30 rounded-xl border border-dashed border-slate-200 dark:border-navy-700">
               <Trophy className="w-7 h-7 mx-auto mb-1.5 opacity-30 text-slate-400" />
@@ -1188,162 +1188,286 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
             </div>
           ) : (
             <div className="w-full">
-              <table className="w-full text-left border-collapse table-auto sm:table-fixed">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-800/40 text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    <th className="py-2.5 px-2.5 sm:px-3 rounded-l-lg w-[36%] sm:w-[35%]">Contest & Date</th>
-                    <th className="py-2.5 px-1.5 sm:px-2 text-center w-[20%] sm:w-[19%]">Solved</th>
-                    <th className="py-2.5 px-1.5 sm:px-2 text-center w-[14%] sm:w-[13%]">Score</th>
-                    <th className="py-2.5 px-2 sm:px-3 text-right w-[15%] sm:w-[17%]">Rating</th>
-                    <th className="py-2.5 px-2.5 sm:px-3 text-right rounded-r-lg w-[15%] sm:w-[16%]">Rank</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
-                  {paginatedContests.map((c) => {
-                    const solved = c.problems_solved || 0;
-                    const total = c.total_problems || 4;
-                    const ratingDelta = c.rating_change;
-                    const contestScore = c.score ?? (solved * 4);
-                    const isSelected = selectedContestId === c.id;
+              {/* Mobile Card List View (sm:hidden) */}
+              <div className="sm:hidden space-y-2.5">
+                {paginatedContests.map((c) => {
+                  const solved = c.problems_solved || 0;
+                  const total = c.total_problems || 4;
+                  const ratingDelta = c.rating_change;
+                  const contestScore = c.score ?? (solved * 4);
+                  const isSelected = selectedContestId === c.id;
 
-                    return (
-                      <tr 
-                        key={c.id || c.contest_name} 
-                        onClick={() => setSelectedContestId(selectedContestId === c.id ? 'ALL' : c.id)}
-                        className={`cursor-pointer transition-all ${
-                          isSelected 
-                            ? 'bg-brand-50/80 dark:bg-brand-950/40 ring-2 ring-brand-500/80 shadow-xs' 
-                            : c.is_best_rank 
-                              ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/80 dark:hover:bg-amber-950/40' 
-                              : 'hover:bg-slate-50/80 dark:hover:bg-navy-800/50'
-                        }`}
-                        title="Click to view detailed metrics for this week"
-                      >
-                        {/* 1. Contest & Date */}
-                        <td className="py-2.5 sm:py-3 px-2.5 sm:px-3">
-                          <div className="flex flex-col">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
-                                {c.contest_name}
-                              </span>
-                              <span className={`px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded uppercase tracking-wider ${
-                                c.contest_type === 'Biweekly' 
-                                  ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/30' 
-                                  : 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30'
-                              }`}>
-                                {c.contest_type}
-                              </span>
-                              {isSelected && (
-                                <span className="px-1.5 py-0.2 text-[8px] font-black uppercase rounded bg-brand-500 text-white">
-                                  Selected
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-slate-400" />
-                                {c.formatted_date || c.date || '-'}
-                              </span>
-                              {c.finish_time && (
-                                <span className="flex items-center gap-0.5 font-mono text-[10px] text-slate-400">
-                                  <Clock className="w-2.5 h-2.5" />
-                                  {c.finish_time}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* 2. Questions Solved with 4 visual blocks */}
-                        <td className="py-2.5 sm:py-3 px-1.5 sm:px-2 text-center">
-                          <div className="flex flex-col items-center justify-center">
-                            <div className="flex items-center gap-0.5 sm:gap-1 mb-0.5">
-                              {[
-                                { num: 1, diff: 'Easy', pts: 3, isSolved: (c.q1 ?? (solved >= 1 ? 1 : 0)) === 1, color: 'bg-emerald-500' },
-                                { num: 2, diff: 'Med', pts: 4, isSolved: (c.q2 ?? (solved >= 2 ? 1 : 0)) === 1, color: 'bg-amber-500' },
-                                { num: 3, diff: 'Med', pts: 5, isSolved: (c.q3 ?? (solved >= 3 ? 1 : 0)) === 1, color: 'bg-amber-500' },
-                                { num: 4, diff: 'Hard', pts: 6, isSolved: (c.q4 ?? (solved >= 4 ? 1 : 0)) === 1, color: 'bg-rose-500' }
-                              ].map((q) => {
-                                return (
-                                  <div
-                                    key={q.num}
-                                    title={`Q${q.num} (${q.diff} • ${q.pts} pts): ${q.isSolved ? 'Solved' : 'Unsolved'}`}
-                                    className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-bold ${
-                                      q.isSolved
-                                        ? `${q.color} text-white shadow-2xs`
-                                        : 'bg-slate-200 dark:bg-navy-700 text-slate-400 dark:text-slate-500'
-                                    }`}
-                                  >
-                                    {q.isSolved ? '✓' : q.num}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                              <span className="font-bold text-slate-900 dark:text-white">{solved}</span> / {total}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* 3. Contest Score */}
-                        <td className="py-2.5 sm:py-3 px-1.5 sm:px-2 text-center">
-                          <span className="inline-flex items-center gap-1 font-mono font-bold text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-lg border border-purple-200/50 dark:border-purple-800/30">
-                            <Flame className="w-3 h-3 text-purple-500" />
-                            {contestScore} pts
+                  return (
+                    <div
+                      key={c.id || c.contest_name}
+                      onClick={() => setSelectedContestId(selectedContestId === c.id ? 'ALL' : c.id)}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-brand-50/90 dark:bg-brand-950/50 border-brand-500 ring-2 ring-brand-500/80 shadow-xs'
+                          : c.is_best_rank
+                          ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/80 dark:border-amber-900/40'
+                          : 'bg-white dark:bg-navy-900/70 border-slate-200/80 dark:border-navy-800 shadow-2xs hover:border-slate-300'
+                      }`}
+                    >
+                      {/* Top Row: Name + Type Badge + Score */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-extrabold text-slate-900 dark:text-white text-xs truncate">
+                            {c.contest_name}
                           </span>
-                        </td>
+                          <span className={`px-1.5 py-0.2 text-[9px] font-bold rounded uppercase shrink-0 ${
+                            c.contest_type === 'Biweekly'
+                              ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50'
+                              : 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/50'
+                          }`}>
+                            {c.contest_type}
+                          </span>
+                          {isSelected && (
+                            <span className="px-1.5 py-0.2 text-[8px] font-black uppercase rounded bg-brand-500 text-white shrink-0">
+                              Selected
+                            </span>
+                          )}
+                        </div>
 
-                        {/* 4. Contest Rating & Delta */}
-                        <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
+                        <span className="font-mono font-black text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-lg border border-purple-200/50 dark:border-purple-800/30 shrink-0">
+                          {contestScore} pts
+                        </span>
+                      </div>
+
+                      {/* Date & Finish Time */}
+                      <div className="flex items-center gap-2 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-slate-400" />
+                          {c.formatted_date || c.date || '-'}
+                        </span>
+                        {c.finish_time && (
+                          <span className="flex items-center gap-0.5 font-mono text-[10px] text-slate-400">
+                            <Clock className="w-2.5 h-2.5" />
+                            {c.finish_time}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bottom Row: Solved Questions + Rating & Delta + Rank */}
+                      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100 dark:border-navy-800/80">
+                        {/* Questions Solved Icons */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-0.5">
+                            {[
+                              { num: 1, diff: 'Easy', pts: 3, isSolved: (c.q1 ?? (solved >= 1 ? 1 : 0)) === 1, color: 'bg-emerald-500' },
+                              { num: 2, diff: 'Med', pts: 4, isSolved: (c.q2 ?? (solved >= 2 ? 1 : 0)) === 1, color: 'bg-amber-500' },
+                              { num: 3, diff: 'Med', pts: 5, isSolved: (c.q3 ?? (solved >= 3 ? 1 : 0)) === 1, color: 'bg-amber-500' },
+                              { num: 4, diff: 'Hard', pts: 6, isSolved: (c.q4 ?? (solved >= 4 ? 1 : 0)) === 1, color: 'bg-rose-500' }
+                            ].map((q) => (
+                              <div
+                                key={q.num}
+                                className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-bold ${
+                                  q.isSolved
+                                    ? `${q.color} text-white shadow-2xs`
+                                    : 'bg-slate-200 dark:bg-navy-700 text-slate-400 dark:text-slate-500'
+                                }`}
+                              >
+                                {q.isSolved ? '✓' : q.num}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                            {solved}/{total}
+                          </span>
+                        </div>
+
+                        {/* Rating Delta & Global Rank */}
+                        <div className="flex items-center gap-2.5">
                           {c.rating_after ? (
-                            <div className="flex flex-col items-end">
-                              <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                            <div className="flex items-center gap-1">
+                              <span className="font-bold text-slate-900 dark:text-white text-xs">
                                 {Math.round(c.rating_after).toLocaleString('en-US')}
                               </span>
                               {ratingDelta !== null && ratingDelta !== undefined && (
-                                <span className={`inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] sm:text-[10px] font-bold mt-0.5 ${
+                                <span className={`inline-flex items-center text-[9px] font-bold ${
                                   ratingDelta > 0 
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' 
+                                    ? 'text-emerald-600 dark:text-emerald-400' 
                                     : ratingDelta < 0 
-                                      ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
-                                      : 'bg-slate-100 text-slate-500 dark:bg-navy-800 dark:text-slate-400'
+                                      ? 'text-rose-600 dark:text-rose-400'
+                                      : 'text-slate-400'
                                 }`}>
-                                  {ratingDelta > 0 && <TrendingUp className="w-2.5 h-2.5" />}
-                                  {ratingDelta < 0 && <TrendingDown className="w-2.5 h-2.5" />}
-                                  {ratingDelta === 0 && <Minus className="w-2.5 h-2.5" />}
                                   {ratingDelta > 0 ? `+${ratingDelta}` : ratingDelta}
                                 </span>
                               )}
                             </div>
-                          ) : (
-                            <span className="text-slate-400 text-xs">Unrated</span>
-                          )}
-                        </td>
+                          ) : null}
 
-                        {/* 5. Global Rank */}
-                        <td className="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right">
-                          <div className="flex flex-col items-end">
-                            {c.contest_rank && c.contest_rank > 0 ? (
-                              <span className={`font-mono font-bold text-xs sm:text-sm ${c.is_best_rank ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-200'}`}>
-                                #{Number(c.contest_rank).toLocaleString('en-US')}
+                          {c.contest_rank && c.contest_rank > 0 && (
+                            <span className={`font-mono font-bold text-xs ${c.is_best_rank ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-200'}`}>
+                              #{Number(c.contest_rank).toLocaleString('en-US')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View (hidden sm:block) */}
+              <div className="hidden sm:block w-full overflow-x-auto">
+                <table className="w-full text-left border-collapse table-auto sm:table-fixed">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-800/40 text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      <th className="py-2.5 px-2.5 sm:px-3 rounded-l-lg w-[36%] sm:w-[35%]">Contest & Date</th>
+                      <th className="py-2.5 px-1.5 sm:px-2 text-center w-[20%] sm:w-[19%]">Solved</th>
+                      <th className="py-2.5 px-1.5 sm:px-2 text-center w-[14%] sm:w-[13%]">Score</th>
+                      <th className="py-2.5 px-2 sm:px-3 text-right w-[15%] sm:w-[17%]">Rating</th>
+                      <th className="py-2.5 px-2.5 sm:px-3 text-right rounded-r-lg w-[15%] sm:w-[16%]">Rank</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                    {paginatedContests.map((c) => {
+                      const solved = c.problems_solved || 0;
+                      const total = c.total_problems || 4;
+                      const ratingDelta = c.rating_change;
+                      const contestScore = c.score ?? (solved * 4);
+                      const isSelected = selectedContestId === c.id;
+
+                      return (
+                        <tr 
+                          key={c.id || c.contest_name} 
+                          onClick={() => setSelectedContestId(selectedContestId === c.id ? 'ALL' : c.id)}
+                          className={`cursor-pointer transition-all ${
+                            isSelected 
+                              ? 'bg-brand-50/80 dark:bg-brand-950/40 ring-2 ring-brand-500/80 shadow-xs' 
+                              : c.is_best_rank 
+                                ? 'bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/80 dark:hover:bg-amber-950/40' 
+                                : 'hover:bg-slate-50/80 dark:hover:bg-navy-800/50'
+                          }`}
+                          title="Click to view detailed metrics for this week"
+                        >
+                          {/* 1. Contest & Date */}
+                          <td className="py-2.5 sm:py-3 px-2.5 sm:px-3">
+                            <div className="flex flex-col">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                                  {c.contest_name}
+                                </span>
+                                <span className={`px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded uppercase tracking-wider ${
+                                  c.contest_type === 'Biweekly' 
+                                    ? 'bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/30' 
+                                    : 'bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30'
+                                }`}>
+                                  {c.contest_type}
+                                </span>
+                                {isSelected && (
+                                  <span className="px-1.5 py-0.2 text-[8px] font-black uppercase rounded bg-brand-500 text-white">
+                                    Selected
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3 text-slate-400" />
+                                  {c.formatted_date || c.date || '-'}
+                                </span>
+                                {c.finish_time && (
+                                  <span className="flex items-center gap-0.5 font-mono text-[10px] text-slate-400">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {c.finish_time}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 2. Questions Solved with 4 visual blocks */}
+                          <td className="py-2.5 sm:py-3 px-1.5 sm:px-2 text-center">
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="flex items-center gap-0.5 sm:gap-1 mb-0.5">
+                                {[
+                                  { num: 1, diff: 'Easy', pts: 3, isSolved: (c.q1 ?? (solved >= 1 ? 1 : 0)) === 1, color: 'bg-emerald-500' },
+                                  { num: 2, diff: 'Med', pts: 4, isSolved: (c.q2 ?? (solved >= 2 ? 1 : 0)) === 1, color: 'bg-amber-500' },
+                                  { num: 3, diff: 'Med', pts: 5, isSolved: (c.q3 ?? (solved >= 3 ? 1 : 0)) === 1, color: 'bg-amber-500' },
+                                  { num: 4, diff: 'Hard', pts: 6, isSolved: (c.q4 ?? (solved >= 4 ? 1 : 0)) === 1, color: 'bg-rose-500' }
+                                ].map((q) => {
+                                  return (
+                                    <div
+                                      key={q.num}
+                                      title={`Q${q.num} (${q.diff} • ${q.pts} pts): ${q.isSolved ? 'Solved' : 'Unsolved'}`}
+                                      className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[8px] font-bold ${
+                                        q.isSolved
+                                          ? `${q.color} text-white shadow-2xs`
+                                          : 'bg-slate-200 dark:bg-navy-700 text-slate-400 dark:text-slate-500'
+                                      }`}
+                                    >
+                                      {q.isSolved ? '✓' : q.num}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                <span className="font-bold text-slate-900 dark:text-white">{solved}</span> / {total}
                               </span>
+                            </div>
+                          </td>
+
+                          {/* 3. Contest Score */}
+                          <td className="py-2.5 sm:py-3 px-1.5 sm:px-2 text-center">
+                            <span className="inline-flex items-center gap-1 font-mono font-bold text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-lg border border-purple-200/50 dark:border-purple-800/30">
+                              <Flame className="w-3 h-3 text-purple-500" />
+                              {contestScore} pts
+                            </span>
+                          </td>
+
+                          {/* 4. Contest Rating & Delta */}
+                          <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
+                            {c.rating_after ? (
+                              <div className="flex flex-col items-end">
+                                <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                                  {Math.round(c.rating_after).toLocaleString('en-US')}
+                                </span>
+                                {ratingDelta !== null && ratingDelta !== undefined && (
+                                  <span className={`inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[9px] sm:text-[10px] font-bold mt-0.5 ${
+                                    ratingDelta > 0 
+                                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' 
+                                      : ratingDelta < 0 
+                                        ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
+                                        : 'bg-slate-100 text-slate-500 dark:bg-navy-800 dark:text-slate-400'
+                                  }`}>
+                                    {ratingDelta > 0 && <TrendingUp className="w-2.5 h-2.5" />}
+                                    {ratingDelta < 0 && <TrendingDown className="w-2.5 h-2.5" />}
+                                    {ratingDelta === 0 && <Minus className="w-2.5 h-2.5" />}
+                                    {ratingDelta > 0 ? `+${ratingDelta}` : ratingDelta}
+                                  </span>
+                                )}
+                              </div>
                             ) : (
-                              <span className="text-slate-400 text-xs">—</span>
+                              <span className="text-slate-400 text-xs">Unrated</span>
                             )}
-                            {c.is_best_rank && (
-                              <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-amber-600 dark:text-amber-400 mt-0.5">
-                                <Trophy className="w-2.5 h-2.5 text-amber-500" />
-                                Best
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </td>
+
+                          {/* 5. Global Rank */}
+                          <td className="py-2.5 sm:py-3 px-2.5 sm:px-3 text-right">
+                            <div className="flex flex-col items-end">
+                              {c.contest_rank && c.contest_rank > 0 ? (
+                                <span className={`font-mono font-bold text-xs sm:text-sm ${c.is_best_rank ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-200'}`}>
+                                  #{Number(c.contest_rank).toLocaleString('en-US')}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-xs">—</span>
+                              )}
+                              {c.is_best_rank && (
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-amber-600 dark:text-amber-400 mt-0.5">
+                                  <Trophy className="w-2.5 h-2.5 text-amber-500" />
+                                  Best
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

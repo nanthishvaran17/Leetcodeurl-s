@@ -224,27 +224,27 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
 
   return createPortal(
     <div
-      className="modal-overlay-responsive animate-modal-backdrop select-none z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm fixed inset-0 overflow-y-auto"
+      className="modal-overlay-responsive animate-modal-backdrop select-none z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/70 backdrop-blur-sm fixed inset-0 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isDeleting) onClose();
       }}
     >
-      <div className="w-full max-w-xl my-auto bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-slate-100 flex flex-col relative overflow-hidden animate-modal-content">
+      <div className="w-full max-w-xl my-auto bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-slate-100 flex flex-col relative overflow-hidden animate-modal-content max-h-[92vh]">
         
         {/* Header */}
-        <div className="px-5 py-4 bg-gradient-to-r from-rose-950 via-slate-900 to-navy-950 text-white flex items-center justify-between border-b border-rose-900/40 shrink-0">
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center space-x-3 min-w-0">
-            <div className="p-2.5 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0 shadow-inner">
-              <Trash2 className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0 shadow-inner">
+              <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-indigo-400" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-black text-white tracking-tight truncate uppercase flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-black text-white tracking-tight truncate uppercase flex items-center gap-2">
                 <span>Delete by Dept & Year</span>
-                <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[10px] font-mono border border-rose-500/30">
+                <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-mono border border-indigo-500/30">
                   BATCH
                 </span>
               </h3>
-              <p className="text-xs text-rose-200/80 font-medium truncate">
+              <p className="text-[11px] sm:text-xs text-slate-300 font-medium truncate">
                 Target & delete student cohorts by Department and Academic Year
               </p>
             </div>
@@ -253,7 +253,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             type="button"
             disabled={isDeleting}
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-rose-600/80 active:scale-95 transition-all cursor-pointer min-h-[38px] min-w-[38px] flex items-center justify-center shrink-0 ml-2 disabled:opacity-30"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center shrink-0 ml-2 disabled:opacity-30 text-slate-300 hover:text-white"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -261,21 +261,21 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar flex-1">
 
           {/* Criteria Selection Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase text-rose-500 bg-rose-50 dark:bg-rose-500/10 px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-rose-200 dark:border-rose-500/20 w-fit">
+          <div className="space-y-3.5 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-500/20 w-fit">
                 <Building2 className="w-3.5 h-3.5" />
-                TARGET CRITERIA SELECTION
+                Cohort Criteria
               </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Choose Department & Year
+                Select Department & Academic Year
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
               {/* Department Dropdown */}
               <div>
                 <label className="block text-xs font-black text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
@@ -346,7 +346,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
                   onClick={() => setIsSoftDelete(false)}
                   className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
                     !isSoftDelete
-                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 shadow-xs'
+                      ? 'bg-rose-500/10 border-rose-500 text-rose-950 dark:text-rose-100 shadow-xs ring-1 ring-rose-500/20'
                       : 'bg-white dark:bg-navy-950/40 border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
@@ -366,7 +366,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
                   onClick={() => setIsSoftDelete(true)}
                   className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
                     isSoftDelete
-                      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 shadow-xs'
+                      ? 'bg-amber-500/10 border-amber-500 text-amber-950 dark:text-amber-100 shadow-xs ring-1 ring-amber-500/20'
                       : 'bg-white dark:bg-navy-950/40 border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                   }`}
                 >
@@ -518,12 +518,12 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/80 flex items-center justify-end gap-3 shrink-0">
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/80 flex items-center justify-end gap-2.5 sm:gap-3 shrink-0">
           <button
             type="button"
             disabled={isDeleting}
             onClick={onClose}
-            className="px-5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 rounded-xl transition-all cursor-pointer min-h-[42px]"
+            className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 rounded-xl transition-all cursor-pointer min-h-[42px] text-center"
           >
             Cancel
           </button>
@@ -539,7 +539,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
               !confirmChecked
             }
             onClick={handleExecuteDelete}
-            className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 disabled:opacity-40 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-rose-600/25 flex items-center justify-center gap-2 cursor-pointer min-h-[42px]"
+            className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 disabled:bg-slate-200 dark:disabled:bg-navy-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:border-slate-300 dark:disabled:border-navy-700 disabled:shadow-none text-white text-xs font-black rounded-xl transition-all shadow-md shadow-rose-600/25 flex items-center justify-center gap-2 cursor-pointer min-h-[42px]"
           >
             {isDeleting ? (
               <>
@@ -549,7 +549,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             ) : (
               <>
                 <Trash2 className="w-4 h-4 shrink-0" />
-                <span>
+                <span className="truncate">
                   {preview && preview.count > 0
                     ? isSoftDelete
                       ? `Deactivate ${preview.count} Students`

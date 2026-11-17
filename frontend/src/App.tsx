@@ -1536,7 +1536,7 @@ const MainAppContent: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 sm:backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 sm:backdrop-blur-md animate-fade-in"
           style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
@@ -1544,7 +1544,7 @@ const MainAppContent: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[92dvh] sm:h-[88vh] max-h-[92dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-[#0a0f1d] dark:bg-navy-950 border-t sm:border border-slate-800/80 dark:border-white/10"
+            className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[96dvh] sm:h-[88vh] max-h-[96dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-[#0a0f1d] dark:bg-navy-950 border-t sm:border border-slate-800/80 dark:border-white/10"
           >
             <SwipeHandle onClose={() => setSelectedStudent(null)} className="pt-2.5 pb-1 block sm:hidden shrink-0 bg-[#0a0f1d]" pillClassName="bg-white/30 hover:bg-white/50" />
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
