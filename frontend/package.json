@@ -1,14 +1,15 @@
 {
-    "name":  "college-leetcode-tracker-frontend",
-    "private":  true,
-    "version":  "4.5.5",
-    "description":  "Nandha Intelligence LeetCode Tracker Desktop Application",
-    "author":  "Nandha Engineering College",
-    "main":  "electron/main.cjs",
-    "type":  "module",
-    "scripts":  {
-                    "dev":  "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite",
-                    "build":  "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc \u0026\u0026 cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "name": "nandha-leetcode-intelligence-frontend",
+    "private": true,
+    "version": "4.5.5",
+    "description": "Nandha LeetCode Intelligence — Weekly Contest Tracker",
+    "author": "Nandha Engineering College",
+    "main": "electron/main.cjs",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "build:large": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc && cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
                     "electron:dev":  "concurrently \"npm run dev\" \"wait-on tcp:5173 \u0026\u0026 electron .\"",
                     "electron:build":  "npm run build \u0026\u0026 electron-builder --win nsis",
                     "lint":  "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -74,9 +75,9 @@
                             "vite-plugin-compression2":  "^2.5.3",
                             "wait-on":  "^9.5.1"
                         },
-    "build":  {
-                  "appId":  "com.nandha.leetcodetracker",
-                  "productName":  "Nandha Intelligence",
+    "build": {
+        "appId": "com.nandha.leetcodetracker",
+        "productName": "Nandha LeetCode Intelligence",
                   "directories":  {
                                       "output":  "dist-electron"
                                   },

@@ -1312,38 +1312,55 @@ class BulkDeleteRequest(BaseModel):
     student_ids: List[int]
     soft_delete: Optional[bool] = False
 
-@router.post("/bulk-delete")
-def bulk_delete_students(
-    req: BulkDeleteRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_security_access(resource_name="Bulk Delete Students", required_roles=["admin", "super admin"]))
-):
-    if not req.student_ids:
-        raise HTTPException(status_code=400, detail="No student IDs provided for deletion.")
+class BatchDeletePreviewRequest(BaseModel):
+    department_id: Optional[int] = None
+    department: Optional[str] = None
+    year_level: Optional[str] = None
+    college: Optional[str] = None
 
-    students = db.query(Student).filter(Student.id.in_(req.student_ids)).all()
+class DeleteByDeptYearRequest(BaseModel):
+    department_id: Optional[int] = None
+    department: Optional[str] = None
+    year_level: Optional[str] = None
+    college: Optional[str] = None
+    soft_delete: Optional[bool] = False
+
+def _perform_bulk_delete_students(
+    student_ids: List[int],
+    soft_delete: bool,
+    db: Session,
+    current_user,
+    background_tasks: BackgroundTasks,
+    action_name: str = "BULK_DELETE_STUDENTS",
+    custom_msg: Optional[str] = None
+):
+    if not student_ids:
+        return {"message": "No students provided for deletion.", "count": 0}
+
+    students = db.query(Student).filter(Student.id.in_(student_ids)).all()
     protected_ids = {s.id for s in students if is_protected_super_admin(s.email)}
-    safe_student_ids = [sid for sid in req.student_ids if sid not in protected_ids]
+    safe_student_ids = [sid for sid in student_ids if sid not in protected_ids]
     if not safe_student_ids:
         raise HTTPException(status_code=403, detail="SECURITY VIOLATION: Primary Super Admin profile is immutable and cannot be deleted.")
-    req.student_ids = safe_student_ids
 
-    count = len(req.student_ids)
+    count = len(safe_student_ids)
     students = [s for s in students if s.id in safe_student_ids]
     emails_to_notify = [(s.email, s.name) for s in students if s.email]
 
-    if req.soft_delete:
-        db.query(Student).filter(Student.id.in_(req.student_ids)).update({"is_active": False}, synchronize_session=False)
-        action_name = "BULK_DEACTIVATE_STUDENTS"
-        msg = f"Successfully deactivated {count} student records."
-        
+    if soft_delete:
+        db.query(Student).filter(Student.id.in_(safe_student_ids)).update({"is_active": False}, synchronize_session=False)
+        effective_action = "BULK_DEACTIVATE_STUDENTS" if action_name == "BULK_DELETE_STUDENTS" else action_name
+        msg = custom_msg or f"Successfully deactivated {count} student records."
+
         # Send archiving notification for soft-deletes
-        from backend.services.email_notifications import notify_student_archived  # type: ignore
-        for email, name in emails_to_notify:
-            background_tasks.add_task(notify_student_archived, student_email=email, student_name=name)
-            
-        for sid in req.student_ids:
+        try:
+            from backend.services.email_notifications import notify_student_archived  # type: ignore
+            for email, name in emails_to_notify:
+                background_tasks.add_task(notify_student_archived, student_email=email, student_name=name)
+        except Exception as e:
+            logger.warning(f"[BATCH_DELETE_EMAIL_NOTIF] {e}")
+
+        for sid in safe_student_ids:
             connection_manager.broadcast_sync({
                 'type': 'STUDENT_DELETED',
                 'student_id': sid,
@@ -1356,36 +1373,29 @@ def bulk_delete_students(
             LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
             WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
             StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
-            StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord
+            StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord,
+            WeeklyVerificationRecord, LeetCodeProblemStats, LeetCodeContest, LeetCodeBadge
         )
-        db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(MentorNote).filter(MentorNote.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentContestSnapshot).filter(StudentContestSnapshot.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentContestParticipation).filter(StudentContestParticipation.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(ContestParticipation).filter(ContestParticipation.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentAssignmentHistory).filter(StudentAssignmentHistory.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentWeeklyTarget).filter(StudentWeeklyTarget.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentGoal).filter(StudentGoal.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentRiskProfile).filter(StudentRiskProfile.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentSkillProfile).filter(StudentSkillProfile.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(StudentLearningPath).filter(StudentLearningPath.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(OfficialPublicParticipant).filter(OfficialPublicParticipant.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.student_id.in_(req.student_ids)).delete(synchronize_session=False)
-        
-        db.query(Student).filter(Student.id.in_(req.student_ids)).delete(synchronize_session=False)
-        action_name = "BULK_DELETE_STUDENTS"
-        msg = f"Successfully deleted {count} student records."
-        
-        for sid in req.student_ids:
+        for model in (
+            LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot, MentorNote,
+            StudentStatSnapshot, StudentContestSnapshot, StudentContestParticipation,
+            ContestParticipation, FacultyStudentAssignment, LeetCodeAccount,
+            LeetCodeActivity, LeetCodeContestRatingHistory, WeeklyPublicResult,
+            WeeklyVirtualResult, StudentAssignmentHistory, StudentWeeklyTarget,
+            StudentGoal, StudentRiskProfile, StudentSkillProfile, StudentLearningPath,
+            OfficialPublicParticipant, PreviousWeekParticipationRecord,
+            WeeklyVerificationRecord, LeetCodeProblemStats, LeetCodeContest, LeetCodeBadge
+        ):
+            try:
+                db.query(model).filter(model.student_id.in_(safe_student_ids)).delete(synchronize_session=False)
+            except Exception as e:
+                logger.debug(f"[BATCH_DELETE_CASCADE] {getattr(model, '__tablename__', str(model))}: {e}")
+
+        db.query(Student).filter(Student.id.in_(safe_student_ids)).delete(synchronize_session=False)
+        effective_action = action_name
+        msg = custom_msg or f"Successfully deleted {count} student records."
+
+        for sid in safe_student_ids:
             connection_manager.broadcast_sync({
                 'type': 'STUDENT_DELETED',
                 'student_id': sid,
@@ -1395,16 +1405,213 @@ def bulk_delete_students(
     audit = AuditLog(
         user_id=current_user.id,
         user_name=current_user.username,
-        action=action_name,
+        action=effective_action,
         details=msg
     )
     db.add(audit)
     db.commit()
 
-    update_all_rankings_and_badges(db)
+    try:
+        update_all_rankings_and_badges(db)
+    except Exception as rank_err:
+        logger.warning(f"Error updating rankings after batch delete: {rank_err}")
     cache.invalidate_tag("students")
 
     return {"message": msg, "count": count}
+
+def _build_dept_year_filter_query(
+    db: Session,
+    department_id: Optional[int] = None,
+    department: Optional[str] = None,
+    year_level: Optional[str] = None,
+    college: Optional[str] = None,
+    include_inactive: bool = True
+):
+    from backend.models import Department, Student
+    from backend.constants import get_academic_year_filter_clause
+
+    query = db.query(Student)
+    if not include_inactive:
+        query = query.filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
+    effective_dept_id = department_id
+    dept_val = department if isinstance(department, str) else None
+    if effective_dept_id is None and dept_val:
+        raw_d = dept_val.strip().upper()
+        if raw_d not in ("ALL", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", ""):
+            dept_lookup = {
+                "CSE(CS)": 1, "CS": 1, "CYBER": 1, "CYBER SECURITY": 1, "CSE_CS": 1, "CSE-CS": 1, "CSE (CS)": 1,
+                "CSE(IOT)": 2, "IOT": 2, "INTERNET OF THINGS": 2, "CSE_IOT": 2, "CSE-IOT": 2, "CSE (IOT)": 2,
+                "IT": 4, "INFORMATION TECHNOLOGY": 4,
+                "CSE": 5, "AIDS": 10, "ECE": 12, "AGRI": 17, "MECH": 18, "CIVIL": 19, "EEE": 20
+            }
+            if raw_d in dept_lookup:
+                effective_dept_id = dept_lookup[raw_d]
+            else:
+                d_obj = db.query(Department).filter(
+                    (func.upper(Department.code) == raw_d) |
+                    (Department.code.ilike(f"%{raw_d}%")) |
+                    (Department.name.ilike(f"%{raw_d}%"))
+                ).first()
+                if d_obj:
+                    effective_dept_id = d_obj.id
+
+    if effective_dept_id:
+        query = query.filter(Student.department_id == effective_dept_id)
+
+    if year_level and str(year_level).strip().upper() not in ['ALL', 'ALL YEARS', 'ALL_YEARS', '']:
+        yr_clause = get_academic_year_filter_clause(Student, str(year_level))
+        if yr_clause is not None:
+            query = query.filter(yr_clause)
+
+    college_val = college if isinstance(college, str) else None
+    if college_val and college_val.strip().upper() not in ("ALL", ""):
+        col_target = college_val.strip().upper()
+        is_nct_cond = or_(
+            func.upper(func.coalesce(Student.college, "")) == "NCT",
+            func.coalesce(Student.reg_no, "").ilike("7321%"),
+            func.coalesce(Student.email, "").ilike("%@nct%"),
+            func.coalesce(Student.institutional_email, "").ilike("%@nct%")
+        )
+        if col_target == "NCT":
+            query = query.filter(is_nct_cond)
+        elif col_target == "NEC":
+            query = query.filter(not_(is_nct_cond))
+        else:
+            query = query.filter(func.upper(func.coalesce(Student.college, "NEC")) == col_target)
+
+    return query, effective_dept_id
+
+@router.post("/preview-batch-delete")
+def preview_batch_delete(
+    req: BatchDeletePreviewRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Preview Batch Delete", required_roles=["admin", "super admin", "hod"]))
+):
+    role = (getattr(current_user, "role", "") or "").strip().lower()
+    if role == "hod" and getattr(current_user, "department_id", None):
+        req.department_id = current_user.department_id
+
+    dept_specified = bool(req.department_id) or (bool(req.department) and str(req.department).strip().upper() not in ("ALL", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", ""))
+    year_specified = bool(req.year_level) and str(req.year_level).strip().upper() not in ("ALL", "ALL YEARS", "ALL_YEARS", "")
+
+    if not dept_specified and not year_specified:
+        return {
+            "count": 0,
+            "department_name": "Please select a department",
+            "year_level": "Please select a year",
+            "college": req.college or "ALL",
+            "sample_students": [],
+            "message": "Please select a Department and/or Academic Year to target students."
+        }
+
+    query, effective_dept_id = _build_dept_year_filter_query(
+        db, req.department_id, req.department, req.year_level, req.college, include_inactive=True
+    )
+    from backend.models import Department
+    students = query.options(joinedload(Student.department)).all()
+
+    protected_count = sum(1 for s in students if is_protected_super_admin(s.email))
+    deletable_students = [s for s in students if not is_protected_super_admin(s.email)]
+
+    dept_display = "All Departments"
+    if effective_dept_id:
+        d_rec = db.query(Department).filter(Department.id == effective_dept_id).first()
+        if d_rec:
+            dept_display = f"{d_rec.code} - {d_rec.name}"
+    elif req.department and str(req.department).strip().upper() not in ("ALL", "ALL DEPARTMENTS", ""):
+        dept_display = str(req.department)
+
+    year_display = req.year_level if year_specified else "All Years"
+
+    samples = [
+        {
+            "id": s.id,
+            "reg_no": s.reg_no,
+            "name": s.name,
+            "department": s.department.code if s.department else "N/A",
+            "year_level": s.year_level or "N/A",
+            "college": s.college or "NEC",
+            "is_active": s.is_active if s.is_active is not None else True
+        }
+        for s in deletable_students[:10]
+    ]
+
+    return {
+        "count": len(deletable_students),
+        "total_matched": len(students),
+        "protected_count": protected_count,
+        "department_name": dept_display,
+        "year_level": year_display,
+        "college": req.college or "ALL",
+        "sample_students": samples
+    }
+
+@router.post("/delete-by-dept-year")
+def delete_students_by_dept_year(
+    req: DeleteByDeptYearRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Delete Students by Dept and Year", required_roles=["admin", "super admin", "hod"]))
+):
+    role = (getattr(current_user, "role", "") or "").strip().lower()
+    if role == "hod" and getattr(current_user, "department_id", None):
+        req.department_id = current_user.department_id
+
+    dept_specified = bool(req.department_id) or (bool(req.department) and str(req.department).strip().upper() not in ("ALL", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", ""))
+    year_specified = bool(req.year_level) and str(req.year_level).strip().upper() not in ("ALL", "ALL YEARS", "ALL_YEARS", "")
+
+    if not dept_specified and not year_specified:
+        raise HTTPException(status_code=400, detail="Safety check: Please select at least a Department or an Academic Year to delete.")
+
+    query, effective_dept_id = _build_dept_year_filter_query(
+        db, req.department_id, req.department, req.year_level, req.college, include_inactive=True
+    )
+    from backend.models import Department
+    students = query.all()
+    if not students:
+        return {"message": "No students found matching the selected criteria.", "count": 0}
+
+    student_ids = [s.id for s in students]
+
+    dept_str = f"Dept #{effective_dept_id}" if effective_dept_id else (req.department or "All Depts")
+    if effective_dept_id:
+        d_rec = db.query(Department).filter(Department.id == effective_dept_id).first()
+        if d_rec:
+            dept_str = d_rec.code
+    year_str = req.year_level or "All Years"
+    college_str = f" [{req.college}]" if req.college and req.college != "ALL" else ""
+    action_type = "Deactivated" if req.soft_delete else "Permanently deleted"
+    audit_msg = f"{action_type} {len(student_ids)} students from {dept_str} - Year {year_str}{college_str}"
+
+    return _perform_bulk_delete_students(
+        student_ids=student_ids,
+        soft_delete=bool(req.soft_delete),
+        db=db,
+        current_user=current_user,
+        background_tasks=background_tasks,
+        action_name="BATCH_DEACTIVATE_BY_DEPT_YEAR" if req.soft_delete else "BATCH_DELETE_BY_DEPT_YEAR",
+        custom_msg=audit_msg
+    )
+
+@router.post("/bulk-delete")
+def bulk_delete_students(
+    req: BulkDeleteRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Bulk Delete Students", required_roles=["admin", "super admin"]))
+):
+    if not req.student_ids:
+        raise HTTPException(status_code=400, detail="No student IDs provided for deletion.")
+
+    return _perform_bulk_delete_students(
+        student_ids=req.student_ids,
+        soft_delete=bool(req.soft_delete),
+        db=db,
+        current_user=current_user,
+        background_tasks=background_tasks,
+        action_name="BULK_DEACTIVATE_STUDENTS" if req.soft_delete else "BULK_DELETE_STUDENTS"
+    )
 
 class SecondaryAccountSchema(BaseModel):
     leetcode_username: str

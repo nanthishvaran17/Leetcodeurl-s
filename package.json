@@ -1,6 +1,6 @@
 {
-  "name": "college-leetcode-tracker",
-  "version": "4.5.1",
+  "name": "nandha-leetcode-intelligence",
+  "version": "4.5.5",
   "private": true,
   "scripts": {
     "build": "cd frontend && npm install && npm run build"

@@ -23,19 +23,29 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('../nandha-release-key.jks')
-            storePassword 'NEC@2024secure'
-            keyAlias 'nandha-key'
-            keyPassword 'NEC@2024secure'
+            storeFile file(System.getenv("KEYSTORE_PATH") ?: project.findProperty("KEYSTORE_PATH") ?: '../nandha-release-key.jks')
+            storePassword System.getenv("KEYSTORE_STORE_PASSWORD") ?: project.findProperty("KEYSTORE_STORE_PASSWORD") ?: ''
+            keyAlias System.getenv("KEYSTORE_KEY_ALIAS") ?: project.findProperty("KEYSTORE_KEY_ALIAS") ?: 'nandha-key'
+            keyPassword System.getenv("KEYSTORE_KEY_PASSWORD") ?: project.findProperty("KEYSTORE_KEY_PASSWORD") ?: ''
             v1SigningEnabled true
             v2SigningEnabled true
         }
     }
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+            // Ensure no debug configuration leaks into release
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            zipAlignEnabled true
         }
     }
 }

@@ -169,44 +169,34 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
         {/* Drawer Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.02]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-xs shrink-0">
               <Filter className="w-4 h-4 stroke-[2.5]" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-black text-slate-900 dark:text-white text-base leading-tight">
                   Filters &amp; Search
                 </span>
                 {activeCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/30 shrink-0">
                     {activeCount} active
                   </span>
                 )}
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Refine students by campus, dept, year &amp; status</span>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                Refine students by campus, dept, year &amp; status
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {activeCount > 0 && (
-              <button
-                type="button"
-                onClick={handleReset}
-                className="px-2.5 py-1.5 flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400 font-bold rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors active:scale-95 touch-manipulation cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset</span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={handleClose}
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95 touch-manipulation cursor-pointer"
-              aria-label="Close filters"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleClose}
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95 touch-manipulation cursor-pointer shrink-0 ml-2"
+            aria-label="Close filters"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Drawer Scrollable Body */}
@@ -377,13 +367,13 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           </div>
         </div>
 
-        {/* Apply Footer - Balanced with Reset & Apply buttons */}
+        {/* Apply Footer - Single clean Reset button & Apply button */}
         <div className="p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] sm:pb-4 bg-slate-50/90 dark:bg-[#070d1a]/95 backdrop-blur-md border-t border-slate-100 dark:border-white/10 flex items-center gap-2.5">
           {activeCount > 0 && (
             <button
               type="button"
               onClick={handleReset}
-              className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-all active:scale-95 touch-manipulation cursor-pointer shrink-0 flex items-center gap-1.5"
+              className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900/40 font-bold text-xs hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-all active:scale-95 touch-manipulation cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
               <span>Reset</span>

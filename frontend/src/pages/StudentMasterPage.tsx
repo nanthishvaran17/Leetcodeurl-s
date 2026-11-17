@@ -23,6 +23,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 const MobileFilterDrawer = React.lazy(() => import('../components/MobileFilterDrawer').then(m => ({ default: m.MobileFilterDrawer })));
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
+import { BatchDeleteModal } from '../components/BatchDeleteModal';
 
 // Validation state machine 
 type LcValidationState =
@@ -168,6 +169,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   // Removed useFilteredStudents client-side filtering
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -619,6 +621,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             
             <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
+                onClick={() => setShowBatchDeleteModal(true)}
+                className="col-span-2 sm:col-span-1 min-h-[42px] px-3 sm:px-3.5 py-2 rounded-xl bg-rose-600/30 hover:bg-rose-600/40 border border-rose-400/30 text-rose-100 hover:text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
+                title="Delete Students by Department and Academic Year"
+              >
+                <Trash2 className="w-4 h-4 text-rose-300 shrink-0" />
+                <span className="truncate">Delete by Dept/Year</span>
+              </button>
+
+              <button
                 onClick={onOpenImport}
                 className="min-h-[42px] px-3 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
               >
@@ -766,17 +777,30 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           </div>
 
           {filters.isFilteringActive && (
-            <button
-              type="button"
-              onClick={() => {
-                setLocalSearch('');
-                filters.resetFilters();
-              }}
-              className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
-            >
-              <RotateCcw className="w-3 h-3" />
-              Reset Filters
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {(filters.department !== 'ALL' || filters.academicYear !== 'ALL') && (
+                <button
+                  type="button"
+                  onClick={() => setShowBatchDeleteModal(true)}
+                  className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center gap-1 border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg transition-all"
+                  title="Batch delete students matching current department and year filters"
+                >
+                  <Trash2 className="w-3 h-3 text-rose-500" />
+                  <span>Delete Filtered Dept/Year</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalSearch('');
+                  filters.resetFilters();
+                }}
+                className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset Filters
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -1247,6 +1271,23 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Batch Delete by Department and Academic Year Modal */}
+      {showBatchDeleteModal && (
+        <BatchDeleteModal
+          isOpen={showBatchDeleteModal}
+          onClose={() => setShowBatchDeleteModal(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['students-master'] });
+            queryClient.invalidateQueries({ queryKey: ['students'] });
+            refetchStudents();
+          }}
+          departments={departments}
+          initialDepartment={filters.department}
+          initialAcademicYear={filters.academicYear}
+          initialCollege={filters.college}
+        />
       )}
 
     </div>

@@ -1640,14 +1640,17 @@ export const ReportsPage: React.FC = () => {
           {/* Floating Success / Status Toast */}
           {toastMessage && (
             <div className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] left-4 right-4 sm:left-auto sm:right-6 z-[10000] animate-slide-down-fade">
-              <div className="px-5 py-3 rounded-2xl bg-slate-905 bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-700/80 text-white text-xs font-bold shadow-2xl flex items-center space-x-3 w-full sm:w-auto max-w-md mx-auto ring-1 ring-white/10">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>{toastMessage}</span>
+              <div className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 text-slate-800 dark:text-white text-xs font-bold shadow-xl shadow-slate-900/10 dark:shadow-2xl flex items-center justify-between space-x-3 w-full sm:w-auto max-w-md mx-auto ring-1 ring-slate-900/5 dark:ring-white/10">
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                  <span className="truncate">{toastMessage}</span>
+                </div>
                 <button
                   onClick={() => setToastMessage(null)}
-                  className="text-slate-400 hover:text-white text-xs font-bold pl-2 cursor-pointer"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-full transition-colors shrink-0 cursor-pointer"
+                  aria-label="Dismiss toast"
                 >
-                 
+                  <X size={14} />
                 </button>
               </div>
             </div>

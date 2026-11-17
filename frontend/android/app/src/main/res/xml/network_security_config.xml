@@ -1,16 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network Security Config — NANDHA LEETCODE INTELLIGENCE
+    Production: HTTPS only for all external hosts.
+    Localhost / emulator addresses allowed over HTTP for dev-only debugging.
+    IMPORTANT: android:usesCleartextTraffic="true" in AndroidManifest.xml is
+    overridden by this file; cleartext is DENIED for all real production hosts.
+-->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true">
+    <!-- Production default: HTTPS only, no cleartext, trust system CAs only -->
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
-            <certificates src="user" />
         </trust-anchors>
     </base-config>
+
+    <!-- Local development / emulator addresses — cleartext allowed -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">13.53.231.6</domain>
+    </domain-config>
+
+    <!-- Production backend — HTTPS only, system CAs -->
+    <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">nandha-leetcode.duckdns.org</domain>
+        <domain includeSubdomains="true">nandhaengg.org</domain>
     </domain-config>
 </network-security-config>

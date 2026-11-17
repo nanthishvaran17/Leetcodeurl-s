@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'org.nandhaengg.leetcodesync',
-  appName: 'LeetCode Tracker',
+  appName: 'Nandha LeetCode Intelligence',
   webDir: 'dist',
   plugins: {
     SplashScreen: {

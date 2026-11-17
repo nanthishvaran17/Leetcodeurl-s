@@ -226,6 +226,13 @@ backend/firebase-key.json
 firebase-key.json
 contest_*_authentic_*.json
 
+# Keystores & Signing Secrets
+*.jks
+*.keystore
+keystore.properties
+*.p8
+*.p12
+
 # Agent & Assistant IDE configuration
 .agents/
 .claude/

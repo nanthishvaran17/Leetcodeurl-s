@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
-import { Layers, Users, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, School, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, SortAsc, SortDesc, Award, Activity, SlidersHorizontal } from 'lucide-react';
+import { Layers, Users, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, School, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, SortAsc, SortDesc, Award, Activity, SlidersHorizontal, Trash2 } from 'lucide-react';
 import api from '../services/api';
+import { BatchDeleteModal } from '../components/BatchDeleteModal';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
@@ -242,6 +243,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [mobileFilterTab, setMobileFilterTab] = useState<'all' | 'college' | 'department' | 'year' | 'performance' | 'sort'>('all');
+  const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -331,11 +333,19 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             </div>
           </div>
 
-          <div className="flex shrink-0 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
+            <button
+              onClick={() => setShowBatchDeleteModal(true)}
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 bg-rose-600/30 hover:bg-rose-600/40 text-rose-100 hover:text-white rounded-2xl text-xs font-black shadow-lg shadow-rose-900/20 transition-all duration-200 active:scale-95 cursor-pointer border border-rose-400/30"
+              title="Delete Students by Department and Academic Year"
+            >
+              <Trash2 className="w-4 h-4 text-rose-300" />
+              <span>Delete by Dept/Year</span>
+            </button>
             <button
               onClick={handleRefreshAllStats}
               disabled={isRefreshing}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? 'Syncing Roster...' : 'Sync Live Stats'}</span>
@@ -1003,6 +1013,21 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           </div>
         )}
       </div>
+
+      {/* Batch Delete by Department and Academic Year Modal */}
+      {showBatchDeleteModal && (
+        <BatchDeleteModal
+          isOpen={showBatchDeleteModal}
+          onClose={() => setShowBatchDeleteModal(false)}
+          onSuccess={() => {
+            refreshAllData();
+          }}
+          departments={departments}
+          initialDepartment={selectedDept !== 'all' ? selectedDept : 'ALL'}
+          initialAcademicYear={yearLevel !== 'all' ? (yearLevel === '2' ? '2nd Year' : yearLevel === '3' ? '3rd Year' : yearLevel === '4' ? '4th Year' : '1st Year') : 'ALL'}
+          initialCollege={selectedCollege !== 'all' ? selectedCollege : 'ALL'}
+        />
+      )}
 
     </div>
   );
