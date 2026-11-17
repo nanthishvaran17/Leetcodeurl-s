@@ -9,6 +9,8 @@ jobs:
   build-apk:
     name: Build & Package Android APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -59,4 +61,32 @@ jobs:
           name: Nandha-LeetCode-Intelligence-release.apk
           path: frontend/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: warn
+
+      - name: Rename Release Outputs for Distribution
+        if: success()
+        run: |
+          mkdir -p dist-release
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.5_latest.apk
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/nandha-leetcode.apk
+          cp frontend/android/app/build/outputs/bundle/release/app-release.aab dist-release/Nandha-LeetCode-PlayStore-Release.aab
+
+      - name: Publish Official GitHub Release v4.5.5
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: v4.5.5
+          name: "Nandha LeetCode Intelligence v4.5.5 (Production Release)"
+          body: |
+            ### 🚀 Official Production Release v4.5.5 (VersionCode 96)
+            - **Target SDK 36 (Android 16)** Google Play Ready
+            - **ProGuard / R8 Optimization** active (14.76 MB lean release APK)
+            - **Restricted permissions removed** for 100% Play Store policy compliance
+            - **Strict HTTPS / Cleartext disabled**
+            - **Institutional Privacy Policy & Reviewer Docs**
+          files: |
+            dist-release/Nandha_LeetCode_Intelligence_v4.5.5_latest.apk
+            dist-release/nandha-leetcode.apk
+            dist-release/Nandha-LeetCode-PlayStore-Release.aab
+          prerelease: false
+          generate_release_notes: true
 
