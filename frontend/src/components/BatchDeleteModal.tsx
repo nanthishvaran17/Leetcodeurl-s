@@ -4,13 +4,14 @@ import { Trash2, AlertTriangle, X, Loader2, Building2, Calendar, School, Check, 
 import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { Department } from '../context/DepartmentContext';
 import { GlobalFilter, GlobalFilterOption } from './GlobalFilter';
 
 export interface BatchDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  departments: Array<{ id: number; name: string; code: string }>;
+  departments: Department[] | Array<{ id?: number; name: string; code: string; [key: string]: any }>;
   initialDepartment?: string;
   initialAcademicYear?: string;
   initialCollege?: string;
