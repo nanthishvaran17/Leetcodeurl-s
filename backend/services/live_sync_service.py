@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, StudentStatSnapshot, StudentContestSnapshot, LeetCodeContestRatingHistory, GlobalSyncLock
+from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, StudentStatSnapshot, StudentContestSnapshot, LeetCodeContestRatingHistory, GlobalSyncLock, LeetCodeLanguageStats, LeetCodeTopicStats
 from sqlalchemy import update, or_, and_
 from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
@@ -956,6 +956,38 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
                 existing_hist.contest_rank = p.get("contest_rank")
             if p.get("contest_rating_after") is not None:
                 existing_hist.rating_after = p.get("contest_rating_after")
+
+        # Sync LeetCodeLanguageStats
+        raw_langs = res.get("languages") or []
+        for l_item in raw_langs:
+            l_name = l_item.get("language_name") or l_item.get("language")
+            if l_name:
+                existing_l = db.query(LeetCodeLanguageStats).filter(
+                    LeetCodeLanguageStats.student_id == student.id,
+                    LeetCodeLanguageStats.language_name == l_name
+                ).first()
+                if not existing_l:
+                    existing_l = LeetCodeLanguageStats(student_id=student.id, language_name=l_name)
+                    db.add(existing_l)
+                existing_l.problems_solved = l_item.get("problems_solved", 0)
+                existing_l.fetched_at = now
+
+        # Sync LeetCodeTopicStats (DSA Skills)
+        raw_skills = res.get("skills") or res.get("dsa_topics") or []
+        for s_item in raw_skills:
+            t_name = s_item.get("topic_name") or s_item.get("topic")
+            if t_name:
+                existing_t = db.query(LeetCodeTopicStats).filter(
+                    LeetCodeTopicStats.student_id == student.id,
+                    LeetCodeTopicStats.topic_name == t_name
+                ).first()
+                if not existing_t:
+                    existing_t = LeetCodeTopicStats(student_id=student.id, topic_name=t_name)
+                    db.add(existing_t)
+                existing_t.topic_slug = s_item.get("topic_slug", "")
+                existing_t.problems_solved = s_item.get("problems_solved", 0) or s_item.get("solved", 0)
+                existing_t.topic_tier = s_item.get("topic_tier") or s_item.get("tier", "intermediate")
+                existing_t.fetched_at = now
 
         # Create historical StudentContestSnapshot if contest data is present
         if res.get("recent_contest_name"):
