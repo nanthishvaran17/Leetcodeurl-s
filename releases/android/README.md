@@ -1,12 +1,16 @@
 # Android Release Archive
 
 Latest Release: **v4.5.5 (VersionCode 96)**  
-**Authoritative Live Sync:** November 17, 2026, 06:56 PM IST (Fully Synchronized)
+**Authoritative Live Sync:** November 17, 2026, 06:56 PM IST (Fully Synchronized)  
+**Cloud CI/CD Build Run:** [GitHub Actions Run #44093673533](https://github.com/nanthishvaran17/Leetcodeurl-s/actions/runs/44093673533) (Build Status: `SUCCESS`)
 
-Download the production signed APK:
-- [Nandha_LeetCode_Intelligence_v4.5.5_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.5_latest.apk)
-- [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
-- [nandha-leetcode.apk](./nandha-leetcode.apk)
+### Production Build Outputs:
+- **Play Store Bundle (AAB):** `Nandha-LeetCode-PlayStore-Release.aab` (17.00 MB) — [Download from GitHub Actions Artifacts](https://github.com/nanthishvaran17/Leetcodeurl-s/actions/runs/44093673533)
+- **Signed Release APK:** `Nandha-LeetCode-Intelligence-release.apk` (14.76 MB) — [Download from GitHub Actions Artifacts](https://github.com/nanthishvaran17/Leetcodeurl-s/actions/runs/44093673533)
+- **Direct Repository APKs:**
+  - [Nandha_LeetCode_Intelligence_v4.5.5_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.5_latest.apk)
+  - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
+  - [nandha-leetcode.apk](./nandha-leetcode.apk)
 
 ### Changelog v4.5.5 (Latest Production)
 - **Mobile Bottom Sheet Drawer & Z-Index Overlay Hardening**:
