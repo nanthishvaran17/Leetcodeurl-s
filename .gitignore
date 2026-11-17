@@ -162,6 +162,7 @@ all_codes.txt
 *.tsv
 *.pdf
 *.html
+!frontend/public/*.html
 response.json
 test_failures.txt
 failures.log
