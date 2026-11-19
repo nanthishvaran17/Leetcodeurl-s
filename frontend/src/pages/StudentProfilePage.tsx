@@ -752,12 +752,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   <Award className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="flex items-baseline space-x-1">
-                <span className="text-xs font-bold text-amber-600/70 dark:text-amber-400/70 font-mono">#</span>
-                <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                  {detail?.college_rank || '—'}
-                </h3>
-              </div>
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {detail?.college_rank || '—'}
+              </h3>
             </div>
 
             {/* Dept Rank */}
@@ -768,12 +765,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                   <Medal className="w-3.5 h-3.5" />
                 </div>
               </div>
-              <div className="flex items-baseline space-x-1">
-                <span className="text-xs font-bold text-indigo-600/70 dark:text-indigo-400/70 font-mono">#</span>
-                <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                  {detail?.dept_rank || '—'}
-                </h3>
-              </div>
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {detail?.dept_rank || '—'}
+              </h3>
             </div>
 
             {/* Weekly Progress */}

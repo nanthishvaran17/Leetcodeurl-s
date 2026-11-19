@@ -47,40 +47,45 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [accentColor, setAccentColor] = useState<string>(getInitialAccentColor);
 
-  // Sync DOM classes, accent attributes, and Android system theme-color
-  useEffect(() => {
+  // Synchronous DOM applier for instant zero-delay theme & accent switching
+  const applyThemeToDOM = (newTheme: Theme) => {
     if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
     const body = window.document.body;
 
-    if (theme === 'dark') {
+    if (newTheme === 'dark') {
       root.classList.add('dark');
       if (body) body.classList.add('dark');
     } else {
       root.classList.remove('dark');
       if (body) body.classList.remove('dark');
     }
-    localStorage.setItem('theme', theme);
 
-    if (accentColor) {
-      root.setAttribute('data-accent', accentColor);
-      localStorage.setItem('nec_accent_color', accentColor);
-    }
-
-    // Update Android status bar & browser navigation theme-color
     try {
-      const themeColor = theme === 'dark' ? '#060813' : '#f8fafc';
+      const themeColor = newTheme === 'dark' ? '#060813' : '#f8fafc';
       const metaTags = document.querySelectorAll('meta[name="theme-color"]');
       if (metaTags.length > 0) {
         metaTags.forEach(tag => tag.setAttribute('content', themeColor));
-      } else {
-        const meta = document.createElement('meta');
-        meta.setAttribute('name', 'theme-color');
-        meta.setAttribute('content', themeColor);
-        document.head.appendChild(meta);
       }
     } catch (_) {}
-  }, [theme]);
+  };
+
+  const applyAccentToDOM = (color: string) => {
+    if (typeof window === 'undefined') return;
+    const root = window.document.documentElement;
+    root.setAttribute('data-accent', color);
+  };
+
+  // Sync DOM classes, accent attributes, and Android system theme-color
+  useEffect(() => {
+    applyThemeToDOM(theme);
+    localStorage.setItem('theme', theme);
+
+    if (accentColor) {
+      applyAccentToDOM(accentColor);
+      localStorage.setItem('nec_accent_color', accentColor);
+    }
+  }, [theme, accentColor]);
 
   // Listen to mobile system dark mode preference changes in real-time
   useEffect(() => {
@@ -107,6 +112,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
+      applyThemeToDOM(next);
       localStorage.setItem('theme', next);
       localStorage.setItem('theme_user_set', 'true');
       return next;
@@ -114,6 +120,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const handleSetTheme = (newTheme: Theme) => {
+    applyThemeToDOM(newTheme);
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     localStorage.setItem('theme_user_set', 'true');
@@ -123,14 +130,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.removeItem('theme_user_set');
     const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const sysTheme = isDark ? 'dark' : 'light';
+    applyThemeToDOM(sysTheme);
     setTheme(sysTheme);
     localStorage.setItem('theme', sysTheme);
   };
 
   const handleSetAccentColor = (color: string) => {
+    applyAccentToDOM(color);
     setAccentColor(color);
     if (typeof window !== 'undefined') {
-      window.document.documentElement.setAttribute('data-accent', color);
       localStorage.setItem('nec_accent_color', color);
     }
   };

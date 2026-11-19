@@ -1042,7 +1042,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const [emailContestAlerts, setEmailContestAlerts] = useState<boolean>(() => localStorage.getItem('pref_contest_email') !== 'false');
   const [weeklyDigestAlerts, setWeeklyDigestAlerts] = useState<boolean>(() => localStorage.getItem('pref_weekly_digest') !== 'false');
   const [systemAuditAlerts, setSystemAuditAlerts] = useState<boolean>(() => localStorage.getItem('pref_audit_alerts') !== 'false');
-  const [toastAudioAlerts, setToastAudioAlerts] = useState<boolean>(() => localStorage.getItem('pref_toast_audio') === 'true');
+  const [toastAudioAlerts, setToastAudioAlerts] = useState<boolean>(() => localStorage.getItem('pref_toast_audio') !== 'false');
   const [inactivityDaysThreshold, setInactivityDaysThreshold] = useState<number>(() => Number(localStorage.getItem('pref_inactivity_threshold')) || 7);
   const [showPhoneToStudents, setShowPhoneToStudents] = useState<boolean>(() => localStorage.getItem('pref_show_phone_students') === 'true');
   const [showCabinInDirectory, setShowCabinInDirectory] = useState<boolean>(() => localStorage.getItem('pref_show_cabin_dir') !== 'false');
@@ -1053,6 +1053,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [showCurrentPassword, setShowCurrentPassword] = useState<boolean>(false);
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(() => localStorage.getItem('nec_2fa_enabled') === 'true' || Boolean((user as any)?.is_2fa_enabled));
   const [show2FASetupModal, setShow2FASetupModal] = useState<boolean>(false);
   const [showDisable2FAModal, setShowDisable2FAModal] = useState<boolean>(false);
@@ -1207,6 +1208,8 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   // Active Sessions
   const [sessions, setSessions] = useState<any[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState<boolean>(true);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [isRevokingAll, setIsRevokingAll] = useState<boolean>(false);
   const [selectedLoginEvent, setSelectedLoginEvent] = useState<any | null>(null);
 
   // Security Login History Audit
@@ -1774,20 +1777,87 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     return Math.min(100, score);
   }, [is2FAEnabled, user?.email, phoneNumber]);
 
-  // Password strength meter & entropy
+  // Password strength meter & entropy (Enforcing minimum 8 characters)
   const passwordStrength = useMemo(() => {
-    if (!newPassword) return { score: 0, label: 'Not Entered', color: 'bg-slate-200 dark:bg-navy-800', crackTime: 'N/A' };
+    if (!newPassword) {
+      return { 
+        score: 0, 
+        segments: 0, 
+        label: 'Enter Min 8 Chars', 
+        color: 'bg-slate-300 dark:bg-navy-700', 
+        textColor: 'text-slate-400 dark:text-slate-500', 
+        crackTime: 'N/A' 
+      };
+    }
     let s = 0;
     if (newPassword.length >= 8) s += 1;
     if (newPassword.length >= 12) s += 1;
-    if (/[A-Z]/.test(newPassword)) s += 1;
+    if (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) s += 1;
     if (/[0-9]/.test(newPassword)) s += 1;
     if (/[^A-Za-z0-9]/.test(newPassword)) s += 1;
 
-    if (s <= 2) return { score: 33, label: 'Weak', color: 'bg-rose-500', crackTime: 'Few seconds' };
-    if (s <= 4) return { score: 66, label: 'Moderate', color: 'bg-amber-500', crackTime: '3 to 6 months' };
-    return { score: 100, label: 'Strong & High Entropy', color: 'bg-emerald-500', crackTime: '10,000+ years' };
+    if (newPassword.length < 8) {
+      return { 
+        score: 25, 
+        segments: 1, 
+        label: 'Too Short (Min 8 Chars)', 
+        color: 'bg-rose-500', 
+        textColor: 'text-rose-600 dark:text-rose-400', 
+        crackTime: 'Instant' 
+      };
+    }
+    if (s <= 2) {
+      return { 
+        score: 50, 
+        segments: 2, 
+        label: 'Moderate', 
+        color: 'bg-amber-500', 
+        textColor: 'text-amber-600 dark:text-amber-400', 
+        crackTime: 'Few hours' 
+      };
+    }
+    if (s <= 4) {
+      return { 
+        score: 75, 
+        segments: 3, 
+        label: 'Strong & Secure', 
+        color: 'bg-emerald-500', 
+        textColor: 'text-emerald-600 dark:text-emerald-400', 
+        crackTime: '3 to 6 months' 
+      };
+    }
+    return { 
+      score: 100, 
+      segments: 4, 
+      label: 'Ultra High Entropy', 
+      color: 'bg-violet-500', 
+      textColor: 'text-violet-600 dark:text-violet-400', 
+      crackTime: '10,000+ years' 
+    };
   }, [newPassword]);
+
+  // One-click secure password generator (12 characters, high entropy)
+  const handleGenerateStrongPassword = () => {
+    const specials = '!@#$%^&*';
+    const uppers = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lowers = 'abcdefghijkmnopqrstuvwxyz';
+    const nums = '23456789';
+    let pwd = '';
+    pwd += uppers[Math.floor(Math.random() * uppers.length)];
+    pwd += lowers[Math.floor(Math.random() * lowers.length)];
+    pwd += nums[Math.floor(Math.random() * nums.length)];
+    pwd += specials[Math.floor(Math.random() * specials.length)];
+    const all = uppers + lowers + nums + specials;
+    for (let i = 0; i < 8; i++) {
+      pwd += all[Math.floor(Math.random() * all.length)];
+    }
+    const shuffled = pwd.split('').sort(() => 0.5 - Math.random()).join('');
+    setNewPassword(shuffled);
+    setConfirmPassword(shuffled);
+    setShowNewPassword(true);
+    setShowConfirmPassword(true);
+    notify.success('Generated ultra-secure 12-char password!', '', { category: 'ADMIN' });
+  };
 
   // Photo upload handler
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1851,8 +1921,8 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
         setErrorMessage('Current password is required to set a new password.');
         return;
       }
-      if (newPassword.length < 6) {
-        setErrorMessage('New password must be at least 6 characters.');
+      if (newPassword.length < 8) {
+        setErrorMessage('New password must be at least 8 characters.');
         return;
       }
       if (newPassword !== confirmPassword) {
@@ -1976,9 +2046,9 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
       notify.error('Please enter a new password.', '', { category: 'ADMIN' });
       return;
     }
-    if (newPassword.length < 6) {
-      setErrorMessage('New password must be at least 6 characters.');
-      notify.error('New password must be at least 6 characters.', '', { category: 'ADMIN' });
+    if (newPassword.length < 8) {
+      setErrorMessage('New password must be at least 8 characters.');
+      notify.error('New password must be at least 8 characters.', '', { category: 'ADMIN' });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -2052,25 +2122,52 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   };
 
   const handleRevokeSession = async (sessionId: string) => {
+    const target = sessions.find(s => s.id === sessionId);
+    const parsed = target ? parseUserAgentDetails(target.device) : null;
+    const deviceTitle = parsed?.deviceName || 'Remote Device';
+    const ipStr = target?.ip === '127.0.0.1' ? '127.0.0.1 (Localhost)' : (target?.ip || 'Unknown IP');
+
+    setRevokingSessionId(sessionId);
     try {
       await api.delete(`/auth/sessions/${sessionId}`);
       setSessions(prev => prev.filter(s => s.id !== sessionId));
-      notify.success('Device session revoked successfully', '', { category: 'ADMIN' });
+      notify.success(
+        `Session Terminated: ${deviceTitle}`,
+        `Signed out & revoked access for ${deviceTitle} at ${ipStr}. Login token invalidated.`,
+        { category: 'DEVICE SECURITY', duration: 5000 }
+      );
+      if (toastAudioAlerts) playChimeSound();
     } catch (err: any) {
-      notify.error(err.response?.data?.detail || err.response?.data?.message || 'Failed to revoke session', '', { category: 'ADMIN' });
+      notify.error(
+        `Failed to Revoke: ${deviceTitle}`,
+        err.response?.data?.detail || err.response?.data?.message || 'Could not terminate the session.',
+        { category: 'DEVICE SECURITY' }
+      );
+    } finally {
+      setRevokingSessionId(null);
     }
   };
 
   const handleRevokeAllOtherSessions = async () => {
+    const otherSessions = sessions.filter(s => !s.current);
+    if (otherSessions.length === 0) return;
+    setIsRevokingAll(true);
     try {
-      const otherSessions = sessions.filter(s => !s.current);
       for (const s of otherSessions) {
         await api.delete(`/auth/sessions/${s.id}`);
       }
       setSessions(prev => prev.filter(s => s.current));
-      notify.success('All other remote device sessions revoked', '', { category: 'ADMIN' });
+      const count = otherSessions.length;
+      notify.success(
+        `${count} Remote Session${count > 1 ? 's' : ''} Revoked`,
+        `Terminated ${count} background session${count > 1 ? 's' : ''} across other devices. Only this device remains authenticated.`,
+        { category: 'DEVICE SECURITY', duration: 6000 }
+      );
+      if (toastAudioAlerts) playChimeSound();
     } catch (err) {
-      notify.error('Failed to revoke some sessions', '', { category: 'ADMIN' });
+      notify.error('Session Revocation Error', 'Failed to revoke some remote sessions.', { category: 'DEVICE SECURITY' });
+    } finally {
+      setIsRevokingAll(false);
     }
   };
 
@@ -5502,29 +5599,48 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 </div>
               </div>
 
-              {/* 1. Password Management Card — iOS Inset Style with Entropy Meter */}
-              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-4 sm:space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-2xl bg-violet-500/15 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/20 shadow-2xs">
-                      <KeyRound className="w-5 h-5" />
+              {/* 1. Password Management Card — Premium Security Deck with Live Entropy Engine */}
+              <div className="bg-white/95 dark:bg-navy-900 rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-shadow space-y-5">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-4 flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-violet-500/25">
+                      <KeyRound className="w-5 h-5 stroke-[2.5]" />
                     </div>
                     <div>
-                      <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                        Password &amp; Credentials
-                      </h3>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">Update master login credentials &amp; hashing encryption</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                          Password &amp; Credentials
+                        </h3>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-800/60 font-mono">
+                          Bcrypt 12-Rounds
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                        Manage master login credentials, password entropy &amp; hashing encryption
+                      </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800/60 font-mono">
-                    Bcrypt Secured
-                  </span>
+
+                  {/* 1-Click Generate Strong Password Button */}
+                  <button
+                    type="button"
+                    onClick={handleGenerateStrongPassword}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/60 border border-violet-200 dark:border-violet-800/60 text-violet-700 dark:text-violet-300 text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-2xs"
+                    title="Generate a random, ultra-secure 12-character password"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                    <span>Generate Strong Password</span>
+                  </button>
                 </div>
 
                 <div className="space-y-4">
                   {/* Current Password Field */}
                   <div className="space-y-1.5">
-                    <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Current Password</label>
+                    <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Current Password
+                    </label>
                     <div className="relative">
                       <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                         <Lock className="w-4 h-4" />
@@ -5534,7 +5650,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         value={currentPassword}
                         onChange={e => setCurrentPassword(e.target.value)}
                         placeholder="Enter your current password"
-                        className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                        className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-violet-500 focus:ring-4 focus:ring-violet-500/15 outline-none transition-all shadow-2xs"
                       />
                       <button
                         type="button"
@@ -5549,8 +5665,17 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                   {/* New Password & Confirm New Password Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+                    {/* New Password */}
                     <div className="space-y-1.5">
-                      <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">New Password</label>
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          New Password
+                        </label>
+                        <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400">
+                          Min 8 Characters
+                        </span>
+                      </div>
                       <div className="relative">
                         <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                           <Key className="w-4 h-4" />
@@ -5559,8 +5684,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           type={showNewPassword ? 'text' : 'password'}
                           value={newPassword}
                           onChange={e => setNewPassword(e.target.value)}
-                          placeholder="Min 6 characters"
-                          className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                          placeholder="Min 8 characters (letters, numbers, symbols)"
+                          className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-violet-500 focus:ring-4 focus:ring-violet-500/15 outline-none transition-all shadow-2xs"
                         />
                         <button
                           type="button"
@@ -5573,59 +5698,112 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       </div>
                     </div>
 
+                    {/* Confirm New Password */}
                     <div className="space-y-1.5">
-                      <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Confirm New Password
+                        </label>
+                        {newPassword && confirmPassword && (
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                            newPassword === confirmPassword
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                              : 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border-rose-200 dark:border-rose-800'
+                          }`}>
+                            {newPassword === confirmPassword ? '✓ Passwords Match' : 'Mismatch'}
+                          </span>
+                        )}
+                      </div>
                       <div className="relative">
                         <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                           <CheckSquare className="w-4 h-4" />
                         </div>
                         <input
-                          type={showNewPassword ? 'text' : 'password'}
+                          type={showConfirmPassword ? 'text' : 'password'}
                           value={confirmPassword}
                           onChange={e => setConfirmPassword(e.target.value)}
                           placeholder="Repeat new password"
-                          className="w-full h-12 pl-10 pr-4 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all shadow-2xs"
+                          className="w-full h-12 pl-10 pr-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:border-violet-500 focus:ring-4 focus:ring-violet-500/15 outline-none transition-all shadow-2xs"
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 cursor-pointer transition-colors"
+                          title={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
+                    </div>
+
+                  </div>
+
+                  {/* Always-Visible Sleek Password Strength & Requirement Checklist */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100/60 dark:from-navy-950/90 dark:to-navy-900/60 border border-slate-200/90 dark:border-navy-800 space-y-3">
+                    <div className="flex items-center justify-between text-xs font-black flex-wrap gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider">Entropy Strength:</span>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${passwordStrength.textColor} bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700`}>
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                        Estimated Crack Time: <strong className="text-slate-800 dark:text-slate-200">{passwordStrength.crackTime}</strong>
+                      </span>
+                    </div>
+
+                    {/* 4-Segment Animated Meter */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[1, 2, 3, 4].map((seg) => {
+                        const isActive = passwordStrength.segments >= seg;
+                        return (
+                          <div
+                            key={seg}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              isActive
+                                ? passwordStrength.color
+                                : 'bg-slate-200 dark:bg-navy-800'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* 4-Item Live Interactive Criteria Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px] font-bold">
+                      <span className={`flex items-center gap-2 p-1.5 rounded-xl transition-colors ${newPassword.length >= 8 ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <Check className={`w-3.5 h-3.5 shrink-0 ${newPassword.length >= 8 ? 'text-emerald-600 stroke-[3]' : 'opacity-40'}`} />
+                        <span>At least 8 characters (required)</span>
+                      </span>
+
+                      <span className={`flex items-center gap-2 p-1.5 rounded-xl transition-colors ${/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <Check className={`w-3.5 h-3.5 shrink-0 ${/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'text-emerald-600 stroke-[3]' : 'opacity-40'}`} />
+                        <span>Uppercase &amp; lowercase letters (A-Z, a-z)</span>
+                      </span>
+
+                      <span className={`flex items-center gap-2 p-1.5 rounded-xl transition-colors ${/[0-9]/.test(newPassword) ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <Check className={`w-3.5 h-3.5 shrink-0 ${/[0-9]/.test(newPassword) ? 'text-emerald-600 stroke-[3]' : 'opacity-40'}`} />
+                        <span>At least one number (0-9)</span>
+                      </span>
+
+                      <span className={`flex items-center gap-2 p-1.5 rounded-xl transition-colors ${/[^A-Za-z0-9]/.test(newPassword) ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300' : 'text-slate-400 dark:text-slate-500'}`}>
+                        <Check className={`w-3.5 h-3.5 shrink-0 ${/[^A-Za-z0-9]/.test(newPassword) ? 'text-emerald-600 stroke-[3]' : 'opacity-40'}`} />
+                        <span>Special symbol (!@#$%^&amp;*)</span>
+                      </span>
                     </div>
                   </div>
 
-                  {/* Password Strength Meter & Live Requirement Checklist */}
-                  {newPassword && (
-                    <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-navy-950/90 border border-slate-200/90 dark:border-navy-800 space-y-3 animate-fade-in">
-                      <div className="flex items-center justify-between text-xs font-black">
-                        <span className="text-slate-700 dark:text-slate-300">Entropy Strength:</span>
-                        <span className={`font-black ${passwordStrength.color.replace('bg-', 'text-')}`}>
-                          {passwordStrength.label} (Crack time: {passwordStrength.crackTime})
-                        </span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
-                        <div className={`h-full ${passwordStrength.color} transition-all duration-300 rounded-full`} style={{ width: `${passwordStrength.score}%` }} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 pt-1 text-[11px] font-bold">
-                        <span className={`flex items-center gap-1.5 ${newPassword.length >= 8 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className={`w-3.5 h-3.5 ${newPassword.length >= 8 ? 'stroke-[3]' : 'opacity-40'}`} /> At least 8 characters
-                        </span>
-                        <span className={`flex items-center gap-1.5 ${/[A-Z]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className={`w-3.5 h-3.5 ${/[A-Z]/.test(newPassword) ? 'stroke-[3]' : 'opacity-40'}`} /> Uppercase letter (A-Z)
-                        </span>
-                        <span className={`flex items-center gap-1.5 ${/[0-9]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className={`w-3.5 h-3.5 ${/[0-9]/.test(newPassword) ? 'stroke-[3]' : 'opacity-40'}`} /> Number (0-9)
-                        </span>
-                        <span className={`flex items-center gap-1.5 ${/[^A-Za-z0-9]/.test(newPassword) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-                          <Check className={`w-3.5 h-3.5 ${/[^A-Za-z0-9]/.test(newPassword) ? 'stroke-[3]' : 'opacity-40'}`} /> Special symbol (!@#$)
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Direct Update Password Button */}
-                  <div className="pt-1 flex items-center justify-end">
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      All password changes are audited &amp; encrypted using bcrypt hashing.
+                    </p>
+
                     <button
                       type="button"
-                      disabled={isSaving || !newPassword || !currentPassword}
+                      disabled={isSaving || !currentPassword || newPassword.length < 8 || newPassword !== confirmPassword}
                       onClick={handleUpdatePasswordOnly}
-                      className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:scale-95 disabled:opacity-50 text-white font-black text-xs transition-all shadow-md shadow-violet-500/20 cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs transition-all shadow-md shadow-violet-500/25 cursor-pointer flex items-center justify-center gap-2 shrink-0"
                     >
                       {isSaving ? (
                         <>
@@ -5635,11 +5813,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       ) : (
                         <>
                           <KeyRound className="w-4 h-4" />
-                          <span>Update Password</span>
+                          <span>Update Master Password</span>
                         </>
                       )}
                     </button>
                   </div>
+
                 </div>
               </div>
 
@@ -5826,9 +6005,17 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <button
                       type="button"
                       onClick={handleRevokeAllOtherSessions}
-                      className="px-3 py-1.5 rounded-xl text-xs font-black text-rose-600 hover:text-white hover:bg-rose-600 dark:text-rose-400 dark:hover:bg-rose-600/90 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer active:scale-95"
+                      disabled={isRevokingAll}
+                      className="px-3 py-1.5 rounded-xl text-xs font-black text-rose-600 hover:text-white hover:bg-rose-600 dark:text-rose-400 dark:hover:bg-rose-600/90 border border-rose-200 dark:border-rose-900/60 transition-all cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center gap-1.5"
                     >
-                      Revoke Other Sessions
+                      {isRevokingAll ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Revoking All…</span>
+                        </>
+                      ) : (
+                        <span>Revoke Other Sessions</span>
+                      )}
                     </button>
                   )}
                 </div>
@@ -5889,10 +6076,20 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           <button
                             type="button"
                             onClick={() => handleRevokeSession(s.id)}
-                            className="px-3.5 py-2 rounded-xl text-xs font-black bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-600 transition-all border border-rose-200 dark:border-rose-900/50 cursor-pointer shrink-0 active:scale-95 flex items-center gap-1.5 justify-center"
+                            disabled={revokingSessionId === s.id}
+                            className="px-3.5 py-2 rounded-xl text-xs font-black bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-600 transition-all border border-rose-200 dark:border-rose-900/50 cursor-pointer shrink-0 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center gap-1.5 justify-center"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Revoke</span>
+                            {revokingSessionId === s.id ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Revoking…</span>
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Revoke</span>
+                              </>
+                            )}
                           </button>
                         )}
                       </div>
@@ -6298,23 +6495,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <Trophy className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-slate-900 dark:text-white">
-                          Contest Finalization Receipts
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTestContestAlert();
-                          }}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
-                        >
-                          <Trophy className="w-3 h-3" />
-                          <span>Test Alert</span>
-                        </button>
+                      <div className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                        Contest Finalization Receipts
                       </div>
-                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
                         Instant email receipts when weekly LeetCode contests conclude.
                       </div>
                     </div>
@@ -6336,23 +6520,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <GraduationCap className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-slate-900 dark:text-white">
-                          Weekly Mentee Progress Digest
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTestWeeklyDigest();
-                          }}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
-                        >
-                          <GraduationCap className="w-3 h-3" />
-                          <span>Test Alert</span>
-                        </button>
+                      <div className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                        Weekly Mentee Progress Digest
                       </div>
-                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
                         Summary of assigned students milestones every Monday morning.
                       </div>
                     </div>
@@ -6374,23 +6545,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-slate-900 dark:text-white">
-                          Security Audit &amp; Login Alerts
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTestSystemAudit();
-                          }}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95"
-                        >
-                          <ShieldCheck className="w-3 h-3" />
-                          <span>Test Alert</span>
-                        </button>
+                      <div className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                        Security Audit &amp; Login Alerts
                       </div>
-                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
                         Instant alerts if password is changed or new logins occur.
                       </div>
                     </div>
@@ -6412,27 +6570,10 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       <Volume2 className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-slate-900 dark:text-white">
-                          In-App Audio Chimes
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTestAudioChime();
-                          }}
-                          className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer inline-flex items-center gap-1 active:scale-95 ${
-                            isPlayingAudioTest
-                              ? 'bg-amber-500 text-white border-amber-600'
-                              : 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
-                          }`}
-                        >
-                          <Volume2 className={`w-3 h-3 ${isPlayingAudioTest ? 'animate-bounce' : ''}`} />
-                          <span>{isPlayingAudioTest ? 'Playing...' : 'Test Sound'}</span>
-                        </button>
+                      <div className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                        In-App Audio Chimes
                       </div>
-                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                      <div className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
                         Subtle audio chimes on milestone toasts and contest conclude.
                       </div>
                     </div>
@@ -7154,7 +7295,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 {plannerTasks.map((task) => (
                   <div
                     key={task.id}
-                    className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all select-none ${
+                    className={`p-3 rounded-xl border flex items-start sm:items-center justify-between gap-2.5 sm:gap-3 transition-all select-none ${
                       task.completed
                         ? 'bg-slate-50/60 dark:bg-navy-950/40 border-slate-200/60 dark:border-navy-800/60 opacity-75'
                         : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-800 shadow-2xs hover:border-brand-500/40'
@@ -7162,19 +7303,19 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   >
                     <div
                       onClick={() => handleToggleTask(task.id)}
-                      className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                      className="flex items-start sm:items-center gap-3 min-w-0 flex-1 cursor-pointer"
                     >
-                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-colors border ${
+                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 transition-colors border mt-0.5 sm:mt-0 ${
                         task.completed
                           ? 'bg-emerald-500 border-emerald-500 text-white'
                           : 'border-slate-300 dark:border-navy-700 hover:border-brand-500'
                       }`}>
                         {task.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <span className={`text-xs font-bold block truncate ${
+                      <div className="min-w-0 flex-1 pr-1">
+                        <span className={`text-xs font-bold block leading-relaxed break-words whitespace-normal ${
                           task.completed
-                            ? 'line-through text-slate-600 dark:text-slate-300'
+                            ? 'line-through text-slate-500 dark:text-slate-400'
                             : 'text-slate-800 dark:text-slate-200'
                         }`}>
                           {task.text}
@@ -7182,7 +7323,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 mt-0.5 sm:mt-0">
                       {task.badge && (
                         <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${
                           task.priority === 'urgent'

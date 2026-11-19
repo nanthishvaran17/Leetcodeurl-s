@@ -254,21 +254,31 @@ def get_command_center_summary(
             dept_name = dept_obj.name if dept_obj else "Computer Science & Engineering"
             dept_code = dept_obj.code if dept_obj else "CSE"
 
-        # Resolve HOD name strictly (never show placement coordinator as HOD)
-        CANONICAL_HOD_MAP = {
-            "IT": "Dr. M. Senthilkumar",
-            "CSE(CS)": "Dr. S. Prabhu",
-            "CSE(IOT)": "Dr. S. Karthikeyan",
-            "CSE": "Dr. S. Prabhu",
-        }
+        # Resolve HOD name strictly from genuine DB user (never show placement coordinator as HOD)
         user_role_clean = (current_user.role or "").lower() if current_user else ""
         is_real_hod = "hod" in user_role_clean and not any(r in user_role_clean for r in ["placement", "coordinator", "faculty", "staff"])
         if is_real_hod:
             hod_name = current_user.full_name or current_user.username
-        elif dept_obj and dept_obj.code:
-            hod_name = CANONICAL_HOD_MAP.get(dept_obj.code.upper(), f"HOD ({dept_obj.code})")
         else:
-            hod_name = "Head of Department"
+            hod_name = None
+            if dept_obj:
+                dept_hod_user = db.query(User).filter(
+                    User.department_id == dept_obj.id,
+                    User.role.ilike("%HOD%"),
+                    User.is_active == True
+                ).first()
+                if not dept_hod_user:
+                    from backend.models import HODDepartmentAllocation
+                    dept_hod_user = db.query(User).join(
+                        HODDepartmentAllocation, HODDepartmentAllocation.user_id == User.id
+                    ).filter(
+                        HODDepartmentAllocation.department_id == dept_obj.id,
+                        User.role.ilike("%HOD%"),
+                        User.is_active == True
+                    ).first()
+                if dept_hod_user:
+                    hod_name = dept_hod_user.full_name or dept_hod_user.username
+            hod_name = hod_name or (f"HOD ({dept_obj.code})" if dept_obj and dept_obj.code else "Head of Department")
 
 
         # Active staff list for Scope Selector & Performance Table
@@ -2023,13 +2033,6 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     
     dept_counts = {dept_id: count for dept_id, count in dept_counts_query}
 
-    # Canonical HOD definitions for institution
-    CANONICAL_HOD_MAP = {
-        "IT": "Dr. M. Senthilkumar",
-        "CSE(CS)": "Dr. S. Prabhu",
-        "CSE(IOT)": "Dr. S. Karthikeyan",
-        "CSE": "Dr. S. Prabhu",
-    }
     EXCLUDE_HOD_ROLES = [
         "placement coordinator", "placement_coordinator", "placement officer", "placement_officer",
         "coordinator", "academic coordinator", "faculty", "staff", "student"
@@ -2124,31 +2127,19 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
         # 1. PRIORITY: Genuine assigned HOD user from database
         if hod_user and (hod_user.full_name or hod_user.username):
             raw_name = (hod_user.full_name or hod_user.username).strip()
-            if not any(coord.lower() in raw_name.lower() for coord in ["Santhoshkumar", "Devayani", "Sivakumar"]):
+            if not raw_name.startswith("HOD -") and not raw_name.startswith("HOD ("):
                 hod_display_name = raw_name
 
         # 2. FALLBACK: Only if no genuine HOD is assigned in the database
         if not hod_display_name:
-            if "IOT" in code_u or "IOT" in name_u:
-                hod_display_name = "Dr. S. Karthikeyan"
-            elif "CYBER" in code_u or "CYBER" in name_u or "(CS)" in code_u or code_u in ["CSE(CS)", "CSE"]:
-                hod_display_name = "Dr. S. Prabhu"
-            elif code_u == "IT" or "INFORMATION" in name_u:
-                hod_display_name = "Dr. M. Senthilkumar"
-            else:
-                code_clean = (d.code or "").upper().strip()
-                hod_display_name = CANONICAL_HOD_MAP.get(code_clean, f"HOD ({d.code})")
+            code_clean = (d.code or "").upper().strip()
+            hod_display_name = f"HOD ({d.code})" if d.code else "Head of Department"
 
         # 1. PRIORITY: Genuine assigned HOD email from database
         hod_email = (hod_user.email.strip() if (hod_user and hod_user.email) else None)
         # 2. FALLBACK: Only if no email assigned in database
         if not hod_email:
-            if "IOT" in code_u or "IOT" in name_u:
-                hod_email = "hod.cseiot@nandhaengg.org"
-            elif "CYBER" in code_u or "CYBER" in name_u or "(CS)" in code_u or code_u in ["CSE(CS)", "CSE"]:
-                hod_email = "prabhu.s@nandhaengg.org"
-            elif code_u == "IT" or "INFORMATION" in name_u:
-                hod_email = "hod.it@nandhaengg.org"
+            hod_email = f"hod.{code_u.lower()}@nandhaengg.org" if code_u else "hod@nandhaengg.org"
 
         direct_fac = faculty_counts.get(d.id, 0)
         assigned_fac = assigned_faculty_map.get(d.id, 0)
@@ -2191,13 +2182,6 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
         "placement coordinator", "placement_coordinator", "placement officer", "placement_officer",
         "coordinator", "academic coordinator", "faculty", "staff", "student"
     ]
-    CANONICAL_HOD_MAP = {
-        "IT": "Dr. M. Senthilkumar",
-        "CSE(CS)": "Dr. S. Prabhu",
-        "CSE(IOT)": "Dr. S. Karthikeyan",
-        "CSE": "Dr. S. Prabhu",
-    }
-    
     # Check direct HOD first
     hod_user = db.query(User).filter(
         User.department_id == dept_id,
@@ -2217,28 +2201,14 @@ def get_department_details(dept_id: int, db: Session = Depends(get_db), current_
         ).first()
 
     code_u = (dept.code or "").upper().strip() if dept else ""
-    name_u = (dept.name or "").upper().strip() if dept else ""
-    canonical_fallback = None
-    canonical_email = None
-
-    if "IOT" in code_u or "IOT" in name_u:
-        canonical_fallback = "Dr. S. Karthikeyan"
-        canonical_email = "hod.cseiot@nandhaengg.org"
-    elif "CYBER" in code_u or "CYBER" in name_u or "(CS)" in code_u or code_u in ["CSE(CS)", "CSE"]:
-        canonical_fallback = "Dr. S. Prabhu"
-        canonical_email = "prabhu.s@nandhaengg.org"
-    elif code_u == "IT" or "INFORMATION" in name_u:
-        canonical_fallback = "Dr. M. Senthilkumar"
-        canonical_email = "hod.it@nandhaengg.org"
-    else:
-        canonical_fallback = CANONICAL_HOD_MAP.get(code_u, f"HOD - {dept.code}" if dept else "Head of Department")
-        canonical_email = "hod@nandha.edu.in"
+    canonical_fallback = f"HOD - {dept.code}" if dept and dept.code else "Head of Department"
+    canonical_email = f"hod.{code_u.lower()}@nandhaengg.org" if code_u else "hod@nandhaengg.org"
 
     # 1. PRIORITY: Genuine assigned HOD user from database
     resolved_hod_name = None
     if hod_user and (hod_user.full_name or hod_user.username):
         raw_name = (hod_user.full_name or hod_user.username).strip()
-        if not any(coord.lower() in raw_name.lower() for coord in ["Santhoshkumar", "Devayani", "Sivakumar"]):
+        if not raw_name.startswith("HOD -") and not raw_name.startswith("HOD ("):
             resolved_hod_name = raw_name
 
     # 2. FALLBACK: Only if no genuine HOD is assigned in the database

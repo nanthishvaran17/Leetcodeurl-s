@@ -2616,61 +2616,165 @@ body.presentation-shield-active input[type="email"]:hover {
   filter: none !important;
 }
 
-/* 2. Institutional Dynamic Accent Themes */
+/* 2. Institutional Dynamic Accent Themes (Instant Real-time Reactive Styling) */
+[data-accent="emerald"] {
+  --color-brand-primary: #10B981;
+}
 [data-accent="emerald"] .bg-brand-600,
-[data-accent="emerald"] .bg-brand-500 {
+[data-accent="emerald"] .bg-brand-500,
+[data-accent="emerald"] .bg-brand-700,
+[data-accent="emerald"] button.bg-brand-600,
+[data-accent="emerald"] button.bg-brand-500 {
   background-color: #10B981 !important;
+}
+[data-accent="emerald"] .bg-brand-50,
+[data-accent="emerald"] [class*="bg-brand-50/"] {
+  background-color: rgba(16, 185, 129, 0.12) !important;
 }
 [data-accent="emerald"] .text-brand-600,
 [data-accent="emerald"] .text-brand-500,
-[data-accent="emerald"] .text-brand-400 {
+[data-accent="emerald"] .text-brand-400,
+[data-accent="emerald"] [class*="text-brand-"] {
   color: #10B981 !important;
 }
 [data-accent="emerald"] .border-brand-500,
-[data-accent="emerald"] .border-brand-400 {
+[data-accent="emerald"] .border-brand-400,
+[data-accent="emerald"] .border-brand-600,
+[data-accent="emerald"] [class*="border-brand-"] {
   border-color: #10B981 !important;
 }
+[data-accent="emerald"] [class*="ring-brand-"] {
+  --tw-ring-color: rgba(16, 185, 129, 0.35) !important;
+}
+[data-accent="emerald"] [class*="from-brand-600"],
+[data-accent="emerald"] [class*="from-brand-500"] {
+  --tw-gradient-from: #10B981 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(16, 185, 129, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+[data-accent="emerald"] [class*="to-brand-600"],
+[data-accent="emerald"] [class*="to-brand-700"] {
+  --tw-gradient-to: #059669 var(--tw-gradient-to-position) !important;
+}
 
+[data-accent="violet"] {
+  --color-brand-primary: #8B5CF6;
+}
 [data-accent="violet"] .bg-brand-600,
-[data-accent="violet"] .bg-brand-500 {
+[data-accent="violet"] .bg-brand-500,
+[data-accent="violet"] .bg-brand-700,
+[data-accent="violet"] button.bg-brand-600,
+[data-accent="violet"] button.bg-brand-500 {
   background-color: #8B5CF6 !important;
+}
+[data-accent="violet"] .bg-brand-50,
+[data-accent="violet"] [class*="bg-brand-50/"] {
+  background-color: rgba(139, 92, 246, 0.12) !important;
 }
 [data-accent="violet"] .text-brand-600,
 [data-accent="violet"] .text-brand-500,
-[data-accent="violet"] .text-brand-400 {
+[data-accent="violet"] .text-brand-400,
+[data-accent="violet"] [class*="text-brand-"] {
   color: #8B5CF6 !important;
 }
 [data-accent="violet"] .border-brand-500,
-[data-accent="violet"] .border-brand-400 {
+[data-accent="violet"] .border-brand-400,
+[data-accent="violet"] .border-brand-600,
+[data-accent="violet"] [class*="border-brand-"] {
   border-color: #8B5CF6 !important;
 }
+[data-accent="violet"] [class*="ring-brand-"] {
+  --tw-ring-color: rgba(139, 92, 246, 0.35) !important;
+}
+[data-accent="violet"] [class*="from-brand-600"],
+[data-accent="violet"] [class*="from-brand-500"] {
+  --tw-gradient-from: #8B5CF6 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(139, 92, 246, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+[data-accent="violet"] [class*="to-brand-600"],
+[data-accent="violet"] [class*="to-brand-700"] {
+  --tw-gradient-to: #7C3AED var(--tw-gradient-to-position) !important;
+}
 
+[data-accent="amber"] {
+  --color-brand-primary: #F59E0B;
+}
 [data-accent="amber"] .bg-brand-600,
-[data-accent="amber"] .bg-brand-500 {
+[data-accent="amber"] .bg-brand-500,
+[data-accent="amber"] .bg-brand-700,
+[data-accent="amber"] button.bg-brand-600,
+[data-accent="amber"] button.bg-brand-500 {
   background-color: #F59E0B !important;
+}
+[data-accent="amber"] .bg-brand-50,
+[data-accent="amber"] [class*="bg-brand-50/"] {
+  background-color: rgba(245, 158, 11, 0.12) !important;
 }
 [data-accent="amber"] .text-brand-600,
 [data-accent="amber"] .text-brand-500,
-[data-accent="amber"] .text-brand-400 {
+[data-accent="amber"] .text-brand-400,
+[data-accent="amber"] [class*="text-brand-"] {
   color: #F59E0B !important;
 }
 [data-accent="amber"] .border-brand-500,
-[data-accent="amber"] .border-brand-400 {
+[data-accent="amber"] .border-brand-400,
+[data-accent="amber"] .border-brand-600,
+[data-accent="amber"] [class*="border-brand-"] {
   border-color: #F59E0B !important;
 }
+[data-accent="amber"] [class*="ring-brand-"] {
+  --tw-ring-color: rgba(245, 158, 11, 0.35) !important;
+}
+[data-accent="amber"] [class*="from-brand-600"],
+[data-accent="amber"] [class*="from-brand-500"] {
+  --tw-gradient-from: #F59E0B var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(245, 158, 11, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+[data-accent="amber"] [class*="to-brand-600"],
+[data-accent="amber"] [class*="to-brand-700"] {
+  --tw-gradient-to: #D97706 var(--tw-gradient-to-position) !important;
+}
 
+[data-accent="rose"] {
+  --color-brand-primary: #F43F5E;
+}
 [data-accent="rose"] .bg-brand-600,
-[data-accent="rose"] .bg-brand-500 {
+[data-accent="rose"] .bg-brand-500,
+[data-accent="rose"] .bg-brand-700,
+[data-accent="rose"] button.bg-brand-600,
+[data-accent="rose"] button.bg-brand-500 {
   background-color: #F43F5E !important;
+}
+[data-accent="rose"] .bg-brand-50,
+[data-accent="rose"] [class*="bg-brand-50/"] {
+  background-color: rgba(244, 63, 94, 0.12) !important;
 }
 [data-accent="rose"] .text-brand-600,
 [data-accent="rose"] .text-brand-500,
-[data-accent="rose"] .text-brand-400 {
+[data-accent="rose"] .text-brand-400,
+[data-accent="rose"] [class*="text-brand-"] {
   color: #F43F5E !important;
 }
 [data-accent="rose"] .border-brand-500,
-[data-accent="rose"] .border-brand-400 {
+[data-accent="rose"] .border-brand-400,
+[data-accent="rose"] .border-brand-600,
+[data-accent="rose"] [class*="border-brand-"] {
   border-color: #F43F5E !important;
+}
+[data-accent="rose"] [class*="ring-brand-"] {
+  --tw-ring-color: rgba(244, 63, 94, 0.35) !important;
+}
+[data-accent="rose"] [class*="from-brand-600"],
+[data-accent="rose"] [class*="from-brand-500"] {
+  --tw-gradient-from: #F43F5E var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(244, 63, 94, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+[data-accent="rose"] [class*="to-brand-600"],
+[data-accent="rose"] [class*="to-brand-700"] {
+  --tw-gradient-to: #E11D48 var(--tw-gradient-to-position) !important;
 }
 
 

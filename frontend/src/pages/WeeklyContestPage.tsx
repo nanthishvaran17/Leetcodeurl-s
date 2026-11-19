@@ -25,11 +25,11 @@ import { triggerConfetti } from '../utils/confettiCelebration';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 import { normalizeDepartment, deriveStudentCollege } from '../utils/filterUtils';
-import { 
-  getCachedContestData, 
-  setCachedContestData, 
-  fetchWithCacheDedupe, 
-  prefetchContest, 
+import {
+  getCachedContestData,
+  setCachedContestData,
+  fetchWithCacheDedupe,
+  prefetchContest,
   logContestTelemetry,
   clearContestCache
 } from '../services/contestCache';
@@ -352,21 +352,19 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
     const isSolved = (val === 1 || val === '1');
     const isUnsolved = isAttended && !isSolved && (val === 0 || val === '0');
     return (
-      <div className={`flex flex-col items-center justify-center py-1 px-1.5 rounded-lg border text-[11px] font-mono font-black ${
-        isSolved 
-          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300' 
-          : isUnsolved 
-            ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400' 
+      <div className={`flex flex-col items-center justify-center py-1 px-1.5 rounded-lg border text-[11px] font-mono font-black ${isSolved
+          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+          : isUnsolved
+            ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
             : isError
               ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-400'
               : 'bg-slate-100 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300'
-      }`}>
-        <span className={`text-[8px] font-sans font-bold uppercase ${
-          isSolved ? 'text-emerald-600 dark:text-emerald-400' :
-          isUnsolved ? 'text-rose-600 dark:text-rose-400' :
-          isError ? 'text-amber-700 dark:text-amber-400 font-extrabold' :
-          'text-slate-600 dark:text-slate-400 font-bold'
-        }`}>{label}</span>
+        }`}>
+        <span className={`text-[8px] font-sans font-bold uppercase ${isSolved ? 'text-emerald-600 dark:text-emerald-400' :
+            isUnsolved ? 'text-rose-600 dark:text-rose-400' :
+              isError ? 'text-amber-700 dark:text-amber-400 font-extrabold' :
+                'text-slate-600 dark:text-slate-400 font-bold'
+          }`}>{label}</span>
         <span className="font-black text-xs">{isSolved ? '1' : isUnsolved ? '0' : '—'}</span>
       </div>
     );
@@ -379,9 +377,8 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
         triggerHaptic('light');
         onSelect(r);
       }}
-      className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer w-full bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-2.5 active:scale-[0.98] touch-manipulation ${
-        isSelected ? 'bg-brand-50/70 dark:bg-brand-950/40 border-brand-300 dark:border-brand-700 ring-1 ring-brand-500/30' : 'border-slate-200/90 dark:border-navy-800'
-      }`}
+      className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer w-full bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-2.5 active:scale-[0.98] touch-manipulation ${isSelected ? 'bg-brand-50/70 dark:bg-brand-950/40 border-brand-300 dark:border-brand-700 ring-1 ring-brand-500/30' : 'border-slate-200/90 dark:border-navy-800'
+        }`}
     >
       {/* Top Header: Select Pill + S.No + RegNo + Status Badge */}
       <div className="flex items-center justify-between gap-2">
@@ -394,11 +391,10 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
               triggerHaptic('selection');
               onCheckbox(r.reg_no, !isSelected);
             }}
-            className={`min-w-[42px] min-h-[42px] rounded-xl flex items-center justify-center transition-all touch-manipulation active:scale-90 border cursor-pointer ${
-              isSelected
+            className={`min-w-[42px] min-h-[42px] rounded-xl flex items-center justify-center transition-all touch-manipulation active:scale-90 border cursor-pointer ${isSelected
                 ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-navy-800 border-slate-300 dark:border-navy-700 text-transparent hover:border-brand-500'
-            }`}
+              }`}
             title={isSelected ? 'Deselect student' : 'Select student'}
           >
             <Check className={`w-4 h-4 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
@@ -632,7 +628,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
   const [yearOpen, setYearOpen] = useState<boolean>(false);
-  const [attOpen,  setAttOpen]  = useState<boolean>(false);
+  const [attOpen, setAttOpen] = useState<boolean>(false);
   const [showMobileContestFilters, setShowMobileContestFilters] = useState<boolean>(false);
 
   // Live Contest Engine Real-Time State
@@ -767,7 +763,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const pollTelemetry = useCallback(async () => {
     if (!selectedSessionId || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
     if (currentSession?.status === 'FINALIZED') return;
-    
+
     try {
       const res = await api.get(`/contests/sessions/${selectedSessionId}/live-status`);
       if (res.data) {
@@ -797,7 +793,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           return;
         }
       }
-    } catch (_e) {}
+    } catch (_e) { }
     setSolverDelta(null);
   }, [selectedSessionId]);
 
@@ -824,7 +820,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       isMounted = false;
       if (interval) clearInterval(interval);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId, isSundayLiveWindowActive]);
 
   // Live Matrix Rows Auto-Poll: refresh contest results every 25s when LIVE or during Sunday window
@@ -845,7 +841,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       isMounted = false;
       clearInterval(interval);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, isSundayLiveWindowActive]);
 
   // Post-9:30 AM Activity Fix: Automatic Final Fetch 
@@ -854,7 +850,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       // Automatically pull the authoritative finalized dataset once when transitioning to FINALIZED
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, currentSession?.status]);
 
   // WebSocket Live Rendering — Batched O(1) state updates
@@ -883,7 +879,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         else if (event.studentName && byName.has(event.studentName)) idx = byName.get(event.studentName)!;
         else if (event.username && byUsername.has(event.username)) idx = byUsername.get(event.username)!;
         else if (event.contestId && byUsername.has(event.contestId)) idx = byUsername.get(event.contestId)!;
-        
+
         if (idx === -1) continue;
 
         changed = true;
@@ -911,11 +907,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, []);
 
   const activeContestIdStr = selectedSessionId ? String(selectedSessionId) : '518';
-  const { 
-    status: wsStatus, 
-    syncState: wsSyncState, 
-    initialProgress: wsProgress, 
-    latestUpdate: wsLatestUpdate, 
+  const {
+    status: wsStatus,
+    syncState: wsSyncState,
+    initialProgress: wsProgress,
+    latestUpdate: wsLatestUpdate,
     liveFeed: wsLiveFeed,
     lastSyncAt: wsLastSyncAt,
     subscribeSession: wsSubscribeSession,
@@ -960,7 +956,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       let idx = evt.student_id != null ? updated.findIndex(r => (r.student_id || r.id) === evt.student_id) : -1;
       if (idx === -1 && evt.people_id) idx = updated.findIndex(r => r.people_id === evt.people_id);
       if (idx === -1 && evt.student_name) idx = updated.findIndex(r => r.name === evt.student_name || r.username === evt.account_id);
-      
+
       if (idx !== -1) {
         const oldRow = updated[idx];
         const timeline = oldRow.timeline || [];
@@ -1085,7 +1081,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     if (selectedSessionId) {
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm, currentPage, pageSize]);
 
   // Pull-to-refresh listener: clear contest caches and refetch live session telemetry & student matrix
@@ -1137,7 +1133,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         fetchWithCacheDedupe('current_contest_session', () => api.get('/contests/current-session').then(r => r.data), { ttlMs: 5000 }),
         fetchWithCacheDedupe('all_contest_sessions', () => api.get('/contests/sessions').then(r => r.data), { ttlMs: 5000 })
       ]);
-      
+
       setCurrentSession(currRes);
       const rawList = allSessionsRes || [];
       const sortedList = sortDesc(rawList);
@@ -1163,7 +1159,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   const handleSelectSession = (sessionId: number) => {
     if (Number(sessionId) === Number(selectedSessionId)) return;
-    
+
     // Cancel any ongoing request immediately upon switching contest to prevent race conditions
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -1225,7 +1221,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const searchParam = debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : '';
       const sortParam = sortConfig ? `&sort_by=${sortConfig.key}` : '';
       const matrixUrl = `/contests/sessions/${requestedSessionId}/matrix?dept=${dept}&year=${year}&attendance=${attendance}&paginated=true&page=${currentPage}&limit=${pageSize}${searchParam}${sortParam}`;
-      
+
       // TIER 1: Priority 1 Fast Summary (< 300ms target)
       const summaryPromise = fetchWithCacheDedupe(
         `contest_summary_${requestedSessionId}`,
@@ -1290,7 +1286,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               }
               localStorage.setItem(baselineKey, String(currentAttended));
             }
-          } catch (_err) {}
+          } catch (_err) { }
 
           // Cache first page for instant re-opening
           if (currentPage === 1 && !debouncedSearchTerm) {
@@ -1331,7 +1327,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             setErrorLogs(errResData || []);
             setComparison(compResData || null);
           }
-        } catch (_err) {}
+        } catch (_err) { }
       })();
 
       // Run parallel requests
@@ -1390,7 +1386,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       try {
         localStorage.setItem(`contest_delta_${selectedSessionId}`, JSON.stringify(deltaObj));
         localStorage.setItem(`contest_baseline_solvers_${selectedSessionId}`, String(newCount));
-      } catch (_e) {}
+      } catch (_e) { }
 
       if (delta > 0) {
         setSyncStatusStage(`+${delta} New Solvers!`);
@@ -1465,7 +1461,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         setDeletingSessionId(sessionId);
         try {
           await api.delete(`/contests/sessions/${sessionId}`);
-          
+
           // Re-fetch fresh data from the server instead of doing unsafe local state mutations
           // This prevents stale session IDs from causing 404 errors during export/sync.
           await fetchInitialContestData();
@@ -1535,8 +1531,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
     // Build clean institutional filename reflecting active filters
     const d = (selectedDeptFilter || 'ALL').toUpperCase().trim();
-    const deptSlug = (d === 'ALL' || d === '' || d === 'ALL DEPARTMENTS') 
-      ? 'All_Depts' 
+    const deptSlug = (d === 'ALL' || d === '' || d === 'ALL DEPARTMENTS')
+      ? 'All_Depts'
       : d.replace(/[\(\)\s]+/g, '_').replace(/-+/g, '_').replace(/^_|_$/g, '');
 
     const y = (selectedYearFilter || 'ALL').toUpperCase().trim();
@@ -1553,9 +1549,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const filename = `NEC_W${contestNum}_${deptSlug}_${yearSlug}${attSlug}${dateStr}.${ext}`;
     const mimeType = format === 'pdf' ? 'application/pdf'
       : format === 'word' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      : format === 'zip' ? 'application/zip'
-      : format === 'csv' ? 'text/csv'
-      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        : format === 'zip' ? 'application/zip'
+          : format === 'csv' ? 'text/csv'
+            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     const formatLabel = format.toUpperCase();
 
     try {
@@ -1705,15 +1701,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     // Resolve Dept ID from code if possible, default to 1 if unknown (backend or edit form handles correction)
     let dId = 1;
     if (r.dept) {
-       const found = departments.find((d: any) => d.code === r.dept);
-       if (found) dId = found.id;
+      const found = departments.find((d: any) => d.code === r.dept);
+      if (found) dId = found.id;
     }
     setEditDeptId(dId);
     setEditYearLevel(r.year || 'III');
     setEditUsername(r.username || '');
     setEditLeetCodeUrl(r.leetcode_url || (r.username ? `https://leetcode.com/u/${r.username}/` : ''));
     setEditEmail(r.email || '');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departments]);
 
   const handleSaveStudentEdit = async () => {
@@ -1826,7 +1822,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     if (hasMatrixRows) {
       for (const r of matrixRows) {
         const st = (r.participation_status || r.status || '').toString().toUpperCase();
-        
+
         // Dynamic score / total solved calculation
         let solved = 0;
         if (r.total_solved !== undefined && r.total_solved !== null && r.total_solved !== '—') {
@@ -2091,7 +2087,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     if (activeSessionObj?.status === 'COMPLETED' || activeSessionObj?.status === 'ARCHIVED') {
       if (!snapshotAlertFiredRef.current) {
         snapshotAlertFiredRef.current = true;
-        try { playCelebrationChime(); } catch (_) {}
+        try { playCelebrationChime(); } catch (_) { }
       }
     }
   }, [activeSessionObj?.status]);
@@ -2186,7 +2182,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     </>
                   )}
                 </h1>
-                
+
                 {user?.role?.toLowerCase() === 'admin (system admin)' && (
                   <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-black uppercase tracking-wider flex items-center space-x-1 shadow-sm">
                     <ShieldCheck className="w-3 h-3" />
@@ -2214,11 +2210,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     Last synced: {sessionMetrics?.last_synced || sessionMetrics?.generatedAtIST || sessionMetrics?.lastUpdated || activeSessionObj?.sessionDate || 'Live'}
                   </span>
                   {solverDelta && (
-                    <span className={`inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded-full ${
-                      solverDelta.delta > 0 
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black' 
+                    <span className={`inline-flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded-full ${solverDelta.delta > 0
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black'
                         : 'bg-slate-700/50 text-slate-300 border border-slate-600/30'
-                    }`}>
+                      }`}>
                       {solverDelta.delta > 0 ? `+${solverDelta.delta} new` : '0 new'} ({solverDelta.current} verified)
                     </span>
                   )}
@@ -2235,29 +2230,29 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="min-w-0 flex-1">
                 <GlobalFilter
                   options={displaySessions.map((s) => {
-                  const statusUp = (s.status || '').toUpperCase();
-                  const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
-                  const isScheduled = statusUp.includes('SCHEDULE');
+                    const statusUp = (s.status || '').toUpperCase();
+                    const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
+                    const isScheduled = statusUp.includes('SCHEDULE');
 
-                  let rawDate = s.sessionDate || '';
-                  let formattedDate = rawDate;
-                  if (rawDate.includes('-')) {
-                    const parts = rawDate.split('-');
-                    if (parts.length === 3 && parts[0].length === 4) {
-                      formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                    let rawDate = s.sessionDate || '';
+                    let formattedDate = rawDate;
+                    if (rawDate.includes('-')) {
+                      const parts = rawDate.split('-');
+                      if (parts.length === 3 && parts[0].length === 4) {
+                        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                      }
                     }
-                  }
 
-                  return {
-                    value: String(s.sessionId),
-                    label: `${formattedDate} — ${s.contestName}`,
-                    pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
-                    pillColorClass: isScheduled
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                      : (isCompleted
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                        : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')
-                  };
+                    return {
+                      value: String(s.sessionId),
+                      label: `${formattedDate} — ${s.contestName}`,
+                      pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
+                      pillColorClass: isScheduled
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        : (isCompleted
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')
+                    };
                   })}
                   value={selectedSessionId ? String(selectedSessionId) : ''}
                   onChange={(val) => handleSelectSession(Number(val))}
@@ -2270,7 +2265,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   dropdownWidth="w-full sm:w-[320px]"
                 />
               </div>
-              
+
               {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && activeSessionObj && (
                 <button
                   type="button"
@@ -2299,11 +2294,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowAdminMonitor(false);
                   }
                 }}
-                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border active:scale-[0.98] whitespace-nowrap shadow-sm shrink-0 w-full sm:w-auto ${
-                  showAdminMonitor
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border active:scale-[0.98] whitespace-nowrap shadow-sm shrink-0 w-full sm:w-auto ${showAdminMonitor
                     ? 'bg-rose-600/90 hover:bg-rose-600 text-white border-rose-500/50 shadow-rose-900/30'
                     : 'bg-slate-800/90 hover:bg-slate-800 text-emerald-400 hover:text-white border-emerald-500/30 hover:border-emerald-500/60'
-                }`}
+                  }`}
                 title="Toggle Live Contest Monitor"
               >
                 <Activity className={`w-3.5 h-3.5 ${showAdminMonitor ? 'text-white' : 'text-emerald-400 animate-pulse'}`} />
@@ -2482,7 +2476,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <h4 className="text-sm font-black uppercase tracking-wider text-brand-300 flex items-center gap-2 flex-wrap">
                   <span>Admin Live Contest Operations & Worker Telemetry</span>
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 font-mono border border-emerald-400/40 font-bold shrink-0">
-                     ACTIVE SUITE
+                    ACTIVE SUITE
                   </span>
                 </h4>
                 <p className="text-xs text-slate-300 font-medium leading-relaxed">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
@@ -2938,11 +2932,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 mb-5 sm:mb-8 shadow-xs">
         <button
           onClick={() => startTransition(() => setActiveTab('previous_week'))}
-          className={`w-full flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-[0.99] ${
-            activeTab === 'previous_week'
+          className={`w-full flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-[0.99] ${activeTab === 'previous_week'
               ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-navy-900/60'
-          }`}
+            }`}
         >
           <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
           <span className="sm:hidden truncate">Contest Analyzer</span>
@@ -2951,11 +2944,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
         <button
           onClick={() => startTransition(() => setActiveTab('matrix'))}
-          className={`w-full flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-[0.99] ${
-            activeTab === 'matrix'
+          className={`w-full flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-[0.99] ${activeTab === 'matrix'
               ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-navy-900/60'
-          }`}
+            }`}
         >
           <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
           <span className="sm:hidden truncate">Roster Matrix</span>
@@ -2977,1786 +2969,1687 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
           <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-3 sm:mb-5`}>
-        {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          {/* Mobile Filter Scope Bar */}
-          <div className="flex items-center justify-between sm:hidden pb-1 border-b border-slate-100 dark:border-navy-900">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
-                <Filter className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
-                Contest Filter Scope
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowMobileContestFilters(prev => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all shadow-2xs touch-manipulation active:scale-95"
-            >
-              <span>{showMobileContestFilters ? 'Hide Filters' : 'Filter Options'}</span>
-              {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
-                <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center">
-                  {[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length}
-                </span>
-              )}
-              <ChevronDown size={13} className={`transition-transform duration-200 ${showMobileContestFilters ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
-
-          {/* Consolidated Action Toolbar */}
-          <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2 ml-auto relative z-30">
-            
-            {/* Unified Actions & Export Dropdown */}
-            <div className="relative w-full sm:w-auto z-40" ref={exportMenuRef}>
-              <button
-                type="button"
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                disabled={!selectedSessionId || isSyncing}
-                className={`group relative w-full sm:w-auto flex items-center justify-center space-x-2.5 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border ${
-                  showExportMenu
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-[0_0_20px_rgba(79,70,229,0.3)] ring-2 ring-indigo-500/30 ring-offset-1 dark:ring-offset-navy-900'
-                    : 'bg-white dark:bg-navy-900/80 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 dark:hover:shadow-indigo-900/20'
-                }`}
-              >
-                {/* Subtle animated background gradient on hover (only when not active) */}
-                {!showExportMenu && (
-                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-purple-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                )}
-                
-                <div className={`p-1.5 rounded-xl transition-all duration-300 relative z-10 ${
-                  showExportMenu 
-                    ? 'bg-white/25 text-white shadow-inner' 
-                    : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 group-hover:scale-105'
-                }`}>
-                  <Download className="w-4 h-4 stroke-[2.5]" />
-                </div>
-                <span className="tracking-wide font-black relative z-10">Actions & Export</span>
-                <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-300 relative z-10 ${
-                  showExportMenu ? 'rotate-180 text-white' : 'text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
-                }`} />
-              </button>
-              
-              <AnimatePresence>
-                {showExportMenu && (() => {
-                  const exportMenuContent = (
-                    <>
-                    {/* SECTION 1: ACTIONS */}
-                    <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
-                         <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
-                         <span className="text-[11px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
-                           Primary Actions
-                         </span>
-                      </div>
-                      <div className="space-y-1">
-                        <button
-                          type="button"
-                          onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
-                              <Eye className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
-                                Live Preview
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                Review dataset & questions before export
-                              </span>
-                            </div>
-                          </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                              <Mail className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
-                                Send Email Report
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                Distribute summary report securely to faculty
-                              </span>
-                            </div>
-                          </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* SECTION 2: EXPORT FORMATS */}
-                    <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                      <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
-                         <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                         <span className="text-[11px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
-                           Export Formats
-                         </span>
-                      </div>
-                      <div className="space-y-1">
-                        <button
-                          type="button"
-                          onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
-                              <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
-                                Excel Workbook
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                Raw structured data & roster matrix
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-300 dark:border-emerald-700 shrink-0">
-                            XLSX
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
-                              <FileText className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
-                                PDF Document
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                Formatted print layout & analytics
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 group-hover:bg-rose-600 group-hover:text-white transition-colors border border-rose-300 dark:border-rose-700 shrink-0">
-                            PDF
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                              <FileText className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-                                Word Document
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                Editable text report with tables
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-300 dark:border-blue-700 shrink-0">
-                            DOCX
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer border border-transparent hover:border-amber-200 dark:hover:border-amber-800"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
-                              <FileArchive className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
-                                ZIP Archive
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                All formats bundled in one archive
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 group-hover:bg-amber-600 group-hover:text-white transition-colors border border-amber-300 dark:border-amber-700 shrink-0">
-                            ZIP
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* SECTION 3: UTILITY */}
-                    <div>
-                      <div className="px-3 pt-1 pb-1 flex items-center space-x-2">
-                         <div className="w-2 h-2 rounded-full bg-slate-500" />
-                         <span className="text-[11px] font-black tracking-wider uppercase text-slate-600 dark:text-slate-400">
-                           Utility
-                         </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => { window.print(); setShowExportMenu(false); }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                      >
-                        <div className="flex items-center space-x-3 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all shadow-sm">
-                            <Printer className="w-4 h-4 stroke-[2.5]" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs font-black text-slate-900 dark:text-white transition-colors">
-                              Print View
-                            </span>
-                            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                              Quick browser print layout
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                    </>
-                  );
-
-                  return (
-                    <>
-                      {/* Desktop Anchored Dropdown */}
-                      <div className="hidden sm:block">
-                        <motion.div
-                          initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute top-[calc(100%+8px)] right-0 w-[380px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
-                        >
-                          {exportMenuContent}
-                        </motion.div>
-                      </div>
-
-                      {/* Mobile High-Z-Index Modal Action Sheet via Portal */}
-                      {typeof document !== 'undefined' && createPortal(
-                        <div 
-                          className="sm:hidden fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end p-3 animate-fade-in"
-                          onClick={() => setShowExportMenu(false)}
-                        >
-                          <motion.div
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 40 }}
-                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3"
-                          >
-                            {/* Mobile Modal Header */}
-                            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                                  <Download className="w-4 h-4 stroke-[2.5]" />
-                                </div>
-                                <div>
-                                  <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight">Actions & Export Hub</h4>
-                                  <p className="text-[10px] text-slate-500 font-medium">Download reports or trigger notifications</p>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setShowExportMenu(false)}
-                                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-
-                            {exportMenuContent}
-                          </motion.div>
-                        </div>,
-                        document.body
-                      )}
-                    </>
-                  );
-                })()}
-              </AnimatePresence>
-            </div>
-
-            <button
-              onClick={handleFetchSelectedContest}
-              disabled={isSyncing || !selectedSessionId}
-              className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 active:scale-95 border border-slate-700/50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{syncStatusStage || (isSyncing ? 'Syncing...' : 'Sync Contest')}</span>
-            </button>
-
-            {/* Auto Refresh Toggle */}
-            <button
-              type="button"
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`group relative w-full sm:w-auto flex items-center justify-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer shadow-md border ${
-                autoRefresh
-                  ? 'bg-slate-900 text-emerald-400 border-emerald-500/50 shadow-emerald-950/40 ring-1 ring-emerald-500/30'
-                  : 'bg-slate-900/90 text-slate-300 hover:text-white border-slate-800 hover:bg-slate-900 hover:border-slate-700'
-              }`}
-              title={autoRefresh ? 'Auto-refresh active (every 2 mins)' : 'Click to enable auto-refresh'}
-            >
-              <div className="relative flex items-center justify-center">
-                {autoRefresh ? (
-                  <>
-                    <span className="absolute -inset-1 rounded-full bg-emerald-500/30 animate-ping opacity-75" />
-                    <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse relative z-10" />
-                  </>
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5 text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
-                )}
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <span className="tracking-wide uppercase text-[10px] font-black">Auto-Refresh</span>
-                <span
-                  className={`text-[9px] px-1.5 py-0.5 rounded-md font-mono font-black uppercase tracking-wider transition-colors ${
-                    autoRefresh
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : 'bg-slate-800 text-slate-400 border border-slate-700'
-                  }`}
-                >
-                  {autoRefresh ? 'LIVE' : 'OFF'}
-                </span>
-              </div>
-
-              <div
-                className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
-                  autoRefresh ? 'bg-emerald-500' : 'bg-slate-700'
-                }`}
-              >
-                <span
-                  className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                    autoRefresh ? 'translate-x-3.5 bg-slate-950' : 'translate-x-0.5'
-                  }`}
-                />
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Row 2: Sleek 5-Column Filter Bar (Collapsible on mobile) */}
-        <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 items-end">
-          {/* College Campus Filter — Admin & Management only */}
-          {canFilterCollege && (() => {
-            const collegeOptions: GlobalFilterOption[] = [
-              { value: 'ALL', label: 'All Colleges', pillText: 'ALL' },
-              { value: 'NEC', label: 'Nandha Engineering (NEC)', pillText: 'NEC' },
-              { value: 'NCT', label: 'Nandha Tech (NCT)', pillText: 'NCT' },
-            ];
-
-            return (
-              <div className="space-y-1 min-w-0 w-full">
-                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
-                  College Campus
-                </label>
-                <GlobalFilter
-                  value={selectedCollegeFilter}
-                  onChange={(val) => setSelectedCollegeFilter(val as 'ALL' | 'NEC' | 'NCT')}
-                  options={collegeOptions}
-                  icon={<Building2 className="w-4 h-4 text-teal-500" />}
-                  dropdownWidth="w-64 sm:w-72"
-                  placeholder="All Colleges"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Department Filter */}
-          {(() => {
-            const roleClean = (user?.role || '').trim().toLowerCase();
-            const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
-            const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
-            const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
-            const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '';
-
-            const hodAuthCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
-            const filteredDepts = (isHod && !isGlobalRole)
-              ? departments.filter(d => hodAuthCodes.includes(d.code.toUpperCase()) || (userDeptCode && d.code.toUpperCase() === userDeptCode.toUpperCase()))
-              : departments;
-
-            const deptOptions: GlobalFilterOption[] = isStaffMentor
-              ? [
-                  { value: 'ALL', label: 'My Allocated Mentees', pillText: 'MENTEES' },
-                  ...(userDeptCode ? [{ value: userDeptCode, label: `${userDeptCode} (My Department)`, pillText: userDeptCode }] : [])
-                ]
-              : (isHod && !isGlobalRole)
-              ? [
-                  ...(filteredDepts.length > 1 ? [{ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' }] : []),
-                  ...filteredDepts.map((d) => ({
-                    value: d.code,
-                    label: d.name,
-                    pillText: d.code
-                  }))
-                ]
-              : [
-                  { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
-                  ...departments.map((d) => ({
-                    value: d.code,
-                    label: d.name,
-                    pillText: d.code
-                  }))
-                ];
-
-            return (
-              <div className="space-y-1 min-w-0 w-full">
-                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
-                  Department
-                </label>
-                <GlobalFilter
-                  value={selectedDeptFilter}
-                  onChange={(val) => setSelectedDeptFilter(val)}
-                  options={deptOptions}
-                  icon={<Building2 className="w-4 h-4 text-indigo-500" />}
-                  dropdownWidth="w-72 sm:w-80"
-                  showSearch={true}
-                  searchPlaceholder="Search department..."
-                  placeholder="All Departments"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Academic Year Filter */}
-          {(() => {
-            const yearOptions: GlobalFilterOption[] = [
-              { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' },
-              { value: 'I',   label: 'I Year (2026–2030)',  pillText: 'I' },
-              { value: 'II',  label: 'II Year (2025–2029)', pillText: 'II' },
-              { value: 'III', label: 'III Year (2024–2028)', pillText: 'III' },
-              { value: 'IV',  label: 'IV Year (2023–2027)', pillText: 'IV' },
-            ];
-
-            const normalizedYear = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
-
-            return (
-              <div className="space-y-1 min-w-0 w-full">
-                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
-                  Academic Year
-                </label>
-                <GlobalFilter
-                  value={normalizedYear}
-                  onChange={(val) => setSelectedYearFilter(val)}
-                  options={yearOptions}
-                  icon={<GraduationCap className="w-4 h-4 text-brand-500" />}
-                  dropdownWidth="w-64 sm:w-72"
-                  placeholder="All Academic Years"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Attendance Status Filter */}
-          {(() => {
-            const attOptions: GlobalFilterOption[] = [
-              { value: 'ALL',                 label: 'All Statuses',    pillText: 'ALL' },
-              { value: 'ALL_ATTENDED',        label: 'Participated',    pillText: 'PART' },
-              { value: 'PUBLIC_ATTENDED',     label: 'Public Attended', pillText: 'PUB' },
-              { value: 'VIRTUAL_ATTENDED',    label: 'Virtual Attended', pillText: 'VIRT' },
-              { value: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended',    pillText: 'ABS' },
-              { value: 'DATA_ERROR',          label: 'Data Errors',     pillText: 'ERR' },
-            ];
-
-            return (
-              <div className="space-y-1 min-w-0 w-full">
-                <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
-                  Attendance Status
-                </label>
-                <GlobalFilter
-                  value={selectedAttendanceFilter}
-                  onChange={(val) => setSelectedAttendanceFilter(val)}
-                  options={attOptions}
-                  icon={<CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                  dropdownWidth="w-64 sm:w-72"
-                  placeholder="All Statuses"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Reset Filters Control */}
-          <div className="min-w-0 w-full flex flex-col justify-end">
-            <label className="block text-[11px] font-black text-transparent select-none uppercase tracking-wider truncate hidden lg:block">
-              Action
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
-                setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
-                setSelectedYearFilter('ALL');
-                setSelectedAttendanceFilter('ALL');
-                setSearchTerm('');
-                setDebouncedSearchTerm('');
-              }}
-              className={`w-full h-10 min-h-[40px] flex items-center justify-center space-x-2 px-4 rounded-xl text-xs font-black border transition-all cursor-pointer active:scale-95 shadow-xs ${
-                (selectedCollegeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
-                  ? 'bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 ring-1 ring-rose-500/20'
-                  : 'bg-slate-50 dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-navy-700 hover:border-slate-300'
-              }`}
-            >
-              <RotateCcw className={`w-3.5 h-3.5 ${
-                (selectedCollegeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
-                  ? 'text-rose-600 dark:text-rose-400'
-                  : 'text-slate-400'
-              }`} />
-              <span>Reset All Filters</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Active Filter Chips */}
-        {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
-            <span className="text-[10px] font-extrabold uppercase text-slate-400">Active:</span>
-            {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
-                College: {selectedCollegeFilter}
-                <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-              </span>
-            )}
-            {selectedDeptFilter !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
-                Dept: {selectedDeptFilter}
-                <button onClick={() => setSelectedDeptFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-              </span>
-            )}
-            {selectedYearFilter !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                Year: {selectedYearFilter}
-                <button onClick={() => setSelectedYearFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-              </span>
-            )}
-            {selectedAttendanceFilter !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                Status: {selectedAttendanceFilter}
-                <button onClick={() => setSelectedAttendanceFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-
-      {/* 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) */}
-      <div className="space-y-4 sm:space-y-6">
-        
-        {/* Department-wise Summary Section — Compact Executive Grid */}
-        {(() => {
-          const deptCards = departments.map((dept, index) => {
-            const colors = [
-              { bg: 'bg-indigo-50/70 dark:bg-indigo-950/30', border: 'border-indigo-100 dark:border-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-400', stat: 'text-indigo-700 dark:text-indigo-300', label: 'text-indigo-500', bar: 'bg-indigo-500 dark:bg-indigo-400' },
-              { bg: 'bg-cyan-50/70 dark:bg-cyan-950/30', border: 'border-cyan-100 dark:border-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-400', stat: 'text-cyan-700 dark:text-cyan-300', label: 'text-cyan-500', bar: 'bg-cyan-500 dark:bg-cyan-400' },
-              { bg: 'bg-blue-50/70 dark:bg-blue-950/30', border: 'border-blue-100 dark:border-blue-900/50', text: 'text-blue-700 dark:text-blue-400', stat: 'text-blue-700 dark:text-blue-300', label: 'text-blue-500', bar: 'bg-blue-500 dark:bg-blue-400' },
-              { bg: 'bg-emerald-50/70 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', stat: 'text-emerald-700 dark:text-emerald-300', label: 'text-emerald-500', bar: 'bg-emerald-500 dark:bg-emerald-400' },
-              { bg: 'bg-purple-50/70 dark:bg-purple-950/30', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500', bar: 'bg-purple-500 dark:bg-purple-400' }
-            ];
-            const color = colors[index % colors.length];
-            const deptNorm = normalizeDepartment(dept.code || dept.name);
-
-            let total = 0;
-            let attended = 0;
-
-            // 1. Check API departmentStats dictionary (or fastSummary)
-            const activeDeptStats = departmentStats || fastSummary?.departmentStats;
-            if (activeDeptStats && typeof activeDeptStats === 'object') {
-              for (const [key, val] of Object.entries(activeDeptStats)) {
-                if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
-                  const dVal: any = val;
-                  total = Number(dVal?.total || dVal?.totalStudents || 0);
-                  attended = Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0) + 
-                             Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0);
-                  if (attended === 0 && dVal?.attended) {
-                    attended = Number(dVal.attended);
-                  }
-                  break;
-                }
-              }
-            }
-
-            // 2. Check matrixRows or cachedStudents (if available) for dynamic calculation of attended count
-            if (attended === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
-              const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
-              const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-              if (deptStudents.length > 0) {
-                if (total === 0) total = deptStudents.length;
-                attended = deptStudents.filter((s: any) => {
-                  const st = (s.participation_status || s.status || '').toUpperCase();
-                  return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
-                }).length;
-              }
-            }
-
-            // 3. Fallback for total student count from master roster
-            if (total === 0 && globalStudents.length > 0) {
-              const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-              total = deptGlobalStudents.length;
-            }
-
-            // Exclude departments with 0 active students
-            if (total === 0) {
-              return null;
-            }
-
-            const participationPct = total > 0 ? Math.min(100, Math.round((attended / total) * 100)) : 0;
-            const isSelected = selectedDeptFilter === dept.code || normalizeDepartment(selectedDeptFilter) === deptNorm;
-
-            return (
-              <div
-                key={dept.code}
-                onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.code)}
-                role="button"
-                title={`Click to filter by ${dept.name}`}
-                className={`relative group p-3.5 sm:p-4 rounded-2xl glass-panel transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${
-                  isSelected 
-                    ? 'border-brand-500 ring-2 ring-brand-500/30 shadow-lg bg-brand-500/10' 
-                    : 'border border-slate-200/80 dark:border-navy-700/80 hover:border-brand-400 dark:hover:border-brand-500/50 hover:shadow-md'
-                }`}
-              >
-                {/* Top gradient decorative line */}
-                <div className={`absolute top-0 left-0 w-full h-1 ${color.bar}`} />
-                
-                <div className="relative z-10 space-y-2">
-                  {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${color.bg} border ${color.border} group-hover:scale-105 transition-transform`}>
-                        <Building2 className={`w-3.5 h-3.5 ${color.text}`} />
-                      </div>
-                      <span className={`text-xs font-black uppercase tracking-wider truncate ${color.text}`}>
-                        {dept.code}
-                      </span>
-                    </div>
-                    
-                    <div className="text-right shrink-0">
-                      <span className={`text-xl sm:text-2xl font-black font-mono leading-none ${color.stat}`}>{attended}</span>
-                      <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${color.label} block mt-0.5`}>Attended</span>
-                    </div>
+            {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Mobile Filter Scope Bar */}
+              <div className="flex items-center justify-between sm:hidden pb-1 border-b border-slate-100 dark:border-navy-900">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
+                    <Filter className="w-3.5 h-3.5" />
                   </div>
-
-                  {/* Middle Row: Department Name */}
-                  <div className="min-w-0">
-                    <h4 className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors" title={dept.name}>
-                      {dept.name}
-                    </h4>
-                  </div>
-                </div>
-
-                {/* Bottom Row: Progress & Active Student Count */}
-                <div className="relative z-10 pt-2.5 mt-2.5 border-t border-slate-100 dark:border-white/[0.06]">
-                  <div className="flex justify-between items-center mb-1.5 text-[10px]">
-                    <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Active
-                    </span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="font-black text-emerald-500">{participationPct}%</span>
-                      <span className="text-[11px] font-bold font-mono text-slate-600 dark:text-slate-400">({attended}/{total})</span>
-                    </div>
-                  </div>
-                  
-                  {/* Participation Progress Bar */}
-                  <div className="w-full bg-slate-100 dark:bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${color.bar} transition-all duration-700 ease-out relative`}
-                      style={{ width: `${participationPct}%` }}
-                    >
-                      <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 animate-[shimmer_2s_infinite]" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          }).filter(Boolean);
-
-          if (deptCards.length === 0) return null;
-
-          const isSingle = deptCards.length === 1;
-
-          return (
-            <div className={`grid ${isSingle ? 'grid-cols-1 sm:grid-cols-2 max-w-sm' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'} gap-3 sm:gap-4`}>
-              {deptCards}
-            </div>
-          );
-        })()}
-        {/* ACTIVE SCOPE BANNER - Dynamic & Clean: Only shows actively filtered dimensions */}
-        {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL') && (
-          <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/80 dark:border-indigo-800/50 rounded-2xl px-3.5 py-2 flex items-center justify-between gap-2.5 shadow-2xs animate-fade-in">
-            <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px] flex items-center gap-1.5 shrink-0">
-                <Filter className="w-3.5 h-3.5 text-indigo-500" />
-                Active Scope:
-              </span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {selectedDeptFilter !== 'ALL' && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold shadow-2xs">
-                    <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Dept:</span>
-                    <span>{selectedDeptFilter}</span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDeptFilter('ALL')}
-                      className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                      title="Clear Department Filter"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
+                    Contest Filter Scope
                   </span>
-                )}
-                {selectedYearFilter !== 'ALL' && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold shadow-2xs">
-                    <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">Year:</span>
-                    <span>{selectedYearFilter === '1' ? 'I Year' : selectedYearFilter === '2' ? 'II Year' : selectedYearFilter === '3' ? 'III Year' : selectedYearFilter === '4' ? 'IV Year' : `${selectedYearFilter} Year`}</span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedYearFilter('ALL')}
-                      className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                      title="Clear Year Filter"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {selectedAttendanceFilter !== 'ALL' && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold shadow-2xs">
-                    <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Status:</span>
-                    <span className="font-extrabold">{selectedAttendanceFilter.replace(/_/g, ' ')}</span>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedAttendanceFilter('ALL')}
-                      className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                      title="Clear Status Filter"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedDeptFilter('ALL');
-                setSelectedYearFilter('ALL');
-                setSelectedAttendanceFilter('ALL');
-              }}
-              className="shrink-0 text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors cursor-pointer flex items-center gap-1.5 bg-white dark:bg-navy-950 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs hover:shadow-xs hover:border-rose-300 active:scale-95 touch-manipulation"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Clear All</span>
-            </button>
-          </div>
-        )}
-
-        {/* Headline Stat Cards - Collapsible on Mobile, Unchanged on Desktop */}
-        {(() => {
-          const showVirtualCard = stats.virtualRows > 0 || selectedAttendanceFilter === 'VIRTUAL_ATTENDED';
-          const cardCount = showVirtualCard ? 6 : 5;
-          return (
-            <div className="space-y-2.5">
-              {/* Mobile-Only Toggle Bar (Hidden on Desktop 'lg:hidden') */}
-              <div className="flex items-center justify-between gap-3 lg:hidden pt-0.5">
+                </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    const next = !showMobileStats;
-                    setShowMobileStats(next);
-                    try { localStorage.setItem('wc_show_mobile_stats', String(next)); } catch {}
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 touch-manipulation shrink-0"
+                  onClick={() => setShowMobileContestFilters(prev => !prev)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all shadow-2xs touch-manipulation active:scale-95"
                 >
-                  <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span>{showMobileStats ? 'Hide Overview Cards' : 'Overview Cards'}</span>
-                  <span className="text-[10px] font-bold text-slate-400">({cardCount})</span>
-                  {showMobileStats ? (
-                    <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>{showMobileContestFilters ? 'Hide Filters' : 'Filter Options'}</span>
+                  {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
+                    <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center">
+                      {[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length}
+                    </span>
                   )}
+                  <ChevronDown size={13} className={`transition-transform duration-200 ${showMobileContestFilters ? 'rotate-180' : ''}`} />
                 </button>
-                {!showMobileStats && (
-                  <span className="inline-flex items-center shrink-0 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
-                    <span>{stats.attendedRows}/{stats.totalRows} Verified ({stats.totalParticipationPct}%)</span>
-                    {solverDelta && solverDelta.delta > 0 && (
-                      <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        (+{solverDelta.delta})
-                      </span>
-                    )}
-                  </span>
-                )}
               </div>
 
-              {/* Grid: Hidden on mobile when collapsed, ALWAYS grid on desktop (lg:grid) */}
-              <div className={`${showMobileStats ? 'grid' : 'hidden lg:grid'} grid-cols-2 sm:grid-cols-3 ${showVirtualCard ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 animate-fade-in`}>
-                {/* Card 1: Total Students */}
-                <button
-                  onClick={() => setSelectedAttendanceFilter('ALL')}
-                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL'
-                    ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/10'
-                    : 'hover:border-brand-400/40'
-                    }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Total</span>
-                    <div className="w-6 h-6 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform">
-                      <Users className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline justify-between w-full">
-                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
-                      <AnimatedNumber value={stats.totalRows} />
-                    </p>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Enrolled</span>
-                  </div>
-                </button>
+              {/* Consolidated Action Toolbar */}
+              <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2 ml-auto relative z-30">
 
-                {/* Card 2: Public Attended */}
-                <button
-                  onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
-                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
-                    ? 'border-emerald-500/80 ring-2 ring-emerald-500/30 shadow-glass-dark bg-emerald-500/15'
-                    : 'hover:border-emerald-500/40'
-                    }`}
-                >
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center">
-                      Public
-                    </span>
-                    <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                      <Award className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline justify-between w-full">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
-                        <AnimatedNumber value={stats.attendedRows} />
-                      </p>
-                      {solverDelta && solverDelta.delta > 0 && (
-                        <span 
-                          title={`+${solverDelta.delta} new solvers added (from ${solverDelta.prev} to ${solverDelta.current})`}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-black font-mono bg-emerald-500 text-white shadow-sm shadow-emerald-500/40 animate-pulse"
-                        >
-                          +{solverDelta.delta} NEW
-                        </span>
-                      )}
-                      {solverDelta && solverDelta.delta === 0 && (
-                        <span 
-                          title="No new solvers added. Roster is up to date."
-                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
-                        >
-                          +0
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/60 uppercase tracking-widest">Verified</span>
-                  </div>
-                </button>
-
-                {/* Card 3: Virtual Attended (Only displayed when virtual participation exists or filter is active) */}
-                {showVirtualCard && (
+                {/* Unified Actions & Export Dropdown */}
+                <div className="relative w-full sm:w-auto z-40" ref={exportMenuRef}>
                   <button
-                    onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
-                    className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
-                      ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-glass-dark bg-purple-500/15'
-                      : 'hover:border-purple-500/40'
+                    type="button"
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    disabled={!selectedSessionId || isSyncing}
+                    className={`group relative w-full sm:w-auto flex items-center justify-center space-x-2.5 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border ${showExportMenu
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-[0_0_20px_rgba(79,70,229,0.3)] ring-2 ring-indigo-500/30 ring-offset-1 dark:ring-offset-navy-900'
+                        : 'bg-white dark:bg-navy-900/80 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 dark:hover:shadow-indigo-900/20'
                       }`}
                   >
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                        Virtual
-                      </span>
-                      <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      </div>
+                    {/* Subtle animated background gradient on hover (only when not active) */}
+                    {!showExportMenu && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-purple-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    )}
+
+                    <div className={`p-1.5 rounded-xl transition-all duration-300 relative z-10 ${showExportMenu
+                        ? 'bg-white/25 text-white shadow-inner'
+                        : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 group-hover:scale-105'
+                      }`}>
+                      <Download className="w-4 h-4 stroke-[2.5]" />
                     </div>
-                    <div className="flex items-baseline justify-between w-full">
-                      <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400">
-                        <AnimatedNumber value={stats.virtualRows} />
-                      </p>
-                      <span className="text-[9px] font-bold text-purple-600/70 dark:text-purple-400/60 uppercase tracking-widest">Practice</span>
-                    </div>
+                    <span className="tracking-wide font-black relative z-10">Actions & Export</span>
+                    <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-300 relative z-10 ${showExportMenu ? 'rotate-180 text-white' : 'text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
+                      }`} />
                   </button>
-                )}
 
-                {/* Card 4: Not Attended */}
+                  <AnimatePresence>
+                    {showExportMenu && (() => {
+                      const exportMenuContent = (
+                        <>
+                          {/* SECTION 1: ACTIONS */}
+                          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                            <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                              <span className="text-[11px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
+                                Primary Actions
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              <button
+                                type="button"
+                                onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                                    <Eye className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+                                      Live Preview
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Review dataset & questions before export
+                                    </span>
+                                  </div>
+                                </div>
+                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                                    <Mail className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                                      Send Email Report
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Distribute summary report securely to faculty
+                                    </span>
+                                  </div>
+                                </div>
+                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* SECTION 2: EXPORT FORMATS */}
+                          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                            <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                              <span className="text-[11px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
+                                Export Formats
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                                      Excel Workbook
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Raw structured data & roster matrix
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-300 dark:border-emerald-700 shrink-0">
+                                  XLSX
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileText className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
+                                      PDF Document
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Formatted print layout & analytics
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 group-hover:bg-rose-600 group-hover:text-white transition-colors border border-rose-300 dark:border-rose-700 shrink-0">
+                                  PDF
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileText className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                                      Word Document
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Editable text report with tables
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-300 dark:border-blue-700 shrink-0">
+                                  DOCX
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer border border-transparent hover:border-amber-200 dark:hover:border-amber-800"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileArchive className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                                      ZIP Archive
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      All formats bundled in one archive
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 group-hover:bg-amber-600 group-hover:text-white transition-colors border border-amber-300 dark:border-amber-700 shrink-0">
+                                  ZIP
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* SECTION 3: UTILITY */}
+                          <div>
+                            <div className="px-3 pt-1 pb-1 flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-slate-500" />
+                              <span className="text-[11px] font-black tracking-wider uppercase text-slate-600 dark:text-slate-400">
+                                Utility
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { window.print(); setShowExportMenu(false); }}
+                              className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-150 group hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                            >
+                              <div className="flex items-center space-x-3 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all shadow-sm">
+                                  <Printer className="w-4 h-4 stroke-[2.5]" />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-black text-slate-900 dark:text-white transition-colors">
+                                    Print View
+                                  </span>
+                                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    Quick browser print layout
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                        </>
+                      );
+
+                      return (
+                        <>
+                          {/* Desktop Anchored Dropdown */}
+                          <div className="hidden sm:block">
+                            <motion.div
+                              initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                              className="absolute top-[calc(100%+8px)] right-0 w-[380px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
+                            >
+                              {exportMenuContent}
+                            </motion.div>
+                          </div>
+
+                          {/* Mobile High-Z-Index Modal Action Sheet via Portal */}
+                          {typeof document !== 'undefined' && createPortal(
+                            <div
+                              className="sm:hidden fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end p-3 animate-fade-in"
+                              onClick={() => setShowExportMenu(false)}
+                            >
+                              <motion.div
+                                initial={{ opacity: 0, y: 40 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 40 }}
+                                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3"
+                              >
+                                {/* Mobile Modal Header */}
+                                <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                                      <Download className="w-4 h-4 stroke-[2.5]" />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight">Actions & Export Hub</h4>
+                                      <p className="text-[10px] text-slate-500 font-medium">Download reports or trigger notifications</p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowExportMenu(false)}
+                                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                                  >
+                                    <X className="w-5 h-5" />
+                                  </button>
+                                </div>
+
+                                {exportMenuContent}
+                              </motion.div>
+                            </div>,
+                            document.body
+                          )}
+                        </>
+                      );
+                    })()}
+                  </AnimatePresence>
+                </div>
+
                 <button
-                  onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
-                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
-                    ? 'border-rose-500/80 ring-2 ring-rose-500/30 shadow-glass-dark bg-rose-500/15'
-                    : 'hover:border-rose-500/40'
-                    }`}
+                  onClick={handleFetchSelectedContest}
+                  disabled={isSyncing || !selectedSessionId}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 active:scale-95 border border-slate-700/50"
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400 tracking-wider">Absent</span>
-                    <div className="w-6 h-6 rounded-lg bg-rose-500/15 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
-                      <UserX className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline justify-between w-full">
-                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400">
-                      <AnimatedNumber value={stats.notAttendedRows} />
-                    </p>
-                    <span className="text-[9px] font-bold text-rose-600/70 dark:text-rose-400/60 uppercase tracking-widest">Inactive</span>
-                  </div>
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>{syncStatusStage || (isSyncing ? 'Syncing...' : 'Sync Contest')}</span>
                 </button>
 
-                {/* Card 5: Data Errors */}
-                <button
-                  onClick={() => {
-                    toggleAttendanceFilter('DATA_ERROR');
-                    setShowDetailedView(true);
-                    setSubTab('error_board');
-                  }}
-                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'DATA_ERROR'
-                    ? 'border-amber-500/80 ring-2 ring-amber-500/30 shadow-glass-dark bg-amber-500/15'
-                    : 'hover:border-amber-500/40'
-                    }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 tracking-wider">Errors</span>
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline justify-between w-full">
-                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
-                      <AnimatedNumber value={stats.errorRows} />
-                    </p>
-                    <span className="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/60 uppercase tracking-widest">Fixes</span>
-                  </div>
-                </button>
-
-                {/* Card 6: Participation (count = public + virtual) */}
-                <button
-                  onClick={() => toggleAttendanceFilter('ALL_ATTENDED')}
-                  className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
-                    !showVirtualCard ? 'col-span-2 sm:col-span-1' : ''
-                  } ${selectedAttendanceFilter === 'ALL_ATTENDED'
-                    ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/15'
-                    : 'hover:border-brand-500/40'
-                    }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Overall</span>
-                    <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline justify-between w-full">
-                    <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400 leading-none">
-                      <AnimatedNumber value={stats.attendedRows + stats.virtualRows} />
-                    </p>
-                    <span className="text-[10px] font-black font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">{stats.totalParticipationPct}%</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Feature Spotlight: Quick Statistics + Trend (Sparkline) + Top Performers */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Card 1: Quick Statistics Progress Bars */}
-          <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass hover:border-white/20 transition-all duration-300 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-500 flex items-center justify-center">
-                  <Layers className="w-3.5 h-3.5" />
-                </div>
-                <span>Participation Distribution</span>
-              </h4>
-              <span className="text-[10px] font-mono font-bold text-slate-400 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5">
-                Total: {stats.totalRows}
-              </span>
-            </div>
-
-            <div className="space-y-3.5">
-              <div>
-                <div className="flex justify-between text-xs font-extrabold mb-1.5">
-                  <span className="text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
-                    <span>PUBLIC ATTENDED ({stats.attendedRows})</span>
-                  </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.publicPct}%</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
-                  <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.publicPct}%` }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs font-extrabold mb-1.5">
-                  <span className="text-purple-500 dark:text-purple-400 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span>
-                    <span>VIRTUAL PRACTICE ({stats.virtualRows})</span>
-                  </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.virtualPct}%</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.virtualPct}%` }}></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs font-extrabold mb-1.5">
-                  <span className="text-rose-500 dark:text-rose-400 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-400 shadow-sm shadow-rose-500/50"></span>
-                    <span>NOT ATTENDED ({stats.notAttendedRows})</span>
-                  </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.notAttendedPct}%</span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
-                  <div className="bg-gradient-to-r from-rose-400 to-rose-500 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.notAttendedPct}%` }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Contest Participation Trend & Growth with Inline Sparkline */}
-          <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass relative overflow-hidden flex flex-col justify-between space-y-4 border border-indigo-500/20 dark:border-indigo-500/30 transition-all duration-300 hover:border-indigo-500/40">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 pb-3 relative z-10">
-              <h4 className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                </div>
-                <span>Participation Trend</span>
-              </h4>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-black border border-emerald-500/30 shadow-2xs">
-                {comparison?.participationGrowthPct !== undefined
-                  ? `${comparison.participationGrowthPct >= 0 ? '+' : ''}${comparison.participationGrowthPct.toFixed(1)}% Growth`
-                  : `${stats.totalParticipationPct}% Active`}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 relative z-10">
-              <div className="space-y-1">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono">{stats.totalParticipationPct}%</span>
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider">Active Solved</span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug font-medium">
-                  <b className="text-slate-900 dark:text-white font-bold">{stats.attendedRows} Public</b>
-                  {stats.virtualRows > 0 ? (
-                    <> + <b className="text-purple-600 dark:text-purple-300 font-bold">{stats.virtualRows} Virtual</b> participants</>
-                  ) : (
-                    <> Verified participants</>
-                  )}
-                </p>
-              </div>
-
-              {/* Inline SVG Sparkline */}
-              <div className="shrink-0 bg-slate-100/80 dark:bg-white/5 p-2 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-inner">
-                <Sparkline data={comparison?.historyTrend || [Math.max(0, Number(stats.totalParticipationPct) - 15), Math.max(0, Number(stats.totalParticipationPct) - 8), Math.max(0, Number(stats.totalParticipationPct) - 3), Number(stats.totalParticipationPct)]} color="#6366f1" />
-              </div>
-            </div>
-
-            <div className="w-full bg-slate-100 dark:bg-white/10 rounded-full h-2 overflow-hidden shadow-inner relative z-10">
-              <div className="bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500 h-2 rounded-full shadow-md transition-all duration-700" style={{ width: `${stats.totalParticipationPct}%` }}></div>
-            </div>
-          </div>
-
-          {/* Card 3: Top Performers Spotlight */}
-          <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass hover:border-white/20 transition-all duration-300 space-y-3">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-amber-500 dark:text-amber-400 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center">
-                  <Award className="w-3.5 h-3.5" />
-                </div>
-                <span>Top Performers Spotlight</span>
-              </h4>
-              <span className="text-[10px] font-bold text-slate-400">Live Global Rank</span>
-            </div>
-
-            <div className="space-y-2">
-              {stats.topPerformers.length > 0 ? (
-                stats.topPerformers.map((p, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 dark:bg-white/[0.03] border border-white/[0.06] text-xs transition-all hover:bg-white/[0.08] hover:scale-[1.01]">
-                    <div className="flex items-center space-x-2.5">
-                      <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950 font-bold' :
-                        idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900 font-bold' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white font-bold'
-                        }`}>
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <span className="font-extrabold text-slate-900 dark:text-white truncate max-w-[120px] block">{p.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">{p.dept} • {p.year} Year</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-mono text-[11px] text-slate-500 font-bold">
-                        {p.rank || p.contest_rank ? `#${p.rank || p.contest_rank}` : (p.participation_status?.includes('VIRTUAL') ? 'Virtual' : '—')}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs border border-emerald-500/20">
-                        {Number(p.total_solved ?? p.total_contest_solved ?? ((p.q1 || 0) + (p.q2 || 0) + (p.q3 || 0) + (p.q4 || 0))) || 0}/4
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-slate-400 italic py-4 text-center">No live ranked submissions recorded yet.</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Virtual Students Detail Card (Conditionally shown only when virtual participants exist) */}
-        {stats.virtualRows > 0 && (
-          <div className="p-4 sm:p-6 rounded-3xl glass-panel relative overflow-hidden border border-purple-500/20 dark:border-purple-500/30 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center space-x-3.5 relative z-10 min-w-0">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
-                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-black text-[10px] uppercase tracking-wider border border-purple-500/30">
-                    Virtual Practice Cohort
-                  </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    {stats.virtualRows} Active Participants
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                  Questions solved during virtual contest windows are tracked separately from live public contests.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full md:w-auto relative z-10">
-              {[
-                { label: '4/4 Solved', count: stats.virtual4Solved, bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25' },
-                { label: '3/4 Solved', count: stats.virtual3Solved, bg: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25' },
-                { label: '2/4 Solved', count: stats.virtual2Solved, bg: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25' },
-                { label: '1/4 Solved', count: stats.virtual1Solved, bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25' },
-              ].map((item, idx) => (
-                <div key={idx} className={`px-3 py-2.5 sm:px-4 sm:py-2.5 rounded-2xl border text-center w-full md:w-28 h-16 flex flex-col items-center justify-center shadow-xs transition-all hover:scale-105 ${item.bg}`}>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-90 whitespace-nowrap">{item.label}</span>
-                  <span className="text-lg sm:text-xl font-black font-mono leading-none mt-1">{item.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Active Cohort Institutional Performance & Ranking Matrix */}
-        <div className="p-5 sm:p-7 rounded-3xl glass-panel relative overflow-hidden border border-brand-500/20 dark:border-brand-500/30 shadow-glass flex flex-col gap-5">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          {/* Header Row */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-center space-x-3.5 min-w-0">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
-                <Award className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 font-black text-[10px] uppercase tracking-wider border border-brand-500/30">
-                    {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
-                  </span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    {stats.attendedRows + stats.virtualRows} Total Participants ({stats.totalRows} Students in Scope)
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-relaxed">
-                  Official Institutional Contest Performance Matrix tracking question solve distribution alongside Global Rank &lt; 20,000 and Contest Rank &lt; 5,000.
-                </p>
-              </div>
-            </div>
-
-            {/* Right Controls: View Mode Toggle & Session Meta Badges */}
-            <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-center">
-              {/* View Switcher: Cards View vs Table View */}
-              <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+                {/* Auto Refresh Toggle */}
                 <button
                   type="button"
-                  onClick={() => setMatrixViewMode('cards')}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${matrixViewMode === 'cards'
-                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-white/10'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  className={`group relative w-full sm:w-auto flex items-center justify-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer shadow-md border ${autoRefresh
+                      ? 'bg-slate-900 text-emerald-400 border-emerald-500/50 shadow-emerald-950/40 ring-1 ring-emerald-500/30'
+                      : 'bg-slate-900/90 text-slate-300 hover:text-white border-slate-800 hover:bg-slate-900 hover:border-slate-700'
+                    }`}
+                  title={autoRefresh ? 'Auto-refresh active (every 2 mins)' : 'Click to enable auto-refresh'}
                 >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>Cards View</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMatrixViewMode('table')}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${matrixViewMode === 'table'
-                    ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-white/10'
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Table View</span>
-                </button>
-              </div>
+                  <div className="relative flex items-center justify-center">
+                    {autoRefresh ? (
+                      <>
+                        <span className="absolute -inset-1 rounded-full bg-emerald-500/30 animate-ping opacity-75" />
+                        <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse relative z-10" />
+                      </>
+                    ) : (
+                      <RefreshCw className="w-3.5 h-3.5 text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
+                    )}
+                  </div>
 
-              <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                {activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()}
-              </span>
-              {activeSessionObj?.sessionDate && (
-                <span className="px-3 py-1.5 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
-                  Date: {activeSessionObj.sessionDate}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* VIEW MODE 1: MODERN SPACIOUS BENTO CARDS (DEFAULT) */}
-          {matrixViewMode === 'cards' ? (
-            <div className="flex flex-col gap-4 relative z-10 animate-fade-in">
-              {/* Tier 1: Question Solve Distribution */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-500" />
-                    Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400 font-mono">5 Problem Benchmarks</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
-                  {[
-                    { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/25 hover:border-emerald-500/40', sub: 'All Solved' },
-                    { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-500/10 border-purple-500/25 hover:border-purple-500/40', sub: '3 Solved' },
-                    { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/25 hover:border-indigo-500/40', sub: '2 Solved' },
-                    { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/25 hover:border-amber-500/40', sub: '1 Solved' },
-                    { label: '0/4 — No Solve', count: stats.q0Solved, color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/25 hover:border-rose-500/40 col-span-2 sm:col-span-1', sub: '0 Solved' },
-                  ].map((item, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={handleOpenDetailedRoster}
-                      title={`Click to view full roster for ${item.label}`}
-                      className={`p-3 sm:p-3.5 rounded-2xl border text-center flex flex-col items-center justify-center min-h-[76px] shadow-2xs transition-all hover:scale-[1.03] active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
+                  <div className="flex items-center gap-1.5">
+                    <span className="tracking-wide uppercase text-[10px] font-black">Auto-Refresh</span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-md font-mono font-black uppercase tracking-wider transition-colors ${autoRefresh
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}
                     >
-                      <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider block opacity-90 whitespace-nowrap">{item.label}</span>
-                      <span className={`text-xl sm:text-2xl font-black font-mono leading-none mt-1.5 ${item.color}`}>{item.count}</span>
-                      <span className="text-[9px] sm:text-[10px] font-semibold opacity-70 block mt-1 truncate max-w-full font-mono">{item.sub}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                      {autoRefresh ? 'LIVE' : 'OFF'}
+                    </span>
+                  </div>
 
-              {/* Tier 2: Institutional Ranking & Attendance Benchmarks */}
-              <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-white/[0.06]">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-amber-500" />
-                    Institutional Ranking &amp; Attendance Benchmarks
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400 font-mono">Session Criteria</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
-                  {[
-                    { 
-                      label: 'Taken Count', 
-                      count: stats.attendedRows + stats.virtualRows, 
-                      color: 'text-slate-900 dark:text-white', 
-                      bg: 'bg-slate-100/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600', 
-                      sub: `last_contest_name (${activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - ${activeSessionObj?.sessionDate || 'Session'})`,
-                      icon: Users,
-                      iconColor: 'text-brand-500'
-                    },
-                    { 
-                      label: 'Below 20000', 
-                      count: stats.rankBelow20k, 
-                      color: 'text-sky-700 dark:text-sky-400', 
-                      bg: 'bg-sky-500/10 border-sky-500/25 hover:border-sky-500/40', 
-                      sub: 'global_ranking < 20,000',
-                      icon: TrendingUp,
-                      iconColor: 'text-sky-500'
-                    },
-                    { 
-                      label: 'Below 5000', 
-                      count: stats.rankBelow5k, 
-                      color: 'text-teal-700 dark:text-teal-400', 
-                      bg: 'bg-teal-500/10 border-teal-500/25 hover:border-teal-500/40', 
-                      sub: 'last_contest_rank < 5,000',
-                      icon: ShieldCheck,
-                      iconColor: 'text-teal-500'
-                    },
-                  ].map((item, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={handleOpenDetailedRoster}
-                      title={`Click to view full roster for ${item.label} (${item.sub})`}
-                      className={`p-3.5 sm:p-4 rounded-2xl border text-center flex flex-col items-center justify-center min-h-[82px] shadow-2xs transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
-                    >
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <item.icon className={`w-3.5 h-3.5 ${item.iconColor}`} />
-                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider opacity-90">{item.label}</span>
-                      </div>
-                      <span className={`text-2xl sm:text-3xl font-black font-mono leading-none ${item.color}`}>{item.count}</span>
-                      <span className="text-[10px] font-semibold opacity-75 mt-1 font-mono truncate max-w-full">{item.sub}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* VIEW MODE 2: INSTITUTIONAL 2-TIER TABLE VIEW */
-            <div className="w-full relative z-10 animate-fade-in">
-              <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md">
-                <table className="w-full min-w-[780px] text-center border-collapse text-xs">
-                  <thead>
-                    {/* Header Row 1 */}
-                    <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
-                      <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 font-black min-w-[190px]">
-                        <span className="text-[11px] tracking-wide uppercase font-black block">last_contest_name</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 inline-block">
-                          ({activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - {activeSessionObj?.sessionDate || 'Session'})
-                        </span>
-                      </th>
-                      <th colSpan={5} className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
-                        Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
-                      </th>
-                      <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15 min-w-[130px]">
-                        Below 20000
-                      </th>
-                      <th className="py-3 px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15 min-w-[130px]">
-                        Below 5000
-                      </th>
-                    </tr>
-                    {/* Header Row 2 */}
-                    <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                      <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
-                        Taken Count
-                      </th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black min-w-[55px] bg-emerald-500/5">4</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black min-w-[55px] bg-purple-500/5">3</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black min-w-[55px] bg-indigo-500/5">2</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black min-w-[55px] bg-amber-500/5">1</th>
-                      <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black min-w-[55px] bg-rose-500/5">0</th>
-                      <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
-                        global_ranking
-                      </th>
-                      <th className="py-2.5 px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
-                        last_contest_rank
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody 
-                    onClick={handleOpenDetailedRoster}
-                    title="Click to view detailed student roster"
-                    className="font-mono divide-y divide-slate-100 dark:divide-slate-800 cursor-pointer"
+                  <div
+                    className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${autoRefresh ? 'bg-emerald-500' : 'bg-slate-700'
+                      }`}
                   >
-                    <tr className="bg-white/80 dark:bg-slate-950/80 hover:bg-brand-50/50 dark:hover:bg-slate-900/60 transition-colors">
-                      <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700">
-                        <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
-                          {stats.attendedRows + stats.virtualRows}
-                        </span>
-                      </td>
-                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-base border border-emerald-500/25 shadow-2xs">
-                          {stats.q4Solved}
-                        </span>
-                      </td>
-                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-base border border-purple-500/25 shadow-2xs">
-                          {stats.q3Solved}
-                        </span>
-                      </td>
-                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-base border border-indigo-500/25 shadow-2xs">
-                          {stats.q2Solved}
-                        </span>
-                      </td>
-                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-base border border-amber-500/25 shadow-2xs">
-                          {stats.q1Solved}
-                        </span>
-                      </td>
-                      <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                        <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-base border border-rose-500/25 shadow-2xs">
-                          {stats.q0Solved}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
-                        <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-base border border-sky-500/25 shadow-2xs">
-                          {stats.rankBelow20k}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 bg-teal-500/[0.03]">
-                        <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-base border border-teal-500/25 shadow-2xs">
-                          {stats.rankBelow5k}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${autoRefresh ? 'translate-x-3.5 bg-slate-950' : 'translate-x-0.5'
+                        }`}
+                    />
+                  </div>
+                </button>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW */}
-        <div className="flex justify-center pt-2">
-          <button
-            onClick={() => {
-              if (!showDetailedView) {
-                handleOpenDetailedRoster();
-              } else {
-                setShowDetailedView(false);
-              }
-            }}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3.5 min-h-[46px] rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition-all duration-300 cursor-pointer active:scale-95 border border-white/15 touch-manipulation"
-          >
-            {showDetailedView ? (
-              <>
-                <ChevronUp className="w-4 h-4 shrink-0" />
-                <span>Collapse Detailed View</span>
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4 shrink-0" />
-                <span className="truncate">View Full Breakdown & Student Roster ({totalRows || globalStudents.length || 0} Students)</span>
-              </>
-            )
-            }
-          </button>
-        </div>
-      </div>
+            {/* Row 2: Sleek 5-Column Filter Bar (Collapsible on mobile) */}
+            <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 items-end">
+                {/* College Campus Filter — Admin & Management only */}
+                {canFilterCollege && (() => {
+                  const collegeOptions: GlobalFilterOption[] = [
+                    { value: 'ALL', label: 'All Colleges', pillText: 'ALL' },
+                    { value: 'NEC', label: 'Nandha Engineering (NEC)', pillText: 'NEC' },
+                    { value: 'NCT', label: 'Nandha Tech (NCT)', pillText: 'NCT' },
+                  ];
 
-      {/* 4. DETAILED VIEW SECTION (LAZY-LOADED ON TOGGLE) */}
-      {showDetailedView && (
-        <div ref={detailedViewRef} className="space-y-6 pt-4 border-t border-white/[0.06] animate-fade-in">
-          {/* Detailed View Sub-Tab Switcher - 2026 SaaS Segmented Bento Bar */}
-          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-white/[0.08] pb-3.5">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 w-full xl:w-auto flex-1 max-w-4xl">
-              <button
-                type="button"
-                onClick={() => setSubTab('matrix')}
-                className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'matrix'
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/25 border border-brand-400/40 ring-2 ring-brand-500/20'
-                  : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
-                  }`}
-              >
-                <Users className={`w-4 h-4 shrink-0 ${subTab === 'matrix' ? 'text-white' : 'text-brand-500'}`} />
-                <span className="truncate">Student Matrix <span className="font-mono text-[11px] opacity-90">({totalRows})</span></span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSubTab('dept_year')}
-                className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'dept_year'
-                  ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/25 border border-purple-400/40 ring-2 ring-purple-500/20'
-                  : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
-                  }`}
-              >
-                <Layers className={`w-4 h-4 shrink-0 ${subTab === 'dept_year' ? 'text-white' : 'text-purple-500'}`} />
-                <span className="truncate">Dept & Year Breakdown</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSubTab('error_board');
-                  setSelectedAttendanceFilter('DATA_ERROR');
-                }}
-                className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'error_board'
-                  ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/25 border border-amber-400/40 ring-2 ring-amber-500/20'
-                  : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
-                  }`}
-              >
-                <AlertTriangle className={`w-4 h-4 shrink-0 ${subTab === 'error_board' ? 'text-white' : 'text-amber-500'}`} />
-                <span className="truncate">Data Quality <span className="font-mono text-[11px] opacity-90">({stats.errorRows})</span></span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSubTab('post_930_activity')}
-                className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'post_930_activity'
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white shadow-lg shadow-emerald-500/25 border border-emerald-400/40 ring-2 ring-emerald-500/20'
-                  : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
-                  }`}
-              >
-                <Clock className={`w-4 h-4 shrink-0 ${subTab === 'post_930_activity' ? 'text-white' : 'text-emerald-500'}`} />
-                <span className="truncate">Post-9:30 AM Activity</span>
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-white/5 px-3.5 py-2 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] w-fit shadow-xs">
-              <span className="text-slate-500 dark:text-slate-400 font-extrabold uppercase text-[10px]">Scope:</span>
-              <span className="text-brand-600 dark:text-brand-400 font-mono font-black">{selectedDeptFilter}</span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="text-purple-600 dark:text-purple-400 font-mono font-black">{selectedYearFilter} Year</span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{selectedAttendanceFilter}</span>
-            </div>
-          </div>
-
-          {/* Missing Handles Alert Banner - 2026 SaaS Amber Card */}
-          {(() => {
-            const missingHandlesCount = sessionMetrics?.usernameNotFound ?? sessionMetrics?.unlinkedProfiles ?? filteredMatrixRows.filter(r => !r.username || r.status === 'USERNAME_NOT_FOUND').length;
-            if (missingHandlesCount > 0) {
-              return (
-                <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 dark:from-amber-950/40 dark:via-slate-900/80 dark:to-orange-950/30 border border-amber-300 dark:border-amber-500/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md shadow-amber-500/5 animate-fade-in">
-                  <div className="flex items-center space-x-3.5 text-amber-900 dark:text-amber-200 min-w-0">
-                    <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 shadow-inner">
-                      <AlertTriangle className="w-5 h-5 animate-pulse" />
+                  return (
+                    <div className="space-y-1 min-w-0 w-full">
+                      <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+                        College Campus
+                      </label>
+                      <GlobalFilter
+                        value={selectedCollegeFilter}
+                        onChange={(val) => setSelectedCollegeFilter(val as 'ALL' | 'NEC' | 'NCT')}
+                        options={collegeOptions}
+                        icon={<Building2 className="w-4 h-4 text-teal-500" />}
+                        dropdownWidth="w-64 sm:w-72"
+                        placeholder="All Colleges"
+                      />
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-950 dark:text-amber-100">
-                          Action Required: Missing LeetCode Handles
-                        </h4>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black font-mono bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/30">
-                          {missingHandlesCount} Students
-                        </span>
-                      </div>
-                      <p className="text-xs text-amber-800/90 dark:text-amber-300/80 font-medium mt-0.5 leading-relaxed">
-                        These students do not have a linked LeetCode profile and cannot be tracked by the contest engine.
-                      </p>
+                  );
+                })()}
+
+                {/* Department Filter */}
+                {(() => {
+                  const roleClean = (user?.role || '').trim().toLowerCase();
+                  const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
+                  const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+                  const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+                  const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '';
+
+                  const hodAuthCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
+                  const filteredDepts = (isHod && !isGlobalRole)
+                    ? departments.filter(d => hodAuthCodes.includes(d.code.toUpperCase()) || (userDeptCode && d.code.toUpperCase() === userDeptCode.toUpperCase()))
+                    : departments;
+
+                  const deptOptions: GlobalFilterOption[] = isStaffMentor
+                    ? [
+                      { value: 'ALL', label: 'My Allocated Mentees', pillText: 'MENTEES' },
+                      ...(userDeptCode ? [{ value: userDeptCode, label: `${userDeptCode} (My Department)`, pillText: userDeptCode }] : [])
+                    ]
+                    : (isHod && !isGlobalRole)
+                      ? [
+                        ...(filteredDepts.length > 1 ? [{ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' }] : []),
+                        ...filteredDepts.map((d) => ({
+                          value: d.code,
+                          label: d.name,
+                          pillText: d.code
+                        }))
+                      ]
+                      : [
+                        { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
+                        ...departments.map((d) => ({
+                          value: d.code,
+                          label: d.name,
+                          pillText: d.code
+                        }))
+                      ];
+
+                  return (
+                    <div className="space-y-1 min-w-0 w-full">
+                      <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+                        Department
+                      </label>
+                      <GlobalFilter
+                        value={selectedDeptFilter}
+                        onChange={(val) => setSelectedDeptFilter(val)}
+                        options={deptOptions}
+                        icon={<Building2 className="w-4 h-4 text-indigo-500" />}
+                        dropdownWidth="w-72 sm:w-80"
+                        showSearch={true}
+                        searchPlaceholder="Search department..."
+                        placeholder="All Departments"
+                      />
                     </div>
-                  </div>
+                  );
+                })()}
+
+                {/* Academic Year Filter */}
+                {(() => {
+                  const yearOptions: GlobalFilterOption[] = [
+                    { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' },
+                    { value: 'I', label: 'I Year (2026–2030)', pillText: 'I' },
+                    { value: 'II', label: 'II Year (2025–2029)', pillText: 'II' },
+                    { value: 'III', label: 'III Year (2024–2028)', pillText: 'III' },
+                    { value: 'IV', label: 'IV Year (2023–2027)', pillText: 'IV' },
+                  ];
+
+                  const normalizedYear = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
+
+                  return (
+                    <div className="space-y-1 min-w-0 w-full">
+                      <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+                        Academic Year
+                      </label>
+                      <GlobalFilter
+                        value={normalizedYear}
+                        onChange={(val) => setSelectedYearFilter(val)}
+                        options={yearOptions}
+                        icon={<GraduationCap className="w-4 h-4 text-brand-500" />}
+                        dropdownWidth="w-64 sm:w-72"
+                        placeholder="All Academic Years"
+                      />
+                    </div>
+                  );
+                })()}
+
+                {/* Attendance Status Filter */}
+                {(() => {
+                  const attOptions: GlobalFilterOption[] = [
+                    { value: 'ALL', label: 'All Statuses', pillText: 'ALL' },
+                    { value: 'ALL_ATTENDED', label: 'Participated', pillText: 'PART' },
+                    { value: 'PUBLIC_ATTENDED', label: 'Public Attended', pillText: 'PUB' },
+                    { value: 'VIRTUAL_ATTENDED', label: 'Virtual Attended', pillText: 'VIRT' },
+                    { value: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended', pillText: 'ABS' },
+                    { value: 'DATA_ERROR', label: 'Data Errors', pillText: 'ERR' },
+                  ];
+
+                  return (
+                    <div className="space-y-1 min-w-0 w-full">
+                      <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider truncate">
+                        Attendance Status
+                      </label>
+                      <GlobalFilter
+                        value={selectedAttendanceFilter}
+                        onChange={(val) => setSelectedAttendanceFilter(val)}
+                        options={attOptions}
+                        icon={<CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                        dropdownWidth="w-64 sm:w-72"
+                        placeholder="All Statuses"
+                      />
+                    </div>
+                  );
+                })()}
+
+                {/* Reset Filters Control */}
+                <div className="min-w-0 w-full flex flex-col justify-end">
+                  <label className="block text-[11px] font-black text-transparent select-none uppercase tracking-wider truncate hidden lg:block">
+                    Action
+                  </label>
                   <button
                     type="button"
                     onClick={() => {
-                      setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${missingHandlesCount} students missing handles.` });
+                      setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
+                      setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
+                      setSelectedYearFilter('ALL');
+                      setSelectedAttendanceFilter('ALL');
+                      setSearchTerm('');
+                      setDebouncedSearchTerm('');
                     }}
-                    className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-amber-600 via-amber-500 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black rounded-2xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer active:scale-95 whitespace-nowrap touch-manipulation border border-amber-400/30 shrink-0"
+                    className={`w-full h-10 min-h-[40px] flex items-center justify-center space-x-2 px-4 rounded-xl text-xs font-black border transition-all cursor-pointer active:scale-95 shadow-xs ${(selectedCollegeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                        ? 'bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700/60 ring-1 ring-rose-500/20'
+                        : 'bg-slate-50 dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-navy-700 hover:border-slate-300'
+                      }`}
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Send Reminder to All</span>
+                    <RotateCcw className={`w-3.5 h-3.5 ${(selectedCollegeFilter !== 'ALL' || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-slate-400'
+                      }`} />
+                    <span>Reset All Filters</span>
                   </button>
                 </div>
-              );
-            }
-            return null;
-          })()}
+              </div>
 
-          {/* Tab 1: Live Question-Wise Student Matrix Table */}
-          {subTab === 'matrix' && (
-            <div className="glass-panel rounded-3xl overflow-hidden shadow-glass border-white/[0.08]">
-              {/* ACTIVE KPI FILTER BAR */}
-              {selectedAttendanceFilter !== 'ALL' && (
-                <div className="px-5 py-3.5 bg-brand-500/10 border-b border-brand-500/20 flex flex-wrap items-center justify-between gap-4 animate-fade-in">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 shrink-0">
-                      <Filter className="w-4 h-4" />
-                    </div>
-                    <p className="text-sm font-black text-brand-900 dark:text-brand-100 min-w-0 break-words">
-                      Showing {filteredMatrixRows.length || totalRows} {
-                        selectedAttendanceFilter === 'DATA_ERROR' ? 'Data Error' :
-                        selectedAttendanceFilter === 'ALL_ATTENDED' ? 'Participating' :
-                        selectedAttendanceFilter === 'PUBLIC_ATTENDED' ? 'Public' :
-                        selectedAttendanceFilter === 'VIRTUAL_ATTENDED' ? 'Virtual' :
-                        selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED' ? 'Not Attended' : 'Filtered'
-                      } Students
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedAttendanceFilter('ALL')}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-brand-400/30 text-brand-300 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer shadow-sm"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Clear Filters</span>
-                  </button>
+              {/* Mobile Active Filter Chips */}
+              {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
+                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400">Active:</span>
+                  {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                      College: {selectedCollegeFilter}
+                      <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
+                    </span>
+                  )}
+                  {selectedDeptFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
+                      Dept: {selectedDeptFilter}
+                      <button onClick={() => setSelectedDeptFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
+                    </span>
+                  )}
+                  {selectedYearFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      Year: {selectedYearFilter}
+                      <button onClick={() => setSelectedYearFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
+                    </span>
+                  )}
+                  {selectedAttendanceFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      Status: {selectedAttendanceFilter}
+                      <button onClick={() => setSelectedAttendanceFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
+                    </span>
+                  )}
                 </div>
               )}
+            </div>
+          </div>
 
-              {/* Table Legend & Top Quick Pagination */}
-              <div className="px-5 py-3 border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] text-xs font-medium backdrop-blur-md">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Legend:</span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    PUBLIC
+          {/* 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) */}
+          <div className="space-y-4 sm:space-y-6">
+
+            {/* Department-wise Summary Section — Compact Executive Grid */}
+            {(() => {
+              const deptCards = departments.map((dept, index) => {
+                const colors = [
+                  { bg: 'bg-indigo-50/70 dark:bg-indigo-950/30', border: 'border-indigo-100 dark:border-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-400', stat: 'text-indigo-700 dark:text-indigo-300', label: 'text-indigo-500', bar: 'bg-indigo-500 dark:bg-indigo-400' },
+                  { bg: 'bg-cyan-50/70 dark:bg-cyan-950/30', border: 'border-cyan-100 dark:border-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-400', stat: 'text-cyan-700 dark:text-cyan-300', label: 'text-cyan-500', bar: 'bg-cyan-500 dark:bg-cyan-400' },
+                  { bg: 'bg-blue-50/70 dark:bg-blue-950/30', border: 'border-blue-100 dark:border-blue-900/50', text: 'text-blue-700 dark:text-blue-400', stat: 'text-blue-700 dark:text-blue-300', label: 'text-blue-500', bar: 'bg-blue-500 dark:bg-blue-400' },
+                  { bg: 'bg-emerald-50/70 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', stat: 'text-emerald-700 dark:text-emerald-300', label: 'text-emerald-500', bar: 'bg-emerald-500 dark:bg-emerald-400' },
+                  { bg: 'bg-purple-50/70 dark:bg-purple-950/30', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500', bar: 'bg-purple-500 dark:bg-purple-400' }
+                ];
+                const color = colors[index % colors.length];
+                const deptNorm = normalizeDepartment(dept.code || dept.name);
+
+                let total = 0;
+                let attended = 0;
+
+                // 1. Check API departmentStats dictionary (or fastSummary)
+                const activeDeptStats = departmentStats || fastSummary?.departmentStats;
+                if (activeDeptStats && typeof activeDeptStats === 'object') {
+                  for (const [key, val] of Object.entries(activeDeptStats)) {
+                    if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                      const dVal: any = val;
+                      total = Number(dVal?.total || dVal?.totalStudents || 0);
+                      attended = Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0) +
+                        Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0);
+                      if (attended === 0 && dVal?.attended) {
+                        attended = Number(dVal.attended);
+                      }
+                      break;
+                    }
+                  }
+                }
+
+                // 2. Check matrixRows or cachedStudents (if available) for dynamic calculation of attended count
+                if (attended === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                  const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
+                  const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+                  if (deptStudents.length > 0) {
+                    if (total === 0) total = deptStudents.length;
+                    attended = deptStudents.filter((s: any) => {
+                      const st = (s.participation_status || s.status || '').toUpperCase();
+                      return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                    }).length;
+                  }
+                }
+
+                // 3. Fallback for total student count from master roster
+                if (total === 0 && globalStudents.length > 0) {
+                  const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+                  total = deptGlobalStudents.length;
+                }
+
+                // Exclude departments with 0 active students
+                if (total === 0) {
+                  return null;
+                }
+
+                const participationPct = total > 0 ? Math.min(100, Math.round((attended / total) * 100)) : 0;
+                const isSelected = selectedDeptFilter === dept.code || normalizeDepartment(selectedDeptFilter) === deptNorm;
+
+                return (
+                  <div
+                    key={dept.code}
+                    onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.code)}
+                    role="button"
+                    title={`Click to filter by ${dept.name}`}
+                    className={`relative group p-3.5 sm:p-4 rounded-2xl glass-panel transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${isSelected
+                        ? 'border-brand-500 ring-2 ring-brand-500/30 shadow-lg bg-brand-500/10'
+                        : 'border border-slate-200/80 dark:border-navy-700/80 hover:border-brand-400 dark:hover:border-brand-500/50 hover:shadow-md'
+                      }`}
+                  >
+                    {/* Top gradient decorative line */}
+                    <div className={`absolute top-0 left-0 w-full h-1 ${color.bar}`} />
+
+                    <div className="relative z-10 space-y-2">
+                      {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${color.bg} border ${color.border} group-hover:scale-105 transition-transform`}>
+                            <Building2 className={`w-3.5 h-3.5 ${color.text}`} />
+                          </div>
+                          <span className={`text-xs font-black uppercase tracking-wider truncate ${color.text}`}>
+                            {dept.code}
+                          </span>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className={`text-xl sm:text-2xl font-black font-mono leading-none ${color.stat}`}>{attended}</span>
+                          <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${color.label} block mt-0.5`}>Attended</span>
+                        </div>
+                      </div>
+
+                      {/* Middle Row: Department Name */}
+                      <div className="min-w-0">
+                        <h4 className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors" title={dept.name}>
+                          {dept.name}
+                        </h4>
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Progress & Active Student Count */}
+                    <div className="relative z-10 pt-2.5 mt-2.5 border-t border-slate-100 dark:border-white/[0.06]">
+                      <div className="flex justify-between items-center mb-1.5 text-[10px]">
+                        <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Active
+                        </span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="font-black text-emerald-500">{participationPct}%</span>
+                          <span className="text-[11px] font-bold font-mono text-slate-600 dark:text-slate-400">({attended}/{total})</span>
+                        </div>
+                      </div>
+
+                      {/* Participation Progress Bar */}
+                      <div className="w-full bg-slate-100 dark:bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${color.bar} transition-all duration-700 ease-out relative`}
+                          style={{ width: `${participationPct}%` }}
+                        >
+                          <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 animate-[shimmer_2s_infinite]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }).filter(Boolean);
+
+              if (deptCards.length === 0) return null;
+
+              const isSingle = deptCards.length === 1;
+
+              return (
+                <div className={`grid ${isSingle ? 'grid-cols-1 sm:grid-cols-2 max-w-sm' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'} gap-3 sm:gap-4`}>
+                  {deptCards}
+                </div>
+              );
+            })()}
+            {/* ACTIVE SCOPE BANNER - Dynamic & Clean: Only shows actively filtered dimensions */}
+            {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL') && (
+              <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/80 dark:border-indigo-800/50 rounded-2xl px-3.5 py-2 flex items-center justify-between gap-2.5 shadow-2xs animate-fade-in">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px] flex items-center gap-1.5 shrink-0">
+                    <Filter className="w-3.5 h-3.5 text-indigo-500" />
+                    Active Scope:
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                    VIRTUAL
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-extrabold border border-rose-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                    NOT ATTENDED
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    DATA ERROR
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {selectedDeptFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Dept:</span>
+                        <span>{selectedDeptFilter}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDeptFilter('ALL')}
+                          className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Clear Department Filter"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {selectedYearFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">Year:</span>
+                        <span>{selectedYearFilter === '1' ? 'I Year' : selectedYearFilter === '2' ? 'II Year' : selectedYearFilter === '3' ? 'III Year' : selectedYearFilter === '4' ? 'IV Year' : `${selectedYearFilter} Year`}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedYearFilter('ALL')}
+                          className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Clear Year Filter"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                    {selectedAttendanceFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold shadow-2xs">
+                        <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Status:</span>
+                        <span className="font-extrabold">{selectedAttendanceFilter.replace(/_/g, ' ')}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAttendanceFilter('ALL')}
+                          className="ml-0.5 p-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Clear Status Filter"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDeptFilter('ALL');
+                    setSelectedYearFilter('ALL');
+                    setSelectedAttendanceFilter('ALL');
+                  }}
+                  className="shrink-0 text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors cursor-pointer flex items-center gap-1.5 bg-white dark:bg-navy-950 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs hover:shadow-xs hover:border-rose-300 active:scale-95 touch-manipulation"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Clear All</span>
+                </button>
+              </div>
+            )}
+
+            {/* Headline Stat Cards - Collapsible on Mobile, Unchanged on Desktop */}
+            {(() => {
+              const showVirtualCard = stats.virtualRows > 0 || selectedAttendanceFilter === 'VIRTUAL_ATTENDED';
+              const cardCount = showVirtualCard ? 6 : 5;
+              return (
+                <div className="space-y-2.5">
+                  {/* Mobile-Only Toggle Bar (Hidden on Desktop 'lg:hidden') */}
+                  <div className="flex items-center justify-between gap-3 lg:hidden pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showMobileStats;
+                        setShowMobileStats(next);
+                        try { localStorage.setItem('wc_show_mobile_stats', String(next)); } catch { }
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 touch-manipulation shrink-0"
+                    >
+                      <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span>{showMobileStats ? 'Hide Overview Cards' : 'Overview Cards'}</span>
+                      <span className="text-[10px] font-bold text-slate-400">({cardCount})</span>
+                      {showMobileStats ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      )}
+                    </button>
+                    {!showMobileStats && (
+                      <span className="inline-flex items-center shrink-0 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                        <span>{stats.attendedRows}/{stats.totalRows} Verified ({stats.totalParticipationPct}%)</span>
+                        {solverDelta && solverDelta.delta > 0 && (
+                          <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                            (+{solverDelta.delta})
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Grid: Hidden on mobile when collapsed, ALWAYS grid on desktop (lg:grid) */}
+                  <div className={`${showMobileStats ? 'grid' : 'hidden lg:grid'} grid-cols-2 sm:grid-cols-3 ${showVirtualCard ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 animate-fade-in`}>
+                    {/* Card 1: Total Students */}
+                    <button
+                      onClick={() => setSelectedAttendanceFilter('ALL')}
+                      className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'ALL'
+                        ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/10'
+                        : 'hover:border-brand-400/40'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Total</span>
+                        <div className="w-6 h-6 rounded-lg bg-slate-500/10 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform">
+                          <Users className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between w-full">
+                        <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
+                          <AnimatedNumber value={stats.totalRows} />
+                        </p>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Enrolled</span>
+                      </div>
+                    </button>
+
+                    {/* Card 2: Public Attended */}
+                    <button
+                      onClick={() => toggleAttendanceFilter('PUBLIC_ATTENDED')}
+                      className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_ATTENDED'
+                        ? 'border-emerald-500/80 ring-2 ring-emerald-500/30 shadow-glass-dark bg-emerald-500/15'
+                        : 'hover:border-emerald-500/40'
+                        }`}
+                    >
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider flex items-center">
+                          Public
+                        </span>
+                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                          <Award className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between w-full">
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
+                            <AnimatedNumber value={stats.attendedRows} />
+                          </p>
+                          {solverDelta && solverDelta.delta > 0 && (
+                            <span
+                              title={`+${solverDelta.delta} new solvers added (from ${solverDelta.prev} to ${solverDelta.current})`}
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-black font-mono bg-emerald-500 text-white shadow-sm shadow-emerald-500/40 animate-pulse"
+                            >
+                              +{solverDelta.delta} NEW
+                            </span>
+                          )}
+                          {solverDelta && solverDelta.delta === 0 && (
+                            <span
+                              title="No new solvers added. Roster is up to date."
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                            >
+                              +0
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400/60 uppercase tracking-widest">Verified</span>
+                      </div>
+                    </button>
+
+                    {/* Card 3: Virtual Attended (Only displayed when virtual participation exists or filter is active) */}
+                    {showVirtualCard && (
+                      <button
+                        onClick={() => toggleAttendanceFilter('VIRTUAL_ATTENDED')}
+                        className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'VIRTUAL_ATTENDED'
+                          ? 'border-purple-500/80 ring-2 ring-purple-500/30 shadow-glass-dark bg-purple-500/15'
+                          : 'hover:border-purple-500/40'
+                          }`}
+                      >
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full blur-xl pointer-events-none" />
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                            Virtual
+                          </span>
+                          <div className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                        <div className="flex items-baseline justify-between w-full">
+                          <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-purple-600 dark:text-purple-400">
+                            <AnimatedNumber value={stats.virtualRows} />
+                          </p>
+                          <span className="text-[9px] font-bold text-purple-600/70 dark:text-purple-400/60 uppercase tracking-widest">Practice</span>
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Card 4: Not Attended */}
+                    <button
+                      onClick={() => toggleAttendanceFilter('PUBLIC_NOT_ATTENDED')}
+                      className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED'
+                        ? 'border-rose-500/80 ring-2 ring-rose-500/30 shadow-glass-dark bg-rose-500/15'
+                        : 'hover:border-rose-500/40'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400 tracking-wider">Absent</span>
+                        <div className="w-6 h-6 rounded-lg bg-rose-500/15 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
+                          <UserX className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between w-full">
+                        <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400">
+                          <AnimatedNumber value={stats.notAttendedRows} />
+                        </p>
+                        <span className="text-[9px] font-bold text-rose-600/70 dark:text-rose-400/60 uppercase tracking-widest">Inactive</span>
+                      </div>
+                    </button>
+
+                    {/* Card 5: Data Errors */}
+                    <button
+                      onClick={() => {
+                        toggleAttendanceFilter('DATA_ERROR');
+                        setShowDetailedView(true);
+                        setSubTab('error_board');
+                      }}
+                      className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${selectedAttendanceFilter === 'DATA_ERROR'
+                        ? 'border-amber-500/80 ring-2 ring-amber-500/30 shadow-glass-dark bg-amber-500/15'
+                        : 'hover:border-amber-500/40'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 tracking-wider">Errors</span>
+                        <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between w-full">
+                        <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
+                          <AnimatedNumber value={stats.errorRows} />
+                        </p>
+                        <span className="text-[9px] font-bold text-amber-600/70 dark:text-amber-400/60 uppercase tracking-widest">Fixes</span>
+                      </div>
+                    </button>
+
+                    {/* Card 6: Participation (count = public + virtual) */}
+                    <button
+                      onClick={() => toggleAttendanceFilter('ALL_ATTENDED')}
+                      className={`h-24 p-3.5 rounded-2xl glass-panel text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-glass cursor-pointer flex flex-col justify-between relative overflow-hidden group ${!showVirtualCard ? 'col-span-2 sm:col-span-1' : ''
+                        } ${selectedAttendanceFilter === 'ALL_ATTENDED'
+                          ? 'border-brand-500/80 ring-2 ring-brand-500/30 shadow-glass-dark bg-brand-500/15'
+                          : 'hover:border-brand-500/40'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">Overall</span>
+                        <div className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between w-full">
+                        <p className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400 leading-none">
+                          <AnimatedNumber value={stats.attendedRows + stats.virtualRows} />
+                        </p>
+                        <span className="text-[10px] font-black font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20">{stats.totalParticipationPct}%</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Feature Spotlight: Quick Statistics + Trend (Sparkline) + Top Performers */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Card 1: Quick Statistics Progress Bars */}
+              <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass hover:border-white/20 transition-all duration-300 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-500 flex items-center justify-center">
+                      <Layers className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Participation Distribution</span>
+                  </h4>
+                  <span className="text-[10px] font-mono font-bold text-slate-400 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5">
+                    Total: {stats.totalRows}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* Top Pagination Controls for Zero-Scroll Navigation */}
-                  {totalRows > 0 && (
-                    <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      <button
-                        type="button"
-                        disabled={currentPage <= 1}
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                      >
-                        ‹ Prev
-                      </button>
-                      <span className="text-[10px] font-mono font-black text-brand-600 dark:text-brand-400 px-1.5">
-                        {currentPage}/{totalPages}
+                <div className="space-y-3.5">
+                  <div>
+                    <div className="flex justify-between text-xs font-extrabold mb-1.5">
+                      <span className="text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+                        <span>PUBLIC ATTENDED ({stats.attendedRows})</span>
                       </span>
-                      <button
-                        type="button"
-                        disabled={currentPage >= totalPages}
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                      >
-                        Next ›
-                      </button>
+                      <span className="text-slate-900 dark:text-white font-mono">{stats.publicPct}%</span>
                     </div>
+                    <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                      <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.publicPct}%` }}></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-extrabold mb-1.5">
+                      <span className="text-purple-500 dark:text-purple-400 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span>
+                        <span>VIRTUAL PRACTICE ({stats.virtualRows})</span>
+                      </span>
+                      <span className="text-slate-900 dark:text-white font-mono">{stats.virtualPct}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                      <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.virtualPct}%` }}></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-extrabold mb-1.5">
+                      <span className="text-rose-500 dark:text-rose-400 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-400 shadow-sm shadow-rose-500/50"></span>
+                        <span>NOT ATTENDED ({stats.notAttendedRows})</span>
+                      </span>
+                      <span className="text-slate-900 dark:text-white font-mono">{stats.notAttendedPct}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                      <div className="bg-gradient-to-r from-rose-400 to-rose-500 h-2 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.notAttendedPct}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Contest Participation Trend & Growth with Inline Sparkline */}
+              <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass relative overflow-hidden flex flex-col justify-between space-y-4 border border-indigo-500/20 dark:border-indigo-500/30 transition-all duration-300 hover:border-indigo-500/40">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-white/10 pb-3 relative z-10">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Participation Trend</span>
+                  </h4>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-black border border-emerald-500/30 shadow-2xs">
+                    {comparison?.participationGrowthPct !== undefined
+                      ? `${comparison.participationGrowthPct >= 0 ? '+' : ''}${comparison.participationGrowthPct.toFixed(1)}% Growth`
+                      : `${stats.totalParticipationPct}% Active`}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 relative z-10">
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono">{stats.totalParticipationPct}%</span>
+                      <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider">Active Solved</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug font-medium">
+                      <b className="text-slate-900 dark:text-white font-bold">{stats.attendedRows} Public</b>
+                      {stats.virtualRows > 0 ? (
+                        <> + <b className="text-purple-600 dark:text-purple-300 font-bold">{stats.virtualRows} Virtual</b> participants</>
+                      ) : (
+                        <> Verified participants</>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Inline SVG Sparkline */}
+                  <div className="shrink-0 bg-slate-100/80 dark:bg-white/5 p-2 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-inner">
+                    <Sparkline data={comparison?.historyTrend || [Math.max(0, Number(stats.totalParticipationPct) - 15), Math.max(0, Number(stats.totalParticipationPct) - 8), Math.max(0, Number(stats.totalParticipationPct) - 3), Number(stats.totalParticipationPct)]} color="#6366f1" />
+                  </div>
+                </div>
+
+                <div className="w-full bg-slate-100 dark:bg-white/10 rounded-full h-2 overflow-hidden shadow-inner relative z-10">
+                  <div className="bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500 h-2 rounded-full shadow-md transition-all duration-700" style={{ width: `${stats.totalParticipationPct}%` }}></div>
+                </div>
+              </div>
+
+              {/* Card 3: Top Performers Spotlight */}
+              <div className="p-5 sm:p-6 rounded-3xl glass-panel shadow-glass hover:border-white/20 transition-all duration-300 space-y-3">
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-500 dark:text-amber-400 flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                      <Award className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Top Performers Spotlight</span>
+                  </h4>
+                  <span className="text-[10px] font-bold text-slate-400">Live Global Rank</span>
+                </div>
+
+                <div className="space-y-2">
+                  {stats.topPerformers.length > 0 ? (
+                    stats.topPerformers.map((p, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 dark:bg-white/[0.03] border border-white/[0.06] text-xs transition-all hover:bg-white/[0.08] hover:scale-[1.01]">
+                        <div className="flex items-center space-x-2.5">
+                          <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950 font-bold' :
+                            idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900 font-bold' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white font-bold'
+                            }`}>
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <span className="font-extrabold text-slate-900 dark:text-white truncate max-w-[120px] block">{p.name}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{p.dept} • {p.year} Year</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono text-[11px] text-slate-500 font-bold">
+                            {p.rank || p.contest_rank ? `#${p.rank || p.contest_rank}` : (p.participation_status?.includes('VIRTUAL') ? 'Virtual' : '—')}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-mono font-black text-xs border border-emerald-500/20">
+                            {Number(p.total_solved ?? p.total_contest_solved ?? ((p.q1 || 0) + (p.q2 || 0) + (p.q3 || 0) + (p.q4 || 0))) || 0}/4
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400 italic py-4 text-center">No live ranked submissions recorded yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Virtual Students Detail Card (Conditionally shown only when virtual participants exist) */}
+            {stats.virtualRows > 0 && (
+              <div className="p-4 sm:p-6 rounded-3xl glass-panel relative overflow-hidden border border-purple-500/20 dark:border-purple-500/30 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="flex items-center space-x-3.5 relative z-10 min-w-0">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
+                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-black text-[10px] uppercase tracking-wider border border-purple-500/30">
+                        Virtual Practice Cohort
+                      </span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        {stats.virtualRows} Active Participants
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
+                      Questions solved during virtual contest windows are tracked separately from live public contests.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full md:w-auto relative z-10">
+                  {[
+                    { label: '4/4 Solved', count: stats.virtual4Solved, bg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25' },
+                    { label: '3/4 Solved', count: stats.virtual3Solved, bg: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25' },
+                    { label: '2/4 Solved', count: stats.virtual2Solved, bg: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25' },
+                    { label: '1/4 Solved', count: stats.virtual1Solved, bg: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25' },
+                  ].map((item, idx) => (
+                    <div key={idx} className={`px-3 py-2.5 sm:px-4 sm:py-2.5 rounded-2xl border text-center w-full md:w-28 h-16 flex flex-col items-center justify-center shadow-xs transition-all hover:scale-105 ${item.bg}`}>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-90 whitespace-nowrap">{item.label}</span>
+                      <span className="text-lg sm:text-xl font-black font-mono leading-none mt-1">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Active Cohort Institutional Performance & Ranking Matrix */}
+            <div className="p-5 sm:p-7 rounded-3xl glass-panel relative overflow-hidden border border-brand-500/20 dark:border-brand-500/30 shadow-glass flex flex-col gap-5">
+              <div className="absolute top-0 right-0 w-36 h-36 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Header Row */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
+                <div className="flex items-center space-x-3.5 min-w-0">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
+                    <Award className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-brand-500/15 text-brand-700 dark:text-brand-300 font-black text-[10px] uppercase tracking-wider border border-brand-500/30">
+                        {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
+                      </span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">
+                        {stats.attendedRows + stats.virtualRows} Total Participants ({stats.totalRows} Students in Scope)
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 leading-relaxed">
+                      Official Institutional Contest Performance Matrix tracking question solve distribution alongside Global Rank &lt; 20,000 and Contest Rank &lt; 5,000.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Controls: View Mode Toggle & Session Meta Badges */}
+                <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-center">
+                  {/* View Switcher: Cards View vs Table View */}
+                  <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setMatrixViewMode('cards')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${matrixViewMode === 'cards'
+                        ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-white/10'
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Cards View</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMatrixViewMode('table')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${matrixViewMode === 'table'
+                        ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-white/10'
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span>Table View</span>
+                    </button>
+                  </div>
+
+                  <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    {activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()}
+                  </span>
+                  {activeSessionObj?.sessionDate && (
+                    <span className="px-3 py-1.5 rounded-xl bg-brand-500/10 text-brand-700 dark:text-brand-300 font-mono font-black text-xs border border-brand-500/20 shadow-2xs">
+                      Date: {activeSessionObj.sessionDate}
+                    </span>
                   )}
                 </div>
               </div>
 
-              {/* Bulk Action Bar */}
-              {selectedRowIds.size > 0 && (
-                <div className="bg-brand-50 dark:bg-brand-900/30 border-b border-brand-100 dark:border-brand-800 px-5 py-3 flex items-center justify-between animate-fade-in">
-                  <div className="flex items-center space-x-3">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold">
-                      {selectedRowIds.size}
-                    </span>
-                    <span className="text-sm font-bold text-brand-700 dark:text-brand-300">
-                      Students Selected
-                    </span>
+              {/* VIEW MODE 1: MODERN SPACIOUS BENTO CARDS (DEFAULT) */}
+              {matrixViewMode === 'cards' ? (
+                <div className="flex flex-col gap-4 relative z-10 animate-fade-in">
+                  {/* Tier 1: Question Solve Distribution */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-brand-500" />
+                        Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 font-mono">5 Problem Benchmarks</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5">
+                      {[
+                        { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/25 hover:border-emerald-500/40', sub: 'All Solved' },
+                        { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-500/10 border-purple-500/25 hover:border-purple-500/40', sub: '3 Solved' },
+                        { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/25 hover:border-indigo-500/40', sub: '2 Solved' },
+                        { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/25 hover:border-amber-500/40', sub: '1 Solved' },
+                        { label: '0/4 — No Solve', count: stats.q0Solved, color: 'text-rose-700 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/25 hover:border-rose-500/40 col-span-2 sm:col-span-1', sub: '0 Solved' },
+                      ].map((item, idx) => (
+                        <div
+                          key={idx}
+                          onClick={handleOpenDetailedRoster}
+                          title={`Click to view full roster for ${item.label}`}
+                          className={`p-3 sm:p-3.5 rounded-2xl border text-center flex flex-col items-center justify-center min-h-[76px] shadow-2xs transition-all hover:scale-[1.03] active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
+                        >
+                          <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider block opacity-90 whitespace-nowrap">{item.label}</span>
+                          <span className={`text-xl sm:text-2xl font-black font-mono leading-none mt-1.5 ${item.color}`}>{item.count}</span>
+                          <span className="text-[9px] sm:text-[10px] font-semibold opacity-70 block mt-1 truncate max-w-full font-mono">{item.sub}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        setNotification({ isOpen: true, title: 'Success', type: 'success', message: `${selectedRowIds.size} students marked as verified successfully.` });
-                        setSelectedRowIds(new Set());
-                      }}
-                      className="flex items-center space-x-1.5 px-4 py-2 bg-white dark:bg-navy-800 border border-brand-200 dark:border-brand-700 hover:bg-brand-100 dark:hover:bg-brand-800/50 text-brand-700 dark:text-brand-300 text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Mark as Verified</span>
-                    </button>
-                    <button
-                      onClick={handleSendBulkReminders}
-                      disabled={isSendingReminders}
-                      className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {isSendingReminders ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Mail className="w-3.5 h-3.5" />
-                      )}
-                      <span>{isSendingReminders ? 'Sending Emails...' : 'Send Reminder Email'}</span>
-                    </button>
+
+                  {/* Tier 2: Institutional Ranking & Attendance Benchmarks */}
+                  <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-white/[0.06]">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                        Institutional Ranking &amp; Attendance Benchmarks
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 font-mono">Session Criteria</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                      {[
+                        {
+                          label: 'Taken Count',
+                          count: stats.attendedRows + stats.virtualRows,
+                          color: 'text-slate-900 dark:text-white',
+                          bg: 'bg-slate-100/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600',
+                          sub: `last_contest_name (${activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - ${activeSessionObj?.sessionDate || 'Session'})`,
+                          icon: Users,
+                          iconColor: 'text-brand-500'
+                        },
+                        {
+                          label: 'Below 20000',
+                          count: stats.rankBelow20k,
+                          color: 'text-sky-700 dark:text-sky-400',
+                          bg: 'bg-sky-500/10 border-sky-500/25 hover:border-sky-500/40',
+                          sub: 'global_ranking < 20,000',
+                          icon: TrendingUp,
+                          iconColor: 'text-sky-500'
+                        },
+                        {
+                          label: 'Below 5000',
+                          count: stats.rankBelow5k,
+                          color: 'text-teal-700 dark:text-teal-400',
+                          bg: 'bg-teal-500/10 border-teal-500/25 hover:border-teal-500/40',
+                          sub: 'last_contest_rank < 5,000',
+                          icon: ShieldCheck,
+                          iconColor: 'text-teal-500'
+                        },
+                      ].map((item, idx) => (
+                        <div
+                          key={idx}
+                          onClick={handleOpenDetailedRoster}
+                          title={`Click to view full roster for ${item.label} (${item.sub})`}
+                          className={`p-3.5 sm:p-4 rounded-2xl border text-center flex flex-col items-center justify-center min-h-[82px] shadow-2xs transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation ${item.bg}`}
+                        >
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <item.icon className={`w-3.5 h-3.5 ${item.iconColor}`} />
+                            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider opacity-90">{item.label}</span>
+                          </div>
+                          <span className={`text-2xl sm:text-3xl font-black font-mono leading-none ${item.color}`}>{item.count}</span>
+                          <span className="text-[10px] font-semibold opacity-75 mt-1 font-mono truncate max-w-full">{item.sub}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* VIEW MODE 2: INSTITUTIONAL 2-TIER TABLE VIEW */
+                <div className="w-full relative z-10 animate-fade-in">
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md">
+                    <table className="w-full min-w-[780px] text-center border-collapse text-xs">
+                      <thead>
+                        {/* Header Row 1 */}
+                        <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                          <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 font-black min-w-[190px]">
+                            <span className="text-[11px] tracking-wide uppercase font-black block">last_contest_name</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 inline-block">
+                              ({activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - {activeSessionObj?.sessionDate || 'Session'})
+                            </span>
+                          </th>
+                          <th colSpan={5} className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
+                            Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
+                          </th>
+                          <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15 min-w-[130px]">
+                            Below 20000
+                          </th>
+                          <th className="py-3 px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15 min-w-[130px]">
+                            Below 5000
+                          </th>
+                        </tr>
+                        {/* Header Row 2 */}
+                        <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                          <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
+                            Taken Count
+                          </th>
+                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black min-w-[55px] bg-emerald-500/5">4</th>
+                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black min-w-[55px] bg-purple-500/5">3</th>
+                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black min-w-[55px] bg-indigo-500/5">2</th>
+                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black min-w-[55px] bg-amber-500/5">1</th>
+                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black min-w-[55px] bg-rose-500/5">0</th>
+                          <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
+                            global_ranking
+                          </th>
+                          <th className="py-2.5 px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
+                            last_contest_rank
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody
+                        onClick={handleOpenDetailedRoster}
+                        title="Click to view detailed student roster"
+                        className="font-mono divide-y divide-slate-100 dark:divide-slate-800 cursor-pointer"
+                      >
+                        <tr className="bg-white/80 dark:bg-slate-950/80 hover:bg-brand-50/50 dark:hover:bg-slate-900/60 transition-colors">
+                          <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
+                              {stats.attendedRows + stats.virtualRows}
+                            </span>
+                          </td>
+                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-base border border-emerald-500/25 shadow-2xs">
+                              {stats.q4Solved}
+                            </span>
+                          </td>
+                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-base border border-purple-500/25 shadow-2xs">
+                              {stats.q3Solved}
+                            </span>
+                          </td>
+                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-base border border-indigo-500/25 shadow-2xs">
+                              {stats.q2Solved}
+                            </span>
+                          </td>
+                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-base border border-amber-500/25 shadow-2xs">
+                              {stats.q1Solved}
+                            </span>
+                          </td>
+                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-base border border-rose-500/25 shadow-2xs">
+                              {stats.q0Solved}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
+                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-base border border-sky-500/25 shadow-2xs">
+                              {stats.rankBelow20k}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 bg-teal-500/[0.03]">
+                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-base border border-teal-500/25 shadow-2xs">
+                              {stats.rankBelow5k}
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
+            </div>
 
-              {/* MOBILE VIEW: High-density full-width responsive cards (Zero Horizontal Scroll) */}
-              <div className="block md:hidden p-4 sm:p-5 space-y-4 sm:space-y-5">
-                {paginatedMatrixRows.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 font-bold">
-                    No students found
-                  </div>
+            {/* TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW */}
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => {
+                  if (!showDetailedView) {
+                    handleOpenDetailedRoster();
+                  } else {
+                    setShowDetailedView(false);
+                  }
+                }}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3.5 min-h-[46px] rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition-all duration-300 cursor-pointer active:scale-95 border border-white/15 touch-manipulation"
+              >
+                {showDetailedView ? (
+                  <>
+                    <ChevronUp className="w-4 h-4 shrink-0" />
+                    <span>Collapse Detailed View</span>
+                  </>
                 ) : (
-                  paginatedMatrixRows.map((r, idx) => {
-                    const actualIdx = (currentPage - 1) * pageSize + idx;
-                    return (
-                      <MobileContestMatrixCard
-                        key={r.reg_no || r.student_id || actualIdx}
-                        r={r}
-                        actualIdx={actualIdx}
-                        isSelected={selectedRowIds.has(r.reg_no)}
-                        onEdit={handleOpenEditStudent}
-                        onDelete={setDeletingStudent}
-                        onSelect={setViewingProfileStudent}
-                        onCheckbox={handleRowCheckbox}
-                        onQuickSync={(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') ? (regNo) => {
-                          setQuickSyncIdentifier(regNo);
-                          setShowAdminMonitor(true);
-                          setAdminSubTab('live_monitor');
-                          requestAnimationFrame(() => {
-                            requestAnimationFrame(() => {
-                              adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            });
-                          });
-                        } : undefined}
-                      />
-                    );
-                  })
-                )}
+                  <>
+                    <ChevronDown className="w-4 h-4 shrink-0" />
+                    <span className="truncate">View Full Breakdown & Student Roster ({totalRows || globalStudents.length || 0} Students)</span>
+                  </>
+                )
+                }
+              </button>
+            </div>
+          </div>
+
+          {/* 4. DETAILED VIEW SECTION (LAZY-LOADED ON TOGGLE) */}
+          {showDetailedView && (
+            <div ref={detailedViewRef} className="space-y-6 pt-4 border-t border-white/[0.06] animate-fade-in">
+              {/* Detailed View Sub-Tab Switcher - 2026 SaaS Segmented Bento Bar */}
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-white/[0.08] pb-3.5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 w-full xl:w-auto flex-1 max-w-4xl">
+                  <button
+                    type="button"
+                    onClick={() => setSubTab('matrix')}
+                    className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'matrix'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/25 border border-brand-400/40 ring-2 ring-brand-500/20'
+                      : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
+                      }`}
+                  >
+                    <Users className={`w-4 h-4 shrink-0 ${subTab === 'matrix' ? 'text-white' : 'text-brand-500'}`} />
+                    <span className="truncate">Student Matrix <span className="font-mono text-[11px] opacity-90">({totalRows})</span></span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSubTab('dept_year')}
+                    className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'dept_year'
+                      ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/25 border border-purple-400/40 ring-2 ring-purple-500/20'
+                      : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
+                      }`}
+                  >
+                    <Layers className={`w-4 h-4 shrink-0 ${subTab === 'dept_year' ? 'text-white' : 'text-purple-500'}`} />
+                    <span className="truncate">Dept & Year Breakdown</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubTab('error_board');
+                      setSelectedAttendanceFilter('DATA_ERROR');
+                    }}
+                    className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'error_board'
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/25 border border-amber-400/40 ring-2 ring-amber-500/20'
+                      : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
+                      }`}
+                  >
+                    <AlertTriangle className={`w-4 h-4 shrink-0 ${subTab === 'error_board' ? 'text-white' : 'text-amber-500'}`} />
+                    <span className="truncate">Data Quality <span className="font-mono text-[11px] opacity-90">({stats.errorRows})</span></span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSubTab('post_930_activity')}
+                    className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'post_930_activity'
+                      ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white shadow-lg shadow-emerald-500/25 border border-emerald-400/40 ring-2 ring-emerald-500/20'
+                      : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
+                      }`}
+                  >
+                    <Clock className={`w-4 h-4 shrink-0 ${subTab === 'post_930_activity' ? 'text-white' : 'text-emerald-500'}`} />
+                    <span className="truncate">Post-9:30 AM Activity</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-white/5 px-3.5 py-2 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] w-fit shadow-xs">
+                  <span className="text-slate-500 dark:text-slate-400 font-extrabold uppercase text-[10px]">Scope:</span>
+                  <span className="text-brand-600 dark:text-brand-400 font-mono font-black">{selectedDeptFilter}</span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="text-purple-600 dark:text-purple-400 font-mono font-black">{selectedYearFilter} Year</span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{selectedAttendanceFilter}</span>
+                </div>
               </div>
 
-              {/* DESKTOP VIEW: Full 12-Column Table */}
-              <div className="hidden md:block table-responsive-container w-full min-w-0 max-w-full overflow-x-auto">
-                <table className="w-full min-w-[900px] text-left text-xs border-separate border-spacing-0">
-                  <thead className="text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm">
-                    <tr className="[&>th]:bg-slate-950 [&>th]:dark:bg-navy-950 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl border-b border-slate-700 dark:border-slate-600">
-                      {/* Checkbox Column */}
-                      <th className="px-3 py-3.5 text-center w-10">
-                        <input 
-                          type="checkbox" 
-                          className="w-4 h-4 rounded border-slate-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
-                          checked={selectedRowIds.size > 0 && selectedRowIds.size === paginatedMatrixRows.length}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              const allIds = new Set<string>(paginatedMatrixRows.map((r: any) => String(r.reg_no || r.id || '')));
-                              setSelectedRowIds(allIds);
-                            } else {
-                              setSelectedRowIds(new Set<string>());
-                            }
-                          }}
-                        />
-                      </th>
-                      <th className="px-3 py-3.5 text-center text-white font-extrabold">S.No</th>
-                      <th className="px-3 py-3.5 text-left text-white font-extrabold whitespace-nowrap">Reg No</th>
-                      <th className="px-3 py-3.5 text-left text-white font-extrabold whitespace-nowrap">Student Name</th>
-                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Dept</th>
-                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Year</th>
-                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Status</th>
-                      
-                      {/* Sortable Columns */}
-                      {['q1', 'q2', 'q3', 'q4'].map((qKey) => (
-                        <th key={qKey} className="px-2 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-white font-extrabold" onClick={() => handleSort(qKey)}>
-                          <div className="flex items-center justify-center space-x-1">
-                            <span>{qKey.toUpperCase()}</span>
-                            <span className="text-xs opacity-60 group-hover:opacity-100">
-                              {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+              {/* Missing Handles Alert Banner - 2026 SaaS Amber Card */}
+              {(() => {
+                const missingHandlesCount = sessionMetrics?.usernameNotFound ?? sessionMetrics?.unlinkedProfiles ?? filteredMatrixRows.filter(r => !r.username || r.status === 'USERNAME_NOT_FOUND').length;
+                if (missingHandlesCount > 0) {
+                  return (
+                    <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 dark:from-amber-950/40 dark:via-slate-900/80 dark:to-orange-950/30 border border-amber-300 dark:border-amber-500/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md shadow-amber-500/5 animate-fade-in">
+                      <div className="flex items-center space-x-3.5 text-amber-900 dark:text-amber-200 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 shadow-inner">
+                          <AlertTriangle className="w-5 h-5 animate-pulse" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-950 dark:text-amber-100">
+                              Action Required: Missing LeetCode Handles
+                            </h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black font-mono bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/30">
+                              {missingHandlesCount} Students
                             </span>
                           </div>
-                        </th>
-                      ))}
-                      
-                      <th className="px-3 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-white font-extrabold" onClick={() => handleSort('solved')}>
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Contest Solved</span>
-                          <span className="text-xs opacity-60 group-hover:opacity-100">
-                            {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
-                          </span>
+                          <p className="text-xs text-amber-800/90 dark:text-amber-300/80 font-medium mt-0.5 leading-relaxed">
+                            These students do not have a linked LeetCode profile and cannot be tracked by the contest engine.
+                          </p>
                         </div>
-                      </th>
-                      
-                      <th className="px-4 py-3.5 text-center text-white font-extrabold min-w-[130px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${missingHandlesCount} students missing handles.` });
+                        }}
+                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-amber-600 via-amber-500 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black rounded-2xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer active:scale-95 whitespace-nowrap touch-manipulation border border-amber-400/30 shrink-0"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send Reminder to All</span>
+                      </button>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Tab 1: Live Question-Wise Student Matrix Table */}
+              {subTab === 'matrix' && (
+                <div className="glass-panel rounded-3xl overflow-hidden shadow-glass border-white/[0.08]">
+                  {/* ACTIVE KPI FILTER BAR */}
+                  {selectedAttendanceFilter !== 'ALL' && (
+                    <div className="px-5 py-3.5 bg-brand-500/10 border-b border-brand-500/20 flex flex-wrap items-center justify-between gap-4 animate-fade-in">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 shrink-0">
+                          <Filter className="w-4 h-4" />
+                        </div>
+                        <p className="text-sm font-black text-brand-900 dark:text-brand-100 min-w-0 break-words">
+                          Showing {filteredMatrixRows.length || totalRows} {
+                            selectedAttendanceFilter === 'DATA_ERROR' ? 'Data Error' :
+                              selectedAttendanceFilter === 'ALL_ATTENDED' ? 'Participating' :
+                                selectedAttendanceFilter === 'PUBLIC_ATTENDED' ? 'Public' :
+                                  selectedAttendanceFilter === 'VIRTUAL_ATTENDED' ? 'Virtual' :
+                                    selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED' ? 'Not Attended' : 'Filtered'
+                          } Students
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedAttendanceFilter('ALL')}
+                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-brand-400/30 text-brand-300 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer shadow-sm"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Clear Filters</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Table Legend & Top Quick Pagination */}
+                  <div className="px-5 py-3 border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-3 bg-white/[0.03] text-xs font-medium backdrop-blur-md">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Legend:</span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        PUBLIC
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                        VIRTUAL
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-extrabold border border-rose-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        NOT ATTENDED
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        DATA ERROR
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {/* Top Pagination Controls for Zero-Scroll Navigation */}
+                      {totalRows > 0 && (
+                        <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                          <button
+                            type="button"
+                            disabled={currentPage <= 1}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            ‹ Prev
+                          </button>
+                          <span className="text-[10px] font-mono font-black text-brand-600 dark:text-brand-400 px-1.5">
+                            {currentPage}/{totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={currentPage >= totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            Next ›
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bulk Action Bar */}
+                  {selectedRowIds.size > 0 && (
+                    <div className="bg-brand-50 dark:bg-brand-900/30 border-b border-brand-100 dark:border-brand-800 px-5 py-3 flex items-center justify-between animate-fade-in">
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold">
+                          {selectedRowIds.size}
+                        </span>
+                        <span className="text-sm font-bold text-brand-700 dark:text-brand-300">
+                          Students Selected
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setNotification({ isOpen: true, title: 'Success', type: 'success', message: `${selectedRowIds.size} students marked as verified successfully.` });
+                            setSelectedRowIds(new Set());
+                          }}
+                          className="flex items-center space-x-1.5 px-4 py-2 bg-white dark:bg-navy-800 border border-brand-200 dark:border-brand-700 hover:bg-brand-100 dark:hover:bg-brand-800/50 text-brand-700 dark:text-brand-300 text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Mark as Verified</span>
+                        </button>
+                        <button
+                          onClick={handleSendBulkReminders}
+                          disabled={isSendingReminders}
+                          className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {isSendingReminders ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Mail className="w-3.5 h-3.5" />
+                          )}
+                          <span>{isSendingReminders ? 'Sending Emails...' : 'Send Reminder Email'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MOBILE VIEW: High-density full-width responsive cards (Zero Horizontal Scroll) */}
+                  <div className="block md:hidden p-4 sm:p-5 space-y-4 sm:space-y-5">
                     {paginatedMatrixRows.length === 0 ? (
-                      <tr>
-                        <td colSpan={12} className="p-12 text-center text-slate-500 font-bold">
-                          No students found
-                        </td>
-                      </tr>
+                      <div className="p-8 text-center text-slate-500 font-bold">
+                        No students found
+                      </div>
                     ) : (
                       paginatedMatrixRows.map((r, idx) => {
                         const actualIdx = (currentPage - 1) * pageSize + idx;
                         return (
-                          <ContestMatrixRow
+                          <MobileContestMatrixCard
                             key={r.reg_no || r.student_id || actualIdx}
                             r={r}
                             actualIdx={actualIdx}
@@ -4779,1209 +4672,1295 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         );
                       })
                     )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* HIGH-SPEED VIRTUALIZED PAGINATION BAR */}
-              {totalRows > 0 && (
-                <div className="px-5 py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-                  {/* Showing count */}
-                  <div className="text-slate-500 dark:text-slate-400 font-bold min-w-0 break-words">
-                    {loading ? (
-                      <span className="animate-pulse">Loading students...</span>
-                    ) : (
-                      <>
-                        Showing <span className="text-slate-900 dark:text-white font-black">{filteredMatrixRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> to{' '}
-                        <span className="text-slate-900 dark:text-white font-black">{Math.min(currentPage * pageSize, totalRows)}</span> of{' '}
-                        <span className="text-brand-600 dark:text-brand-400 font-black">{totalRows}</span> students
-                      </>
-                    )}
                   </div>
 
-                  {/* Page Size Selector */}
-                  {totalRows > 10 && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-slate-400 font-medium">Rows per page:</span>
-                      <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                        {[10, 20, 50, 100, 200, 99999].map(sz => (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => { setPageSize(sz); setCurrentPage(1); }}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                              pageSize === sz
-                                ? 'bg-brand-500 text-white shadow-sm'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
-                            }`}
-                          >
-                            {sz >= 99999 ? 'All' : sz}
-                          </button>
-                        ))}
+                  {/* DESKTOP VIEW: Full 12-Column Table */}
+                  <div className="hidden md:block table-responsive-container w-full min-w-0 max-w-full overflow-x-auto">
+                    <table className="w-full min-w-[900px] text-left text-xs border-separate border-spacing-0">
+                      <thead className="text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                        <tr className="[&>th]:bg-slate-950 [&>th]:dark:bg-navy-950 [&>th:first-child]:rounded-l-2xl [&>th:last-child]:rounded-r-2xl border-b border-slate-700 dark:border-slate-600">
+                          {/* Checkbox Column */}
+                          <th className="px-3 py-3.5 text-center w-10">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border-slate-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
+                              checked={selectedRowIds.size > 0 && selectedRowIds.size === paginatedMatrixRows.length}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  const allIds = new Set<string>(paginatedMatrixRows.map((r: any) => String(r.reg_no || r.id || '')));
+                                  setSelectedRowIds(allIds);
+                                } else {
+                                  setSelectedRowIds(new Set<string>());
+                                }
+                              }}
+                            />
+                          </th>
+                          <th className="px-3 py-3.5 text-center text-white font-extrabold">S.No</th>
+                          <th className="px-3 py-3.5 text-left text-white font-extrabold whitespace-nowrap">Reg No</th>
+                          <th className="px-3 py-3.5 text-left text-white font-extrabold whitespace-nowrap">Student Name</th>
+                          <th className="px-3 py-3.5 text-center text-white font-extrabold">Dept</th>
+                          <th className="px-3 py-3.5 text-center text-white font-extrabold">Year</th>
+                          <th className="px-3 py-3.5 text-center text-white font-extrabold">Status</th>
+
+                          {/* Sortable Columns */}
+                          {['q1', 'q2', 'q3', 'q4'].map((qKey) => (
+                            <th key={qKey} className="px-2 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-white font-extrabold" onClick={() => handleSort(qKey)}>
+                              <div className="flex items-center justify-center space-x-1">
+                                <span>{qKey.toUpperCase()}</span>
+                                <span className="text-xs opacity-60 group-hover:opacity-100">
+                                  {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                                </span>
+                              </div>
+                            </th>
+                          ))}
+
+                          <th className="px-3 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-white font-extrabold" onClick={() => handleSort('solved')}>
+                            <div className="flex items-center justify-center space-x-1">
+                              <span>Contest Solved</span>
+                              <span className="text-xs opacity-60 group-hover:opacity-100">
+                                {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                              </span>
+                            </div>
+                          </th>
+
+                          <th className="px-4 py-3.5 text-center text-white font-extrabold min-w-[130px]">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {paginatedMatrixRows.length === 0 ? (
+                          <tr>
+                            <td colSpan={12} className="p-12 text-center text-slate-500 font-bold">
+                              No students found
+                            </td>
+                          </tr>
+                        ) : (
+                          paginatedMatrixRows.map((r, idx) => {
+                            const actualIdx = (currentPage - 1) * pageSize + idx;
+                            return (
+                              <ContestMatrixRow
+                                key={r.reg_no || r.student_id || actualIdx}
+                                r={r}
+                                actualIdx={actualIdx}
+                                isSelected={selectedRowIds.has(r.reg_no)}
+                                onEdit={handleOpenEditStudent}
+                                onDelete={setDeletingStudent}
+                                onSelect={setViewingProfileStudent}
+                                onCheckbox={handleRowCheckbox}
+                                onQuickSync={(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') ? (regNo) => {
+                                  setQuickSyncIdentifier(regNo);
+                                  setShowAdminMonitor(true);
+                                  setAdminSubTab('live_monitor');
+                                  requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                      adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    });
+                                  });
+                                } : undefined}
+                              />
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* HIGH-SPEED VIRTUALIZED PAGINATION BAR */}
+                  {totalRows > 0 && (
+                    <div className="px-5 py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      {/* Showing count */}
+                      <div className="text-slate-500 dark:text-slate-400 font-bold min-w-0 break-words">
+                        {loading ? (
+                          <span className="animate-pulse">Loading students...</span>
+                        ) : (
+                          <>
+                            Showing <span className="text-slate-900 dark:text-white font-black">{filteredMatrixRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> to{' '}
+                            <span className="text-slate-900 dark:text-white font-black">{Math.min(currentPage * pageSize, totalRows)}</span> of{' '}
+                            <span className="text-brand-600 dark:text-brand-400 font-black">{totalRows}</span> students
+                          </>
+                        )}
+                      </div>
+
+                      {/* Page Size Selector */}
+                      {totalRows > 10 && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-slate-400 font-medium">Rows per page:</span>
+                          <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            {[10, 20, 50, 100, 200, 99999].map(sz => (
+                              <button
+                                key={sz}
+                                type="button"
+                                onClick={() => { setPageSize(sz); setCurrentPage(1); }}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${pageSize === sz
+                                    ? 'bg-brand-500 text-white shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
+                                  }`}
+                              >
+                                {sz >= 99999 ? 'All' : sz}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Page Navigation Buttons */}
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          type="button"
+                          disabled={currentPage <= 1}
+                          onClick={() => setCurrentPage(1)}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          title="First Page"
+                        >
+                          «
+                        </button>
+                        <button
+                          type="button"
+                          disabled={currentPage <= 1}
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          ‹ Prev
+                        </button>
+
+                        <span className="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-black border border-brand-200 dark:border-brand-800/60">
+                          Page {currentPage} of {totalPages}
+                        </span>
+
+                        <button
+                          type="button"
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          Next ›
+                        </button>
+                        <button
+                          type="button"
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          title="Last Page"
+                        >
+                          »
+                        </button>
                       </div>
                     </div>
                   )}
+                </div>
+              )}
 
-                  {/* Page Navigation Buttons */}
-                  <div className="flex items-center space-x-1.5">
-                    <button
-                      type="button"
-                      disabled={currentPage <= 1}
-                      onClick={() => setCurrentPage(1)}
-                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                      title="First Page"
-                    >
-                      «
-                    </button>
-                    <button
-                      type="button"
-                      disabled={currentPage <= 1}
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                    >
-                      ‹ Prev
-                    </button>
-
-                    <span className="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-black border border-brand-200 dark:border-brand-800/60">
-                      Page {currentPage} of {totalPages}
-                    </span>
-
-                    <button
-                      type="button"
-                      disabled={currentPage >= totalPages}
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                    >
-                      Next ›
-                    </button>
-                    <button
-                      type="button"
-                      disabled={currentPage >= totalPages}
-                      onClick={() => setCurrentPage(totalPages)}
-                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                      title="Last Page"
-                    >
-                      »
-                    </button>
+              {/* Tab 2: Department & Academic Year Matrix Breakdown */}
+              {subTab === 'dept_year' && (
+                <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        Department & Academic Year Aggregation Breakdown
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400">Single-Source-of-Truth Aggregation</span>
                   </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto -mx-1 px-1 touch-pan-x overscroll-x-contain">
+                    <table className="w-full min-w-[700px] text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                          <th className="py-2.5 px-3">Segment / Category</th>
+                          <th className="py-2.5 px-3 text-center">Total</th>
+                          <th className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Public</th>
+                          <th className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400">Virtual</th>
+                          <th className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400">Not Attended</th>
+                          <th className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">Errors</th>
+                          <th className="py-2.5 px-3 text-right">Participation %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 font-bold">
+                        {/* Department breakdown rows */}
+                        {departments.map((dept, index) => {
+                          const deptCode = dept.code;
+                          const deptNorm = normalizeDepartment(dept.code || dept.name);
+
+                          let dStats = { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+
+                          if (departmentStats && typeof departmentStats === 'object') {
+                            for (const [key, val] of Object.entries(departmentStats)) {
+                              if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                                const dVal: any = val;
+                                dStats = {
+                                  total: Number(dVal?.total || 0),
+                                  public: Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0),
+                                  virtual: Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0),
+                                  not_attended: Number(dVal?.not_attended ?? dVal?.notAttended ?? 0),
+                                  errors: Number(dVal?.errors ?? dVal?.totalErrors ?? dVal?.dataErrors ?? 0)
+                                };
+                                break;
+                              }
+                            }
+                          }
+
+                          if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                            const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
+                            const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+                            if (deptStudents.length > 0) {
+                              const tot = deptStudents.length;
+                              const pub = deptStudents.filter((s: any) => {
+                                const st = (s.participation_status || s.status || '').toUpperCase();
+                                return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED';
+                              }).length;
+                              const virt = deptStudents.filter((s: any) => {
+                                const st = (s.participation_status || s.status || '').toUpperCase();
+                                return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                              }).length;
+                              const notAtt = deptStudents.filter((s: any) => {
+                                const st = (s.participation_status || s.status || '').toUpperCase();
+                                return st === 'PUBLIC_NOT_ATTENDED' || st === 'NOT_ATTENDED';
+                              }).length;
+                              const errs = deptStudents.filter((s: any) => {
+                                const st = (s.participation_status || s.status || '').toUpperCase();
+                                return st === 'DATA_ERROR' || st === 'SOURCE_ERROR' || st === 'CONFLICT';
+                              }).length;
+                              dStats = { total: dStats.total || tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
+                            }
+                          }
+
+                          if (dStats.total === 0 && globalStudents.length > 0) {
+                            const deptGlobal = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+                            dStats.total = deptGlobal.length;
+                          }
+
+                          const tot = dStats.total || 0;
+                          const pub = dStats.public || 0;
+                          const virt = dStats.virtual || 0;
+                          const errs = dStats.errors || 0;
+                          let notAtt = dStats.not_attended || 0;
+                          if (notAtt === 0 && tot > (pub + virt + errs)) {
+                            notAtt = tot - (pub + virt + errs);
+                          }
+                          const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
+
+                          const dotColors = ['bg-indigo-500', 'bg-teal-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500'];
+                          const dotColor = dotColors[index % dotColors.length];
+
+                          return (
+                            <tr key={deptCode} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                              <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
+                                <div className="flex items-center gap-2">
+                                  <span className={`w-2.5 h-2.5 rounded-full ${dotColor} shrink-0`}></span>
+                                  <span>Department: {dept.name}</span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
+                              <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
+                              <td className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400 font-black">{virt}</td>
+                              <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
+                              <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
+                              <td className="py-2.5 px-3 text-right text-indigo-600 dark:text-indigo-400 font-black">{pct}%</td>
+                            </tr>
+                          );
+                        })}
+
+                        {/* Academic Year breakdown rows */}
+                        {['II', 'III', 'IV'].map((yr) => {
+                          const normY = (y: any): string => {
+                            if (!y) return '';
+                            const str = String(y).toUpperCase().trim();
+                            if (str.includes('2') || str.includes('II')) return 'II';
+                            if (str.includes('3') || str.includes('III')) return 'III';
+                            if (str.includes('4') || str.includes('IV')) return 'IV';
+                            if (str.includes('1') || str.includes('I')) return 'I';
+                            return str;
+                          };
+                          let yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                          if (yStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0 || globalStudents?.length > 0)) {
+                            const pool = matrixRows.length > 0 ? matrixRows : (cachedStudents?.length > 0 ? cachedStudents : globalStudents);
+                            const yrNorm = normY(yr);
+                            const yrStudents = pool.filter((s: any) => normY(s.year || s.year_level || s.academic_year) === yrNorm);
+                            if (yrStudents.length > 0) {
+                              const t = yrStudents.length;
+                              const p = yrStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                              const v = yrStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                              const e = yrStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                              const n = Math.max(0, t - (p + v + e));
+                              yStats = { total: t, public: p, virtual: v, not_attended: n, errors: e };
+                            }
+                          }
+                          const tot = yStats.total || 0;
+                          const pub = yStats.public || 0;
+                          const virt = yStats.virtual || 0;
+                          const errs = yStats.errors || 0;
+                          let notAtt = yStats.not_attended || 0;
+                          if (notAtt === 0 && tot > (pub + virt + errs)) {
+                            notAtt = tot - (pub + virt + errs);
+                          }
+                          const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
+
+                          return (
+                            <tr key={yr} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 bg-slate-50/40 dark:bg-navy-950/20">
+                              <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
+                                  <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
+                              <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
+                              <td className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400 font-black">{virt}</td>
+                              <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
+                              <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
+                              <td className="py-2.5 px-3 text-right text-purple-600 dark:text-purple-400 font-black">{pct}%</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Native Card View (Zero Horizontal Scroll on mobile) */}
+                  <div className="block md:hidden space-y-3">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 pb-1">
+                      Departments ({departments.length})
+                    </div>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {departments.map((dept, index) => {
+                        const deptCode = dept.code;
+                        const deptNorm = normalizeDepartment(dept.code || dept.name);
+                        let dStats = { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+
+                        if (departmentStats && typeof departmentStats === 'object') {
+                          for (const [key, val] of Object.entries(departmentStats)) {
+                            if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                              const dVal: any = val;
+                              dStats = {
+                                total: Number(dVal?.total || 0),
+                                public: Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0),
+                                virtual: Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0),
+                                not_attended: Number(dVal?.not_attended ?? dVal?.notAttended ?? 0),
+                                errors: Number(dVal?.errors ?? dVal?.totalErrors ?? dVal?.dataErrors ?? 0)
+                              };
+                              break;
+                            }
+                          }
+                        }
+
+                        if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                          const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
+                          const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+                          if (deptStudents.length > 0) {
+                            const tot = deptStudents.length;
+                            const pub = deptStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            const virt = deptStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            const notAtt = deptStudents.filter((s: any) => ['PUBLIC_NOT_ATTENDED', 'NOT_ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            const errs = deptStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            dStats = { total: tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
+                          }
+                        }
+
+                        const tot = dStats.total || 0;
+                        const pub = dStats.public || 0;
+                        const virt = dStats.virtual || 0;
+                        const errs = dStats.errors || 0;
+                        const notAtt = dStats.not_attended || Math.max(0, tot - (pub + virt + errs));
+                        const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
+
+                        return (
+                          <div key={deptCode} className="p-3.5 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-900/60 shadow-xs space-y-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-black text-slate-900 dark:text-white truncate">
+                                {dept.name}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                                {pct}% Attended
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-5 gap-1.5 text-center text-[10.5px] font-mono">
+                              <div className="p-1 rounded-lg bg-slate-100 dark:bg-navy-800">
+                                <span className="block text-[8px] font-bold text-slate-400 uppercase">Total</span>
+                                <span className="font-black text-slate-800 dark:text-slate-200">{tot}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                <span className="block text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Live</span>
+                                <span className="font-black text-emerald-600 dark:text-emerald-400">{pub}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                <span className="block text-[8px] font-bold text-purple-600 dark:text-purple-400 uppercase">Virt</span>
+                                <span className="font-black text-purple-600 dark:text-purple-400">{virt}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                                <span className="block text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Abs</span>
+                                <span className="font-black text-rose-600 dark:text-rose-400">{notAtt}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                <span className="block text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Err</span>
+                                <span className="font-black text-amber-600 dark:text-amber-400">{errs}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 pt-2 pb-1">
+                      Academic Years
+                    </div>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {['II', 'III', 'IV'].map((yr) => {
+                        const normY = (y: any): string => {
+                          if (!y) return '';
+                          const str = String(y).toUpperCase().trim();
+                          if (str.includes('2') || str.includes('II')) return 'II';
+                          if (str.includes('3') || str.includes('III')) return 'III';
+                          if (str.includes('4') || str.includes('IV')) return 'IV';
+                          return str;
+                        };
+                        let yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                        if (yStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0 || globalStudents?.length > 0)) {
+                          const pool = matrixRows.length > 0 ? matrixRows : (cachedStudents?.length > 0 ? cachedStudents : globalStudents);
+                          const yrNorm = normY(yr);
+                          const yrStudents = pool.filter((s: any) => normY(s.year || s.year_level || s.academic_year) === yrNorm);
+                          if (yrStudents.length > 0) {
+                            const t = yrStudents.length;
+                            const p = yrStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            const v = yrStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            const e = yrStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                            const n = Math.max(0, t - (p + v + e));
+                            yStats = { total: t, public: p, virtual: v, not_attended: n, errors: e };
+                          }
+                        }
+                        const tot = yStats.total || 0;
+                        const pub = yStats.public || 0;
+                        const virt = yStats.virtual || 0;
+                        const errs = yStats.errors || 0;
+                        const notAtt = yStats.not_attended || Math.max(0, tot - (pub + virt + errs));
+                        const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
+
+                        return (
+                          <div key={yr} className="p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-900/50 bg-purple-50/30 dark:bg-purple-950/20 shadow-xs space-y-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-black text-purple-900 dark:text-purple-200 truncate">
+                                Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shrink-0">
+                                {pct}%
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-5 gap-1.5 text-center text-[10.5px] font-mono">
+                              <div className="p-1 rounded-lg bg-white/60 dark:bg-navy-900">
+                                <span className="block text-[8px] font-bold text-slate-400 uppercase">Total</span>
+                                <span className="font-black text-slate-800 dark:text-slate-200">{tot}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                <span className="block text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Live</span>
+                                <span className="font-black text-emerald-600 dark:text-emerald-400">{pub}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                <span className="block text-[8px] font-bold text-purple-600 dark:text-purple-400 uppercase">Virt</span>
+                                <span className="font-black text-purple-600 dark:text-purple-400">{virt}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                                <span className="block text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Abs</span>
+                                <span className="font-black text-rose-600 dark:text-rose-400">{notAtt}</span>
+                              </div>
+                              <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                <span className="block text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Err</span>
+                                <span className="font-black text-amber-600 dark:text-amber-400">{errs}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Itemized Data Quality Error Board */}
+              {subTab === 'error_board' && (() => {
+                const errorRows = matrixRows.filter(r => {
+                  const st = (r.status || r.participation_status || '').toString().toUpperCase();
+                  const u = (r.username || '').toString().trim();
+                  const isMissingUsername = !u || u === 'USERNAME_NOT_FOUND' || u === 'UNLINKED' || u === 'NO_HANDLE' || u === 'NONE' || u === 'NULL';
+                  return (
+                    isMissingUsername ||
+                    [
+                      'USERNAME_NOT_FOUND', 'INVALID_USERNAME',
+                      'FETCH_FAILED', 'FETCH_ERROR', 'DATA_ERROR',
+                      'DATA_MISMATCH', 'CONFLICT',
+                      'AUTH_REQUIRED', 'BLOCKED', 'SOURCE_UNAVAILABLE',
+                      'SOURCE_ERROR', 'ERROR', 'INVALID', 'FAILED'
+                    ].includes(st) ||
+                    r.participation_status === 'DATA_ERROR'
+                  );
+                });
+
+                const totalErrorCount = errorRows.length;
+                const totalErrorPages = Math.ceil(totalErrorCount / pageSize) || 1;
+                const currentErrorPage = Math.min(currentPage, totalErrorPages);
+                const startIndex = (currentErrorPage - 1) * pageSize;
+                const paginatedErrorRows = errorRows.slice(startIndex, startIndex + pageSize);
+
+                return (
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-6 space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/80">
+                      <div>
+                        <h3 className="text-sm font-black uppercase text-amber-600 dark:text-amber-400 flex items-center space-x-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>Itemized Data Quality Errors ({totalErrorCount} Students)</span>
+                        </h3>
+                        <p className="text-xs text-slate-500 font-bold mt-0.5">
+                          Root Cause: Missing or invalid LeetCode username handles. API failure is NEVER falsely marked as Not Attended.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Page Size Selector */}
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                          <span className="px-2 text-slate-400 uppercase text-[9px] font-black">Rows:</span>
+                          {[10, 20, 50, 100, 200].map(sz => (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => { setPageSize(sz); setCurrentPage(1); }}
+                              className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${pageSize === sz ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-navy-800'}`}
+                            >
+                              {sz}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Top Pagination Controls */}
+                        {totalErrorCount > 0 && (
+                          <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <button
+                              type="button"
+                              disabled={currentErrorPage <= 1}
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                            >
+                              ‹ Prev
+                            </button>
+                            <span className="text-[10px] font-mono font-black text-amber-600 dark:text-amber-400 px-1.5">
+                              {currentErrorPage}/{totalErrorPages}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={currentErrorPage >= totalErrorPages}
+                              onClick={() => setCurrentPage(p => Math.min(totalErrorPages, p + 1))}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                            >
+                              Next ›
+                            </button>
+                          </div>
+                        )}
+
+                        <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-300">
+                          Click "Add Username" to link profile
+                        </span>
+                      </div>
+                    </div>
+
+                    {loading ? (
+                      <div className="p-8 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse flex items-center justify-center space-x-2">
+                        <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
+                        <span>Loading data quality error records for scope ({selectedDeptFilter} • {selectedYearFilter} Year)...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Mobile View: Clean No-Scroll Card Stack */}
+                        <div className="md:hidden space-y-3">
+                          {totalErrorCount === 0 ? (
+                            <div className="p-6 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                              No data quality errors found for active filter scope ({selectedDeptFilter} • {selectedYearFilter} Year).
+                            </div>
+                          ) : (
+                            paginatedErrorRows.map((errStudent, idx) => (
+                              <div
+                                key={errStudent.reg_no || errStudent.id || idx}
+                                className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-amber-200/80 dark:border-amber-900/50 shadow-sm space-y-3"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-mono font-bold text-slate-400">#{startIndex + idx + 1}</span>
+                                    <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs">{errStudent.reg_no}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
+                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.dept}</span>
+                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.year}</span>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">{errStudent.name}</h4>
+                                  <div className="mt-1.5">
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/60">
+                                      {!errStudent.username
+                                        ? 'Missing LeetCode Username Handle'
+                                        : errStudent.status === 'USERNAME_NOT_FOUND'
+                                          ? 'Username Not Found on LeetCode'
+                                          : errStudent.status === 'FETCH_ERROR'
+                                            ? 'LeetCode API Fetch Error'
+                                            : 'Invalid LeetCode Handle / API Error'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  onClick={() => handleOpenEditStudent(errStudent)}
+                                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer active:scale-95 flex items-center justify-center space-x-1.5"
+                                >
+                                  <span>Add Username</span>
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {/* Desktop View: Full-width Table */}
+                        <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-navy-950 text-white font-black uppercase">
+                              <tr>
+                                <th className="px-4 py-3 text-center">#</th>
+                                <th className="px-4 py-3">Register No</th>
+                                <th className="px-4 py-3">Student Name</th>
+                                <th className="px-4 py-3 text-center">Dept</th>
+                                <th className="px-4 py-3 text-center">Year</th>
+                                <th className="px-4 py-3">Root Cause / Issue</th>
+                                <th className="px-4 py-3 text-center">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                              {totalErrorCount === 0 ? (
+                                <tr>
+                                  <td colSpan={7} className="p-8 text-center text-slate-500 font-bold">
+                                    No data quality errors found for active filter scope ({selectedDeptFilter} • {selectedYearFilter} Year).
+                                  </td>
+                                </tr>
+                              ) : (
+                                paginatedErrorRows.map((errStudent, idx) => (
+                                  <tr key={errStudent.reg_no || errStudent.id || idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
+                                    <td className="px-4 py-2.5 text-center text-slate-400 font-mono font-bold">
+                                      {startIndex + idx + 1}
+                                    </td>
+                                    <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">
+                                      {errStudent.reg_no}
+                                    </td>
+                                    <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">
+                                      {errStudent.name}
+                                    </td>
+                                    <td className="px-4 py-2.5 text-center font-bold">
+                                      {errStudent.dept}
+                                    </td>
+                                    <td className="px-4 py-2.5 text-center text-slate-500">
+                                      {errStudent.year}
+                                    </td>
+                                    <td className="px-4 py-2.5 text-slate-500">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                        {!errStudent.username
+                                          ? 'Missing LeetCode Username Handle'
+                                          : errStudent.status === 'USERNAME_NOT_FOUND'
+                                            ? 'Username Not Found on LeetCode'
+                                            : errStudent.status === 'FETCH_ERROR'
+                                              ? 'LeetCode API Fetch Error'
+                                              : 'Invalid LeetCode Handle / API Error'}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-2.5 text-center">
+                                      <button
+                                        onClick={() => handleOpenEditStudent(errStudent)}
+                                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+                                      >
+                                        Add Username
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Bottom Pagination Controls */}
+                        {totalErrorCount > 0 && (
+                          <div className="flex items-center justify-between flex-wrap gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                            <span className="text-slate-500 font-bold">
+                              Showing <b className="text-slate-800 dark:text-slate-200">{startIndex + 1}</b> to <b className="text-slate-800 dark:text-slate-200">{Math.min(totalErrorCount, startIndex + pageSize)}</b> of <b className="text-amber-600 dark:text-amber-400">{totalErrorCount}</b> data error records
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                disabled={currentErrorPage <= 1}
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                              >
+                                ‹ Previous
+                              </button>
+                              <span className="px-2.5 py-1 text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
+                                Page {currentErrorPage} of {totalErrorPages}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={currentErrorPage >= totalErrorPages}
+                                onClick={() => setCurrentPage(p => Math.min(totalErrorPages, p + 1))}
+                                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                              >
+                                Next ›
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Tab 4: Post-9:30 AM Activity Solvers Report */}
+              {subTab === 'post_930_activity' && (
+                <div className="animate-fade-in">
+                  <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading solvers report...</div>}>
+                    <Post930SolversView />
+                  </React.Suspense>
                 </div>
               )}
             </div>
           )}
 
-          {/* Tab 2: Department & Academic Year Matrix Breakdown */}
-          {subTab === 'dept_year' && (
-            <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                    Department & Academic Year Aggregation Breakdown
-                  </h4>
-                </div>
-                <span className="text-[11px] font-bold text-slate-400">Single-Source-of-Truth Aggregation</span>
-              </div>
+          {/* Interactive Report Preview Modal — Auto-fitted Viewport Card (Matches Student Modal) */}
+          {showPreviewModal && (
+            <div
+              className="modal-overlay-responsive animate-modal-backdrop"
+              onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
+            >
+              <div className="modal-container-responsive mobile-responsive-modal max-w-5xl bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl rounded-b-none sm:rounded-b-3xl shadow-lg border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up-drawer sm:animate-modal-content">
 
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto -mx-1 px-1 touch-pan-x overscroll-x-contain">
-                <table className="w-full min-w-[700px] text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider">
-                      <th className="py-2.5 px-3">Segment / Category</th>
-                      <th className="py-2.5 px-3 text-center">Total</th>
-                      <th className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Public</th>
-                      <th className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400">Virtual</th>
-                      <th className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400">Not Attended</th>
-                      <th className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">Errors</th>
-                      <th className="py-2.5 px-3 text-right">Participation %</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 font-bold">
-                    {/* Department breakdown rows */}
-                    {departments.map((dept, index) => {
-                      const deptCode = dept.code;
-                      const deptNorm = normalizeDepartment(dept.code || dept.name);
-
-                      let dStats = { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
-
-                      if (departmentStats && typeof departmentStats === 'object') {
-                        for (const [key, val] of Object.entries(departmentStats)) {
-                          if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
-                            const dVal: any = val;
-                            dStats = {
-                              total: Number(dVal?.total || 0),
-                              public: Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0),
-                              virtual: Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0),
-                              not_attended: Number(dVal?.not_attended ?? dVal?.notAttended ?? 0),
-                              errors: Number(dVal?.errors ?? dVal?.totalErrors ?? dVal?.dataErrors ?? 0)
-                            };
-                            break;
-                          }
-                        }
-                      }
-
-                      if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
-                        const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
-                        const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-                        if (deptStudents.length > 0) {
-                          const tot = deptStudents.length;
-                          const pub = deptStudents.filter((s: any) => {
-                            const st = (s.participation_status || s.status || '').toUpperCase();
-                            return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED';
-                          }).length;
-                          const virt = deptStudents.filter((s: any) => {
-                            const st = (s.participation_status || s.status || '').toUpperCase();
-                            return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
-                          }).length;
-                          const notAtt = deptStudents.filter((s: any) => {
-                            const st = (s.participation_status || s.status || '').toUpperCase();
-                            return st === 'PUBLIC_NOT_ATTENDED' || st === 'NOT_ATTENDED';
-                          }).length;
-                          const errs = deptStudents.filter((s: any) => {
-                            const st = (s.participation_status || s.status || '').toUpperCase();
-                            return st === 'DATA_ERROR' || st === 'SOURCE_ERROR' || st === 'CONFLICT';
-                          }).length;
-                          dStats = { total: dStats.total || tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
-                        }
-                      }
-
-                      if (dStats.total === 0 && globalStudents.length > 0) {
-                        const deptGlobal = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-                        dStats.total = deptGlobal.length;
-                      }
-
-                      const tot = dStats.total || 0;
-                      const pub = dStats.public || 0;
-                      const virt = dStats.virtual || 0;
-                      const errs = dStats.errors || 0;
-                      let notAtt = dStats.not_attended || 0;
-                      if (notAtt === 0 && tot > (pub + virt + errs)) {
-                        notAtt = tot - (pub + virt + errs);
-                      }
-                      const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
-
-                      const dotColors = ['bg-indigo-500', 'bg-teal-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500'];
-                      const dotColor = dotColors[index % dotColors.length];
-
-                      return (
-                        <tr key={deptCode} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
-                          <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
-                            <div className="flex items-center gap-2">
-                              <span className={`w-2.5 h-2.5 rounded-full ${dotColor} shrink-0`}></span>
-                              <span>Department: {dept.name}</span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
-                          <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
-                          <td className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400 font-black">{virt}</td>
-                          <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
-                          <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
-                          <td className="py-2.5 px-3 text-right text-indigo-600 dark:text-indigo-400 font-black">{pct}%</td>
-                        </tr>
-                      );
-                    })}
-
-                    {/* Academic Year breakdown rows */}
-                    {['II', 'III', 'IV'].map((yr) => {
-                      const normY = (y: any): string => {
-                        if (!y) return '';
-                        const str = String(y).toUpperCase().trim();
-                        if (str.includes('2') || str.includes('II')) return 'II';
-                        if (str.includes('3') || str.includes('III')) return 'III';
-                        if (str.includes('4') || str.includes('IV')) return 'IV';
-                        if (str.includes('1') || str.includes('I')) return 'I';
-                        return str;
-                      };
-                      let yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
-                      if (yStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0 || globalStudents?.length > 0)) {
-                        const pool = matrixRows.length > 0 ? matrixRows : (cachedStudents?.length > 0 ? cachedStudents : globalStudents);
-                        const yrNorm = normY(yr);
-                        const yrStudents = pool.filter((s: any) => normY(s.year || s.year_level || s.academic_year) === yrNorm);
-                        if (yrStudents.length > 0) {
-                          const t = yrStudents.length;
-                          const p = yrStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                          const v = yrStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                          const e = yrStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                          const n = Math.max(0, t - (p + v + e));
-                          yStats = { total: t, public: p, virtual: v, not_attended: n, errors: e };
-                        }
-                      }
-                      const tot = yStats.total || 0;
-                      const pub = yStats.public || 0;
-                      const virt = yStats.virtual || 0;
-                      const errs = yStats.errors || 0;
-                      let notAtt = yStats.not_attended || 0;
-                      if (notAtt === 0 && tot > (pub + virt + errs)) {
-                        notAtt = tot - (pub + virt + errs);
-                      }
-                      const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
-
-                      return (
-                        <tr key={yr} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 bg-slate-50/40 dark:bg-navy-950/20">
-                          <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
-                            <div className="flex items-center gap-2">
-                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
-                              <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
-                          <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
-                          <td className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400 font-black">{virt}</td>
-                          <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
-                          <td className="py-2.5 px-3 text-center text-amber-600 dark:text-amber-400">{errs}</td>
-                          <td className="py-2.5 px-3 text-right text-purple-600 dark:text-purple-400 font-black">{pct}%</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Native Card View (Zero Horizontal Scroll on mobile) */}
-              <div className="block md:hidden space-y-3">
-                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 pb-1">
-                  Departments ({departments.length})
-                </div>
-                <div className="grid grid-cols-1 gap-2.5">
-                  {departments.map((dept, index) => {
-                    const deptCode = dept.code;
-                    const deptNorm = normalizeDepartment(dept.code || dept.name);
-                    let dStats = { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
-
-                    if (departmentStats && typeof departmentStats === 'object') {
-                      for (const [key, val] of Object.entries(departmentStats)) {
-                        if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
-                          const dVal: any = val;
-                          dStats = {
-                            total: Number(dVal?.total || 0),
-                            public: Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0),
-                            virtual: Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0),
-                            not_attended: Number(dVal?.not_attended ?? dVal?.notAttended ?? 0),
-                            errors: Number(dVal?.errors ?? dVal?.totalErrors ?? dVal?.dataErrors ?? 0)
-                          };
-                          break;
-                        }
-                      }
-                    }
-
-                    if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
-                      const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
-                      const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-                      if (deptStudents.length > 0) {
-                        const tot = deptStudents.length;
-                        const pub = deptStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        const virt = deptStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        const notAtt = deptStudents.filter((s: any) => ['PUBLIC_NOT_ATTENDED', 'NOT_ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        const errs = deptStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        dStats = { total: tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
-                      }
-                    }
-
-                    const tot = dStats.total || 0;
-                    const pub = dStats.public || 0;
-                    const virt = dStats.virtual || 0;
-                    const errs = dStats.errors || 0;
-                    const notAtt = dStats.not_attended || Math.max(0, tot - (pub + virt + errs));
-                    const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
-
-                    return (
-                      <div key={deptCode} className="p-3.5 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-900/60 shadow-xs space-y-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-black text-slate-900 dark:text-white truncate">
-                            {dept.name}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
-                            {pct}% Attended
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-5 gap-1.5 text-center text-[10.5px] font-mono">
-                          <div className="p-1 rounded-lg bg-slate-100 dark:bg-navy-800">
-                            <span className="block text-[8px] font-bold text-slate-400 uppercase">Total</span>
-                            <span className="font-black text-slate-800 dark:text-slate-200">{tot}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                            <span className="block text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Live</span>
-                            <span className="font-black text-emerald-600 dark:text-emerald-400">{pub}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                            <span className="block text-[8px] font-bold text-purple-600 dark:text-purple-400 uppercase">Virt</span>
-                            <span className="font-black text-purple-600 dark:text-purple-400">{virt}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                            <span className="block text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Abs</span>
-                            <span className="font-black text-rose-600 dark:text-rose-400">{notAtt}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                            <span className="block text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Err</span>
-                            <span className="font-black text-amber-600 dark:text-amber-400">{errs}</span>
-                          </div>
-                        </div>
+                {/* A. SLEEK GRADIENT HEADER (Matches Image 2) */}
+                <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30">
+                      <FileSpreadsheet className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                        <h3 className="text-base sm:text-lg font-black text-white tracking-tight truncate">
+                          Report Live Preview
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                          Verified Dataset
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 font-mono">
+                          {activeSessionObj?.contestName || 'Weekly Contest'}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-
-                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 pt-2 pb-1">
-                  Academic Years
-                </div>
-                <div className="grid grid-cols-1 gap-2.5">
-                  {['II', 'III', 'IV'].map((yr) => {
-                    const normY = (y: any): string => {
-                      if (!y) return '';
-                      const str = String(y).toUpperCase().trim();
-                      if (str.includes('2') || str.includes('II')) return 'II';
-                      if (str.includes('3') || str.includes('III')) return 'III';
-                      if (str.includes('4') || str.includes('IV')) return 'IV';
-                      return str;
-                    };
-                    let yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
-                    if (yStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0 || globalStudents?.length > 0)) {
-                      const pool = matrixRows.length > 0 ? matrixRows : (cachedStudents?.length > 0 ? cachedStudents : globalStudents);
-                      const yrNorm = normY(yr);
-                      const yrStudents = pool.filter((s: any) => normY(s.year || s.year_level || s.academic_year) === yrNorm);
-                      if (yrStudents.length > 0) {
-                        const t = yrStudents.length;
-                        const p = yrStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        const v = yrStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        const e = yrStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
-                        const n = Math.max(0, t - (p + v + e));
-                        yStats = { total: t, public: p, virtual: v, not_attended: n, errors: e };
-                      }
-                    }
-                    const tot = yStats.total || 0;
-                    const pub = yStats.public || 0;
-                    const virt = yStats.virtual || 0;
-                    const errs = yStats.errors || 0;
-                    const notAtt = yStats.not_attended || Math.max(0, tot - (pub + virt + errs));
-                    const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
-
-                    return (
-                      <div key={yr} className="p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-900/50 bg-purple-50/30 dark:bg-purple-950/20 shadow-xs space-y-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-black text-purple-900 dark:text-purple-200 truncate">
-                            Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})
-                          </span>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shrink-0">
-                            {pct}%
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-5 gap-1.5 text-center text-[10.5px] font-mono">
-                          <div className="p-1 rounded-lg bg-white/60 dark:bg-navy-900">
-                            <span className="block text-[8px] font-bold text-slate-400 uppercase">Total</span>
-                            <span className="font-black text-slate-800 dark:text-slate-200">{tot}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                            <span className="block text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Live</span>
-                            <span className="font-black text-emerald-600 dark:text-emerald-400">{pub}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                            <span className="block text-[8px] font-bold text-purple-600 dark:text-purple-400 uppercase">Virt</span>
-                            <span className="font-black text-purple-600 dark:text-purple-400">{virt}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                            <span className="block text-[8px] font-bold text-rose-600 dark:text-rose-400 uppercase">Abs</span>
-                            <span className="font-black text-rose-600 dark:text-rose-400">{notAtt}</span>
-                          </div>
-                          <div className="p-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                            <span className="block text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase">Err</span>
-                            <span className="font-black text-amber-600 dark:text-amber-400">{errs}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 3: Itemized Data Quality Error Board */}
-          {subTab === 'error_board' && (() => {
-            const errorRows = matrixRows.filter(r => {
-              const st = (r.status || r.participation_status || '').toString().toUpperCase();
-              const u = (r.username || '').toString().trim();
-              const isMissingUsername = !u || u === 'USERNAME_NOT_FOUND' || u === 'UNLINKED' || u === 'NO_HANDLE' || u === 'NONE' || u === 'NULL';
-              return (
-                isMissingUsername ||
-                [
-                  'USERNAME_NOT_FOUND', 'INVALID_USERNAME',
-                  'FETCH_FAILED', 'FETCH_ERROR', 'DATA_ERROR',
-                  'DATA_MISMATCH', 'CONFLICT',
-                  'AUTH_REQUIRED', 'BLOCKED', 'SOURCE_UNAVAILABLE',
-                  'SOURCE_ERROR', 'ERROR', 'INVALID', 'FAILED'
-                ].includes(st) ||
-                r.participation_status === 'DATA_ERROR'
-              );
-            });
-
-            const totalErrorCount = errorRows.length;
-            const totalErrorPages = Math.ceil(totalErrorCount / pageSize) || 1;
-            const currentErrorPage = Math.min(currentPage, totalErrorPages);
-            const startIndex = (currentErrorPage - 1) * pageSize;
-            const paginatedErrorRows = errorRows.slice(startIndex, startIndex + pageSize);
-
-            return (
-              <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-6 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/80">
-                  <div>
-                    <h3 className="text-sm font-black uppercase text-amber-600 dark:text-amber-400 flex items-center space-x-2">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>Itemized Data Quality Errors ({totalErrorCount} Students)</span>
-                    </h3>
-                    <p className="text-xs text-slate-500 font-bold mt-0.5">
-                      Root Cause: Missing or invalid LeetCode username handles. API failure is NEVER falsely marked as Not Attended.
-                    </p>
+                      <p className="text-xs text-brand-200/80 font-medium truncate mt-0.5">
+                        Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {filteredMatrixRows.length} Students
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Page Size Selector */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                      <span className="px-2 text-slate-400 uppercase text-[9px] font-black">Rows:</span>
-                      {[10, 20, 50, 100, 200].map(sz => (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => { setPageSize(sz); setCurrentPage(1); }}
-                          className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${pageSize === sz ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-slate-200 dark:hover:bg-navy-800'}`}
-                        >
-                          {sz}
-                        </button>
-                      ))}
-                    </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreviewModal(false)}
+                    aria-label="Close report preview"
+                    className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Close</span>
+                  </button>
+                </div>
 
-                    {/* Top Pagination Controls */}
-                    {totalErrorCount > 0 && (
-                      <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                        <button
-                          type="button"
-                          disabled={currentErrorPage <= 1}
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                        >
-                          ‹ Prev
-                        </button>
-                        <span className="text-[10px] font-mono font-black text-amber-600 dark:text-amber-400 px-1.5">
-                          {currentErrorPage}/{totalErrorPages}
-                        </span>
-                        <button
-                          type="button"
-                          disabled={currentErrorPage >= totalErrorPages}
-                          onClick={() => setCurrentPage(p => Math.min(totalErrorPages, p + 1))}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                        >
-                          Next ›
-                        </button>
-                      </div>
-                    )}
-
-                    <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-300">
-                      Click "Add Username" to link profile
+                {/* B. COMPACT METRICS & FILTER SUMMARY BAR */}
+                <div className="px-4 py-2.5 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
+                  {/* Quick Metrics Badges */}
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/50 font-black text-[11px]">
+                      Roster: {filteredMatrixRows.length}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
+                      Public: {stats.attendedRows}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 font-black text-[11px]">
+                      Not Attended: {stats.notAttendedRows}
                     </span>
                   </div>
+
+                  {/* Active Filter Badges */}
+                  <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 text-[11px] font-bold text-slate-500">
+                    <span>Filters:</span>
+                    <span className="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">{selectedDeptFilter}</span>
+                    <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-bold">{selectedYearFilter}</span>
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">{selectedAttendanceFilter}</span>
+                  </div>
                 </div>
 
-                {loading ? (
-                  <div className="p-8 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse flex items-center justify-center space-x-2">
-                    <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
-                    <span>Loading data quality error records for scope ({selectedDeptFilter} • {selectedYearFilter} Year)...</span>
-                  </div>
-                ) : (
-                  <>
-                    {/* Mobile View: Clean No-Scroll Card Stack */}
-                    <div className="md:hidden space-y-3">
-                      {totalErrorCount === 0 ? (
-                        <div className="p-6 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                          No data quality errors found for active filter scope ({selectedDeptFilter} • {selectedYearFilter} Year).
-                        </div>
-                      ) : (
-                        paginatedErrorRows.map((errStudent, idx) => (
-                          <div 
-                            key={errStudent.reg_no || errStudent.id || idx}
-                            className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-amber-200/80 dark:border-amber-900/50 shadow-sm space-y-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono font-bold text-slate-400">#{startIndex + idx + 1}</span>
-                                <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs">{errStudent.reg_no}</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
-                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.dept}</span>
-                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.year}</span>
-                              </div>
-                            </div>
-
-                            <div>
-                              <h4 className="font-bold text-slate-900 dark:text-white text-sm">{errStudent.name}</h4>
-                              <div className="mt-1.5">
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/60">
-                                  {!errStudent.username 
-                                    ? 'Missing LeetCode Username Handle' 
-                                    : errStudent.status === 'USERNAME_NOT_FOUND' 
-                                    ? 'Username Not Found on LeetCode' 
-                                    : errStudent.status === 'FETCH_ERROR' 
-                                    ? 'LeetCode API Fetch Error' 
-                                    : 'Invalid LeetCode Handle / API Error'}
-                                </span>
-                              </div>
-                            </div>
-
-                            <button
-                              onClick={() => handleOpenEditStudent(errStudent)}
-                              className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer active:scale-95 flex items-center justify-center space-x-1.5"
-                            >
-                              <span>Add Username</span>
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    {/* Desktop View: Full-width Table */}
-                    <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-navy-950 text-white font-black uppercase">
+                {/* C. SCROLLABLE PREVIEW TABLE */}
+                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    {/* Desktop Preview Table */}
+                    <div className="hidden md:block overflow-x-auto touch-pan-x overscroll-x-contain">
+                      <table className="w-full min-w-[780px] text-left text-xs">
+                        <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
                           <tr>
-                            <th className="px-4 py-3 text-center">#</th>
-                            <th className="px-4 py-3">Register No</th>
-                            <th className="px-4 py-3">Student Name</th>
-                            <th className="px-4 py-3 text-center">Dept</th>
-                            <th className="px-4 py-3 text-center">Year</th>
-                            <th className="px-4 py-3">Root Cause / Issue</th>
-                            <th className="px-4 py-3 text-center">Action</th>
+                            <th className="px-3 py-2 text-center w-12">S.No</th>
+                            <th className="px-3 py-2">Reg No</th>
+                            <th className="px-3 py-2">Student Name</th>
+                            <th className="px-3 py-2 text-center">Dept</th>
+                            <th className="px-3 py-2 text-center">Year</th>
+                            <th className="px-3 py-2 text-center">Status</th>
+                            <th className="px-2 py-2 text-center w-10">Q1</th>
+                            <th className="px-2 py-2 text-center w-10">Q2</th>
+                            <th className="px-2 py-2 text-center w-10">Q3</th>
+                            <th className="px-2 py-2 text-center w-10">Q4</th>
+                            <th className="px-3 py-2 text-right">Contest Solved</th>
+                            <th className="px-2 py-2 text-right">Score</th>
+                            <th className="px-3 py-2 text-right">Contest Rank</th>
+                            <th className="px-3 py-2 text-right">Contest Rating</th>
+                            <th className="px-3 py-2 text-right">Global Rank</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                          {totalErrorCount === 0 ? (
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
+                          {previewPaginatedRows.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="p-8 text-center text-slate-500 font-bold">
-                                No data quality errors found for active filter scope ({selectedDeptFilter} • {selectedYearFilter} Year).
+                              <td colSpan={15} className="p-8 text-center text-slate-500 font-bold">
+                                No matching student records found for the active filter selection.
                               </td>
                             </tr>
                           ) : (
-                            paginatedErrorRows.map((errStudent, idx) => (
-                              <tr key={errStudent.reg_no || errStudent.id || idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
-                                <td className="px-4 py-2.5 text-center text-slate-400 font-mono font-bold">
-                                  {startIndex + idx + 1}
-                                </td>
-                                <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">
-                                  {errStudent.reg_no}
-                                </td>
-                                <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">
-                                  {errStudent.name}
-                                </td>
-                                <td className="px-4 py-2.5 text-center font-bold">
-                                  {errStudent.dept}
-                                </td>
-                                <td className="px-4 py-2.5 text-center text-slate-500">
-                                  {errStudent.year}
-                                </td>
-                                <td className="px-4 py-2.5 text-slate-500">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                                    {!errStudent.username 
-                                      ? 'Missing LeetCode Username Handle' 
-                                      : errStudent.status === 'USERNAME_NOT_FOUND' 
-                                      ? 'Username Not Found on LeetCode' 
-                                      : errStudent.status === 'FETCH_ERROR' 
-                                      ? 'LeetCode API Fetch Error' 
-                                      : 'Invalid LeetCode Handle / API Error'}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-2.5 text-center">
-                                  <button
-                                    onClick={() => handleOpenEditStudent(errStudent)}
-                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
-                                  >
-                                    Add Username
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
+                            previewPaginatedRows.map((r, idx) => {
+                              const actualIdx = (previewPage - 1) * previewPageSize + idx;
+                              const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
+                              const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
+                              const isAttended = isPublicAttended || isVirtualAttended;
+                              return (
+                                <tr key={actualIdx} className="hover:bg-brand-50/40 dark:hover:bg-navy-800/40 transition-colors">
+                                  <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
+                                  <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
+                                  <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200 uppercase">{(r.name || '').toUpperCase()}</td>
+                                  <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
+                                  <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
+                                  <td className="px-3 py-1.5 text-center">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
+                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                      : isVirtualAttended
+                                        ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
+                                        : r.status === 'USERNAME_NOT_FOUND'
+                                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                                      }`}>
+                                      {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
+                                    </span>
+                                  </td>
+                                  <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                                  <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                                  <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                                  <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
+                                  <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? 0) : 0}</td>
+                                  <td className="px-2 py-1.5 text-right font-bold text-indigo-600 dark:text-indigo-400">{isAttended ? (r.score ?? 0) : 0}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">{isAttended && (r.contest_rank || r.rank) && String(r.contest_rank || r.rank) !== '—' ? `#${Number(String(r.contest_rank || r.rank).replace(/[^0-9]/g, '')).toLocaleString()}` : '—'}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{r.contest_rating && String(r.contest_rating) !== 'Unrated' && String(r.contest_rating) !== '—' ? (typeof r.contest_rating === 'number' ? Math.round(r.contest_rating) : r.contest_rating) : (r.rating && String(r.rating) !== 'Unrated' && String(r.rating) !== '—' ? (typeof r.rating === 'number' ? Math.round(r.rating) : r.rating) : 'Unrated')}</td>
+                                  <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-600 dark:text-slate-400">{r.contest_global_rank && String(r.contest_global_rank) !== 'Unrated' ? r.contest_global_rank : (r.global_rank && String(r.global_rank) !== 'Unrated' ? r.global_rank : 'Unrated')}</td>
+                                </tr>
+                              );
+                            })
                           )}
                         </tbody>
                       </table>
                     </div>
 
-                    {/* Bottom Pagination Controls */}
-                    {totalErrorCount > 0 && (
-                      <div className="flex items-center justify-between flex-wrap gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-                        <span className="text-slate-500 font-bold">
-                          Showing <b className="text-slate-800 dark:text-slate-200">{startIndex + 1}</b> to <b className="text-slate-800 dark:text-slate-200">{Math.min(totalErrorCount, startIndex + pageSize)}</b> of <b className="text-amber-600 dark:text-amber-400">{totalErrorCount}</b> data error records
-                        </span>
-
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            disabled={currentErrorPage <= 1}
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                          >
-                            ‹ Previous
-                          </button>
-                          <span className="px-2.5 py-1 text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
-                            Page {currentErrorPage} of {totalErrorPages}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={currentErrorPage >= totalErrorPages}
-                            onClick={() => setCurrentPage(p => Math.min(totalErrorPages, p + 1))}
-                            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                          >
-                            Next ›
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Tab 4: Post-9:30 AM Activity Solvers Report */}
-          {subTab === 'post_930_activity' && (
-            <div className="animate-fade-in">
-              <React.Suspense fallback={<div className="p-12 text-center text-slate-400 animate-pulse">Loading solvers report...</div>}>
-                <Post930SolversView />
-              </React.Suspense>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Interactive Report Preview Modal — Auto-fitted Viewport Card (Matches Student Modal) */}
-      {showPreviewModal && (
-        <div
-          className="modal-overlay-responsive animate-modal-backdrop"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
-        >
-          <div className="modal-container-responsive mobile-responsive-modal max-w-5xl bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl rounded-b-none sm:rounded-b-3xl shadow-lg border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up-drawer sm:animate-modal-content">
-
-            {/* A. SLEEK GRADIENT HEADER (Matches Image 2) */}
-            <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center space-x-3 min-w-0">
-                <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30">
-                  <FileSpreadsheet className="w-5 h-5 text-white" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                    <h3 className="text-base sm:text-lg font-black text-white tracking-tight truncate">
-                      Report Live Preview
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                      Verified Dataset
-                    </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 font-mono">
-                      {activeSessionObj?.contestName || 'Weekly Contest'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-brand-200/80 font-medium truncate mt-0.5">
-                    Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {filteredMatrixRows.length} Students
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowPreviewModal(false)}
-                aria-label="Close report preview"
-                className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm"
-              >
-                <X className="w-4 h-4" />
-                <span>Close</span>
-              </button>
-            </div>
-
-            {/* B. COMPACT METRICS & FILTER SUMMARY BAR */}
-            <div className="px-4 py-2.5 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
-              {/* Quick Metrics Badges */}
-              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/50 font-black text-[11px]">
-                  Roster: {filteredMatrixRows.length}
-                </span>
-                <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
-                  Public: {stats.attendedRows}
-                </span>
-                <span className="px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 font-black text-[11px]">
-                  Not Attended: {stats.notAttendedRows}
-                </span>
-              </div>
-
-              {/* Active Filter Badges */}
-              <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 text-[11px] font-bold text-slate-500">
-                <span>Filters:</span>
-                <span className="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">{selectedDeptFilter}</span>
-                <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-bold">{selectedYearFilter}</span>
-                <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">{selectedAttendanceFilter}</span>
-              </div>
-            </div>
-
-            {/* C. SCROLLABLE PREVIEW TABLE */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                {/* Desktop Preview Table */}
-                <div className="hidden md:block overflow-x-auto touch-pan-x overscroll-x-contain">
-                  <table className="w-full min-w-[780px] text-left text-xs">
-                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
-                      <tr>
-                        <th className="px-3 py-2 text-center w-12">S.No</th>
-                        <th className="px-3 py-2">Reg No</th>
-                        <th className="px-3 py-2">Student Name</th>
-                        <th className="px-3 py-2 text-center">Dept</th>
-                        <th className="px-3 py-2 text-center">Year</th>
-                        <th className="px-3 py-2 text-center">Status</th>
-                        <th className="px-2 py-2 text-center w-10">Q1</th>
-                        <th className="px-2 py-2 text-center w-10">Q2</th>
-                        <th className="px-2 py-2 text-center w-10">Q3</th>
-                        <th className="px-2 py-2 text-center w-10">Q4</th>
-                        <th className="px-3 py-2 text-right">Contest Solved</th>
-                        <th className="px-2 py-2 text-right">Score</th>
-                        <th className="px-3 py-2 text-right">Contest Rank</th>
-                        <th className="px-3 py-2 text-right">Contest Rating</th>
-                        <th className="px-3 py-2 text-right">Global Rank</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
+                    {/* Mobile Preview Cards */}
+                    <div className="block md:hidden p-2.5 space-y-2">
                       {previewPaginatedRows.length === 0 ? (
-                        <tr>
-                          <td colSpan={15} className="p-8 text-center text-slate-500 font-bold">
-                            No matching student records found for the active filter selection.
-                          </td>
-                        </tr>
+                        <div className="p-6 text-center text-slate-500 font-bold text-xs">
+                          No matching student records found.
+                        </div>
                       ) : (
                         previewPaginatedRows.map((r, idx) => {
                           const actualIdx = (previewPage - 1) * previewPageSize + idx;
                           const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
                           const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
-                          const isAttended = isPublicAttended || isVirtualAttended;
                           return (
-                            <tr key={actualIdx} className="hover:bg-brand-50/40 dark:hover:bg-navy-800/40 transition-colors">
-                              <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
-                              <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
-                              <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200 uppercase">{(r.name || '').toUpperCase()}</td>
-                              <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
-                              <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
-                              <td className="px-3 py-1.5 text-center">
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                  : isVirtualAttended
-                                    ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
-                                    : r.status === 'USERNAME_NOT_FOUND'
-                                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                            <div key={actualIdx} className="p-3 rounded-xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 text-xs space-y-1.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono font-bold text-slate-500 text-[11px]">#{actualIdx + 1} • {r.reg_no}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black ${isPublicAttended ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                                    isVirtualAttended ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
+                                      'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                                   }`}>
-                                  {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
+                                  {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : 'NOT ATTENDED'}
                                 </span>
-                              </td>
-                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                              <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-400 font-bold">0</span>}</td>
-                              <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? 0) : 0}</td>
-                              <td className="px-2 py-1.5 text-right font-bold text-indigo-600 dark:text-indigo-400">{isAttended ? (r.score ?? 0) : 0}</td>
-                              <td className="px-3 py-1.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">{isAttended && (r.contest_rank || r.rank) && String(r.contest_rank || r.rank) !== '—' ? `#${Number(String(r.contest_rank || r.rank).replace(/[^0-9]/g, '')).toLocaleString()}` : '—'}</td>
-                              <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{r.contest_rating && String(r.contest_rating) !== 'Unrated' && String(r.contest_rating) !== '—' ? (typeof r.contest_rating === 'number' ? Math.round(r.contest_rating) : r.contest_rating) : (r.rating && String(r.rating) !== 'Unrated' && String(r.rating) !== '—' ? (typeof r.rating === 'number' ? Math.round(r.rating) : r.rating) : 'Unrated')}</td>
-                              <td className="px-3 py-1.5 text-right font-mono font-bold text-slate-600 dark:text-slate-400">{r.contest_global_rank && String(r.contest_global_rank) !== 'Unrated' ? r.contest_global_rank : (r.global_rank && String(r.global_rank) !== 'Unrated' ? r.global_rank : 'Unrated')}</td>
-                            </tr>
+                              </div>
+                              <p className="font-black text-slate-900 dark:text-white uppercase truncate">{r.name}</p>
+                              <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-200/60 dark:border-navy-800">
+                                <span className="text-slate-600 dark:text-slate-400">{r.dept} • {r.year} Year</span>
+                                <span className="font-black text-emerald-600 dark:text-emerald-400">{r.total_solved ?? 0}/4 Solved</span>
+                              </div>
+                            </div>
                           );
                         })
                       )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Preview Cards */}
-                <div className="block md:hidden p-2.5 space-y-2">
-                  {previewPaginatedRows.length === 0 ? (
-                    <div className="p-6 text-center text-slate-500 font-bold text-xs">
-                      No matching student records found.
                     </div>
-                  ) : (
-                    previewPaginatedRows.map((r, idx) => {
-                      const actualIdx = (previewPage - 1) * previewPageSize + idx;
-                      const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'PUBLIC' || r.status === 'PUBLIC';
-                      const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
-                      return (
-                        <div key={actualIdx} className="p-3 rounded-xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 text-xs space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono font-bold text-slate-500 text-[11px]">#{actualIdx + 1} • {r.reg_no}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black ${
-                              isPublicAttended ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
-                              isVirtualAttended ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
-                              'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                            }`}>
-                              {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : 'NOT ATTENDED'}
-                            </span>
-                          </div>
-                          <p className="font-black text-slate-900 dark:text-white uppercase truncate">{r.name}</p>
-                          <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-200/60 dark:border-navy-800">
-                            <span className="text-slate-600 dark:text-slate-400">{r.dept} • {r.year} Year</span>
-                            <span className="font-black text-emerald-600 dark:text-emerald-400">{r.total_solved ?? 0}/4 Solved</span>
-                          </div>
-                        </div>
-                      );
-                    })
+                  </div>
+
+                  {/* Preview Pagination Toolbar */}
+                  {filteredMatrixRows.length > previewPageSize && (
+                    <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-slate-500">
+                      <span>Page {previewPage} of {previewTotalPages} ({totalRows} total)</span>
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          type="button"
+                          disabled={previewPage <= 1}
+                          onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
+                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                        >
+                          ‹ Prev
+                        </button>
+                        <button
+                          type="button"
+                          disabled={previewPage >= previewTotalPages}
+                          onClick={() => setPreviewPage(p => Math.min(previewTotalPages, p + 1))}
+                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                        >
+                          Next ›
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* Preview Pagination Toolbar */}
-              {filteredMatrixRows.length > previewPageSize && (
-                <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-slate-500">
-                  <span>Page {previewPage} of {previewTotalPages} ({totalRows} total)</span>
-                  <div className="flex items-center space-x-1.5">
+                {/* D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) */}
+                <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                  <span className="text-[11px] text-slate-500 font-bold font-mono">
+                    Nandha Engineering College • LeetCode Tracker
+                  </span>
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                     <button
-                      type="button"
-                      disabled={previewPage <= 1}
-                      onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
-                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                      onClick={() => downloadReportFile('excel')}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
                     >
-                      ‹ Prev
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span>Excel (.xlsx)</span>
                     </button>
                     <button
-                      type="button"
-                      disabled={previewPage >= previewTotalPages}
-                      onClick={() => setPreviewPage(p => Math.min(previewTotalPages, p + 1))}
-                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                      onClick={() => downloadReportFile('pdf')}
+                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
                     >
-                      Next ›
+                      <Download className="w-3.5 h-3.5" />
+                      <span>PDF (.pdf)</span>
+                    </button>
+                    <button
+                      onClick={() => downloadReportFile('word')}
+                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
+                    >
+                      <span>Word (.docx)</span>
+                    </button>
+                    <button
+                      onClick={() => downloadReportFile('zip')}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
+                    >
+                      <span>All (.zip)</span>
+                    </button>
+                    <button
+                      onClick={() => setShowPreviewModal(false)}
+                      className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer"
+                    >
+                      Done
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) */}
-            <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <span className="text-[11px] text-slate-500 font-bold font-mono">
-                Nandha Engineering College • LeetCode Tracker
-              </span>
-              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <button
-                  onClick={() => downloadReportFile('excel')}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Excel (.xlsx)</span>
-                </button>
-                <button
-                  onClick={() => downloadReportFile('pdf')}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>PDF (.pdf)</span>
-                </button>
-                <button
-                  onClick={() => downloadReportFile('word')}
-                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
-                >
-                  <span>Word (.docx)</span>
-                </button>
-                <button
-                  onClick={() => downloadReportFile('zip')}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
-                >
-                  <span>All (.zip)</span>
-                </button>
-                <button
-                  onClick={() => setShowPreviewModal(false)}
-                  className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer"
-                >
-                  Done
-                </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Interactive Report Email Dispatch Modal */}
-      {showEmailModal && (
-        <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col my-auto">
-            {/* Modal Header */}
-            <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
-              <div>
-                <h3 className="text-lg font-black flex items-center space-x-2">
-                  <Mail className="w-5 h-5 text-indigo-400" />
-                  <span>Dispatch Filtered Weekly Report</span>
-                </h3>
-                <p className="text-xs text-slate-300 font-bold mt-0.5">
-                  Sends the exact generated Excel report (<code className="text-indigo-300 font-mono">NEC_Weekly_Contest_{activeSessionObj?.contestName?.match(/\d+/)?.[0] || selectedSessionId}_PUBLIC.xlsx</code>)
-                </p>
-              </div>
-              <button
-                onClick={() => setShowEmailModal(false)}
-                className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
-              {/* Active Filter Scope Card */}
-              <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 space-y-2">
-                <div className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 tracking-wider">
-                  Report Scope & Target Roster
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
-                    Contest: <b className="text-slate-900 dark:text-white">{activeSessionObj?.contestName || 'Weekly Contest'}</b>
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
-                    Dept: <b className="text-indigo-600">{selectedDeptFilter}</b>
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
-                    Year: <b className="text-purple-600">{selectedYearFilter}</b>
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
-                    Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black">
-                    {matrixRows.length} Students Selected
-                  </span>
-                </div>
-              </div>
-
-              {/* Recipient Contacts */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Select Delivery Recipients ({selectedRecipients.length} selected)
-                  </label>
-                  <button
-                    onClick={() => {
-                      if (selectedRecipients.length === recipientsList.length) setSelectedRecipients([]);
-                      else setSelectedRecipients(recipientsList.map((r: any) => r.email));
-                    }}
-                    className="text-[11px] font-bold text-brand-600 hover:text-brand-700 cursor-pointer"
-                  >
-                    {selectedRecipients.length === recipientsList.length ? 'Deselect All' : 'Select All'}
-                  </button>
-                </div>
-
-                <div className="max-h-36 overflow-y-auto space-y-1.5 border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50 dark:bg-navy-950">
-                  {recipientsList.length === 0 ? (
-                    <p className="text-xs text-slate-500 font-bold py-2 text-center">
-                      No configured recipients found in database. You can send a test email below.
+          {/* Interactive Report Email Dispatch Modal */}
+          {showEmailModal && (
+            <div className="modal-overlay-responsive animate-modal-backdrop">
+              <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col my-auto">
+                {/* Modal Header */}
+                <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
+                  <div>
+                    <h3 className="text-lg font-black flex items-center space-x-2">
+                      <Mail className="w-5 h-5 text-indigo-400" />
+                      <span>Dispatch Filtered Weekly Report</span>
+                    </h3>
+                    <p className="text-xs text-slate-300 font-bold mt-0.5">
+                      Sends the exact generated Excel report (<code className="text-indigo-300 font-mono">NEC_Weekly_Contest_{activeSessionObj?.contestName?.match(/\d+/)?.[0] || selectedSessionId}_PUBLIC.xlsx</code>)
                     </p>
-                  ) : (
-                    recipientsList.map((r: any) => {
-                      const isChecked = selectedRecipients.includes(r.email);
-                      return (
-                        <label
-                          key={r.id}
-                          className="flex items-center space-x-2.5 text-xs p-1.5 rounded-lg hover:bg-white dark:hover:bg-navy-900 transition-colors"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              if (e.target.checked) setSelectedRecipients(prev => [...prev, r.email]);
-                              else setSelectedRecipients(prev => prev.filter(em => em !== r.email));
-                            }}
-                            className="rounded text-brand-600 focus:ring-brand-500"
-                          />
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{r.name}</span>
-                          <span className="text-slate-400 font-mono text-[11px]">({r.email})</span>
-                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 ml-auto">
-                            {r.role || 'HOD'}
-                          </span>
-                        </label>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              {/* Custom Note */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Executive Note / Remarks (Optional)
-                </label>
-                <textarea
-                  value={customEmailNote}
-                  onChange={(e) => setCustomEmailNote(e.target.value)}
-                  placeholder="e.g. Please review the department performance metrics from Sunday contest..."
-                  rows={2}
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 resize-none"
-                />
-              </div>
-
-              {/* Safe Test Section */}
-              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-2">
-                <div className="flex items-center space-x-1.5 text-xs font-black text-amber-800 dark:text-amber-300">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Run Safe Test (Single Recipient)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="email"
-                    value={testEmailInput}
-                    onChange={(e) => setTestEmailInput(e.target.value)}
-                    placeholder="Enter test recipient email (e.g. admin@nandha.edu.in)"
-                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-navy-950 border border-amber-300 dark:border-amber-700 rounded-lg text-slate-900 dark:text-white outline-none"
-                  />
+                  </div>
                   <button
-                    onClick={() => handleSendWeeklyEmail(true)}
-                    disabled={isSendingEmail}
-                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-black transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                    onClick={() => setShowEmailModal(false)}
+                    className="p-1 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs cursor-pointer"
                   >
-                    {isSendingEmail ? 'Sending...' : 'Send Test'}
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
+                  {/* Active Filter Scope Card */}
+                  <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 space-y-2">
+                    <div className="text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 tracking-wider">
+                      Report Scope & Target Roster
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
+                        Contest: <b className="text-slate-900 dark:text-white">{activeSessionObj?.contestName || 'Weekly Contest'}</b>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
+                        Dept: <b className="text-indigo-600">{selectedDeptFilter}</b>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
+                        Year: <b className="text-purple-600">{selectedYearFilter}</b>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
+                        Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black">
+                        {matrixRows.length} Students Selected
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Recipient Contacts */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Select Delivery Recipients ({selectedRecipients.length} selected)
+                      </label>
+                      <button
+                        onClick={() => {
+                          if (selectedRecipients.length === recipientsList.length) setSelectedRecipients([]);
+                          else setSelectedRecipients(recipientsList.map((r: any) => r.email));
+                        }}
+                        className="text-[11px] font-bold text-brand-600 hover:text-brand-700 cursor-pointer"
+                      >
+                        {selectedRecipients.length === recipientsList.length ? 'Deselect All' : 'Select All'}
+                      </button>
+                    </div>
+
+                    <div className="max-h-36 overflow-y-auto space-y-1.5 border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50 dark:bg-navy-950">
+                      {recipientsList.length === 0 ? (
+                        <p className="text-xs text-slate-500 font-bold py-2 text-center">
+                          No configured recipients found in database. You can send a test email below.
+                        </p>
+                      ) : (
+                        recipientsList.map((r: any) => {
+                          const isChecked = selectedRecipients.includes(r.email);
+                          return (
+                            <label
+                              key={r.id}
+                              className="flex items-center space-x-2.5 text-xs p-1.5 rounded-lg hover:bg-white dark:hover:bg-navy-900 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) setSelectedRecipients(prev => [...prev, r.email]);
+                                  else setSelectedRecipients(prev => prev.filter(em => em !== r.email));
+                                }}
+                                className="rounded text-brand-600 focus:ring-brand-500"
+                              />
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{r.name}</span>
+                              <span className="text-slate-400 font-mono text-[11px]">({r.email})</span>
+                              <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 ml-auto">
+                                {r.role || 'HOD'}
+                              </span>
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Custom Note */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Executive Note / Remarks (Optional)
+                    </label>
+                    <textarea
+                      value={customEmailNote}
+                      onChange={(e) => setCustomEmailNote(e.target.value)}
+                      placeholder="e.g. Please review the department performance metrics from Sunday contest..."
+                      rows={2}
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+                    />
+                  </div>
+
+                  {/* Safe Test Section */}
+                  <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-2">
+                    <div className="flex items-center space-x-1.5 text-xs font-black text-amber-800 dark:text-amber-300">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Run Safe Test (Single Recipient)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="email"
+                        value={testEmailInput}
+                        onChange={(e) => setTestEmailInput(e.target.value)}
+                        placeholder="Enter test recipient email (e.g. admin@nandha.edu.in)"
+                        className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-navy-950 border border-amber-300 dark:border-amber-700 rounded-lg text-slate-900 dark:text-white outline-none"
+                      />
+                      <button
+                        onClick={() => handleSendWeeklyEmail(true)}
+                        disabled={isSendingEmail}
+                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-black transition-all cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {isSendingEmail ? 'Sending...' : 'Send Test'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+                  <button
+                    onClick={() => setShowEmailModal(false)}
+                    className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleSendWeeklyEmail(false)}
+                    disabled={isSendingEmail || selectedRecipients.length === 0}
+                    className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-brand-500/20 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isSendingEmail ? 'Dispatching...' : `Dispatch Report to ${selectedRecipients.length} Recipient(s)`}</span>
                   </button>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Modal Footer */}
-            <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
-              <button
-                onClick={() => setShowEmailModal(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
+          {/* Viewport-Centered Sticky Floating Student Edit Overlay */}
+          <StudentEditOverlay
+            isOpen={Boolean(editingStudent)}
+            student={editingStudent}
+            onClose={() => setEditingStudent(null)}
+            onSaveSuccess={(updated) => {
+              setMatrixRows(prev => prev.map(row =>
+                (row.student_id === updated.id || row.id === updated.id)
+                  ? {
+                    ...row,
+                    student_name: updated.name,
+                    name: updated.name,
+                    section: updated.section,
+                    department: updated.department,
+                    is_active: updated.is_active,
+                    username: updated.username || row.username,
+                    status: updated.username ? 'SYNC_PENDING' : row.status,
+                    participation_status: updated.username ? 'PENDING' : row.participation_status
+                  }
+                  : row
+              ));
+              setEditingStudent(null);
+            }}
+          />
+
+          {/* Viewport-Centered Student Delete Confirmation Modal */}
+          {deletingStudent && (
+            <div
+              className="modal-overlay-responsive animate-fade-in"
+              onClick={(e) => {
+                if (e.target === e.currentTarget && !isDeletingStudent) setDeletingStudent(null);
+              }}
+            >
+              <div
+                className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+                onClick={(e) => e.stopPropagation()}
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleSendWeeklyEmail(false)}
-                disabled={isSendingEmail || selectedRecipients.length === 0}
-                className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-brand-500/20 transition-all cursor-pointer disabled:opacity-50"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>{isSendingEmail ? 'Dispatching...' : `Dispatch Report to ${selectedRecipients.length} Recipient(s)`}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+                  <Trash2 className="w-6 h-6" />
+                </div>
 
-      {/* Viewport-Centered Sticky Floating Student Edit Overlay */}
-      <StudentEditOverlay
-        isOpen={Boolean(editingStudent)}
-        student={editingStudent}
-        onClose={() => setEditingStudent(null)}
-        onSaveSuccess={(updated) => {
-          setMatrixRows(prev => prev.map(row => 
-            (row.student_id === updated.id || row.id === updated.id)
-              ? { 
-                  ...row, 
-                  student_name: updated.name, 
-                  name: updated.name,
-                  section: updated.section, 
-                  department: updated.department, 
-                  is_active: updated.is_active,
-                  username: updated.username || row.username,
-                  status: updated.username ? 'SYNC_PENDING' : row.status,
-                  participation_status: updated.username ? 'PENDING' : row.participation_status
-                } 
-              : row
-          ));
-          setEditingStudent(null);
-        }}
-      />
+                <div className="text-center space-y-1">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Deactivate Student Record?</h3>
+                  <p className="text-xs text-slate-500">
+                    Are you sure you want to deactivate <b className="text-slate-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
+                  </p>
+                </div>
 
-      {/* Viewport-Centered Student Delete Confirmation Modal */}
-      {deletingStudent && (
-        <div
-          className="modal-overlay-responsive animate-fade-in"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isDeletingStudent) setDeletingStudent(null);
-          }}
-        >
-          <div
-            className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
-              <Trash2 className="w-6 h-6" />
-            </div>
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
+                  This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
+                </div>
 
-            <div className="text-center space-y-1">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Deactivate Student Record?</h3>
-              <p className="text-xs text-slate-500">
-                Are you sure you want to deactivate <b className="text-slate-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
-              </p>
-            </div>
-
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
-              This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
-            </div>
-
-            <div className="flex items-center justify-end space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setDeletingStudent(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeleteStudent}
-                disabled={isDeletingStudent}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isDeletingStudent ? 'Deactivating...' : 'Confirm Deactivation'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Centered Application Notification Modal */}
-      <StatusNotificationModal
-        notification={notification}
-        onClose={() => setNotification(null)}
-      />
-
-      {/* Centered Institutional Authentication Required Modal */}
-      {showAuthRequiredModal && (
-        <div className="modal-overlay-responsive animate-fade-in">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
-              <Lock className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center justify-center gap-2">
-                <span>Authentication Required</span>
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed px-2">
-                The institutional contest resource requires authentication. Please authenticate and try Sync again.
-              </p>
-            </div>
-
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-[11.5px] text-amber-800 dark:text-amber-300 font-bold text-left space-y-1">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <span>Protected Institutional Operation</span>
+                <div className="flex items-center justify-end space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeletingStudent(null)}
+                    className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmDeleteStudent}
+                    disabled={isDeletingStudent}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isDeletingStudent ? 'Deactivating...' : 'Confirm Deactivation'}
+                  </button>
+                </div>
               </div>
-              <p className="text-[10.5px] font-normal text-amber-700 dark:text-amber-400">
-                Weekly contest synchronization updates official student rankings and requires verified administrative or faculty credentials.
-              </p>
             </div>
+          )}
 
-            <div className="flex items-center justify-center space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAuthRequiredModal(false)}
-                className="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAuthRequiredModal(false);
-                  window.location.href = '/login?returnUrl=' + encodeURIComponent(window.location.pathname);
-                }}
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
-              >
-                Authenticate / Sign In
-              </button>
+          {/* Centered Application Notification Modal */}
+          <StatusNotificationModal
+            notification={notification}
+            onClose={() => setNotification(null)}
+          />
+
+          {/* Centered Institutional Authentication Required Modal */}
+          {showAuthRequiredModal && (
+            <div className="modal-overlay-responsive animate-fade-in">
+              <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
+                <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+                  <Lock className="w-7 h-7" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center justify-center gap-2">
+                    <span>Authentication Required</span>
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed px-2">
+                    The institutional contest resource requires authentication. Please authenticate and try Sync again.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl text-[11.5px] text-amber-800 dark:text-amber-300 font-bold text-left space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <span>Protected Institutional Operation</span>
+                  </div>
+                  <p className="text-[10.5px] font-normal text-amber-700 dark:text-amber-400">
+                    Weekly contest synchronization updates official student rankings and requires verified administrative or faculty credentials.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthRequiredModal(false)}
+                    className="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAuthRequiredModal(false);
+                      window.location.href = '/login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
+                  >
+                    Authenticate / Sign In
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
         </>
       )}
@@ -6004,7 +5983,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
@@ -6028,11 +6007,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 const isVirt = viewingProfileStudent.participation_status === 'VIRTUAL_ATTENDED' || viewingProfileStudent.participation_status === 'VIRTUAL' || viewingProfileStudent.status === 'VIRTUAL';
                 const isErr = viewingProfileStudent.participation_status === 'DATA_ERROR' || viewingProfileStudent.status === 'USERNAME_NOT_FOUND' || viewingProfileStudent.status === 'FETCH_ERROR';
 
-                const bannerCls = isPub 
+                const bannerCls = isPub
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                  : isVirt 
+                  : isVirt
                     ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-300'
-                    : isErr 
+                    : isErr
                       ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-300'
                       : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-300';
 

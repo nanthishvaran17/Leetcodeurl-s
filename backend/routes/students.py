@@ -20,7 +20,7 @@ from backend.websocket_manager import connection_manager
 router = APIRouter(prefix="/api/students", tags=["Students"])
 from backend.constants import get_academic_year_filter_clause
 
-from sqlalchemy import func, or_, and_, not_
+from sqlalchemy import func, or_, and_, not_, text
 
 from sqlalchemy.orm import joinedload, defer, selectinload
 
@@ -1379,31 +1379,69 @@ def _perform_bulk_delete_students(
                 'version': 999
             })
     else:
-        from backend.models import (
-            WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
-            StudentContestParticipation, ContestParticipation, FacultyStudentAssignment,
-            LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
-            WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
-            StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
-            StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord,
-            WeeklyVerificationRecord, LeetCodeProblemStats, LeetCodeContest, LeetCodeBadge
-        )
-        for model in (
-            LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot, MentorNote,
-            StudentStatSnapshot, StudentContestSnapshot, StudentContestParticipation,
-            ContestParticipation, FacultyStudentAssignment, LeetCodeAccount,
-            LeetCodeActivity, LeetCodeContestRatingHistory, WeeklyPublicResult,
-            WeeklyVirtualResult, StudentAssignmentHistory, StudentWeeklyTarget,
-            StudentGoal, StudentRiskProfile, StudentSkillProfile, StudentLearningPath,
-            OfficialPublicParticipant, PreviousWeekParticipationRecord,
-            WeeklyVerificationRecord, LeetCodeProblemStats, LeetCodeContest, LeetCodeBadge
-        ):
+        bind = db.get_bind()
+        if bind.dialect.name == "sqlite":
             try:
-                db.query(model).filter(model.student_id.in_(safe_student_ids)).delete(synchronize_session=False)
-            except Exception as e:
-                logger.debug(f"[BATCH_DELETE_CASCADE] {getattr(model, '__tablename__', str(model))}: {e}")
+                sids_str = ",".join(str(int(sid)) for sid in safe_student_ids)
+                db.execute(text("PRAGMA foreign_keys = OFF;"))
 
-        db.query(Student).filter(Student.id.in_(safe_student_ids)).delete(synchronize_session=False)
+                # Clean up faculty_action_audit_logs if referencing faculty_action_queue
+                try:
+                    db.execute(text(f"""
+                        DELETE FROM faculty_action_audit_logs 
+                        WHERE action_id IN (SELECT id FROM faculty_action_queue WHERE student_id IN ({sids_str}))
+                    """))
+                except Exception as faq_err:
+                    logger.debug(f"[CASCADE_FAQ_AUDIT] {faq_err}")
+
+                # Dynamically delete from all tables referencing students
+                res = db.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
+                for (tbl,) in res:
+                    fks = db.execute(text(f"PRAGMA foreign_key_list('{tbl}')")).fetchall()
+                    for fk in fks:
+                        if str(fk[2]).lower() == 'students':
+                            col = fk[3]
+                            try:
+                                db.execute(text(f"DELETE FROM {tbl} WHERE {col} IN ({sids_str})"))
+                            except Exception as del_err:
+                                logger.debug(f"[CASCADE_TABLE_DEL] {tbl}.{col}: {del_err}")
+
+                # Delete from students table itself
+                db.execute(text(f"DELETE FROM students WHERE id IN ({sids_str})"))
+                db.execute(text("PRAGMA foreign_keys = ON;"))
+            except Exception as sql_err:
+                logger.error(f"[SQLITE_BULK_DELETE_ERROR] {sql_err}")
+                db.rollback()
+                raise HTTPException(status_code=500, detail=f"Database cascade deletion failed: {str(sql_err)}")
+        else:
+            from backend.models import (
+                WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
+                StudentContestParticipation, ContestParticipation, FacultyStudentAssignment,
+                LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
+                WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
+                StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
+                StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord,
+                WeeklyVerificationRecord, LeetCodeProblemStats, LeetCodeContest, LeetCodeBadge,
+                FacultyActionQueueItem
+            )
+            for model in (
+                LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot, MentorNote,
+                StudentStatSnapshot, StudentContestSnapshot, StudentContestParticipation,
+                ContestParticipation, FacultyStudentAssignment, LeetCodeAccount,
+                LeetCodeActivity, LeetCodeContestRatingHistory, WeeklyPublicResult,
+                WeeklyVirtualResult, StudentAssignmentHistory, StudentWeeklyTarget,
+                StudentGoal, StudentRiskProfile, StudentSkillProfile, StudentLearningPath,
+                OfficialPublicParticipant, PreviousWeekParticipationRecord,
+                WeeklyVerificationRecord, LeetCodeProblemStats, LeetCodeContest, LeetCodeBadge,
+                FacultyActionQueueItem
+            ):
+                try:
+                    db.query(model).filter(model.student_id.in_(safe_student_ids)).delete(synchronize_session=False)
+                except Exception as e:
+                    logger.debug(f"[BATCH_DELETE_CASCADE] {getattr(model, '__tablename__', str(model))}: {e}")
+
+            db.query(Student).filter(Student.id.in_(safe_student_ids)).delete(synchronize_session=False)
+
         effective_action = action_name
         msg = custom_msg or f"Successfully deleted {count} student records."
 
@@ -2169,38 +2207,60 @@ def delete_student(
 
         return {"success": True, "message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
     else:
-        from backend.models import (
-            WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
-            StudentContestParticipation, ContestParticipation, FacultyStudentAssignment,
-            LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
-            WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
-            StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
-            StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord
-        )
-        db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete(synchronize_session=False)
-        db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete(synchronize_session=False)
-        db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.student_id == student_id).delete(synchronize_session=False)
-        db.query(MentorNote).filter(MentorNote.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentContestSnapshot).filter(StudentContestSnapshot.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentContestParticipation).filter(StudentContestParticipation.student_id == student_id).delete(synchronize_session=False)
-        db.query(ContestParticipation).filter(ContestParticipation.student_id == student_id).delete(synchronize_session=False)
-        db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.student_id == student_id).delete(synchronize_session=False)
-        db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student_id).delete(synchronize_session=False)
-        db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == student_id).delete(synchronize_session=False)
-        db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.student_id == student_id).delete(synchronize_session=False)
-        db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_id).delete(synchronize_session=False)
-        db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentAssignmentHistory).filter(StudentAssignmentHistory.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentWeeklyTarget).filter(StudentWeeklyTarget.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentGoal).filter(StudentGoal.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentRiskProfile).filter(StudentRiskProfile.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentSkillProfile).filter(StudentSkillProfile.student_id == student_id).delete(synchronize_session=False)
-        db.query(StudentLearningPath).filter(StudentLearningPath.student_id == student_id).delete(synchronize_session=False)
-        db.query(OfficialPublicParticipant).filter(OfficialPublicParticipant.student_id == student_id).delete(synchronize_session=False)
-        db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.student_id == student_id).delete(synchronize_session=False)
+        bind = db.get_bind()
+        if bind.dialect.name == "sqlite":
+            try:
+                sid_int = int(student_id)
+                db.execute(text("PRAGMA foreign_keys = OFF;"))
+                try:
+                    db.execute(text(f"""
+                        DELETE FROM faculty_action_audit_logs 
+                        WHERE action_id IN (SELECT id FROM faculty_action_queue WHERE student_id = {sid_int})
+                    """))
+                except Exception:
+                    pass
 
-        db.delete(student)
+                res = db.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
+                for (tbl,) in res:
+                    fks = db.execute(text(f"PRAGMA foreign_key_list('{tbl}')")).fetchall()
+                    for fk in fks:
+                        if str(fk[2]).lower() == 'students':
+                            col = fk[3]
+                            try:
+                                db.execute(text(f"DELETE FROM {tbl} WHERE {col} = {sid_int}"))
+                            except Exception:
+                                pass
+                db.execute(text(f"DELETE FROM students WHERE id = {sid_int}"))
+                db.execute(text("PRAGMA foreign_keys = ON;"))
+            except Exception as sql_err:
+                logger.error(f"[SQLITE_DELETE_STUDENT_ERROR] {sql_err}")
+                db.rollback()
+                raise HTTPException(status_code=500, detail=f"Database student deletion failed: {str(sql_err)}")
+        else:
+            from backend.models import (
+                WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
+                StudentContestParticipation, ContestParticipation, FacultyStudentAssignment,
+                LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
+                WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
+                StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
+                StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord,
+                FacultyActionQueueItem
+            )
+            for model in (
+                LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot, MentorNote,
+                StudentStatSnapshot, StudentContestSnapshot, StudentContestParticipation,
+                ContestParticipation, FacultyStudentAssignment, LeetCodeAccount,
+                LeetCodeActivity, LeetCodeContestRatingHistory, WeeklyPublicResult,
+                WeeklyVirtualResult, StudentAssignmentHistory, StudentWeeklyTarget,
+                StudentGoal, StudentRiskProfile, StudentSkillProfile, StudentLearningPath,
+                OfficialPublicParticipant, PreviousWeekParticipationRecord, FacultyActionQueueItem
+            ):
+                try:
+                    db.query(model).filter(model.student_id == student_id).delete(synchronize_session=False)
+                except Exception:
+                    pass
+            db.delete(student)
+
         db.commit()
         logger.info(f"[HARD_DELETE_STUDENT] Permanently deleted student record {reg_no} ({name}) with all cascading relations")
         connection_manager.broadcast_sync({

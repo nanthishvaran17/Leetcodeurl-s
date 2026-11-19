@@ -411,6 +411,12 @@ class AudioChimeEngine {
    * Plays the tone currently selected in user preferences (galaxy | apple | pixel | tech | neon)
    */
   public playSelectedNotificationChime(): void {
+    try {
+      if (typeof window !== 'undefined' && localStorage.getItem('pref_toast_audio') === 'false') {
+        return;
+      }
+    } catch {}
+
     let tone = 'galaxy';
     try {
       tone = localStorage.getItem('notification_sound_tone') || 'galaxy';

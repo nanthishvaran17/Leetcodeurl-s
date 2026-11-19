@@ -35,10 +35,7 @@ BATCH_CONFIG = [
 ]
 
 DEPARTMENT_COORDINATORS = {
-    "CSE(CS)": "M. Santhoshkumar, AP / CSE (Cyber Security)",
-    "CSE(IoT)": "P.Devayani /AP",
-    "CSE(IOT)": "P.Devayani /AP",
-    "DEFAULT": "Dr. S. Prabhu, M.E., Ph.D. / Associate Professor & Head - CSE (Cyber Security)",
+    "DEFAULT": "Academic Coordinator",
 }
 
 FINALIZED_STATUSES = ("COMPLETED", "FINALIZED")
@@ -98,13 +95,7 @@ def derive_student_batch(year_level: Optional[str]) -> str:
 
 
 def get_coordinator_for_department(dept_code_or_name: Optional[str]) -> str:
-    """Retrieves standard coordinator name for department."""
+    """Retrieves standard coordinator label for department."""
     if not dept_code_or_name:
-        return DEPARTMENT_COORDINATORS["DEFAULT"]
-    
-    code = dept_code_or_name.strip()
-    if "CS" in code.upper() and "IOT" not in code.upper():
-        return DEPARTMENT_COORDINATORS.get("CSE(CS)", DEPARTMENT_COORDINATORS["DEFAULT"])
-    elif "IOT" in code.upper():
-        return DEPARTMENT_COORDINATORS.get("CSE(IoT)", DEPARTMENT_COORDINATORS["DEFAULT"])
-    return DEPARTMENT_COORDINATORS.get(code, DEPARTMENT_COORDINATORS["DEFAULT"])
+        return "Academic Coordinator"
+    return f"Academic Coordinator - {dept_code_or_name.strip()}"

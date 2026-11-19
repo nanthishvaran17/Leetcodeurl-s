@@ -65,31 +65,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [commandCenterDepts, setCommandCenterDepts] = useState<DepartmentRecord[]>([]);
   const [selectedDeptForDrawer, setSelectedDeptForDrawer] = useState<DeptBenchmark | null>(null);
 
-  const CANONICAL_DEPT_HOD: Record<string, string> = {
-    IT: 'Dr. M. Senthilkumar',
-    'CSE(CS)': 'Dr. S. Prabhu',
-    'CSE(IOT)': 'Dr. S. Karthikeyan',
-    CSE: 'Dr. S. Prabhu',
-  };
-
   const resolveDepartmentHODName = (dept: { code?: string; name?: string; hod_name?: string }) => {
-    // 1. PRIORITY: Genuine assigned HOD user returned by backend from database
+    // Genuine assigned HOD user returned by backend from database
     const raw = (dept.hod_name || '').trim();
-    const isCoordinator = /santhoshkumar|devayani|sivakumar/i.test(raw);
-    if (raw && !isCoordinator && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
+    if (raw && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
       return raw;
-    }
-    // 2. FALLBACK: Only if no genuine HOD is assigned in the database
-    const code = (dept.code || '').toUpperCase().trim();
-    const name = (dept.name || '').toUpperCase().trim();
-    if (code.includes('IOT') || name.includes('IOT')) {
-      return 'Dr. S. Karthikeyan';
-    }
-    if (code.includes('CYBER') || name.includes('CYBER') || code.includes('(CS)') || code === 'CSE(CS)' || code === 'CSE') {
-      return 'Dr. S. Prabhu';
-    }
-    if (code === 'IT' || name.includes('INFORMATION')) {
-      return 'Dr. M. Senthilkumar';
     }
     return dept.code ? `HOD (${dept.code})` : 'Head of Department';
   };

@@ -93,13 +93,11 @@ def export_weekly_performance_pdf(dataset: dict) -> bytes:
     d_raw = (dataset.get("department_name") or dataset.get("department") or "").strip()
     if "Cyber" in d_raw or "(CS)" in d_raw or d_raw == "1" or d_raw == "CSE(CS)":
         dept_name = "Department of CSE (Cyber Security)"
-        default_coord = "M. Santhoshkumar, AP / CSE (Cyber Security)"
     elif "Things" in d_raw or "IoT" in d_raw or "IOT" in d_raw or d_raw == "2" or d_raw == "CSE(IOT)":
         dept_name = "Department of CSE (Internet of Things )"
-        default_coord = "P.Devayani /AP"
     else:
         dept_name = str(dataset.get("department_name") or "Department of CSE (Cyber Security)")
-        default_coord = "M. Santhoshkumar, AP / CSE (Cyber Security)"
+    default_coord = "Academic Coordinator"
 
     coordinator = str(dataset.get("coordinator") or dataset.get("academicCoordinator") or default_coord)
 

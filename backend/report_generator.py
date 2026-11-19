@@ -275,7 +275,7 @@ class CollegeReportGenerator:
         ws1["A5"].alignment = Alignment(horizontal="center", vertical="center")
 
         ws1.merge_cells("A6:L6")
-        ws1["A6"] = "Name & Designation of the Academic Coordinator: Dr. S. Sivakumar"
+        ws1["A6"] = "Name & Designation of the Academic Coordinator: Academic Coordinator"
         ws1["A6"].font = Font(name="Arial", size=10, italic=True, color="444444")
         ws1["A6"].alignment = Alignment(horizontal="center", vertical="center")
 
@@ -532,7 +532,7 @@ class CollegeReportGenerator:
                     <h1>NANDHA ENGINEERING COLLEGE, ERODE - 638 052.</h1>
                     <h2>{department_name}</h2>
                     <p>Leetcode Performance - Weekly Report ({contest_title}) • Date: {report_date}</p>
-                    <p style="font-size: 11px; margin-top: 4px; color: #ffffff;">Name & Designation of Academic Coordinator: <strong>Dr. S. Sivakumar</strong></p>
+                    <p style="font-size: 11px; margin-top: 4px; color: #ffffff;">Name & Designation of Academic Coordinator: <strong>Academic Coordinator</strong></p>
                 </div>
 
                 <div class="content">

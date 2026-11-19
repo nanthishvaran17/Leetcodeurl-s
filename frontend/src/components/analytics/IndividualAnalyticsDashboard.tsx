@@ -19,7 +19,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
     let isMounted = true;
     const cacheKey = `individual_analytics_${studentId}_${period}`;
     const url = `/analytics/student/${studentId}?period=${period}`;
-    
+
     // 1. Check client cache first for instant load unless refresh was triggered
     if (refreshTrigger === 0) {
       const cached = getCachedData(cacheKey, url);
@@ -106,27 +106,27 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
       return data.week_comparison;
     }
     if (!trendData || trendData.length === 0) return null;
-    
+
     const sorted = [...trendData].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const nowTotal = data?.current_stats?.total_solved ?? sorted[sorted.length - 1]?.total_solved ?? 0;
     const latestTime = new Date(sorted[sorted.length - 1].date).getTime();
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-    
+
     let sevenDaysAgoItem = [...sorted].reverse().find((d: any) => new Date(d.date).getTime() <= latestTime - sevenDaysMs);
     let fourteenDaysAgoItem = [...sorted].reverse().find((d: any) => new Date(d.date).getTime() <= latestTime - (sevenDaysMs * 2));
-    
+
     const sevenDaysAgo = sevenDaysAgoItem ? sevenDaysAgoItem.total_solved : sorted[0].total_solved;
     const fourteenDaysAgo = fourteenDaysAgoItem ? fourteenDaysAgoItem.total_solved : (sevenDaysAgoItem ? sevenDaysAgoItem.total_solved : sorted[0].total_solved);
-    
+
     const rawThisWeek = nowTotal - sevenDaysAgo;
     const rawLastWeek = sevenDaysAgo - fourteenDaysAgo;
 
     const thisWeek = Math.max(0, rawThisWeek);
     const lastWeek = Math.max(0, rawLastWeek);
-    
+
     let diff = thisWeek - lastWeek;
     let percent = lastWeek === 0 ? (thisWeek > 0 ? 100 : 0) : (diff / lastWeek) * 100;
-    
+
     return { thisWeek, lastWeek, diff, percent };
   }, [trendData, data]);
 
@@ -145,84 +145,102 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
   };
 
   return (
-    <div className="space-y-6 animate-fade-in mt-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
-        <div>
-          <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white">Performance Analytics</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Comprehensive historical data view</p>
+    <div className="space-y-4 sm:space-y-6 animate-fade-in mt-4 sm:mt-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 bg-white dark:bg-navy-950 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+        <div className="space-y-0.5">
+          <h2 className="text-base sm:text-lg font-display font-black text-slate-900 dark:text-white">Performance Analytics</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">Comprehensive historical data view</p>
         </div>
         <GlobalAnalyticsFilter period={period} setPeriod={setPeriod} />
       </div>
 
       {error || data?.error ? (
-        <div className="flex items-center justify-center h-64 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl border border-red-200 dark:border-red-800">
-          <p>{error || data?.error}</p>
+        <div className="flex items-center justify-center h-48 sm:h-64 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl border border-red-200 dark:border-red-800">
+          <p className="text-xs sm:text-sm font-bold">{error || data?.error}</p>
         </div>
       ) : (
-        <div className="space-y-6 pb-6">
-          
+        <div className="space-y-4 sm:space-y-6 pb-6">
+
           {/* Week Comparison Summary Card */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900/90 via-slate-900 to-slate-950 p-6 sm:p-7 rounded-3xl text-white shadow-2xl shadow-indigo-950/50 border border-indigo-500/20 backdrop-blur-xl">
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900/90 via-slate-900 to-slate-950 p-4 sm:p-6 rounded-2xl sm:rounded-3xl text-white shadow-xl sm:shadow-2xl shadow-indigo-950/50 border border-indigo-500/20 backdrop-blur-xl">
             <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/20 blur-3xl rounded-full pointer-events-none"></div>
             <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/15 blur-3xl rounded-full pointer-events-none"></div>
 
             {loading && !data && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/60 backdrop-blur-md rounded-3xl">
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/60 backdrop-blur-md rounded-2xl sm:rounded-3xl">
                 <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
               </div>
             )}
-            
-            <div className="relative z-10 flex items-center justify-between mb-5">
-              <div className="flex items-center space-x-2.5">
+
+            <div className="relative z-10 flex items-center justify-between mb-3.5 sm:mb-4">
+              <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-                <h3 className="font-mono text-[11px] font-black uppercase tracking-widest text-indigo-300">
+                <h3 className="font-mono text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-300">
                   Weekly Cadence Benchmark
                 </h3>
               </div>
-              <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-white/10 text-indigo-200 border border-white/10">
+              <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-white/10 text-indigo-200 border border-white/10">
                 Delta Analysis
               </span>
             </div>
 
             {weekComparison ? (
-              <div className="relative z-10 flex flex-wrap items-center gap-6 sm:gap-10">
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                  <p className="text-[11px] font-black uppercase tracking-wider text-indigo-200/80">Solved This Week</p>
-                  <p className="text-4xl sm:text-5xl font-black mt-1 tracking-tight text-white">{weekComparison.thisWeek}</p>
+              <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                {/* Solved This Week */}
+                <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex flex-col justify-between">
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-indigo-200/80">
+                    Solved This Week
+                  </p>
+                  <p className="text-3xl sm:text-5xl font-black mt-1 tracking-tight text-white leading-none">
+                    {weekComparison.thisWeek}
+                  </p>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                  <p className="text-[11px] font-black uppercase tracking-wider text-indigo-200/80">Solved Last Week</p>
-                  <p className="text-3xl sm:text-4xl font-black mt-1 tracking-tight text-indigo-200">{weekComparison.lastWeek}</p>
+
+                {/* Solved Last Week */}
+                <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex flex-col justify-between">
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-indigo-200/80">
+                    Solved Last Week
+                  </p>
+                  <p className="text-3xl sm:text-5xl font-black mt-1 tracking-tight text-indigo-200 leading-none">
+                    {weekComparison.lastWeek}
+                  </p>
                 </div>
-                <div className={`flex items-center px-4 py-2 rounded-2xl font-black text-sm border backdrop-blur-md shadow-lg ${
-                  weekComparison.diff > 0 
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-emerald-500/10' 
-                    : weekComparison.diff < 0 
-                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-300 shadow-rose-500/10' 
+
+                {/* Delta Badge */}
+                <div className={`col-span-2 sm:col-span-1 p-3 sm:p-4 rounded-xl sm:rounded-2xl font-black border backdrop-blur-md flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 shadow-lg ${weekComparison.diff > 0
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-emerald-500/10'
+                    : weekComparison.diff < 0
+                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-300 shadow-rose-500/10'
                       : 'bg-white/10 border-white/15 text-white'
-                }`}>
+                  }`}>
                   {weekComparison.diff > 0 ? (
-                    <TrendingUp className="w-4 h-4 mr-2 text-emerald-400" />
+                    <TrendingUp className="w-5 h-5 text-emerald-400 shrink-0" />
                   ) : weekComparison.diff < 0 ? (
-                    <TrendingDown className="w-4 h-4 mr-2 text-rose-400" />
+                    <TrendingDown className="w-5 h-5 text-rose-400 shrink-0" />
                   ) : (
-                    <Minus className="w-4 h-4 mr-2" />
+                    <Minus className="w-5 h-5 opacity-70 shrink-0" />
                   )}
-                  <span className="font-sans text-base mr-1.5">{Math.abs(weekComparison.percent).toFixed(1)}%</span>
-                  <span className="text-xs uppercase tracking-wider opacity-80">
-                    {weekComparison.diff > 0 ? 'Increase' : weekComparison.diff < 0 ? 'Decrease' : 'No Change'}
-                  </span>
+                  <div className="flex sm:flex-col items-center sm:items-start gap-1.5 sm:gap-0.5">
+                    <span className="font-sans text-base sm:text-xl font-black leading-none">
+                      {Math.abs(weekComparison.percent).toFixed(1)}%
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-wider opacity-85">
+                      {weekComparison.diff > 0 ? 'Increase vs Last Week' : weekComparison.diff < 0 ? 'Decrease vs Last Week' : 'No Change vs Last Week'}
+                    </span>
+                  </div>
                 </div>
               </div>
             ) : (
-              <p className="relative z-10 text-indigo-200/80 text-sm">Insufficient historical data to compare weekly performance.</p>
+              <p className="relative z-10 text-indigo-200/80 text-xs sm:text-sm">
+                Insufficient historical data to compare weekly performance.
+              </p>
             )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+
             {/* 1. Rating Trend */}
-            <div className="bg-white/80 dark:bg-slate-900/70 p-6 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col relative backdrop-blur-xl">
+            <div className="bg-white/80 dark:bg-slate-900/70 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col relative backdrop-blur-xl">
               {loading && !data && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm rounded-3xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
@@ -251,27 +269,27 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 2. Problems Solved Trend */}
-            <div className="bg-white/80 dark:bg-slate-900/70 p-6 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col relative backdrop-blur-xl">
+            <div className="bg-white/80 dark:bg-slate-900/70 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/40 flex flex-col relative backdrop-blur-xl">
               {loading && !data && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm rounded-3xl">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div className="flex items-center space-x-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                  <h3 className="font-bold text-sm tracking-wide text-slate-900 dark:text-white uppercase">Problems Solved Trend</h3>
+                  <h3 className="font-bold text-xs sm:text-sm tracking-wide text-slate-900 dark:text-white uppercase">Problems Solved Trend</h3>
                 </div>
                 <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">CUMULATIVE</span>
               </div>
               {trendData.length > 0 ? (
-                <div className="flex-1 min-h-[300px]">
+                <div className="flex-1 min-h-[250px] sm:min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorSolved" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.02}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
@@ -286,20 +304,20 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 3. Submission Activity (Delta proxy) */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2 relative">
+            <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2 relative">
               {loading && !data && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Submission Activity (Submissions per Day)</h3>
+              <h3 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white mb-3 sm:mb-4">Submission Activity (Submissions per Day)</h3>
               {activityData.length > 0 ? (
-                <div className="flex-1 min-h-[300px]">
+                <div className="flex-1 min-h-[250px] sm:min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data?.activity_data ? activityData : (activityData.length > 1 ? activityData.slice(1) : activityData)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} minTickGap={30} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} minTickGap={30} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
                       <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#334155', opacity: 0.1 }} />
                       <Bar dataKey="submissions" name="Submissions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -309,21 +327,21 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 4. Contest Performance */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2 relative">
+            <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2 relative">
               {loading && !data && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Contest Performance</h3>
+              <h3 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white mb-3 sm:mb-4">Contest Performance</h3>
               {contestData.length > 0 ? (
-                <div className="flex-1 min-h-[300px]">
+                <div className="flex-1 min-h-[250px] sm:min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={contestData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                      <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} reversed />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} />
+                      <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                      <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} reversed />
                       <Tooltip contentStyle={tooltipStyle} />
                       <Legend wrapperStyle={{ paddingTop: '20px' }} />
                       <Bar yAxisId="left" dataKey="solved" name="Questions Solved" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />
@@ -335,20 +353,20 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 5. Difficulty Progression */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+            <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
               {loading && !data && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Difficulty Progression</h3>
+              <h3 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white mb-3 sm:mb-4">Difficulty Progression</h3>
               {trendData.length > 0 ? (
-                <div className="flex-1 min-h-[300px]">
+                <div className="flex-1 min-h-[250px] sm:min-h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} minTickGap={30} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} dy={10} minTickGap={30} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
                       <Tooltip contentStyle={tooltipStyle} />
                       <Legend wrapperStyle={{ paddingTop: '20px' }} />
                       <Area type="monotone" dataKey="hard" stackId="1" name="Hard" stroke="#ef4444" fill="#ef4444" fillOpacity={0.6} />
@@ -361,35 +379,35 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 6. Acceptance Rate & Problem Distribution */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+            <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
               {loading && !data && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Acceptance Rate & Overview</h3>
+              <h3 className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white mb-3 sm:mb-4">Acceptance Rate & Overview</h3>
               {data?.current_stats?.total_submissions > 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-navy-900 rounded-xl space-y-3">
-                  <div className="text-4xl font-black text-brand-600 dark:text-brand-400">
+                <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 bg-slate-50 dark:bg-navy-900 rounded-xl space-y-2 sm:space-y-3">
+                  <div className="text-3xl sm:text-4xl font-black text-brand-600 dark:text-brand-400">
                     {data.current_stats.acceptance_rate}%
                   </div>
                   <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     Overall Acceptance Rate
                   </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-medium">
                     Based on {data.current_stats.total_submissions.toLocaleString()} total submissions
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800 text-center space-y-3">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Live Profile Performance</span>
-                  <div className="text-3xl font-black text-slate-900 dark:text-white">
+                <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800 text-center space-y-2 sm:space-y-3">
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Live Profile Performance</span>
+                  <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                     {(data?.current_stats?.total_solved ?? 0).toLocaleString()} <span className="text-xs font-bold text-slate-400">Solved</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs font-bold pt-1">
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Easy: {data?.current_stats?.easy ?? 0}</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Medium: {data?.current_stats?.medium ?? 0}</span>
-                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">Hard: {data?.current_stats?.hard ?? 0}</span>
+                  <div className="flex items-center gap-2 sm:gap-3 text-xs font-bold pt-1 flex-wrap justify-center">
+                    <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Easy: {data?.current_stats?.easy ?? 0}</span>
+                    <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Medium: {data?.current_stats?.medium ?? 0}</span>
+                    <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">Hard: {data?.current_stats?.hard ?? 0}</span>
                   </div>
                 </div>
               )}

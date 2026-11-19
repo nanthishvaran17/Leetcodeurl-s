@@ -16,42 +16,22 @@ interface DepartmentDetailDrawerProps {
   onClose: () => void;
 }
 
-const CANONICAL_DEPT_HOD: Record<string, string> = {
-  IT: 'Dr. M. Senthilkumar',
-  'CSE(CS)': 'Dr. S. Prabhu',
-  'CSE(IOT)': 'Dr. S. Karthikeyan',
-  CSE: 'Dr. S. Prabhu',
-};
-
-const resolveDepartmentHODName = (deptCode?: string, rawName?: string, deptName?: string) => {
-  // 1. PRIORITY: Genuine assigned HOD user returned by backend from database
+const resolveDepartmentHODName = (deptCode?: string, rawName?: string, _deptName?: string) => {
+  // Genuine assigned HOD user returned by backend from database
   const raw = (rawName || '').trim();
-  const isCoordinator = /santhoshkumar|devayani|sivakumar/i.test(raw);
-  if (raw && !isCoordinator && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
+  if (raw && !raw.startsWith('HOD -') && !raw.startsWith('HOD (')) {
     return raw;
   }
-  // 2. FALLBACK: Only if no genuine HOD is assigned in the database
-  const code = (deptCode || '').toUpperCase().trim();
-  const name = (deptName || '').toUpperCase().trim();
-  if (code.includes('IOT') || name.includes('IOT')) return 'Dr. S. Karthikeyan';
-  if (code.includes('CYBER') || name.includes('CYBER') || code.includes('(CS)') || code === 'CSE(CS)' || code === 'CSE') return 'Dr. S. Prabhu';
-  if (code === 'IT' || name.includes('INFORMATION')) return 'Dr. M. Senthilkumar';
   return deptCode ? `HOD (${deptCode})` : 'Head of Department';
 };
 
-const resolveDepartmentHODEmail = (deptCode?: string, rawEmail?: string, deptName?: string) => {
-  // 1. PRIORITY: Genuine assigned HOD email returned by backend from database
+const resolveDepartmentHODEmail = (deptCode?: string, rawEmail?: string, _deptName?: string) => {
+  // Genuine assigned HOD email returned by backend from database
   const raw = (rawEmail || '').trim();
-  if (raw && !raw.includes('example.com') && raw !== 'hod@nandha.edu.in' && raw !== 'hod@nandhaengg.org') {
+  if (raw && !raw.includes('example.com')) {
     return raw;
   }
-  // 2. FALLBACK: Only if no email assigned in the database
-  const code = (deptCode || '').toUpperCase().trim();
-  const name = (deptName || '').toUpperCase().trim();
-  if (code.includes('IOT') || name.includes('IOT')) return 'hod.cseiot@nandhaengg.org';
-  if (code.includes('CYBER') || name.includes('CYBER') || code.includes('(CS)') || code === 'CSE(CS)' || code === 'CSE') return 'prabhu.s@nandhaengg.org';
-  if (code === 'IT' || name.includes('INFORMATION')) return 'hod.it@nandhaengg.org';
-  return raw || 'hod@nandhaengg.org';
+  return deptCode ? `hod.${deptCode.toLowerCase()}@nandhaengg.org` : 'hod@nandhaengg.org';
 };
 
 export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ department, onClose }) => {

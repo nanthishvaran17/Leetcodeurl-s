@@ -832,13 +832,28 @@ def generate_weekly_performance_data(
             db.rollback()
 
     dept_code = (dept_filter or "ALL").upper().strip()
-    if "IOT" in dept_code or dept_code == "2":
-        dept_display = "Department of CSE (Internet of Things )"
-        coordinator_display = "P.Devayani /AP"
+    target_dept = None
+    if dept_filter and dept_filter != "ALL":
+        target_dept = db.query(Department).filter(
+            or_(Department.code == dept_filter, Department.name == dept_filter, Department.id == (int(dept_filter) if dept_filter.isdigit() else -1))
+        ).first()
+
+    if target_dept:
+        dept_display = f"Department of {target_dept.name}"
+        clean_dept_slug = target_dept.code
+        coord_user = db.query(User).filter(
+            User.department_id == target_dept.id,
+            User.role.ilike("%coordinator%"),
+            User.is_active == True
+        ).first()
+        coordinator_display = (coord_user.full_name or coord_user.username) if coord_user else "Academic Coordinator"
+    elif "IOT" in dept_code or dept_code == "2":
+        dept_display = "Department of CSE (Internet of Things)"
+        coordinator_display = "Academic Coordinator"
         clean_dept_slug = "CSE(IOT)"
     else:
         dept_display = "Department of CSE (Cyber Security)"
-        coordinator_display = "M. Santhoshkumar, AP / CSE (Cyber Security)"
+        coordinator_display = "Academic Coordinator"
         clean_dept_slug = "CSE(CS)" if dept_code in ("1", "CSE(CS)", "CSE") else (dept_filter if dept_filter and dept_filter != "ALL" else "CSE(CS)")
 
     canonical_dataset = {

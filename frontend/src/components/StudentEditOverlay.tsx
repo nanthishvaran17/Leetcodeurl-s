@@ -71,15 +71,15 @@ function LcValidationChip({
 
   if (state.status === 'valid') {
     return (
-      <div className="mt-2.5 p-3 sm:p-3.5 rounded-xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/5 dark:from-emerald-950/40 dark:via-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/30 dark:border-emerald-500/30 shadow-xs space-y-2.5 transition-all">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+      <div className="mt-3.5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/5 dark:from-emerald-950/40 dark:via-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/30 dark:border-emerald-500/30 shadow-xs space-y-3 sm:space-y-3.5 transition-all">
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-0.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
+                <span className="text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-300">
                   LeetCode Account Verified
                 </span>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
@@ -91,7 +91,7 @@ function LcValidationChip({
                 href={state.canonical_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 mt-0.5"
               >
                 <span>@{state.username}</span>
                 <ExternalLink className="w-2.5 h-2.5" />
@@ -120,40 +120,40 @@ function LcValidationChip({
           </div>
         </div>
 
-        {/* 4-Column Live Metric Breakdown Grid */}
-        <div className="grid grid-cols-4 gap-2 pt-1 border-t border-emerald-500/20">
-          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-emerald-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+        {/* 4-Column Live Metric Breakdown Grid with generous top padding & gap */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-2.5 pt-2.5 sm:pt-3 border-t border-emerald-500/25">
+          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-emerald-500/25 flex flex-col items-center justify-center text-center shadow-xs">
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Solved</span>
-            <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">
+            <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
               {state.total_solved != null ? state.total_solved : '0'}
             </span>
           </div>
-          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-emerald-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-emerald-500/25 flex flex-col items-center justify-center text-center shadow-xs">
             <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Easy</span>
-            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
               {state.easy_solved != null ? state.easy_solved : '0'}
             </span>
           </div>
-          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-amber-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-amber-500/25 flex flex-col items-center justify-center text-center shadow-xs">
             <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Medium</span>
-            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
               {state.medium_solved != null ? state.medium_solved : '0'}
             </span>
           </div>
-          <div className="p-2 rounded-lg bg-white/80 dark:bg-navy-900/70 border border-rose-500/20 flex flex-col items-center justify-center text-center shadow-2xs">
+          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-rose-500/25 flex flex-col items-center justify-center text-center shadow-xs">
             <span className="text-[9px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Hard</span>
-            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
+            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
               {state.hard_solved != null ? state.hard_solved : '0'}
             </span>
           </div>
         </div>
 
         {(state.contest_rating != null || state.ranking != null) && (
-          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300 px-1 pt-0.5">
+          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300 px-1 pt-2 border-t border-emerald-500/15">
             {state.contest_rating != null ? (
-              <span className="flex items-center gap-1 font-semibold">
-                <Trophy className="w-3 h-3 text-amber-500" />
-                Rating: <strong className="text-amber-600 dark:text-amber-400">{Math.round(state.contest_rating)}</strong>
+              <span className="flex items-center gap-1.5 font-bold">
+                <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                Rating: <strong className="text-amber-600 dark:text-amber-400 font-extrabold">{Math.round(state.contest_rating)}</strong>
               </span>
             ) : <span />}
             {state.ranking != null && (
@@ -904,7 +904,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto bg-slate-950/85 sm:backdrop-blur-md modal-overlay-responsive"
+      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden bg-slate-950/85 sm:backdrop-blur-md modal-overlay-responsive"
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();
@@ -915,39 +915,41 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-student-dialog-title"
-        className="w-full h-auto max-h-[92dvh] sm:max-h-[88vh] max-w-xl my-0 sm:my-auto bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
+        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl m-0 sm:my-auto bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Mobile Pull Handle Indicator */}
-        <div className="sm:hidden w-12 h-1 bg-slate-400/40 rounded-full mx-auto my-2 shrink-0" />
-
-        {/* Fixed Header */}
-        <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
-          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
-              <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
+        {/* Fixed Header with integrated pull handle */}
+        <div className="px-4 pt-2.5 pb-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col border-b border-slate-800 shrink-0 z-20 shadow-md">
+          {/* Mobile Pull Handle inside dark header (eliminates top white gap) */}
+          <div className="sm:hidden w-12 h-1 bg-white/25 rounded-full mx-auto mb-2.5 shrink-0" />
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+              <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+                <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 id="edit-student-dialog-title" className="text-sm sm:text-base font-black text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
+                <p className="text-[11px] sm:text-xs text-slate-300 font-mono font-medium truncate">
+                  <span>{student.reg_no || student.register_number || 'ID: ' + student.id}</span>
+                  {name && <span className="text-slate-400 font-sans"> · {name}</span>}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 id="edit-student-dialog-title" className="text-sm sm:text-base font-black text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
-              <p className="text-[11px] sm:text-xs text-slate-300 font-mono font-medium truncate">
-                <span>{student.reg_no || student.register_number || 'ID: ' + student.id}</span>
-                {name && <span className="text-slate-400 font-sans"> · {name}</span>}
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={handleAttemptClose}
+              title="Close"
+              className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 ml-2 touch-manipulation"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleAttemptClose}
-            title="Close"
-            className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 ml-2 touch-manipulation"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Scrollable Form Content */}
         <form id="edit-student-form" onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 relative">
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain [touch-action:pan-y] [-webkit-overflow-scrolling:touch] custom-scrollbar p-4 sm:p-6 space-y-5">
             {errorMessage && (
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -1182,7 +1184,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2 pt-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-200">LeetCode Profile URL</label>
                   <button
@@ -1219,7 +1221,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             </div>
 
             {/* Section 3: Secondary LeetCode Accounts */}
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/40 shadow-xs space-y-3">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/40 shadow-xs space-y-3 mt-4 sm:mt-5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center space-x-2">
                   <span className="flex items-center justify-center w-5 h-5 rounded-md bg-indigo-500 text-white font-black text-[10px]">3</span>
@@ -1292,9 +1294,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             <div className="h-32 sm:h-8"></div>
           </div>
 
-          {/* Dedicated Fixed Bottom Action Bar: Sits below the scroll container using flex shrink-0 */}
+          {/* Dedicated Fixed Bottom Action Bar: Sits flush at bottom with safe-area support */}
           <div
-            className="shrink-0 px-4 pt-3.5 sm:px-6 sm:pt-4 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-2xl gap-3 w-full safe-area-pb"
+            className="shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-2xl gap-3 w-full pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3.5"
           >
             <button
               type="button"

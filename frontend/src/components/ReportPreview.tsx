@@ -3041,13 +3041,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               </h3>
                               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                 Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
-                                  {(() => {
-                                    const dRaw = (report.department_name || report.department || '').toString().trim();
-                                    if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
-                                      return 'P.Devayani /AP';
-                                    }
-                                    return report.coordinator || 'M. Santhoshkumar, AP / CSE (Cyber Security)';
-                                  })()}
+                                  {report.coordinator || report.academicCoordinator || report.coordinator_name || 'Academic Coordinator'}
                                 </span>
                               </p>
                             </div>
@@ -3267,13 +3261,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                                 </h3>
                                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                   Name &amp; Designation of the Academic Coordinator: <span className="font-black text-brand-700 dark:text-brand-400">
-                                    {(() => {
-                                      const dRaw = (report.department_name || report.department || '').toString().trim();
-                                      if (dRaw.includes('Things') || dRaw.includes('IoT') || dRaw === '2' || dRaw === 'CSE(IOT)') {
-                                        return 'P.Devayani /AP';
-                                      }
-                                      return report.coordinator || 'M.Santhosh Kumar/AP';
-                                    })()}
+                                    {report.coordinator || report.academicCoordinator || report.coordinator_name || 'Academic Coordinator'}
                                   </span>
                                 </p>
                               </div>

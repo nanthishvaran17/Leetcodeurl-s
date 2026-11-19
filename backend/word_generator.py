@@ -20,7 +20,7 @@ try:
 except ImportError:
     DOCX_AVAILABLE = False
 
-from backend.config.report_config import BATCH_CONFIG, DEPARTMENT_COORDINATORS, get_coordinator_for_department
+from backend.config.report_config import BATCH_CONFIG, get_coordinator_for_department
 
 
 def set_cell_background(cell, fill_hex: str):
@@ -89,7 +89,7 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[Union[
             "department_id": 1,
             "department": "CSE(CS)",
             "department_name": "Department of Computer Science and Engineering (Cyber Security)",
-            "coordinator": DEPARTMENT_COORDINATORS.get("CSE(CS)"),
+            "coordinator": get_coordinator_for_department("CSE(CS)"),
             "batches": {}
         }]
 

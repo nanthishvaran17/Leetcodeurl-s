@@ -430,16 +430,11 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     # Dynamic Academic Coordinator resolution
     coord_str = ""
     from backend.models import User
-    coord_user = db.query(User).filter(User.department_id == dept.id, User.role.in_(["staff", "faculty", "hod"])).first()
+    coord_user = db.query(User).filter(User.department_id == dept.id, User.role.in_(["staff", "faculty", "hod", "coordinator"])).first()
     if coord_user:
-        coord_str = coord_user.username
+        coord_str = coord_user.full_name or coord_user.username
     else:
-        if "Cyber Security" in dept.name or "CS" in dept.code:
-            coord_str = "M. Santhoshkumar, AP / CSE (Cyber Security)"
-        elif "IoT" in dept.name or "IOT" in dept.code:
-            coord_str = "Mohan Gandhi S"
-        else:
-            coord_str = f"Academic Coordinator / {dept.code or dept.name}"
+        coord_str = f"Academic Coordinator / {dept.code or dept.name}"
 
     ws.merge_cells("C6:M6")
     ws["C6"] = f"Name & Designation of the Academic Coordinator: {coord_str}"
@@ -1567,12 +1562,14 @@ def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int
     ws["A2"].font = Font(name="Times New Roman", size=16, bold=True, color="0F172A")
     ws["A2"].alignment = Alignment(horizontal="center")
 
-    coordinator_name = "Dr. S. Prabhu, M.E., Ph.D. / Associate Professor & Head - CSE (Cyber Security)"
+    coordinator_name = "Academic Coordinator"
     if dept_obj:
-        if "IOT" in dept_obj.code.upper() or "IOT" in dept_obj.name.upper():
-            coordinator_name = "Mohan Gandhi S"
-        elif "CS" in dept_obj.code.upper() or "CYBER" in dept_obj.name.upper():
-            coordinator_name = "M.Santhosh Kumar M / Ap(cs)"
+        from backend.models import User
+        coord_user = db.query(User).filter(User.department_id == dept_obj.id, User.role.in_(["staff", "faculty", "hod", "coordinator"])).first()
+        if coord_user:
+            coordinator_name = coord_user.full_name or coord_user.username
+        else:
+            coordinator_name = f"Academic Coordinator - {dept_obj.code or dept_obj.name}"
 
     ws.merge_cells("A3:M3")
     ws["A3"] = f"Name & Designation of the Academic Coordinator: {coordinator_name}"

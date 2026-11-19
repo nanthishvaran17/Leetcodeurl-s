@@ -1631,8 +1631,8 @@ def update_user_profile(
             raise HTTPException(status_code=400, detail="Current password is required to change password.")
         if not verify_password(payload.current_password, user.hashed_password):  # type: ignore
             raise HTTPException(status_code=400, detail="Current password entered is incorrect.")
-        if len(payload.new_password) < 6:
-            raise HTTPException(status_code=400, detail="New password must be at least 6 characters long.")
+        if len(payload.new_password) < 8:
+            raise HTTPException(status_code=400, detail="New password must be at least 8 characters long.")
         user.hashed_password = get_password_hash(payload.new_password)  # type: ignore
         user.require_password_change = False  # type: ignore
 
@@ -1999,8 +1999,8 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
 
     # Check password strength
     pwd = req.new_password
-    if len(pwd) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    if len(pwd) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
 
 
     user = db.query(User).filter(User.id == user_id).first()

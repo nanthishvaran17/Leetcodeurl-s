@@ -401,53 +401,55 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         if (!isDeleting) onClose();
       }}
       zIndex={100000}
-      className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 dark:bg-black/80 backdrop-blur-md overflow-y-auto"
+      className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 dark:bg-black/80 backdrop-blur-md overflow-hidden"
     >
       <div 
-        className="bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[88vh] overflow-hidden border border-slate-200 dark:border-white/10 animate-fade-in-up select-text my-auto"
+        className="bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] overflow-hidden border-0 sm:border border-slate-200 dark:border-white/10 animate-fade-in-up select-text m-0 sm:my-auto"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="batch-delete-modal-title"
       >
-        {/* Header */}
-        <div className="px-5 pt-4 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50 shrink-0">
-          <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3" />
-          
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 pr-2">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 id="batch-delete-modal-title" className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
-                    Delete Cohort by Department & Year
-                  </h3>
-                  <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[9px] font-black tracking-wider uppercase border border-rose-500/25">
-                    {isSoftDelete ? 'DEACTIVATE' : 'PURGE'}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Filter by department & year, select all or choose individual students.
-                </p>
-              </div>
-            </div>
+        {/* Scrollable Container (Header + Body scroll together smoothly) */}
+        <div className="overflow-y-auto overscroll-contain flex-1 min-h-0 [touch-action:pan-y] [-webkit-overflow-scrolling:touch] custom-scrollbar">
+          {/* Header */}
+          <div className="px-5 pt-4 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50">
+            <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3" />
             
-            <button
-              type="button"
-              disabled={isDeleting}
-              onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center shrink-0 disabled:opacity-30"
-              title="Close dialog (Esc)"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 id="batch-delete-modal-title" className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
+                      Delete Cohort by Department & Year
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[9px] font-black tracking-wider uppercase border border-rose-500/25">
+                      {isSoftDelete ? 'DEACTIVATE' : 'PURGE'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    Filter by department & year, select all or choose individual students.
+                  </p>
+                </div>
+              </div>
+              
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={onClose}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center shrink-0 disabled:opacity-30"
+                title="Close dialog (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto overscroll-contain flex-1 min-h-0 [touch-action:pan-y] [-webkit-overflow-scrolling:touch] custom-scrollbar">
+          {/* Modal Scrollable Body */}
+          <div className="p-4 sm:p-5 space-y-4">
 
           {/* Section 1: Compact Filter Bar (Department, Year, Campus, Mode) */}
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-800 space-y-3">
@@ -750,6 +752,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
           )}
 
         </div>
+      </div>
 
         {/* Modal Footer */}
         <div className="px-5 py-3.5 border-t border-slate-200 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/90 backdrop-blur-md flex items-center justify-end gap-3 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-3.5">
