@@ -1,23 +1,25 @@
 # Android Release Archive
 
-Latest Release: **v4.5.5 (VersionCode 96)**  
-**Authoritative Live Sync:** November 17, 2026, 06:56 PM IST (Fully Synchronized)  
-**Cloud CI/CD Build Run:** [GitHub Actions Run #44093673533](https://github.com/nanthishvaran17/Leetcodeurl-s/actions/runs/44093673533) (Build Status: `SUCCESS`)
+Latest Release: **v4.5.7 (VersionCode 98)**  
+**Authoritative Live Sync:** November 19, 2026 (Fully Synchronized & Play Store Ready)  
 
 ### Production Build Outputs:
-- **Play Store Bundle (AAB):** `Nandha-LeetCode-PlayStore-Release.aab` (17.00 MB) — [Download from GitHub Actions Artifacts](https://github.com/nanthishvaran17/Leetcodeurl-s/actions/runs/44093673533)
-- **Signed Release APK:** `Nandha-LeetCode-Intelligence-release.apk` (14.76 MB) — [Download from GitHub Actions Artifacts](https://github.com/nanthishvaran17/Leetcodeurl-s/actions/runs/44093673533)
+- **Play Store Bundle (AAB):** `Nandha-LeetCode-PlayStore-Release.aab`
+- **Signed Release APK:** `Nandha-LeetCode-Intelligence-release.apk`
 - **Direct Repository APKs:**
-  - [Nandha_LeetCode_Intelligence_v4.5.5_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.5_latest.apk)
+  - [Nandha_LeetCode_Intelligence_v4.5.7_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.7_latest.apk)
   - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
   - [nandha-leetcode.apk](./nandha-leetcode.apk)
 
-### Changelog v4.5.5 (Latest Production)
-- **Mobile Bottom Sheet Drawer & Z-Index Overlay Hardening**:
-  - Re-architected multi-select dropdown for Department and Academic Year cohorts with mobile-native Bottom Sheet Drawer.
-  - Lifted dropdown popup z-index from `99999` to `99999999` to eliminate behind-modal clipping in all administrative dialogs.
-  - Added live search filter and quick "Select All" / "Clear All" toggles for swift management of 12+ departmental entities.
-  - Fully auto-provisions all 11 active engineering departments and all cohorts for `Placement Coordinator` and `Student Coordinator`.
+### Changelog v4.5.7 (Latest Production)
+- **Weekly Contest Mobile Viewport & Overview Cards Alignment**:
+  - Re-proportioned mobile stat cards with compact `h-20` height, `p-2.5` internal padding, and scaled font sizes.
+  - Eliminated left-edge border cut-off / clipping on mobile frames via `ring-inset` and internal `border-2`.
+  - Added safe responsive container bounds ensuring full border visibility across all device screens.
+- **Data Quality & Profile Health Page Polish**:
+  - Standardized padding and margins, unified dark theme navy color palettes, and balanced bento grid.
+- **Notification Settings Optimization**:
+  - Removed cluttered test alert buttons and streamlined preference sound persistence.
 
 ### Changelog v4.5.4
 - **Enhanced Badge Display & Type Safety**:

@@ -67,26 +67,26 @@ jobs:
         if: success()
         run: |
           mkdir -p dist-release
-          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.6_latest.apk
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk
           cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/nandha-leetcode.apk
           cp frontend/android/app/build/outputs/bundle/release/app-release.aab dist-release/Nandha-LeetCode-PlayStore-Release.aab
 
-      - name: Publish Official GitHub Release v4.5.6
+      - name: Publish Official GitHub Release v4.5.7
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v4.5.6
-          name: "Nandha LeetCode Intelligence v4.5.6 (Production Release)"
+          tag_name: v4.5.7
+          name: "Nandha LeetCode Intelligence v4.5.7 (Production Release)"
           body: |
-            ### 🚀 Official Production Release v4.5.6 (VersionCode 97)
-            - **Mobile APK Layout & Filter Alignment**: Compact 2-tier responsive filter bar, eliminated chip overflow, and improved mobile header proportions.
-            - **Seamless Leaderboard Spacing**: Removed excessive bottom whitespace padding above mobile pagination.
-            - **Theme & Accent Color Persistence**: Direct synchronization and persistence of institutional theme and accent colors.
+            ### 🚀 Official Production Release v4.5.7 (VersionCode 98)
+            - **Weekly Contest Mobile Overview Cards Fix**: Compact card proportions (`h-20`), inset borders, and zero frame-edge clipping on mobile screens.
+            - **Data Quality & Profile Health Alignment**: Standardized hero padding, balanced bento cards, and unified dark navy theme.
+            - **Notification Studio Cleanup**: Streamlined alert center settings with seamless chime state persistence.
             - **Target SDK 36 (Android 16)** Google Play Ready
             - **ProGuard / R8 Optimization** active lean release APK
             - **Restricted permissions removed** for 100% Play Store policy compliance
           files: |
-            dist-release/Nandha_LeetCode_Intelligence_v4.5.6_latest.apk
+            dist-release/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk
             dist-release/nandha-leetcode.apk
             dist-release/Nandha-LeetCode-PlayStore-Release.aab
           prerelease: false
