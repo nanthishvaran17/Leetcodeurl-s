@@ -1735,7 +1735,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
           </div>
         ) : viewMode === 'cards' ? (
-          <div className="space-y-6 pb-8 md:pb-14">
+          <div className="space-y-6 pb-28 md:pb-14">
             <motion.div
               initial="hidden"
               animate="show"

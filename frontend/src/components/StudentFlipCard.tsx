@@ -189,7 +189,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
   return (
     <div
-      className={`w-full min-h-[290px] sm:min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
+      className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onClick={handleCardClick}
@@ -198,12 +198,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         style={{ transformStyle: 'preserve-3d' }}
-        className="relative w-full h-full min-h-[290px] sm:min-h-[360px] flex flex-col"
+        className="relative w-full h-full min-h-[360px] flex flex-col"
       >
         {/* FRONT SIDE — 2026 Holographic Glass Student Card */}
         <div 
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-          className={`absolute inset-0 w-full h-full min-h-[290px] sm:min-h-[360px] p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 ${
+          className={`absolute inset-0 w-full h-full min-h-[360px] p-4.5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 overflow-hidden ${
             isFlipped ? 'pointer-events-none opacity-0' : 'pointer-events-auto opacity-100 z-10'
           }`}
         >
@@ -301,16 +301,16 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
             transform: 'rotateY(180deg)',
             WebkitTransform: 'rotateY(180deg)'
           }}
-          className={`absolute inset-0 w-full h-full min-h-[290px] sm:min-h-[360px] p-4 sm:p-6 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 ${
+          className={`absolute inset-0 w-full h-full min-h-[360px] p-4.5 sm:p-6 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 overflow-hidden ${
             isFlipped ? 'pointer-events-auto opacity-100 z-20' : 'pointer-events-none opacity-0 z-0'
           }`}
         >
 
           {/* Top Header */}
-          <div className="flex items-center justify-between pb-3 shrink-0">
+          <div className="flex items-center justify-between pb-2 sm:pb-3 shrink-0">
             <div className="flex items-center space-x-2 min-w-0">
-              <ShieldCheck className="w-5 h-5 text-brand-500 shrink-0" />
-              <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
+              <ShieldCheck className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
+              <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
             <a
               href={student.username ? `https://leetcode.com/u/${student.username}/` : '#'}
@@ -328,7 +328,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-navy-700 to-transparent shrink-0" />
 
           {/* Stats Breakdown Container - Clean Typography */}
-          <div className="flex-1 flex flex-col justify-center py-2 min-w-0">
+          <div className="flex-1 flex flex-col justify-center py-1 sm:py-2 min-w-0">
 
             {!isVerified ? (
               <div className="text-center space-y-2">
@@ -351,31 +351,31 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 </p>
               </div>
             ) : (
-              <div className="space-y-3.5">
+              <div className="space-y-2.5 sm:space-y-3.5">
 
                 {/* Total & Difficulty */}
                 <div className="text-center">
                   <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
                     {totalSolved}
                   </span>
-                  <div className="text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mt-0.5 mb-2.5">
+                  <div className="text-[10px] sm:text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mt-0.5 mb-2">
                     Total Solved
                   </div>
 
-                  <div className="flex justify-center items-center gap-5">
+                  <div className="flex justify-center items-center gap-4 sm:gap-5">
                     <div className="flex flex-col items-center">
-                      <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{easy}</span>
-                      <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Easy</span>
+                      <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">{easy}</span>
+                      <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Easy</span>
                     </div>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-navy-800" />
+                    <div className="w-px h-5 sm:h-6 bg-slate-300 dark:bg-navy-800" />
                     <div className="flex flex-col items-center">
-                      <span className="text-base font-black text-amber-600 dark:text-amber-400">{medium}</span>
-                      <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Med</span>
+                      <span className="text-sm sm:text-base font-black text-amber-600 dark:text-amber-400">{medium}</span>
+                      <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Med</span>
                     </div>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-navy-800" />
+                    <div className="w-px h-5 sm:h-6 bg-slate-300 dark:bg-navy-800" />
                     <div className="flex flex-col items-center">
-                      <span className="text-base font-black text-rose-600 dark:text-rose-400">{hard}</span>
-                      <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Hard</span>
+                      <span className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400">{hard}</span>
+                      <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Hard</span>
                     </div>
                   </div>
                 </div>
@@ -385,8 +385,8 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
                 {/* Additional Stats */}
                 <div className="grid grid-cols-2 gap-2 text-center px-1">
-                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                    <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Rating</span>
+                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                    <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Rating</span>
                     <span className="text-xs font-black text-amber-600 dark:text-amber-400 truncate max-w-full">
                       {getContestRatingDisplay(student)}
                     </span>
@@ -394,8 +394,8 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   {(() => {
                     const rankInfo = getRankBadgeInfo(student);
                     return (
-                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                        <span className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">
+                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                        <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">
                           {rankInfo.label}
                         </span>
                         <span
@@ -414,7 +414,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Action Footer: Buttons */}
-          <div className="flex items-center space-x-2 pt-2 pb-1 mt-auto shrink-0">
+          <div className="flex items-center space-x-2 pt-2 pb-0.5 mt-auto shrink-0">
             <button
               type="button"
               onMouseEnter={() => { import('../pages/StudentProfilePage'); }}
@@ -422,7 +422,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 if (onSelectStudent) onSelectStudent(student);
               }}
-              className="flex-1 py-2.5 min-h-[40px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+              className="flex-1 py-2 sm:py-2.5 min-h-[40px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95 touch-manipulation"
             >
               <span>View Profile</span>
             </button>
@@ -433,7 +433,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 setIsFlipped(false);
               }}
-              className="px-3 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95"
+              className="px-3 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
               title="Flip to Front"
             >
               <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -447,7 +447,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   e.stopPropagation();
                   onDeleteStudent(student);
                 }}
-                className="w-10 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95"
+                className="w-10 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95 touch-manipulation"
                 title="Delete Student Record"
               >
                 <Trash2 className="w-4 h-4" />
