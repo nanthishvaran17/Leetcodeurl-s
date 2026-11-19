@@ -189,28 +189,28 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
   return (
     <div
-      className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
+      className={`w-full min-h-[295px] sm:min-h-[345px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onClick={handleCardClick}
     >
       <motion.div
         animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         style={{ transformStyle: 'preserve-3d' }}
-        className="relative w-full h-full min-h-[360px] flex flex-col"
+        className="relative w-full h-full min-h-[295px] sm:min-h-[345px] flex flex-col"
       >
-        {/* FRONT SIDE — 2026 Holographic Glass Student Card */}
+        {/* FRONT SIDE — Holographic Glass Student Card */}
         <div 
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-          className={`absolute inset-0 w-full h-full min-h-[360px] p-4.5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 overflow-hidden ${
+          className={`absolute inset-0 w-full h-full min-h-[295px] sm:min-h-[345px] p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 overflow-hidden ${
             isFlipped ? 'pointer-events-none opacity-0' : 'pointer-events-auto opacity-100 z-10'
           }`}
         >
 
           {/* Card Top: Rank & Department Pill */}
-          <div className="flex items-center justify-between gap-2">
-            <span className={`px-3 py-1 rounded-full text-[10.5px] uppercase tracking-wider flex items-center space-x-1.5 whitespace-nowrap shadow-xs font-bold ${getRankBadgeStyle(effectiveRank)}`}>
+          <div className="flex items-center justify-between gap-1.5">
+            <span className={`px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[10.5px] uppercase tracking-wider flex items-center space-x-1.5 whitespace-nowrap shadow-xs font-bold ${getRankBadgeStyle(effectiveRank)}`}>
               {effectiveRank === 1 ? (
                 <>
                   <Award className="w-3.5 h-3.5 text-amber-900" />
@@ -232,37 +232,37 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <span>Unranked</span>
               )}
             </span>
-            <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-[9.5px] tracking-wider uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40 shadow-2xs font-mono">
+            <div className="flex items-center space-x-1">
+              <span className="font-bold text-[9px] sm:text-[9.5px] tracking-wider uppercase text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40 shadow-2xs font-mono">
                 {student.college || 'NEC'}
               </span>
-              <span className="font-bold text-[10.5px] tracking-wider uppercase text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.05] px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-white/10 shadow-2xs font-mono">
+              <span className="font-bold text-[10px] sm:text-[10.5px] tracking-wider uppercase text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.05] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-200/60 dark:border-white/10 shadow-2xs font-mono">
                 {formatDepartmentCode(student.department) || deriveDepartmentFromRegNo(student.reg_no) || (typeof student.department === 'string' ? student.department : student.department?.code) || 'DEPT'}
               </span>
             </div>
           </div>
 
           {/* Card Center: Avatar & Student Details */}
-          <div className="text-center space-y-2 py-1.5 flex-1 flex flex-col justify-center min-w-0">
-            <div className="relative w-16 h-16 sm:w-24 sm:h-24 mx-auto shrink-0 aspect-square flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400/30 to-indigo-500/30 blur-lg pointer-events-none" />
-              <div className="relative w-16 h-16 sm:w-24 sm:h-24 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
+          <div className="text-center space-y-1.5 py-1 flex-1 flex flex-col justify-center min-w-0">
+            <div className="relative w-15 h-15 sm:w-20 sm:h-20 mx-auto shrink-0 aspect-square flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400/30 to-indigo-500/30 blur-md pointer-events-none" />
+              <div className="relative w-15 h-15 sm:w-20 sm:h-20 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-lg sm:text-2xl flex items-center justify-center shadow-md border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
                 <span className="leading-none tracking-normal font-black text-center flex items-center justify-center">
-                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-7 h-7 sm:w-9 sm:h-9" />}
+                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-6 h-6 sm:w-8 sm:h-8" />}
                 </span>
               </div>
             </div>
 
             <div className="min-w-0 px-1 pt-0.5">
-              <h3 className="font-extrabold text-sm sm:text-lg text-slate-900 dark:text-white break-words line-clamp-2 max-w-full tracking-tight font-display leading-snug text-center" title={student.name}>
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white break-words line-clamp-1 max-w-full tracking-tight font-display leading-snug text-center" title={student.name}>
                 {student.name}
               </h3>
               <div className="flex items-center justify-center space-x-1.5 mt-0.5">
-                <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-wider truncate">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-wider truncate">
                   {student.reg_no}
                 </p>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">
                   {formatStudentYearBadge(student)}{student.section ? ` • ${student.section?.name || student.section}` : ''}
                 </p>
               </div>
@@ -270,23 +270,23 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-2 sm:pt-3 flex flex-col items-center justify-center gap-1 mt-auto border-t border-slate-100 dark:border-white/[0.04]">
+          <div className="pt-1.5 sm:pt-2.5 flex flex-col items-center justify-center gap-0.5 mt-auto border-t border-slate-100 dark:border-white/[0.04] shrink-0">
             {isVerified ? (
               <div className="flex flex-col items-center">
-                <span className="text-2xl sm:text-3.5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
+                <span className="text-xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
                   {totalSolved}
                 </span>
-                <span className="text-[9.5px] sm:text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 tracking-wider mt-0.5 px-2 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
+                <span className="text-[9px] sm:text-[9.5px] font-bold uppercase text-slate-600 dark:text-slate-300 tracking-wider mt-0.5 px-2 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
                   Problems Solved
                 </span>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[42px] sm:h-[50px]">
+              <div className="flex flex-col items-center justify-center h-[38px] sm:h-[44px]">
                 <span className="text-xs font-semibold text-slate-400">Stats Unavailable</span>
               </div>
             )}
 
-            <div className="mt-1.5 sm:mt-2.5 flex items-center justify-center">
+            <div className="mt-1 flex items-center justify-center">
               <SyncBadge />
             </div>
           </div>
@@ -301,15 +301,15 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
             transform: 'rotateY(180deg)',
             WebkitTransform: 'rotateY(180deg)'
           }}
-          className={`absolute inset-0 w-full h-full min-h-[360px] p-4.5 sm:p-6 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 overflow-hidden ${
+          className={`absolute inset-0 w-full h-full min-h-[295px] sm:min-h-[345px] p-3.5 sm:p-5 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 overflow-hidden ${
             isFlipped ? 'pointer-events-auto opacity-100 z-20' : 'pointer-events-none opacity-0 z-0'
           }`}
         >
 
           {/* Top Header */}
-          <div className="flex items-center justify-between pb-2 sm:pb-3 shrink-0">
-            <div className="flex items-center space-x-2 min-w-0">
-              <ShieldCheck className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
+          <div className="flex items-center justify-between pb-1 sm:pb-2 shrink-0">
+            <div className="flex items-center space-x-1.5 min-w-0">
+              <ShieldCheck className="w-4 h-4 text-brand-500 shrink-0" />
               <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
             <a
@@ -320,7 +320,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               className="text-slate-400 hover:text-brand-500 transition-colors shrink-0 p-1"
               title={student.username ? `View ${student.username} on LeetCode` : 'No LeetCode ID'}
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
 
@@ -328,54 +328,54 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-navy-700 to-transparent shrink-0" />
 
           {/* Stats Breakdown Container - Clean Typography */}
-          <div className="flex-1 flex flex-col justify-center py-1 sm:py-2 min-w-0">
+          <div className="flex-1 flex flex-col justify-center py-1 min-w-0">
 
             {!isVerified ? (
-              <div className="text-center space-y-2">
-                <AlertCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-navy-600 mb-3" />
-                <p className="font-extrabold text-sm text-slate-700 dark:text-slate-300">
+              <div className="text-center space-y-1.5">
+                <AlertCircle className="w-7 h-7 mx-auto text-slate-300 dark:text-navy-600 mb-2" />
+                <p className="font-extrabold text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                   {state === 'pending_username' ? 'Pending LeetCode Username' :
                     state === 'invalid_profile' ? 'Invalid LeetCode Profile' :
                       state === 'pending' ? 'Awaiting Scheduled Sync' :
                         state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
                 </p>
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-[11px] font-medium text-slate-500">
                   {state === 'pending_username' && 'Awaiting valid LeetCode profile assignment'}
                   {state === 'invalid_profile' && 'Profile not found or URL is incorrect'}
                   {state === 'pending' && 'Scheduled for background sync'}
                   {state === 'failed' && (lastVerifiedAt ? `Last verified: ${verifiedAgo}` : 'Never successfully synced')}
                   {state === 'mismatch' && 'Easy + Medium + Hard ≠ Total'}
                 </p>
-                <p className="text-xs font-black text-brand-500 mt-2 truncate">
+                <p className="text-xs font-black text-brand-500 mt-1 truncate">
                   {student.username || '—'}
                 </p>
               </div>
             ) : (
-              <div className="space-y-2.5 sm:space-y-3.5">
+              <div className="space-y-1.5 sm:space-y-2.5">
 
                 {/* Total & Difficulty */}
                 <div className="text-center">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
+                  <span className="text-2xl sm:text-3.5xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
                     {totalSolved}
                   </span>
-                  <div className="text-[10px] sm:text-[11px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mt-0.5 mb-2">
+                  <div className="text-[9px] sm:text-[10px] font-black uppercase text-slate-800 dark:text-slate-100 tracking-wider mt-0.5 mb-1.5">
                     Total Solved
                   </div>
 
-                  <div className="flex justify-center items-center gap-4 sm:gap-5">
+                  <div className="flex justify-center items-center gap-3.5 sm:gap-5">
                     <div className="flex flex-col items-center">
-                      <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">{easy}</span>
-                      <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Easy</span>
+                      <span className="text-xs sm:text-base font-black text-emerald-600 dark:text-emerald-400">{easy}</span>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Easy</span>
                     </div>
-                    <div className="w-px h-5 sm:h-6 bg-slate-300 dark:bg-navy-800" />
+                    <div className="w-px h-4 sm:h-5 bg-slate-300 dark:bg-navy-800" />
                     <div className="flex flex-col items-center">
-                      <span className="text-sm sm:text-base font-black text-amber-600 dark:text-amber-400">{medium}</span>
-                      <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Med</span>
+                      <span className="text-xs sm:text-base font-black text-amber-600 dark:text-amber-400">{medium}</span>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Med</span>
                     </div>
-                    <div className="w-px h-5 sm:h-6 bg-slate-300 dark:bg-navy-800" />
+                    <div className="w-px h-4 sm:h-5 bg-slate-300 dark:bg-navy-800" />
                     <div className="flex flex-col items-center">
-                      <span className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400">{hard}</span>
-                      <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Hard</span>
+                      <span className="text-xs sm:text-base font-black text-rose-600 dark:text-rose-400">{hard}</span>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Hard</span>
                     </div>
                   </div>
                 </div>
@@ -384,22 +384,22 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <div className="h-px w-2/3 mx-auto bg-gradient-to-r from-transparent via-slate-200 dark:via-navy-700 to-transparent" />
 
                 {/* Additional Stats */}
-                <div className="grid grid-cols-2 gap-2 text-center px-1">
-                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                    <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">Rating</span>
-                    <span className="text-xs font-black text-amber-600 dark:text-amber-400 truncate max-w-full">
+                <div className="grid grid-cols-2 gap-1.5 text-center px-0.5">
+                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 py-1 px-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                    <span className="text-[9px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">Rating</span>
+                    <span className="text-[11px] sm:text-xs font-black text-amber-600 dark:text-amber-400 truncate max-w-full">
                       {getContestRatingDisplay(student)}
                     </span>
                   </div>
                   {(() => {
                     const rankInfo = getRankBadgeInfo(student);
                     return (
-                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 p-1.5 sm:p-2 rounded-xl border border-slate-200/80 dark:border-navy-800">
-                        <span className="text-[9.5px] sm:text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider mb-0.5">
+                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 py-1 px-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                        <span className="text-[9px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
                           {rankInfo.label}
                         </span>
                         <span
-                          className="text-xs font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full"
+                          className="text-[11px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 truncate max-w-full"
                           title={`${rankInfo.label}: ${rankInfo.value}`}
                         >
                           {rankInfo.value}
@@ -414,7 +414,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Action Footer: Buttons */}
-          <div className="flex items-center space-x-2 pt-2 pb-0.5 mt-auto shrink-0">
+          <div className="flex items-center space-x-1.5 pt-1.5 pb-0.5 mt-auto shrink-0">
             <button
               type="button"
               onMouseEnter={() => { import('../pages/StudentProfilePage'); }}
@@ -422,7 +422,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 if (onSelectStudent) onSelectStudent(student);
               }}
-              className="flex-1 py-2 sm:py-2.5 min-h-[40px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95 touch-manipulation"
+              className="flex-1 py-2 min-h-[36px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 touch-manipulation"
             >
               <span>View Profile</span>
             </button>
@@ -433,7 +433,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 setIsFlipped(false);
               }}
-              className="px-3 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
+              className="px-2.5 min-h-[36px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
               title="Flip to Front"
             >
               <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -447,10 +447,10 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   e.stopPropagation();
                   onDeleteStudent(student);
                 }}
-                className="w-10 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                className="w-9 min-h-[36px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95 touch-manipulation"
                 title="Delete Student Record"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
