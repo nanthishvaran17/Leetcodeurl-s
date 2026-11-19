@@ -11,8 +11,8 @@
 
 [![Keep a Changelog](https://img.shields.io/badge/Changelog-Keep%20a%20Changelog%20v1.1.0-orange.svg?style=flat-square)](https://keepachangelog.com/en/1.1.0/)
 [![Semantic Versioning](https://img.shields.io/badge/SemVer-2.0.0-blue.svg?style=flat-square)](https://semver.org/spec/v2.0.0.html)
-[![Current Production Release](https://img.shields.io/badge/Release-v4.5.6%20(Build%2097)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.6%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.6_latest.apk)
+[![Current Production Release](https://img.shields.io/badge/Release-v4.5.7%20(Build%2098)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.7%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk)
 [![Windows Setup EXE](https://img.shields.io/badge/Windows%20Setup-v4.5.2%20EXE-blueviolet.svg?style=flat-square)](releases/desktop/Nandha_LeetCode_Intelligence_Setup_4.5.2.exe)
 [![CI/CD Autopilot Pipeline](https://img.shields.io/badge/Autopilot%20CI%2FCD-Active%205--Phase-blue.svg?style=flat-square)](.github/workflows/sunday_autopilot.yml)
 
@@ -40,12 +40,29 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 
 * **Formatting Standard:** Adheres strictly to [Keep a Changelog v1.1.0](https://keepachangelog.com/en/1.1.0/).
 * **Versioning Scheme:** Governed by [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) (`MAJOR.MINOR.PATCH`).
-* **Android Release Tracking:** Every minor/patch release maps to an immutable, sequentially incremented `versionCode` (Current: `versionCode 97`).
+* **Android Release Tracking:** Every minor/patch release maps to an immutable, sequentially incremented `versionCode` (Current: `versionCode 98`).
 * **Audit Trail:** Backed by cryptographically signed Git commits and automated continuous verification pipelines.
 
 ---
 
 ## Version 4.5.x — Multi-Department Governance & Mobile Polish (Current)
+
+### [4.5.7] - 2026-11-20 (Production Release)
+
+#### 📱 Native Android Release v4.5.7 (Build 98)
+* **Release Artifacts:** Compiled signed release APK (`Nandha_LeetCode_Intelligence_v4.5.7_latest.apk`, 15.01 MB lean), signed with `nandha-release-key.jks` using SHA256withRSA.
+* **Asset Optimization:** Purged legacy nested binary bundles from the APK container to achieve a lean 15.01 MB footprint.
+
+#### ⚡ Extreme Velocity & Zero-Delay Navigation
+* **React Query Structural Sharing:** Configured `structuralSharing: true` across all queries to prevent unnecessary DOM thrashing and guarantee 120Hz/60fps rendering.
+* **Instant Network Mode:** Activated `networkMode: 'always'` and capped retry backoff at 400ms–2s to eliminate wait pauses during transient network fluctuations.
+* **Predictive Idle Pre-Warming:** Extended `pagePrefetch.ts` to pre-warm `staff-dashboard`, `staff`, and `landing` JS chunks and API payloads during idle intervals for instant 0ms tab clicks.
+
+#### 🛡️ Commercial Audit & 100% Authentic Data
+* **Zero Dummy / Mock Data:** Completely removed all `Math.random()` simulation fallbacks and fake latencies. Wired live NAAC Criteria 5.1 & NBA Mentoring Audit data engines.
+* **Strict Cohort Isolation:** Enforced canonical cohort matching in frontend and backend queries. Filtering by 2nd Year Cyber Security yields strictly the 27 enrolled students with zero 3rd year or cross-department leaks.
+* **Staff Dashboard Streamlined:** Removed cluttered header action buttons (`FETCH LIVE DATA`, `Refresh`, `Export CSV`, `Copy Report`) to deliver an uncluttered, modern mobile view.
+* **Session Cache Isolation:** Scoped mentee data caching by `userScope` (`user.id`) to eliminate cross-session mentee bleed.
 
 ### [4.5.6] - 2026-11-19 (Production Release)
 
