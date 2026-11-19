@@ -7,7 +7,7 @@ import {
   SlidersHorizontal, Filter, RotateCcw, School, GraduationCap
 } from 'lucide-react';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 import { clearAllStudentCaches } from '../utils/rosterCache';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
@@ -299,6 +299,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   // Pull-to-refresh listener: clear caches, invalidate React Query and refetch student roster
   useEffect(() => {
     const handlePull = () => {
+      clearApiCache();
       clearAllStudentCaches();
       queryClient.invalidateQueries({ queryKey: ['students-master'] });
       queryClient.invalidateQueries({ queryKey: ['students'] });
@@ -571,28 +572,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     || lcValidation.status === 'validating';
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-0 animate-fade-in font-sans pb-32 sm:pb-20">
+    <div className="space-y-4 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in font-sans pb-32 sm:pb-20">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3.5 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-8 shadow-xl sm:shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
         {/* Animated Decorative Ambient Light Beams */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-400/50 to-transparent" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
-          <div className="space-y-1.5 max-w-2xl">
-            <div className="space-y-1.5">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
-                Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Directory</span>
-              </h1>
-              <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
-                Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
-              </p>
-            </div>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-8">
+          <div className="space-y-1 max-w-2xl">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+              Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Directory</span>
+            </h1>
+            <p className="text-xs md:text-sm text-slate-300/90 font-medium sm:font-bold tracking-wide leading-relaxed">
+              Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
+            </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-4 lg:justify-end mt-2 lg:mt-0 w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-4 lg:justify-end mt-1 lg:mt-0 w-full lg:w-auto">
             {/* View Mode Toggle - Responsive (Visible on Mobile & Desktop) */}
             <div className="flex items-center gap-1.5 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
               <button
@@ -622,26 +621,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowBatchDeleteModal(true)}
-                className="col-span-2 sm:col-span-1 min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/20 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
+                className="col-span-2 sm:col-span-1 min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 border border-white/20 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
                 title="Delete Students by Department and Academic Year"
               >
-                <Trash2 className="w-4 h-4 text-rose-400 shrink-0" />
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400 shrink-0" />
                 <span className="truncate">Delete by Dept/Year</span>
               </button>
 
               <button
                 onClick={onOpenImport}
-                className="min-h-[42px] px-3 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
+                className="min-h-[38px] sm:min-h-[42px] px-3 sm:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm transition-all duration-200 active:scale-95 cursor-pointer backdrop-blur-md"
               >
-                <UploadCloud className="w-4 h-4 text-brand-300 shrink-0" />
+                <UploadCloud className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300 shrink-0" />
                 <span className="truncate">Import</span>
               </button>
 
               <button
                 onClick={handleOpenAddModal}
-                className="min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer border border-brand-300/40"
+                className="min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer border border-brand-300/40"
               >
-                <Plus className="w-4 h-4 shrink-0" />
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span className="truncate">Add Student</span>
               </button>
             </div>
@@ -737,69 +736,78 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         </div>
 
         {/* Results Counter & Active Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100 dark:border-navy-800/80 px-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
-          <div className="min-w-0 flex-1 break-words flex flex-wrap items-center gap-2">
-            {filters.isFilteringActive ? (
-              <span>
-                Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
-              </span>
-            ) : (
-              <span>Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
-            )}
-
-                        {/* Active College Tag */}
-            {filters.college !== 'ALL' && (
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold border ${
-                filters.college === 'NCT'
-                  ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300'
-                  : 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300'
-              }`}>
-                College: {filters.college}
-                <button type="button" onClick={() => filters.setCollege('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-
-            {/* Active Department Tag */}
-            {filters.department !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-[10.5px] font-bold">
-                Dept: {filters.department}
-                <button type="button" onClick={() => filters.setDepartment('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-
-            {/* Active Year Tag */}
-            {filters.academicYear !== 'ALL' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10.5px] font-bold">
-                Year: {filters.academicYear}
-                <button type="button" onClick={() => filters.setAcademicYear('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
-              </span>
-            )}
-          </div>
-
-          {filters.isFilteringActive && (
-            <div className="flex items-center gap-2 shrink-0">
-              {(filters.department !== 'ALL' || filters.academicYear !== 'ALL') && (
-                <button
-                  type="button"
-                  onClick={() => setShowBatchDeleteModal(true)}
-                  className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center gap-1 border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg transition-all"
-                  title="Batch delete students matching current department and year filters"
-                >
-                  <Trash2 className="w-3 h-3 text-rose-500" />
-                  <span>Delete Filtered Dept/Year</span>
-                </button>
+        <div className="pt-2 border-t border-slate-100 dark:border-navy-800/80 space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          {/* Top Line: Showing count & Quick Reset */}
+          <div className="flex items-center justify-between gap-2 px-0.5">
+            <div className="min-w-0 text-xs">
+              {filters.isFilteringActive ? (
+                <span>
+                  Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
+                </span>
+              ) : (
+                <span>Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
               )}
+            </div>
+
+            {filters.isFilteringActive && (
               <button
                 type="button"
                 onClick={() => {
                   setLocalSearch('');
                   filters.resetFilters();
                 }}
-                className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer inline-flex items-center gap-1 active:scale-95 transition-all"
+                title="Reset all filters and search"
               >
                 <RotateCcw className="w-3 h-3" />
-                Reset Filters
+                <span>Reset Filters</span>
               </button>
+            )}
+          </div>
+
+          {/* Active Filter Tags & Delete Filtered Action */}
+          {((filters.college !== 'ALL') || (filters.department !== 'ALL') || (filters.academicYear !== 'ALL')) && (
+            <div className="flex flex-wrap items-center gap-1.5 px-0.5 pt-0.5">
+              {/* Active College Tag */}
+              {filters.college !== 'ALL' && (
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-bold border ${
+                  filters.college === 'NCT'
+                    ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300'
+                    : 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300'
+                }`}>
+                  College: {filters.college}
+                  <button type="button" onClick={() => filters.setCollege('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+                </span>
+              )}
+
+              {/* Active Department Tag */}
+              {filters.department !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-[10.5px] font-bold">
+                  Dept: {filters.department}
+                  <button type="button" onClick={() => filters.setDepartment('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+                </span>
+              )}
+
+              {/* Active Year Tag */}
+              {filters.academicYear !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10.5px] font-bold">
+                  Year: {filters.academicYear}
+                  <button type="button" onClick={() => filters.setAcademicYear('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
+                </span>
+              )}
+
+              {/* Delete Filtered Dept/Year Button */}
+              {filters.isFilteringActive && (filters.department !== 'ALL' || filters.academicYear !== 'ALL') && (
+                <button
+                  type="button"
+                  onClick={() => setShowBatchDeleteModal(true)}
+                  className="inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-100 dark:hover:bg-rose-900/40 cursor-pointer border border-rose-200 dark:border-rose-900/60 bg-rose-50/80 dark:bg-rose-950/50 px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-xs"
+                  title="Batch delete students matching current department and year filters"
+                >
+                  <Trash2 className="w-3 h-3 text-rose-500 shrink-0" />
+                  <span>Delete Filtered Dept/Year</span>
+                </button>
+              )}
             </div>
           )}
         </div>

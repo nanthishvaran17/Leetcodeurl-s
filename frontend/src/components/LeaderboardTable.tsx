@@ -555,6 +555,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   }, []);
   const [syncingIds, setSyncingIds] = useState<Record<string, boolean>>({});
 
+  // Reset any in-flight row syncing states on pull-to-refresh
+  useEffect(() => {
+    const handlePull = () => {
+      setSyncingIds({});
+    };
+    window.addEventListener('pull_to_refresh', handlePull);
+    return () => window.removeEventListener('pull_to_refresh', handlePull);
+  }, []);
+
   const memoizedHandleDelete = useCallback((s: any, e: any) => {
     setDeletingStudent(s);
   }, []);
@@ -751,7 +760,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 }}
               </List>
             ) : (
-              <div className="flex flex-col space-y-3 pb-20 md:pb-0">
+              <div className="flex flex-col space-y-3 pb-3 md:pb-0">
                 {paginatedStudents.slice(0, renderedCount).map((student, idx) => (
                   <FastStudentRow
                     key={student.id}

@@ -740,7 +740,7 @@ const DeleteAccountPanel: React.FC<{ notify: any }> = ({ notify }) => {
 export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   useEscapeKey(onBack, Boolean(onBack));
   const { user, logout } = useAuth();
-  const { theme, setTheme, setSystemTheme, toggleTheme } = useTheme();
+  const { theme, setTheme, setSystemTheme, toggleTheme, accentColor, setAccentColor } = useTheme();
   const { notify } = useNotification();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonImportInputRef = useRef<HTMLInputElement>(null);
@@ -816,9 +816,6 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
   };
 
   // Executive Institutional Workstation Preferences & Plan Settings
-  const [accentColor, setAccentColor] = useState<string>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('nec_accent_color')) || 'indigo';
-  });
   const [uiDensity, setUiDensity] = useState<'compact' | 'standard' | 'comfortable'>(() => {
     return (typeof window !== 'undefined' && localStorage.getItem('nec_ui_density') as any) || 'standard';
   });
@@ -1412,7 +1409,21 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
           if (m.orcid_id) setOrcidId(m.orcid_id);
           if (m.scopus_id) setScopusId(m.scopus_id);
           if (m.leetcode_handle) setLeetcodeHandle(m.leetcode_handle);
-          if (m.card_theme) setSelectedCardTheme(m.card_theme);
+          if (m.card_theme) {
+            setSelectedCardTheme(m.card_theme);
+            try { localStorage.setItem('nec_card_theme', m.card_theme); } catch {}
+          }
+          if (m.accent_color) {
+            setAccentColor(m.accent_color);
+          }
+          if (m.theme) {
+            setThemeMode(m.theme);
+            if (m.theme === 'system') {
+              setSystemTheme();
+            } else if (m.theme === 'dark' || m.theme === 'light') {
+              setTheme(m.theme);
+            }
+          }
         }
       } catch {
         if (user) {
@@ -1880,6 +1891,7 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
     localStorage.setItem('pref_show_cabin_dir', String(showCabinInDirectory));
     localStorage.setItem('nec_2fa_enabled', String(is2FAEnabled));
     localStorage.setItem('nec_card_theme', selectedCardTheme);
+    localStorage.setItem('nec_accent_color', accentColor);
 
     setIsSaving(true);
     try {
@@ -1917,7 +1929,9 @@ export const AccountProfileSettings: React.FC<{ onBack?: () => void }> = ({ onBa
         orcid_id: orcidId,
         scopus_id: scopusId,
         leetcode_handle: leetcodeHandle,
-        card_theme: selectedCardTheme
+        card_theme: selectedCardTheme,
+        accent_color: accentColor,
+        theme: themeMode
       };
 
       if (newPassword && currentPassword) {
@@ -6759,7 +6773,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
               <div className="p-1 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 grid grid-cols-3 gap-1">
                 <button
                   type="button"
-                  onClick={() => { setTheme('light'); setThemeMode('light'); triggerHaptic('selection'); }}
+                  onClick={() => {
+                    setTheme('light');
+                    setThemeMode('light');
+                    triggerHaptic('selection');
+                    try { api.put('/auth/profile', { theme: 'light' }).catch(() => {}); } catch {}
+                  }}
                   className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'light'
                       ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
@@ -6772,7 +6791,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <button
                   type="button"
-                  onClick={() => { setTheme('dark'); setThemeMode('dark'); triggerHaptic('selection'); }}
+                  onClick={() => {
+                    setTheme('dark');
+                    setThemeMode('dark');
+                    triggerHaptic('selection');
+                    try { api.put('/auth/profile', { theme: 'dark' }).catch(() => {}); } catch {}
+                  }}
                   className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'dark'
                       ? 'bg-navy-900 text-white shadow-sm border border-navy-700'
@@ -6785,7 +6809,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
                 <button
                   type="button"
-                  onClick={() => { setSystemTheme(); setThemeMode('system'); triggerHaptic('selection'); }}
+                  onClick={() => {
+                    setSystemTheme();
+                    setThemeMode('system');
+                    triggerHaptic('selection');
+                    try { api.put('/auth/profile', { theme: 'system' }).catch(() => {}); } catch {}
+                  }}
                   className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 select-none ${
                     themeMode === 'system'
                       ? 'bg-white dark:bg-navy-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-navy-700'
@@ -6815,8 +6844,11 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       type="button"
                       onClick={() => {
                         setAccentColor(acc.id);
-                        try { localStorage.setItem('nec_accent_color', acc.id); } catch {}
                         triggerHaptic('selection');
+                        notify.success(`Accent color set to ${acc.label}`, 'Applied across the app and saved.', { category: 'ADMIN', duration: 2500 });
+                        try {
+                          api.put('/auth/profile', { accent_color: acc.id }).catch(() => {});
+                        } catch {}
                       }}
                       className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
                         accentColor === acc.id
@@ -7266,7 +7298,12 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     <button
                       key={th.id}
                       type="button"
-                      onClick={() => setSelectedCardTheme(th.id)}
+                      onClick={() => {
+                        setSelectedCardTheme(th.id);
+                        try { localStorage.setItem('nec_card_theme', th.id); } catch {}
+                        triggerHaptic('selection');
+                        try { api.put('/auth/profile', { card_theme: th.id }).catch(() => {}); } catch {}
+                      }}
                       className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border-2 cursor-pointer whitespace-nowrap active:scale-95 ${
                         selectedCardTheme === th.id
                           ? 'bg-brand-600 text-white border-brand-700 shadow-sm'
