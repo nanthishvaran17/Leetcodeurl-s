@@ -94,9 +94,12 @@ def get_departments(
     # Scope restrictions by role (HOD & Staff/Faculty Mentors):
     # HOD and Staff can NEVER see departments outside their authorized scope.
     if current_user:
-        from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, _GLOBAL_ACCESS_ROLES
+        from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, _GLOBAL_ACCESS_ROLES, get_hod_authorized_department_ids
         role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role in _HOD_ROLES or "hod" in role or "head of department" in role:
+        is_hod_user = role in _HOD_ROLES or "hod" in role or "head of department" in role
+        is_staff_user = role in _STAFF_ROLES or "staff" in role or "faculty" in role or "mentor" in role
+
+        if is_hod_user:
             if hod_authorized_ids:
                 all_d = [d for d in all_d if d.id in hod_authorized_ids]
             elif current_user.department_id:
@@ -104,19 +107,23 @@ def get_departments(
             else:
                 # HOD with no allocations — return empty list (fail closed)
                 all_d = []
-        elif role in _STAFF_ROLES:
-            from backend.services.faculty_assignment_service import FacultyAssignmentService
-            assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id))
-            if assigned_ids:
-                dept_ids = [s[0] for s in db.query(Student.department_id).filter(Student.id.in_(assigned_ids)).distinct().all() if s[0]]
-                if dept_ids:
-                    all_d = [d for d in all_d if d.id in dept_ids]
+        elif is_staff_user:
+            staff_alloc_ids = get_hod_authorized_department_ids(db, current_user)
+            if staff_alloc_ids:
+                all_d = [d for d in all_d if d.id in staff_alloc_ids]
+            else:
+                from backend.services.faculty_assignment_service import FacultyAssignmentService
+                assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id))
+                if assigned_ids:
+                    dept_ids = [s[0] for s in db.query(Student.department_id).filter(Student.id.in_(assigned_ids)).distinct().all() if s[0]]
+                    if dept_ids:
+                        all_d = [d for d in all_d if d.id in dept_ids]
+                    elif current_user.department_id:
+                        all_d = [d for d in all_d if d.id == current_user.department_id]
                 elif current_user.department_id:
                     all_d = [d for d in all_d if d.id == current_user.department_id]
-            elif current_user.department_id:
-                all_d = [d for d in all_d if d.id == current_user.department_id]
-            else:
-                all_d = []
+                else:
+                    all_d = []
 
     return all_d
 

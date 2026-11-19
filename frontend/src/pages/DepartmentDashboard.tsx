@@ -44,6 +44,9 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   const defaultDeptId = useMemo(() => {
     if (isStaffUser) {
+      if (departments.length > 1) {
+        return 'all'; // Multi-dept staff defaults to combined view of authorized depts
+      }
       if (departments.length === 1 && departments[0].id) {
         return String(departments[0].id);
       }
@@ -67,8 +70,15 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   useEffect(() => {
     if (isStaffUser) {
-      if (selectedDept !== defaultDeptId) {
-        setSelectedDept(defaultDeptId);
+      if (departments.length > 1) {
+        const validValues = departments.map(d => String(d.id));
+        if (selectedDept !== 'all' && selectedDept !== 'ALL' && !validValues.includes(selectedDept)) {
+          setSelectedDept(defaultDeptId);
+        }
+      } else {
+        if (selectedDept !== defaultDeptId) {
+          setSelectedDept(defaultDeptId);
+        }
       }
     } else if (isRestrictedHod) {
       if (departments.length === 1 && (selectedDept === 'all' || selectedDept === 'ALL')) {
@@ -194,10 +204,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   // Department Dropdown Options for unified desktop controls
   const departmentOptions: DropdownOption[] = useMemo(() => {
     const list: DropdownOption[] = [];
-    if (!((isRestrictedHod && departments.length <= 1) || isStaffUser)) {
+    const hasMultipleDepts = departments.length > 1;
+    if (!((isRestrictedHod || isStaffUser) && !hasMultipleDepts)) {
       list.push({
         value: 'all',
-        label: isRestrictedHod ? 'All My Depts' : 'All Departments',
+        label: (isRestrictedHod || isStaffUser) ? 'All My Depts' : 'All Departments',
         badge: 'ALL',
         icon: Building2,
       });
@@ -477,7 +488,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {[
-                  ...((isRestrictedHod && departments.length <= 1) || isStaffUser ? [] : [{ id: 'all', label: isRestrictedHod ? 'All My Depts' : 'All Depts' }]),
+                  ...(((isRestrictedHod || isStaffUser) && departments.length <= 1) ? [] : [{ id: 'all', label: (isRestrictedHod || isStaffUser) ? 'All My Depts' : 'All Depts' }]),
                   ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
                 ].map(d => {
                   const isSelected = 

@@ -626,8 +626,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     return counts;
   }, [students]);
 
-  // Only departments that actually have enrolled students in the database
+  // Only departments that actually have enrolled students in the database (strictly respecting HOD/Staff scope)
   const activeDepartmentsWithCounts = useMemo(() => {
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    const isGlobal = ['admin', 'administrator', 'superadmin', 'super_admin', 'super admin', 'principal', 'management', 'director'].includes(roleClean);
+    const authCodes = (user?.authorized_department_codes || []).map((c: string) => normalizeDepartment(c));
+    const authIds = (user?.authorized_department_ids || []).map(Number);
+    const uDeptCode = normalizeDepartment(user?.department || (user as any)?.department_code || '');
+    const uDeptId = user?.department_id ? Number(user.department_id) : null;
+
     return departments
       .map(d => {
         const code = (d.code || d.name || '').trim().toUpperCase();
@@ -638,12 +645,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         };
       })
       .filter(d => {
-        const authCodes = (user?.authorized_department_codes || []).map((c: string) => c.toUpperCase());
-        // Always include departments explicitly authorized for current user even if count is 0
-        if (authCodes.includes((d.code || '').toUpperCase())) return true;
+        // If user is restricted (HOD / Staff), they can ONLY see their allocated departments!
+        if (!isGlobal && user) {
+          const normD = normalizeDepartment(d);
+          const normCode = normalizeDepartment(d.code);
+          const isAuth = (d.id && authIds.includes(Number(d.id))) ||
+                         (uDeptId && d.id && Number(d.id) === uDeptId) ||
+                         (authCodes.length > 0 && (authCodes.includes(normD) || authCodes.includes(normCode))) ||
+                         (uDeptCode && (normD === uDeptCode || normCode === uDeptCode));
+          return isAuth;
+        }
         return (d.student_count ?? 0) > 0 || departments.length <= 2;
       });
-  }, [departments, departmentCounts]);
+  }, [departments, departmentCounts, user]);
 
 
 

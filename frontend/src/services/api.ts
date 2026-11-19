@@ -49,10 +49,10 @@ const URL_TTL_OVERRIDES: Record<string, number> = {
   '/analytics/data-quality': 300_000,       // 5 min
   '/data-issues/summary': 180_000,          // 3 min
   '/command-center/summary': 180_000,       // 3 min
-  '/command-center/departments': 600_000,   // 10 min
+  '/command-center/departments': 10_000,   // 10 sec - instant refresh on allocation changes
   '/faculty-assignments/': 180_000,         // 3 min — instant staff dashboard navigation
   '/contests/': 120_000,                    // 2 min
-  '/departments': 600_000,                  // 10 min
+  '/departments': 10_000,                   // 10 sec - instant refresh on allocation changes
   '/sessions/dashboard-summary': 60_000,    // 1 min
   '/system/health': 60_000,                 // 1 min
   '/public/stats': 300_000,                 // 5 min

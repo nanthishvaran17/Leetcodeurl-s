@@ -28,6 +28,7 @@ import api, { clearApiCache } from '../services/api';
 import { useGlobalWebSocket } from '../context/GlobalWebSocketProvider';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { normalizeDepartment } from '../utils/filterUtils';
 
 // Shared Card Component 
 
@@ -1344,21 +1345,22 @@ export const HODCommandCenter: React.FC = () => {
  const filteredDepartments = useMemo(() => {
    if (isGlobalRole) return departments;
    if (isHod) {
-     if (departments.length > 0) return departments;
-     const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids : [];
-     const authCodes: string[] = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
+     const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids.map(Number) : [];
+     const authCodes: string[] = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map((c: string) => normalizeDepartment(c));
      const uDeptId = user?.department_id ? Number(user.department_id) : null;
-     const uDeptCode = String(user?.department || (user as any)?.department_code || '').toUpperCase();
+     const uDeptCode = normalizeDepartment(user?.department || (user as any)?.department_code || '');
 
      const matched = departments.filter(d => {
+       const normD = normalizeDepartment(d);
+       const normCode = normalizeDepartment(d.code);
        if (authIds.length > 0 && d.id && authIds.includes(Number(d.id))) return true;
-       if (authCodes.length > 0 && d.code && authCodes.includes(d.code.toUpperCase())) return true;
        if (uDeptId && d.id && Number(d.id) === uDeptId) return true;
-       if (uDeptCode && d.code && (d.code.toUpperCase() === uDeptCode || uDeptCode.includes(d.code.toUpperCase()))) return true;
+       if (authCodes.length > 0 && (authCodes.includes(normD) || authCodes.includes(normCode))) return true;
+       if (uDeptCode && (normD === uDeptCode || normCode === uDeptCode)) return true;
        return false;
      });
 
-     return matched.length > 0 ? matched : departments;
+     return matched;
    }
    return departments;
  }, [departments, isGlobalRole, isHod, user]);

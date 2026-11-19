@@ -50,16 +50,16 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
     return list.filter(d => d.student_count === undefined || d.student_count > 0);
   }, [isRestricted, isRestrictedHod, isStaffUser, showAllDepartments, isGlobalAccess, allDepartments, departments]);
 
-  // If HOD has scoped departments, auto-select their first department if single dept, or allow 'ALL' / 'MY_DEPARTMENTS' for multi-dept
+  // If HOD or Staff has scoped departments, auto-select their first department if single dept, or allow 'ALL' / 'MY_DEPARTMENTS' for multi-dept
   useEffect(() => {
     if ((isRestrictedHod || isStaffUser) && activeDepts.length > 0) {
       const validValues = activeDepts.map(d => useIdAsValue ? String(d.id || '') : (formatDepartmentCode(d) || d.code));
-      if (activeDepts.length === 1 || isStaffUser) {
+      if (activeDepts.length === 1) {
         if (selectedDept === 'ALL' || selectedDept === 'MY_DEPARTMENTS' || !validValues.includes(selectedDept)) {
           onChange(validValues[0]);
         }
       } else {
-        // Multi-dept HOD: allow 'ALL' or 'MY_DEPARTMENTS' (combined view of all authorized depts, e.g. 150 + 150 = 300)
+        // Multi-dept HOD or Staff: allow 'ALL' or 'MY_DEPARTMENTS' (combined view of all authorized depts, e.g. 150 + 150 = 300)
         const isCombined = selectedDept === 'ALL' || selectedDept === 'MY_DEPARTMENTS';
         if (!selectedDept || (!validValues.includes(selectedDept) && !isCombined)) {
           onChange('ALL');
@@ -68,7 +68,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
     }
   }, [isRestrictedHod, isStaffUser, activeDepts, selectedDept, useIdAsValue, onChange]);
 
-  // Options generator strictly respecting HOD scope
+  // Options generator strictly respecting HOD / Staff scope
   const options = useMemo(() => {
     const deptOpts = activeDepts.map(d => {
       const code = formatDepartmentCode(d) || d.code;
@@ -80,11 +80,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       };
     });
 
-    if (isStaffUser) {
-      return deptOpts;
-    }
-
-    if (isRestrictedHod) {
+    if (isRestrictedHod || isStaffUser) {
       if (activeDepts.length > 1) {
         return [
           { value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' },
@@ -98,7 +94,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
       ...deptOpts
     ];
-  }, [activeDepts, isRestrictedHod, useIdAsValue]);
+  }, [activeDepts, isRestrictedHod, isStaffUser, useIdAsValue]);
 
   return (
     <GlobalFilter

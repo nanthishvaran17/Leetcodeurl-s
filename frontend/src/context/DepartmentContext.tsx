@@ -32,13 +32,6 @@ const ALL_DEPARTMENTS_FALLBACK: Department[] = [
 ];
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
-  const [allDepartments, setAllDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isHodScope, setIsHodScope] = useState(false);
-  const [isGlobalAccess, setIsGlobalAccess] = useState(false);
-
   // Resolve user info from localStorage for reactivity (avoid circular provider dependency)
   const getUserSnapshot = () => {
     try {
@@ -48,6 +41,48 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return null;
     }
   };
+
+  const getInitialDepartments = (): Department[] => {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return [];
+      const u = JSON.parse(raw);
+      const role = ((u?.role) || '').trim().toLowerCase();
+      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator', 'director', 'executive'];
+      if (globalRoles.includes(role)) {
+        return ALL_DEPARTMENTS_FALLBACK;
+      }
+      const authCodes: string[] = Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : [];
+      const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
+      if (authCodes.length > 0) {
+        return authCodes.map((c, i) => ({
+          id: authIds[i] || i + 1,
+          code: c,
+          name: c,
+          pillText: c,
+          student_count: 0
+        }));
+      }
+      if (u?.department || u?.department_code) {
+        const code = u.department_code || u.department;
+        return [{
+          id: u.department_id || 1,
+          code: code,
+          name: u.department_name || code,
+          pillText: code,
+          student_count: 0
+        }];
+      }
+    } catch {}
+    return [];
+  };
+
+  const [departments, setDepartments] = useState<Department[]>(getInitialDepartments);
+  const [allDepartments, setAllDepartments] = useState<Department[]>(getInitialDepartments);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isHodScope, setIsHodScope] = useState(false);
+  const [isGlobalAccess, setIsGlobalAccess] = useState(false);
 
   const fetchDepartments = useCallback(async () => {
     setIsLoading(true);
@@ -147,85 +182,110 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const hodRoles = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator', 'placement officer'];
       const staffRoles = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'];
       const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator', 'director', 'executive'];
-      const isHod = hodRoles.includes(role);
-      const isStaff = staffRoles.includes(role);
-      const isGlobal = globalRoles.includes(role);
+      
+      const isHod = hodRoles.some(r => role === r || role.includes(r)) || role.includes('hod') || role.includes('head of department') || role.includes('head_of_department');
+      const isStaff = staffRoles.some(r => role === r || role.includes(r)) || role.includes('staff') || role.includes('faculty') || role.includes('mentor');
+      const isGlobal = globalRoles.some(r => role === r);
       setIsHodScope(isHod || isStaff);
       setIsGlobalAccess(isGlobal);
 
       if ((isHod || isStaff) && !isGlobal) {
-        // If the server directly returned scoped departments for this user, trust the authoritative backend!
-        // The backend (/departments) already validates HODDepartmentAllocation in the database.
-        if (scopedData.length > 0) {
-          const parsed = parseDeptList(scopedData);
-          if (parsed.length > 0) {
-            setDepartments(parsed);
-            setAllDepartments(parsed);
-
-            // Sync fresh department IDs & codes into localStorage user so other components stay updated
-            try {
-              if (u) {
-                const newIds = parsed.map(d => d.id).filter(Boolean) as number[];
-                const newCodes = parsed.map(d => d.code).filter(Boolean) as string[];
-                const updatedUser = {
-                  ...u,
-                  authorized_department_ids: newIds.length > 0 ? newIds : u.authorized_department_ids,
-                  authorized_department_codes: newCodes.length > 0 ? newCodes : u.authorized_department_codes
-                };
-                localStorage.setItem('user', JSON.stringify(updatedUser));
-              }
-            } catch (_) {}
-            return;
-          }
-        }
-
-        const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
-        const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
+        const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids.map(Number) : [];
+        const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).trim());
         const uDeptId = u?.department_id ? Number(u.department_id) : null;
-        const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
+        const uDeptCode = String(u?.department || u?.department_code || '').trim();
+
+        // Canonical set of normalized authorized identifiers
+        const authorizedKeys = new Set<string>();
+        if (uDeptId) authorizedKeys.add(normalizeDepartment(uDeptId));
+        if (uDeptCode) authorizedKeys.add(normalizeDepartment(uDeptCode));
+        authIds.forEach(id => authorizedKeys.add(normalizeDepartment(id)));
+        authCodes.forEach(code => authorizedKeys.add(normalizeDepartment(code)));
 
         const isAuthorizedDept = (d: Department) => {
-          if (authIds.length > 0 && d.id && authIds.includes(Number(d.id))) return true;
-          if (authCodes.length > 0 && d.code && authCodes.includes(d.code.toUpperCase())) return true;
+          if (d.id && authIds.includes(Number(d.id))) return true;
           if (uDeptId && d.id && Number(d.id) === uDeptId) return true;
-          if (uDeptCode && d.code && (d.code.toUpperCase() === uDeptCode || uDeptCode.includes(d.code.toUpperCase()))) return true;
-          if (uDeptCode && d.name && (d.name.toUpperCase() === uDeptCode || uDeptCode.includes(d.name.toUpperCase()))) return true;
-          if (uDeptCode && normalizeDepartment(d) === normalizeDepartment(uDeptCode)) return true;
-          if (uDeptId && normalizeDepartment(d) === normalizeDepartment(uDeptId)) return true;
+          const normD = normalizeDepartment(d);
+          if (authorizedKeys.has(normD)) return true;
+          const normCode = normalizeDepartment(d.code);
+          if (authorizedKeys.has(normCode)) return true;
           return false;
         };
 
-        const finalScoped = scopedDeptsList.filter(isAuthorizedDept);
-        const finalAll = allDeptsList.filter(isAuthorizedDept);
+        // Filter both scoped and all data strictly to authorized departments
+        const validScoped = parseDeptList(scopedData).filter(isAuthorizedDept);
+        const validAll = parseDeptList(allData).filter(isAuthorizedDept);
+        let resolved = validScoped.length > 0 ? validScoped : validAll;
 
-        let resolved = finalScoped.length > 0 ? finalScoped : finalAll;
-        if (resolved.length === 0 && (uDeptCode || uDeptId)) {
-          const fallbackDept = ALL_DEPARTMENTS_FALLBACK.find(isAuthorizedDept) || {
-            id: uDeptId || 1,
-            code: uDeptCode || 'DEPT',
-            name: u?.department_name || uDeptCode || 'Department',
-            pillText: uDeptCode || 'DEPT',
-            student_count: 0
-          };
-          resolved = [fallbackDept];
+        if (resolved.length === 0) {
+          if (authCodes.length > 0) {
+            resolved = authCodes.map((code, idx) => ({
+              id: authIds[idx] || (uDeptId && idx === 0 ? uDeptId : idx + 1),
+              code: code,
+              name: code,
+              pillText: code,
+              student_count: 0
+            }));
+          } else if (uDeptCode || uDeptId) {
+            resolved = [{
+              id: uDeptId || 1,
+              code: uDeptCode || 'DEPT',
+              name: u?.department_name || uDeptCode || 'Department',
+              pillText: uDeptCode || 'DEPT',
+              student_count: 0
+            }];
+          }
         }
 
         setDepartments(resolved);
         setAllDepartments(resolved);
+
+        // Sync fresh department IDs & codes into localStorage user so other components stay updated
+        try {
+          if (u && resolved.length > 0) {
+            const newIds = resolved.map(d => d.id).filter(Boolean) as number[];
+            const newCodes = resolved.map(d => d.code).filter(Boolean) as string[];
+            const updatedUser = {
+              ...u,
+              authorized_department_ids: newIds.length > 0 ? newIds : u.authorized_department_ids,
+              authorized_department_codes: newCodes.length > 0 ? newCodes : u.authorized_department_codes
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } catch (_) {}
+        return;
       }
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
       const u = getUserSnapshot();
       const role = ((u?.role) || '').trim().toLowerCase();
-      const isRestrictedRole = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator', 'placement officer', 'staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'].includes(role);
-      if (isRestrictedRole) {
-        const uDeptCode = String(u?.department || u?.department_code || '').toUpperCase();
-        const uDeptId = u?.department_id ? Number(u.department_id) : null;
-        const matched = ALL_DEPARTMENTS_FALLBACK.filter(d => (uDeptId && d.id === uDeptId) || (uDeptCode && d.code === uDeptCode));
-        const res = matched.length > 0 ? matched : [ALL_DEPARTMENTS_FALLBACK[0]];
-        setDepartments(res);
-        setAllDepartments(res);
+      const isRestrictedRole = !['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator', 'director', 'executive'].includes(role);
+      if (isRestrictedRole && u) {
+        const authCodes: string[] = Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : [];
+        const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
+        if (authCodes.length > 0) {
+          const list = authCodes.map((c, i) => ({
+            id: authIds[i] || i + 1,
+            code: c,
+            name: c,
+            pillText: c,
+            student_count: 0
+          }));
+          setDepartments(list);
+          setAllDepartments(list);
+        } else {
+          const code = u.department_code || u.department || 'DEPT';
+          const list = [{
+            id: u.department_id || 1,
+            code: code,
+            name: u.department_name || code,
+            pillText: code,
+            student_count: 0
+          }];
+          setDepartments(list);
+          setAllDepartments(list);
+        }
       } else {
         setDepartments(ALL_DEPARTMENTS_FALLBACK);
         setAllDepartments(ALL_DEPARTMENTS_FALLBACK);
