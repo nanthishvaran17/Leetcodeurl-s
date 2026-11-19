@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, ExternalLink, Trophy, RefreshCw, School } from 'lucide-react';
+import { Edit3, X, CheckCircle, CheckCircle2, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2, ExternalLink, Trophy, RefreshCw, School, ChevronDown, ChevronUp } from 'lucide-react';
 import { deriveStudentCollege } from '../utils/filterUtils';
 import api, { clearApiCache } from '../services/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -55,6 +55,8 @@ function LcValidationChip({
   onApplyCanonical?: (url: string, username: string) => void;
   onRetry?: () => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   if (state.status === 'idle') return null;
 
   if (state.status === 'validating') {
@@ -71,95 +73,128 @@ function LcValidationChip({
 
   if (state.status === 'valid') {
     return (
-      <div className="mt-3.5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/5 dark:from-emerald-950/40 dark:via-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/30 dark:border-emerald-500/30 shadow-xs space-y-3 sm:space-y-3.5 transition-all">
-        <div className="flex items-center justify-between flex-wrap gap-2 pb-0.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+      <div className="mt-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/5 dark:from-emerald-950/40 dark:via-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/30 dark:border-emerald-500/30 shadow-xs overflow-hidden transition-all">
+        {/* Card Header Bar — Clickable Toggle */}
+        <div 
+          onClick={() => setIsExpanded(prev => !prev)}
+          className="p-3 sm:p-3.5 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-emerald-500/5 dark:hover:bg-emerald-950/30 transition-colors"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
               <CheckCircle2 className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-300">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-300 truncate">
                   LeetCode Account Verified
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live Verified
                 </span>
               </div>
-              <a
-                href={state.canonical_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 mt-0.5"
-              >
-                <span>@{state.username}</span>
-                <ExternalLink className="w-2.5 h-2.5" />
-              </a>
+              <div className="flex items-center gap-2 text-[11px] font-mono text-emerald-700 dark:text-emerald-400 mt-0.5">
+                <a
+                  href={state.canonical_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:underline flex items-center gap-1 truncate"
+                >
+                  <span>@{state.username}</span>
+                  <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                </a>
+                {!isExpanded && state.total_solved != null && (
+                  <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400 font-sans">
+                    • {state.total_solved} Solved
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {state.canonical_url && currentUrl && currentUrl.trim().replace(/\/$/, '') === state.canonical_url.trim().replace(/\/$/, '') ? (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                URL Synced
-              </span>
-            ) : onApplyCanonical ? (
-              <button
-                type="button"
-                onClick={() => onApplyCanonical(state.canonical_url, state.username)}
-                className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
-              >
-                <span>Use Canonical URL</span>
-              </button>
-            ) : null}
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-              Safe to Save
-            </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Show/Hide Toggle Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(prev => !prev);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold transition-all shadow-2xs border border-emerald-500/30 cursor-pointer active:scale-95"
+              title={isExpanded ? "Hide detailed stats" : "Show detailed stats"}
+            >
+              <span>{isExpanded ? 'Hide' : 'Open'}</span>
+              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
           </div>
         </div>
 
-        {/* 4-Column Live Metric Breakdown Grid with generous top padding & gap */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-2.5 pt-2.5 sm:pt-3 border-t border-emerald-500/25">
-          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-emerald-500/25 flex flex-col items-center justify-center text-center shadow-xs">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Solved</span>
-            <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-              {state.total_solved != null ? state.total_solved : '0'}
-            </span>
-          </div>
-          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-emerald-500/25 flex flex-col items-center justify-center text-center shadow-xs">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Easy</span>
-            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-              {state.easy_solved != null ? state.easy_solved : '0'}
-            </span>
-          </div>
-          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-amber-500/25 flex flex-col items-center justify-center text-center shadow-xs">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Medium</span>
-            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-              {state.medium_solved != null ? state.medium_solved : '0'}
-            </span>
-          </div>
-          <div className="py-2.5 px-1.5 sm:px-2 rounded-xl bg-white/90 dark:bg-navy-900/80 border border-rose-500/25 flex flex-col items-center justify-center text-center shadow-xs">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Hard</span>
-            <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
-              {state.hard_solved != null ? state.hard_solved : '0'}
-            </span>
-          </div>
-        </div>
+        {/* Collapsible Stats Body */}
+        {isExpanded && (
+          <div className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-3 pt-1 border-t border-emerald-500/20 animate-slide-down-fade">
+            {/* Status Pills Subrow */}
+            <div className="flex items-center justify-between flex-wrap gap-1.5 pt-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {state.canonical_url && currentUrl && currentUrl.trim().replace(/\/$/, '') === state.canonical_url.trim().replace(/\/$/, '') ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    URL Synced
+                  </span>
+                ) : onApplyCanonical ? (
+                  <button
+                    type="button"
+                    onClick={() => onApplyCanonical(state.canonical_url, state.username)}
+                    className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 active:scale-95"
+                  >
+                    <span>Use Canonical URL</span>
+                  </button>
+                ) : null}
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                  Safe to Save
+                </span>
+              </div>
 
-        {(state.contest_rating != null || state.ranking != null) && (
-          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300 px-1 pt-2 border-t border-emerald-500/15">
-            {state.contest_rating != null ? (
-              <span className="flex items-center gap-1.5 font-bold">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                Rating: <strong className="text-amber-600 dark:text-amber-400 font-extrabold">{Math.round(state.contest_rating)}</strong>
-              </span>
-            ) : <span />}
+              {state.contest_rating != null && (
+                <span className="flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                  <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  Rating: <strong className="text-amber-600 dark:text-amber-400 font-extrabold">{Math.round(state.contest_rating)}</strong>
+                </span>
+              )}
+            </div>
+
+            {/* 4-Column Live Metric Breakdown Grid */}
+            <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+              <div className="py-2 px-1.5 sm:px-2 rounded-xl bg-white/95 dark:bg-navy-900/90 border border-emerald-500/30 flex flex-col items-center justify-center text-center shadow-xs">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total</span>
+                <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  {state.total_solved != null ? state.total_solved : '0'}
+                </span>
+              </div>
+              <div className="py-2 px-1.5 sm:px-2 rounded-xl bg-white/95 dark:bg-navy-900/90 border border-emerald-500/25 flex flex-col items-center justify-center text-center shadow-xs">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Easy</span>
+                <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                  {state.easy_solved != null ? state.easy_solved : '0'}
+                </span>
+              </div>
+              <div className="py-2 px-1.5 sm:px-2 rounded-xl bg-white/95 dark:bg-navy-900/90 border border-amber-500/25 flex flex-col items-center justify-center text-center shadow-xs">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">Medium</span>
+                <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                  {state.medium_solved != null ? state.medium_solved : '0'}
+                </span>
+              </div>
+              <div className="py-2 px-1.5 sm:px-2 rounded-xl bg-white/95 dark:bg-navy-900/90 border border-rose-500/25 flex flex-col items-center justify-center text-center shadow-xs">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-rose-600 dark:text-rose-400">Hard</span>
+                <span className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">
+                  {state.hard_solved != null ? state.hard_solved : '0'}
+                </span>
+              </div>
+            </div>
+
             {state.ranking != null && (
-              <span className="font-semibold text-slate-500 dark:text-slate-400">
-                Global Rank: #{state.ranking.toLocaleString()}
-              </span>
+              <div className="text-right text-[10px] font-semibold text-slate-500 dark:text-slate-400 pr-1">
+                Global LeetCode Rank: #{state.ranking.toLocaleString()}
+              </div>
             )}
           </div>
         )}

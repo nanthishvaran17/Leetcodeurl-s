@@ -67,26 +67,26 @@ jobs:
         if: success()
         run: |
           mkdir -p dist-release
-          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk
           cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/nandha-leetcode.apk
           cp frontend/android/app/build/outputs/bundle/release/app-release.aab dist-release/Nandha-LeetCode-PlayStore-Release.aab
 
-      - name: Publish Official GitHub Release v4.5.7
+      - name: Publish Official GitHub Release v4.5.8
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v4.5.7
-          name: "Nandha LeetCode Intelligence v4.5.7 (Production Release)"
+          tag_name: v4.5.8
+          name: "Nandha LeetCode Intelligence v4.5.8 (Production Release)"
           body: |
-            ### 🚀 Official Production Release v4.5.7 (VersionCode 98)
-            - **Weekly Contest Mobile Overview Cards Fix**: Compact card proportions (`h-20`), inset borders, and zero frame-edge clipping on mobile screens.
-            - **Data Quality & Profile Health Alignment**: Standardized hero padding, balanced bento cards, and unified dark navy theme.
-            - **Notification Studio Cleanup**: Streamlined alert center settings with seamless chime state persistence.
+            ### 🚀 Official Production Release v4.5.8 (VersionCode 99)
+            - **LeetCode Account Verification Card Polish & Collapsible Toggle**: Fixed mobile layout wrapping bugs in student edit modal; introduced interactive Open / Hide (`[ Hide ∧ ]` / `[ Open ∨ ]`) collapse toggle allowing seamless minimization for extra screen room.
+            - **Native Mobile Network Reliability Safeguard**: Automatic host redirect preventing mobile devices from getting locked in localhost/127.0.0.1; high-contrast "Tap to Retry" button with native DOM fallback.
+            - **Responsive Mobile Dashboard Polish**: Balanced 2-column layout for Filter & Sort / Top Solvers, compact student cards, and sleek ~40px floating toast notification pills.
             - **Target SDK 36 (Android 16)** Google Play Ready
             - **ProGuard / R8 Optimization** active lean release APK
             - **Restricted permissions removed** for 100% Play Store policy compliance
           files: |
-            dist-release/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk
+            dist-release/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk
             dist-release/nandha-leetcode.apk
             dist-release/Nandha-LeetCode-PlayStore-Release.aab
           prerelease: false

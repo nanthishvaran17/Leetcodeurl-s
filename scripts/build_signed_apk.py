@@ -3,11 +3,22 @@ import shutil
 import zipfile
 import subprocess
 import sys
+import json
 
-print("[1/5] Locating base APK and assets...")
+# Dynamically resolve current version from frontend/package.json
+pkg_json_path = os.path.abspath("frontend/package.json")
+version = "4.5.8"
+if os.path.exists(pkg_json_path):
+    try:
+        with open(pkg_json_path, "r", encoding="utf-8") as f:
+            version = json.load(f).get("version", "4.5.8")
+    except Exception:
+        pass
+
+print(f"[1/5] Locating base APK and assets for v{version}...")
 src_apk = os.path.abspath("releases/android/app-release.apk")
 new_assets_dir = os.path.abspath("frontend/android/app/src/main/assets/public")
-output_apk = os.path.abspath("releases/android/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk")
+output_apk = os.path.abspath(f"releases/android/Nandha_LeetCode_Intelligence_v{version}_latest.apk")
 keystore = os.path.abspath("frontend/android/nandha-release-key.jks")
 jarsigner = r"C:\Program Files\Java\jdk-21.0.11\bin\jarsigner.exe"
 
@@ -80,10 +91,10 @@ print("[5/5] Deploying updated APK to distribution destinations...")
 destinations = [
     "releases/android/Nandha-LeetCode-Tracker-Latest.apk",
     "releases/android/nandha-leetcode.apk",
-    "frontend/public/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk",
+    f"frontend/public/Nandha_LeetCode_Intelligence_v{version}_latest.apk",
     "frontend/public/Nandha-LeetCode-Tracker-Latest.apk",
     "frontend/public/nandha-leetcode.apk",
-    "frontend/dist/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk",
+    f"frontend/dist/Nandha_LeetCode_Intelligence_v{version}_latest.apk",
     "frontend/dist/Nandha-LeetCode-Tracker-Latest.apk",
     "frontend/dist/nandha-leetcode.apk",
 ]

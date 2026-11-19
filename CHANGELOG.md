@@ -11,8 +11,8 @@
 
 [![Keep a Changelog](https://img.shields.io/badge/Changelog-Keep%20a%20Changelog%20v1.1.0-orange.svg?style=flat-square)](https://keepachangelog.com/en/1.1.0/)
 [![Semantic Versioning](https://img.shields.io/badge/SemVer-2.0.0-blue.svg?style=flat-square)](https://semver.org/spec/v2.0.0.html)
-[![Current Production Release](https://img.shields.io/badge/Release-v4.5.7%20(Build%2098)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.7%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.7_latest.apk)
+[![Current Production Release](https://img.shields.io/badge/Release-v4.5.8%20(Build%2099)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.8%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk)
 [![Windows Setup EXE](https://img.shields.io/badge/Windows%20Setup-v4.5.2%20EXE-blueviolet.svg?style=flat-square)](releases/desktop/Nandha_LeetCode_Intelligence_Setup_4.5.2.exe)
 [![CI/CD Autopilot Pipeline](https://img.shields.io/badge/Autopilot%20CI%2FCD-Active%205--Phase-blue.svg?style=flat-square)](.github/workflows/sunday_autopilot.yml)
 
@@ -46,6 +46,24 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 ---
 
 ## Version 4.5.x — Multi-Department Governance & Mobile Polish (Current)
+
+### [4.5.8] - 2026-11-20 (Production Release)
+
+#### 📱 Native Android Release v4.5.8 (Build 99)
+* **Release Artifacts:** Compiled signed release APK (`Nandha_LeetCode_Intelligence_v4.5.8_latest.apk`, lean 15 MB), signed with `nandha-release-key.jks` using SHA256withRSA with Android APK Signature Scheme v2 & v3.
+* **Capacitor Mobile Host Safeguard:** `apiConfig.ts` automatically guards native mobile runs by converting any `localhost` or `127.0.0.1` address into the authoritative HTTPS production backend (`https://nandha-leetcode.duckdns.org/api`), protecting native Android users from network connection errors.
+
+#### 🎯 UI / UX Mobile Polish & Collapsible Verification Card
+* **LeetCode Account Verification Card (`StudentEditOverlay.tsx`):**
+  * Eliminated mobile line wrapping issues where `Live Verified`, `URL Synced`, and `Safe to Save` collided awkwardly.
+  * Added collapsible toggle (`[ Hide ∧ ]` / `[ Open ∨ ]`) with full header touch support. In collapsed mode, shrinks into an ultra-compact single line (`LeetCode Account Verified • Live Verified • @username • {total_solved} Solved`), freeing up crucial mobile vertical space.
+* **Student Performance Showcase & Card Heights:**
+  * Re-architected `Filter & Sort` and `Top Solvers` action buttons into a balanced 2-column mobile grid.
+  * Scaled student showcase card min-height to `min-h-[290px]` for small mobile viewports.
+* **High-Contrast Login Recovery Button:**
+  * Replaced transparent retry text with a high-contrast Crimson Red (`bg-rose-600 text-white`) "Tap here to retry sign-in now" action with DOM fallback.
+* **Toast Notification Streamlining:**
+  * Redesigned bulky ~90px toast containers into an ultra-slim ~40px floating pill. Suppressed redundant toasts on filter selections.
 
 ### [4.5.7] - 2026-11-20 (Production Release)
 

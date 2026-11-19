@@ -1,17 +1,29 @@
 # Android Release Archive
 
-Latest Release: **v4.5.7 (VersionCode 98)**  
-**Authoritative Live Sync:** November 19, 2026 (Fully Synchronized & Play Store Ready)  
+Latest Release: **v4.5.8 (VersionCode 99)**  
+**Authoritative Live Sync:** November 20, 2026 (Fully Synchronized & Play Store Ready)  
 
 ### Production Build Outputs:
 - **Play Store Bundle (AAB):** `Nandha-LeetCode-PlayStore-Release.aab`
 - **Signed Release APK:** `Nandha-LeetCode-Intelligence-release.apk`
 - **Direct Repository APKs:**
-  - [Nandha_LeetCode_Intelligence_v4.5.7_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.7_latest.apk)
+  - [Nandha_LeetCode_Intelligence_v4.5.8_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.8_latest.apk)
   - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
   - [nandha-leetcode.apk](./nandha-leetcode.apk)
 
-### Changelog v4.5.7 (Latest Production)
+### Changelog v4.5.8 (Latest Production)
+- **LeetCode Account Live Verification Card Polish & Collapsible Toggle**:
+  - Redesigned `LcValidationChip` in `StudentEditOverlay` with responsive flexbox and text truncation to eliminate mobile wrapping bugs.
+  - Added interactive Open / Hide (`[ Hide ∧ ]` / `[ Open ∨ ]`) collapse toggle so users can minimize stats to a compact single-line indicator to save mobile screen space or expand for full 4-metric breakdown and contest rating.
+- **Login Network & Mobile Reliability Enhancements**:
+  - Capacitor runtime host safeguard automatically routes mobile traffic away from `localhost`/`127.0.0.1` to the production DuckDNS / EC2 backend.
+  - "Tap to Retry" button redesign with high-contrast Crimson Red styling and DOM credential fallback.
+- **Student Performance Showcase & Toast Pill Refinements**:
+  - Balanced 2-column mobile layout for Filter & Sort / Top Solvers buttons.
+  - Reduced student card minimum height to prevent oversized layout on small screens.
+  - Ultra-slim ~40px notification toast pills replacing bulky toasts.
+
+### Changelog v4.5.7
 - **Weekly Contest Mobile Viewport & Overview Cards Alignment**:
   - Re-proportioned mobile stat cards with compact `h-20` height, `p-2.5` internal padding, and scaled font sizes.
   - Eliminated left-edge border cut-off / clipping on mobile frames via `ring-inset` and internal `border-2`.

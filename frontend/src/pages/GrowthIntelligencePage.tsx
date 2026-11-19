@@ -379,34 +379,47 @@ export const GrowthIntelligencePage: React.FC = () => {
         </div>
 
         <div className="relative z-10 space-y-6">
-          {/* Header Title Section */}
-          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 shadow-lg shadow-amber-500/10 mt-0.5 sm:mt-0">
-              <BarChart2 className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
+          {/* Header Title Section & Live Refresh Action */}
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 shadow-lg shadow-amber-500/10 mt-0.5 sm:mt-0">
+                <BarChart2 className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.2]" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-x-2.5 leading-tight">
+                  <span className="whitespace-nowrap">Growth Intelligence</span>
+                  <span className="text-amber-300 font-extrabold">&amp;</span>
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 whitespace-nowrap">
+                    Time Machine
+                  </span>
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mt-1 max-w-3xl">
+                  Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex flex-wrap items-center gap-x-2.5 leading-tight">
-                <span className="whitespace-nowrap">Growth Intelligence</span>
-                <span className="text-amber-300 font-extrabold">&amp;</span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 whitespace-nowrap">
-                  Time Machine
-                </span>
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mt-1 max-w-3xl">
-                Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
-              </p>
-            </div>
+
+            {/* Live Refresh Button - Positioned in the Top-Right Header */}
+            <button
+              onClick={handleManualRefresh}
+              disabled={loading || isRefreshing}
+              title="Refresh Growth Metrics & Solve Deltas"
+              className="inline-flex items-center justify-center shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 hover:border-white/25 text-white text-xs font-bold backdrop-blur-md shadow-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer gap-2"
+            >
+              <RotateCw className={`w-3.5 h-3.5 text-amber-300 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline font-bold">{isRefreshing ? 'Syncing...' : 'Sync Live Stats'}</span>
+            </button>
           </div>
 
-          {/* Timeframe Selector Pills & Sleek Inline Refresh Button */}
+          {/* Timeframe Selector Pills */}
           <div className="pt-4 border-t border-brand-400/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full sm:w-auto">
-              <div className="flex-1 sm:flex-initial flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
+            <div className="w-full sm:w-auto">
+              <div className="grid grid-cols-4 sm:flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
                 {(['today', '7d', '30d', 'all'] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`flex-1 sm:flex-initial whitespace-nowrap px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center ${
+                    className={`whitespace-nowrap px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center ${
                       period === p
                         ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 sm:scale-105'
                         : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -419,21 +432,10 @@ export const GrowthIntelligencePage: React.FC = () => {
                   </button>
                 ))}
               </div>
-
-              {/* Live Refresh Button */}
-              <button
-                onClick={handleManualRefresh}
-                disabled={loading || isRefreshing}
-                title="Refresh Growth Metrics & Solve Deltas"
-                className="inline-flex items-center justify-center shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-              >
-                <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline ml-1.5 font-bold">{isRefreshing ? 'Syncing Live Stats...' : 'Sync Live Stats'}</span>
-              </button>
             </div>
 
             {/* Selected Period Badge / Context */}
-            <div className="text-xs text-slate-300 font-medium hidden sm:flex items-center gap-1.5">
+            <div className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
               <span>Timeframe window:</span>
               <span className="text-amber-300 font-bold capitalize">
                 {period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}

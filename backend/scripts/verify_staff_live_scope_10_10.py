@@ -67,9 +67,16 @@ def run_test_suite():
 
     try:
         # 1. Authoritative Staff User
-        staff_user = db.query(User).filter(User.username == "nanthishvaran17").first()
+        staff_user = db.query(User).filter(User.username == "staff_audit").first()
         if not staff_user:
-            staff_user = User(username="nanthishvaran17", email="nanthishvaran17@gmail.com", role="Staff", is_active=True)
+            from backend.routes.auth import get_password_hash
+            staff_user = User(
+                username="staff_audit",
+                email="staff_audit@nandha.edu.in",
+                hashed_password=get_password_hash("Password123!"),
+                role="Staff",
+                is_active=True
+            )
             db.add(staff_user)
             db.commit()
             db.refresh(staff_user)
