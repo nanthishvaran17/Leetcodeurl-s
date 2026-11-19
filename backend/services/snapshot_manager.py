@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import (
-    OfficialWeeklySnapshot, WeeklySession
+    OfficialWeeklySnapshot, WeeklySession, Student
 )
 from backend.logger import logger
 from backend.services.canonical_contest_engine import build_canonical_contest_dataset
@@ -57,6 +57,30 @@ class AuthoritativeSnapshotEngine:
                     "student_count": snap.student_count or 0,
                     "dataset_hash": snap.dataset_hash
                 }
+            else:
+                student_cnt = 0
+                try:
+                    student_cnt = (
+                        db.query(Student).filter(
+                            (Student.is_active == True) | (Student.is_active.is_(None))
+                        ).count()
+                        if db else 0
+                    )
+                except Exception as _st_err:
+                    logger.warning(f"[SNAPSHOT_MANAGER] DB query error on student_count fallback: {_st_err}")
+                    student_cnt = 0
+
+                from backend.services.contest_discovery import discover_contest_metadata
+                disc = discover_contest_metadata()
+                res = {
+                    "data_version": cls._in_memory_latest_version,
+                    "snapshot_id": f"SNAPSHOT-INIT-{cls._in_memory_latest_version}",
+                    "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    "status": "SUCCESS",
+                    "contest_name": disc.get("contest_name", "Weekly Contest"),
+                    "student_count": student_cnt,
+                    "dataset_hash": "0b77f4480d586b392495a6da9d25f89e395d254bfbcc4590a5d9e560a6584108"
+                }
         except Exception as _snap_exc:
             from backend.logger import logger
             logger.warning(f"[SNAPSHOT_MANAGER] DB query error on get_latest_version_info: {_snap_exc}")
@@ -79,7 +103,7 @@ class AuthoritativeSnapshotEngine:
             "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "status": "SUCCESS",
             "contest_name": disc.get("contest_name", "Weekly Contest"),
-            "student_count": (db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count() if db else 0),
+            "student_count": 0,
             "dataset_hash": "0b77f4480d586b392495a6da9d25f89e395d254bfbcc4590a5d9e560a6584108"
         }
 
@@ -116,6 +140,10 @@ class AuthoritativeSnapshotEngine:
             dataset["snapshot_id"] = f"SNAPSHOT-{sess_id}-{cls._in_memory_latest_version}"
             dataset["status"] = "SUCCESS"
             dataset["synced_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            if "matrixRows" not in dataset:
+                dataset["matrixRows"] = dataset.get("rows", [])
+            if "rows" not in dataset:
+                dataset["rows"] = dataset.get("matrixRows", [])
             return dataset
         except Exception as _snap_exc:
             from backend.logger import logger
@@ -149,8 +177,14 @@ class AuthoritativeSnapshotEngine:
         """
         with cls._lock:
             # 1. Validation check
-            if not dataset or not dataset.get("matrixRows"):
+            rows = dataset.get("matrixRows") or dataset.get("rows")
+            if not dataset or not rows:
                 raise ValueError("Cannot publish empty or unvalidated dataset snapshot.")
+
+            if "matrixRows" not in dataset:
+                dataset["matrixRows"] = rows
+            if "rows" not in dataset:
+                dataset["rows"] = rows
 
             sess = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
             contest_id = sess.contest_id if sess else f"weekly-contest-{session_id}"
@@ -192,6 +226,12 @@ class AuthoritativeSnapshotEngine:
                 f"[SNAPSHOT_PUBLISH] Atomically published LATEST_SUCCESSFUL_SNAPSHOT V{cls._in_memory_latest_version} "
                 f"for {contest_name} ({new_snap.student_count} students, Hash: {dataset_hash[:16]}...)"
             )
+
+            try:
+                from backend.main import purge_api_memory_cache
+                purge_api_memory_cache()
+            except Exception:
+                pass
 
             return {
                 "success": True,

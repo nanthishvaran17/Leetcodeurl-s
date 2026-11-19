@@ -1024,7 +1024,6 @@ _CACHE_TTL_MAP: dict = {
     "/api/contest-integrity/analysis": 120,
     "/api/data-issues/summary": 60,
     "/api/notifications": 30,
-    "/api/stats/version": 300,
     "/api/system/health": 45,
     "/api/data/freshness": 60,
     "/api/admin/staff-list": 120,
@@ -1332,8 +1331,9 @@ async def add_security_headers_and_performance_middleware(request, call_next):
         response.headers["Expires"] = "0"
     elif path.startswith("/assets/") or path.endswith((".js", ".css", ".png", ".jpg", ".ico", ".svg", ".woff2")):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-    elif path.startswith("/api/public/") or path.startswith("/api/stats"):
-        response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+    elif path.startswith("/api/public/"):
+        if "Cache-Control" not in response.headers:
+            response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
         
     return response
 

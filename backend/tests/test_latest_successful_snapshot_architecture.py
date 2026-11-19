@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 from backend.main import app
 from backend.database import SessionLocal
 from backend.services.snapshot_manager import authoritative_snapshot_engine
-from backend.models import OfficialWeeklySnapshot
+from backend.models import OfficialWeeklySnapshot, WeeklySession
 
 
 class TestLatestSuccessfulSnapshotArchitecture(unittest.TestCase):
@@ -22,6 +22,17 @@ class TestLatestSuccessfulSnapshotArchitecture(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
         self.db = SessionLocal()
+        sess = self.db.query(WeeklySession).first()
+        if not sess:
+            sess = WeeklySession(
+                contest_id="weekly-contest-999",
+                contest_name="Weekly Contest 999",
+                session_date="19.11.2026"
+            )
+            self.db.add(sess)
+            self.db.commit()
+            self.db.refresh(sess)
+        self.session_id = sess.id
 
     def tearDown(self):
         self.db.close()
@@ -58,7 +69,7 @@ class TestLatestSuccessfulSnapshotArchitecture(unittest.TestCase):
         }
 
         pub_res = authoritative_snapshot_engine.publish_new_successful_snapshot(
-            session_id=21,
+            session_id=self.session_id,
             dataset=dummy_dataset,
             db=self.db
         )
@@ -77,7 +88,7 @@ class TestLatestSuccessfulSnapshotArchitecture(unittest.TestCase):
         # Attempt to publish invalid empty dataset
         with self.assertRaises(ValueError):
             authoritative_snapshot_engine.publish_new_successful_snapshot(
-                session_id=21,
+                session_id=self.session_id,
                 dataset={},  # Empty -> Must fail validation
                 db=self.db
             )

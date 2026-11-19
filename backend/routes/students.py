@@ -1335,6 +1335,7 @@ class DeleteByDeptYearRequest(BaseModel):
     year_level: Optional[str] = None
     college: Optional[str] = None
     soft_delete: Optional[bool] = False
+    student_ids: Optional[List[int]] = None
 
 def _perform_bulk_delete_students(
     student_ids: List[int],
@@ -1545,7 +1546,7 @@ def preview_batch_delete(
             "college": s.college or "NEC",
             "is_active": s.is_active if s.is_active is not None else True
         }
-        for s in deletable_students[:10]
+        for s in deletable_students[:1000]
     ]
 
     return {
@@ -1555,7 +1556,8 @@ def preview_batch_delete(
         "department_name": dept_display,
         "year_level": year_display,
         "college": req.college or "ALL",
-        "sample_students": samples
+        "sample_students": samples,
+        "students": samples
     }
 
 @router.post("/delete-by-dept-year")
@@ -1583,7 +1585,14 @@ def delete_students_by_dept_year(
     if not students:
         return {"message": "No students found matching the selected criteria.", "count": 0}
 
-    student_ids = [s.id for s in students]
+    if req.student_ids:
+        target_ids = set(req.student_ids)
+        student_ids = [s.id for s in students if s.id in target_ids]
+    else:
+        student_ids = [s.id for s in students]
+
+    if not student_ids:
+        return {"message": "No matching students were selected for deletion.", "count": 0}
 
     dept_str = f"Dept #{effective_dept_id}" if effective_dept_id else (req.department or "All Depts")
     if effective_dept_id:

@@ -8,7 +8,7 @@ import {
 } from '../../utils/filterUtils';
 import { getCachedStudents } from '../../utils/rosterCache';
 import api from '../../services/api';
-import { useTypewriterPlaceholder } from '../../hooks/useTypewriterPlaceholder';
+import { useTypewriterPlaceholder, toMobilePlaceholder } from '../../hooks/useTypewriterPlaceholder';
 
 export interface ModernSearchInputProps {
   value: string;
@@ -121,6 +121,11 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
     enableTypewriter,
     Boolean(disabled || inputValue.trim().length > 0)
   );
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  const safeFallbackPlaceholder = isMobile && placeholder
+    ? toMobilePlaceholder(placeholder)
+    : placeholder;
 
   // Sync external value changes
   useEffect(() => {
@@ -321,7 +326,7 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
         }`}
       >
         {/* Left Search Icon */}
-        <div className="pointer-events-none pl-3.5 pr-2.5 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+        <div className="pointer-events-none pl-3 sm:pl-3.5 pr-2 sm:pr-2.5 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
           <Search className="w-4 h-4 stroke-[2.5]" />
         </div>
 
@@ -340,11 +345,11 @@ export const ModernSearchInput: React.FC<ModernSearchInputProps> = ({
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder={animatedPlaceholder || placeholder}
+          placeholder={animatedPlaceholder || safeFallbackPlaceholder}
           disabled={disabled}
           autoFocus={autoFocus}
-          className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left ${
-            hasRightAction ? 'pr-9' : 'pr-3.5'
+          className={`flex-1 w-full min-w-0 bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none py-2 text-left truncate ${
+            hasRightAction ? 'pr-9' : 'pr-3 sm:pr-3.5'
           } ${inputClassName}`}
         />
 

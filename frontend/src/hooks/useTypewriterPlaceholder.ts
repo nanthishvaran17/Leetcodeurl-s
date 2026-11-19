@@ -1,16 +1,65 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 
 /**
+ * Normalizes a placeholder string to fit cleanly on mobile screens
+ * so that register numbers, hints, and instructions are NEVER cut off.
+ */
+export function toMobilePlaceholder(text: string): string {
+  if (!text) return text;
+  if (text.length <= 22) return text;
+
+  const lower = text.toLowerCase();
+  if (lower.includes('732224cc031') || lower.includes('reg no') || lower.includes('reg. no')) {
+    return 'Search reg no...';
+  }
+  if (lower.includes('department') || lower.includes('cyber')) {
+    return 'Search department...';
+  }
+  if (lower.includes('student name') || lower.includes('by name')) {
+    return 'Search name...';
+  }
+  if (lower.includes('leetcode handle') || lower.includes('username')) {
+    return 'Search username...';
+  }
+  if (lower.includes('command') || lower.includes('action')) {
+    return 'Search commands...';
+  }
+  if (lower.includes('name, reg no') || lower.includes('name or reg')) {
+    return 'Search name, reg no...';
+  }
+
+  return text.length > 22 ? text.slice(0, 20).trim() + '...' : text;
+}
+
+/**
  * Custom hook that animates placeholder text character-by-character (typewriter effect)
  * smoothly cycling through multiple search hints with zero stutter, zero blank frames,
  * and guaranteed instant visibility on initial mount.
+ * Automatically adapts on mobile screens so text NEVER cuts off.
  */
 export function useTypewriterPlaceholder(
   customPlaceholders?: string[],
   enabled: boolean = true,
   isPaused: boolean = false
 ): string {
-  const defaultList = useMemo(() => [
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => {
+      const mobile = window.innerWidth < 640;
+      setIsMobile((prev) => (prev !== mobile ? mobile : prev));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const desktopDefaultList = useMemo(() => [
     "Search student name...",
     "Search reg no (e.g. 732224CC031)...",
     "Search username...",
@@ -18,17 +67,45 @@ export function useTypewriterPlaceholder(
     "Search department (Cyber Security, IoT, IT)..."
   ], []);
 
-  // Stabilize list across parent re-renders
-  const listKey = customPlaceholders ? customPlaceholders.join('|||') : '';
+  const mobileDefaultList = useMemo(() => [
+    "Search reg no...",
+    "Search student name...",
+    "Search username...",
+    "Search handle...",
+    "Search department..."
+  ], []);
+
+  const defaultList = isMobile ? mobileDefaultList : desktopDefaultList;
+
+  // Stabilize list across parent re-renders and format for mobile if needed
+  const listKey = customPlaceholders ? customPlaceholders.join('|||') + (isMobile ? '-m' : '-d') : (isMobile ? 'def-m' : 'def-d');
   const list = useMemo(() => {
-    return customPlaceholders && customPlaceholders.length > 0 ? customPlaceholders : defaultList;
-  }, [listKey, defaultList]);
+    if (customPlaceholders && customPlaceholders.length > 0) {
+      if (isMobile) {
+        return customPlaceholders.map(toMobilePlaceholder);
+      }
+      return customPlaceholders;
+    }
+    return defaultList;
+  }, [listKey, customPlaceholders, isMobile, defaultList]);
 
   // Start with the first full text immediately so the placeholder is NEVER blank
-  const [text, setText] = useState(() => list[0] || 'Search name, reg no, username...');
+  const [text, setText] = useState(() => list[0] || (isMobile ? 'Search reg no...' : 'Search name, reg no, username...'));
   const textIndexRef = useRef(0);
-  const charIndexRef = useRef(list[0]?.length || 22);
+  const charIndexRef = useRef(list[0]?.length || 16);
   const isDeletingRef = useRef(true);
+
+  // If list changes (e.g. on resize from desktop to mobile), reset textIndex and clamp
+  useEffect(() => {
+    if (textIndexRef.current >= list.length) {
+      textIndexRef.current = 0;
+    }
+    const currentFullText = list[textIndexRef.current % list.length];
+    if (currentFullText && charIndexRef.current > currentFullText.length) {
+      charIndexRef.current = currentFullText.length;
+      setText(currentFullText);
+    }
+  }, [list]);
 
   useEffect(() => {
     if (!enabled || isPaused || list.length === 0) return;
