@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="50%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFA116" />
+      <stop offset="100%" stop-color="#FF6B00" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Rounded Shield Badge -->
+  <rect x="4" y="4" width="120" height="120" rx="32" fill="url(#bgGrad)" stroke="#6366F1" stroke-width="4" />
+  
+  <!-- LeetCode Accent Arch/Polygon Ribbon in Top Corner -->
+  <path d="M 96 16 L 112 16 L 112 32 Z" fill="url(#orangeGrad)" />
+
+  <!-- Trophy Cup Main Body -->
+  <path d="M 38 32 H 90 V 58 C 90 72 78 84 64 84 C 50 84 38 72 38 58 Z" fill="url(#goldGrad)" filter="url(#glow)" />
+  
+  <!-- Trophy Handles -->
+  <path d="M 38 38 H 26 C 21 38 18 43 18 48 V 52 C 18 60 25 66 34 66 H 38" fill="none" stroke="#FBBF24" stroke-width="5" stroke-linecap="round" />
+  <path d="M 90 38 H 102 C 107 38 110 43 110 48 V 52 C 110 60 103 66 94 66 H 90" fill="none" stroke="#FBBF24" stroke-width="5" stroke-linecap="round" />
+
+  <!-- Trophy Stem and Base -->
+  <rect x="58" y="84" width="12" height="18" fill="#F59E0B" />
+  <path d="M 44 102 H 84 L 88 112 H 40 Z" fill="url(#goldGrad)" />
+
+  <!-- Star Highlight -->
+  <polygon points="64,36 67,44 76,44 69,49 71,57 64,52 57,57 59,49 52,44 61,44" fill="#FFFFFF" opacity="0.95" />
+</svg>

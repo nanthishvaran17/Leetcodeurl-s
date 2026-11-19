@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nandha-leetcode.duckdns.org/sitemap.xml
+Sitemap: https://leetcodeurl-s-roan.vercel.app/sitemap.xml
+# Agentmap: https://nandha-leetcode.duckdns.org/.well-known/ai-catalog.json
