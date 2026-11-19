@@ -66,27 +66,30 @@ jobs:
       - name: Rename Release Outputs for Distribution
         if: success()
         run: |
+          VERSION=$(node -p "require('./frontend/package.json').version")
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
           mkdir -p dist-release
-          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v${VERSION}_latest.apk
           cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/nandha-leetcode.apk
           cp frontend/android/app/build/outputs/bundle/release/app-release.aab dist-release/Nandha-LeetCode-PlayStore-Release.aab
 
-      - name: Publish Official GitHub Release v4.5.8
+      - name: Publish Official GitHub Release
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v4.5.8
-          name: "Nandha LeetCode Intelligence v4.5.8 (Production Release)"
+          tag_name: v${{ env.APP_VERSION }}
+          name: "Nandha LeetCode Intelligence v${{ env.APP_VERSION }} (Production Release)"
           body: |
-            ### 🚀 Official Production Release v4.5.8 (VersionCode 99)
-            - **LeetCode Account Verification Card Polish & Collapsible Toggle**: Fixed mobile layout wrapping bugs in student edit modal; introduced interactive Open / Hide (`[ Hide ∧ ]` / `[ Open ∨ ]`) collapse toggle allowing seamless minimization for extra screen room.
-            - **Native Mobile Network Reliability Safeguard**: Automatic host redirect preventing mobile devices from getting locked in localhost/127.0.0.1; high-contrast "Tap to Retry" button with native DOM fallback.
-            - **Responsive Mobile Dashboard Polish**: Balanced 2-column layout for Filter & Sort / Top Solvers, compact student cards, and sleek ~40px floating toast notification pills.
+            ### 🚀 Official Production Release v${{ env.APP_VERSION }} (VersionCode 101)
+            - **🏛️ Multi-Department HOD Access & Interactive Switcher**: Full support for Head of Department users overseeing multiple departments (e.g., CSE(CS) & CSE(IOT)). Department switching now works seamlessly across LandingPage, Department Dashboard, and HOD Command Center without snapping back.
+            - **🔄 Instant Scope Synchronization**: Admin panel staff allocation changes immediately propagate and sync authorized department scope to the client without requiring manual re-login.
+            - **✨ Universal Department Filter Normalization**: Integrated `MY_DEPARTMENTS` (`ALL`) support into `filterUtils` for flawless student filtering across single or combined department views.
+            - **📱 Production Android Release v${{ env.APP_VERSION }}**: Native Capacitor 7 Release APK with full APK Signature Scheme v2 & v3 + 4-byte zipalign, verified across Android 11–16.
             - **Target SDK 36 (Android 16)** Google Play Ready
             - **ProGuard / R8 Optimization** active lean release APK
             - **Restricted permissions removed** for 100% Play Store policy compliance
           files: |
-            dist-release/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk
+            dist-release/Nandha_LeetCode_Intelligence_v*.apk
             dist-release/nandha-leetcode.apk
             dist-release/Nandha-LeetCode-PlayStore-Release.aab
           prerelease: false
