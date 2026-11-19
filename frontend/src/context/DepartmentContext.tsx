@@ -66,10 +66,10 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           const rawName = (d.name || d.code || '').trim();
           const upperCode = code.toUpperCase();
           const upperName = rawName.toUpperCase();
-          
+
           let finalCode = code;
           let finalName = rawName;
-          
+
           if (upperCode.includes('IOT') || upperName.includes('IOT') || upperName.includes('INTERNET')) {
             finalCode = 'CSE(IOT)';
             finalName = 'Computer Science and Engineering (IoT)';
@@ -130,16 +130,14 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       let allDeptsList: Department[] = ALL_DEPARTMENTS_FALLBACK;
       if (allData.length > 0) {
         const parsedAll = parseDeptList(allData);
-        const activeAll = parsedAll.filter(d => (d.student_count === undefined || d.student_count > 0));
-        allDeptsList = activeAll.length > 0 ? activeAll : ALL_DEPARTMENTS_FALLBACK;
+        allDeptsList = parsedAll.length > 0 ? parsedAll : ALL_DEPARTMENTS_FALLBACK;
       }
       setAllDepartments(allDeptsList);
 
       let scopedDeptsList: Department[] = allDeptsList;
       if (scopedData.length > 0) {
         const parsedScoped = parseDeptList(scopedData);
-        const mappedDepts = parsedScoped.filter(d => (d.student_count === undefined || d.student_count > 0));
-        scopedDeptsList = mappedDepts.length > 0 ? mappedDepts : allDeptsList;
+        scopedDeptsList = parsedScoped.length > 0 ? parsedScoped : allDeptsList;
       }
       setDepartments(scopedDeptsList);
 
@@ -174,7 +172,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         const finalScoped = scopedDeptsList.filter(isAuthorizedDept);
         const finalAll = allDeptsList.filter(isAuthorizedDept);
-        
+
         let resolved = finalScoped.length > 0 ? finalScoped : finalAll;
         if (resolved.length === 0 && (uDeptCode || uDeptId)) {
           const fallbackDept = ALL_DEPARTMENTS_FALLBACK.find(isAuthorizedDept) || {
@@ -263,7 +261,7 @@ export const useDepartments = () => {
       allDepartments: [],
       isLoading: false,
       error: null,
-      refreshDepartments: async () => {},
+      refreshDepartments: async () => { },
       isHodScope: false,
       isGlobalAccess: false
     };

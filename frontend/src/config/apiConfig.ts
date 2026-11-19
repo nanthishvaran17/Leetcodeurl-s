@@ -45,7 +45,12 @@ export const isElectron = (): boolean => {
  */
 export const getApiBaseUrl = (): string => {
   if (isCapacitorNative() || isElectron()) {
-    const base = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+    let base = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+    // On Capacitor Android/iOS, localhost (127.0.0.1) points to the phone itself, not the backend server.
+    // Automatically redirect to the production backend so mobile devices never encounter ECONNREFUSED.
+    if (isCapacitorNative() && (base.includes('localhost') || base.includes('127.0.0.1'))) {
+      base = 'https://nandha-leetcode.duckdns.org';
+    }
     return `${base}/api`;
   }
 

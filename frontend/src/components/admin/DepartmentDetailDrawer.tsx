@@ -350,7 +350,9 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                         />
                       </div>
                       <span className="text-xs font-bold text-slate-500 shrink-0 font-mono">
-                        Showing {filteredStaff.length} / {staffList.length} Staff
+                        {filteredStaff.length === staffList.length
+                          ? `Showing ${staffList.length} Staff`
+                          : `Showing ${filteredStaff.length} / ${staffList.length} Staff`}
                       </span>
                     </div>
 

@@ -54,9 +54,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
       const res = await api.get(`/hr-candidate-finder/student-intelligence/${studentId}`);
       const endTime = performance.now();
       const realDuration = Math.round(endTime - startTime);
-      // Artificially fast speed as requested
-      const duration = Math.floor(Math.random() * 34) + 12; 
-      setFetchLatency(duration);
+      setFetchLatency(realDuration);
       setLastFetchTime(new Date().toLocaleTimeString());
 
       if (res.data) {

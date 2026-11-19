@@ -45,6 +45,10 @@ except Exception as e:
     print(f'Migration note: {e}')
 " || true
 
+# Run automated Growth Intelligence & Time Machine snapshot fix
+echo "Applying Growth Intelligence & Time Machine fix..."
+python3 backend/scripts/apply_aws_growth_and_time_machine_fix.py || python backend/scripts/apply_aws_growth_and_time_machine_fix.py || true
+
 echo "3. Installing frontend dependencies & building bundle..."
 cd frontend
 if [ -f "package-lock.json" ]; then

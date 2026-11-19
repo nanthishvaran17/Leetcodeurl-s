@@ -1100,7 +1100,11 @@ export const PrivacyPolicyPage: React.FC = () => {
           </div>
 
           <div className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 self-end sm:self-auto">
-            <span>Showing {filteredSections.length} of {sections.length} policy sections</span>
+            <span>
+              {filteredSections.length === sections.length
+                ? `Showing ${sections.length} policy sections`
+                : `Showing ${filteredSections.length} of ${sections.length} policy sections`}
+            </span>
           </div>
         </div>
 

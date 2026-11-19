@@ -1706,15 +1706,13 @@ export const HODCommandCenter: React.FC = () => {
     const isSelected = selectedYear === targetVal || selectedYear === y.year_level;
     if (isSelected) {
       setSelectedYear('ALL');
-      notify.info('Cleared cohort filter. Showing all cohorts.', '', { category: 'ALLOCATION' });
     } else {
       setSelectedYear(targetVal);
-      notify.info(`Filtered to ${y.year} cohort (${y.student_count || 0} students) · Health: ${y.health_score}`, '', { category: 'ALLOCATION' });
       setTimeout(() => {
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
-  }, [selectedYear, notify]);
+  }, [selectedYear]);
 
  const rawYearMatrix = summary?.benchmarks?.year_matrix || [];
   const yearMatrix = useMemo(() => {
@@ -1986,7 +1984,7 @@ export const HODCommandCenter: React.FC = () => {
                 title="Reset all active filters to default"
               >
                 <RotateCcw size={11} />
-                <span className="hidden sm:inline">Reset All</span>
+                <span>Reset</span>
               </button>
             )}
 
@@ -2077,26 +2075,6 @@ export const HODCommandCenter: React.FC = () => {
                     className={selectedStatus !== 'ALL' ? 'ring-2 ring-emerald-500 border-emerald-500' : ''}
                   />
                 </div>
-
-                {/* Mobile Reset Chip */}
-                {activeFilterCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedDept(defaultDeptValue);
-                      setSelectedStaff('ALL');
-                      setSelectedYear('ALL');
-                      setSelectedSection('ALL');
-                      setSelectedStatus('ALL');
-                      setAllocationFilter('ALL');
-                      setStaffWorkloadFilter('ALL');
-                    }}
-                    className="shrink-0 h-9 px-3 rounded-xl border border-rose-300 dark:border-rose-800/80 bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 text-xs font-black flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer shadow-2xs"
-                  >
-                    <RotateCcw size={12} className="text-rose-500 shrink-0" />
-                    <span>Reset</span>
-                  </button>
-                )}
               </div>
             </div>
 
@@ -2314,10 +2292,8 @@ export const HODCommandCenter: React.FC = () => {
       onClick={() => {
         if (allocationFilter === 'ALLOCATED') {
           setAllocationFilter('ALL');
-          notify.info('Cleared allocated filter. Showing all students.', '', { category: 'ALLOCATION' });
         } else {
           setAllocationFilter('ALLOCATED');
-          notify.info(`Filtered: ${summary?.kpi_summary?.total_allocated ?? activeInScope} allocated students.`, '', { category: 'ALLOCATION', duration: 2200 });
         }
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
@@ -2348,11 +2324,9 @@ export const HODCommandCenter: React.FC = () => {
         if (selectedStatus === 'COMPLETED') {
           setSelectedStatus('ALL');
           setAllocationFilter('ALL');
-          notify.info('Cleared target completed filter. Showing all students.', '', { category: 'ALLOCATION' });
         } else {
           setSelectedStatus('COMPLETED');
           setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
-          notify.info(`Filtered: ${summary?.kpi_summary?.completed ?? 0} students who achieved target (10+ solved).`, '', { category: 'ALLOCATION', duration: 2200 });
         }
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}
@@ -2369,9 +2343,9 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </div>
       <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium min-w-0 gap-1.5 pt-1.5 border-t border-slate-100 dark:border-white/5">
-        <span className="truncate font-semibold">Target Done</span>
+        <span className="truncate font-semibold">{summary?.kpi_summary?.completed ?? 0} Done</span>
         <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/50 dark:border-emerald-800/40 shrink-0 text-[8.5px] sm:text-[9.5px]">
-          {summary?.kpi_summary?.completed ?? 0} Done
+          Target Done
         </span>
       </div>
     </Card>
@@ -2383,11 +2357,9 @@ export const HODCommandCenter: React.FC = () => {
         if (selectedStatus === 'PENDING') {
           setSelectedStatus('ALL');
           setAllocationFilter('ALL');
-          notify.info('Cleared pending target filter. Showing all students.', '', { category: 'ALLOCATION' });
         } else {
           setSelectedStatus('PENDING');
           setAllocationFilter((summary?.kpi_summary?.total_allocated ?? 0) === 0 ? 'ALL' : 'ALLOCATED');
-          notify.info(`Filtered: ${summary?.kpi_summary?.pending ?? 0} students with target in progress (< 10 solved).`, '', { category: 'ALLOCATION', duration: 2200 });
         }
         document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
       }}

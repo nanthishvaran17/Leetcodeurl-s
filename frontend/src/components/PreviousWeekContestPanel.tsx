@@ -2451,7 +2451,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
 
           <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 font-mono ml-auto">
-            Showing {filteredRecords.length} / {records.length} Students
+            {filteredRecords.length === records.length
+              ? `Showing ${records.length} Students`
+              : `Showing ${filteredRecords.length} / ${records.length} Students`}
           </span>
         </div>
       </div>

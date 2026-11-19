@@ -398,43 +398,15 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
-          <div className="pt-4 border-t border-brand-400/20 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
-            
-            {/* Department & Academic Year Filters - Side-by-side on mobile */}
-            <div className="flex flex-row items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div className="flex-1 min-w-0 sm:w-72 sm:flex-none">
-                <GlobalFilter
-                  options={departmentOptions}
-                  value={deptFilter}
-                  onChange={(val) => setDeptFilter(val)}
-                  icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
-                  dropdownWidth="w-full sm:w-72"
-                  showSearch={false}
-                  variant="dark"
-                />
-              </div>
-              <div className="flex-1 min-w-0 sm:w-60 sm:flex-none">
-                <GlobalFilter
-                  options={yearOptions}
-                  value={yearFilter}
-                  onChange={(val) => setYearFilter(val)}
-                  icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
-                  dropdownWidth="w-full sm:w-60"
-                  showSearch={false}
-                  variant="dark"
-                />
-              </div>
-            </div>
-
-            {/* Timeframe Selector Pills & Sleek Inline Refresh Button */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full xl:w-auto">
+          {/* Timeframe Selector Pills & Sleek Inline Refresh Button */}
+          <div className="pt-4 border-t border-brand-400/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 w-full sm:w-auto">
               <div className="flex-1 sm:flex-initial flex items-center bg-navy-900/90 p-1 rounded-xl sm:rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
                 {(['today', '7d', '30d', 'all'] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`flex-1 sm:flex-initial whitespace-nowrap px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center ${
+                    className={`flex-1 sm:flex-initial whitespace-nowrap px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center ${
                       period === p
                         ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 sm:scale-105'
                         : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -460,6 +432,50 @@ export const GrowthIntelligencePage: React.FC = () => {
               </button>
             </div>
 
+            {/* Selected Period Badge / Context */}
+            <div className="text-xs text-slate-300 font-medium hidden sm:flex items-center gap-1.5">
+              <span>Timeframe window:</span>
+              <span className="text-amber-300 font-bold capitalize">
+                {period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scope Filter Bar — Department & Academic Year in Dedicated Proper UI */}
+      <div className="p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-md shadow-slate-900/5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 transition-all">
+        <div className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200/60 dark:border-brand-800/60 shadow-xs">
+            <Filter className="w-3.5 h-3.5" />
+          </div>
+          <span>Select Department &amp; Year</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 flex-1 md:max-w-xl">
+          <div className="w-full min-w-0">
+            <GlobalFilter
+              options={departmentOptions}
+              value={deptFilter}
+              onChange={(val) => setDeptFilter(val)}
+              icon={<Building2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
+              dropdownWidth="w-full sm:w-80"
+              showSearch={false}
+              variant="default"
+              className="w-full shadow-xs"
+            />
+          </div>
+          <div className="w-full min-w-0">
+            <GlobalFilter
+              options={yearOptions}
+              value={yearFilter}
+              onChange={(val) => setYearFilter(val)}
+              icon={<GraduationCap className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
+              dropdownWidth="w-full sm:w-72"
+              showSearch={false}
+              variant="default"
+              className="w-full shadow-xs"
+            />
           </div>
         </div>
       </div>

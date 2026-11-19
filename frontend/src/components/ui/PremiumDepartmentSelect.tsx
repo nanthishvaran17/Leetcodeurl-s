@@ -43,9 +43,12 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
     } else if (showAllDepartments || isGlobalAccess) {
       list = (allDepartments && allDepartments.length > 0) ? allDepartments : departments;
     }
-    // Strictly exclude any department with 0 students/stats unless explicitly scoped
+    // For HOD & Staff: Always retain all their authorized departments
+    if (isRestrictedHod || isStaffUser) {
+      return list;
+    }
     return list.filter(d => d.student_count === undefined || d.student_count > 0);
-  }, [isRestricted, showAllDepartments, isGlobalAccess, allDepartments, departments]);
+  }, [isRestricted, isRestrictedHod, isStaffUser, showAllDepartments, isGlobalAccess, allDepartments, departments]);
 
   // If HOD has scoped departments, auto-select their first department if single dept, or allow 'ALL' / 'MY_DEPARTMENTS' for multi-dept
   useEffect(() => {

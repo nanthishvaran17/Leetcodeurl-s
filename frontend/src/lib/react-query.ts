@@ -7,6 +7,9 @@ export const queryClient = new QueryClient({
       gcTime: 60 * 60 * 1000, // 60 minutes memory cache
       refetchOnWindowFocus: false,
       retry: 2,
+      retryDelay: (attemptIndex) => Math.min(400 * (attemptIndex + 1), 2000),
+      networkMode: 'always',
+      structuralSharing: true,
       refetchOnMount: false, // Serve instant cached data when navigating between tabs
       refetchOnReconnect: true,
     },

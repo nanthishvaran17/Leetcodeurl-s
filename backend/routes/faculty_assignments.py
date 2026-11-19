@@ -609,11 +609,12 @@ def get_my_mentoring_summary(
 
     for s in students:
         perf = calculate_student_performance_status(s)
-        if perf["status_code"] == "AT_RISK":
+        sc = perf.get("status_code", "")
+        if sc == "AT_RISK":
             at_risk_count += 1
-        elif perf["status_code"] == "NEEDS_IMPROVEMENT":
+        elif sc in ("NEEDS_IMPROVEMENT", "ATTENTION"):
             needing_attention_count += 1
-        elif perf["status_code"] == "EXCELLENT":
+        elif sc in ("EXCELLENT", "COMPLETED"):
             completed_count += 1
         else:
             pending_count += 1

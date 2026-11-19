@@ -2286,7 +2286,9 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 </div>
               </div>
               <span className="text-xs text-slate-600 dark:text-slate-300 font-black font-mono">
-                Showing {filteredBackups.length} of {backups.length} snapshots
+                {filteredBackups.length === backups.length
+                  ? `Showing ${backups.length} snapshots`
+                  : `Showing ${filteredBackups.length} of ${backups.length} snapshots`}
               </span>
             </div>
 

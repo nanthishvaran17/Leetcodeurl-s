@@ -652,6 +652,9 @@ def get_backups_list(
     return list_backups_detail()
 
 
+@router.get("/backup/verify/{filename}")
+@router.post("/backup/verify/{filename}")
+@router.get("/backups/{filename}/verify")
 @router.post("/backups/{filename}/verify")
 def verify_backup_api(
     filename: str, 

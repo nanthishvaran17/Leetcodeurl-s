@@ -191,7 +191,7 @@ export const AccreditationStudioPage: React.FC = () => {
                 </div>
               </div>
               <span className="text-xs font-mono font-bold text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
-                Top 28% Cohort
+                {data?.naac_criteria_5_1?.advanced_percentage != null ? `${data.naac_criteria_5_1.advanced_percentage}% of Roster` : 'Placement Ready'}
               </span>
             </div>
           </div>
@@ -211,11 +211,11 @@ export const AccreditationStudioPage: React.FC = () => {
               <div>
                 <span className="text-xs text-slate-400">Institutional Ratio</span>
                 <div className="text-3xl font-black text-indigo-400">
-                  {data?.nba_mentoring_audit.mentee_ratio || "1:20.0"}
+                  {data?.nba_mentoring_audit?.mentee_ratio || "1:20.0"}
                 </div>
               </div>
               <span className="text-xs font-bold text-indigo-300 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
-                100% Covered
+                {data?.nba_mentoring_audit?.coverage_pct != null ? `${data.nba_mentoring_audit.coverage_pct}% Covered` : 'Active Mentoring'}
               </span>
             </div>
           </div>
@@ -247,10 +247,10 @@ export const AccreditationStudioPage: React.FC = () => {
                 {(data?.department_benchmarks || departments.map((d) => ({
                   dept_code: d.code || 'DEP',
                   dept_name: d.name,
-                  total_students: Math.floor(Math.random() * 200 + 300),
-                  total_problems_solved: Math.floor(Math.random() * 10000 + 30000),
-                  avg_per_student: +(Math.random() * 20 + 80).toFixed(1),
-                  naac_compliance_score: Math.floor(Math.random() * 15 + 85)
+                  total_students: 0,
+                  total_problems_solved: 0,
+                  avg_per_student: 0,
+                  naac_compliance_score: 0
                 }))).map((dept) => (
                   <tr key={dept.dept_code} className="hover:bg-slate-800/40 transition-colors">
                     <td className="py-3 px-4 font-bold text-white">{dept.dept_code}</td>

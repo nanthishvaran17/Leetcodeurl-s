@@ -174,6 +174,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
 
+  // Sanitizes technical raw socket/proxy exceptions (e.g. ECONNREFUSED) into friendly actionable alerts
+  const extractCleanErrorMessage = (err: any, fallback: string): string => {
+    const rawDetail = err?.response?.data?.detail;
+    const detail = typeof rawDetail === 'string' ? rawDetail : (rawDetail ? JSON.stringify(rawDetail) : null);
+    const msg = err?.message || '';
+    if (detail && (detail.includes('ECONNREFUSED') || detail.includes('ECONNRESET') || detail.includes('Failed to fetch') || err?.response?.status === 503)) {
+      return 'Cannot reach server. The backend service is currently offline or unreachable. Please tap to retry.';
+    }
+    if (msg.includes('Network Error') || msg.toLowerCase().includes('failed to fetch')) {
+      return 'Cannot reach server. Please check your internet connection and tap to retry.';
+    }
+    return detail || fallback;
+  };
+
   // Live Stats State — Dynamically loaded from API / local cache with 593 master fallback
   const [liveStats, setLiveStats] = useState<{
     totalStudents: number;
@@ -304,12 +318,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
   // 1. Password Login Handler
   const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     setError('');
     setSuccessMsg('');
 
-    const cleanUser = username.trim();
-    const cleanPass = password.trim();
+    // Fallback to DOM input values if browser autofilled credentials without triggering React state onChange
+    const domUser = (document.getElementById('institutionalEmail') as HTMLInputElement)?.value?.trim() || '';
+    const domPass = (document.getElementById('password') as HTMLInputElement)?.value || '';
+    const cleanUser = username.trim() || domUser;
+    const cleanPass = password || domPass;
+
+    if (cleanUser && !username) setUsername(cleanUser);
+    if (cleanPass && !password) setPassword(cleanPass);
 
     if (!cleanUser || !cleanPass) {
       triggerShake();
@@ -322,8 +342,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     try {
       const res = await api.post('/auth/login', {
-        username: username.trim().toLowerCase(),
-        password
+        username: cleanUser.toLowerCase(),
+        password: cleanPass
       }, { timeout: 60000 });
 
       if (res.data?.require_2fa) {
@@ -362,13 +382,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       const errMsg = err?.message || 'unknown';
       console.error(`[LOGIN_ERROR] status=${status} detail=${detail} message=${errMsg}`);
 
-      if (detail) {
+      if (detail && (detail.includes('ECONNREFUSED') || detail.includes('ECONNRESET') || detail.includes('Failed to fetch') || status === 503)) {
+        setError('Cannot reach server. The backend service is currently offline or unreachable. Please tap to retry.');
+      } else if (detail) {
         setError(detail);
       } else if (status === 401 || status === 403) {
         setError('Invalid institutional email/username or password.');
       } else if (err?.code === 'ECONNABORTED' || errMsg.toLowerCase().includes('timeout')) {
         setError('Server response timed out. Please tap to retry.');
-      } else if (!err.response || errMsg.toLowerCase().includes('network error')) {
+      } else if (!err.response || errMsg.toLowerCase().includes('network error') || errMsg.toLowerCase().includes('failed to fetch')) {
         setError('Cannot reach server. Please check your internet connection and tap to retry.');
       } else {
         setError(`Login failed (${errMsg || status || 'network issue'}). Please try again.`);
@@ -405,7 +427,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setTimeout(() => digitRefs[0].current?.focus(), 150);
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Failed to send OTP code. Please verify your email.');
+      setError(extractCleanErrorMessage(err, 'Failed to send OTP code. Please verify your email.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -442,7 +464,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Invalid or expired verification code.');
+      setError(extractCleanErrorMessage(err, 'Invalid or expired verification code.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -517,7 +539,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       }
     } catch (err: any) {
       triggerShake();
-      setError(err?.response?.data?.detail || 'Invalid 2FA code. Please check Google Authenticator.');
+      setError(extractCleanErrorMessage(err, 'Invalid 2FA code. Please check Google Authenticator.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -565,7 +587,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setForgotResetToken('');
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Identity verification failed. Please check your Institutional ID, Email and Date of Birth.');
+      setError(extractCleanErrorMessage(err, 'Identity verification failed. Please check your Institutional ID, Email and Date of Birth.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -599,7 +621,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setSuccessMsg('Reset code verified. Please set your new password.');
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Invalid or expired verification code. Please try again.');
+      setError(extractCleanErrorMessage(err, 'Invalid or expired verification code. Please try again.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -635,7 +657,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setSuccessMsg('Your password has been successfully updated!');
     } catch (err: any) {
       triggerShake();
-      setError(err.response?.data?.detail || 'Failed to reset password. Please start over.');
+      setError(extractCleanErrorMessage(err, 'Failed to reset password. Please start over.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -851,9 +873,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   role="alert"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <AlertCircle size={18} className="shrink-0 text-rose-400 mt-0.5" />
-                  <div className="flex-1 min-w-0 space-y-1 text-left">
-                    <p className="text-xs font-bold leading-normal">{error || authError}</p>
+                  <AlertCircle size={18} className="shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                  <div className="flex-1 min-w-0 space-y-1.5 text-left">
+                    <p className="text-xs font-bold leading-normal text-rose-900 dark:text-rose-100">{error || authError}</p>
                     {((error || authError || '').toLowerCase().includes('cannot reach server') ||
                       (error || authError || '').toLowerCase().includes('network error') ||
                       (error || authError || '').toLowerCase().includes('timed out') ||
@@ -863,14 +885,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                           disabled={loading}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (username && password) {
-                              handlePasswordLogin(e);
-                            }
+                            handlePasswordLogin(e);
                           }}
-                          className="inline-flex items-center space-x-1.5 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer mt-1 disabled:opacity-60"
+                          className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 dark:bg-rose-600 dark:hover:bg-rose-500 px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer select-none active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed mt-1 touch-manipulation"
                         >
-                          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                          <span>{loading ? 'Retrying sign-in...' : 'Tap here to retry sign-in now'}</span>
+                          <RefreshCw className={`w-3.5 h-3.5 text-white ${loading ? 'animate-spin' : ''}`} />
+                          <span className="text-white font-semibold">{loading ? 'Retrying sign-in...' : 'Tap to retry sign-in now'}</span>
                         </button>
                       )}
                   </div>

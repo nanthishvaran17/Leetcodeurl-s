@@ -71,6 +71,10 @@ def get_hod_authorized_department_ids(db: Session, user: Optional[User]) -> List
         )
         ids = [row[0] for row in allocations if row[0]]
 
+    # Ensure HOD's primary department_id is included if set
+    if u_dept_id and u_dept_id not in ids:
+        ids.append(u_dept_id)
+
     # Fallback for legacy HOD users not yet in HODDepartmentAllocation
     if not ids and u_dept_id:
         u_dept = db.query(Department).filter(Department.id == u_dept_id).first()

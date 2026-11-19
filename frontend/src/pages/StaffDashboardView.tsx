@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity, Copy, ExternalLink, ArrowUpDown, X, SlidersHorizontal } from 'lucide-react';
+import { Users, AlertTriangle, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, ChevronDown, Check, Filter, Moon, Activity, ExternalLink, ArrowUpDown, X, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
@@ -12,9 +12,12 @@ import { LiveContestPanel } from '../components/contest/LiveContestPanel';
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotification();
+  const userScope = user?.id ? String(user.id) : (user?.username || 'anon');
+
   const [summary, setSummary] = useState<any>(() => {
     try {
-      const cached = sessionStorage.getItem('nec_my_mentoring_summary');
+      const scope = user?.id ? String(user.id) : (user?.username || 'anon');
+      const cached = sessionStorage.getItem(`nec_my_mentoring_summary_${scope}`);
       return cached ? JSON.parse(cached) : null;
     } catch (_) {
       return null;
@@ -22,7 +25,8 @@ export const StaffDashboardView: React.FC = () => {
   });
   const [myStudents, setMyStudents] = useState<any[]>(() => {
     try {
-      const cached = sessionStorage.getItem('nec_my_assigned_students');
+      const scope = user?.id ? String(user.id) : (user?.username || 'anon');
+      const cached = sessionStorage.getItem(`nec_my_assigned_students_${scope}`);
       return cached ? JSON.parse(cached) : [];
     } catch (_) {
       return [];
@@ -30,7 +34,8 @@ export const StaffDashboardView: React.FC = () => {
   });
   const [priorityStudents, setPriorityStudents] = useState<any[]>(() => {
     try {
-      const cached = sessionStorage.getItem('nec_my_priority_students');
+      const scope = user?.id ? String(user.id) : (user?.username || 'anon');
+      const cached = sessionStorage.getItem(`nec_my_priority_students_${scope}`);
       return cached ? JSON.parse(cached) : [];
     } catch (_) {
       return [];
@@ -39,7 +44,8 @@ export const StaffDashboardView: React.FC = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(() => {
     try {
-      return !sessionStorage.getItem('nec_my_assigned_students');
+      const scope = user?.id ? String(user.id) : (user?.username || 'anon');
+      return !sessionStorage.getItem(`nec_my_assigned_students_${scope}`);
     } catch (_) {
       return true;
     }
@@ -93,7 +99,7 @@ export const StaffDashboardView: React.FC = () => {
 
   useEffect(() => {
     fetchMentoringData(false);
-  }, []);
+  }, [user?.id]);
 
   const fetchMentoringData = async (forceRefresh: boolean = false) => {
     setLoading(true);
@@ -131,10 +137,10 @@ export const StaffDashboardView: React.FC = () => {
         }
       }
 
-      // Tier 3 fallback: Load previously stored mentees from sessionStorage if network was empty
+      // Tier 3 fallback: Load previously stored mentees from sessionStorage for this specific user if network was empty
       if (!rawList || rawList.length === 0) {
         try {
-          const cachedRaw = sessionStorage.getItem('nec_my_assigned_students');
+          const cachedRaw = sessionStorage.getItem(`nec_my_assigned_students_${userScope}`);
           if (cachedRaw) {
             const parsed = JSON.parse(cachedRaw);
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -188,7 +194,7 @@ export const StaffDashboardView: React.FC = () => {
 
       if (sumRes.status === 'fulfilled' && sumRes.value?.data) {
         setSummary(sumRes.value.data);
-        try { sessionStorage.setItem('nec_my_mentoring_summary', JSON.stringify(sumRes.value.data)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_mentoring_summary_${userScope}`, JSON.stringify(sumRes.value.data)); } catch (_) {}
       } else if (studentList.length > 0) {
         const activeCnt = studentList.filter((s: any) => s.total_solved > 0).length;
         const atRiskCnt = studentList.filter((s: any) => s.status_code === 'AT_RISK').length;
@@ -204,23 +210,30 @@ export const StaffDashboardView: React.FC = () => {
           workload_status: studentList.length > 20 ? 'OVERLOAD' : 'NORMAL'
         };
         setSummary(computedSummary);
-        try { sessionStorage.setItem('nec_my_mentoring_summary', JSON.stringify(computedSummary)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_mentoring_summary_${userScope}`, JSON.stringify(computedSummary)); } catch (_) {}
+      } else {
+        setSummary(null);
+        try { sessionStorage.removeItem(`nec_my_mentoring_summary_${userScope}`); } catch (_) {}
       }
 
       setMyStudents(studentList);
       if (studentList && studentList.length > 0) {
         try {
-          sessionStorage.setItem('nec_my_assigned_students', JSON.stringify(studentList));
+          sessionStorage.setItem(`nec_my_assigned_students_${userScope}`, JSON.stringify(studentList));
+        } catch (_) {}
+      } else {
+        try {
+          sessionStorage.removeItem(`nec_my_assigned_students_${userScope}`);
         } catch (_) {}
       }
 
       if (prioRes.status === 'fulfilled' && prioRes.value?.data) {
         setPriorityStudents(prioRes.value.data);
-        try { sessionStorage.setItem('nec_my_priority_students', JSON.stringify(prioRes.value.data)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_priority_students_${userScope}`, JSON.stringify(prioRes.value.data)); } catch (_) {}
       } else {
         const fallbackPrio = studentList.filter((s: any) => s.status_code === 'AT_RISK' || s.status_code === 'NEEDS_IMPROVEMENT');
         setPriorityStudents(fallbackPrio);
-        try { sessionStorage.setItem('nec_my_priority_students', JSON.stringify(fallbackPrio)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_priority_students_${userScope}`, JSON.stringify(fallbackPrio)); } catch (_) {}
       }
 
       if (alertRes.status === 'fulfilled' && alertRes.value?.data) {
@@ -553,50 +566,6 @@ NEC LeetCode Intelligence Portal`;
                 <span>Last Live Sync: {lastSyncTime || 'Just now'}</span>
               </span>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
-            <button
-              type="button"
-              onClick={handleLiveSync}
-              disabled={liveSyncing}
-              className="min-h-[44px] flex-1 sm:flex-none justify-center px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-indigo-700 hover:from-brand-500 hover:to-indigo-600 active:scale-95 text-white text-xs font-bold shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50 touch-manipulation"
-            >
-              <RefreshCw className={`w-4 h-4 ${liveSyncing ? 'animate-spin text-amber-400' : 'text-amber-300'}`} />
-              <span>{liveSyncing ? 'Fetching Live Data...' : 'FETCH LIVE DATA'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => fetchMentoringData(true)}
-              disabled={loading}
-              className="min-h-[44px] flex-1 sm:flex-none justify-center px-3.5 sm:px-4 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExportCSV}
-              disabled={myStudents.length === 0}
-              className="min-h-[44px] flex-1 sm:flex-none justify-center px-3.5 sm:px-4 py-2.5 rounded-2xl bg-emerald-600/80 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold border border-emerald-500/30 flex items-center space-x-2 transition-all cursor-pointer backdrop-blur-md touch-manipulation shadow-lg shadow-emerald-950/20 disabled:opacity-50"
-              title="Export Mentoring Roster to CSV"
-            >
-              <Download className="w-4 h-4 text-emerald-200" />
-              <span>Export CSV</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCopySummary}
-              disabled={myStudents.length === 0}
-              className="min-h-[44px] flex-1 sm:flex-none justify-center px-3 sm:px-3.5 py-2.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.15] active:scale-95 text-white text-xs font-semibold border border-white/10 flex items-center space-x-1.5 transition-all cursor-pointer backdrop-blur-md touch-manipulation disabled:opacity-50"
-              title="Copy Portfolio Summary for WhatsApp/Email sharing"
-            >
-              <Copy className="w-4 h-4 text-indigo-300" />
-              <span>Copy Report</span>
-            </button>
           </div>
         </div>
 
@@ -1480,7 +1449,9 @@ NEC LeetCode Intelligence Portal`;
                   </span>
                 )}
                 <span className="ml-1 font-normal text-slate-500 dark:text-slate-400 inline-block mt-0.5">
-                  — Showing {filteredStudents.length} of {myStudents.length} students
+                  — {filteredStudents.length === myStudents.length
+                    ? `Showing ${myStudents.length} students`
+                    : `Showing ${filteredStudents.length} of ${myStudents.length} students`}
                 </span>
               </span>
             </div>
@@ -1501,7 +1472,9 @@ NEC LeetCode Intelligence Portal`;
         {/* MOBILE SORT & STATS BAR (md:hidden) */}
         <div className="block md:hidden flex items-center justify-between gap-2 px-1 pt-1 pb-2">
           <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-            {sortedFilteredStudents.length} of {myStudents.length} Mentees
+            {sortedFilteredStudents.length === myStudents.length
+              ? `${myStudents.length} Mentees`
+              : `${sortedFilteredStudents.length} of ${myStudents.length} Mentees`}
           </span>
           <div className="flex items-center gap-1.5">
             <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />

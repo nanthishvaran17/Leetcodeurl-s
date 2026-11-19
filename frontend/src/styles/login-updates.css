@@ -465,4 +465,26 @@ html, body, #root {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7) !important;
 }
 
+/* High-contrast mobile retry button inside error banner */
+.error-banner button.touch-manipulation {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
+.error-banner button.touch-manipulation:hover,
+.error-banner button.touch-manipulation:focus,
+.error-banner button.touch-manipulation:active {
+  background-color: #be123c !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.error-banner button.touch-manipulation * {
+  color: #ffffff !important;
+}
+
+
 

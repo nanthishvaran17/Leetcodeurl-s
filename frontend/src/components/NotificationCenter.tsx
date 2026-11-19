@@ -115,30 +115,30 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
   return (
     <div
-      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-2xl p-3.5 sm:p-4 shadow-2xl shadow-slate-900/20 dark:shadow-black/80 border transition-all duration-300 transform hover:-translate-y-0.5 animate-slide-down-fade ring-1 ring-black/5 dark:ring-white/10 ${style.bg}`}
+      className={`pointer-events-auto relative shrink-0 w-full overflow-hidden rounded-xl sm:rounded-2xl py-2 px-3 sm:py-2.5 sm:px-3.5 shadow-lg shadow-slate-900/10 dark:shadow-black/60 border transition-all duration-300 transform hover:-translate-y-0.5 ring-1 ring-black/5 dark:ring-white/10 ${style.bg}`}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       role="alert"
     >
-      <div className="flex items-start space-x-3">
-        <div className={`p-2 rounded-xl border shrink-0 mt-0.5 ${style.badgeBg}`}>
-          <IconComponent className={`w-4 h-4 ${style.iconColor}`} />
+      <div className="flex items-center space-x-2.5 min-w-0">
+        <div className={`p-1.5 rounded-lg border shrink-0 ${style.badgeBg}`}>
+          <IconComponent className={`w-3.5 h-3.5 ${style.iconColor}`} />
         </div>
 
-        <div className="flex-1 min-w-0 pr-2 space-y-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${style.categoryColor}`}>
-              {toast.category || style.defaultCategory}
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold shrink-0">{toast.timestamp}</span>
+        <div className="flex-1 min-w-0 pr-1">
+          <div className="flex items-center space-x-1.5 min-w-0">
+            {toast.category && (
+              <span className={`text-[9px] font-black uppercase tracking-wider shrink-0 ${style.categoryColor}`}>
+                {toast.category}
+              </span>
+            )}
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
+              {toast.title}
+            </h4>
           </div>
 
-          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug tracking-tight">
-            {toast.title}
-          </h4>
-
           {toast.description && (
-            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed truncate">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight truncate mt-0.5">
               {toast.description}
             </p>
           )}
@@ -150,7 +150,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
                 toast.onAction?.();
                 onDismiss(toast.id);
               }}
-              className="mt-1.5 inline-flex items-center text-xs font-black text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+              className="mt-1 inline-flex items-center text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
             >
               {toast.actionLabel}
             </button>
@@ -163,17 +163,17 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
             e.stopPropagation();
             onDismiss(toast.id);
           }}
-          className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer active:scale-95"
+          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer active:scale-95"
           title="Dismiss notification"
           aria-label="Dismiss notification"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Auto-dismiss Inset Floating Micro-Progress Bar */}
       {toast.duration && toast.duration > 0 ? (
-        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-slate-100 dark:bg-slate-800 overflow-hidden">
           <div
             className={`h-full transition-all ease-linear ${style.progressBg}`}
             style={{ width: `${progress}%` }}
@@ -212,7 +212,7 @@ export const NotificationCenter: React.FC = () => {
       {/* Toast Notification Stack Container (Top-Right Header-Aligned Stack / Below Navbar on Mobile) */}
       <div
         id="nec-toast-container"
-        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] left-3 sm:left-auto right-3 sm:right-6 z-[99999999] flex flex-col gap-2.5 sm:gap-3.5 w-auto sm:w-[380px] max-w-sm sm:max-w-md mx-auto sm:mx-0 pointer-events-none print:hidden no-print"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+3.85rem)] sm:top-[4.25rem] left-3 sm:left-auto right-3 sm:right-6 z-[99999999] flex flex-col gap-2 w-auto sm:w-[320px] max-w-[calc(100vw-1.5rem)] sm:max-w-sm mx-auto sm:mx-0 pointer-events-none print:hidden no-print"
         aria-live="polite"
         aria-atomic="true"
       >

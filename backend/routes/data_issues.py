@@ -736,9 +736,9 @@ def generate_data_issues_excel_bytes(
         cell.border = thin_border
     ws.row_dimensions[4].height = 32
 
-    # Mandatory 100% CENTER alignment across ALL 15 columns as explicitly requested
+    # Column Alignments: Student Name is LEFT-ALIGNED (following Staff / Master Excel Design Standard); other columns remain centered
     center_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    col_alignments = {i: center_alignment for i in range(1, 16)}
+    left_alignment = Alignment(horizontal="left", vertical="center", wrap_text=False)
 
     # Populate Data Rows
     for idx, st in enumerate(students_data, start=1):
@@ -790,7 +790,7 @@ def generate_data_issues_excel_bytes(
         for col_idx, cell in enumerate(current_row, start=1):
             cell.fill = row_fill
             cell.border = thin_border
-            cell.alignment = center_alignment
+            cell.alignment = left_alignment if col_idx == 2 else center_alignment
 
             # Specific cell font styling (Times New Roman with high-contrast text)
             if col_idx == 10: # Severity

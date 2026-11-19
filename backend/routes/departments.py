@@ -52,23 +52,6 @@ def get_departments(
         except Exception:
             db.rollback()
 
-    # Filter to valid production departments with active enrolled students.
-    # Strictly exclude departments that have 0 active students/stats.
-    all_d = [
-        d for d in all_d
-        if is_production_department(str(d.code or ""), str(d.name or ""))
-        and student_counts.get(d.id, 0) > 0
-    ]
-
-    for d in all_d:
-        if d.code and str(d.code).upper() == "IT" and d.name != "Information Technology":
-            d.name = "Information Technology"  # type: ignore[assignment]
-            db.add(d)
-            try:
-                db.commit()
-            except Exception:
-                db.rollback()
-
     # Attempt to get current user (optional — public access still works for leaderboard)
     current_user: Optional[User] = None
     if request:
@@ -81,16 +64,41 @@ def get_departments(
                 pass
             current_user = None
 
+    hod_authorized_ids: List[int] = []
+    if current_user:
+        from backend.services.authorization_service import _HOD_ROLES
+        role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role in _HOD_ROLES or "hod" in role or "head of department" in role:
+            from backend.services.authorization_service import get_hod_authorized_department_ids
+            hod_authorized_ids = get_hod_authorized_department_ids(db, current_user)
+
+    # Filter to valid production departments:
+    # - all_depts=True (admin staff allocation / user management): Include all production departments
+    # - HOD users: Always include all departments authorized for the HOD
+    # - General public filter: Departments with active enrolled students
+    all_d = [
+        d for d in all_d
+        if is_production_department(str(d.code or ""), str(d.name or ""))
+        and (all_depts or not active_only or student_counts.get(d.id, 0) > 0 or d.id in hod_authorized_ids or (current_user and current_user.department_id == d.id))
+    ]
+
+    for d in all_d:
+        if d.code and str(d.code).upper() == "IT" and d.name != "Information Technology":
+            d.name = "Information Technology"  # type: ignore[assignment]
+            db.add(d)
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
     # Scope restrictions by role (HOD & Staff/Faculty Mentors):
     # HOD and Staff can NEVER see departments outside their authorized scope.
     if current_user:
         from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, _GLOBAL_ACCESS_ROLES
         role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role in _HOD_ROLES:
-            from backend.services.authorization_service import get_hod_authorized_department_ids
-            authorized_ids = get_hod_authorized_department_ids(db, current_user)
-            if authorized_ids:
-                all_d = [d for d in all_d if d.id in authorized_ids]
+        if role in _HOD_ROLES or "hod" in role or "head of department" in role:
+            if hod_authorized_ids:
+                all_d = [d for d in all_d if d.id in hod_authorized_ids]
             elif current_user.department_id:
                 all_d = [d for d in all_d if d.id == current_user.department_id]
             else:

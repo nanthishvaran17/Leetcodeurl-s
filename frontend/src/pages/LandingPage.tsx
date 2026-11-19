@@ -268,15 +268,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (user) {
       const roleClean = (user.role || '').trim().toLowerCase();
       const isGlobalLeader = ['admin', 'administrator', 'superadmin', 'super_admin', 'super admin', 'principal', 'management', 'director'].includes(roleClean);
+      const isHodRole = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator'].includes(roleClean);
       if (!isGlobalLeader) {
-        let userDeptCode: string | null = null;
-        if (user.authorized_department_codes && user.authorized_department_codes.length > 0) {
-          userDeptCode = user.authorized_department_codes[0];
-        } else if (user.department) {
-          userDeptCode = user.department;
-        }
-        if (userDeptCode && selectedDept === 'all') {
-          setSelectedDept(userDeptCode);
+        const authCodes = user.authorized_department_codes || [];
+        // If HOD has multiple departments allocated (e.g. Cyber Security + IoT), keep 'all' to show both departments together!
+        if (isHodRole && authCodes.length > 1) {
+          // Do not force single department — allow viewing all authorized departments combined
+        } else {
+          let userDeptCode: string | null = null;
+          if (authCodes.length > 0) {
+            userDeptCode = authCodes[0];
+          } else if (user.department) {
+            userDeptCode = user.department;
+          }
+          if (userDeptCode && selectedDept === 'all') {
+            setSelectedDept(userDeptCode);
+          }
         }
       } else {
         if (selectedDept !== 'all') {
@@ -629,7 +636,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           student_count: liveCount
         };
       })
-      .filter(d => (d.student_count ?? 0) > 0);
+      .filter(d => {
+        const authCodes = (user?.authorized_department_codes || []).map((c: string) => c.toUpperCase());
+        // Always include departments explicitly authorized for current user even if count is 0
+        if (authCodes.includes((d.code || '').toUpperCase())) return true;
+        return (d.student_count ?? 0) > 0 || departments.length <= 2;
+      });
   }, [departments, departmentCounts]);
 
 
@@ -1275,44 +1287,50 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         {/* Mobile View: Dedicated Sleek Filter Control Bar */}
         <div className="block md:hidden space-y-2.5">
-          <div className="flex items-center space-x-2">
-            {/* Primary Mobile Filter Trigger Button */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Primary Mobile Filter Trigger Button (50% Width) */}
             <button
               type="button"
               onClick={() => {
                 setMobileFilterTab('all');
                 setIsMobileFilterOpen(true);
               }}
-              className="flex-1 flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-white/[0.09] text-slate-800 dark:text-slate-100 hover:border-brand-500/40 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+              className="flex items-center justify-between px-3 py-2.5 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-white/[0.09] text-slate-800 dark:text-slate-100 hover:border-brand-500/40 active:scale-[0.98] transition-all shadow-xs cursor-pointer w-full min-w-0"
             >
-              <div className="flex items-center space-x-2 min-w-0">
-                <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
+              <div className="flex items-center space-x-1.5 min-w-0">
+                <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs font-black tracking-tight">Filter &amp; Sort</span>
+                <span className="text-xs font-black tracking-tight truncate">Filter &amp; Sort</span>
               </div>
-              <div className="flex items-center space-x-1.5 shrink-0">
-                {activeFiltersCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-600 text-white shadow-xs">
-                    {activeFiltersCount} active
+              <div className="flex items-center space-x-1 shrink-0 ml-1">
+                {activeFiltersCount > 0 ? (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-brand-600 text-white shadow-xs">
+                    {activeFiltersCount}
                   </span>
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 -rotate-90" />
                 )}
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 -rotate-90" />
               </div>
             </button>
 
-            {/* Quick Mobile Sort Trigger Button */}
+            {/* Quick Mobile Sort Trigger Button (50% Width) */}
             <button
               type="button"
               onClick={() => {
                 setMobileFilterTab('sort');
                 setIsMobileFilterOpen(true);
               }}
-              className="flex items-center space-x-1.5 px-3 py-2.5 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-white/[0.09] text-slate-700 dark:text-slate-200 active:scale-[0.98] transition-all shadow-xs cursor-pointer shrink-0"
+              className="flex items-center justify-between px-3 py-2.5 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-200/90 dark:border-white/[0.09] text-slate-700 dark:text-slate-200 active:scale-[0.98] transition-all shadow-xs cursor-pointer w-full min-w-0"
               title="Quick Sort Selection"
             >
-              <ArrowUpDown className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <span className="text-xs font-bold truncate max-w-[95px]">{activeSortLabel}</span>
+              <div className="flex items-center space-x-1.5 min-w-0">
+                <div className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold truncate">{activeSortLabel}</span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
             </button>
           </div>
 
@@ -1393,18 +1411,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 ml-0.5" />
               )}
             </button>
-
-            {/* Clear All Quick Chip */}
-            {activeFiltersCount > 0 && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20"
-              >
-                <RotateCcw className="w-3 h-3 shrink-0" />
-                <span>Reset</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -1555,7 +1561,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
           <h3 className="font-black text-lg text-slate-900 dark:text-white min-w-0">
             <div className="flex flex-col min-w-0">
-              <span className="break-words">Showing {viewMode === 'cards' ? Math.min(displayCount, sortedList.length) : sortedList.length} of {sortedList.length} Students</span>
+              <span className="break-words">
+                {viewMode === 'cards' && displayCount < sortedList.length
+                  ? `Showing ${displayCount} of ${sortedList.length} Students`
+                  : `Showing ${sortedList.length} Students`}
+              </span>
               {(selectedCollege !== 'all' || selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
                 <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-words [overflow-wrap:anywhere]">
                   Filtered by: {[
@@ -1587,8 +1597,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   : refreshing
                     ? 'Refreshing...'
                     : isFiltered
-                      ? `Refresh Filtered (${sortedList.length})`
-                      : (isFacultyRole ? `Refresh My Allocated Students (${sortedList.length})` : 'Refresh Allocated Students')
+                      ? 'Refresh Filtered'
+                      : (isFacultyRole ? 'Refresh My Allocated Students' : 'Refresh Allocated Students')
                 }
               </span>
             </button>

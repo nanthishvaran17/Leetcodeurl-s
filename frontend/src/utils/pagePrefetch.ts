@@ -38,6 +38,8 @@ const pageImportMap: Record<string, () => Promise<any>> = {
   'profile': () => import('../pages/StudentProfilePage'),
   'student-dashboard': () => import('../pages/StudentDashboardView'),
   'staff-dashboard': () => import('../pages/StaffDashboardView'),
+  'staff': () => import('../pages/StaffDashboardView'),
+  'landing': () => import('../pages/LandingPage'),
 };
 
 const prefetchedPages = new Set<string>();
@@ -128,12 +130,17 @@ export function warmupPriorityRoutes(userRole?: string): void {
     return;
   }
 
+  const roleLower = (userRole || '').trim().toLowerCase();
+  const isExecOrHod = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'hod', 'department hod', 'department_hod'].includes(roleLower);
+  const isStaffOrFaculty = ['faculty', 'staff', 'mentor', 'advisor', 'tutor'].some(r => roleLower.includes(r));
+
   // Warm up core & operational routes cleanly during idle so sidebar navigation is instant
   const coreRoutes = [
     'dashboard',
     'students',
     'weekly-contest',
     'departments',
+    ...(isStaffOrFaculty ? ['staff-dashboard'] : []),
     'hod-command-center',
     'faculty-action-center',
     'quality',
@@ -146,10 +153,6 @@ export function warmupPriorityRoutes(userRole?: string): void {
     'system-health',
     'public'
   ];
-
-  const roleLower = (userRole || '').trim().toLowerCase();
-  const isExecOrHod = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'hod', 'department hod', 'department_hod'].includes(roleLower);
-  const isStaffOrFaculty = ['faculty', 'staff', 'mentor', 'advisor', 'tutor'].some(r => roleLower.includes(r));
   const priorityDataRoutes = [
     'students',
     'weekly-contest',

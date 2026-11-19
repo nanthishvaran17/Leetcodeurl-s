@@ -120,8 +120,8 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
       const campus = d.campus || (name.toLowerCase().includes('nct') ? 'NCT' : 'NEC');
       const count = d.student_count ?? d.students_count ?? d.count;
 
-      // Strictly exclude departments that have 0 active students
-      if (count !== undefined && count <= 0) return;
+      // Strictly exclude departments that have 0 active students (unless there are only a few scoped departments)
+      if (departments.length > 2 && count !== undefined && count <= 0) return;
 
       list.push({
         value: code,

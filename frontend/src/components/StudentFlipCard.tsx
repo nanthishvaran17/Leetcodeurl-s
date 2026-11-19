@@ -189,7 +189,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
   return (
     <div
-      className={`w-full min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
+      className={`w-full min-h-[290px] sm:min-h-[360px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onClick={handleCardClick}
@@ -198,12 +198,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         style={{ transformStyle: 'preserve-3d' }}
-        className="relative w-full h-full min-h-[360px] flex flex-col"
+        className="relative w-full h-full min-h-[290px] sm:min-h-[360px] flex flex-col"
       >
         {/* FRONT SIDE — 2026 Holographic Glass Student Card */}
         <div 
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 ${
+          className={`absolute inset-0 w-full h-full min-h-[290px] sm:min-h-[360px] p-4 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 ${
             isFlipped ? 'pointer-events-none opacity-0' : 'pointer-events-auto opacity-100 z-10'
           }`}
         >
@@ -243,26 +243,26 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Card Center: Avatar & Student Details */}
-          <div className="text-center space-y-3 py-2 flex-1 flex flex-col justify-center min-w-0">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto shrink-0 aspect-square flex items-center justify-center">
+          <div className="text-center space-y-2 py-1.5 flex-1 flex flex-col justify-center min-w-0">
+            <div className="relative w-16 h-16 sm:w-24 sm:h-24 mx-auto shrink-0 aspect-square flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400/30 to-indigo-500/30 blur-lg pointer-events-none" />
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
+              <div className="relative w-16 h-16 sm:w-24 sm:h-24 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
                 <span className="leading-none tracking-normal font-black text-center flex items-center justify-center">
-                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-8 h-8 sm:w-9 sm:h-9" />}
+                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-7 h-7 sm:w-9 sm:h-9" />}
                 </span>
               </div>
             </div>
 
-            <div className="min-w-0 px-1 pt-1">
-              <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white break-words line-clamp-2 max-w-full tracking-tight font-display leading-snug text-center" title={student.name}>
+            <div className="min-w-0 px-1 pt-0.5">
+              <h3 className="font-extrabold text-sm sm:text-lg text-slate-900 dark:text-white break-words line-clamp-2 max-w-full tracking-tight font-display leading-snug text-center" title={student.name}>
                 {student.name}
               </h3>
-              <div className="flex items-center justify-center space-x-2 mt-1">
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-wider truncate">
+              <div className="flex items-center justify-center space-x-1.5 mt-0.5">
+                <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-wider truncate">
                   {student.reg_no}
                 </p>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">
+                <p className="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate">
                   {formatStudentYearBadge(student)}{student.section ? ` • ${student.section?.name || student.section}` : ''}
                 </p>
               </div>
@@ -270,23 +270,23 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-3 flex flex-col items-center justify-center gap-1 mt-auto border-t border-slate-100 dark:border-white/[0.04]">
+          <div className="pt-2 sm:pt-3 flex flex-col items-center justify-center gap-1 mt-auto border-t border-slate-100 dark:border-white/[0.04]">
             {isVerified ? (
               <div className="flex flex-col items-center">
-                <span className="text-3xl sm:text-3.5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
+                <span className="text-2xl sm:text-3.5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
                   {totalSolved}
                 </span>
-                <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 tracking-wider mt-1 px-2.5 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
+                <span className="text-[9.5px] sm:text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 tracking-wider mt-0.5 px-2 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
                   Problems Solved
                 </span>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[50px]">
+              <div className="flex flex-col items-center justify-center h-[42px] sm:h-[50px]">
                 <span className="text-xs font-semibold text-slate-400">Stats Unavailable</span>
               </div>
             )}
 
-            <div className="mt-2.5 flex items-center justify-center">
+            <div className="mt-1.5 sm:mt-2.5 flex items-center justify-center">
               <SyncBadge />
             </div>
           </div>
@@ -301,7 +301,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
             transform: 'rotateY(180deg)',
             WebkitTransform: 'rotateY(180deg)'
           }}
-          className={`absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 ${
+          className={`absolute inset-0 w-full h-full min-h-[290px] sm:min-h-[360px] p-4 sm:p-6 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 ${
             isFlipped ? 'pointer-events-auto opacity-100 z-20' : 'pointer-events-none opacity-0 z-0'
           }`}
         >

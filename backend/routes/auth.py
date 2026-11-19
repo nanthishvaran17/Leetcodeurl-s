@@ -109,13 +109,16 @@ def _get_user_dept_scope(db: Session, user: User) -> dict:
         from backend.models import Department
         dept = db.query(Department).filter(Department.id == u_dept_id).first()
         if dept:
-            scope["department"] = dept.name
-            scope["department_name"] = dept.name
-            scope["department_code"] = dept.code
-            if not scope["authorized_department_ids"]:
-                scope["authorized_department_ids"] = [dept.id]
-            if not scope["authorized_department_codes"]:
-                scope["authorized_department_codes"] = [dept.code]
+            if not scope.get("department"):
+                scope["department"] = dept.name
+            if not scope.get("department_name"):
+                scope["department_name"] = dept.name
+            if not scope.get("department_code"):
+                scope["department_code"] = dept.code
+            if dept.id not in scope["authorized_department_ids"]:
+                scope["authorized_department_ids"].append(dept.id)
+            if dept.code and dept.code not in scope["authorized_department_codes"]:
+                scope["authorized_department_codes"].append(dept.code)
 
     return scope
 
@@ -2031,6 +2034,48 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         return {"success": True, "message": "Password reset successfully."}
         
     raise HTTPException(status_code=400, detail="User account not found for password reset.")
+
+
+class SetupAccountRequest(BaseModel):
+    token: str
+    new_password: str
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+
+
+@router.post("/setup-account")
+def setup_account_endpoint(req: SetupAccountRequest, db: Session = Depends(get_db)):
+    """
+    Sets up a newly invited staff member's password and profile using an account_setup JWT token.
+    """
+    try:
+        payload = jwt.decode(req.token.strip(), settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("purpose") != "account_setup":
+            raise HTTPException(status_code=401, detail="Invalid token purpose.")
+        sub_val = payload.get("sub")
+        if sub_val is None:
+            raise HTTPException(status_code=401, detail="Invalid token subject.")
+        user_id = int(str(sub_val))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired setup link. Please request a new invite.")
+
+    if len(req.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User account not found.")
+
+    user.hashed_password = get_password_hash(req.new_password)  # type: ignore
+    user.require_password_change = False  # type: ignore
+    user.is_active = True  # type: ignore
+    if req.full_name and req.full_name.strip():
+        user.full_name = req.full_name.strip()  # type: ignore
+    if req.phone_number and req.phone_number.strip():
+        user.phone_number = req.phone_number.strip()  # type: ignore
+
+    db.commit()
+    return {"success": True, "message": "Account setup completed successfully. You can now log in."}
 
 
 class AdminResetStaffPasswordRequest(BaseModel):

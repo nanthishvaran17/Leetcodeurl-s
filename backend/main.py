@@ -1344,6 +1344,11 @@ async def add_security_headers_and_performance_middleware(request, call_next):
 # auth: prefix="/auth" — mount for both /api/auth and /auth compatibility
 app.include_router(auth.router, prefix="/api")
 app.include_router(auth.router, include_in_schema=False)
+
+@app.post("/api/setup-account", tags=["Authentication"], include_in_schema=False)
+@app.post("/setup-account", tags=["Authentication"], include_in_schema=False)
+def direct_setup_account_route(req: auth.SetupAccountRequest, db: Session = Depends(get_db)):
+    return auth.setup_account_endpoint(req, db)
 # notifications: prefix="/api/notifications" (self-prefixed) — mount once
 app.include_router(notifications.router)
 # messaging: prefix="/api/messaging"

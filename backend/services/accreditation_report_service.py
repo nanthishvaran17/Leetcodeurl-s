@@ -32,6 +32,7 @@ class AccreditationReportService:
         total_students = query_students.count() or 1
         
         active_coders = db.query(Student).join(Student.stats).filter(
+            Student.is_active == True,
             LeetCodeProfileStats.total_solved >= 10
         )
         if dept_id:
@@ -39,6 +40,7 @@ class AccreditationReportService:
         active_coders_count = active_coders.count()
 
         advanced_coders = db.query(Student).join(Student.stats).filter(
+            Student.is_active == True,
             LeetCodeProfileStats.total_solved >= 100
         )
         if dept_id:
@@ -54,19 +56,27 @@ class AccreditationReportService:
             total_faculty = total_faculty.filter(User.department_id == dept_id)
         faculty_count = total_faculty.count() or 1
 
-        total_assignments = db.query(FacultyStudentAssignment).filter(
-            FacultyStudentAssignment.is_active == True
+        total_assignments = db.query(FacultyStudentAssignment).join(
+            Student, Student.id == FacultyStudentAssignment.student_id
+        ).filter(
+            FacultyStudentAssignment.is_active == True,
+            Student.is_active == True
         )
+        if dept_id:
+            total_assignments = total_assignments.filter(Student.department_id == dept_id)
         assigned_students_count = total_assignments.count()
 
-        # Department matrix
+        # Department matrix - strictly authentic active departments
         depts = db.query(Department).all()
         dept_benchmarks = []
         for d in depts:
+            d_code = (d.code or "").upper()
+            if d_code.startswith("TEST") or d_code.startswith("DEMO") or d_code.startswith("MOCK"):
+                continue
             d_students = db.query(Student).filter(Student.department_id == d.id, Student.is_active == True).count()
             d_solved = db.query(func.sum(LeetCodeProfileStats.total_solved)).join(
                 Student, Student.id == LeetCodeProfileStats.student_id
-            ).filter(Student.department_id == d.id).scalar() or 0
+            ).filter(Student.department_id == d.id, Student.is_active == True).scalar() or 0
             
             dept_benchmarks.append({
                 "dept_code": d.code,
