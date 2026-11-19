@@ -5,7 +5,7 @@ import { Building2 } from 'lucide-react';
 import { GlobalFilter } from '../GlobalFilter';
 import { useDepartments } from '../../contexts/DepartmentContext';
 
-import { normalizeDepartment, formatDepartmentName, formatDepartmentCode } from '../../utils/filterUtils';
+import { formatDepartmentName, formatDepartmentCode } from '../../utils/filterUtils';
 
 interface PremiumDepartmentSelectProps {
   selectedDept: string;
@@ -114,4 +114,3 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
 };
 
 export default PremiumDepartmentSelect;
-
