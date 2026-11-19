@@ -609,16 +609,16 @@ NEC LeetCode Intelligence Portal`;
       </div>
 
       {/* Interactive Summary KPI Grid — 2026 Bento Matrix */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-2.5 sm:gap-4 p-1">
 
         {/* 1. Assigned (All) */}
         <div 
           onClick={() => handleCardFilterClick('ALL')}
           title="Click to view all assigned students"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ALL'
-              ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border-brand-500 ring-2 ring-brand-500/30 shadow-indigo-500/10'
-              : 'glass-panel hover:border-brand-500/40'
+              ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border-brand-500 ring-2 ring-inset ring-brand-500/30 shadow-indigo-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-brand-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
@@ -650,10 +650,10 @@ NEC LeetCode Intelligence Portal`;
         <div 
           onClick={() => handleCardFilterClick('ACTIVE')}
           title="Click to filter active solvers"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ACTIVE'
-              ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-emerald-500/10'
-              : 'glass-panel hover:border-emerald-500/40'
+              ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-inset ring-emerald-500/30 shadow-emerald-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-emerald-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
@@ -679,10 +679,10 @@ NEC LeetCode Intelligence Portal`;
         <div 
           onClick={() => handleCardFilterClick('COMPLETED')}
           title="Click to filter students with 100+ solved"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'COMPLETED'
-              ? 'bg-purple-50/90 dark:bg-purple-950/50 border-purple-500 ring-2 ring-purple-500/30 shadow-purple-500/10'
-              : 'glass-panel hover:border-purple-500/40'
+              ? 'bg-purple-50/90 dark:bg-purple-950/50 border-purple-500 ring-2 ring-inset ring-purple-500/30 shadow-purple-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-purple-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
@@ -708,10 +708,10 @@ NEC LeetCode Intelligence Portal`;
         <div 
           onClick={() => handleCardFilterClick('ATTENTION')}
           title="Click to filter students needing attention"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'ATTENTION'
-              ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-500 ring-2 ring-amber-500/30 shadow-amber-500/10'
-              : 'glass-panel hover:border-amber-500/40'
+              ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-500 ring-2 ring-inset ring-amber-500/30 shadow-amber-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-amber-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
@@ -737,10 +737,10 @@ NEC LeetCode Intelligence Portal`;
         <div 
           onClick={() => handleCardFilterClick('UNRESPONSIVE')}
           title="Click to filter students who haven't solved anything in a week"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'UNRESPONSIVE'
-              ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-orange-500/30 shadow-orange-500/10'
-              : 'glass-panel hover:border-orange-500/40'
+              ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-inset ring-orange-500/30 shadow-orange-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-orange-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
@@ -766,10 +766,10 @@ NEC LeetCode Intelligence Portal`;
         <div 
           onClick={() => handleCardFilterClick('AT_RISK')}
           title="Click to filter at-risk students"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'AT_RISK'
-              ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 ring-2 ring-rose-500/30 shadow-rose-500/10'
-              : 'glass-panel hover:border-rose-500/40'
+              ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 ring-2 ring-inset ring-rose-500/30 shadow-rose-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-rose-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
@@ -795,10 +795,10 @@ NEC LeetCode Intelligence Portal`;
         <div 
           onClick={() => handleCardFilterClick('IN_PROGRESS')}
           title="Click to filter students in progress towards 100 target"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
             filterStatus === 'IN_PROGRESS'
-              ? 'bg-sky-50/90 dark:bg-sky-950/50 border-sky-500 ring-2 ring-sky-500/30 shadow-sky-500/10'
-              : 'glass-panel hover:border-sky-500/40'
+              ? 'bg-sky-50/90 dark:bg-sky-950/50 border-sky-500 ring-2 ring-inset ring-sky-500/30 shadow-sky-500/10'
+              : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-sky-500/40'
           }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
