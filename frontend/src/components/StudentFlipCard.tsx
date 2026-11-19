@@ -183,13 +183,17 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
     );
   };
 
-  const auraClass = effectiveRank === 1 ? 'gold-aura ring-2 ring-amber-400/50' :
-    effectiveRank === 2 ? 'silver-aura ring-2 ring-slate-300/50' :
-      effectiveRank === 3 ? 'bronze-aura ring-2 ring-amber-600/50' : '';
+  const cardBorderClass = effectiveRank === 1 
+    ? 'border-2 border-amber-400 dark:border-amber-400 shadow-[0_4px_20px_-2px_rgba(245,158,11,0.25)]' 
+    : effectiveRank === 2 
+      ? 'border-2 border-slate-300 dark:border-slate-500 shadow-[0_4px_20px_-2px_rgba(148,163,184,0.25)]' 
+      : effectiveRank === 3 
+        ? 'border-2 border-amber-600 dark:border-amber-600 shadow-[0_4px_20px_-2px_rgba(217,119,6,0.25)]' 
+        : 'border border-slate-200/80 dark:border-white/[0.09] shadow-subtle';
 
   return (
     <div
-      className={`w-full min-h-[295px] sm:min-h-[345px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation ${auraClass}`}
+      className="w-full min-h-[310px] sm:min-h-[350px] flex flex-col perspective-1000 cursor-pointer group min-w-0 rounded-3xl select-none touch-manipulation"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onClick={handleCardClick}
@@ -198,12 +202,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         style={{ transformStyle: 'preserve-3d' }}
-        className="relative w-full h-full min-h-[295px] sm:min-h-[345px] flex flex-col"
+        className="relative w-full h-full min-h-[310px] sm:min-h-[350px] flex flex-col"
       >
         {/* FRONT SIDE — Holographic Glass Student Card */}
         <div 
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-          className={`absolute inset-0 w-full h-full min-h-[295px] sm:min-h-[345px] p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-white/[0.09] shadow-subtle hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 overflow-hidden ${
+          className={`absolute inset-0 w-full h-full min-h-[310px] sm:min-h-[350px] p-4 sm:p-5 rounded-3xl ${cardBorderClass} hover:shadow-glass-dark dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white/95 dark:bg-navy-900/95 sm:backdrop-blur-xl transform-gpu transition-opacity duration-200 overflow-hidden ${
             isFlipped ? 'pointer-events-none opacity-0' : 'pointer-events-auto opacity-100 z-10'
           }`}
         >
@@ -243,12 +247,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Card Center: Avatar & Student Details */}
-          <div className="text-center space-y-1.5 py-1 flex-1 flex flex-col justify-center min-w-0">
-            <div className="relative w-15 h-15 sm:w-20 sm:h-20 mx-auto shrink-0 aspect-square flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400/30 to-indigo-500/30 blur-md pointer-events-none" />
-              <div className="relative w-15 h-15 sm:w-20 sm:h-20 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-lg sm:text-2xl flex items-center justify-center shadow-md border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
+          <div className="text-center space-y-1.5 py-0.5 sm:py-1 flex-1 flex flex-col justify-center min-w-0">
+            <div className="relative w-16 h-16 sm:w-24 sm:h-24 mx-auto shrink-0 aspect-square flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-400/30 to-indigo-500/30 blur-lg pointer-events-none" />
+              <div className="relative w-16 h-16 sm:w-24 sm:h-24 aspect-square rounded-full bg-gradient-to-br from-brand-500 via-indigo-600 to-navy-900 text-white font-extrabold text-xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white dark:border-navy-800 shrink-0 select-none overflow-hidden">
                 <span className="leading-none tracking-normal font-black text-center flex items-center justify-center">
-                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-6 h-6 sm:w-8 sm:h-8" />}
+                  {student.name ? student.name.trim().split(/\s+/).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : <User className="w-7 h-7 sm:w-9 sm:h-9" />}
                 </span>
               </div>
             </div>
@@ -273,7 +277,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           <div className="pt-1.5 sm:pt-2.5 flex flex-col items-center justify-center gap-0.5 mt-auto border-t border-slate-100 dark:border-white/[0.04] shrink-0">
             {isVerified ? (
               <div className="flex flex-col items-center">
-                <span className="text-xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
+                <span className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-400 drop-shadow-sm leading-none font-display">
                   {totalSolved}
                 </span>
                 <span className="text-[9px] sm:text-[9.5px] font-bold uppercase text-slate-600 dark:text-slate-300 tracking-wider mt-0.5 px-2 py-0.5 rounded-full bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.08]">
@@ -301,7 +305,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
             transform: 'rotateY(180deg)',
             WebkitTransform: 'rotateY(180deg)'
           }}
-          className={`absolute inset-0 w-full h-full min-h-[295px] sm:min-h-[345px] p-3.5 sm:p-5 rounded-3xl border border-slate-100 dark:border-white/[0.09] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 overflow-hidden ${
+          className={`absolute inset-0 w-full h-full min-h-[310px] sm:min-h-[350px] p-4 sm:p-5 rounded-3xl ${cardBorderClass} shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_14px_36px_-6px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] flex flex-col justify-between bg-white dark:bg-navy-950/95 sm:backdrop-blur-2xl transform-gpu transition-opacity duration-200 overflow-hidden ${
             isFlipped ? 'pointer-events-auto opacity-100 z-20' : 'pointer-events-none opacity-0 z-0'
           }`}
         >
@@ -351,7 +355,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 </p>
               </div>
             ) : (
-              <div className="space-y-1.5 sm:space-y-2.5">
+              <div className="space-y-2 sm:space-y-2.5">
 
                 {/* Total & Difficulty */}
                 <div className="text-center">
@@ -385,7 +389,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
                 {/* Additional Stats */}
                 <div className="grid grid-cols-2 gap-1.5 text-center px-0.5">
-                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 py-1 px-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                  <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 py-1.5 px-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
                     <span className="text-[9px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">Rating</span>
                     <span className="text-[11px] sm:text-xs font-black text-amber-600 dark:text-amber-400 truncate max-w-full">
                       {getContestRatingDisplay(student)}
@@ -394,7 +398,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   {(() => {
                     const rankInfo = getRankBadgeInfo(student);
                     return (
-                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 py-1 px-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
+                      <div className="flex flex-col items-center bg-slate-50 dark:bg-navy-900/50 py-1.5 px-1 rounded-xl border border-slate-200/80 dark:border-navy-800">
                         <span className="text-[9px] font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider">
                           {rankInfo.label}
                         </span>
@@ -414,7 +418,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Action Footer: Buttons */}
-          <div className="flex items-center space-x-1.5 pt-1.5 pb-0.5 mt-auto shrink-0">
+          <div className="flex items-center space-x-1.5 pt-2 pb-0.5 mt-auto shrink-0">
             <button
               type="button"
               onMouseEnter={() => { import('../pages/StudentProfilePage'); }}
@@ -422,7 +426,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 if (onSelectStudent) onSelectStudent(student);
               }}
-              className="flex-1 py-2 min-h-[36px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 touch-manipulation"
+              className="flex-1 py-2 min-h-[38px] sm:min-h-[40px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 touch-manipulation"
             >
               <span>View Profile</span>
             </button>
@@ -433,7 +437,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 setIsFlipped(false);
               }}
-              className="px-2.5 min-h-[36px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
+              className="px-2.5 min-h-[38px] sm:min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
               title="Flip to Front"
             >
               <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -447,7 +451,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   e.stopPropagation();
                   onDeleteStudent(student);
                 }}
-                className="w-9 min-h-[36px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95 touch-manipulation"
+                className="w-9 min-h-[38px] sm:min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95 touch-manipulation"
                 title="Delete Student Record"
               >
                 <Trash2 className="w-3.5 h-3.5" />

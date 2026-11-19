@@ -271,8 +271,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       const isHodRole = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator'].includes(roleClean);
       if (!isGlobalLeader) {
         const authCodes = user.authorized_department_codes || [];
+        const hasMultipleDepts = (authCodes.length > 1) || (departments.length > 1 && isHodRole);
         // If HOD has multiple departments allocated (e.g. Cyber Security + IoT), keep 'all' to show both departments together!
-        if (isHodRole && authCodes.length > 1) {
+        if (isHodRole && hasMultipleDepts) {
           // Do not force single department — allow viewing all authorized departments combined
         } else {
           let userDeptCode: string | null = null;
@@ -281,7 +282,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           } else if (user.department) {
             userDeptCode = user.department;
           }
-          if (userDeptCode && selectedDept === 'all') {
+          if (userDeptCode && selectedDept === 'all' && !hasMultipleDepts) {
             setSelectedDept(userDeptCode);
           }
         }
@@ -291,7 +292,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         }
       }
     }
-  }, [user]);
+  }, [user, departments.length]);
 
   useEffect(() => {
     fetchDepartments();

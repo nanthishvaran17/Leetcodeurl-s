@@ -154,6 +154,31 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setIsGlobalAccess(isGlobal);
 
       if ((isHod || isStaff) && !isGlobal) {
+        // If the server directly returned scoped departments for this user, trust the authoritative backend!
+        // The backend (/departments) already validates HODDepartmentAllocation in the database.
+        if (scopedData.length > 0) {
+          const parsed = parseDeptList(scopedData);
+          if (parsed.length > 0) {
+            setDepartments(parsed);
+            setAllDepartments(parsed);
+
+            // Sync fresh department IDs & codes into localStorage user so other components stay updated
+            try {
+              if (u) {
+                const newIds = parsed.map(d => d.id).filter(Boolean) as number[];
+                const newCodes = parsed.map(d => d.code).filter(Boolean) as string[];
+                const updatedUser = {
+                  ...u,
+                  authorized_department_ids: newIds.length > 0 ? newIds : u.authorized_department_ids,
+                  authorized_department_codes: newCodes.length > 0 ? newCodes : u.authorized_department_codes
+                };
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+              }
+            } catch (_) {}
+            return;
+          }
+        }
+
         const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
         const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
         const uDeptId = u?.department_id ? Number(u.department_id) : null;

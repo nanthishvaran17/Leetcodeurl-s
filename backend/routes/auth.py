@@ -93,7 +93,7 @@ def _get_user_dept_scope(db: Session, user: User) -> dict:
         "designation": desig
     }
     role = (getattr(user, "override_role", None) or getattr(user, "role", "") or "").strip().lower()
-    if role in ("hod", "department hod", "department_hod", "placement coordinator", "placement_coordinator", "student coordinator", "student_coordinator", "coordinator", "faculty", "staff", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
+    if role in ("hod", "department hod", "department_hod", "head of department", "head_of_department", "placement coordinator", "placement_coordinator", "student coordinator", "student_coordinator", "coordinator", "faculty", "staff", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor") or "hod" in role or "head of department" in role:
         from backend.services.authorization_service import (
             get_hod_authorized_department_ids,
             get_hod_authorized_department_codes

@@ -589,9 +589,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isHodScoped = !!user && ['hod', 'department hod', 'department_hod'].includes(
-    (user.role || '').trim().toLowerCase()
-  );
+  const isHodScoped = !!user && [
+    'hod', 'department hod', 'department_hod', 'head of department', 'head_of_department', 'placement coordinator', 'placement_coordinator'
+  ].includes((user.role || '').trim().toLowerCase());
   const isGlobalAccess = !!user && ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management'].includes(
     (user.role || '').trim().toLowerCase()
   );

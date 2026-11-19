@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://nandha-leetcode.duckdns.org"><img alt="Live Platform" src="docs/assets/badges/live_platform.svg"></a>
-  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.5.9" src="https://img.shields.io/badge/Release-v4.5.9-blue.svg?style=flat-square"></a>
+  <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest"><img alt="Version 4.6.0" src="https://img.shields.io/badge/Release-v4.6.0-blue.svg?style=flat-square"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android"><img alt="Download Android APK" src="docs/assets/badges/android_apk.svg"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CODE_OF_CONDUCT.md"><img alt="Code of Conduct" src="https://img.shields.io/badge/Code%20of%20Conduct-v2.1-4baaaa.svg?style=flat-square"></a>
   <a href="https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CONTRIBUTING.md"><img alt="Contributing" src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square"></a>
@@ -35,10 +35,10 @@
 </div>
 
 > [!IMPORTANT]
-> ### 📢 What's New in Version 4.5.9 (Production Release — Build 100 Milestone)
-> - **📱 Production Android Release v4.5.9 (VersionCode 100)**: Native Capacitor 7 Release APK with full APK Signature Scheme v2 & v3 + 4-byte zipalign, completely resolving "App not installed. The package appears to be invalid" across Android 11–16 (Target SDK 36).
-> - **🎯 Dynamic Single Student Mentee View**: In the Faculty Mentoring Dashboard, selecting any assigned student strictly isolates the view across KPI metrics, target progress percentage, and student lists with zero data leakage.
-> - **✨ 4-Sided Symmetrical Frame Borders**: Fixed left-edge border clipping on active filter cards using `ring-inset` and `p-1` grid breathing room, ensuring pixel-perfect 4-sided symmetry.
+> ### 📢 What's New in Version 4.6.0 (Production Release — Build 101 Milestone)
+> - **🏛️ Multi-Department HOD Access & Interactive Switcher**: Full support for Head of Department users overseeing multiple departments (e.g., CSE(CS) & CSE(IOT)). Department switching now works seamlessly across LandingPage, Department Dashboard, and HOD Command Center without snapping back.
+> - **📱 Production Android Release v4.6.0 (VersionCode 101)**: Native Capacitor 7 Release APK signed with APK Signature Scheme v2 & v3 + 4-byte zipalign, verified across Android 11–16.
+> - **🔄 Instant Scope Synchronization**: Admin panel staff allocation changes immediately propagate and sync authorized department scope to the client without requiring manual re-login.
 > - **🛡️ 100% Authentic Institutional Telemetry**: Zero mock or dummy data across all academic years and student cohorts.
 
 ---

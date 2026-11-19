@@ -11,8 +11,8 @@
 
 [![Keep a Changelog](https://img.shields.io/badge/Changelog-Keep%20a%20Changelog%20v1.1.0-orange.svg?style=flat-square)](https://keepachangelog.com/en/1.1.0/)
 [![Semantic Versioning](https://img.shields.io/badge/SemVer-2.0.0-blue.svg?style=flat-square)](https://semver.org/spec/v2.0.0.html)
-[![Current Production Release](https://img.shields.io/badge/Release-v4.5.9%20(Build%20100)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.9%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.9_latest.apk)
+[![Current Production Release](https://img.shields.io/badge/Release-v4.6.0%20(Build%20101)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.6.0%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.6.0_latest.apk)
 [![Windows Setup EXE](https://img.shields.io/badge/Windows%20Setup-v4.5.2%20EXE-blueviolet.svg?style=flat-square)](releases/desktop/Nandha_LeetCode_Intelligence_Setup_4.5.2.exe)
 [![CI/CD Autopilot Pipeline](https://img.shields.io/badge/Autopilot%20CI%2FCD-Active%205--Phase-blue.svg?style=flat-square)](.github/workflows/sunday_autopilot.yml)
 
@@ -45,7 +45,13 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 
 ---
 
-## Version 4.5.x — Multi-Department Governance & Mobile Polish (Current)
+## Version 4.6.x — Multi-Department Governance & Mobile Polish (Current)
+
+### [4.6.0] - 2026-11-20 (Production Release — Build 101 Milestone)
+- **Multi-Department HOD Access & Interactive Switcher**: Fully resolved multi-department scope resolution for Head of Department users assigned across multiple departments (e.g. CSE(CS) & CSE(IOT)). Fixed frontend `localStorage` stale filtering in `DepartmentContext`, role matching in backend auth routes and authorization service, and prevented single-department auto-lock across `LandingPage`, `DepartmentDashboard`, and `HODCommandCenter`.
+- **Instant Scope Synchronization**: Admin panel staff allocation updates now immediately return and sync multi-department allocation ids (`hod_department_ids`) to the client without requiring manual re-login.
+- **Universal Department Filter Normalization**: Added support for `MY_DEPARTMENTS` in `filterUtils` to smoothly display all authorized departments or individual department filters without snapping back.
+- **📱 Production Android Release v4.6.0 (Build 101)**: Signed with APK Signature Scheme v2 & v3, compiled with latest web assets, and verified across Android 11–16.
 
 ### [4.5.9] - 2026-11-20 (Production Release — Build 100 Milestone)
 - **APK Signature Scheme v2 & v3 + 4-byte Zipalign**: Eliminated the "App not installed. The package appears to be invalid" error on Android 11–16 (Target SDK 36) by integrating official `uber-apk-signer` with institutional keystore signing.

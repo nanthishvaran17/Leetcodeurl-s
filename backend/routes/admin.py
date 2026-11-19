@@ -1554,6 +1554,7 @@ def update_staff_user(
             "date_of_birth": staff_user.date_of_birth or "",
             "role": staff_user.role,
             "department_id": staff_user.department_id,
+            "hod_department_ids": dept_ids if payload.hod_department_ids is not None else [a.department_id for a in db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id == staff_user.id).all()],
             "academic_year": staff_user.academic_year or "",
             "mentoring_role": staff_user.mentoring_role or "",
             "is_active": staff_user.is_active

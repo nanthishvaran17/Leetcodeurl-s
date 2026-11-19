@@ -1314,19 +1314,22 @@ export const HODCommandCenter: React.FC = () => {
  const [staffWorkloadFilter, setStaffWorkloadFilter] = useState<'ALL' | 'PENDING' | 'COMPLETED'>('ALL');
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
+ const [departments, setDepartments] = useState<DepartmentRecord[]>([]);
+
  useEffect(() => {
    if (isHod && !isGlobalAdmin) {
      const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids : [];
-     // Only lock to single department if HOD has exactly 1 authorized department
-     if (authIds.length === 1 && (selectedDept === 'ALL' || !selectedDept)) {
+     const hasMultiple = authIds.length > 1 || departments.length > 1;
+     // Only lock to single department if HOD has strictly 1 authorized department
+     if (!hasMultiple && authIds.length === 1 && (selectedDept === 'ALL' || !selectedDept)) {
        setSelectedDept(String(authIds[0]));
-     } else if (authIds.length === 0 && user?.department_id && (selectedDept === 'ALL' || !selectedDept)) {
+     } else if (!hasMultiple && authIds.length === 0 && user?.department_id && (selectedDept === 'ALL' || !selectedDept)) {
        setSelectedDept(String(user.department_id));
      } else if (!selectedDept) {
        setSelectedDept(defaultDeptValue);
      }
    }
- }, [isHod, isGlobalAdmin, defaultDeptValue, selectedDept, user?.authorized_department_ids, user?.department_id]);
+ }, [isHod, isGlobalAdmin, defaultDeptValue, selectedDept, user?.authorized_department_ids, user?.department_id, departments.length]);
 
  // Summary & Metadata with Instant SWR Session Hydration
  const [summary, setSummary] = useState<CommandCenterSummary | null>(() => {
@@ -1337,11 +1340,11 @@ export const HODCommandCenter: React.FC = () => {
      return null;
    }
  });
- const [departments, setDepartments] = useState<DepartmentRecord[]>([]);
 
  const filteredDepartments = useMemo(() => {
    if (isGlobalRole) return departments;
    if (isHod) {
+     if (departments.length > 0) return departments;
      const authIds: number[] = Array.isArray(user?.authorized_department_ids) ? user.authorized_department_ids : [];
      const authCodes: string[] = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map((c: string) => String(c).toUpperCase());
      const uDeptId = user?.department_id ? Number(user.department_id) : null;
