@@ -39,6 +39,8 @@ wheels/
 .pytest_cache/
 .coverage
 htmlcov/
+*.idsig
+tools/*.jar
 
 # Logs
 logs/

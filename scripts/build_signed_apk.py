@@ -43,30 +43,37 @@ with zipfile.ZipFile(src_apk, "r") as zin, zipfile.ZipFile(output_apk, "w", comp
             count += 1
     print(f"  Successfully injected {count} newly compiled assets (zero nested binaries).")
 
-print("[3/5] Signing updated APK with official release keystore...")
+print("[3/5] Aligning and signing APK with APK Signature Scheme v2 & v3 (uber-apk-signer)...")
+uber_jar = os.path.abspath("tools/uber-apk-signer.jar")
+if not os.path.exists(uber_jar):
+    import urllib.request
+    print(f"  Downloading uber-apk-signer to {uber_jar}...")
+    os.makedirs(os.path.dirname(uber_jar), exist_ok=True)
+    urllib.request.urlretrieve("https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar", uber_jar)
 sign_cmd = [
-    jarsigner,
-    "-sigalg", "SHA256withRSA",
-    "-digestalg", "SHA-256",
-    "-keystore", keystore,
-    "-storepass", "NEC@2024secure",
-    "-keypass", "NEC@2024secure",
-    output_apk,
-    "nandha-key"
+    "java", "-jar", uber_jar,
+    "-a", output_apk,
+    "--ks", keystore,
+    "--ksAlias", "nandha-key",
+    "--ksPass", "NEC@2024secure",
+    "--ksKeyPass", "NEC@2024secure",
+    "--allowResign",
+    "--overwrite",
+    "--verbose"
 ]
 res = subprocess.run(sign_cmd, capture_output=True, text=True)
 if res.returncode != 0:
-    print(f"Signing failed with exit code {res.returncode}:\n{res.stderr}")
+    print(f"Signing failed with exit code {res.returncode}:\n{res.stdout}\n{res.stderr}")
     sys.exit(1)
-print("  jarsigner signing completed.")
+print("  zipalign and v2/v3 signing completed successfully.")
 
-print("[4/5] Verifying APK signature...")
-ver_cmd = [jarsigner, "-verify", output_apk]
+print("[4/5] Verifying APK signature scheme...")
+ver_cmd = ["java", "-jar", uber_jar, "-y", "-a", output_apk, "--verbose"]
 ver_res = subprocess.run(ver_cmd, capture_output=True, text=True)
-print("  Verification output:", ver_res.stdout.strip())
-if "jar verified" not in ver_res.stdout:
-    print("Verification failed!")
+if "signature verified" not in ver_res.stdout or "zipalign verified" not in ver_res.stdout:
+    print(f"Verification failed:\n{ver_res.stdout}")
     sys.exit(1)
+print("  Verified: zipalign OK, signature scheme v2/v3 OK!")
 
 print("[5/5] Deploying updated APK to distribution destinations...")
 
