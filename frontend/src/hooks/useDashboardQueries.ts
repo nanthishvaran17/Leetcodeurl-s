@@ -8,7 +8,8 @@ export const useSummaryQuery = () => {
       const res = await api.get('/sessions/dashboard-summary');
       return res.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutes (smooth dashboard metrics without thrashing)
+    refetchOnWindowFocus: false,
   });
 };
 

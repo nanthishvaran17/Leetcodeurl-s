@@ -1377,7 +1377,13 @@ export const HODCommandCenter: React.FC = () => {
  }, [filteredDepartments, isGlobalRole, isHod]);
 
  const [staffList, setStaffList] = useState<StaffRecord[]>([]);
- const [loading, setLoading] = useState<boolean>(true);
+ const [loading, setLoading] = useState<boolean>(() => {
+   try {
+     return !sessionStorage.getItem('swr_hod_summary');
+   } catch {
+     return true;
+   }
+ });
  const [scopeLoading, setScopeLoading] = useState<boolean>(false);
  const [refreshing, setRefreshing] = useState<boolean>(false);
  const [error, setError] = useState<string | null>(null);

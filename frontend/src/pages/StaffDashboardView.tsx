@@ -12,7 +12,14 @@ import { LiveContestPanel } from '../components/contest/LiveContestPanel';
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotification();
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<any>(() => {
+    try {
+      const cached = sessionStorage.getItem('nec_my_mentoring_summary');
+      return cached ? JSON.parse(cached) : null;
+    } catch (_) {
+      return null;
+    }
+  });
   const [myStudents, setMyStudents] = useState<any[]>(() => {
     try {
       const cached = sessionStorage.getItem('nec_my_assigned_students');
@@ -21,9 +28,22 @@ export const StaffDashboardView: React.FC = () => {
       return [];
     }
   });
-  const [priorityStudents, setPriorityStudents] = useState<any[]>([]);
+  const [priorityStudents, setPriorityStudents] = useState<any[]>(() => {
+    try {
+      const cached = sessionStorage.getItem('nec_my_priority_students');
+      return cached ? JSON.parse(cached) : [];
+    } catch (_) {
+      return [];
+    }
+  });
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => {
+    try {
+      return !sessionStorage.getItem('nec_my_assigned_students');
+    } catch (_) {
+      return true;
+    }
+  });
   const [liveSyncing, setLiveSyncing] = useState<boolean>(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
@@ -168,12 +188,13 @@ export const StaffDashboardView: React.FC = () => {
 
       if (sumRes.status === 'fulfilled' && sumRes.value?.data) {
         setSummary(sumRes.value.data);
+        try { sessionStorage.setItem('nec_my_mentoring_summary', JSON.stringify(sumRes.value.data)); } catch (_) {}
       } else if (studentList.length > 0) {
         const activeCnt = studentList.filter((s: any) => s.total_solved > 0).length;
         const atRiskCnt = studentList.filter((s: any) => s.status_code === 'AT_RISK').length;
         const compCnt = studentList.filter((s: any) => s.status_code === 'EXCELLENT' || s.status_code === 'COMPLETED').length;
         const attCnt = studentList.filter((s: any) => s.status_code === 'NEEDS_IMPROVEMENT' || s.status_code === 'ATTENTION').length;
-        setSummary({
+        const computedSummary = {
           total_assigned: studentList.length,
           active_students: activeCnt,
           completed_students: compCnt,
@@ -181,7 +202,9 @@ export const StaffDashboardView: React.FC = () => {
           at_risk: atRiskCnt,
           workload_capacity: 30,
           workload_status: studentList.length > 20 ? 'OVERLOAD' : 'NORMAL'
-        });
+        };
+        setSummary(computedSummary);
+        try { sessionStorage.setItem('nec_my_mentoring_summary', JSON.stringify(computedSummary)); } catch (_) {}
       }
 
       setMyStudents(studentList);
@@ -193,8 +216,11 @@ export const StaffDashboardView: React.FC = () => {
 
       if (prioRes.status === 'fulfilled' && prioRes.value?.data) {
         setPriorityStudents(prioRes.value.data);
+        try { sessionStorage.setItem('nec_my_priority_students', JSON.stringify(prioRes.value.data)); } catch (_) {}
       } else {
-        setPriorityStudents(studentList.filter((s: any) => s.status_code === 'AT_RISK' || s.status_code === 'NEEDS_IMPROVEMENT'));
+        const fallbackPrio = studentList.filter((s: any) => s.status_code === 'AT_RISK' || s.status_code === 'NEEDS_IMPROVEMENT');
+        setPriorityStudents(fallbackPrio);
+        try { sessionStorage.setItem('nec_my_priority_students', JSON.stringify(fallbackPrio)); } catch (_) {}
       }
 
       if (alertRes.status === 'fulfilled' && alertRes.value?.data) {

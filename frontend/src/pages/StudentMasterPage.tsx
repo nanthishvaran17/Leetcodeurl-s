@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
+import {
+  Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle,
   X, Check, AlertCircle, Building2, LayoutList, Calendar,
   Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail, User,
   SlidersHorizontal, Filter, RotateCcw, School, GraduationCap
@@ -29,13 +29,13 @@ import { BatchDeleteModal } from '../components/BatchDeleteModal';
 type LcValidationState =
   | { status: 'idle' }
   | { status: 'validating' }
-  | { status: 'valid';   username: string; canonical_url: string; total_solved?: number; contest_rating?: number }
-  | { status: 'not_found';    message: string }
+  | { status: 'valid'; username: string; canonical_url: string; total_solved?: number; contest_rating?: number }
+  | { status: 'not_found'; message: string }
   | { status: 'invalid_format'; message: string }
   | { status: 'identity_mismatch'; message: string }
-  | { status: 'rate_limited';  message: string }
+  | { status: 'rate_limited'; message: string }
   | { status: 'network_error'; message: string }
-  | { status: 'fetch_failed';  message: string };
+  | { status: 'fetch_failed'; message: string };
 
 function LcValidationChip({ state }: { state: LcValidationState }) {
   if (state.status === 'idle') return null;
@@ -225,7 +225,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [departments, setDepartments] = useState<any[]>([]);
-  
+
   const [serverPage, setServerPage] = useState(1);
   const [serverPageSize, setServerPageSize] = useState(() => (typeof window !== "undefined" && window.innerWidth < 640 ? 25 : 50));
 
@@ -238,14 +238,14 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       if (filters.college && filters.college !== 'ALL') {
         params.college = filters.college;
       }
-      
+
       // Map department CODE to ID
       const allDepts = departments.length > 0 ? departments : (ctxDepts.length > 0 ? ctxDepts : globalDepts);
       if (filters.department && filters.department !== 'ALL') {
         let deptIdToUse: number | undefined;
         if (allDepts.length > 0) {
-          const found = allDepts.find((d: any) => 
-            (d.code || d.department_code || '').toUpperCase() === filters.department.toUpperCase() || 
+          const found = allDepts.find((d: any) =>
+            (d.code || d.department_code || '').toUpperCase() === filters.department.toUpperCase() ||
             (d.name || d.department_name || '').toUpperCase() === filters.department.toUpperCase() ||
             normalizeDepartment(d) === normalizeDepartment(filters.department)
           );
@@ -275,15 +275,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         if (deptIdToUse) params.dept_id = deptIdToUse;
         params.department = filters.department;
       }
-      
+
       if (filters.academicYear && filters.academicYear !== 'ALL') {
         params.year_level = normalizeAcademicYear(filters.academicYear);
       }
-      
+
       const res = await api.get('/students', { params });
       return res.data;
     },
-    staleTime: 60000,
+    staleTime: 5 * 60 * 1000, // 5 minutes (eliminates repeated loading while switching tabs)
     refetchOnWindowFocus: false
   });
 
@@ -596,28 +596,26 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             <div className="flex items-center gap-1.5 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md w-full sm:w-auto">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[36px] ${
-                  viewMode === 'table'
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[36px] ${viewMode === 'table'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <List className="w-3.5 h-3.5 shrink-0" />
                 <span>Table</span>
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[36px] ${
-                  viewMode === 'cards'
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer min-h-[36px] ${viewMode === 'cards'
                     ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
                 <span>Cards</span>
               </button>
             </div>
-            
+
             <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setShowBatchDeleteModal(true)}
@@ -691,15 +689,14 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     key={col}
                     type="button"
                     onClick={() => filters.setCollege(col)}
-                    className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${
-                      isSelected
+                    className={`px-2.5 py-1 text-xs font-black rounded-lg transition-all cursor-pointer ${isSelected
                         ? col === 'NCT'
                           ? 'bg-teal-600 text-white shadow-xs'
                           : col === 'NEC'
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-brand-600 text-white shadow-xs'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-brand-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     {col}
                   </button>
@@ -770,11 +767,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             <div className="flex flex-wrap items-center gap-1.5 px-0.5 pt-0.5">
               {/* Active College Tag */}
               {filters.college !== 'ALL' && (
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-bold border ${
-                  filters.college === 'NCT'
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-bold border ${filters.college === 'NCT'
                     ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300'
                     : 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300'
-                }`}>
+                  }`}>
                   College: {filters.college}
                   <button type="button" onClick={() => filters.setCollege('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
                 </span>
@@ -847,8 +843,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
               {filters.isFilteringActive || filters.college !== 'ALL'
                 ? (filters.college === 'NCT'
-                    ? 'Only NCT students are displayed when the NCT filter is selected. No NCT records were found. Use "Add Student" above to enroll NCT students, or switch to ALL/NEC.'
-                    : 'Try adjusting your search criteria, department, or academic year filters.')
+                  ? 'Only NCT students are displayed when the NCT filter is selected. No NCT records were found. Use "Add Student" above to enroll NCT students, or switch to ALL/NEC.'
+                  : 'Try adjusting your search criteria, department, or academic year filters.')
                 : 'Get started by enrolling students manually or importing an institutional Excel roster.'}
             </p>
           </div>
@@ -908,79 +904,79 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               }}
             />
           ) : (
-        <div className="flex flex-col gap-6 pb-8 md:pb-14">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-4 gap-3.5 sm:gap-4.5 md:gap-5 lg:gap-6">
-            {displayedStudents.map((st) => (
-              <StudentFlipCard
-                key={st.id}
-                student={st}
-                onSelectStudent={onSelectStudent}
-                onDeleteStudent={handleDeleteStudent}
-              />
-            ))}
-          </div>
-          
-          {serverTotalCount > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white/50 dark:bg-navy-950/50 border border-slate-200 dark:border-navy-700">
-              <div className="text-sm font-semibold text-slate-500 dark:text-navy-300 min-w-0 break-words text-center sm:text-left">
-                Showing <span className="text-slate-900 dark:text-white font-bold">{Math.min((serverPage - 1) * serverPageSize + 1, serverTotalCount)}</span> to <span className="text-slate-900 dark:text-white font-bold">{Math.min(serverPage * serverPageSize, serverTotalCount)}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
+            <div className="flex flex-col gap-6 pb-8 md:pb-14">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-4 gap-3.5 sm:gap-4.5 md:gap-5 lg:gap-6">
+                {displayedStudents.map((st) => (
+                  <StudentFlipCard
+                    key={st.id}
+                    student={st}
+                    onSelectStudent={onSelectStudent}
+                    onDeleteStudent={handleDeleteStudent}
+                  />
+                ))}
               </div>
-              
-              <div className="flex items-center gap-2">
-                <GlobalFilter
-                  value={serverPageSize.toString()}
-                  onChange={(val) => {
-                    setServerPageSize(Number(val));
-                    setServerPage(1);
-                  }}
-                  dropdownWidth="w-48"
-                  options={[
-                    { value: "10", label: "10 per page" },
-                    { value: "20", label: "20 per page" },
-                    { value: "50", label: "50 per page" },
-                    { value: "100", label: "100 per page" },
-                    { value: "200", label: "200 per page" }
-                  ]}
-                  icon={<LayoutList className="w-4 h-4" />}
-                />
 
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 rounded-xl p-1 border border-slate-200 dark:border-navy-700">
-                  <button
-                    onClick={() => setServerPage(p => Math.max(1, p - 1))}
-                    disabled={serverPage === 1}
-                    className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center active:scale-95"
-                    title="Previous page"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <div className="px-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[3rem] text-center">
-                    {serverPage} / {Math.max(1, Math.ceil(serverTotalCount / serverPageSize))}
+              {serverTotalCount > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white/50 dark:bg-navy-950/50 border border-slate-200 dark:border-navy-700">
+                  <div className="text-sm font-semibold text-slate-500 dark:text-navy-300 min-w-0 break-words text-center sm:text-left">
+                    Showing <span className="text-slate-900 dark:text-white font-bold">{Math.min((serverPage - 1) * serverPageSize + 1, serverTotalCount)}</span> to <span className="text-slate-900 dark:text-white font-bold">{Math.min(serverPage * serverPageSize, serverTotalCount)}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
                   </div>
-                  <button
-                    onClick={() => setServerPage(p => Math.min(Math.ceil(serverTotalCount / serverPageSize), p + 1))}
-                    disabled={serverPage >= Math.ceil(serverTotalCount / serverPageSize)}
-                    className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center active:scale-95"
-                    title="Next page"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <GlobalFilter
+                      value={serverPageSize.toString()}
+                      onChange={(val) => {
+                        setServerPageSize(Number(val));
+                        setServerPage(1);
+                      }}
+                      dropdownWidth="w-48"
+                      options={[
+                        { value: "10", label: "10 per page" },
+                        { value: "20", label: "20 per page" },
+                        { value: "50", label: "50 per page" },
+                        { value: "100", label: "100 per page" },
+                        { value: "200", label: "200 per page" }
+                      ]}
+                      icon={<LayoutList className="w-4 h-4" />}
+                    />
+
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 rounded-xl p-1 border border-slate-200 dark:border-navy-700">
+                      <button
+                        onClick={() => setServerPage(p => Math.max(1, p - 1))}
+                        disabled={serverPage === 1}
+                        className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center active:scale-95"
+                        title="Previous page"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <div className="px-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[3rem] text-center">
+                        {serverPage} / {Math.max(1, Math.ceil(serverTotalCount / serverPageSize))}
+                      </div>
+                      <button
+                        onClick={() => setServerPage(p => Math.min(Math.ceil(serverTotalCount / serverPageSize), p + 1))}
+                        disabled={serverPage >= Math.ceil(serverTotalCount / serverPageSize)}
+                        className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center active:scale-95"
+                        title="Next page"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
           )}
         </div>
       )}
 
       {/* Add Student Modal */}
       {showAddModal && typeof document !== 'undefined' && createPortal(
-        <div 
+        <div
           className="modal-overlay-responsive animate-modal-backdrop select-none"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseAddModal(); }}
         >
           <div className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-lg my-auto bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content">
-            
+
             {/* Fixed Header */}
             <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
               <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
@@ -1006,239 +1002,236 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
             <form onSubmit={handleCreateStudent} className="flex flex-col flex-1 min-h-0 relative">
               <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 bg-white dark:bg-slate-900 custom-scrollbar">
-              
-              {/* Section 1: Primary Identification */}
-              <div className="space-y-3">
-                <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
-                  <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">1</span>
-                  <User className="w-3.5 h-3.5" />
-                  IDENTITY & ROSTER INFO
-                </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
-                      Register Number <span className="text-rose-500 font-black">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={regNo}
-                      onChange={(e) => setRegNo(e.target.value)}
-                      placeholder="e.g. 732224CC001"
-                      required
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
-                      Student Name <span className="text-rose-500 font-black">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. AJAY A"
-                      required
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 2: Department & Academic Year */}
-              <div className="space-y-3 pt-1">
-                <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
-                  <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">2</span>
-                  ACADEMIC PLACEMENT
-                </span>
-
-                {/* College Selection */}
-                <div>
-                  <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
-                    College Campus <span className="text-rose-500 font-black">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setCollegeType('NEC')}
-                      className={`h-11 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                        collegeType === 'NEC'
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <School className="w-3.5 h-3.5" />
-                      <span>NEC (Nandha Engg)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCollegeType('NCT')}
-                      className={`h-11 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                        collegeType === 'NCT'
-                          ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
-                          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <School className="w-3.5 h-3.5" />
-                      <span>NCT (Nandha Tech)</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Department</label>
-                    <GlobalFilter
-                      value={deptId?.toString() || ""}
-                      onChange={(val) => setDeptId(Number(val))}
-                      dropdownWidth="w-full"
-                      options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
-                      icon={<Building2 className="w-4 h-4 text-brand-500" />}
-                      placeholder="Select Department"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Year Level</label>
-                    <GlobalFilter
-                      value={yearLevel}
-                      onChange={(val) => setYearLevel(val)}
-                      dropdownWidth="w-full"
-                      options={[
-                        { value: "1", label: "I Year", pillText: "1ST" },
-                        { value: "2", label: "II Year", pillText: "2ND" },
-                        { value: "3", label: "III Year", pillText: "3RD" },
-                        { value: "4", label: "IV Year", pillText: "4TH" }
-                      ]}
-                      icon={<Calendar className="w-4 h-4 text-amber-400" />}
-                      placeholder="Select Academic Year"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Contact & Accommodation */}
-              <div className="space-y-3 pt-1">
-                <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
-                  <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">3</span>
-                  CONTACT & ACCOMMODATION
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Personal Email</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. ajay@gmail.com"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Institutional Email</label>
-                    <input
-                      type="email"
-                      value={institutionalEmail}
-                      onChange={(e) => setInstitutionalEmail(e.target.value)}
-                      placeholder="e.g. 732224CC001@nandhaengg.org"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">12th Cut-off Score</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={cutOffScore}
-                      onChange={(e) => setCutOffScore(e.target.value)}
-                      placeholder="e.g. 185.50"
-                      className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Gender</label>
-                    <GlobalFilter
-                      value={gender}
-                      onChange={(val) => setGender(val)}
-                      dropdownWidth="w-full"
-                      options={[
-                        { value: "Male", label: "Male", pillText: "MALE" },
-                        { value: "Female", label: "Female", pillText: "FEMALE" }
-                      ]}
-                      icon={<User className="w-4 h-4 text-blue-400" />}
-                      placeholder="Select Gender"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Accommodation</label>
-                    <GlobalFilter
-                      value={accommodationType}
-                      onChange={(val) => setAccommodationType(val)}
-                      dropdownWidth="w-full"
-                      options={[
-                        { value: "DAY SCHOLAR", label: "Day Scholar", pillText: "DAY" },
-                        { value: "HOSTEL", label: "Hosteler", pillText: "HOSTEL" }
-                      ]}
-                      icon={<Building2 className="w-4 h-4 text-emerald-400" />}
-                      placeholder="Select Type"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 4: LeetCode Verification Link */}
-              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between">
+                {/* Section 1: Primary Identification */}
+                <div className="space-y-3">
                   <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
-                    <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">4</span>
-                    LEETCODE LIVE SYNC INTEGRATION
+                    <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">1</span>
+                    <User className="w-3.5 h-3.5" />
+                    IDENTITY & ROSTER INFO
                   </span>
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">AUTOMATIC VERIFICATION</span>
-                </div>
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="add-student-leetcode-url"
-                    value={leetcodeUrl}
-                    onChange={(e) => handleLcUrlChange(e.target.value)}
-                    placeholder="e.g. https://leetcode.com/u/ajay_a/"
-                    className={`w-full h-11 px-4 pr-10 rounded-xl border-2 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-sm ${
-                      lcValidation.status === 'valid'
-                        ? 'border-emerald-500 focus:ring-4 focus:ring-emerald-500/10'
-                        : lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format'
-                        ? 'border-rose-500 focus:ring-4 focus:ring-rose-500/10'
-                        : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10'
-                    } focus:outline-none`}
-                  />
-                  {/* Inline status icon */}
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    {lcValidation.status === 'validating' && <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />}
-                    {lcValidation.status === 'valid' && <CheckCircle className="w-4 h-4 text-emerald-400" />}
-                    {(lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format') && (
-                      <XCircle className="w-4 h-4 text-rose-400" />
-                    )}
-                    {(lcValidation.status === 'rate_limited' || lcValidation.status === 'network_error' || lcValidation.status === 'fetch_failed') && (
-                      <AlertTriangle className="w-4 h-4 text-amber-400" />
-                    )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
+                        Register Number <span className="text-rose-500 font-black">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={regNo}
+                        onChange={(e) => setRegNo(e.target.value)}
+                        placeholder="e.g. 732224CC001"
+                        required
+                        className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
+                        Student Name <span className="text-rose-500 font-black">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. AJAY A"
+                        required
+                        className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Validation status chip */}
-                <LcValidationChip state={lcValidation} />
+                {/* Section 2: Department & Academic Year */}
+                <div className="space-y-3 pt-1">
+                  <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                    <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">2</span>
+                    ACADEMIC PLACEMENT
+                  </span>
 
-                {!saveAllowed && (
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 italic">
-                    Tip: Fix the LeetCode URL above, or clear it to save record without profile sync.
-                  </p>
-                )}
-              </div>
+                  {/* College Selection */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">
+                      College Campus <span className="text-rose-500 font-black">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCollegeType('NEC')}
+                        className={`h-11 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${collegeType === 'NEC'
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
+                          }`}
+                      >
+                        <School className="w-3.5 h-3.5" />
+                        <span>NEC (Nandha Engg)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCollegeType('NCT')}
+                        className={`h-11 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${collegeType === 'NCT'
+                            ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50'
+                          }`}
+                      >
+                        <School className="w-3.5 h-3.5" />
+                        <span>NCT (Nandha Tech)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Department</label>
+                      <GlobalFilter
+                        value={deptId?.toString() || ""}
+                        onChange={(val) => setDeptId(Number(val))}
+                        dropdownWidth="w-full"
+                        options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
+                        icon={<Building2 className="w-4 h-4 text-brand-500" />}
+                        placeholder="Select Department"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Year Level</label>
+                      <GlobalFilter
+                        value={yearLevel}
+                        onChange={(val) => setYearLevel(val)}
+                        dropdownWidth="w-full"
+                        options={[
+                          { value: "1", label: "I Year", pillText: "1ST" },
+                          { value: "2", label: "II Year", pillText: "2ND" },
+                          { value: "3", label: "III Year", pillText: "3RD" },
+                          { value: "4", label: "IV Year", pillText: "4TH" }
+                        ]}
+                        icon={<Calendar className="w-4 h-4 text-amber-400" />}
+                        placeholder="Select Academic Year"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Contact & Accommodation */}
+                <div className="space-y-3 pt-1">
+                  <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                    <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">3</span>
+                    CONTACT & ACCOMMODATION
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Personal Email</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="e.g. ajay@gmail.com"
+                        className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Institutional Email</label>
+                      <input
+                        type="email"
+                        value={institutionalEmail}
+                        onChange={(e) => setInstitutionalEmail(e.target.value)}
+                        placeholder="e.g. 732224CC001@nandhaengg.org"
+                        className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">12th Cut-off Score</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={cutOffScore}
+                        onChange={(e) => setCutOffScore(e.target.value)}
+                        placeholder="e.g. 185.50"
+                        className="w-full h-11 px-4 rounded-xl border-2 border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Gender</label>
+                      <GlobalFilter
+                        value={gender}
+                        onChange={(val) => setGender(val)}
+                        dropdownWidth="w-full"
+                        options={[
+                          { value: "Male", label: "Male", pillText: "MALE" },
+                          { value: "Female", label: "Female", pillText: "FEMALE" }
+                        ]}
+                        icon={<User className="w-4 h-4 text-blue-400" />}
+                        placeholder="Select Gender"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-slate-900 dark:text-slate-100 mb-1.5">Accommodation</label>
+                      <GlobalFilter
+                        value={accommodationType}
+                        onChange={(val) => setAccommodationType(val)}
+                        dropdownWidth="w-full"
+                        options={[
+                          { value: "DAY SCHOLAR", label: "Day Scholar", pillText: "DAY" },
+                          { value: "HOSTEL", label: "Hosteler", pillText: "HOSTEL" }
+                        ]}
+                        icon={<Building2 className="w-4 h-4 text-emerald-400" />}
+                        placeholder="Select Type"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: LeetCode Verification Link */}
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] sm:text-[11px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded flex items-center gap-1.5 border border-indigo-100 dark:border-indigo-500/20 w-fit">
+                      <span className="bg-indigo-500 text-white w-4 h-4 rounded flex items-center justify-center text-[9px] shrink-0">4</span>
+                      LEETCODE LIVE SYNC INTEGRATION
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">AUTOMATIC VERIFICATION</span>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="add-student-leetcode-url"
+                      value={leetcodeUrl}
+                      onChange={(e) => handleLcUrlChange(e.target.value)}
+                      placeholder="e.g. https://leetcode.com/u/ajay_a/"
+                      className={`w-full h-11 px-4 pr-10 rounded-xl border-2 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 transition-all shadow-sm ${lcValidation.status === 'valid'
+                          ? 'border-emerald-500 focus:ring-4 focus:ring-emerald-500/10'
+                          : lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format'
+                            ? 'border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+                            : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10'
+                        } focus:outline-none`}
+                    />
+                    {/* Inline status icon */}
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      {lcValidation.status === 'validating' && <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />}
+                      {lcValidation.status === 'valid' && <CheckCircle className="w-4 h-4 text-emerald-400" />}
+                      {(lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format') && (
+                        <XCircle className="w-4 h-4 text-rose-400" />
+                      )}
+                      {(lcValidation.status === 'rate_limited' || lcValidation.status === 'network_error' || lcValidation.status === 'fetch_failed') && (
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Validation status chip */}
+                  <LcValidationChip state={lcValidation} />
+
+                  {!saveAllowed && (
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 italic">
+                      Tip: Fix the LeetCode URL above, or clear it to save record without profile sync.
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Fixed Footer */}

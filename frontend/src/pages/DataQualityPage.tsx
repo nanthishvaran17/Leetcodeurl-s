@@ -228,36 +228,36 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
   };
 
   return (
-    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-3.5 sm:space-y-6 md:space-y-8 animate-fade-in pb-32 sm:pb-16 font-sans px-1.5 sm:px-0">
+    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-5 sm:space-y-6 animate-fade-in pb-32 sm:pb-20 font-sans">
       
       {/* Hero Banner with Rich Styling */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3 sm:p-6 md:p-8 shadow-lg border border-brand-500/30 w-full min-w-0">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-4 sm:p-7 md:p-8 shadow-xl border border-slate-700/80 dark:border-brand-500/30 w-full min-w-0">
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-6 min-w-0">
-          <div className="space-y-1.5 sm:space-y-3 flex-1 min-w-0">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 min-w-0">
+          <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
             {/* Mobile Top Strip: Badge + Audit Time */}
-            <div className="flex items-center justify-between gap-1.5 flex-wrap min-w-0">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[8.5px] sm:text-xs font-black tracking-wider leading-none">
+            <div className="flex items-center justify-between gap-2 flex-wrap min-w-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black tracking-wider leading-none">
                 <span>DATA INTEGRITY • REALTIME AUDIT</span>
               </div>
               {lastAuditTime && (
-                <div className="flex sm:hidden items-center space-x-1 px-2 py-0.5 rounded-lg bg-white/10 border border-white/15 text-slate-200 text-[9px] font-mono font-bold shadow-xs shrink-0">
-                  <Clock className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                <div className="flex sm:hidden items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-white/10 border border-white/15 text-slate-200 text-[10px] font-mono font-bold shadow-xs shrink-0">
+                  <Clock className="w-3 h-3 text-emerald-400 shrink-0" />
                   <span>{lastAuditTime}</span>
                 </div>
               )}
             </div>
 
-            <h1 className="text-lg sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
               Data Quality &amp; <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-300 to-rose-300">Profile Health</span>
             </h1>
 
-            <p className="text-[10.5px] sm:text-sm text-slate-300 font-medium sm:font-bold tracking-wide line-clamp-2 sm:line-clamp-none leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide line-clamp-2 sm:line-clamp-none leading-relaxed">
               Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full lg:w-auto min-w-0 pt-1 sm:pt-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full lg:w-auto min-w-0 pt-1 sm:pt-0">
             {lastAuditTime && (
               <div className="hidden sm:flex items-center space-x-2 px-3 py-2 rounded-2xl bg-white/10 border border-white/15 text-slate-200 text-xs font-mono font-bold shadow-xs">
                 <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -265,12 +265,12 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
               </div>
             )}
 
-            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto min-w-0">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 w-full sm:w-auto min-w-0">
               {/* Show / Hide Filter Button */}
               <button
                 type="button"
                 onClick={() => setShowFilters(prev => !prev)}
-                className={`w-full sm:w-auto px-2.5 sm:px-4 py-2 sm:py-2.5 min-h-[38px] sm:min-h-[44px] text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl border transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation ${
+                className={`w-full sm:w-auto px-4 py-2.5 min-h-[42px] sm:min-h-[44px] text-xs font-black rounded-2xl border transition-all flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation ${
                   showFilters
                     ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
                     : 'bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border-white/20 backdrop-blur-md'
@@ -290,7 +290,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                 type="button"
                 onClick={() => fetchQualityData(true)}
                 disabled={refreshing}
-                className="w-full sm:w-auto px-2.5 sm:px-4 py-2 sm:py-2.5 min-h-[38px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-[11px] sm:text-xs font-black rounded-xl sm:rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 min-h-[42px] sm:min-h-[44px] bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-xs font-black rounded-2xl border border-white/20 transition-all backdrop-blur-md flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 shadow-xs touch-manipulation disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''} shrink-0 text-brand-300`} />
                 <span>{refreshing ? 'Auditing...' : 'Run Audit'}</span>
@@ -302,7 +302,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
       {/* Active Filter Chips Mini-bar (When Filters are Hidden) */}
       {!showFilters && activeFiltersCount > 0 && (
-        <div className="flex items-center justify-between px-3.5 py-2 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-[#0c1427]/80 backdrop-blur-md border border-slate-200/90 dark:border-white/10 text-xs shadow-xs animate-in fade-in duration-150">
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/90 dark:bg-navy-900/90 backdrop-blur-md border border-slate-200/90 dark:border-navy-800 text-xs shadow-xs animate-in fade-in duration-150">
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-slate-600 dark:text-slate-300 text-[11px] font-bold">
             <span className="text-slate-400 uppercase text-[9px] font-black tracking-wider">Active Scope:</span>
             {isGlobalAccess && selectedCollege !== 'ALL' && (
@@ -333,8 +333,8 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
       {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar (Collapsible) */}
       {showFilters && (
-        <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5 sm:gap-4 w-full animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5 flex-1 w-full min-w-0">
+        <div className="bg-white dark:bg-navy-900 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-3 sm:gap-4 w-full animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 flex-1 w-full min-w-0">
             {/* College Campus Filter — Admin & Management only */}
             {isGlobalAccess && (
               <GlobalFilter
@@ -410,15 +410,15 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
       {/* Metrics Snapshot Grid — 5 2026 SaaS Bento Cards */}
       <div 
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 w-full min-w-0"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 w-full min-w-0"
       >
         {/* 1. Health Score */}
         <div 
           onClick={() => setFilterCategory('ALL')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[100px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[104px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'ALL' 
               ? 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/90 dark:to-slate-950 border-2 border-emerald-500 shadow-md shadow-emerald-500/15' 
-              : 'bg-white/90 dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
+              : 'bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 hover:border-emerald-400 dark:hover:border-emerald-500/50 shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between gap-1 min-w-0">
@@ -436,10 +436,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 2. Valid Profiles */}
         <div 
           onClick={() => setFilterCategory('VALID')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[100px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[104px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'VALID' 
               ? 'bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900/90 dark:to-slate-950 border-2 border-brand-500 shadow-md shadow-indigo-500/15' 
-              : 'bg-white/90 dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
+              : 'bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 hover:border-brand-400 dark:hover:border-brand-500/50 shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between gap-1 min-w-0">
@@ -460,10 +460,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 3. Missing Links */}
         <div 
           onClick={() => setFilterCategory('MISSING')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[100px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[104px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'MISSING' 
               ? 'bg-gradient-to-br from-amber-50 via-white to-orange-50/50 dark:from-amber-950/40 dark:via-slate-900/90 dark:to-slate-950 border-2 border-amber-500 shadow-md shadow-amber-500/15' 
-              : 'bg-white/90 dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
+              : 'bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 hover:border-amber-400 dark:hover:border-amber-500/50 shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between gap-1 min-w-0">
@@ -481,10 +481,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 4. Profile Not Found */}
         <div 
           onClick={() => setFilterCategory('NOT_FOUND')}
-          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[100px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[104px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'NOT_FOUND' 
               ? 'bg-gradient-to-br from-rose-50 via-white to-red-50/50 dark:from-rose-950/40 dark:via-slate-900/90 dark:to-slate-950 border-2 border-rose-500 shadow-md shadow-rose-500/15' 
-              : 'bg-white/90 dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
+              : 'bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 hover:border-rose-400 dark:hover:border-rose-500/50 shadow-xs'
           }`}
         >
           <div className="flex items-center justify-between gap-1 min-w-0">
@@ -502,28 +502,38 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 5. Network / Sync */}
         <div 
           onClick={() => setFilterCategory('NETWORK')}
-          className={`col-span-2 sm:col-span-1 relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[100px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`col-span-2 sm:col-span-1 lg:col-span-1 relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-row sm:flex-col justify-between items-center sm:items-stretch min-h-[72px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'NETWORK' 
               ? 'bg-gradient-to-br from-cyan-50 via-white to-blue-50/50 dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950 border-2 border-cyan-500 shadow-md shadow-cyan-500/15' 
-              : 'bg-white/90 dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 hover:border-cyan-400 dark:hover:border-cyan-500/50 shadow-xs'
+              : 'bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 hover:border-cyan-400 dark:hover:border-cyan-500/50 shadow-xs'
           }`}
         >
-          <div className="flex items-center justify-between gap-1 min-w-0">
-            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-cyan-800 dark:text-cyan-300 truncate">Network / Sync</span>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-cyan-500/15 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center sm:justify-between w-full gap-2">
+              <div className="w-7 h-7 sm:hidden rounded-xl bg-cyan-500/15 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+                <Wifi className="w-3.5 h-3.5" />
+              </div>
+              <div className="space-y-0.5 sm:space-y-0">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-cyan-800 dark:text-cyan-300 truncate block">Network / Sync</span>
+                <span className="inline-flex sm:hidden items-center text-[9px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20 truncate">
+                  Retry Anomalies
+                </span>
+              </div>
+            </div>
+            <div className="hidden sm:flex w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-cyan-500/15 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 items-center justify-center shrink-0">
               <Wifi className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-1.5 sm:my-2 truncate leading-none">{data?.network_errors || 0}</p>
-          <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg sm:rounded-full w-fit border border-cyan-500/20 truncate max-w-full">
+          <p className="text-xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-0 sm:my-2 truncate leading-none">{data?.network_errors || 0}</p>
+          <span className="hidden sm:inline-flex items-center text-[9px] sm:text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg sm:rounded-full w-fit border border-cyan-500/20 truncate max-w-full">
             Retry Anomalies
           </span>
         </div>
       </div>
 
       {/* Profile Attention & Quality Issues Board */}
-      <div className="border border-slate-200/90 dark:border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-3 sm:p-6 space-y-3 sm:space-y-4 w-full min-w-0 max-w-full">
-        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-4 pb-2 border-b border-slate-100 dark:border-white/10 w-full min-w-0">
+      <div className="border border-slate-200/90 dark:border-navy-800 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm bg-white dark:bg-navy-900 p-4 sm:p-6 space-y-4 w-full min-w-0 max-w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-4 pb-2 border-b border-slate-100 dark:border-navy-800 w-full min-w-0">
           <div className="space-y-0.5 sm:space-y-1 min-w-0">
             <h3 className="text-xs sm:text-sm font-black uppercase text-slate-900 dark:text-white flex items-center space-x-1.5 sm:space-x-2">
               <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
@@ -599,7 +609,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                   <div
                     key={idx}
                     onClick={() => handleStudentClick(item)}
-                    className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 p-4 sm:p-5 shadow-md shadow-slate-200/40 dark:shadow-black/40 space-y-3.5 cursor-pointer hover:border-brand-500/50 transition-all duration-200 active:scale-[0.98] touch-manipulation group"
+                    className="relative overflow-hidden rounded-3xl bg-white dark:bg-navy-900 border border-slate-200/90 dark:border-navy-800 p-4 sm:p-5 shadow-xs space-y-3.5 cursor-pointer hover:border-brand-500/50 transition-all duration-200 active:scale-[0.98] touch-manipulation group"
                   >
                     {/* Top Row: Avatar + Student Info + Department */}
                     <div className="flex items-center justify-between gap-3">

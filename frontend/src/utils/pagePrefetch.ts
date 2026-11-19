@@ -67,6 +67,8 @@ const ROUTE_API_PREFETCH_MAP: Record<string, string[]> = {
   'hr-candidate-finder': ['/hr-candidate-finder/candidates'],
   'faculty-action-center': ['/intelligence/faculty-actions'],
   'faculty': ['/intelligence/faculty-actions'],
+  'staff-dashboard': ['/faculty-assignments/my-mentoring-summary', '/faculty-assignments/my-students'],
+  'staff': ['/faculty-assignments/my-mentoring-summary', '/faculty-assignments/my-students'],
 };
 
 export function prefetchRouteData(routeId: string): void {
@@ -147,12 +149,14 @@ export function warmupPriorityRoutes(userRole?: string): void {
 
   const roleLower = (userRole || '').trim().toLowerCase();
   const isExecOrHod = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'hod', 'department hod', 'department_hod'].includes(roleLower);
+  const isStaffOrFaculty = ['faculty', 'staff', 'mentor', 'advisor', 'tutor'].some(r => roleLower.includes(r));
   const priorityDataRoutes = [
     'students',
     'weekly-contest',
     'departments',
     'quality',
     'data-issues',
+    ...(isStaffOrFaculty ? ['staff-dashboard'] : []),
     ...(isExecOrHod ? ['hod-command-center'] : []),
   ];
 

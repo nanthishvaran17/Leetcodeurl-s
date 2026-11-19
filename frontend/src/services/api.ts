@@ -43,15 +43,16 @@ const CACHE_TTL_MS = 120_000; // 2 minutes — fast-enough for live staff use, e
 
 // Per-URL TTL overrides (milliseconds). Heavier endpoints get longer cache.
 const URL_TTL_OVERRIDES: Record<string, number> = {
-  '/students/leaderboard-fast': 180_000,    // 3 min
+  '/students/leaderboard-fast': 600_000,    // 10 min
   '/public/leaderboard': 180_000,           // 3 min
-  '/analytics/department-comparison': 300_000, // 5 min
+  '/analytics/department-comparison': 600_000, // 10 min
   '/analytics/data-quality': 300_000,       // 5 min
   '/data-issues/summary': 180_000,          // 3 min
   '/command-center/summary': 180_000,       // 3 min
-  '/command-center/departments': 300_000,   // 5 min
+  '/command-center/departments': 600_000,   // 10 min
+  '/faculty-assignments/': 180_000,         // 3 min — instant staff dashboard navigation
   '/contests/': 120_000,                    // 2 min
-  '/departments': 300_000,                  // 5 min
+  '/departments': 600_000,                  // 10 min
   '/sessions/dashboard-summary': 60_000,    // 1 min
   '/system/health': 60_000,                 // 1 min
   '/public/stats': 300_000,                 // 5 min

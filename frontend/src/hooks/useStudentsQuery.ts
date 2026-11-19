@@ -56,13 +56,13 @@ export const useStudentsQuery = () => {
 
         const mergedStats = (serverHasValidSum && !cachedHasValidSum)
           ? {
-              ...(cachedStudent.stats || {}),
-              ...(serverStudent.stats || {}),
-            }
+            ...(cachedStudent.stats || {}),
+            ...(serverStudent.stats || {}),
+          }
           : {
-              ...(serverStudent.stats || {}),
-              ...(cachedStudent.stats || {})
-            };
+            ...(serverStudent.stats || {}),
+            ...(cachedStudent.stats || {})
+          };
 
         if (serverVersion > 0 && cachedVersion > 0) {
           if (cachedVersion > serverVersion) {
@@ -105,7 +105,9 @@ export const useStudentsQuery = () => {
         return bVal - aVal;
       });
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 5 * 60 * 1000, // 5 minutes — instant 0ms transitions across Dashboard, Master and Leaderboard
+    gcTime: 30 * 60 * 1000,    // 30 minutes memory cache
+    refetchOnWindowFocus: false, // Prevents aggressive background re-fetches when switching apps/tabs on mobile
   });
 
   // Reconcile the live store automatically whenever the canonical data fetch completes

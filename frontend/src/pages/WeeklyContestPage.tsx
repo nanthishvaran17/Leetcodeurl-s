@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDefe
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
+import { Calendar, RefreshCw, AlertTriangle, AlertCircle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -14,6 +14,7 @@ import { normalizeYear } from '../utils/filterUtils';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
+import { GlobalModalBackdrop } from '../components/GlobalModalBackdrop';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
@@ -356,14 +357,11 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
           ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
           : isUnsolved
             ? 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-            : isError
-              ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-400'
-              : 'bg-slate-100 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300'
+            : 'bg-slate-100 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300'
         }`}>
         <span className={`text-[8px] font-sans font-bold uppercase ${isSolved ? 'text-emerald-600 dark:text-emerald-400' :
             isUnsolved ? 'text-rose-600 dark:text-rose-400' :
-              isError ? 'text-amber-700 dark:text-amber-400 font-extrabold' :
-                'text-slate-600 dark:text-slate-400 font-bold'
+              'text-slate-600 dark:text-slate-400 font-bold'
           }`}>{label}</span>
         <span className="font-black text-xs">{isSolved ? '1' : isUnsolved ? '0' : '—'}</span>
       </div>
@@ -455,7 +453,7 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
               {r.total_solved ?? '0'}/4
             </span>
           ) : isError ? (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-800 dark:text-amber-300 font-mono font-black text-xs border border-amber-500/30 shadow-2xs">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 font-mono font-black text-xs border border-slate-300 dark:border-navy-700 shadow-2xs">
               —/4
             </span>
           ) : (
@@ -1031,6 +1029,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   const [deletingStudent, setDeletingStudent] = useState<any | null>(null);
   const [isDeletingStudent, setIsDeletingStudent] = useState<boolean>(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState<boolean>(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState<boolean>(false);
+  const [bulkDeleteSoft, setBulkDeleteSoft] = useState<boolean>(true);
 
   // Email state
   const [recipientsList, setRecipientsList] = useState<any[]>([]);
@@ -1798,6 +1799,52 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   };
 
+  const handleConfirmBulkDelete = async () => {
+    if (selectedRowIds.size === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const sMap = new Map<string, any>();
+      allSessionRows.forEach(r => { if (r.reg_no) sMap.set(r.reg_no, r); });
+      matrixRows.forEach(r => { if (r.reg_no) sMap.set(r.reg_no, r); });
+
+      const targetStudents = Array.from(selectedRowIds).map(regNo => sMap.get(String(regNo))).filter(Boolean);
+      const studentIds = targetStudents.map(s => Number(s.student_id || s.id)).filter(id => !isNaN(id) && id > 0);
+
+      if (studentIds.length === 0) {
+        for (const regNo of Array.from(selectedRowIds)) {
+          await api.delete(`/students/${String(regNo)}?soft_delete=${bulkDeleteSoft}`);
+        }
+      } else {
+        await api.post('/students/bulk-delete', { 
+          student_ids: studentIds, 
+          soft_delete: bulkDeleteSoft 
+        });
+      }
+
+      const deletedRegNos = new Set(Array.from(selectedRowIds).map(String));
+      setMatrixRows(prev => prev.filter(r => !deletedRegNos.has(r.reg_no)));
+      setAllSessionRows(prev => prev.filter(r => !deletedRegNos.has(r.reg_no)));
+      setSelectedRowIds(new Set());
+      setShowBulkDeleteModal(false);
+
+      setNotification({
+        isOpen: true,
+        type: 'success',
+        title: bulkDeleteSoft ? 'Students Deactivated' : 'Students Deleted',
+        message: `Successfully ${bulkDeleteSoft ? 'deactivated' : 'permanently deleted'} ${targetStudents.length || selectedRowIds.size} student record(s).`
+      });
+    } catch (err: any) {
+      setNotification({
+        isOpen: true,
+        type: 'error',
+        title: 'Bulk Action Failed',
+        message: err.response?.data?.detail || err.message || 'Could not process selected students.'
+      });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   // Memoized Dynamic Statistics Calculation with Fast Tiered Fallback
   const stats = useMemo(() => {
     const isScopeActive = (canFilterCollege ? selectedCollegeFilter !== 'ALL' : false) || selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
@@ -2074,6 +2121,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       return s;
     });
   }, []);
+
+  // Stable callback so MobileContestMatrixCard and ContestMatrixRow memoization is NOT broken by inline closures
+  const handleQuickSync = useCallback((regNo: string) => {
+    setQuickSyncIdentifier(regNo);
+    setShowAdminMonitor(true);
+    setAdminSubTab('live_monitor');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }, []);
+
+  const isAdmin = Boolean(
+    user?.role?.toLowerCase()?.includes('admin') || 
+    user?.role?.toLowerCase() === 'system admin'
+  );
 
   // Only show sessions that have actual data synced — exclude all SCHEDULED (future) sessions
   const displaySessions = sessionsList.filter(s => {
@@ -4481,26 +4545,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               </div>
 
-              {/* Missing Handles Alert Banner - 2026 SaaS Amber Card */}
+              {/* Missing Handles Alert Banner - ONLY shown in Data Quality ('error_board') tab */}
               {(() => {
+                if (subTab !== 'error_board') return null;
                 const missingHandlesCount = sessionMetrics?.usernameNotFound ?? sessionMetrics?.unlinkedProfiles ?? filteredMatrixRows.filter(r => !r.username || r.status === 'USERNAME_NOT_FOUND').length;
                 if (missingHandlesCount > 0) {
                   return (
-                    <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 dark:from-amber-950/40 dark:via-slate-900/80 dark:to-orange-950/30 border border-amber-300 dark:border-amber-500/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md shadow-amber-500/5 animate-fade-in">
-                      <div className="flex items-center space-x-3.5 text-amber-900 dark:text-amber-200 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 shadow-inner">
-                          <AlertTriangle className="w-5 h-5 animate-pulse" />
+                    <div className="relative overflow-hidden bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border border-amber-200/90 dark:border-amber-500/30 rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all animate-fade-in before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1.5 before:bg-gradient-to-b before:from-amber-400 before:to-amber-500 before:rounded-l-3xl">
+                      <div className="flex items-start sm:items-center space-x-3.5 min-w-0 pl-1.5">
+                        <div className="w-11 h-11 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 shadow-2xs">
+                          <AlertTriangle className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-pulse" />
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-950 dark:text-amber-100">
+                            <h4 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
                               Action Required: Missing LeetCode Handles
                             </h4>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black font-mono bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/30">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black font-mono bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25 shadow-2xs">
                               {missingHandlesCount} Students
                             </span>
                           </div>
-                          <p className="text-xs text-amber-800/90 dark:text-amber-300/80 font-medium mt-0.5 leading-relaxed">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1 leading-relaxed">
                             These students do not have a linked LeetCode profile and cannot be tracked by the contest engine.
                           </p>
                         </div>
@@ -4510,7 +4575,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         onClick={() => {
                           setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${missingHandlesCount} students missing handles.` });
                         }}
-                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-amber-600 via-amber-500 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-black rounded-2xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer active:scale-95 whitespace-nowrap touch-manipulation border border-amber-400/30 shrink-0"
+                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black rounded-xl sm:rounded-2xl transition-all shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 cursor-pointer active:scale-95 whitespace-nowrap touch-manipulation shrink-0 border border-brand-400/20"
                       >
                         <Send className="w-3.5 h-3.5" />
                         <span>Send Reminder to All</span>
@@ -4603,30 +4668,39 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                   {/* Bulk Action Bar */}
                   {selectedRowIds.size > 0 && (
-                    <div className="bg-brand-50 dark:bg-brand-900/30 border-b border-brand-100 dark:border-brand-800 px-5 py-3 flex items-center justify-between animate-fade-in">
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold">
+                    <div className="bg-brand-50 dark:bg-brand-900/30 border-b border-brand-100 dark:border-brand-800 px-3.5 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-2.5 animate-fade-in">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold shrink-0">
                           {selectedRowIds.size}
                         </span>
-                        <span className="text-sm font-bold text-brand-700 dark:text-brand-300">
+                        <span className="text-xs sm:text-sm font-bold text-brand-700 dark:text-brand-300">
                           Students Selected
                         </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
                         <button
+                          type="button"
+                          onClick={() => setSelectedRowIds(new Set())}
+                          className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline ml-1 cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
                           onClick={() => {
                             setNotification({ isOpen: true, title: 'Success', type: 'success', message: `${selectedRowIds.size} students marked as verified successfully.` });
                             setSelectedRowIds(new Set());
                           }}
-                          className="flex items-center space-x-1.5 px-4 py-2 bg-white dark:bg-navy-800 border border-brand-200 dark:border-brand-700 hover:bg-brand-100 dark:hover:bg-brand-800/50 text-brand-700 dark:text-brand-300 text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
+                          className="flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-white dark:bg-navy-800 border border-brand-200 dark:border-brand-700 hover:bg-brand-100 dark:hover:bg-brand-800/50 text-brand-700 dark:text-brand-300 text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Mark as Verified</span>
                         </button>
                         <button
+                          type="button"
                           onClick={handleSendBulkReminders}
                           disabled={isSendingReminders}
-                          className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {isSendingReminders ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -4634,6 +4708,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             <Mail className="w-3.5 h-3.5" />
                           )}
                           <span>{isSendingReminders ? 'Sending Emails...' : 'Send Reminder Email'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowBulkDeleteModal(true)}
+                          className="flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/25"
+                          title="Deactivate or delete selected students"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Deactivate Selected</span>
                         </button>
                       </div>
                     </div>
@@ -4658,16 +4741,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             onDelete={setDeletingStudent}
                             onSelect={setViewingProfileStudent}
                             onCheckbox={handleRowCheckbox}
-                            onQuickSync={(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') ? (regNo) => {
-                              setQuickSyncIdentifier(regNo);
-                              setShowAdminMonitor(true);
-                              setAdminSubTab('live_monitor');
-                              requestAnimationFrame(() => {
-                                requestAnimationFrame(() => {
-                                  adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                });
-                              });
-                            } : undefined}
+                            onQuickSync={isAdmin ? handleQuickSync : undefined}
                           />
                         );
                       })
@@ -4746,16 +4820,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                 onDelete={setDeletingStudent}
                                 onSelect={setViewingProfileStudent}
                                 onCheckbox={handleRowCheckbox}
-                                onQuickSync={(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') ? (regNo) => {
-                                  setQuickSyncIdentifier(regNo);
-                                  setShowAdminMonitor(true);
-                                  setAdminSubTab('live_monitor');
-                                  requestAnimationFrame(() => {
-                                    requestAnimationFrame(() => {
-                                      adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    });
-                                  });
-                                } : undefined}
+                                onQuickSync={isAdmin ? handleQuickSync : undefined}
                               />
                             );
                           })
@@ -5429,9 +5494,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           )}
 
           {/* Interactive Report Preview Modal — Auto-fitted Viewport Card (Matches Student Modal) */}
-          {showPreviewModal && (
+          {showPreviewModal && typeof document !== 'undefined' && createPortal(
             <div
               className="modal-overlay-responsive animate-modal-backdrop"
+              style={{ zIndex: 100000 }}
               onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
             >
               <div className="modal-container-responsive mobile-responsive-modal max-w-5xl bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl rounded-b-none sm:rounded-b-3xl shadow-lg border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up-drawer sm:animate-modal-content">
@@ -5670,12 +5736,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* Interactive Report Email Dispatch Modal */}
-          {showEmailModal && (
-            <div className="modal-overlay-responsive animate-modal-backdrop">
+          {showEmailModal && typeof document !== 'undefined' && createPortal(
+            <div className="modal-overlay-responsive animate-modal-backdrop" style={{ zIndex: 100000 }}>
               <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col my-auto">
                 {/* Modal Header */}
                 <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
@@ -5830,7 +5897,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </button>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* Viewport-Centered Sticky Floating Student Edit Overlay */}
@@ -5858,38 +5926,55 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             }}
           />
 
-          {/* Viewport-Centered Student Delete Confirmation Modal */}
-          {deletingStudent && (
-            <div
-              className="modal-overlay-responsive animate-fade-in"
-              onClick={(e) => {
-                if (e.target === e.currentTarget && !isDeletingStudent) setDeletingStudent(null);
-              }}
-            >
+          {/* Viewport-Centered Single Student Delete Confirmation Modal */}
+          <GlobalModalBackdrop
+            isOpen={Boolean(deletingStudent)}
+            onClose={() => { if (!isDeletingStudent) setDeletingStudent(null); }}
+            zIndex={100000}
+            className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 dark:bg-black/85 backdrop-blur-md overflow-hidden"
+          >
+            {deletingStudent && (
               <div
-                className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+                className="bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[88vh] overflow-hidden border-0 sm:border border-slate-200 dark:border-white/10 animate-fade-in-up select-text m-0 sm:my-auto p-5 sm:p-6 space-y-4"
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="single-delete-modal-title"
               >
-                <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
-                  <Trash2 className="w-6 h-6" />
-                </div>
+                <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto -mt-1 mb-1" />
 
-                <div className="text-center space-y-1">
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">Deactivate Student Record?</h3>
-                  <p className="text-xs text-slate-500">
-                    Are you sure you want to deactivate <b className="text-slate-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
-                  </p>
-                </div>
-
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-xl text-[11px] text-rose-700 dark:text-rose-300 font-bold">
-                  This student will be marked as inactive and removed from public contest rankings. You can re-activate them anytime from Student Master.
-                </div>
-
-                <div className="flex items-center justify-end space-x-3 pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
+                    <Trash2 className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 id="single-delete-modal-title" className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                      Deactivate Student?
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">
+                      {deletingStudent.name} • <span className="font-mono text-rose-600 dark:text-rose-400">{deletingStudent.reg_no}</span>
+                    </p>
+                  </div>
                   <button
                     type="button"
+                    disabled={isDeletingStudent}
                     onClick={() => setDeletingStudent(null)}
-                    className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="p-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-2xl text-xs text-rose-800 dark:text-rose-300 font-medium leading-relaxed">
+                  This student record will be deactivated and removed from contest rankings and live sessions. You can safely reactivate them anytime from Student Master.
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={isDeletingStudent}
+                    onClick={() => setDeletingStudent(null)}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer min-h-[42px]"
                   >
                     Cancel
                   </button>
@@ -5897,14 +5982,155 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     type="button"
                     onClick={handleConfirmDeleteStudent}
                     disabled={isDeletingStudent}
-                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 sm:flex-initial px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-black shadow-lg shadow-rose-600/30 transition-all cursor-pointer disabled:opacity-50 min-h-[42px] flex items-center justify-center gap-2"
                   >
-                    {isDeletingStudent ? 'Deactivating...' : 'Confirm Deactivation'}
+                    {isDeletingStudent ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Deactivating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Confirm Deactivation</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
+            )}
+          </GlobalModalBackdrop>
+
+          {/* Viewport-Centered Bulk Deactivation Confirmation Modal */}
+          <GlobalModalBackdrop
+            isOpen={showBulkDeleteModal}
+            onClose={() => { if (!isBulkDeleting) setShowBulkDeleteModal(false); }}
+            zIndex={100000}
+            className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 dark:bg-black/85 backdrop-blur-md overflow-hidden"
+          >
+            <div
+              className="bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[88vh] overflow-hidden border-0 sm:border border-slate-200 dark:border-white/10 animate-fade-in-up select-text m-0 sm:my-auto p-5 sm:p-6 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="bulk-delete-modal-title"
+            >
+              <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto -mt-1 mb-1" />
+
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
+                  <Trash2 className="w-6 h-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 id="bulk-delete-modal-title" className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    Deactivate {selectedRowIds.size} Selected Students?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                    Cohort action on {selectedRowIds.size} selected student record{selectedRowIds.size > 1 ? 's' : ''}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isBulkDeleting}
+                  onClick={() => setShowBulkDeleteModal(false)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Mode Selector: Deactivate vs Purge */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setBulkDeleteSoft(true)}
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                    bulkDeleteSoft
+                      ? 'bg-amber-500/10 border-amber-500 text-amber-950 dark:text-amber-100 ring-1 ring-amber-500/20'
+                      : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-black text-xs text-amber-700 dark:text-amber-400 uppercase">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Deactivate (Safe)</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">
+                    Soft-deletes records; reversible anytime from Student Master.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setBulkDeleteSoft(false)}
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                    !bulkDeleteSoft
+                      ? 'bg-rose-500/10 border-rose-500 text-rose-950 dark:text-rose-100 ring-1 ring-rose-500/20'
+                      : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-black text-xs text-rose-700 dark:text-rose-400 uppercase">
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Purge (Permanent)</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">
+                    Cascades and deletes all contest history permanently.
+                  </p>
+                </button>
+              </div>
+
+              {/* Selected Preview List */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  Selected Students ({selectedRowIds.size})
+                </span>
+                <div className="max-h-36 overflow-y-auto space-y-1 p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/80 dark:border-white/5 custom-scrollbar">
+                  {Array.from(selectedRowIds).map(regNo => {
+                    const regStr = String(regNo);
+                    const s = matrixRows.find(r => r.reg_no === regStr) || allSessionRows.find(r => r.reg_no === regStr);
+                    return (
+                      <div key={regStr} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-white dark:bg-white/5">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate pr-2">
+                          {s?.name || 'Student'}
+                        </span>
+                        <span className="font-mono text-rose-600 dark:text-rose-400 font-semibold shrink-0">
+                          {regStr}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={isBulkDeleting}
+                  onClick={() => setShowBulkDeleteModal(false)}
+                  className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer min-h-[42px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmBulkDelete}
+                  disabled={isBulkDeleting}
+                  className="flex-1 sm:flex-initial px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-black shadow-lg shadow-rose-600/30 transition-all cursor-pointer disabled:opacity-50 min-h-[42px] flex items-center justify-center gap-2"
+                >
+                  {isBulkDeleting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{bulkDeleteSoft ? `Deactivate ${selectedRowIds.size} Students` : `Permanently Delete ${selectedRowIds.size} Students`}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          )}
+          </GlobalModalBackdrop>
 
           {/* Centered Application Notification Modal */}
           <StatusNotificationModal
@@ -5913,8 +6139,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           />
 
           {/* Centered Institutional Authentication Required Modal */}
-          {showAuthRequiredModal && (
-            <div className="modal-overlay-responsive animate-fade-in">
+          {showAuthRequiredModal && typeof document !== 'undefined' && createPortal(
+            <div className="modal-overlay-responsive animate-fade-in" style={{ zIndex: 100000 }}>
               <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
                 <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
                   <Lock className="w-7 h-7" />
@@ -5959,7 +6185,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </button>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
         </>
