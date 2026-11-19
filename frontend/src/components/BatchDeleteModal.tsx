@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Trash2, AlertTriangle, X, Loader2, Building2, Calendar, School, 
-  Check, Users, ShieldAlert, AlertCircle, ShieldCheck, CheckCircle2 
+  Check, Users, ShieldAlert, AlertCircle, ShieldCheck, Search, CheckSquare, Square, MinusSquare
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -19,7 +19,7 @@ export interface BatchDeleteModalProps {
   initialCollege?: string;
 }
 
-interface PreviewStudent {
+interface StudentItem {
   id: number;
   reg_no: string;
   name: string;
@@ -36,7 +36,8 @@ interface PreviewResponse {
   department_name: string;
   year_level: string;
   college: string;
-  sample_students: PreviewStudent[];
+  students?: StudentItem[];
+  sample_students?: StudentItem[];
   message?: string;
 }
 
@@ -88,6 +89,10 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Individual student selection state
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(new Set());
+  const [searchFilter, setSearchFilter] = useState<string>('');
+
   const previewAbortController = useRef<AbortController | null>(null);
 
   // Sync initial values when modal opens
@@ -99,6 +104,8 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
       setSelectedCollege((initialCollege as 'ALL' | 'NEC' | 'NCT') || 'ALL');
       setConfirmChecked(false);
       setErrorMsg(null);
+      setSelectedStudentIds(new Set());
+      setSearchFilter('');
 
       return () => {
         document.body.classList.remove('hide-mobile-bottom-nav');
@@ -202,9 +209,11 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         department_name: 'All Departments',
         year_level: 'All Years',
         college: selectedCollege,
+        students: [],
         sample_students: [],
         message: 'Please choose at least a specific Department or an Academic Year to target students.'
       });
+      setSelectedStudentIds(new Set());
       setIsLoadingPreview(false);
       return;
     }
@@ -226,10 +235,16 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         const res = await api.post('/students/preview-batch-delete', payload, {
           signal: controller.signal
         });
-        setPreview(res.data);
+        const data: PreviewResponse = res.data;
+        setPreview(data);
+
+        // By default, select all retrieved students for quick bulk action
+        const allList: StudentItem[] = data.students || data.sample_students || [];
+        const allIds = new Set(allList.map(s => s.id));
+        setSelectedStudentIds(allIds);
       } catch (err: any) {
         if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
-          setErrorMsg(err.response?.data?.detail || 'Failed to load preview for selected Department and Year.');
+          setErrorMsg(err.response?.data?.detail || 'Failed to load preview for selected criteria.');
         }
       } finally {
         setIsLoadingPreview(false);
@@ -242,20 +257,61 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
     };
   }, [isOpen, selectedDept, selectedYear, selectedCollege, hasSpecificFilter]);
 
-  // Execute Batch Delete
+  // All student items currently loaded
+  const studentList: StudentItem[] = useMemo(() => {
+    if (!preview) return [];
+    return preview.students || preview.sample_students || [];
+  }, [preview]);
+
+  // Filtered by search text (name / reg_no)
+  const filteredStudents = useMemo(() => {
+    if (!searchFilter.trim()) return studentList;
+    const q = searchFilter.trim().toLowerCase();
+    return studentList.filter(s => 
+      (s.name && s.name.toLowerCase().includes(q)) ||
+      (s.reg_no && s.reg_no.toLowerCase().includes(q))
+    );
+  }, [studentList, searchFilter]);
+
+  // Select / Deselect individual student
+  const handleToggleStudent = (studentId: number) => {
+    setSelectedStudentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(studentId)) {
+        next.delete(studentId);
+      } else {
+        next.add(studentId);
+      }
+      return next;
+    });
+  };
+
+  // Select All / Deselect All
+  const isAllSelected = studentList.length > 0 && selectedStudentIds.size === studentList.length;
+  const isPartiallySelected = selectedStudentIds.size > 0 && selectedStudentIds.size < studentList.length;
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedStudentIds(new Set());
+    } else {
+      setSelectedStudentIds(new Set(studentList.map(s => s.id)));
+    }
+  };
+
+  // Execute Batch Delete for selected IDs
   const handleExecuteDelete = async () => {
     if (!hasSpecificFilter) {
       setErrorMsg('Please select at least a Department or Academic Year.');
       return;
     }
 
-    if (!preview || preview.count <= 0) {
-      setErrorMsg('No students match the selected criteria to delete.');
+    if (selectedStudentIds.size === 0) {
+      setErrorMsg('Please select at least one student from the list to proceed.');
       return;
     }
 
     if (!confirmChecked) {
-      setErrorMsg('Please tick the confirmation checkbox to proceed.');
+      setErrorMsg('Please tick the confirmation checkbox to authorize this operation.');
       return;
     }
 
@@ -267,14 +323,15 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         department: selectedDept !== 'ALL' ? selectedDept : undefined,
         year_level: selectedYear !== 'ALL' ? selectedYear : undefined,
         college: selectedCollege !== 'ALL' ? selectedCollege : undefined,
-        soft_delete: isSoftDelete
+        soft_delete: isSoftDelete,
+        student_ids: Array.from(selectedStudentIds)
       };
 
       const res = await api.post('/students/delete-by-dept-year', payload);
       const actionWord = isSoftDelete ? 'deactivated' : 'deleted';
       notify.success(
         isSoftDelete ? 'Batch Deactivation Successful' : 'Batch Deletion Successful',
-        res.data?.message || `Successfully ${actionWord} ${res.data?.count ?? preview.count} students.`,
+        res.data?.message || `Successfully ${actionWord} ${res.data?.count ?? selectedStudentIds.size} students.`,
         { category: 'STUDENT REPOSITORY' }
       );
 
@@ -289,7 +346,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Determine button state and descriptive label
+  // Determine button state and label
   const getButtonState = () => {
     if (isDeleting) {
       return {
@@ -300,32 +357,38 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
     if (!hasSpecificFilter) {
       return {
         disabled: true,
-        text: 'Select Department or Year to Target'
+        text: 'Select Department or Year'
       };
     }
     if (isLoadingPreview) {
       return {
         disabled: true,
-        text: 'Scanning Student Records...'
+        text: 'Scanning Roster...'
       };
     }
-    if (!preview || preview.count <= 0) {
+    if (studentList.length === 0) {
       return {
         disabled: true,
-        text: 'No Matching Students Found'
+        text: 'No Students Found'
+      };
+    }
+    if (selectedStudentIds.size === 0) {
+      return {
+        disabled: true,
+        text: 'Select Students to Proceed'
       };
     }
     if (!confirmChecked) {
       return {
         disabled: true,
-        text: 'Check Confirmation Below to Proceed'
+        text: `Check Confirmation Below (${selectedStudentIds.size})`
       };
     }
     return {
       disabled: false,
       text: isSoftDelete
-        ? `Deactivate ${preview.count} Students`
-        : `Permanently Delete ${preview.count} Students`
+        ? `Deactivate ${selectedStudentIds.size} Selected Students`
+        : `Permanently Delete ${selectedStudentIds.size} Selected Students`
     };
   };
 
@@ -338,18 +401,17 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         if (!isDeleting) onClose();
       }}
       zIndex={100000}
-      className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 dark:bg-black/80 backdrop-blur-md overflow-hidden"
+      className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 dark:bg-black/80 backdrop-blur-md overflow-y-auto"
     >
       <div 
-        className="bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl w-full max-w-xl shadow-2xl flex flex-col h-auto max-h-[92dvh] sm:max-h-[88vh] overflow-hidden border border-slate-200 dark:border-white/10 animate-fade-in-up select-text"
+        className="bg-white dark:bg-[#0c1424] rounded-t-3xl sm:rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[88vh] overflow-hidden border border-slate-200 dark:border-white/10 animate-fade-in-up select-text my-auto"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="batch-delete-modal-title"
       >
-        {/* Modal Header */}
+        {/* Header */}
         <div className="px-5 pt-4 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50 shrink-0">
-          {/* Mobile Drag Indicator */}
           <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3" />
           
           <div className="flex items-center justify-between gap-3">
@@ -360,14 +422,14 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 id="batch-delete-modal-title" className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
-                    Delete by Department & Year
+                    Delete Cohort by Department & Year
                   </h3>
                   <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[9px] font-black tracking-wider uppercase border border-rose-500/25">
-                    DESTRUCTIVE ACTION
+                    {isSoftDelete ? 'DEACTIVATE' : 'PURGE'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Target, preview & remove student cohorts by department and year.
+                  Filter by department & year, select all or choose individual students.
                 </p>
               </div>
             </div>
@@ -384,282 +446,309 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
+        {/* Modal Scrollable Body */}
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto overscroll-contain flex-1 min-h-0 [touch-action:pan-y] [-webkit-overflow-scrolling:touch] custom-scrollbar">
 
-          {/* Section 1: Target Criteria Dropdowns */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Target Cohort</span>
-              </span>
-              <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                Choose Department & Year
-              </span>
+          {/* Section 1: Compact Filter Bar (Department, Year, Campus, Mode) */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-800 space-y-3">
+            
+            {/* Top row: Dept & Year Dropdowns */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <CustomDropdown
+                id="batch-delete-department"
+                label="Department"
+                icon={Building2}
+                value={selectedDept}
+                onChange={(val) => setSelectedDept(val)}
+                options={deptOptions}
+                placeholder="Select Department"
+              />
+              <CustomDropdown
+                id="batch-delete-year"
+                label="Academic Year"
+                icon={Calendar}
+                value={selectedYear}
+                onChange={(val) => setSelectedYear(val)}
+                options={yearOptions}
+                placeholder="Select Academic Year"
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Department Dropdown */}
-              <div>
-                <CustomDropdown
-                  id="batch-delete-department"
-                  label="Department"
-                  icon={Building2}
-                  value={selectedDept}
-                  onChange={(val) => setSelectedDept(val)}
-                  options={deptOptions}
-                  placeholder="Select Department"
-                />
-              </div>
-
-              {/* Academic Year Dropdown */}
-              <div>
-                <CustomDropdown
-                  id="batch-delete-year"
-                  label="Academic Year"
-                  icon={Calendar}
-                  value={selectedYear}
-                  onChange={(val) => setSelectedYear(val)}
-                  options={yearOptions}
-                  placeholder="Select Academic Year"
-                />
-              </div>
-            </div>
-
-            {/* Prompt when both are ALL */}
-            {!hasSpecificFilter && (
-              <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-amber-900 dark:text-amber-200 leading-snug">
-                  <span className="font-extrabold">Filter Required: </span>
-                  <span className="text-amber-800 dark:text-amber-300 text-[11px]">
-                    To protect institutional data, please select at least a specific <strong>Department</strong> or <strong>Academic Year</strong> above to find students.
-                  </span>
+            {/* Bottom row: Campus Scope & Execution Mode */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1 border-t border-slate-200/60 dark:border-navy-800/80">
+              
+              {/* Campus Selector */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                  Campus:
+                </span>
+                <div className="inline-flex rounded-lg bg-white dark:bg-navy-950 p-0.5 border border-slate-200 dark:border-navy-800 text-xs">
+                  {(['ALL', 'NEC', 'NCT'] as const).map((campus) => {
+                    const isSel = selectedCollege === campus;
+                    return (
+                      <button
+                        key={campus}
+                        type="button"
+                        onClick={() => setSelectedCollege(campus)}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                          isSel
+                            ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 font-extrabold'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {campus === 'ALL' ? 'All' : campus}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Section 2: Campus / College Scope */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <School className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-              <span>Campus Scope</span>
-            </label>
-            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-navy-900/80 border border-slate-200/80 dark:border-navy-800">
-              {(['ALL', 'NEC', 'NCT'] as const).map((campus) => {
-                const isSelected = selectedCollege === campus;
-                return (
+              {/* Mode Toggle */}
+              <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                  Mode:
+                </span>
+                <div className="inline-flex rounded-lg bg-white dark:bg-navy-950 p-0.5 border border-slate-200 dark:border-navy-800 text-xs">
                   <button
-                    key={campus}
                     type="button"
-                    onClick={() => setSelectedCollege(campus)}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      isSelected
-                        ? 'bg-white dark:bg-navy-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/80 dark:border-navy-700 font-extrabold'
+                    onClick={() => setIsSoftDelete(false)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      !isSoftDelete
+                        ? 'bg-rose-600 text-white font-extrabold shadow-2xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    <span>{campus === 'ALL' ? 'All Campuses' : campus}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                    Permanent Delete
                   </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 3: Deletion Mode */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-700 dark:text-slate-300">
-              Deletion Execution Mode
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {/* Permanent Delete Card */}
-              <button
-                type="button"
-                onClick={() => setIsSoftDelete(false)}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                  !isSoftDelete
-                    ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-500 ring-2 ring-rose-500/20 text-slate-900 dark:text-white shadow-xs'
-                    : 'bg-slate-50/60 dark:bg-navy-900/40 border-slate-200 dark:border-navy-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                }`}
-              >
-                <div className={`mt-0.5 p-0.5 rounded-full shrink-0 ${!isSoftDelete ? 'bg-rose-600 text-white' : 'border border-slate-300 dark:border-slate-600 text-transparent'}`}>
-                  <Check className="w-3 h-3" />
+                  <button
+                    type="button"
+                    onClick={() => setIsSoftDelete(true)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      isSoftDelete
+                        ? 'bg-amber-600 text-white font-extrabold shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Deactivate Only
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white">Permanent Delete</span>
-                    <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400">
-                      Irreversible
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    Completely purges student records, submissions, and contest logs.
-                  </p>
-                </div>
-              </button>
-
-              {/* Deactivate Only Card */}
-              <button
-                type="button"
-                onClick={() => setIsSoftDelete(true)}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                  isSoftDelete
-                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 ring-2 ring-amber-500/20 text-slate-900 dark:text-white shadow-xs'
-                    : 'bg-slate-50/60 dark:bg-navy-900/40 border-slate-200 dark:border-navy-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                }`}
-              >
-                <div className={`mt-0.5 p-0.5 rounded-full shrink-0 ${isSoftDelete ? 'bg-amber-600 text-white' : 'border border-slate-300 dark:border-slate-600 text-transparent'}`}>
-                  <Check className="w-3 h-3" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white">Deactivate Only</span>
-                    <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                      Reversible
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    Hides students from active leaderboards while preserving all database data.
-                  </p>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Section 4: Live Cohort Audit & Preview */}
-          {hasSpecificFilter && (
-            <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-navy-800">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-500/20">
-                  <Users className="w-3.5 h-3.5" />
-                  Live Cohort Preview
-                </span>
-                {isLoadingPreview && (
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Auditing records...
-                  </span>
-                )}
               </div>
 
+            </div>
+
+          </div>
+
+          {/* Section 2: When NO specific filter is chosen -> Quick Select Prompt */}
+          {!hasSpecificFilter && (
+            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-center space-y-3">
+              <Users className="w-8 h-8 text-rose-500/60 mx-auto" />
+              <div>
+                <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                  Choose a Department or Academic Year
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-0.5">
+                  Select a specific branch or academic batch above to audit and select students.
+                </p>
+              </div>
+
+              {/* Quick Select Chips */}
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5">
+                {departments.slice(0, 4).map(d => (
+                  <button
+                    key={d.code}
+                    type="button"
+                    onClick={() => setSelectedDept(d.code)}
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-navy-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 transition-all cursor-pointer shadow-2xs"
+                  >
+                    {d.code}
+                  </button>
+                ))}
+                {(['1st Year', '2nd Year', '3rd Year', '4th Year'] as const).map(yr => (
+                  <button
+                    key={yr}
+                    type="button"
+                    onClick={() => setSelectedYear(yr)}
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 hover:bg-slate-100 transition-all cursor-pointer shadow-2xs"
+                  >
+                    {yr}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section 3: Interactive Student Selection Ledger (Select All / Row Select) */}
+          {hasSpecificFilter && (
+            <div className="space-y-3">
+              
+              {/* Header Info & Toolbar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                
+                {/* Left: Select All Checkbox + Count Pill */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleToggleSelectAll}
+                    disabled={isLoadingPreview || studentList.length === 0}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-40"
+                  >
+                    {isAllSelected ? (
+                      <CheckSquare className="w-4 h-4 text-rose-600" />
+                    ) : isPartiallySelected ? (
+                      <MinusSquare className="w-4 h-4 text-rose-600" />
+                    ) : (
+                      <Square className="w-4 h-4 text-slate-400" />
+                    )}
+                    <span>Select All ({studentList.length})</span>
+                  </button>
+
+                  <span className={`px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
+                    selectedStudentIds.size > 0
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60'
+                      : 'bg-slate-100 dark:bg-navy-900 text-slate-500 border-slate-200 dark:border-navy-800'
+                  }`}>
+                    {selectedStudentIds.size} of {studentList.length} Selected
+                  </span>
+                </div>
+
+                {/* Right: Quick Search Filter */}
+                {studentList.length > 5 && (
+                  <div className="relative w-full sm:w-56">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Filter by name / roll..."
+                      value={searchFilter}
+                      onChange={(e) => setSearchFilter(e.target.value)}
+                      className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                    />
+                  </div>
+                )}
+
+              </div>
+
+              {/* Student Rows Container */}
               {isLoadingPreview ? (
-                <div className="p-6 text-center bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-800">
-                  <Loader2 className="w-6 h-6 animate-spin text-rose-500 mx-auto mb-2" />
+                <div className="p-8 text-center bg-slate-50 dark:bg-navy-900/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-rose-500 mx-auto" />
                   <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                    Scanning student database for matching cohort records...
+                    Scanning student records for matching cohort...
                   </p>
                 </div>
-              ) : preview && preview.count > 0 ? (
-                <div className="space-y-3">
-                  {/* Count summary banner */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-rose-50/50 to-orange-50 dark:from-rose-950/40 dark:via-rose-950/20 dark:to-navy-900 border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest block">
-                        Target Students Found
+              ) : studentList.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-center space-y-1">
+                  <Users className="w-7 h-7 opacity-30 mx-auto text-slate-400" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Matching Students Found</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    No active student records match Department ({selectedDept}) and Year ({selectedYear}).
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-950 shadow-xs">
+                  
+                  {/* Cohort Summary Bar */}
+                  <div className="px-3.5 py-2 bg-slate-100/90 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between text-xs">
+                    <span className="font-extrabold text-slate-700 dark:text-slate-300 text-[11px]">
+                      Student Roster ({filteredStudents.length} {filteredStudents.length !== studentList.length ? `matching "${searchFilter}"` : 'records'})
+                    </span>
+                    {preview?.protected_count ? (
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>{preview.protected_count} Admin Protected</span>
                       </span>
-                      <p className="text-2xl font-black text-rose-700 dark:text-rose-300 leading-tight">
-                        {preview.count} <span className="text-xs font-bold font-sans text-rose-600/80 dark:text-rose-400/80">students targeted</span>
-                      </p>
-                      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                        <span className="px-2 py-0.5 rounded-md bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 text-[10px] font-black border border-slate-200 dark:border-navy-700">
-                          {preview.department_name}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 text-[10px] font-black border border-slate-200 dark:border-navy-700">
-                          {preview.year_level}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 text-[10px] font-black border border-slate-200 dark:border-navy-700">
-                          {preview.college === 'ALL' ? 'All Campuses' : preview.college}
-                        </span>
-                      </div>
-                    </div>
-                    {preview.protected_count > 0 && (
-                      <div className="text-right shrink-0">
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{preview.protected_count} admin safe</span>
-                        </span>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
 
-                  {/* Sample students list */}
-                  {preview.sample_students.length > 0 && (
-                    <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden text-xs bg-white dark:bg-navy-900 shadow-xs">
-                      <div className="bg-slate-100/80 dark:bg-navy-950 px-3.5 py-2 font-bold text-slate-700 dark:text-slate-300 text-[11px] flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800">
-                        <span>Roster Sample Preview ({preview.sample_students.length} of {preview.count} records)</span>
-                        <span className="text-[10px] font-mono text-slate-500">Live DB</span>
-                      </div>
-                      <div className="divide-y divide-slate-100 dark:divide-navy-800/80 max-h-40 overflow-y-auto custom-scrollbar">
-                        {preview.sample_students.map((st) => (
-                          <div key={st.id} className="px-3.5 py-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                            <div className="min-w-0 pr-2">
-                              <p className="font-bold text-slate-900 dark:text-white truncate text-xs">
+                  {/* Scrollable Rows */}
+                  <div className="max-h-64 sm:max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-navy-800/80 custom-scrollbar overscroll-contain">
+                    {filteredStudents.map((st) => {
+                      const isSelected = selectedStudentIds.has(st.id);
+                      return (
+                        <div
+                          key={st.id}
+                          onClick={() => handleToggleStudent(st.id)}
+                          className={`px-3.5 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none ${
+                            isSelected
+                              ? 'bg-rose-50/70 dark:bg-rose-950/30'
+                              : 'hover:bg-slate-50 dark:hover:bg-navy-900/50'
+                          }`}
+                        >
+                          {/* Checkbox + Name & RegNo */}
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleStudent(st.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-4 h-4 rounded text-rose-600 border-slate-300 dark:border-navy-700 focus:ring-rose-500 cursor-pointer shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <p className={`font-bold text-xs truncate ${isSelected ? 'text-rose-900 dark:text-rose-200' : 'text-slate-900 dark:text-white'}`}>
                                 {st.name}
                               </p>
                               <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
                                 {st.reg_no}
                               </p>
                             </div>
-                            <div className="text-right shrink-0 flex items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                                {st.department}
-                              </span>
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
-                                Yr {st.year_level}
-                              </span>
-                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Safety Confirmation Checkbox */}
-                  <div className="p-3.5 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/60 space-y-2.5">
-                    <div className="flex items-start gap-2.5 text-rose-800 dark:text-rose-200 text-xs">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                      <p className="font-bold leading-tight">
-                        {isSoftDelete
-                          ? `Are you sure you want to deactivate ${preview.count} students? They will no longer appear on active leaderboards.`
-                          : `Permanent Warning: This will permanently delete ${preview.count} student records, their statistics, submissions, and contest logs. This action cannot be undone.`}
-                      </p>
-                    </div>
-
-                    <label className="flex items-center gap-2.5 text-xs font-black text-slate-900 dark:text-white cursor-pointer select-none pt-1">
-                      <input
-                        type="checkbox"
-                        checked={confirmChecked}
-                        onChange={(e) => setConfirmChecked(e.target.checked)}
-                        className="w-4 h-4 rounded text-rose-600 border-rose-300 focus:ring-rose-500 cursor-pointer shrink-0"
-                      />
-                      <span>
-                        I confirm and authorize {isSoftDelete ? 'deactivating' : 'permanently deleting'} these {preview.count} students.
-                      </span>
-                    </label>
+                          {/* Dept / Year / Campus Badges */}
+                          <div className="text-right shrink-0 flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                              {st.department}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
+                              Yr {st.year_level}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200/60 text-slate-600 dark:bg-navy-800/80 dark:text-slate-400">
+                              {st.college || 'NEC'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-center text-slate-500 dark:text-slate-400 text-xs">
-                  <Users className="w-7 h-7 opacity-40 mx-auto mb-1 text-slate-400" />
-                  <p className="font-bold text-slate-700 dark:text-slate-300">No Matching Students Found</p>
-                  <p className="text-[11px] mt-0.5 max-w-sm mx-auto leading-relaxed">
-                    No records match Department ({selectedDept}) and Academic Year ({selectedYear}).
-                  </p>
+
                 </div>
               )}
+
+              {/* Safety Confirmation Checkbox (Visible when at least 1 student is selected) */}
+              {selectedStudentIds.size > 0 && (
+                <div className="p-3.5 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/60 space-y-2">
+                  <div className="flex items-start gap-2.5 text-rose-800 dark:text-rose-200 text-xs">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <p className="font-bold leading-tight">
+                      {isSoftDelete
+                        ? `You are targeting ${selectedStudentIds.size} student(s) for deactivation. They will be hidden from active leaderboards.`
+                        : `Permanent Purge: This will permanently delete ${selectedStudentIds.size} student record(s), contest history, and logs. This action cannot be reversed.`}
+                    </p>
+                  </div>
+
+                  <label className="flex items-center gap-2.5 text-xs font-black text-slate-900 dark:text-white cursor-pointer select-none pt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={confirmChecked}
+                      onChange={(e) => setConfirmChecked(e.target.checked)}
+                      className="w-4 h-4 rounded text-rose-600 border-rose-300 focus:ring-rose-500 cursor-pointer shrink-0"
+                    />
+                    <span>
+                      I confirm and authorize {isSoftDelete ? 'deactivating' : 'permanently deleting'} these {selectedStudentIds.size} students.
+                    </span>
+                  </label>
+                </div>
+              )}
+
             </div>
           )}
 
-          {/* Error Message Banner */}
+          {/* Error Banner */}
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2.5">
+            <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2.5">
               <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{errorMsg}</span>
             </div>
           )}
+
         </div>
 
         {/* Modal Footer */}
@@ -696,6 +785,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             )}
           </button>
         </div>
+
       </div>
     </GlobalModalBackdrop>
   );
