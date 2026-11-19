@@ -342,29 +342,50 @@ export const StaffDashboardView: React.FC = () => {
     return solved > 0;
   }, []);
 
-  // Exact KPI calculations strictly matching assigned portfolio with summary fallback
-  const totalAssignedCount = myStudents.length > 0 ? myStudents.length : (summary?.total_assigned || 0);
-  const activeCount = myStudents.length > 0 ? myStudents.filter(isActiveStudent).length : (summary?.active_students || 0);
-  const completedCount = myStudents.length > 0 ? myStudents.filter(isCompletedStudent).length : (summary?.completed_students || 0);
-  const attentionCount = myStudents.length > 0 ? myStudents.filter(isAttentionStudent).length : (summary?.needing_attention || 0);
-  const atRiskCount = myStudents.length > 0 ? myStudents.filter(isAtRiskStudent).length : (summary?.at_risk || 0);
-  const unresponsiveCount = myStudents.length > 0 ? myStudents.filter(isUnresponsiveStudent).length : (summary?.unresponsive_students || 0);
+  // Dynamic lookup for currently selected individual student
+  const selectedStudentObj = useMemo(() => {
+    if (!selectedStudentFilter || selectedStudentFilter === 'ALL') return null;
+    const filterKey = String(selectedStudentFilter).trim().toLowerCase();
+    return myStudents.find((st: any) => {
+      const matchReg = st.reg_no ? String(st.reg_no).trim().toLowerCase() === filterKey : false;
+      const matchId = st.id !== undefined && st.id !== null ? String(st.id).trim().toLowerCase() === filterKey : false;
+      const matchUser = st.username ? String(st.username).trim().toLowerCase() === filterKey : false;
+      const matchName = st.name ? String(st.name).trim().toLowerCase() === filterKey : false;
+      return matchReg || matchId || matchUser || matchName;
+    }) || null;
+  }, [myStudents, selectedStudentFilter]);
+
+  const isSingleStudentView = selectedStudentFilter !== 'ALL' && Boolean(selectedStudentObj);
+  const kpiCohort = isSingleStudentView && selectedStudentObj ? [selectedStudentObj] : myStudents;
+
+  // Exact KPI calculations strictly matching assigned portfolio with dynamic single-student adaptation
+  const totalAssignedCount = isSingleStudentView ? 1 : (myStudents.length > 0 ? myStudents.length : (summary?.total_assigned || 0));
+  const activeCount = isSingleStudentView ? (isActiveStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isActiveStudent).length : (summary?.active_students || 0));
+  const completedCount = isSingleStudentView ? (isCompletedStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isCompletedStudent).length : (summary?.completed_students || 0));
+  const attentionCount = isSingleStudentView ? (isAttentionStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isAttentionStudent).length : (summary?.needing_attention || 0));
+  const atRiskCount = isSingleStudentView ? (isAtRiskStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isAtRiskStudent).length : (summary?.at_risk || 0));
+  const unresponsiveCount = isSingleStudentView ? (isUnresponsiveStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isUnresponsiveStudent).length : (summary?.unresponsive_students || 0));
   
   // Progress calculations based on 100 Target
-  const totalSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Number(s.stats?.total_solved ?? s.total_solved ?? 0), 0);
-  const avgSolvedProblems = summary?.weekly_progress_avg ?? (myStudents.length > 0 ? (totalSolvedSum / myStudents.length).toFixed(1) : 0);
-  const totalCappedSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Math.min(Number(s.stats?.total_solved ?? s.total_solved ?? 0), 100), 0);
-  const targetProgressPct = summary?.target_progress_pct ?? (myStudents.length > 0 ? (totalCappedSolvedSum / myStudents.length).toFixed(1) : '0');
+  const totalSolvedSum = kpiCohort.reduce((acc: number, s: any) => acc + Number(s.stats?.total_solved ?? s.total_solved ?? 0), 0);
+  const avgSolvedProblems = isSingleStudentView ? totalSolvedSum : (summary?.weekly_progress_avg ?? (myStudents.length > 0 ? (totalSolvedSum / myStudents.length).toFixed(1) : 0));
+  const totalCappedSolvedSum = kpiCohort.reduce((acc: number, s: any) => acc + Math.min(Number(s.stats?.total_solved ?? s.total_solved ?? 0), 100), 0);
+  const targetProgressPct = isSingleStudentView 
+    ? (totalCappedSolvedSum).toFixed(1)
+    : (summary?.target_progress_pct ?? (myStudents.length > 0 ? (totalCappedSolvedSum / myStudents.length).toFixed(1) : '0'));
   const avgSolvedProgress = targetProgressPct;
 
   // Filter ONLY inside assigned students set based on active student filter + status filter + search query
   const filteredStudents = useMemo(() => {
     return myStudents.filter((s: any) => {
       // 1. Specific Student Filter dropdown
-      if (selectedStudentFilter !== 'ALL' && selectedStudentFilter !== '') {
-        const studentIdMatch = String(s.id) === String(selectedStudentFilter);
-        const regNoMatch = String(s.reg_no || '').toLowerCase() === String(selectedStudentFilter).toLowerCase();
-        if (!studentIdMatch && !regNoMatch) {
+      if (selectedStudentFilter && selectedStudentFilter !== 'ALL') {
+        const filterKey = String(selectedStudentFilter).trim().toLowerCase();
+        const matchesRegNo = Boolean(s.reg_no && String(s.reg_no).trim().toLowerCase() === filterKey);
+        const matchesId = Boolean(s.id !== undefined && s.id !== null && String(s.id).trim().toLowerCase() === filterKey);
+        const matchesUsername = Boolean(s.username && String(s.username).trim().toLowerCase() === filterKey);
+        const matchesName = Boolean(s.name && String(s.name).trim().toLowerCase() === filterKey);
+        if (!matchesRegNo && !matchesId && !matchesUsername && !matchesName) {
           return false;
         }
       }
@@ -834,8 +855,8 @@ NEC LeetCode Intelligence Portal`;
         </div>
       )}
 
-      {/* TODAY'S PRIORITY SECTION */}
-      {priorityStudents.length > 0 && (
+      {/* TODAY'S PRIORITY SECTION (Hidden when viewing an individual student to keep view strictly isolated) */}
+      {priorityStudents.length > 0 && selectedStudentFilter === 'ALL' && (
         <div className="bg-amber-50/40 dark:bg-amber-950/20 p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-300/80 dark:border-amber-700/40 space-y-3 sm:space-y-4 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center space-x-2.5">
@@ -948,7 +969,7 @@ NEC LeetCode Intelligence Portal`;
                 <div
                   className="relative flex-1 min-w-full sm:min-w-[220px] sm:w-72"
                   onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    if (!isMobile && !e.currentTarget.contains(e.relatedTarget as Node)) {
                       setIsStudentSelectOpen(false);
                     }
                   }}
@@ -1080,7 +1101,11 @@ NEC LeetCode Intelligence Portal`;
                           </div>
                         ) : (
                           searchedStudents.map((st: any) => {
-                            const isSelected = String(st.id) === String(selectedStudentFilter);
+                            const isSelected = selectedStudentFilter !== 'ALL' && Boolean(
+                              (st.reg_no && String(st.reg_no).trim().toLowerCase() === String(selectedStudentFilter).trim().toLowerCase()) ||
+                              (st.id !== undefined && st.id !== null && String(st.id).trim().toLowerCase() === String(selectedStudentFilter).trim().toLowerCase()) ||
+                              (st.name && String(st.name).trim().toLowerCase() === String(selectedStudentFilter).trim().toLowerCase())
+                            );
                             const solved = st.total_solved || 0;
                             const initials = (st.name || 'S')
                               .split(' ')
@@ -1091,11 +1116,12 @@ NEC LeetCode Intelligence Portal`;
 
                             return (
                               <button
-                                key={st.id || st.reg_no}
+                                key={st.reg_no || st.id || st.name}
                                 type="button"
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => {
-                                  setSelectedStudentFilter(String(st.id));
+                                  const filterKey = st.reg_no ? String(st.reg_no) : (st.id !== undefined && st.id !== null ? String(st.id) : (st.name || ''));
+                                  setSelectedStudentFilter(filterKey);
                                   setFilterStatus('ALL');
                                   setIsStudentSelectOpen(false);
                                   setStudentSelectSearch('');
@@ -1228,15 +1254,20 @@ NEC LeetCode Intelligence Portal`;
                           )}
 
                           {searchedStudents.map((st: any) => {
-                            const isSelected = String(st.id) === String(selectedStudentFilter);
+                            const isSelected = selectedStudentFilter !== 'ALL' && Boolean(
+                              (st.reg_no && String(st.reg_no).trim().toLowerCase() === String(selectedStudentFilter).trim().toLowerCase()) ||
+                              (st.id !== undefined && st.id !== null && String(st.id).trim().toLowerCase() === String(selectedStudentFilter).trim().toLowerCase()) ||
+                              (st.name && String(st.name).trim().toLowerCase() === String(selectedStudentFilter).trim().toLowerCase())
+                            );
                             const solved = st.total_solved || 0;
                             const initials = (st.name || 'S').slice(0, 2).toUpperCase();
                             return (
                               <button
-                                key={st.id || st.reg_no}
+                                key={st.reg_no || st.id || st.name}
                                 type="button"
                                 onClick={() => {
-                                  setSelectedStudentFilter(String(st.id));
+                                  const filterKey = st.reg_no ? String(st.reg_no) : (st.id !== undefined && st.id !== null ? String(st.id) : (st.name || ''));
+                                  setSelectedStudentFilter(filterKey);
                                   setFilterStatus('ALL');
                                   setIsStudentSelectOpen(false);
                                   setStudentSelectSearch('');
