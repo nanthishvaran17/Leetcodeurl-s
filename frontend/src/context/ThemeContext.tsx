@@ -7,6 +7,8 @@ interface ThemeContextType {
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
   setSystemTheme: () => void;
+  accentColor: string;
+  setAccentColor: (color: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -32,10 +34,20 @@ function getInitialTheme(): Theme {
   }
 }
 
+function getInitialAccentColor(): string {
+  if (typeof window === 'undefined') return 'indigo';
+  try {
+    return localStorage.getItem('nec_accent_color') || 'indigo';
+  } catch (_) {
+    return 'indigo';
+  }
+}
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [accentColor, setAccentColor] = useState<string>(getInitialAccentColor);
 
-  // Sync DOM classes and Android system theme-color
+  // Sync DOM classes, accent attributes, and Android system theme-color
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const root = window.document.documentElement;
@@ -49,6 +61,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (body) body.classList.remove('dark');
     }
     localStorage.setItem('theme', theme);
+
+    if (accentColor) {
+      root.setAttribute('data-accent', accentColor);
+      localStorage.setItem('nec_accent_color', accentColor);
+    }
 
     // Update Android status bar & browser navigation theme-color
     try {
@@ -110,8 +127,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('theme', sysTheme);
   };
 
+  const handleSetAccentColor = (color: string) => {
+    setAccentColor(color);
+    if (typeof window !== 'undefined') {
+      window.document.documentElement.setAttribute('data-accent', color);
+      localStorage.setItem('nec_accent_color', color);
+    }
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme: handleSetTheme, setSystemTheme: handleSetSystemTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme: handleSetTheme, setSystemTheme: handleSetSystemTheme, accentColor, setAccentColor: handleSetAccentColor }}>
       {children}
     </ThemeContext.Provider>
   );
