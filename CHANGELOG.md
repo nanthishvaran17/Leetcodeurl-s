@@ -11,8 +11,8 @@
 
 [![Keep a Changelog](https://img.shields.io/badge/Changelog-Keep%20a%20Changelog%20v1.1.0-orange.svg?style=flat-square)](https://keepachangelog.com/en/1.1.0/)
 [![Semantic Versioning](https://img.shields.io/badge/SemVer-2.0.0-blue.svg?style=flat-square)](https://semver.org/spec/v2.0.0.html)
-[![Current Production Release](https://img.shields.io/badge/Release-v4.5.8%20(Build%2099)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.8%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk)
+[![Current Production Release](https://img.shields.io/badge/Release-v4.5.9%20(Build%20100)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.5.9%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.5.9_latest.apk)
 [![Windows Setup EXE](https://img.shields.io/badge/Windows%20Setup-v4.5.2%20EXE-blueviolet.svg?style=flat-square)](releases/desktop/Nandha_LeetCode_Intelligence_Setup_4.5.2.exe)
 [![CI/CD Autopilot Pipeline](https://img.shields.io/badge/Autopilot%20CI%2FCD-Active%205--Phase-blue.svg?style=flat-square)](.github/workflows/sunday_autopilot.yml)
 
@@ -46,6 +46,12 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 ---
 
 ## Version 4.5.x — Multi-Department Governance & Mobile Polish (Current)
+
+### [4.5.9] - 2026-11-20 (Production Release — Build 100 Milestone)
+- **APK Signature Scheme v2 & v3 + 4-byte Zipalign**: Eliminated the "App not installed. The package appears to be invalid" error on Android 11–16 (Target SDK 36) by integrating official `uber-apk-signer` with institutional keystore signing.
+- **Dynamic Single Student Mentee View**: Fixed student filtering in Staff Dashboard to strictly isolate to the clicked student across KPI statistics, target progress percentage, and student cards.
+- **4-Sided Symmetrical Frame Borders**: Resolved left-edge clipping on active filter cards using `ring-inset` and `p-1` grid breathing padding so all four card borders render with equal crispness and symmetry.
+- **Zero Dummy Data Guarantee**: Confirmed 100% authentic database calculations across all years (27 students in II Year Cyber, 63 in III Year Cyber, 28 in IV Year Cyber).
 
 ### [4.5.8] - 2026-11-20 (Production Release)
 
