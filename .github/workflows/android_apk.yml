@@ -66,25 +66,26 @@ jobs:
         if: success()
         run: |
           mkdir -p dist-release
-          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.5_latest.apk
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/Nandha_LeetCode_Intelligence_v4.5.6_latest.apk
           cp frontend/android/app/build/outputs/apk/release/app-release.apk dist-release/nandha-leetcode.apk
           cp frontend/android/app/build/outputs/bundle/release/app-release.aab dist-release/Nandha-LeetCode-PlayStore-Release.aab
 
-      - name: Publish Official GitHub Release v4.5.5
+      - name: Publish Official GitHub Release v4.5.6
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v4.5.5
-          name: "Nandha LeetCode Intelligence v4.5.5 (Production Release)"
+          tag_name: v4.5.6
+          name: "Nandha LeetCode Intelligence v4.5.6 (Production Release)"
           body: |
-            ### 🚀 Official Production Release v4.5.5 (VersionCode 96)
+            ### 🚀 Official Production Release v4.5.6 (VersionCode 97)
+            - **Mobile APK Layout & Filter Alignment**: Compact 2-tier responsive filter bar, eliminated chip overflow, and improved mobile header proportions.
+            - **Seamless Leaderboard Spacing**: Removed excessive bottom whitespace padding above mobile pagination.
+            - **Theme & Accent Color Persistence**: Direct synchronization and persistence of institutional theme and accent colors.
             - **Target SDK 36 (Android 16)** Google Play Ready
-            - **ProGuard / R8 Optimization** active (14.76 MB lean release APK)
+            - **ProGuard / R8 Optimization** active lean release APK
             - **Restricted permissions removed** for 100% Play Store policy compliance
-            - **Strict HTTPS / Cleartext disabled**
-            - **Institutional Privacy Policy & Reviewer Docs**
           files: |
-            dist-release/Nandha_LeetCode_Intelligence_v4.5.5_latest.apk
+            dist-release/Nandha_LeetCode_Intelligence_v4.5.6_latest.apk
             dist-release/nandha-leetcode.apk
             dist-release/Nandha-LeetCode-PlayStore-Release.aab
           prerelease: false

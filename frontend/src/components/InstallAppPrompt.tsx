@@ -111,7 +111,7 @@ export const InstallAppPrompt: React.FC = () => {
     setDownloadStarted(true);
     const link = document.createElement('a');
     link.href = '/nandha-leetcode.apk';
-    link.download = 'Nandha_LeetCode_Intelligence_v4.5.5_latest.apk';
+    link.download = 'Nandha_LeetCode_Intelligence_v4.5.6_latest.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -152,7 +152,7 @@ export const InstallAppPrompt: React.FC = () => {
                 Nandha LeetCode Mobile
               </h4>
               <span className="px-2 py-0.5 text-[9.5px] font-black rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                v4.5.5 APK
+                v4.5.6 APK
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-medium">
