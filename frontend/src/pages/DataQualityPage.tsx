@@ -234,7 +234,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-3 sm:p-6 md:p-8 shadow-lg border border-brand-500/30 w-full min-w-0">
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-6 min-w-0">
-          <div className="space-y-1.5 sm:space-y-3 max-w-3xl min-w-0">
+          <div className="space-y-1.5 sm:space-y-3 flex-1 min-w-0">
             {/* Mobile Top Strip: Badge + Audit Time */}
             <div className="flex items-center justify-between gap-1.5 flex-wrap min-w-0">
               <div className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[8.5px] sm:text-xs font-black tracking-wider leading-none">
@@ -334,7 +334,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
       {/* Scope Filter Controls - 2026 SaaS Glassmorphic Bar (Collapsible) */}
       {showFilters && (
         <div className="bg-white/90 dark:bg-navy-950/90 backdrop-blur-xl p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2.5 sm:gap-4 w-full animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5 flex-1 w-full max-w-4xl min-w-0">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5 flex-1 w-full min-w-0">
             {/* College Campus Filter — Admin & Management only */}
             {isGlobalAccess && (
               <GlobalFilter
@@ -410,10 +410,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
 
       {/* Metrics Snapshot Grid — 5 2026 SaaS Bento Cards */}
       <div 
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 w-full min-w-0 [grid-template-columns:calc(50%-7px)_calc(50%-7px)] sm:[grid-template-columns:repeat(3,minmax(0,1fr))] lg:[grid-template-columns:repeat(5,minmax(0,1fr))]"
-        style={{
-          gridTemplateColumns: isMobile ? 'calc(50% - 7px) calc(50% - 7px)' : undefined
-        }}
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 w-full min-w-0"
       >
         {/* 1. Health Score */}
         <div 
@@ -505,7 +502,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
         {/* 5. Network / Sync */}
         <div 
           onClick={() => setFilterCategory('NETWORK')}
-          className={`col-span-2 sm:col-span-1 relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[86px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
+          className={`col-span-2 sm:col-span-1 relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl flex flex-col justify-between min-h-[100px] sm:min-h-[116px] min-w-0 transition-all duration-200 cursor-pointer touch-manipulation hover:-translate-y-0.5 active:scale-95 ${
             filterCategory === 'NETWORK' 
               ? 'bg-gradient-to-br from-cyan-50 via-white to-blue-50/50 dark:from-cyan-950/40 dark:via-slate-900/90 dark:to-slate-950 border-2 border-cyan-500 shadow-md shadow-cyan-500/15' 
               : 'bg-white/90 dark:bg-[#0c1324] border border-slate-200/90 dark:border-white/10 hover:border-cyan-400 dark:hover:border-cyan-500/50 shadow-xs'
@@ -517,12 +514,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
               <Wifi className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="flex items-baseline justify-between sm:block min-w-0 gap-2">
-            <p className="text-xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-1.5 sm:my-2 truncate leading-none">{data?.network_errors || 0}</p>
-            <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg sm:rounded-full w-fit border border-cyan-500/20 truncate max-w-full">
-              Retry Anomalies
-            </span>
-          </div>
+          <p className="text-xl sm:text-3xl font-black text-cyan-800 dark:text-cyan-300 tracking-tight my-1.5 sm:my-2 truncate leading-none">{data?.network_errors || 0}</p>
+          <span className="inline-flex items-center text-[9px] sm:text-[10px] font-black text-cyan-800 dark:text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg sm:rounded-full w-fit border border-cyan-500/20 truncate max-w-full">
+            Retry Anomalies
+          </span>
         </div>
       </div>
 
@@ -694,50 +689,65 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
-              <table className="w-full text-left text-xs min-w-[700px]">
-                <thead className="bg-navy-950 text-white font-black uppercase">
+            <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+              <table className="w-full text-left text-xs table-auto">
+                <thead className="bg-navy-950 text-white font-black uppercase tracking-wider">
                   <tr>
-                    <th className="px-4 py-3">Register No</th>
-                    <th className="px-4 py-3">Student Name</th>
-                    <th className="px-4 py-3 text-center">Dept</th>
-                    <th className="px-4 py-3">Status / Flag</th>
-                    <th className="px-4 py-3 text-right">Action Required</th>
+                    <th className="px-4 py-3.5 w-[14%]">Register No</th>
+                    <th className="px-4 py-3.5 w-[22%]">Student Name</th>
+                    <th className="px-4 py-3.5 text-center w-[9%]">Dept</th>
+                    <th className="px-4 py-3.5 text-center w-[9%]">Year</th>
+                    <th className="px-4 py-3.5 w-[18%]">LeetCode Profile</th>
+                    <th className="px-4 py-3.5 text-center w-[14%]">Audit Status</th>
+                    <th className="px-4 py-3.5 text-right w-[14%]">Action Item</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {filteredIssues.slice((page - 1) * pageSize, page * pageSize).map((item: any, idx: number) => (
-                    <tr 
-                      key={idx} 
-                      onClick={() => handleStudentClick(item)}
-                      className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white font-mono">{item.reg_no}</td>
-                      <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                        <div className="flex items-center gap-1.5">
-                          <span>{item.name}</span>
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{item.dept}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
-                          item.status === 'VALID_PROFILE'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
-                            : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
-                            : item.status === 'NETWORK_ERROR'
-                            ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-500/30'
-                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
-                        }`}>
-                          {item.issue}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-bold text-slate-700 dark:text-slate-300">
-                        {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredIssues.slice((page - 1) * pageSize, page * pageSize).map((item: any, idx: number) => {
+                    const statusCfg = getStatusConfig(item.status);
+                    const formattedYear = item.year_level || item.year || 'III';
+                    return (
+                      <tr 
+                        key={idx} 
+                        onClick={() => handleStudentClick(item)}
+                        className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group"
+                      >
+                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap">{item.reg_no}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold">{item.name}</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center font-bold text-indigo-600 dark:text-indigo-400 font-mono">{item.dept}</td>
+                        <td className="px-4 py-3 text-center font-bold text-slate-600 dark:text-slate-300 font-mono">
+                          {String(formattedYear).toLowerCase().includes('year') ? formattedYear : `Year ${formattedYear}`}
+                        </td>
+                        <td className="px-4 py-3">
+                          {item.username ? (
+                            <span className="inline-flex items-center gap-1.5 font-mono font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                              <Globe className="w-3.5 h-3.5 shrink-0" />
+                              <span>@{item.username}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-rose-500 font-mono font-bold text-[11px]">
+                              <AlertCircle className="w-3 h-3 shrink-0" />
+                              <span>No Handle</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full font-black text-[10px] border ${statusCfg.bg}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                            <span>{statusCfg.label}</span>
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-slate-700 dark:text-slate-300">
+                          {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

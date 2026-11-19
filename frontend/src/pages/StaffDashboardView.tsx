@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity, MessageCircle, Copy, ExternalLink, QrCode, ArrowUpDown, X, SlidersHorizontal } from 'lucide-react';
+import { Users, AlertTriangle, RefreshCw, BarChart3, CheckCircle2, Search, XCircle, ShieldCheck, Award, TrendingUp, TrendingDown, Minus, Eye, Bell, FileText, Clock, AlertCircle, ArrowRight, Download, ChevronDown, Check, Filter, Moon, Activity, Copy, ExternalLink, ArrowUpDown, X, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
@@ -434,33 +434,6 @@ NEC LeetCode Intelligence Portal`;
     }).catch(() => {
       notify.error('Copy Failed', 'Unable to copy summary to clipboard.');
     });
-  };
-
-  const handleWhatsAppNudge = (st: any) => {
-    const solved = st.total_solved || 0;
-    const days = st.days_inactive ?? 0;
-    const greeting = `Hi ${st.name || 'Student'}`;
-    const reminder = days > 0
-      ? `You have been inactive on LeetCode for ${days} days (Current Solved: ${solved}).`
-      : `Your current LeetCode solved count is ${solved}.`;
-    
-    const msg = `${greeting}, this is your faculty mentor from Nandha Engineering College. ${reminder} Please solve today's challenge to maintain consistency and boost your coding placement score: https://leetcode.com/problemset/`;
-
-    const phone = (st.phone || st.phone_number || '').replace(/\D/g, '');
-    if (phone) {
-      const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-      notify.info('WhatsApp Opened', 'Student phone number not registered. Pre-filled reminder message opened in WhatsApp.');
-    }
-  };
-
-  const handleOpenDigitalPass = (regNo: string) => {
-    if (!regNo) return;
-    const cleanReg = encodeURIComponent(regNo.trim().toUpperCase());
-    window.open(`/#/verify/${cleanReg}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleSort = (field: 'name' | 'reg_no' | 'total_solved' | 'progress' | 'contest_rating' | 'status') => {
@@ -923,30 +896,14 @@ NEC LeetCode Intelligence Portal`;
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-amber-100 dark:border-navy-800 mt-2 flex items-center gap-2">
+                <div className="pt-3 border-t border-amber-100 dark:border-navy-800 mt-2 flex items-center">
                   <button
                     type="button"
                     onClick={() => setSelectedStudent(st)}
-                    className="flex-1 min-h-[44px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 cursor-pointer touch-manipulation"
+                    className="w-full min-h-[44px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-white text-xs font-black transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/20 cursor-pointer touch-manipulation"
                   >
                     <span>Inspect</span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleWhatsAppNudge(st)}
-                    className="min-h-[44px] px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer touch-manipulation"
-                    title="Send WhatsApp Nudge"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOpenDigitalPass(st.reg_no)}
-                    className="min-h-[44px] px-3 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-navy-600 flex items-center justify-center transition-all cursor-pointer touch-manipulation"
-                    title="Verify Student Digital Pass"
-                  >
-                    <QrCode className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1570,7 +1527,8 @@ NEC LeetCode Intelligence Portal`;
               return (
                 <div
                   key={st.id}
-                  className="overflow-hidden bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-4 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40"
+                  onClick={() => setSelectedStudent(st)}
+                  className="overflow-hidden bg-white dark:bg-navy-900 rounded-2xl p-3 sm:p-4 border border-slate-200/90 dark:border-navy-700/80 shadow-md shadow-slate-200/50 dark:shadow-none space-y-3 transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600/60 ring-1 ring-slate-100 dark:ring-navy-800/40 cursor-pointer active:scale-[0.99] group"
                 >
                   {/* Top Bar: Reg No, Dept/Year & Status Pills */}
                   <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-navy-800/80 pb-2.5">
@@ -1613,6 +1571,7 @@ NEC LeetCode Intelligence Portal`;
                         href={`https://leetcode.com/u/${st.username}/`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center gap-1 text-xs font-bold font-mono text-brand-600 dark:text-brand-400 hover:underline mt-0.5"
                       >
                         @{st.username}
@@ -1646,51 +1605,40 @@ NEC LeetCode Intelligence Portal`;
                     </div>
                   </div>
 
-                  {/* Quick Numbers & Inspect Button */}
-                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-navy-800">
+                  {/* Quick Numbers: Solved, Rating, Sunday Contest & Inspect */}
+                  <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-navy-800">
                     <div className="grid grid-cols-3 gap-1 sm:gap-1.5 flex-1 min-w-0 text-xs">
-                      <div className="bg-slate-50 dark:bg-navy-950 px-1 sm:px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase block truncate">Solved</span>
-                        <span className="font-black text-slate-900 dark:text-white text-xs">{solved}</span>
+                      <div className="bg-slate-50 dark:bg-navy-950 px-1 sm:px-2 py-1.5 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0 shadow-2xs">
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider block truncate">Solved</span>
+                        <span className="font-black text-slate-900 dark:text-white text-xs sm:text-sm mt-0.5 block">{solved}</span>
                       </div>
-                      <div className="bg-slate-50 dark:bg-navy-950 px-1 sm:px-2 py-1 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0">
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase block truncate">Rating</span>
-                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs truncate block">{st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}</span>
+                      <div className="bg-slate-50 dark:bg-navy-950 px-1 sm:px-2 py-1.5 rounded-xl border border-slate-200 dark:border-navy-800 text-center min-w-0 shadow-2xs">
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-wider block truncate">Rating</span>
+                        <span className="font-black text-amber-500 dark:text-amber-400 text-xs sm:text-sm mt-0.5 block truncate">
+                          {st.contest_rating && Number(st.contest_rating) > 0 && Math.round(st.contest_rating) !== 1500 ? Math.round(st.contest_rating) : 'N/A'}
+                        </span>
                       </div>
-                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-1 sm:px-2 py-1 rounded-xl border border-indigo-200 dark:border-indigo-800/60 text-center min-w-0">
-                        <span className="text-[9px] text-indigo-700 dark:text-indigo-300 font-black uppercase block truncate">Sun. Contest</span>
-                        <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs truncate block">
-                          {st.recent_contest_score ? st.recent_contest_score.split('/')[0].trim() : '-'}
+                      <div className="bg-indigo-50 dark:bg-indigo-950/40 px-1 sm:px-2 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60 text-center min-w-0 shadow-2xs">
+                        <span className="text-[9px] text-indigo-700 dark:text-indigo-300 font-black uppercase tracking-tight block leading-tight text-center">
+                          Sun Contest
+                        </span>
+                        <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs sm:text-sm mt-0.5 block truncate">
+                          {st.recent_contest_score ? (st.recent_contest_score.includes('/') ? st.recent_contest_score.replace(/\s+/g, '') : `${st.recent_contest_score.trim()}/4`) : '-'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleWhatsAppNudge(st)}
-                        className="min-h-[38px] w-9 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 inline-flex items-center justify-center transition-all cursor-pointer touch-manipulation"
-                        title="Send WhatsApp Nudge"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDigitalPass(st.reg_no)}
-                        className="min-h-[38px] w-9 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-navy-600 inline-flex items-center justify-center transition-all cursor-pointer touch-manipulation"
-                        title="View Digital Pass"
-                      >
-                        <QrCode className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStudent(st)}
-                        className="min-h-[38px] px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer touch-manipulation"
-                      >
-                        <Eye className="w-4 h-4 shrink-0" />
-                        <span>Inspect</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedStudent(st);
+                      }}
+                      className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white text-xs font-black inline-flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-brand-500/20 cursor-pointer touch-manipulation shrink-0"
+                    >
+                      <Eye className="w-4 h-4 shrink-0" />
+                      <span>Inspect</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -1890,23 +1838,7 @@ NEC LeetCode Intelligence Portal`;
                         </div>
                       </td>
                       <td className="px-5 py-4 sticky right-0 z-10 bg-white group-hover:bg-slate-50 dark:bg-navy-950 dark:group-hover:bg-navy-850 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors whitespace-nowrap text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleWhatsAppNudge(st)}
-                            className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 transition-all cursor-pointer"
-                            title="Send WhatsApp Nudge"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDigitalPass(st.reg_no)}
-                            className="p-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 transition-all cursor-pointer"
-                            title="Open Digital Verification Pass"
-                          >
-                            <QrCode className="w-4 h-4" />
-                          </button>
+                        <div className="flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => setSelectedStudent(st)}

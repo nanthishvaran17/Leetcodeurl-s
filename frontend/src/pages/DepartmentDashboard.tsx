@@ -336,11 +336,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
             <button
               onClick={() => setShowBatchDeleteModal(true)}
-              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 active:bg-white/25 text-white rounded-2xl text-xs font-black shadow-md shadow-black/10 transition-all duration-200 active:scale-95 cursor-pointer border border-white/20 backdrop-blur-md"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-100 hover:text-white rounded-2xl text-xs font-black shadow-md shadow-rose-950/20 transition-all duration-200 hover:scale-[1.02] active:scale-95 cursor-pointer border border-rose-400/30 backdrop-blur-md group"
               title="Delete Students by Department and Academic Year"
             >
-              <Trash2 className="w-4 h-4 text-rose-400" />
-              <span>Delete by Dept/Year</span>
+              <Trash2 className="w-4 h-4 text-rose-400 group-hover:text-rose-300 transition-colors shrink-0" />
+              <span className="whitespace-nowrap">Delete by Department & Year</span>
             </button>
             <button
               onClick={handleRefreshAllStats}

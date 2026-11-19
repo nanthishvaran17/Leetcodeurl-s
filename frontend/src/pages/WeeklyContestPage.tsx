@@ -2976,7 +2976,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-8 sm:mb-12`}>
+          <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-3 sm:mb-5`}>
         {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           {/* Mobile Filter Scope Bar */}
@@ -3552,148 +3552,154 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     </div>
 
       {/* 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         
         {/* Department-wise Summary Section — Compact Executive Grid */}
         {(() => {
-          return (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-              {departments.map((dept, index) => {
-                const colors = [
-                  { bg: 'bg-indigo-50/70 dark:bg-indigo-950/30', border: 'border-indigo-100 dark:border-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-400', stat: 'text-indigo-700 dark:text-indigo-300', label: 'text-indigo-500', bar: 'bg-indigo-500 dark:bg-indigo-400' },
-                  { bg: 'bg-cyan-50/70 dark:bg-cyan-950/30', border: 'border-cyan-100 dark:border-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-400', stat: 'text-cyan-700 dark:text-cyan-300', label: 'text-cyan-500', bar: 'bg-cyan-500 dark:bg-cyan-400' },
-                  { bg: 'bg-blue-50/70 dark:bg-blue-950/30', border: 'border-blue-100 dark:border-blue-900/50', text: 'text-blue-700 dark:text-blue-400', stat: 'text-blue-700 dark:text-blue-300', label: 'text-blue-500', bar: 'bg-blue-500 dark:bg-blue-400' },
-                  { bg: 'bg-emerald-50/70 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', stat: 'text-emerald-700 dark:text-emerald-300', label: 'text-emerald-500', bar: 'bg-emerald-500 dark:bg-emerald-400' },
-                  { bg: 'bg-purple-50/70 dark:bg-purple-950/30', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500', bar: 'bg-purple-500 dark:bg-purple-400' }
-                ];
-                const color = colors[index % colors.length];
-                const deptNorm = normalizeDepartment(dept.code || dept.name);
+          const deptCards = departments.map((dept, index) => {
+            const colors = [
+              { bg: 'bg-indigo-50/70 dark:bg-indigo-950/30', border: 'border-indigo-100 dark:border-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-400', stat: 'text-indigo-700 dark:text-indigo-300', label: 'text-indigo-500', bar: 'bg-indigo-500 dark:bg-indigo-400' },
+              { bg: 'bg-cyan-50/70 dark:bg-cyan-950/30', border: 'border-cyan-100 dark:border-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-400', stat: 'text-cyan-700 dark:text-cyan-300', label: 'text-cyan-500', bar: 'bg-cyan-500 dark:bg-cyan-400' },
+              { bg: 'bg-blue-50/70 dark:bg-blue-950/30', border: 'border-blue-100 dark:border-blue-900/50', text: 'text-blue-700 dark:text-blue-400', stat: 'text-blue-700 dark:text-blue-300', label: 'text-blue-500', bar: 'bg-blue-500 dark:bg-blue-400' },
+              { bg: 'bg-emerald-50/70 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', stat: 'text-emerald-700 dark:text-emerald-300', label: 'text-emerald-500', bar: 'bg-emerald-500 dark:bg-emerald-400' },
+              { bg: 'bg-purple-50/70 dark:bg-purple-950/30', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500', bar: 'bg-purple-500 dark:bg-purple-400' }
+            ];
+            const color = colors[index % colors.length];
+            const deptNorm = normalizeDepartment(dept.code || dept.name);
 
-                let total = 0;
-                let attended = 0;
+            let total = 0;
+            let attended = 0;
 
-                // 1. Check API departmentStats dictionary (or fastSummary)
-                const activeDeptStats = departmentStats || fastSummary?.departmentStats;
-                if (activeDeptStats && typeof activeDeptStats === 'object') {
-                  for (const [key, val] of Object.entries(activeDeptStats)) {
-                    if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
-                      const dVal: any = val;
-                      total = Number(dVal?.total || dVal?.totalStudents || 0);
-                      attended = Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0) + 
-                                 Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0);
-                      if (attended === 0 && dVal?.attended) {
-                        attended = Number(dVal.attended);
-                      }
-                      break;
-                    }
+            // 1. Check API departmentStats dictionary (or fastSummary)
+            const activeDeptStats = departmentStats || fastSummary?.departmentStats;
+            if (activeDeptStats && typeof activeDeptStats === 'object') {
+              for (const [key, val] of Object.entries(activeDeptStats)) {
+                if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                  const dVal: any = val;
+                  total = Number(dVal?.total || dVal?.totalStudents || 0);
+                  attended = Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0) + 
+                             Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0);
+                  if (attended === 0 && dVal?.attended) {
+                    attended = Number(dVal.attended);
                   }
+                  break;
                 }
+              }
+            }
 
-                // 2. Check matrixRows or cachedStudents (if available) for dynamic calculation of attended count
-                if (attended === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
-                  const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
-                  const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-                  if (deptStudents.length > 0) {
-                    if (total === 0) total = deptStudents.length;
-                    attended = deptStudents.filter((s: any) => {
-                      const st = (s.participation_status || s.status || '').toUpperCase();
-                      return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
-                    }).length;
-                  }
-                }
+            // 2. Check matrixRows or cachedStudents (if available) for dynamic calculation of attended count
+            if (attended === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+              const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
+              const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+              if (deptStudents.length > 0) {
+                if (total === 0) total = deptStudents.length;
+                attended = deptStudents.filter((s: any) => {
+                  const st = (s.participation_status || s.status || '').toUpperCase();
+                  return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                }).length;
+              }
+            }
 
-                // 3. Fallback for total student count from master roster
-                if (total === 0 && globalStudents.length > 0) {
-                  const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
-                  total = deptGlobalStudents.length;
-                }
+            // 3. Fallback for total student count from master roster
+            if (total === 0 && globalStudents.length > 0) {
+              const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
+              total = deptGlobalStudents.length;
+            }
 
-                // Exclude departments with 0 active students
-                if (total === 0) {
-                  return null;
-                }
+            // Exclude departments with 0 active students
+            if (total === 0) {
+              return null;
+            }
 
-                const participationPct = total > 0 ? Math.min(100, Math.round((attended / total) * 100)) : 0;
-                const isSelected = selectedDeptFilter === dept.code || normalizeDepartment(selectedDeptFilter) === deptNorm;
+            const participationPct = total > 0 ? Math.min(100, Math.round((attended / total) * 100)) : 0;
+            const isSelected = selectedDeptFilter === dept.code || normalizeDepartment(selectedDeptFilter) === deptNorm;
 
-                return (
-                  <div
-                    key={dept.code}
-                    onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.code)}
-                    role="button"
-                    title={`Click to filter by ${dept.name}`}
-                    className={`relative group p-3.5 sm:p-4 rounded-2xl glass-panel transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${
-                      isSelected 
-                        ? 'border-brand-500 ring-2 ring-brand-500/30 shadow-lg bg-brand-500/10' 
-                        : 'border border-slate-200/80 dark:border-navy-700/80 hover:border-brand-400 dark:hover:border-brand-500/50 hover:shadow-md'
-                    }`}
-                  >
-                    {/* Top gradient decorative line */}
-                    <div className={`absolute top-0 left-0 w-full h-1 ${color.bar}`} />
-                    
-                    <div className="relative z-10 space-y-2">
-                      {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${color.bg} border ${color.border} group-hover:scale-105 transition-transform`}>
-                            <Building2 className={`w-3.5 h-3.5 ${color.text}`} />
-                          </div>
-                          <span className={`text-xs font-black uppercase tracking-wider truncate ${color.text}`}>
-                            {dept.code}
-                          </span>
-                        </div>
-                        
-                        <div className="text-right shrink-0">
-                          <span className={`text-xl sm:text-2xl font-black font-mono leading-none ${color.stat}`}>{attended}</span>
-                          <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${color.label} block mt-0.5`}>Attended</span>
-                        </div>
+            return (
+              <div
+                key={dept.code}
+                onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.code)}
+                role="button"
+                title={`Click to filter by ${dept.name}`}
+                className={`relative group p-3.5 sm:p-4 rounded-2xl glass-panel transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden cursor-pointer active:scale-[0.98] ${
+                  isSelected 
+                    ? 'border-brand-500 ring-2 ring-brand-500/30 shadow-lg bg-brand-500/10' 
+                    : 'border border-slate-200/80 dark:border-navy-700/80 hover:border-brand-400 dark:hover:border-brand-500/50 hover:shadow-md'
+                }`}
+              >
+                {/* Top gradient decorative line */}
+                <div className={`absolute top-0 left-0 w-full h-1 ${color.bar}`} />
+                
+                <div className="relative z-10 space-y-2">
+                  {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${color.bg} border ${color.border} group-hover:scale-105 transition-transform`}>
+                        <Building2 className={`w-3.5 h-3.5 ${color.text}`} />
                       </div>
-
-                      {/* Middle Row: Department Name */}
-                      <div className="min-w-0">
-                        <h4 className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors" title={dept.name}>
-                          {dept.name}
-                        </h4>
-                      </div>
+                      <span className={`text-xs font-black uppercase tracking-wider truncate ${color.text}`}>
+                        {dept.code}
+                      </span>
                     </div>
-
-                    {/* Bottom Row: Progress & Active Student Count */}
-                    <div className="relative z-10 pt-2.5 mt-2.5 border-t border-slate-100 dark:border-white/[0.06]">
-                      <div className="flex justify-between items-center mb-1.5 text-[10px]">
-                        <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          Active
-                        </span>
-                        <div className="flex items-baseline gap-1">
-                          <span className="font-black text-emerald-500">{participationPct}%</span>
-                          <span className="text-[11px] font-bold font-mono text-slate-600 dark:text-slate-400">({attended}/{total})</span>
-                        </div>
-                      </div>
-                      
-                      {/* Participation Progress Bar */}
-                      <div className="w-full bg-slate-100 dark:bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${color.bar} transition-all duration-700 ease-out relative`}
-                          style={{ width: `${participationPct}%` }}
-                        >
-                          <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 animate-[shimmer_2s_infinite]" />
-                        </div>
-                      </div>
+                    
+                    <div className="text-right shrink-0">
+                      <span className={`text-xl sm:text-2xl font-black font-mono leading-none ${color.stat}`}>{attended}</span>
+                      <span className={`text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${color.label} block mt-0.5`}>Attended</span>
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* Middle Row: Department Name */}
+                  <div className="min-w-0">
+                    <h4 className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors" title={dept.name}>
+                      {dept.name}
+                    </h4>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Progress & Active Student Count */}
+                <div className="relative z-10 pt-2.5 mt-2.5 border-t border-slate-100 dark:border-white/[0.06]">
+                  <div className="flex justify-between items-center mb-1.5 text-[10px]">
+                    <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Active
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-black text-emerald-500">{participationPct}%</span>
+                      <span className="text-[11px] font-bold font-mono text-slate-600 dark:text-slate-400">({attended}/{total})</span>
+                    </div>
+                  </div>
+                  
+                  {/* Participation Progress Bar */}
+                  <div className="w-full bg-slate-100 dark:bg-white/[0.06] h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full ${color.bar} transition-all duration-700 ease-out relative`}
+                      style={{ width: `${participationPct}%` }}
+                    >
+                      <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 animate-[shimmer_2s_infinite]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }).filter(Boolean);
+
+          if (deptCards.length === 0) return null;
+
+          const isSingle = deptCards.length === 1;
+
+          return (
+            <div className={`grid ${isSingle ? 'grid-cols-1 sm:grid-cols-2 max-w-sm' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'} gap-3 sm:gap-4`}>
+              {deptCards}
             </div>
           );
         })()}
         {/* ACTIVE SCOPE BANNER - Dynamic & Clean: Only shows actively filtered dimensions */}
         {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL') && (
-          <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/80 dark:border-indigo-800/50 rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2.5 shadow-sm animate-fade-in -mb-1 mt-4">
-            <div className="flex items-center gap-2 flex-wrap text-xs">
-              <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+          <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/80 dark:border-indigo-800/50 rounded-2xl px-3.5 py-2 flex items-center justify-between gap-2.5 shadow-2xs animate-fade-in">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px] flex items-center gap-1.5 shrink-0">
                 <Filter className="w-3.5 h-3.5 text-indigo-500" />
                 Active Scope:
               </span>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 {selectedDeptFilter !== 'ALL' && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold shadow-2xs">
                     <span className="text-[10px] font-black uppercase text-indigo-400 tracking-wider">Dept:</span>
@@ -3745,7 +3751,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 setSelectedYearFilter('ALL');
                 setSelectedAttendanceFilter('ALL');
               }}
-              className="text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors cursor-pointer flex items-center gap-1.5 bg-white dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs hover:shadow-xs hover:border-rose-300"
+              className="shrink-0 text-[10px] font-black uppercase tracking-wider text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors cursor-pointer flex items-center gap-1.5 bg-white dark:bg-navy-950 px-2.5 py-1.5 rounded-xl border border-rose-200/80 dark:border-rose-900/50 shadow-2xs hover:shadow-xs hover:border-rose-300 active:scale-95 touch-manipulation"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Clear All</span>
@@ -3760,7 +3766,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           return (
             <div className="space-y-2.5">
               {/* Mobile-Only Toggle Bar (Hidden on Desktop 'lg:hidden') */}
-              <div className="flex items-center justify-between lg:hidden pt-0.5">
+              <div className="flex items-center justify-between gap-3 lg:hidden pt-0.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -3768,10 +3774,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowMobileStats(next);
                     try { localStorage.setItem('wc_show_mobile_stats', String(next)); } catch {}
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 touch-manipulation"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200 shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer active:scale-95 touch-manipulation shrink-0"
                 >
                   <Layers className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span>{showMobileStats ? 'Hide Overview Cards' : 'Show Overview Cards'}</span>
+                  <span>{showMobileStats ? 'Hide Overview Cards' : 'Overview Cards'}</span>
                   <span className="text-[10px] font-bold text-slate-400">({cardCount})</span>
                   {showMobileStats ? (
                     <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -3780,8 +3786,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   )}
                 </button>
                 {!showMobileStats && (
-                  <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
-                    {stats.attendedRows}/{stats.totalRows} Verified ({stats.totalParticipationPct}%)
+                  <span className="inline-flex items-center shrink-0 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                    <span>{stats.attendedRows}/{stats.totalRows} Verified ({stats.totalParticipationPct}%)</span>
                     {solverDelta && solverDelta.delta > 0 && (
                       <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-extrabold">
                         (+{solverDelta.delta})

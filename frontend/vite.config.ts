@@ -14,6 +14,7 @@ export default defineConfig({
       '@': path.resolve(rootDir, './src'),
       'react': path.resolve(rootDir, './node_modules/react'),
       'react-dom': path.resolve(rootDir, './node_modules/react-dom'),
+      'framer-motion': path.resolve(rootDir, './node_modules/framer-motion/dist/cjs/index.js'),
     },
     dedupe: ['react', 'react-dom'],
   },

@@ -78,7 +78,8 @@ data/contest_*
 Thumbs.db
 
 # Vite Build Output — kept in repo for Render Docker deployment
-# frontend/dist/
+!frontend/dist/
+!frontend/dist/**
 .firebase/
 
 # Scratch & Temporary Verification Files
