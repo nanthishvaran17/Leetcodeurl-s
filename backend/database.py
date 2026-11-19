@@ -82,23 +82,35 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"))
-    raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 30 if is_render else 25))
-    raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 30 if is_render else 25))
-    is_low_pool = os.environ.get("FORCE_LOW_POOL") == "true"
-    pool_size = raw_pool_size if is_low_pool else max(raw_pool_size, 20)
-    max_overflow = raw_max_overflow if is_low_pool else max(raw_max_overflow, 20)
+    use_nullpool = (
+        os.environ.get("USE_NULLPOOL", "").lower() in ("true", "1", "yes")
+        or ":6543" in db_url  # Standard PgBouncer transaction pooling port
+    )
 
+    if use_nullpool:
+        engine_kwargs.update({
+            "poolclass": NullPool,
+            "connect_args": pg_connect_args,
+        })
+    else:
+        raw_pool_size = int(os.environ.get("DB_POOL_SIZE", 30 if is_render else 25))
+        raw_max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", 30 if is_render else 25))
+        is_low_pool = os.environ.get("FORCE_LOW_POOL") == "true"
+        # If user explicitly specifies DB_POOL_SIZE, honor it; otherwise ensure safe floor
+        pool_size = raw_pool_size if (is_low_pool or "DB_POOL_SIZE" in os.environ) else max(raw_pool_size, 20)
+        max_overflow = raw_max_overflow if (is_low_pool or "DB_MAX_OVERFLOW" in os.environ) else max(raw_max_overflow, 20)
 
-    # Always use QueuePool for better performance and to avoid SSL connection drops from connection storms,
-    # but configure it to be resilient against idle timeouts on cloud environments.
-    engine_kwargs.update({
-        "pool_size": pool_size,
-        "max_overflow": max_overflow,
-        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)),
-        "pool_pre_ping": True,
-        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 60)), # Aggressive recycle to avoid idle drops
-        "connect_args": pg_connect_args
-    })
+        # Always use QueuePool for better performance and to avoid SSL connection drops from connection storms,
+        # but configure it to be resilient against idle timeouts on cloud environments.
+        engine_kwargs.update({
+            "poolclass": QueuePool,
+            "pool_size": pool_size,
+            "max_overflow": max_overflow,
+            "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", 30)),
+            "pool_pre_ping": True,
+            "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 60)), # Aggressive recycle to avoid idle drops
+            "connect_args": pg_connect_args
+        })
 else:
     engine_kwargs.update({
         "poolclass": QueuePool,

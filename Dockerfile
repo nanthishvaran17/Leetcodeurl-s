@@ -53,8 +53,8 @@ ENV PORT=8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Multi-worker high concurrency uvicorn server (optimised for 4+ CPUs, 8 workers default, scalable via WEB_CONCURRENCY)
-CMD ["sh", "-c", "exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-8} --proxy-headers --forwarded-allow-ips='*' --timeout-keep-alive 30 --backlog 16384"]
+# Multi-worker high concurrency uvicorn server (auto-detects CPU count: 4 CPU -> 8 workers, 8 CPU -> 16 workers)
+CMD ["sh", "-c", "CORES=$(nproc 2>/dev/null || echo 4); DEFAULT_WORKERS=$(( CORES * 2 )); WORKERS=${WEB_CONCURRENCY:-$DEFAULT_WORKERS}; echo \"Starting FastAPI with $WORKERS uvicorn workers on $CORES CPU cores...\"; exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WORKERS} --proxy-headers --forwarded-allow-ips='*' --timeout-keep-alive 30 --backlog 16384"]
 
 
 
