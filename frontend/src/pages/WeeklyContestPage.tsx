@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDefe
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
-import { Calendar, RefreshCw, AlertTriangle, AlertCircle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
+import { Calendar, RefreshCw, AlertTriangle, AlertCircle, Download, FileSpreadsheet, FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Filter, Trash2, Mail, Send, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp, Building2, Building, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward, Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
@@ -3352,254 +3352,315 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </AnimatePresence>
 
                   {/* Mobile Swipe-Up Bottom Sheet Drawer for Actions & Export */}
-                  {showExportMenu && isMobile && typeof document !== 'undefined' && createPortal(
-                    <div
-                      className="fixed inset-0 z-[999999] flex flex-col justify-end sm:hidden"
-                      role="dialog"
-                      aria-modal="true"
-                      aria-labelledby="mobile-actions-export-title"
-                    >
-                      {/* Dark Backdrop */}
-                      <div
-                        className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity duration-200"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setShowExportMenu(false);
-                        }}
-                      />
-
-                      {/* Bottom Sheet Drawer with Swipe / Drag */}
-                      <div
-                        className="relative z-10 w-full max-w-lg mx-auto bg-white dark:bg-[#091122] rounded-t-[32px] border-t border-x border-slate-200/90 dark:border-white/10 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up overflow-hidden pb-8"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {/* Interactive Top Swipe/Drag Pill */}
-                        <SwipeHandle
-                          onClose={() => {
-                            triggerHaptic('light');
-                            setShowExportMenu(false);
-                          }}
-                          className="pt-2.5 pb-1 shrink-0"
-                          pillClassName="bg-slate-300 dark:bg-white/20 hover:bg-slate-400 w-12 h-1.5"
-                        />
-
-                        {/* Mobile Header */}
-                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-white/10 shrink-0 bg-slate-50/70 dark:bg-white/[0.02]">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30 shadow-xs shrink-0">
-                              <Download className="w-4 h-4 stroke-[2.5]" />
-                            </div>
-                            <div className="min-w-0">
-                              <h4 id="mobile-actions-export-title" className="text-sm font-black text-slate-900 dark:text-white leading-tight">
-                                Actions &amp; Export Hub
-                              </h4>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                                Download reports or trigger notifications
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
+                  {typeof document !== 'undefined' && createPortal(
+                    <AnimatePresence>
+                      {isMobile && showExportMenu && (
+                        <div
+                          className="fixed inset-0 z-[100050] flex flex-col justify-end"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="mobile-actions-export-title"
+                        >
+                          {/* Backdrop */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
                             onClick={() => {
                               triggerHaptic('light');
                               setShowExportMenu(false);
                             }}
-                            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95 touch-manipulation cursor-pointer shrink-0 ml-2"
-                            aria-label="Close"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+                            className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm"
+                          />
 
-                        {/* Scrollable Action Content */}
-                        <div className="p-4 overflow-y-auto space-y-3 custom-scrollbar">
-                          {/* SECTION 1: ACTIONS */}
-                          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                            <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
-                              <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
-                              <span className="text-[11px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
-                                Primary Actions
-                              </span>
-                            </div>
-                            <div className="space-y-1.5">
+                          {/* Bottom Sheet Drawer */}
+                          <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                            className="relative z-10 w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.75rem,env(safe-area-inset-bottom,1.75rem))]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* Pull Handle */}
+                            <SwipeHandle
+                              onClose={() => {
+                                triggerHaptic('light');
+                                setShowExportMenu(false);
+                              }}
+                              className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0"
+                              pillClassName="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors"
+                            />
+
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-white/[0.08] shrink-0">
+                              <div className="flex items-center space-x-2.5 min-w-0">
+                                <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                                  <Download className="w-4 h-4 stroke-[2.5]" />
+                                </div>
+                                <div className="min-w-0">
+                                  <h3 id="mobile-actions-export-title" className="text-base font-black tracking-tight text-slate-900 dark:text-white font-display truncate">
+                                    Actions &amp; Export Hub
+                                  </h3>
+                                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                    Download reports or trigger notifications
+                                  </p>
+                                </div>
+                              </div>
+
                               <button
                                 type="button"
-                                onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
-                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800 active:scale-98"
+                                onClick={() => {
+                                  triggerHaptic('light');
+                                  setShowExportMenu(false);
+                                }}
+                                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer active:scale-95 shrink-0 ml-2"
+                                title="Close"
                               >
-                                <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
-                                    <Eye className="w-5 h-5 stroke-[2.5]" />
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            {/* Cards List */}
+                            <div className="overflow-y-auto px-3.5 py-3 space-y-2 flex-1 min-h-0 custom-scrollbar">
+                              {/* Primary Actions Group */}
+                              <div className="px-1 pt-1 pb-1 flex items-center space-x-2">
+                                <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                                <span className="text-[10px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
+                                  Primary Actions
+                                </span>
+                              </div>
+
+                              {/* Live Preview Card */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic('light');
+                                  setShowPreviewModal(true);
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-purple-50/80 dark:hover:bg-purple-950/40 hover:border-purple-300 dark:hover:border-purple-800"
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                                    <Eye className="w-4 h-4 stroke-[2.5]" />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
+                                        PREVIEW
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
                                       Live Preview
                                     </span>
-                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                      Review dataset & questions before export
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                      Review dataset &amp; questions before export
                                     </span>
                                   </div>
                                 </div>
-                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 shrink-0" />
+                                <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                               </button>
 
+                              {/* Send Email Report Card */}
                               <button
                                 type="button"
-                                onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
-                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 active:scale-98"
+                                onClick={() => {
+                                  triggerHaptic('light');
+                                  setShowEmailModal(true);
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-800"
                               >
-                                <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                                    <Mail className="w-5 h-5 stroke-[2.5]" />
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                                    <Mail className="w-4 h-4 stroke-[2.5]" />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
+                                        EMAIL
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
                                       Send Email Report
                                     </span>
-                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                                       Distribute summary report securely to faculty
                                     </span>
                                   </div>
                                 </div>
-                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+                                <ArrowUpRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                               </button>
-                            </div>
-                          </div>
 
-                          {/* SECTION 2: EXPORT FORMATS */}
-                          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                            <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
-                              <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                              <span className="text-[11px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
-                                Export Formats
-                              </span>
-                            </div>
-                            <div className="space-y-1.5">
+                              {/* Export Formats Group */}
+                              <div className="px-1 pt-2 pb-1 flex items-center space-x-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                                <span className="text-[10px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
+                                  Export Formats
+                                </span>
+                              </div>
+
+                              {/* Excel Card */}
                               <button
                                 type="button"
-                                onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
-                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 active:scale-98"
+                                onClick={() => {
+                                  triggerHaptic('selection');
+                                  downloadReportFile('excel');
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-emerald-50/80 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-800"
                               >
-                                <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
-                                    <FileSpreadsheet className="w-5 h-5 stroke-[2.5]" />
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                                        XLSX
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
                                       Excel Workbook
                                     </span>
-                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                      Raw structured data & roster matrix
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                      Raw structured data &amp; roster matrix
                                     </span>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-300 dark:border-emerald-700 shrink-0">
-                                  XLSX
-                                </span>
+                                <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               </button>
 
+                              {/* PDF Card */}
                               <button
                                 type="button"
-                                onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
-                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-800 active:scale-98"
+                                onClick={() => {
+                                  triggerHaptic('selection');
+                                  downloadReportFile('pdf');
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-rose-50/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-800"
                               >
-                                <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
-                                    <FileText className="w-5 h-5 stroke-[2.5]" />
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0">
+                                    <FileText className="w-4 h-4 stroke-[2.5]" />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
+                                        PDF
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
                                       PDF Document
                                     </span>
-                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                      Formatted print layout & analytics
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                      Formatted print layout &amp; analytics
                                     </span>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 group-hover:bg-rose-600 group-hover:text-white transition-colors border border-rose-300 dark:border-rose-700 shrink-0">
-                                  PDF
-                                </span>
+                                <Download className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                               </button>
 
+                              {/* Word Document Card */}
                               <button
                                 type="button"
-                                onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
-                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800 active:scale-98"
+                                onClick={() => {
+                                  triggerHaptic('selection');
+                                  downloadReportFile('word');
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-800"
                               >
-                                <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                                    <FileText className="w-5 h-5 stroke-[2.5]" />
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
+                                    <FileText className="w-4 h-4 stroke-[2.5]" />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                                        DOCX
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
                                       Word Document
                                     </span>
-                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                                       Editable text report with tables
                                     </span>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-300 dark:border-blue-700 shrink-0">
-                                  DOCX
-                                </span>
+                                <Download className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                               </button>
 
+                              {/* ZIP Archive Card */}
                               <button
                                 type="button"
-                                onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
-                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer border border-transparent hover:border-amber-200 dark:hover:border-amber-800 active:scale-98"
+                                onClick={() => {
+                                  triggerHaptic('selection');
+                                  downloadReportFile('zip');
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-amber-50/80 dark:hover:bg-amber-950/40 hover:border-amber-300 dark:hover:border-amber-800"
                               >
-                                <div className="flex items-center space-x-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
-                                    <FileArchive className="w-5 h-5 stroke-[2.5]" />
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+                                    <FileArchive className="w-4 h-4 stroke-[2.5]" />
                                   </div>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                                        ZIP
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
                                       ZIP Archive
                                     </span>
-                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                                       All formats bundled in one archive
                                     </span>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 group-hover:bg-amber-600 group-hover:text-white transition-colors border border-amber-300 dark:border-amber-700 shrink-0">
-                                  ZIP
-                                </span>
+                                <Download className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                              </button>
+
+                              {/* Print View Card */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic('light');
+                                  window.print();
+                                  setShowExportMenu(false);
+                                }}
+                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                  <div className="w-8 h-8 rounded-xl bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+                                    <Printer className="w-4 h-4 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+                                        PRINT
+                                      </span>
+                                    </div>
+                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                      Print View
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                      Quick browser print layout
+                                    </span>
+                                  </div>
+                                </div>
+                                <Printer className="w-4 h-4 text-slate-400 shrink-0" />
                               </button>
                             </div>
-                          </div>
-
-                          {/* SECTION 3: UTILITY */}
-                          <div>
-                            <div className="px-3 pt-1 pb-1 flex items-center space-x-2">
-                              <div className="w-2 h-2 rounded-full bg-slate-500" />
-                              <span className="text-[11px] font-black tracking-wider uppercase text-slate-600 dark:text-slate-400">
-                                Utility
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => { window.print(); setShowExportMenu(false); }}
-                              className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-98"
-                            >
-                              <div className="flex items-center space-x-3 min-w-0">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all shadow-sm">
-                                  <Printer className="w-5 h-5 stroke-[2.5]" />
-                                </div>
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-black text-slate-900 dark:text-white transition-colors">
-                                    Print View
-                                  </span>
-                                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                    Quick browser print layout
-                                  </span>
-                                </div>
-                              </div>
-                            </button>
-                          </div>
+                          </motion.div>
                         </div>
-                      </div>
-                    </div>,
+                      )}
+                    </AnimatePresence>,
                     document.body
                   )}
                 </div>
@@ -3861,272 +3922,487 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
 
             {/* Mobile Swipe-Up Bottom Sheet Drawer for Contest Filter Scope */}
-            {showMobileContestFilters && isMobile && typeof document !== 'undefined' && createPortal(
-              <div
-                className="fixed inset-0 z-[999999] flex flex-col justify-end sm:hidden"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="mobile-contest-filters-title"
-              >
-                {/* Backdrop */}
-                <div
-                  className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity duration-200"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setShowMobileContestFilters(false);
-                  }}
-                />
-
-                {/* Drawer Container */}
-                <div
-                  className="relative z-10 w-full max-w-lg mx-auto bg-white dark:bg-[#091122] rounded-t-[32px] border-t border-x border-slate-200/90 dark:border-white/10 shadow-2xl flex flex-col max-h-[88vh] animate-slide-up overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {/* Interactive Top Swipe/Drag Pill */}
-                  <SwipeHandle
-                    onClose={() => {
-                      triggerHaptic('light');
-                      setShowMobileContestFilters(false);
-                    }}
-                    className="pt-2.5 pb-1 shrink-0"
-                    pillClassName="bg-slate-300 dark:bg-white/20 hover:bg-slate-400 w-12 h-1.5"
-                  />
-
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-white/10 shrink-0 bg-slate-50/70 dark:bg-white/[0.02]">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30 shadow-xs shrink-0">
-                        <Filter className="w-4 h-4 stroke-[2.5]" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 id="mobile-contest-filters-title" className="text-sm font-black text-slate-900 dark:text-white leading-tight">
-                            Contest Filter Scope
-                          </h4>
-                          {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 shrink-0">
-                              {[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length} active
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                          Filter contest by campus, dept, year &amp; attendance
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
+            {typeof document !== 'undefined' && createPortal(
+              <AnimatePresence>
+                {isMobile && showMobileContestFilters && (
+                  <div
+                    className="fixed inset-0 z-[100050] flex flex-col justify-end"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="mobile-contest-filters-title"
+                  >
+                    {/* Backdrop */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
                       onClick={() => {
                         triggerHaptic('light');
                         setShowMobileContestFilters(false);
                       }}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95 touch-manipulation cursor-pointer shrink-0 ml-2"
-                      aria-label="Close filters"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                      className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm"
+                    />
 
-                  {/* Body */}
-                  <div className="p-4 overflow-y-auto space-y-4 custom-scrollbar">
-                    {/* College Campus Filter */}
-                    {canFilterCollege && (
-                      <div>
-                        <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5 text-teal-500" />
-                          <span>College Campus</span>
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[
-                            { id: 'ALL', label: 'All Colleges' },
-                            { id: 'NEC', label: 'NEC' },
-                            { id: 'NCT', label: 'NCT' }
-                          ].map(c => (
+                    {/* Bottom Sheet Drawer */}
+                    <motion.div
+                      initial={{ y: '100%' }}
+                      animate={{ y: 0 }}
+                      exit={{ y: '100%' }}
+                      transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                      className="relative z-10 w-full max-h-[88vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.75rem,env(safe-area-inset-bottom,1.75rem))]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Pull Handle */}
+                      <SwipeHandle
+                        onClose={() => {
+                          triggerHaptic('light');
+                          setShowMobileContestFilters(false);
+                        }}
+                        className="pt-2.5 pb-1 flex justify-center cursor-pointer shrink-0"
+                        pillClassName="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors"
+                      />
+
+                      {/* Header matching PreviousWeekContestPanel */}
+                      <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-white/[0.08] shrink-0">
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                            {filterDrawerTab === 'year' && <GraduationCap className="w-4 h-4" />}
+                            {filterDrawerTab === 'dept' && <Building2 className="w-4 h-4" />}
+                            {filterDrawerTab === 'college' && <Building className="w-4 h-4" />}
+                            {filterDrawerTab === 'att' && <CheckCircle2 className="w-4 h-4" />}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 id="mobile-contest-filters-title" className="text-base font-black tracking-tight text-slate-900 dark:text-white font-display truncate">
+                              {filterDrawerTab === 'year' && 'Select Academic Year'}
+                              {filterDrawerTab === 'dept' && 'Select Department'}
+                              {filterDrawerTab === 'college' && 'Select College Campus'}
+                              {filterDrawerTab === 'att' && 'Select Attendance Status'}
+                            </h3>
+                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                              {filterDrawerTab === 'year' && 'Filter students by study year and cohort'}
+                              {filterDrawerTab === 'dept' && 'Filter contest performance by department'}
+                              {filterDrawerTab === 'college' && 'Filter participants by institution campus'}
+                              {filterDrawerTab === 'att' && 'Filter by submission and attendance status'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2 shrink-0 ml-2">
+                          {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL')) && (
                             <button
-                              key={c.id}
                               type="button"
                               onClick={() => {
-                                triggerHaptic('selection');
-                                setSelectedCollegeFilter(c.id as any);
+                                triggerHaptic('light');
+                                setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
+                                setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
+                                setSelectedYearFilter('ALL');
+                                setSelectedAttendanceFilter('ALL');
                               }}
-                              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                selectedCollegeFilter === c.id
-                                  ? 'bg-teal-600 text-white border-transparent shadow-xs'
-                                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
-                              }`}
+                              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all active:scale-95 cursor-pointer"
                             >
-                              {c.label}
+                              <RotateCcw className="w-3 h-3" />
+                              <span>Reset</span>
                             </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Department Filter */}
-                    <div>
-                      <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5 text-indigo-500" />
-                          <span>Department</span>
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {contestDeptOptions.length} available
-                        </span>
-                      </label>
-                      <div className="relative mb-2">
-                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="text"
-                          value={deptSearchQuery}
-                          onChange={(e) => setDeptSearchQuery(e.target.value)}
-                          placeholder="Search department..."
-                          className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
-                        />
-                        {deptSearchQuery && (
+                          )}
                           <button
                             type="button"
-                            onClick={() => setDeptSearchQuery('')}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setShowMobileContestFilters(false);
+                            }}
+                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white transition-all cursor-pointer active:scale-95"
+                            title="Close"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Filter Category Segment Tabs */}
+                      <div className="flex items-center gap-1.5 px-3.5 py-2 border-b border-slate-100 dark:border-white/[0.08] overflow-x-auto no-scrollbar shrink-0 bg-slate-50/50 dark:bg-white/[0.02]">
+                        <button
+                          type="button"
+                          onClick={() => setFilterDrawerTab('year')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                            filterDrawerTab === 'year'
+                              ? 'bg-purple-600 text-white shadow-xs'
+                              : 'bg-white dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100'
+                          }`}
+                        >
+                          <GraduationCap className="w-3.5 h-3.5" />
+                          <span>Year</span>
+                          {selectedYearFilter !== 'ALL' && (
+                            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setFilterDrawerTab('dept')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                            filterDrawerTab === 'dept'
+                              ? 'bg-purple-600 text-white shadow-xs'
+                              : 'bg-white dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100'
+                          }`}
+                        >
+                          <Building2 className="w-3.5 h-3.5" />
+                          <span>Dept</span>
+                          {selectedDeptFilter !== 'ALL' && (
+                            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                          )}
+                        </button>
+
+                        {canFilterCollege && (
+                          <button
+                            type="button"
+                            onClick={() => setFilterDrawerTab('college')}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                              filterDrawerTab === 'college'
+                                ? 'bg-purple-600 text-white shadow-xs'
+                                : 'bg-white dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100'
+                            }`}
+                          >
+                            <Building className="w-3.5 h-3.5" />
+                            <span>Campus</span>
+                            {selectedCollegeFilter !== 'ALL' && (
+                              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                            )}
                           </button>
                         )}
-                      </div>
-                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 p-1 rounded-2xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200 dark:border-navy-800">
-                        {contestDeptOptions
-                          .filter(d => !deptSearchQuery || d.label.toLowerCase().includes(deptSearchQuery.toLowerCase()) || d.value.toLowerCase().includes(deptSearchQuery.toLowerCase()))
-                          .map(dept => {
-                            const isSelected = selectedDeptFilter === dept.value;
-                            return (
-                              <button
-                                key={dept.value}
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('selection');
-                                  setSelectedDeptFilter(dept.value);
-                                }}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all border text-left ${
-                                  isSelected
-                                    ? 'bg-indigo-600 text-white border-transparent shadow-xs'
-                                    : 'bg-white dark:bg-navy-900 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-navy-700/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
-                                }`}
-                              >
-                                <span className="truncate">{dept.label}</span>
-                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5] shrink-0 ml-1.5" />}
-                              </button>
-                            );
-                          })}
-                      </div>
-                    </div>
 
-                    {/* Academic Year Filter */}
-                    <div>
-                      <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                        <GraduationCap className="w-3.5 h-3.5 text-brand-500" />
-                        <span>Academic Year</span>
-                      </label>
-                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                        {[
-                          { id: 'ALL', label: 'All Years' },
-                          { id: 'I', label: 'I Year' },
-                          { id: 'II', label: 'II Year' },
-                          { id: 'III', label: 'III Year' },
-                          { id: 'IV', label: 'IV Year' }
-                        ].map(yr => {
-                          const normalizedSelected = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
-                          const isSelected = normalizedSelected === yr.id;
-                          return (
-                            <button
-                              key={yr.id}
-                              type="button"
-                              onClick={() => {
-                                triggerHaptic('selection');
-                                setSelectedYearFilter(yr.id);
-                              }}
-                              className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center ${
-                                isSelected
-                                  ? 'bg-brand-600 text-white border-transparent shadow-xs'
-                                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
-                              }`}
-                            >
-                              {yr.label}
-                            </button>
-                          );
-                        })}
+                        <button
+                          type="button"
+                          onClick={() => setFilterDrawerTab('att')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                            filterDrawerTab === 'att'
+                              ? 'bg-purple-600 text-white shadow-xs'
+                              : 'bg-white dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100'
+                          }`}
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Status</span>
+                          {selectedAttendanceFilter !== 'ALL' && (
+                            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                          )}
+                        </button>
                       </div>
-                    </div>
 
-                    {/* Attendance Status Filter */}
-                    <div>
-                      <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Attendance Status</span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { id: 'ALL', label: 'All Statuses' },
-                          { id: 'ALL_ATTENDED', label: 'Participated' },
-                          { id: 'PUBLIC_ATTENDED', label: 'Public Attended' },
-                          { id: 'VIRTUAL_ATTENDED', label: 'Virtual Attended' },
-                          { id: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended' },
-                          { id: 'DATA_ERROR', label: 'Data Errors' }
-                        ].map(att => {
-                          const isSelected = selectedAttendanceFilter === att.id;
-                          return (
-                            <button
-                              key={att.id}
-                              type="button"
-                              onClick={() => {
-                                triggerHaptic('selection');
-                                setSelectedAttendanceFilter(att.id);
-                              }}
-                              className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-left truncate ${
-                                isSelected
-                                  ? 'bg-emerald-600 text-white border-transparent shadow-xs'
-                                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
-                              }`}
-                            >
-                              {att.label}
-                            </button>
-                          );
-                        })}
+                      {/* Options Container */}
+                      <div className="overflow-y-auto px-3.5 py-3 space-y-2 flex-1 min-h-0 custom-scrollbar">
+                        {/* TAB 1: ACADEMIC YEAR (Matching User's Reference Screenshot Exactly) */}
+                        {filterDrawerTab === 'year' && (
+                          <div className="space-y-1.5">
+                            {[
+                              { value: 'ALL', label: 'All Academic Years', desc: 'All batches and cohorts', code: 'ALL', color: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' },
+                              { value: 'I', label: 'I Year (First Year)', desc: 'Batch 2026 – 2030', code: 'I', color: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800' },
+                              { value: 'II', label: 'II Year (Second Year)', desc: 'Batch 2025 – 2029', code: 'II', color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800' },
+                              { value: 'III', label: 'III Year (Third Year)', desc: 'Batch 2024 – 2028', code: 'III', color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' },
+                              { value: 'IV', label: 'IV Year (Final Year)', desc: 'Batch 2023 – 2027', code: 'IV', color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800' },
+                            ].map((opt) => {
+                              const normalizedSelected = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
+                              const isSelected = normalizedSelected === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    setSelectedYearFilter(opt.value);
+                                  }}
+                                  className={`w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-purple-50/90 dark:bg-purple-950/60 border-2 border-purple-500 dark:border-purple-500/80 shadow-xs'
+                                      : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                      isSelected
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                                    }`}>
+                                      <GraduationCap className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${opt.color}`}>
+                                          {opt.code}
+                                        </span>
+                                        {isSelected && (
+                                          <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                            Active
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className={`text-xs mt-0.5 font-bold leading-snug ${
+                                        isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                      }`}>
+                                        {opt.label}
+                                      </span>
+                                      {opt.desc && (
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                          {opt.desc}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* TAB 2: DEPARTMENT */}
+                        {filterDrawerTab === 'dept' && (
+                          <div className="space-y-2">
+                            <div className="relative">
+                              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                              <input
+                                type="text"
+                                value={deptSearchQuery}
+                                onChange={(e) => setDeptSearchQuery(e.target.value)}
+                                placeholder="Search department name or code..."
+                                className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500"
+                              />
+                              {deptSearchQuery && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDeptSearchQuery('')}
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="space-y-1.5">
+                              {contestDeptOptions
+                                .filter(d => !deptSearchQuery || d.label.toLowerCase().includes(deptSearchQuery.toLowerCase()) || d.value.toLowerCase().includes(deptSearchQuery.toLowerCase()))
+                                .map(dept => {
+                                  const isSelected = selectedDeptFilter === dept.value;
+                                  return (
+                                    <button
+                                      key={dept.value}
+                                      type="button"
+                                      onClick={() => {
+                                        triggerHaptic('light');
+                                        setSelectedDeptFilter(dept.value);
+                                      }}
+                                      className={`w-full min-h-[50px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                                        isSelected
+                                          ? 'bg-purple-50/90 dark:bg-purple-950/60 border-2 border-purple-500 dark:border-purple-500/80 shadow-xs'
+                                          : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                          isSelected
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                                        }`}>
+                                          <Building2 className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
+                                              {dept.pillText || (dept.value === 'ALL' ? 'ALL' : dept.value)}
+                                            </span>
+                                            {isSelected && (
+                                              <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                                Active
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className={`text-xs mt-0.5 font-bold leading-snug ${
+                                            isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                          }`}>
+                                            {dept.label}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {isSelected && (
+                                        <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* TAB 3: COLLEGE CAMPUS */}
+                        {filterDrawerTab === 'college' && canFilterCollege && (
+                          <div className="space-y-1.5">
+                            {[
+                              { id: 'ALL', label: 'All College Campuses', desc: 'Both NEC and NCT combined', code: 'ALL' },
+                              { id: 'NEC', label: 'Nandha Engineering College', desc: 'Main Campus (Autonomous)', code: 'NEC' },
+                              { id: 'NCT', label: 'Nandha College of Technology', desc: 'Technology Campus', code: 'NCT' }
+                            ].map(c => {
+                              const isSelected = selectedCollegeFilter === c.id;
+                              return (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    setSelectedCollegeFilter(c.id as any);
+                                  }}
+                                  className={`w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-purple-50/90 dark:bg-purple-950/60 border-2 border-purple-500 dark:border-purple-500/80 shadow-xs'
+                                      : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                      isSelected
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                                    }`}>
+                                      <Building className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800">
+                                          {c.code}
+                                        </span>
+                                        {isSelected && (
+                                          <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                            Active
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className={`text-xs mt-0.5 font-bold leading-snug ${
+                                        isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                      }`}>
+                                        {c.label}
+                                      </span>
+                                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                        {c.desc}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* TAB 4: ATTENDANCE STATUS */}
+                        {filterDrawerTab === 'att' && (
+                          <div className="space-y-1.5">
+                            {[
+                              { id: 'ALL', label: 'All Attendance Statuses', desc: 'All registered contest records', code: 'ALL' },
+                              { id: 'ALL_ATTENDED', label: 'Participated', desc: 'Solved at least 1 problem', code: 'PART' },
+                              { id: 'PUBLIC_ATTENDED', label: 'Public Attended', desc: 'Ranked in official public contest', code: 'PUB' },
+                              { id: 'VIRTUAL_ATTENDED', label: 'Virtual Attended', desc: 'Participated in virtual contest window', code: 'VIRT' },
+                              { id: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended', desc: 'Absent from contest session', code: 'ABS' },
+                              { id: 'DATA_ERROR', label: 'Data Errors', desc: 'Handshake or username resolution issues', code: 'ERR' }
+                            ].map(att => {
+                              const isSelected = selectedAttendanceFilter === att.id;
+                              return (
+                                <button
+                                  key={att.id}
+                                  type="button"
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    setSelectedAttendanceFilter(att.id);
+                                  }}
+                                  className={`w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-purple-50/90 dark:bg-purple-950/60 border-2 border-purple-500 dark:border-purple-500/80 shadow-xs'
+                                      : 'bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                      isSelected
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                                    }`}>
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                                          {att.code}
+                                        </span>
+                                        {isSelected && (
+                                          <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                            Active
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className={`text-xs mt-0.5 font-bold leading-snug ${
+                                        isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                      }`}>
+                                        {att.label}
+                                      </span>
+                                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                                        {att.desc}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
+
+                      {/* Sticky Footer Actions */}
+                      <div className="p-3.5 border-t border-slate-100 dark:border-white/[0.08] bg-slate-50/70 dark:bg-white/[0.02] flex items-center gap-2.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('warning');
+                            setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
+                            setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
+                            setSelectedYearFilter('ALL');
+                            setSelectedAttendanceFilter('ALL');
+                            setSearchTerm('');
+                            setDebouncedSearchTerm('');
+                            setDeptSearchQuery('');
+                          }}
+                          className="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Reset</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic('success');
+                            setShowMobileContestFilters(false);
+                          }}
+                          className="flex-2 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Check className="w-4 h-4 stroke-[2.5]" />
+                          <span>Apply Filters</span>
+                        </button>
+                      </div>
+                    </motion.div>
                   </div>
-
-                  {/* Footer Actions */}
-                  <div className="p-4 border-t border-slate-100 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('warning');
-                        setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
-                        setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
-                        setSelectedYearFilter('ALL');
-                        setSelectedAttendanceFilter('ALL');
-                        setSearchTerm('');
-                        setDebouncedSearchTerm('');
-                        setDeptSearchQuery('');
-                      }}
-                      className="flex-1 py-3 px-4 rounded-xl border border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 text-xs font-black transition-all flex items-center justify-center gap-1.5"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
-                      <span>Reset</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('success');
-                        setShowMobileContestFilters(false);
-                      }}
-                      className="flex-2 py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
-                    >
-                      <Check className="w-4 h-4 stroke-[2.5]" />
-                      <span>Apply Filters</span>
-                    </button>
-                  </div>
-                </div>
-              </div>,
+                )}
+              </AnimatePresence>,
               document.body
             )}
           </div>
