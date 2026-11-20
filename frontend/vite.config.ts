@@ -30,7 +30,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://127.0.0.1:8001',
+        target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
@@ -46,7 +46,7 @@ export default defineConfig({
         },
       },
       '/ws': {
-        target: process.env.VITE_API_URL || 'http://127.0.0.1:8001',
+        target: process.env.VITE_API_URL || 'http://127.0.0.1:8000',
         ws: true,
         changeOrigin: true,
         secure: false,

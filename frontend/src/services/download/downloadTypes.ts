@@ -45,6 +45,7 @@ export interface DownloadState {
   mimeType: string;
   status: DownloadStatus;
   error?: string;
+  technicalDetail?: string;
   preparedUrl?: string;
   startTime?: number;
   progress?: number;
