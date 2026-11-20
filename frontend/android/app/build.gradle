@@ -7,7 +7,7 @@ android {
         applicationId "org.nandhaengg.leetcodesync"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 102
+        versionCode 104
         versionName "4.6.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -29,6 +29,8 @@ android {
             keyPassword System.getenv("KEYSTORE_KEY_PASSWORD") ?: project.findProperty("KEYSTORE_KEY_PASSWORD") ?: 'NEC@2024secure'
             v1SigningEnabled true
             v2SigningEnabled true
+            enableV3Signing true
+            enableV4Signing true
         }
     }
     buildTypes {
@@ -44,7 +46,6 @@ android {
             // Ensure no debug configuration leaks into release
             debuggable false
             jniDebuggable false
-            renderscriptDebuggable false
             zipAlignEnabled true
         }
     }

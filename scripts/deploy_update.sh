@@ -54,6 +54,7 @@ cd frontend
 if [ -f "package-lock.json" ]; then
     npm install --no-audit --no-fund --quiet
 fi
+export NODE_OPTIONS="--max-old-space-size=2048"
 npm run build
 cd ..
 
