@@ -1488,7 +1488,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               fetchPreviousWeekData(true);
             }}
             disabled={syncing}
-            className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 sm:gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation whitespace-nowrap"
+            className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-black shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 sm:gap-2 disabled:opacity-50 cursor-pointer active:scale-95 touch-manipulation whitespace-nowrap shadow-brand-500/20"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             <span>
@@ -2489,7 +2489,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 {/* Header: Rank + Student Name + Status Pill */}
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-50 to-brand-50 dark:from-navy-800 dark:to-indigo-950 text-indigo-700 dark:text-indigo-300 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-indigo-200/80 dark:border-indigo-800 shadow-2xs">
+                    <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100/60 dark:from-navy-800 dark:to-brand-950 text-brand-700 dark:text-brand-300 font-mono font-black text-xs flex items-center justify-center shrink-0 border border-brand-200/80 dark:border-brand-800 shadow-2xs">
                       #{rankIndex}
                     </span>
                     <div className="min-w-0 flex-1">

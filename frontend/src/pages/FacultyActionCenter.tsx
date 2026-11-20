@@ -1236,8 +1236,8 @@ const UpdateModal: React.FC<{
           </div>
 
           {/* Signal & Recommendation Banner */}
-          <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-500/10 via-brand-500/5 to-purple-500/10 dark:from-indigo-950/50 dark:via-navy-900/60 dark:to-purple-950/50 border-b border-indigo-100 dark:border-navy-700/80 flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0">
+          <div className="px-6 py-3.5 bg-gradient-to-r from-brand-500/10 to-transparent dark:from-brand-950/50 dark:to-transparent border-b border-brand-500/20 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-brand-500/20 text-brand-600 dark:text-brand-400 mt-0.5 shrink-0">
               <Target size={16} />
             </div>
             <div className="space-y-0.5 flex-1 min-w-0">

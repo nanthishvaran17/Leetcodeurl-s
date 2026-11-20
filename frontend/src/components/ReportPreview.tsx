@@ -3667,7 +3667,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                           title={fKey ? `Click to filter roster by ${formatMetricTitle(key)}` : undefined}
                           className={`relative overflow-hidden p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left print:bg-white print:border-slate-300 print:shadow-none print:break-inside-avoid ${fKey ? 'cursor-pointer hover:-translate-y-1 hover:shadow-xl active:scale-[0.98]' : ''
                             } ${isSelected
-                              ? 'bg-gradient-to-br from-indigo-500/20 via-brand-500/15 to-transparent dark:from-indigo-500/30 dark:via-brand-500/20 dark:to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/40 shadow-xl shadow-brand-500/15'
+                              ? 'bg-gradient-to-br from-brand-500/20 to-transparent dark:from-brand-500/30 dark:to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/40 shadow-xl shadow-brand-500/15'
                               : `bg-gradient-to-br ${lightGradient} ${darkGradient} ${borderColor} shadow-md shadow-slate-200/50 dark:shadow-black/40`
                             } backdrop-blur-xl group`}
                         >

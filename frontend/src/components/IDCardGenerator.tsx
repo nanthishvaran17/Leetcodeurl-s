@@ -899,7 +899,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
               {/* Student Profile Row */}
               <div className="relative flex items-center gap-3.5 pt-0.5">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 via-brand-500 to-indigo-600 p-0.5 shadow-lg shadow-brand-500/25 shrink-0 aspect-square flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 p-0.5 shadow-lg shadow-brand-500/25 shrink-0 aspect-square flex items-center justify-center">
                   <div className="w-full h-full rounded-full bg-[#0E1A30] flex items-center justify-center text-xl font-black text-white">
                     {studentName.charAt(0).toUpperCase()}
                   </div>

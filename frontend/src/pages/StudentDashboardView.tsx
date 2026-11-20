@@ -266,7 +266,7 @@ export const StudentDashboardView: React.FC = () => {
                 {studentData.badge_list.map((badge, idx) => (
                   <span
                     key={idx}
-                    className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-brand-500/10 via-brand-500/20 to-indigo-500/10 border border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-black shadow-sm"
+                    className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-brand-500/10 to-brand-500/20 border border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-black shadow-sm"
                   >
                     {badge}
                   </span>

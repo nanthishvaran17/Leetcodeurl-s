@@ -1371,7 +1371,7 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                                     href={contestSlug ? `https://leetcode.com/contest/${contestSlug}/ranking/?region=global_v2` : 'https://leetcode.com/contest/'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-sm transition-all text-center"
+                                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold text-xs shadow-sm transition-all text-center"
                                   >
                                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                                     <span>View on Contest Leaderboard (Code Popup) ↗</span>

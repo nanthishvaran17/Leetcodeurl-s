@@ -2338,7 +2338,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-2 sm:p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/20 text-rose-400 hover:text-rose-300 transition-colors shadow-xs cursor-pointer shrink-0"
+                  className="p-2 sm:p-2 bg-rose-500/15 hover:bg-rose-500/25 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-200 transition-colors shadow-xs cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
                   <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -3001,7 +3001,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         <button
           onClick={() => startTransition(() => setActiveTab('previous_week'))}
           className={`w-full flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-[0.99] ${activeTab === 'previous_week'
-              ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
+              ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md shadow-brand-500/25'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-navy-900/60'
             }`}
         >
@@ -3013,7 +3013,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         <button
           onClick={() => startTransition(() => setActiveTab('matrix'))}
           className={`w-full flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs font-black transition-all cursor-pointer active:scale-[0.99] ${activeTab === 'matrix'
-              ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
+              ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md shadow-brand-500/25'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-navy-900/60'
             }`}
         >
@@ -3074,13 +3074,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     onClick={() => setShowExportMenu(prev => !prev)}
                     disabled={!selectedSessionId || isSyncing}
                     className={`group relative w-full sm:w-auto flex items-center justify-center space-x-2.5 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border ${showExportMenu
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-[0_0_20px_rgba(79,70,229,0.3)] ring-2 ring-indigo-500/30 ring-offset-1 dark:ring-offset-navy-900'
-                        : 'bg-white dark:bg-navy-900/80 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 dark:hover:shadow-indigo-900/20'
+                        ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white border-transparent shadow-[0_0_20px_rgba(var(--color-brand-500)/0.3)] ring-2 ring-brand-500/30 ring-offset-1 dark:ring-offset-navy-900'
+                        : 'bg-white dark:bg-navy-900/80 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500 hover:shadow-lg hover:shadow-brand-500/10'
                       }`}
                   >
                     {/* Subtle animated background gradient on hover (only when not active) */}
                     {!showExportMenu && (
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-purple-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-brand-500/0 via-brand-500/10 to-brand-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     )}
 
                     <div className={`p-1.5 rounded-xl transition-all duration-300 relative z-10 ${showExportMenu

@@ -1127,7 +1127,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                     key={student.id}
                     className={`relative overflow-hidden rounded-2xl border transition-all duration-200 p-3 sm:p-3.5 space-y-2.5 shadow-sm ${
                       isSelected
-                        ? 'bg-gradient-to-br from-indigo-500/10 via-brand-500/5 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25'
+                        ? 'bg-gradient-to-br from-brand-500/10 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25'
                         : isCritical
                         ? 'bg-white dark:bg-slate-900/90 border-rose-200/80 dark:border-rose-500/25'
                         : isWarning

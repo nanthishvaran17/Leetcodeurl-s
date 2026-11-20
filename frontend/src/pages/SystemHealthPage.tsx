@@ -2518,9 +2518,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           )}
 
           {copilotAnswer && !copilotLoading && (
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-brand-500/5 to-transparent border border-indigo-500/20 space-y-4 animate-fade-in">
-              <div className="flex items-center justify-between border-b border-indigo-500/10 pb-2">
-                <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-brand-500/10 to-transparent border border-brand-500/20 space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between border-b border-brand-500/10 pb-2">
+                <span className="text-xs font-black text-brand-600 dark:text-brand-400">
                   Question: {copilotAnswer.question}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600">
