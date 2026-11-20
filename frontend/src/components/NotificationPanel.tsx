@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, TrendingUp, Users, Award, Activity, Volume2, Play } from 'lucide-react';
+import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, TrendingUp, Users, Award, Activity, Volume2, Play, Search } from 'lucide-react';
 import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
@@ -228,6 +228,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     markAllAsRead,
     deleteNotification,
     archiveNotification,
+    clearAllNotifications,
     registerFCMDeviceToken,
     refreshNotifications
   } = useGlobalNotifications();
@@ -240,9 +241,11 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const [isEnablingPush, setIsEnablingPush] = useState(false);
   const [isSendingTestPush, setIsSendingTestPush] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterReadStatus, setFilterReadStatus] = useState<'all' | 'unread'>('all');
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
   const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
-
 
   const confirmDeleteNotification = async (notification: Notification, onCancel?: () => void) => {
     const rawTitle = (notification.title || '').trim();
@@ -257,18 +260,52 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
       variant: 'danger',
     });
     if (confirmed) {
-      await deleteNotification(notification.id);
-      notify.success('Deleted', 'Notification removed', { duration: 2000 });
+      try {
+        await deleteNotification(notification.id);
+        notify.success('Deleted', 'Notification removed', { duration: 2000 });
+      } catch (err: any) {
+        notify.error('Delete Failed', err.message || 'Unable to delete notification.', { category: 'NOTIFICATION' });
+        if (onCancel) onCancel();
+      }
     } else {
       if (onCancel) onCancel();
     }
   };
 
   const confirmArchiveNotification = async (notification: Notification, onFinish?: () => void) => {
-    // Instant, smooth archive with toast notification
-    await archiveNotification(notification.id);
-    notify.info('Archived', 'Moved to Archived tab', { duration: 2200 });
-    if (onFinish) onFinish();
+    try {
+      await archiveNotification(notification.id);
+      notify.info('Archived', 'Moved to Archived tab', { duration: 2200 });
+      if (onFinish) onFinish();
+    } catch (err: any) {
+      notify.error('Archive Failed', err.message || 'Unable to archive notification.', { category: 'NOTIFICATION' });
+    }
+  };
+
+  const handleClearAll = async () => {
+    const activeItems = allNotifications.filter(n => !n.isArchived);
+    if (activeItems.length === 0) return;
+
+    const confirmed = await confirmAction({
+      title: 'Clear All Notifications?',
+      message: `Are you sure you want to permanently clear all ${activeItems.length} active notifications? Archived items will remain safely stored.`,
+      confirmLabel: 'Clear All',
+      cancelLabel: 'Cancel',
+      category: 'NOTIFICATION',
+      variant: 'danger',
+    });
+
+    if (confirmed) {
+      setIsClearingAll(true);
+      try {
+        await clearAllNotifications();
+        notify.success('Inbox Cleared', 'All active notifications have been removed.', { category: 'NOTIFICATION', duration: 2500 });
+      } catch (err: any) {
+        notify.error('Clear Failed', err.message || 'Failed to clear notifications.', { category: 'NOTIFICATION' });
+      } finally {
+        setIsClearingAll(false);
+      }
+    }
   };
 
   const checkInitialPushPermission = async () => {
@@ -556,6 +593,20 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     });
   };
 
+  const displayedNotifications = useMemo(() => {
+    return notifications.filter((n) => {
+      if (filterReadStatus === 'unread' && n.isRead) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const titleMatch = (n.title || '').toLowerCase().includes(q);
+        const bodyMatch = (n.message || n.body || '').toLowerCase().includes(q);
+        const catMatch = (n.category || '').toLowerCase().includes(q);
+        if (!titleMatch && !bodyMatch && !catMatch) return false;
+      }
+      return true;
+    });
+  }, [notifications, filterReadStatus, searchQuery]);
+
   if (typeof document === 'undefined' || !document.body) return null;
 
   return createPortal(
@@ -607,27 +658,96 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-
+                  {allNotifications.some(n => !n.isArchived) && (
+                    <button
+                      type="button"
+                      onClick={() => void handleClearAll()}
+                      disabled={isClearingAll}
+                      className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center shrink-0 disabled:opacity-40"
+                      title="Clear all active notifications"
+                      aria-label="Clear all notifications"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => void handleRefreshNotifications()}
                     disabled={isRefreshing}
-                    className="p-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/60 dark:hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center disabled:opacity-50 disabled:cursor-wait"
+                    className="p-2 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-200/60 dark:hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center disabled:opacity-50 disabled:cursor-wait"
                     title="Refresh notifications"
                     aria-label="Refresh notifications"
                   >
-                    <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                    <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
                   </button>
                   {unreadCount > 0 && (
                     <button
                       type="button"
                       onClick={markAllAsRead}
-                      className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[36px] px-2 rounded-xl hover:bg-brand-50 dark:hover:bg-white/[0.08] shrink-0"
+                      className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[36px] px-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-white/[0.08] shrink-0"
                     >
-                      <Check size={15} />
+                      <Check size={14} />
                       <span className="hidden xs:inline">Mark all</span>
                     </button>
                   )}
+                </div>
+              </div>
+
+              {/* Instant Search & Unread Filter Bar */}
+              <div className="px-3 sm:px-4 py-2 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-100/60 dark:bg-white/[0.02] flex items-center gap-2 shrink-0">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search notifications..."
+                    className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-white dark:bg-white/[0.06] text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 border border-slate-200/80 dark:border-white/[0.08] focus:outline-hidden focus:ring-1 focus:ring-brand-500/40"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-0.5 cursor-pointer"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center p-0.5 rounded-xl bg-slate-200/80 dark:bg-white/[0.06] border border-slate-300/40 dark:border-white/[0.06] shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setFilterReadStatus('all')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                      filterReadStatus === 'all'
+                        ? 'bg-white dark:bg-brand-500 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFilterReadStatus('unread')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                      filterReadStatus === 'unread'
+                        ? 'bg-white dark:bg-brand-500 text-slate-900 dark:text-white shadow-xs'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <span>Unread</span>
+                    {unreadCount > 0 && (
+                      <span className={`px-1 py-0.2 rounded-full text-[9px] font-black ${
+                        filterReadStatus === 'unread'
+                          ? 'bg-brand-500/20 text-brand-700 dark:bg-white/25 dark:text-white'
+                          : 'bg-brand-500/15 text-brand-600 dark:text-brand-400'
+                      }`}>
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -705,19 +825,25 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">{error}</p>
                     </div>
                   </div>
-                ) : notifications.length === 0 ? (
+                ) : displayedNotifications.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center my-auto min-h-[260px] animate-fade-in">
                     <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] flex items-center justify-center mb-4 text-slate-400 dark:text-slate-400 shadow-sm">
                       <Bell size={28} />
                     </div>
-                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-white mb-1.5">No notifications</h4>
+                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-white mb-1.5">
+                      {searchQuery ? 'No matching notifications' : 'No notifications'}
+                    </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed">
-                      Notifications for your selected category will appear here.
+                      {searchQuery
+                        ? `No notifications found matching "${searchQuery}".`
+                        : filterReadStatus === 'unread'
+                        ? 'All caught up! No unread notifications.'
+                        : 'Notifications for your selected category will appear here.'}
                     </p>
                   </div>
                 ) : (
                   <div className="p-3 sm:p-4 space-y-3 bg-slate-50 dark:bg-[#070A12] pb-6">
-                    {notifications.map((n) => (
+                    {displayedNotifications.map((n) => (
                       <NotificationItem
                         key={n.id}
                         n={n}

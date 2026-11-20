@@ -526,6 +526,33 @@ def mark_all_notifications_read_endpoint(
     return {"success": True, "marked_count": len(records)}
 
 
+@router.delete("/clear-all")
+def clear_all_notifications_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Permanently clears all active (unarchived) notifications for the current user."""
+    user_id_variants = get_user_id_variants(current_user)
+    records = db.query(NotificationRecord).filter(
+        and_(
+            NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+            or_(
+                NotificationRecord.is_archived == False,
+                NotificationRecord.is_archived == None,
+                NotificationRecord.is_archived.is_(None)
+            )
+        )
+    ).all()
+
+    deleted_count = 0
+    for r in records:
+        db.delete(r)
+        deleted_count += 1
+
+    db.commit()
+    return {"success": True, "deleted_count": deleted_count}
+
+
 @router.delete("/{notification_id}")
 def delete_notification_endpoint(
     notification_id: str,

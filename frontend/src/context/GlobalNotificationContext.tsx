@@ -65,6 +65,7 @@ interface GlobalNotificationContextType {
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
   archiveNotification: (id: string) => Promise<void>;
+  clearAllNotifications: () => Promise<void>;
   registerFCMDeviceToken: (token: string, platform?: string) => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
 }
@@ -605,6 +606,27 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     }
   }, [allNotifications, token]);
 
+  const clearAllNotifications = useCallback(async () => {
+    // Preserve archived notifications, clear all active ones
+    setAllNotifications(prev => prev.filter(n => n.isArchived));
+    setUnreadCount(0);
+
+    if (token) {
+      try {
+        const res = await fetch(getApiUrl('/notifications/clear-all'), {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          throw new Error('Server returned error while clearing notifications');
+        }
+      } catch (err) {
+        console.warn("REST API clear all notice:", err);
+        throw err;
+      }
+    }
+  }, [token]);
+
   const notifications = React.useMemo(() => {
     if (selectedCategory === 'archived') {
       return allNotifications.filter(n => n.isArchived);
@@ -631,6 +653,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     markAllAsRead,
     deleteNotification,
     archiveNotification,
+    clearAllNotifications,
     registerFCMDeviceToken,
     refreshNotifications: fetchFromBackendAPI
   // eslint-disable-next-line react-hooks/exhaustive-deps
