@@ -1511,6 +1511,8 @@ class UpdateProfileRequest(BaseModel):
     scopus_id: Optional[str] = None
     leetcode_handle: Optional[str] = None
     card_theme: Optional[str] = None
+    accent_color: Optional[str] = None
+    theme: Optional[str] = None
 
 
 @router.get("/me")
@@ -1658,7 +1660,8 @@ def update_user_profile(
         "office_location", "specialization", "highest_degree", "experience_years",
         "courses_taught", "faculty_bio", "languages", "consultation_days",
         "consultation_slot", "consultation_mode", "linkedin_url", "github_url",
-        "scholar_url", "orcid_id", "scopus_id", "leetcode_handle", "card_theme"
+        "scholar_url", "orcid_id", "scopus_id", "leetcode_handle", "card_theme",
+        "accent_color", "theme"
     ]
     for field in meta_fields:
         val = getattr(payload, field, None)

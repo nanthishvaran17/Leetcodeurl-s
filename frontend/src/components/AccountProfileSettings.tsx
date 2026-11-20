@@ -6969,41 +6969,67 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
 
               {/* Accent Color Palette Selector */}
               <div className="pt-2">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">
-                  Accent Color
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {[
-                    { id: 'indigo', label: 'Indigo (Default)', hex: '#4F46E5' },
-                    { id: 'emerald', label: 'Emerald', hex: '#10B981' },
-                    { id: 'violet', label: 'Violet', hex: '#8B5CF6' },
-                    { id: 'amber', label: 'Amber', hex: '#F59E0B' },
-                    { id: 'rose', label: 'Rose', hex: '#F43F5E' },
-                  ].map(acc => (
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Accent Color Theme
+                  </span>
+                  {accentColor !== 'indigo' && (
                     <button
-                      key={acc.id}
                       type="button"
                       onClick={() => {
-                        setAccentColor(acc.id);
+                        setAccentColor('indigo');
                         triggerHaptic('selection');
-                        notify.success(`Accent color set to ${acc.label}`, 'Applied across the app and saved.', { category: 'ADMIN', duration: 2500 });
+                        notify.success('Reset to Default', 'Indigo palette restored.', { category: 'ADMIN', duration: 2000 });
                         try {
-                          api.put('/auth/profile', { accent_color: acc.id }).catch(() => {});
+                          api.put('/auth/profile', { accent_color: 'indigo', profile_metadata: { accent_color: 'indigo' } }).catch(() => {});
                         } catch {}
                       }}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer active:scale-95 ${
-                        accentColor === acc.id
-                          ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
-                          : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
-                      }`}
+                      className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer active:scale-95"
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: acc.hex }} />
-                        {accentColor === acc.id && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[3]" />}
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{acc.label}</div>
+                      Reset to Default
                     </button>
-                  ))}
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {[
+                    { id: 'indigo', label: 'Indigo', sub: 'Default', hex: '#4F46E5' },
+                    { id: 'cyan', label: 'Cyan', sub: 'Cyber', hex: '#06B6D4' },
+                    { id: 'emerald', label: 'Emerald', sub: 'Mint', hex: '#10B981' },
+                    { id: 'violet', label: 'Violet', sub: 'Prestige', hex: '#8B5CF6' },
+                    { id: 'amber', label: 'Amber', sub: 'Gold', hex: '#F59E0B' },
+                    { id: 'rose', label: 'Rose', sub: 'Ruby', hex: '#F43F5E' },
+                  ].map(acc => {
+                    const isSelected = accentColor === acc.id;
+                    return (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        onClick={() => {
+                          setAccentColor(acc.id);
+                          triggerHaptic('selection');
+                          notify.success(`Accent color set to ${acc.label}`, 'Applied instantly across the app.', { category: 'ADMIN', duration: 2500 });
+                          try {
+                            api.put('/auth/profile', { accent_color: acc.id, profile_metadata: { accent_color: acc.id } }).catch(() => {});
+                          } catch {}
+                        }}
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer active:scale-95 ${
+                          isSelected
+                            ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/40 ring-2 ring-brand-500/25 shadow-sm'
+                            : 'border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 hover:border-slate-300 dark:hover:border-navy-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span
+                            className="w-4 h-4 rounded-full shrink-0 shadow-xs ring-2 ring-white dark:ring-navy-900"
+                            style={{ backgroundColor: acc.hex }}
+                          />
+                          {isSelected && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[3]" />}
+                        </div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{acc.label}</div>
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">{acc.hex}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

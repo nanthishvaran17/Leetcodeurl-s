@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Trash2, AlertTriangle, X, Loader2, Building2, Calendar, School, 
-  Check, Users, ShieldAlert, AlertCircle, ShieldCheck, Search, CheckSquare, Square, MinusSquare
+  Check, Users, ShieldAlert, AlertCircle, ShieldCheck, Search, CheckSquare, Square, MinusSquare,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -272,6 +273,24 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
       (s.reg_no && s.reg_no.toLowerCase().includes(q))
     );
   }, [studentList, searchFilter]);
+
+  // 2. Pagination State & Slice Logic
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+
+  // Reset page when search or criteria filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchFilter, selectedDept, selectedYear, selectedCollege, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  // Paginated records to render:
+  const paginatedStudents = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filteredStudents.slice(start, start + pageSize);
+  }, [filteredStudents, safePage, pageSize]);
 
   // Select / Deselect individual student
   const handleToggleStudent = (studentId: number) => {

@@ -3036,7 +3036,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className={`relative ${showExportMenu ? 'z-40' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-3 sm:mb-5`}>
+          <div className={`relative ${showExportMenu ? 'z-50' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-3 sm:mb-5`}>
             {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Mobile Filter Scope Bar */}
@@ -3068,10 +3068,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2 ml-auto relative z-30">
 
                 {/* Unified Actions & Export Dropdown */}
-                <div className="relative w-full sm:w-auto z-40" ref={exportMenuRef}>
+                <div className={`relative w-full sm:w-auto ${showExportMenu ? 'z-50' : 'z-40'}`} ref={exportMenuRef}>
                   <button
                     type="button"
-                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    onClick={() => setShowExportMenu(prev => !prev)}
                     disabled={!selectedSessionId || isSyncing}
                     className={`group relative w-full sm:w-auto flex items-center justify-center space-x-2.5 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border ${showExportMenu
                         ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-[0_0_20px_rgba(79,70,229,0.3)] ring-2 ring-indigo-500/30 ring-offset-1 dark:ring-offset-navy-900'
@@ -3286,60 +3286,36 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       );
 
                       return (
-                        <>
-                          {/* Desktop Anchored Dropdown */}
-                          <div className="hidden sm:block">
-                            <motion.div
-                              initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                              className="absolute top-[calc(100%+8px)] right-0 w-[380px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
+                        <motion.div
+                          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                          className="absolute top-[calc(100%+8px)] left-0 sm:left-auto right-0 w-full sm:w-[380px] max-w-[calc(100vw-32px)] max-h-[min(520px,calc(100vh-140px))] overflow-y-auto overscroll-contain custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top sm:origin-top-right"
+                        >
+                          {/* Mobile Hub Header */}
+                          <div className="flex sm:hidden items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                                <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">Actions & Export Hub</h4>
+                                <p className="text-[10px] text-slate-500 font-medium">Download reports or trigger notifications</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowExportMenu(false)}
+                              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              aria-label="Close"
                             >
-                              {exportMenuContent}
-                            </motion.div>
+                              <X className="w-4 h-4" />
+                            </button>
                           </div>
 
-                          {/* Mobile High-Z-Index Modal Action Sheet via Portal */}
-                          {typeof document !== 'undefined' && createPortal(
-                            <div
-                              className="sm:hidden fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-sm flex flex-col justify-end p-3 animate-fade-in"
-                              onClick={() => setShowExportMenu(false)}
-                            >
-                              <motion.div
-                                initial={{ opacity: 0, y: 40 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 40 }}
-                                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-full max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3"
-                              >
-                                {/* Mobile Modal Header */}
-                                <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                                      <Download className="w-4 h-4 stroke-[2.5]" />
-                                    </div>
-                                    <div>
-                                      <h4 className="text-sm font-black text-slate-900 dark:text-white leading-tight">Actions & Export Hub</h4>
-                                      <p className="text-[10px] text-slate-500 font-medium">Download reports or trigger notifications</p>
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowExportMenu(false)}
-                                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                                  >
-                                    <X className="w-5 h-5" />
-                                  </button>
-                                </div>
-
-                                {exportMenuContent}
-                              </motion.div>
-                            </div>,
-                            document.body
-                          )}
-                        </>
+                          {exportMenuContent}
+                        </motion.div>
                       );
                     })()}
                   </AnimatePresence>

@@ -509,7 +509,7 @@ export const ReportsPage: React.FC = () => {
             </button>
             <button
               onClick={() => setShowCertModal(true)}
-              className="flex items-center justify-center space-x-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all transform active:scale-95 cursor-pointer w-full sm:w-auto shrink-0 touch-manipulation"
+              className="flex items-center justify-center space-x-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/25 transition-all transform active:scale-95 cursor-pointer w-full sm:w-auto shrink-0 touch-manipulation"
             >
               <Award className="w-4 h-4 shrink-0" />
               <span className="truncate">Merit Certificates</span>
@@ -523,7 +523,7 @@ export const ReportsPage: React.FC = () => {
         <button
           onClick={() => startTransition(() => setActiveTab('reports'))}
           className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active-spring ${activeTab === 'reports'
-              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
         >
@@ -534,11 +534,11 @@ export const ReportsPage: React.FC = () => {
         <button
           onClick={() => startTransition(() => setActiveTab('email'))}
           className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap touch-manipulation active-spring ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
-              ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
+              ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
         >
-          <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
+          <Mail className="w-4 h-4 shrink-0" />
           <span>Email Operations</span>
         </button>
       </div>
@@ -991,11 +991,7 @@ export const ReportsPage: React.FC = () => {
                           onClick={() => setSelectedCollege(col)}
                           className={`flex-1 py-2 text-xs font-black rounded-xl transition-all cursor-pointer ${
                             isSelected
-                              ? col === 'NCT'
-                                ? 'bg-teal-600 text-white shadow-xs'
-                                : col === 'NEC'
-                                ? 'bg-indigo-600 text-white shadow-xs'
-                                : 'bg-brand-600 text-white shadow-xs'
+                              ? 'bg-brand-600 text-white shadow-xs'
                               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >

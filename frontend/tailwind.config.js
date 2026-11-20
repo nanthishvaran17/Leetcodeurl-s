@@ -9,17 +9,17 @@ const config = {
     extend: {
       colors: {
         brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5', // 2026 Electric Indigo Accent
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50: 'rgb(var(--color-brand-50, 238 242 255) / <alpha-value>)',
+          100: 'rgb(var(--color-brand-100, 224 231 255) / <alpha-value>)',
+          200: 'rgb(var(--color-brand-200, 199 210 254) / <alpha-value>)',
+          300: 'rgb(var(--color-brand-300, 165 180 252) / <alpha-value>)',
+          400: 'rgb(var(--color-brand-400, 129 140 248) / <alpha-value>)',
+          500: 'rgb(var(--color-brand-500, 99 102 241) / <alpha-value>)',
+          600: 'rgb(var(--color-brand-600, 79 70 229) / <alpha-value>)',
+          700: 'rgb(var(--color-brand-700, 67 56 202) / <alpha-value>)',
+          800: 'rgb(var(--color-brand-800, 55 48 163) / <alpha-value>)',
+          900: 'rgb(var(--color-brand-900, 49 46 129) / <alpha-value>)',
+          950: 'rgb(var(--color-brand-950, 30 27 75) / <alpha-value>)',
         },
         navy: {
           50: '#f8fafc',
