@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta name="google-site-verification" content="C4DXOGK6fDXcCkTsZNy5LmIh6lxpK_lvfs5x5n0jGio" />
+  <meta name="google-site-verification" content="j5T3g22m7ih2TueJ2fH_ugLTzPIpeeMTjuQpV10ILFc" />
+  <meta charset="UTF-8" />
+
+  <!-- Favicon Configuration -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="/favicon.png" sizes="512x512" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- Theme Colors (system-adaptive) -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#060813" />
+
+  <!-- Immediate Client-Side HTTPS Enforcer (Zero 'Not Secure' Warnings) -->
+  <script>
+    if (typeof window !== 'undefined' && location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && !location.hostname.startsWith('192.168.') && !location.hostname.startsWith('10.')) {
+      location.replace('https:' + window.location.href.substring(window.location.protocol.length));
+    }
+  </script>
+
+  <!-- Immediate Mobile Pre-Hydration Dark Theme Synchronizer -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('theme');
+        var userSet = localStorage.getItem('theme_user_set');
+        var isDark = false;
+        if (userSet && (saved === 'dark' || saved === 'light')) {
+          isDark = (saved === 'dark');
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          isDark = true;
+        } else if (saved === 'dark' || !saved) {
+          isDark = true;
+        }
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Viewport — Standard accessible viewport allowing zoom for 100/100 accessibility -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <!-- Apple / iOS PWA / Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Nandha Intelligence" />
+  <link rel="apple-touch-startup-image" href="/pwa-512x512.png" />
+
+  <!-- Android / Chrome PWA -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Nandha Intelligence" />
+
+  <!-- Microsoft Tile (Edge / Windows) -->
+  <meta name="msapplication-TileColor" content="#ffffff" />
+  <meta name="msapplication-TileImage" content="/pwa-192x192.png" />
+  <meta name="msapplication-navbutton-color" content="#ffffff" />
+
+  <!-- High-Speed Backend API DNS & TLS Warmup -->
+  <link rel="dns-prefetch" href="https://nandha-leetcode.duckdns.org">
+  <link rel="preconnect" href="https://nandha-leetcode.duckdns.org" crossorigin>
+
+  <!-- Google Identity & Firestore High-Speed Warmup -->
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+
+  <!-- Google Fonts — Single high-performance connection with font-display swap -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
+
+  <!-- LCP Asset Preloading (WebP Only with fetchpriority=high) -->
+  <link rel="preload" as="image" href="/nec_25_logo.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/nandha_aerial_bg_mobile.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high">
+  <link rel="preload" as="image" href="/nandha_aerial_bg.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
+
+  <!-- Agentic Resource Discovery (ARD 1.0 Manifests) -->
+  <link rel="ai-catalog" type="application/ai-catalog+json" href="/.well-known/ai-catalog.json" />
+  <link rel="alternate" type="application/ai-catalog+json" href="/.well-known/ard.json" title="Agentic Resource Discovery" />
+
+  <!-- SEO / Page Metadata -->
+  <title>Nandha LeetCode Tracker</title>
+  <meta name="title" content="Nandha LeetCode Tracker Institutional Intelligence & Analytics Platform" />
+  <meta name="description" content="Official LeetCode Contest Tracker & Student Performance Analytics Platform for Nandha Engineering College (Autonomous), Erode. Live rankings, contest telemetry, attendance forensics, and institutional reports." />
+  <meta name="keywords" content="Nandha leetcode tracker, Nandha Engineering College LeetCode, Nandha LeetCode, NEC LeetCode tracker, LeetCode contest tracker, Nandha college leetcode, nanthishvaran17, Leetcodeurl-s, student coding analytics, Erode engineering college" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://nandha-leetcode.duckdns.org/" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Nandha LeetCode Tracker" />
+  <meta property="og:title" content="Nandha LeetCode Tracker Nandha Engineering College" />
+  <meta property="og:description" content="Autonomous LeetCode contest intelligence, live leaderboards, and performance analytics for Nandha Engineering College, Erode." />
+  <meta property="og:image" content="/pwa-512x512.png" />
+  <meta property="og:url" content="https://nandha-leetcode.duckdns.org/" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Nandha LeetCode Tracker Nandha Engineering College" />
+  <meta name="twitter:description" content="Official LeetCode Contest Tracker & Student Analytics for Nandha Engineering College." />
+  <meta name="twitter:image" content="/pwa-512x512.png" />
+
+  <!-- Schema.org JSON-LD for Google Search & AI Overview indexing -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Nandha LeetCode Tracker",
+    "alternateName": ["Nandha LeetCode Intelligence", "NEC LeetCode Tracker", "Leetcodeurl-s"],
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web, Android, PWA",
+    "url": "https://nandha-leetcode.duckdns.org/",
+    "author": {
+      "@type": "CollegeOrUniversity",
+      "name": "Nandha Engineering College (Autonomous)",
+      "url": "https://nandhaengg.org/",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Erode",
+        "addressRegion": "Tamil Nadu",
+        "addressCountry": "India"
+      }
+    },
+    "description": "Institutional LeetCode contest tracking, live attendance verification, automated scoring, and performance analytics platform for 1,500+ students of Nandha Engineering College.",
+    "codeRepository": "https://github.com/nanthishvaran17/Leetcodeurl-s"
+  }
+  </script>
+
+  <!-- Pre-paint CSS -->
+  <link rel="stylesheet" href="/pre-paint.css" />
+  <script type="module" crossorigin src="/assets/index-MbetgH02.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vendor-react-TDl6vYKr.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-capacitor-BZ588q4v.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-query-DS1GJtm6.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-DGs4TZrW.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-network-Djv5XBeH.js">
+  <link rel="modulepreload" crossorigin href="/assets/app-core-services-EGRB3vBr.js">
+  <link rel="modulepreload" crossorigin href="/assets/app-state-BYXc9CFe.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-framer-B-xWkYKA.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-icons-Dh0SrE2a.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-ui-utils-DeRmtv56.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-authn-CAkU1J_u.js">
+  <link rel="modulepreload" crossorigin href="/assets/app-components-settings-CXtJuDYp.js">
+  <link rel="stylesheet" crossorigin href="/assets/app-components-settings-BvtdHBMA.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-6E4petBR.css">
+</head>
+
+<body class="bg-[#F8FAFC] text-slate-900 dark:bg-[#060813] dark:text-slate-100 antialiased font-sans w-full">
+  <div id="root" class="w-full min-h-screen">
+    <div style="min-height:100vh; display:flex; flex-direction:column; align-items:center;" class="bg-slate-50 dark:bg-[#060813]">
+      <div class="mobile-pre-branding">
+        <img src="/nec_25_logo.webp" alt="25 NEC Silver Jubilee" class="mobile-pre-logo" width="70" height="70" fetchpriority="high">
+        <span style="font-family:Inter,sans-serif; font-size:10px; font-weight:800; color:#006A94; letter-spacing:0.08em;">INSTITUTIONAL PORTAL</span>
+        <h1 class="mobile-pre-title">Nandha Intelligence</h1>
+        <p class="mobile-pre-sub">Nandha Engineering College (Autonomous) · Erode</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+          .then(function(reg) {
+            console.log('[PWA] ServiceWorker registered successfully with scope:', reg.scope);
+          })
+          .catch(function(err) {
+            console.warn('[PWA] ServiceWorker registration failed:', err);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

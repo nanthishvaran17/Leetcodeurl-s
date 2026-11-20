@@ -527,11 +527,29 @@ class DownloadManager {
         lower.includes('cannot read') ||
         lower.includes('undefined') ||
         lower.includes('typeerror') ||
-        lower.includes('is not a function')
+        lower.includes('is not a function') ||
+        lower.includes('econnrefused')
       );
     };
 
-    if (httpStatus === 401) {
+    const isConnectionRefused = (msg?: string) => {
+      if (!msg) return false;
+      const lower = String(msg).toLowerCase();
+      return (
+        lower.includes('econnrefused') ||
+        lower.includes('connection refused') ||
+        lower.includes('failed to fetch') ||
+        lower.includes('service unavailable') ||
+        lower.includes('network error')
+      );
+    };
+
+    if (isConnectionRefused(detail) || err?.code === 'ECONNREFUSED' || httpStatus === 503) {
+      status = 'FAILED';
+      errorMessage = 'Backend reporting server is offline or unreachable. Please verify that the backend service is running.';
+      state.technicalDetail = typeof detail === 'string' && detail.trim() ? detail : '127.0.0.1:8000 (ECONNREFUSED)';
+      await downloadNotification.notifyFailure(filename, errorMessage);
+    } else if (httpStatus === 401) {
       status = 'UNAUTHORIZED';
       errorMessage = 'Your session has expired. Please sign in again.';
       await downloadNotification.notifyFailure(filename, errorMessage);
