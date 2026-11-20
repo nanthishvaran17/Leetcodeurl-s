@@ -90,7 +90,7 @@ const SetupAccountPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 transition-all shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 cursor-pointer"
           >
             Go to Login
           </button>
@@ -112,7 +112,7 @@ const SetupAccountPage: React.FC = () => {
         
         {/* Header */}
         <div className="p-8 text-center border-b border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-900/50 relative overflow-hidden">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/20 mb-4 relative z-10">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center shadow-lg shadow-brand-600/20 mb-4 relative z-10">
             <ShieldCheck className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-black text-slate-900 dark:text-white relative z-10">Secure Account Onboarding</h2>
@@ -319,7 +319,7 @@ const SetupAccountPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 transition-all shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2 cursor-pointer"
               >
                 Continue <ChevronRight className="w-5 h-5" />
               </button>

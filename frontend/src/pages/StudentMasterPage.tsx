@@ -636,7 +636,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               <button
                 onClick={handleOpenAddModal}
-                className="min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer border border-brand-300/40"
+                className="min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-600/25 flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer border border-brand-400/40"
               >
                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span className="truncate">Add Student</span>

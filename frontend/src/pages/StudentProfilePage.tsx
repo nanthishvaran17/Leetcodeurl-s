@@ -418,7 +418,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </button>
           
           {/* Student Avatar */}
-          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-xs sm:text-base flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0 border border-white/20 font-display">
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 text-white font-black text-xs sm:text-base flex items-center justify-center shadow-lg shadow-brand-600/20 shrink-0 border border-white/20 font-display">
             {(detail?.name || student?.name || 'S').charAt(0).toUpperCase()}
           </div>
 

@@ -14,6 +14,7 @@ import { normalizeYear } from '../utils/filterUtils';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
+import { SwipeHandle } from '../components/SwipeHandle';
 import { GlobalModalBackdrop } from '../components/GlobalModalBackdrop';
 import { useAuth } from '../context/AuthContext';
 import { getUserCollege, isCollegeFilterAllowed } from '../services/auth/authTypes';
@@ -628,6 +629,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [yearOpen, setYearOpen] = useState<boolean>(false);
   const [attOpen, setAttOpen] = useState<boolean>(false);
   const [showMobileContestFilters, setShowMobileContestFilters] = useState<boolean>(false);
+  const [deptSearchQuery, setDeptSearchQuery] = useState<string>('');
+  const [filterDrawerTab, setFilterDrawerTab] = useState<'year' | 'dept' | 'college' | 'att'>('year');
 
   // Live Contest Engine Real-Time State
   const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
@@ -657,9 +660,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // New Feature States
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const adminMonitorRef = useRef<HTMLDivElement>(null);
   const detailedViewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleOpenDetailedRoster = () => {
     setShowDetailedView(true);
@@ -673,6 +683,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
       if (!target || !document.contains(target)) return;
+      if (isMobile) {
+        // Mobile bottom sheet handles its own backdrop outside taps
+        return;
+      }
       if (exportMenuRef.current && !exportMenuRef.current.contains(target)) {
         setShowExportMenu(false);
       }
@@ -680,9 +694,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowExportMenu(false);
+        setShowMobileContestFilters(false);
       }
     };
-    if (showExportMenu) {
+    if (showExportMenu || showMobileContestFilters) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('touchstart', handleClickOutside, { passive: true });
       document.addEventListener('keydown', handleKeyDown);
@@ -692,13 +707,49 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showExportMenu]);
+  }, [showExportMenu, showMobileContestFilters, isMobile]);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string | number>>(new Set());
   const [viewingProfileStudent, setViewingProfileStudent] = useState<any | null>(null);
 
-  useScrollLock(Boolean(viewingProfileStudent));
+  useScrollLock(Boolean(viewingProfileStudent || (isMobile && (showExportMenu || showMobileContestFilters))));
+
+  const contestDeptOptions = useMemo<GlobalFilterOption[]>(() => {
+    const roleClean = (user?.role || '').trim().toLowerCase();
+    const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes(roleClean);
+    const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
+    const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director'].includes(roleClean);
+    const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || '';
+
+    const hodAuthCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
+    const filteredDepts = (isHod && !isGlobalRole)
+      ? departments.filter(d => hodAuthCodes.includes(d.code.toUpperCase()) || (userDeptCode && d.code.toUpperCase() === userDeptCode.toUpperCase()))
+      : departments;
+
+    return isStaffMentor
+      ? [
+        { value: 'ALL', label: 'My Allocated Mentees', pillText: 'MENTEES' },
+        ...(userDeptCode ? [{ value: userDeptCode, label: `${userDeptCode} (My Department)`, pillText: userDeptCode }] : [])
+      ]
+      : (isHod && !isGlobalRole)
+        ? [
+          ...(filteredDepts.length > 1 ? [{ value: 'ALL', label: 'All My Authorized Departments', pillText: 'ALL' }] : []),
+          ...filteredDepts.map((d) => ({
+            value: d.code,
+            label: d.name,
+            pillText: d.code
+          }))
+        ]
+        : [
+          { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
+          ...departments.map((d) => ({
+            value: d.code,
+            label: d.name,
+            pillText: d.code
+          }))
+        ];
+  }, [user, departments]);
 
   useEffect(() => {
     if (viewingProfileStudent) {
@@ -2638,7 +2689,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <button
               onClick={() => setAdminSubTab('simulation_sandbox')}
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'simulation_sandbox'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-indigo-900/50 border border-brand-400/40'
+                ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-600/30 border border-brand-400/40'
                 : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
@@ -2920,7 +2971,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <button
                       onClick={() => handleAdminAction('simulate_live_cycle')}
                       disabled={isPerformingAdminAction}
-                      className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                      className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
                       <span>Trigger Simulated Solves (5 Live Events)</span>
@@ -3094,8 +3145,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       }`} />
                   </button>
 
+                  {/* Desktop Dropdown for Actions & Export */}
                   <AnimatePresence>
-                    {showExportMenu && (() => {
+                    {showExportMenu && !isMobile && (() => {
                       const exportMenuContent = (
                         <>
                           {/* SECTION 1: ACTIONS */}
@@ -3291,34 +3343,265 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -8, scale: 0.98 }}
                           transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute top-[calc(100%+8px)] left-0 sm:left-auto right-0 w-full sm:w-[380px] max-w-[calc(100vw-32px)] max-h-[min(520px,calc(100vh-140px))] overflow-y-auto overscroll-contain custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top sm:origin-top-right"
+                          className="hidden sm:block absolute top-[calc(100%+8px)] right-0 w-[380px] max-w-[calc(100vw-32px)] max-h-[min(520px,calc(100vh-140px))] overflow-y-auto overscroll-contain custom-scrollbar z-[9999] rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.45)] p-3.5 space-y-2 focus:outline-none select-none origin-top-right"
                         >
-                          {/* Mobile Hub Header */}
-                          <div className="flex sm:hidden items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                                <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">Actions & Export Hub</h4>
-                                <p className="text-[10px] text-slate-500 font-medium">Download reports or trigger notifications</p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setShowExportMenu(false)}
-                              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                              aria-label="Close"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-
                           {exportMenuContent}
                         </motion.div>
                       );
                     })()}
                   </AnimatePresence>
+
+                  {/* Mobile Swipe-Up Bottom Sheet Drawer for Actions & Export */}
+                  {showExportMenu && isMobile && typeof document !== 'undefined' && createPortal(
+                    <div
+                      className="fixed inset-0 z-[999999] flex flex-col justify-end sm:hidden"
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="mobile-actions-export-title"
+                    >
+                      {/* Dark Backdrop */}
+                      <div
+                        className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity duration-200"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setShowExportMenu(false);
+                        }}
+                      />
+
+                      {/* Bottom Sheet Drawer with Swipe / Drag */}
+                      <div
+                        className="relative z-10 w-full max-w-lg mx-auto bg-white dark:bg-[#091122] rounded-t-[32px] border-t border-x border-slate-200/90 dark:border-white/10 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up overflow-hidden pb-8"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Interactive Top Swipe/Drag Pill */}
+                        <SwipeHandle
+                          onClose={() => {
+                            triggerHaptic('light');
+                            setShowExportMenu(false);
+                          }}
+                          className="pt-2.5 pb-1 shrink-0"
+                          pillClassName="bg-slate-300 dark:bg-white/20 hover:bg-slate-400 w-12 h-1.5"
+                        />
+
+                        {/* Mobile Header */}
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-white/10 shrink-0 bg-slate-50/70 dark:bg-white/[0.02]">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30 shadow-xs shrink-0">
+                              <Download className="w-4 h-4 stroke-[2.5]" />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 id="mobile-actions-export-title" className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                                Actions &amp; Export Hub
+                              </h4>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                                Download reports or trigger notifications
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              triggerHaptic('light');
+                              setShowExportMenu(false);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95 touch-manipulation cursor-pointer shrink-0 ml-2"
+                            aria-label="Close"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Scrollable Action Content */}
+                        <div className="p-4 overflow-y-auto space-y-3 custom-scrollbar">
+                          {/* SECTION 1: ACTIONS */}
+                          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                            <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                              <span className="text-[11px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
+                                Primary Actions
+                              </span>
+                            </div>
+                            <div className="space-y-1.5">
+                              <button
+                                type="button"
+                                onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-800 active:scale-98"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+                                    <Eye className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+                                      Live Preview
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Review dataset & questions before export
+                                    </span>
+                                  </div>
+                                </div>
+                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 shrink-0" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-indigo-50 dark:hover:bg-indigo-950/50 cursor-pointer border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 active:scale-98"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                                    <Mail className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                                      Send Email Report
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Distribute summary report securely to faculty
+                                    </span>
+                                  </div>
+                                </div>
+                                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* SECTION 2: EXPORT FORMATS */}
+                          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                            <div className="px-3 pt-1 pb-1.5 flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                              <span className="text-[11px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
+                                Export Formats
+                              </span>
+                            </div>
+                            <div className="space-y-1.5">
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 active:scale-98"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileSpreadsheet className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                                      Excel Workbook
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Raw structured data & roster matrix
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-300 dark:border-emerald-700 shrink-0">
+                                  XLSX
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer border border-transparent hover:border-rose-200 dark:hover:border-rose-800 active:scale-98"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-rose-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileText className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
+                                      PDF Document
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Formatted print layout & analytics
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200 group-hover:bg-rose-600 group-hover:text-white transition-colors border border-rose-300 dark:border-rose-700 shrink-0">
+                                  PDF
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800 active:scale-98"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileText className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                                      Word Document
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      Editable text report with tables
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors border border-blue-300 dark:border-blue-700 shrink-0">
+                                  DOCX
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
+                                className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer border border-transparent hover:border-amber-200 dark:hover:border-amber-800 active:scale-98"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
+                                    <FileArchive className="w-5 h-5 stroke-[2.5]" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                                      ZIP Archive
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                      All formats bundled in one archive
+                                    </span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 group-hover:bg-amber-600 group-hover:text-white transition-colors border border-amber-300 dark:border-amber-700 shrink-0">
+                                  ZIP
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* SECTION 3: UTILITY */}
+                          <div>
+                            <div className="px-3 pt-1 pb-1 flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-slate-500" />
+                              <span className="text-[11px] font-black tracking-wider uppercase text-slate-600 dark:text-slate-400">
+                                Utility
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { window.print(); setShowExportMenu(false); }}
+                              className="w-full flex items-center justify-between p-3 rounded-2xl text-left transition-all duration-150 group hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700 active:scale-98"
+                            >
+                              <div className="flex items-center space-x-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all shadow-sm">
+                                  <Printer className="w-5 h-5 stroke-[2.5]" />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-black text-slate-900 dark:text-white transition-colors">
+                                    Print View
+                                  </span>
+                                  <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                    Quick browser print layout
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>,
+                    document.body
+                  )}
                 </div>
 
                 <button
@@ -3376,8 +3659,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
 
-            {/* Row 2: Sleek 5-Column Filter Bar (Collapsible on mobile) */}
-            <div className={`pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800 ${showMobileContestFilters ? 'block' : 'hidden sm:block'}`}>
+            {/* Row 2: Sleek 5-Column Filter Bar (Desktop only) */}
+            <div className="hidden sm:block pt-3 sm:pt-5 border-t border-slate-100 dark:border-slate-800">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4 items-end">
                 {/* College Campus Filter — Admin & Management only */}
                 {canFilterCollege && (() => {
@@ -3547,7 +3830,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {/* Mobile Active Filter Chips */}
               {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
-                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
+                <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
                   <span className="text-[10px] font-extrabold uppercase text-slate-400">Active:</span>
                   {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
@@ -3576,6 +3859,276 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               )}
             </div>
+
+            {/* Mobile Swipe-Up Bottom Sheet Drawer for Contest Filter Scope */}
+            {showMobileContestFilters && isMobile && typeof document !== 'undefined' && createPortal(
+              <div
+                className="fixed inset-0 z-[999999] flex flex-col justify-end sm:hidden"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="mobile-contest-filters-title"
+              >
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity duration-200"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowMobileContestFilters(false);
+                  }}
+                />
+
+                {/* Drawer Container */}
+                <div
+                  className="relative z-10 w-full max-w-lg mx-auto bg-white dark:bg-[#091122] rounded-t-[32px] border-t border-x border-slate-200/90 dark:border-white/10 shadow-2xl flex flex-col max-h-[88vh] animate-slide-up overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Interactive Top Swipe/Drag Pill */}
+                  <SwipeHandle
+                    onClose={() => {
+                      triggerHaptic('light');
+                      setShowMobileContestFilters(false);
+                    }}
+                    className="pt-2.5 pb-1 shrink-0"
+                    pillClassName="bg-slate-300 dark:bg-white/20 hover:bg-slate-400 w-12 h-1.5"
+                  />
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-white/10 shrink-0 bg-slate-50/70 dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/30 shadow-xs shrink-0">
+                        <Filter className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 id="mobile-contest-filters-title" className="text-sm font-black text-slate-900 dark:text-white leading-tight">
+                            Contest Filter Scope
+                          </h4>
+                          {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 shrink-0">
+                              {[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length} active
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                          Filter contest by campus, dept, year &amp; attendance
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setShowMobileContestFilters(false);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors active:scale-95 touch-manipulation cursor-pointer shrink-0 ml-2"
+                      aria-label="Close filters"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-4 overflow-y-auto space-y-4 custom-scrollbar">
+                    {/* College Campus Filter */}
+                    {canFilterCollege && (
+                      <div>
+                        <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-teal-500" />
+                          <span>College Campus</span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { id: 'ALL', label: 'All Colleges' },
+                            { id: 'NEC', label: 'NEC' },
+                            { id: 'NCT', label: 'NCT' }
+                          ].map(c => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('selection');
+                                setSelectedCollegeFilter(c.id as any);
+                              }}
+                              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
+                                selectedCollegeFilter === c.id
+                                  ? 'bg-teal-600 text-white border-transparent shadow-xs'
+                                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {c.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Department Filter */}
+                    <div>
+                      <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                          <span>Department</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {contestDeptOptions.length} available
+                        </span>
+                      </label>
+                      <div className="relative mb-2">
+                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={deptSearchQuery}
+                          onChange={(e) => setDeptSearchQuery(e.target.value)}
+                          placeholder="Search department..."
+                          className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
+                        />
+                        {deptSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setDeptSearchQuery('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-1 p-1 rounded-2xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200 dark:border-navy-800">
+                        {contestDeptOptions
+                          .filter(d => !deptSearchQuery || d.label.toLowerCase().includes(deptSearchQuery.toLowerCase()) || d.value.toLowerCase().includes(deptSearchQuery.toLowerCase()))
+                          .map(dept => {
+                            const isSelected = selectedDeptFilter === dept.value;
+                            return (
+                              <button
+                                key={dept.value}
+                                type="button"
+                                onClick={() => {
+                                  triggerHaptic('selection');
+                                  setSelectedDeptFilter(dept.value);
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all border text-left ${
+                                  isSelected
+                                    ? 'bg-indigo-600 text-white border-transparent shadow-xs'
+                                    : 'bg-white dark:bg-navy-900 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-navy-700/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
+                                }`}
+                              >
+                                <span className="truncate">{dept.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5] shrink-0 ml-1.5" />}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+
+                    {/* Academic Year Filter */}
+                    <div>
+                      <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                        <GraduationCap className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Academic Year</span>
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        {[
+                          { id: 'ALL', label: 'All Years' },
+                          { id: 'I', label: 'I Year' },
+                          { id: 'II', label: 'II Year' },
+                          { id: 'III', label: 'III Year' },
+                          { id: 'IV', label: 'IV Year' }
+                        ].map(yr => {
+                          const normalizedSelected = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
+                          const isSelected = normalizedSelected === yr.id;
+                          return (
+                            <button
+                              key={yr.id}
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('selection');
+                                setSelectedYearFilter(yr.id);
+                              }}
+                              className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center ${
+                                isSelected
+                                  ? 'bg-brand-600 text-white border-transparent shadow-xs'
+                                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {yr.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Attendance Status Filter */}
+                    <div>
+                      <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Attendance Status</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'ALL', label: 'All Statuses' },
+                          { id: 'ALL_ATTENDED', label: 'Participated' },
+                          { id: 'PUBLIC_ATTENDED', label: 'Public Attended' },
+                          { id: 'VIRTUAL_ATTENDED', label: 'Virtual Attended' },
+                          { id: 'PUBLIC_NOT_ATTENDED', label: 'Not Attended' },
+                          { id: 'DATA_ERROR', label: 'Data Errors' }
+                        ].map(att => {
+                          const isSelected = selectedAttendanceFilter === att.id;
+                          return (
+                            <button
+                              key={att.id}
+                              type="button"
+                              onClick={() => {
+                                triggerHaptic('selection');
+                                setSelectedAttendanceFilter(att.id);
+                              }}
+                              className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-left truncate ${
+                                isSelected
+                                  ? 'bg-emerald-600 text-white border-transparent shadow-xs'
+                                  : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-200'
+                              }`}
+                            >
+                              {att.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="p-4 border-t border-slate-100 dark:border-white/10 bg-slate-50/70 dark:bg-white/[0.02] flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('warning');
+                        setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
+                        setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
+                        setSelectedYearFilter('ALL');
+                        setSelectedAttendanceFilter('ALL');
+                        setSearchTerm('');
+                        setDebouncedSearchTerm('');
+                        setDeptSearchQuery('');
+                      }}
+                      className="flex-1 py-3 px-4 rounded-xl border border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 text-xs font-black transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Reset</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('success');
+                        setShowMobileContestFilters(false);
+                      }}
+                      className="flex-2 py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4 stroke-[2.5]" />
+                      <span>Apply Filters</span>
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
           </div>
 
           {/* 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) */}
@@ -4445,7 +4998,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setShowDetailedView(false);
                   }
                 }}
-                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3.5 min-h-[46px] rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition-all duration-300 cursor-pointer active:scale-95 border border-white/15 touch-manipulation"
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3.5 min-h-[46px] rounded-2xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs sm:text-sm font-black shadow-lg shadow-brand-600/25 hover:shadow-brand-600/40 transition-all duration-300 cursor-pointer active:scale-95 border border-white/15 touch-manipulation"
               >
                 {showDetailedView ? (
                   <>
@@ -4473,7 +5026,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     type="button"
                     onClick={() => setSubTab('matrix')}
                     className={`flex items-center justify-center space-x-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer touch-manipulation active:scale-95 ${subTab === 'matrix'
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/25 border border-brand-400/40 ring-2 ring-brand-500/20'
+                      ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-600/25 border border-brand-400/40 ring-2 ring-brand-500/20'
                       : 'bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/[0.08] shadow-xs'
                       }`}
                   >
@@ -4561,7 +5114,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         onClick={() => {
                           setNotification({ isOpen: true, title: 'Success', type: 'success', message: `Reminder emails queued for ${missingHandlesCount} students missing handles.` });
                         }}
-                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black rounded-xl sm:rounded-2xl transition-all shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 cursor-pointer active:scale-95 whitespace-nowrap touch-manipulation shrink-0 border border-brand-400/20"
+                        className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-black rounded-xl sm:rounded-2xl transition-all shadow-md shadow-brand-600/20 hover:shadow-lg hover:shadow-brand-600/30 cursor-pointer active:scale-95 whitespace-nowrap touch-manipulation shrink-0 border border-brand-400/20"
                       >
                         <Send className="w-3.5 h-3.5" />
                         <span>Send Reminder to All</span>
@@ -4686,7 +5239,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           type="button"
                           onClick={handleSendBulkReminders}
                           disabled={isSendingReminders}
-                          className="flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {isSendingReminders ? (
                             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -5489,9 +6042,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="modal-container-responsive mobile-responsive-modal max-w-5xl bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl rounded-b-none sm:rounded-b-3xl shadow-lg border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up-drawer sm:animate-modal-content">
 
                 {/* A. SLEEK GRADIENT HEADER (Matches Image 2) */}
-                <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
+                <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-950 via-slate-900 to-navy-950 text-white flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-3 min-w-0">
-                    <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30">
+                    <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-600/30">
                       <FileSpreadsheet className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0">
@@ -5876,7 +6429,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <button
                     onClick={() => handleSendWeeklyEmail(false)}
                     disabled={isSendingEmail || selectedRecipients.length === 0}
-                    className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-brand-500/20 transition-all cursor-pointer disabled:opacity-50"
+                    className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white rounded-xl text-xs font-black shadow-lg shadow-brand-600/20 transition-all cursor-pointer disabled:opacity-50"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{isSendingEmail ? 'Dispatching...' : `Dispatch Report to ${selectedRecipients.length} Recipient(s)`}</span>

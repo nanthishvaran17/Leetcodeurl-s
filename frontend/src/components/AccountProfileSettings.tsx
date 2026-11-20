@@ -3819,7 +3819,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-brand-700 text-white font-black text-2xl sm:text-3xl flex items-center justify-center">
                     {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -4226,7 +4226,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-brand-700 text-white font-black text-2xl flex items-center justify-center">
                           {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -4548,7 +4548,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                       }}
                       title="Click to change photo"
                     >
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-brand-500 via-indigo-500 to-purple-500 shadow-sm overflow-hidden">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-0.5 bg-gradient-to-tr from-brand-600 to-brand-700 shadow-sm overflow-hidden">
                         <div className="w-full h-full rounded-[14px] bg-slate-100 dark:bg-navy-950 overflow-hidden flex items-center justify-center">
                           {profilePhoto ? (
                             <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
@@ -5522,8 +5522,8 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               type="button"
                               onClick={() => handleToggleLanguage(lang)}
                               className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer flex items-center gap-1.5 active:scale-95 ${isSelected
-                                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-brand-500/30 shadow-md shadow-brand-500/20'
-                                : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-indigo-400'
+                                ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white border-brand-500/30 shadow-md shadow-brand-600/20'
+                                : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-brand-400'
                                 }`}
                             >
                               <span>{lang}</span>
@@ -7640,7 +7640,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                             className="w-full h-full max-w-full max-h-full object-cover object-top block pointer-events-none select-none"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-3xl flex items-center justify-center">
+                          <div className="w-full h-full bg-gradient-to-tr from-brand-600 to-brand-700 text-white font-black text-3xl flex items-center justify-center">
                             {(fullName || user?.username || 'N').charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -7913,7 +7913,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="bg-white/95 dark:bg-[#0B1221]/95 backdrop-blur-xl rounded-3xl p-3.5 sm:p-6 lg:p-7 border border-slate-200/90 dark:border-navy-700 shadow-sm space-y-4 sm:space-y-6">
               <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-navy-800 pb-3.5 sm:pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-500/20 to-indigo-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/25 shrink-0">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-500/15 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/25 shrink-0">
                     <GraduationCap className="w-5 h-5" />
                   </div>
                   <div>
@@ -8453,7 +8453,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 type="button"
                 disabled={isSaving}
                 onClick={handleSaveProfile}
-                className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 touch-manipulation"
+                className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs transition-all shadow-md shadow-brand-600/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 touch-manipulation"
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>Save Details</span>
@@ -8480,7 +8480,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs transition-all shadow-md shadow-brand-600/25 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   <span>Save Details</span>
@@ -8567,7 +8567,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         <GlobalModalBackdrop isOpen={showPhotoZoom} onClose={() => setShowPhotoZoom(false)} className="flex items-center justify-center p-4 z-[9999]">
           <div className="relative w-full max-w-md bg-white dark:bg-navy-950 rounded-[2rem] overflow-hidden p-1 shadow-2xl shadow-brand-500/20 animate-scale-up border border-slate-200 dark:border-navy-800 flex flex-col group">
             {/* Top decorative gradient header */}
-            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-600 opacity-90 rounded-t-[1.8rem]"></div>
+            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-br from-brand-600 to-brand-700 opacity-90 rounded-t-[1.8rem]"></div>
 
             {/* Close Button */}
             <button onClick={() => setShowPhotoZoom(false)} className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full backdrop-blur-md cursor-pointer transition-all z-10 shadow-sm">
@@ -8577,7 +8577,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
             <div className="relative z-10 mt-12 flex flex-col items-center pb-6">
               {/* Profile Image with Glowing Border */}
               <div className="relative p-1 bg-white dark:bg-navy-950 rounded-[2rem] shadow-xl">
-                <div className="absolute inset-0 bg-gradient-to-tr from-brand-400 to-indigo-400 rounded-[2rem] blur-md opacity-60 animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-brand-500 to-brand-600 rounded-[2rem] blur-md opacity-60 animate-pulse"></div>
                 <div className="w-40 h-40 rounded-3xl overflow-hidden bg-black flex items-center justify-center relative z-10 border-4 border-white dark:border-navy-900 shadow-lg">
                   <img src={profilePhoto} alt="Zoomed" className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
                 </div>

@@ -556,7 +556,7 @@ export const ReportsPage: React.FC = () => {
           <div className={`p-4 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-2xl shadow-indigo-950/20 space-y-5 bg-white dark:bg-[#0b101e] relative mt-2 ${rptTypeOpen || rptYearOpen || rptScopeOpen || rptSessionOpen ? 'z-50' : 'z-10'}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/[0.08] pb-4">
               <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-brand-500/25 border border-white/20">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center shrink-0 shadow-lg shadow-brand-600/25 border border-white/20">
                   <Layers className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -666,10 +666,10 @@ export const ReportsPage: React.FC = () => {
 
                     const categoryMeta: Record<string, { gradient: string; headerBg: string; iconBg: string; accentBar: string }> = {
                       'A. CONTEST REPORTS': {
-                        gradient: 'from-brand-500 to-indigo-500',
-                        headerBg: 'bg-gradient-to-r from-brand-500/10 to-indigo-500/5 border border-brand-500/20',
+                        gradient: 'from-brand-600 to-brand-700',
+                        headerBg: 'bg-gradient-to-r from-brand-500/10 to-brand-500/5 border border-brand-500/20',
                         iconBg: 'bg-brand-500/15',
-                        accentBar: 'bg-gradient-to-b from-brand-500 to-indigo-500',
+                        accentBar: 'bg-gradient-to-b from-brand-600 to-brand-700',
                       },
                       'B. PERFORMANCE REPORTS': {
                         gradient: 'from-purple-500 to-pink-500',
@@ -692,7 +692,7 @@ export const ReportsPage: React.FC = () => {
                     };
 
                     const renderCategory = (cat: any) => {
-                      const meta = categoryMeta[cat.title] || { gradient: 'from-brand-500 to-indigo-500', headerBg: 'bg-slate-100/80 border border-slate-200', iconBg: 'bg-brand-500/10', accentBar: 'bg-brand-500' };
+                      const meta = categoryMeta[cat.title] || { gradient: 'from-brand-600 to-brand-700', headerBg: 'bg-slate-100/80 border border-slate-200', iconBg: 'bg-brand-500/10', accentBar: 'bg-brand-600' };
                       return (
                         <div key={cat.title} className="space-y-1.5">
                           {/* Category Header */}
@@ -1570,7 +1570,7 @@ export const ReportsPage: React.FC = () => {
                     }
                   }}
                   disabled={isGeneratingUniversal}
-                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:via-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 disabled:opacity-50 text-white font-black text-xs sm:text-sm tracking-wide rounded-2xl shadow-xl shadow-brand-600/25 hover:shadow-brand-600/40 border border-brand-400/30 transition-all active:scale-95 cursor-pointer touch-manipulation group"
                 >
                   <CheckCircle2 className={`w-4 h-4 text-brand-200 group-hover:rotate-12 transition-transform shrink-0 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
                   <span className="font-sans font-black">{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>

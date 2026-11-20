@@ -1280,7 +1280,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                 <button
                   onClick={handleDownloadPdf}
                   disabled={downloading}
-                  className={`px-6 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs rounded-xl shadow-lg shadow-brand-600/20 flex items-center space-x-2 transition-all transform hover:scale-105 cursor-pointer ${downloading ? 'opacity-75 cursor-not-allowed' : ''}`}
+                  className={`px-6 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs rounded-xl shadow-lg shadow-brand-600/20 flex items-center space-x-2 transition-all transform hover:scale-105 cursor-pointer ${downloading ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
                   {downloading ? (
                     <>

@@ -176,7 +176,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
             <button
               onClick={handleSyncNow}
               disabled={isSyncing}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-brand-500/30 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-105 disabled:opacity-50"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-105 disabled:opacity-50"
             >
               <RefreshCw className="w-4 h-4 text-amber-300" />
               <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
@@ -350,7 +350,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
             <button
               onClick={handleSyncNow}
               disabled={isSyncing}
-              className="px-4 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2.5 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-600/25 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>

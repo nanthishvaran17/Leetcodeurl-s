@@ -1772,7 +1772,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveCurrentFilter}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-brand-600/25 flex items-center justify-center space-x-1.5 cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs shadow-lg shadow-brand-600/25 flex items-center justify-center space-x-1.5 cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>Save Preset</span>

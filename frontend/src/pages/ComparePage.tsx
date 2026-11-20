@@ -454,7 +454,7 @@ export const ComparePage: React.FC = () => {
               onClick={() => setCompareMode('STUDENT')}
               className={`min-h-[42px] flex items-center justify-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer touch-manipulation active:scale-95 select-none ${
                 compareMode === 'STUDENT'
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-900/40'
+                  ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md shadow-brand-900/40'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -466,7 +466,7 @@ export const ComparePage: React.FC = () => {
               onClick={() => setCompareMode('GROUP')}
               className={`min-h-[42px] flex items-center justify-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer touch-manipulation active:scale-95 select-none ${
                 compareMode === 'GROUP'
-                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-900/40'
+                  ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md shadow-brand-900/40'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -741,7 +741,7 @@ export const ComparePage: React.FC = () => {
                                 onClick={() => { handleSelectA(Number(s.id)); setFighterAOpen(false); }}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
                                   isSelected
-                                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-600/30'
+                                    ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-600/30'
                                     : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
                                 }`}
                               >
@@ -1102,7 +1102,7 @@ export const ComparePage: React.FC = () => {
                       onClick={() => setMobileStudentTab('MATRIX')}
                       className={`py-1.5 px-1 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                         mobileStudentTab === 'MATRIX'
-                          ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-xs'
+                          ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-xs'
                           : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
@@ -1245,7 +1245,7 @@ export const ComparePage: React.FC = () => {
                       </div>
 
                       <div className="text-center space-y-3">
-                        <div className={`w-20 h-20 mx-auto rounded-full text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-300' : 'bg-gradient-to-tr from-brand-600 to-indigo-600 border-white/20'}`}>
+                        <div className={`w-20 h-20 mx-auto rounded-full text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-300' : 'bg-gradient-to-tr from-brand-600 to-brand-700 border-white/20'}`}>
                           {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
@@ -1371,8 +1371,8 @@ export const ComparePage: React.FC = () => {
 
                     <div className="text-center space-y-4 relative z-10">
                       <div className="relative w-28 h-28 mx-auto">
-                        <div className={`absolute inset-0 rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-400 to-orange-600 animate-pulse' : 'bg-gradient-to-tr from-brand-400 to-indigo-600'}`} />
-                        <div className={`relative w-full h-full rounded-full text-white font-black text-4xl flex items-center justify-center shadow-xl border-4 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-200 dark:border-amber-900' : 'bg-gradient-to-tr from-brand-600 to-indigo-600 border-white dark:border-navy-800'}`}>
+                        <div className={`absolute inset-0 rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-400 to-orange-600 animate-pulse' : 'bg-gradient-to-tr from-brand-500 to-brand-700'}`} />
+                        <div className={`relative w-full h-full rounded-full text-white font-black text-4xl flex items-center justify-center shadow-xl border-4 ${battleResult?.winner === 'A' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 border-amber-200 dark:border-amber-900' : 'bg-gradient-to-tr from-brand-600 to-brand-700 border-white dark:border-navy-800'}`}>
                           {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                       </div>
@@ -1638,7 +1638,7 @@ export const ComparePage: React.FC = () => {
                   onClick={() => handleDimensionChange('DEPT_YEAR')}
                   className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     groupDimension === 'DEPT_YEAR'
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25 ring-1 ring-brand-400/40'
+                      ? 'bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-md shadow-brand-600/25 ring-1 ring-brand-400/40'
                       : 'text-slate-600 dark:text-slate-300 hover:text-brand-500 hover:bg-slate-200/50 dark:hover:bg-white/5'
                   }`}
                 >

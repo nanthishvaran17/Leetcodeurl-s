@@ -2179,7 +2179,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                     type="button"
                     onClick={handleTestAdminOtpDelivery}
                     disabled={testingAdminOtp}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-600/30 flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 transition-all"
                   >
                     <Send className={`w-3.5 h-3.5 ${testingAdminOtp ? 'animate-spin' : ''}`} />
                     <span>{testingAdminOtp ? 'Testing Real Delivery...' : 'TEST ADMIN OTP DELIVERY'}</span>
@@ -3145,7 +3145,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-brand-500/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              className="flex-1 sm:flex-initial px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
             >
               {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               <span>{saving ? 'Saving...' : 'Save Configuration'}</span>

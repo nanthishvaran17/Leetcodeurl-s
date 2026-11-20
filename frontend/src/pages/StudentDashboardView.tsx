@@ -89,7 +89,7 @@ export const StudentDashboardView: React.FC = () => {
                 className="w-20 h-20 rounded-3xl border-4 border-brand-400 shadow-xl object-cover shrink-0"
               />
             ) : (
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 font-black text-2xl flex items-center justify-center shadow-xl border-2 border-white/20 shrink-0">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 to-brand-700 font-black text-2xl flex items-center justify-center shadow-xl border-2 border-white/20 shrink-0">
                 {user?.name ? user.name[0] : 'S'}
               </div>
             )}

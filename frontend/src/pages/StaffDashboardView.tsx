@@ -1760,7 +1760,7 @@ NEC LeetCode Intelligence Portal`;
                             window.location.hash = '#/hod-command-center';
                             window.dispatchEvent(new CustomEvent('navigate_to_route', { detail: { route: 'hod-command-center' } }));
                           }}
-                          className="mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-brand-500/25 transition cursor-pointer flex items-center gap-2"
+                          className="mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white text-xs font-black shadow-md shadow-brand-600/25 transition cursor-pointer flex items-center gap-2"
                         >
                           <ArrowRight className="w-4 h-4" />
                           <span>Open HOD Leadership Deck & Allocate</span>
