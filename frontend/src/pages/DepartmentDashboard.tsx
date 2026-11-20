@@ -196,9 +196,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   // Academic Year Dropdown Options (Removed 1st Year; Batches: 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
     { value: 'all', label: 'All Academic Years', badge: 'ALL', icon: GraduationCap },
-    { value: '2', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
-    { value: '3', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
-    { value: '4', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap },
+    { value: '1', label: '1st Year (Batch 2030)', badge: '1st Year', icon: GraduationCap },
+    { value: '2', label: '2nd Year (Batch 2029)', badge: '2nd Year', icon: GraduationCap },
+    { value: '3', label: '3rd Year (Batch 2028)', badge: '3rd Year', icon: GraduationCap },
+    { value: '4', label: '4th Year (Batch 2027)', badge: '4th Year', icon: GraduationCap },
   ];
 
   // Department Dropdown Options for unified desktop controls
@@ -402,13 +403,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 type="button"
                 onClick={() => {
                   setDesktopFilterMode('dropdowns');
-                  try { localStorage.setItem('nec_dept_filter_mode', 'dropdowns'); } catch {}
+                  try { localStorage.setItem('nec_dept_filter_mode', 'dropdowns'); } catch { }
                 }}
-                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  desktopFilterMode === 'dropdowns'
-                    ? 'bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-400 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${desktopFilterMode === 'dropdowns'
+                  ? 'bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-400 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
                 title="Unified Dropdown Grid"
               >
                 <LayoutGrid className="w-3 h-3" />
@@ -418,13 +418,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 type="button"
                 onClick={() => {
                   setDesktopFilterMode('pills');
-                  try { localStorage.setItem('nec_dept_filter_mode', 'pills'); } catch {}
+                  try { localStorage.setItem('nec_dept_filter_mode', 'pills'); } catch { }
                 }}
-                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  desktopFilterMode === 'pills'
-                    ? 'bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-400 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${desktopFilterMode === 'pills'
+                  ? 'bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-400 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
                 title="1-Tap Fast Filter Pills"
               >
                 <SlidersHorizontal className="w-3 h-3" />
@@ -467,11 +466,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                         key={c.value}
                         type="button"
                         onClick={() => { setSelectedCollege(c.value); setDisplayCount(32); }}
-                        className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${
-                          isSelected
-                            ? 'bg-teal-600 text-white shadow-xs'
-                            : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-teal-500/40'
-                        }`}
+                        className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${isSelected
+                          ? 'bg-teal-600 text-white shadow-xs'
+                          : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-teal-500/40'
+                          }`}
                       >
                         {c.label}
                       </button>
@@ -491,8 +489,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   ...(((isRestrictedHod || isStaffUser) && departments.length <= 1) ? [] : [{ id: 'all', label: (isRestrictedHod || isStaffUser) ? 'All My Depts' : 'All Depts' }]),
                   ...departments.map(d => ({ id: String(d.id), label: d.code || d.name }))
                 ].map(d => {
-                  const isSelected = 
-                    selectedDept === d.id || 
+                  const isSelected =
+                    selectedDept === d.id ||
                     (d.id === 'all' && (selectedDept === 'all' || selectedDept === 'ALL')) ||
                     normalizeDepartment(selectedDept) === normalizeDepartment(d.id);
                   return (
@@ -500,11 +498,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                       key={d.id}
                       type="button"
                       onClick={() => { setSelectedDept(d.id); setDisplayCount(32); }}
-                      className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${
-                        isSelected
-                          ? 'bg-brand-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-brand-500/40'
-                      }`}
+                      className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${isSelected
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-brand-500/40'
+                        }`}
                     >
                       {d.label}
                     </button>
@@ -521,11 +518,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               <div className="flex items-center gap-1.5 flex-wrap">
                 {[
                   { value: 'all', label: 'All Years' },
-                  { value: '2', label: 'II Year' },
-                  { value: '3', label: 'III Year' },
-                  { value: '4', label: 'IV Year' }
+                  { value: '1', label: '1st Year' },
+                  { value: '2', label: '2nd Year' },
+                  { value: '3', label: '3rd Year' },
+                  { value: '4', label: '4th Year' }
                 ].map(y => {
-                  const isSelected = 
+                  const isSelected =
                     yearLevel === y.value ||
                     (y.value === 'all' && (yearLevel === 'all' || yearLevel === 'ALL')) ||
                     normalizeAcademicYear(yearLevel) === normalizeAcademicYear(y.value);
@@ -534,11 +532,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                       key={y.value}
                       type="button"
                       onClick={() => { setYearLevel(y.value); setDisplayCount(32); }}
-                      className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${
-                        isSelected
-                          ? 'bg-brand-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-brand-500/40'
-                      }`}
+                      className={`px-3 py-1 rounded-xl font-bold text-[11px] transition-all cursor-pointer active:scale-95 ${isSelected
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-navy-700 hover:border-brand-500/40'
+                        }`}
                     >
                       {y.label}
                     </button>
@@ -619,11 +616,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   setMobileFilterTab('college');
                   setIsMobileFilterOpen(true);
                 }}
-                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                  selectedCollege !== 'all' && selectedCollege !== 'ALL'
-                    ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30'
-                    : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-                }`}
+                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${selectedCollege !== 'all' && selectedCollege !== 'ALL'
+                  ? 'bg-teal-500/15 text-teal-600 dark:text-teal-300 border-teal-500/30'
+                  : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
+                  }`}
               >
                 <School className="w-3 h-3 shrink-0 text-teal-500" />
                 <span>College: {activeCollegeLabel}</span>
@@ -641,11 +637,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 setMobileFilterTab('department');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                selectedDept !== 'all' && selectedDept !== 'ALL'
-                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border-brand-500/30'
-                  : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${selectedDept !== 'all' && selectedDept !== 'ALL'
+                ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border-brand-500/30'
+                : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
+                }`}
             >
               <Building2 className="w-3 h-3 shrink-0" />
               <span>Dept: {activeDeptLabel}</span>
@@ -661,11 +656,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 setMobileFilterTab('year');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                yearLevel !== 'all'
-                  ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border-brand-500/30'
-                  : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${yearLevel !== 'all'
+                ? 'bg-brand-500/15 text-brand-600 dark:text-brand-300 border-brand-500/30'
+                : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
+                }`}
             >
               <GraduationCap className="w-3 h-3 shrink-0" />
               <span>Year: {activeYearLabel}</span>
@@ -681,11 +675,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                 setMobileFilterTab('performance');
                 setIsMobileFilterOpen(true);
               }}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${
-                solvedFilter !== 'all'
-                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30'
-                  : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
-              }`}
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-[11px] font-extrabold whitespace-nowrap transition-all shrink-0 cursor-pointer border ${solvedFilter !== 'all'
+                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30'
+                : 'bg-slate-100/80 dark:bg-navy-900/60 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.06]'
+                }`}
             >
               <Award className="w-3 h-3 shrink-0" />
               <span>Solved: {activePerformanceLabel}</span>
@@ -856,10 +849,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   ? (selectedCollege === 'all' || selectedCollege === 'ALL'
                     ? 'All Colleges'
                     : selectedCollege.toUpperCase() === 'NEC'
-                    ? 'Nandha Engineering (NEC)'
-                    : selectedCollege.toUpperCase() === 'NCT'
-                    ? 'Nandha Tech (NCT)'
-                    : selectedCollege)
+                      ? 'Nandha Engineering (NEC)'
+                      : selectedCollege.toUpperCase() === 'NCT'
+                        ? 'Nandha Tech (NCT)'
+                        : selectedCollege)
                   : (userCollege === 'NCT' ? 'Nandha Tech (NCT)' : 'Nandha Engineering (NEC)')}
               </span>
             </div>

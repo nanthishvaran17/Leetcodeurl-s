@@ -292,7 +292,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
 
       {/* Filters & Search Control Bar - Uniform Responsive Grid */}
       <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200/90 dark:border-white/10 shadow-xl space-y-3.5">
-        
+
         {/* Filter Bar Header & Reset */}
         <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-navy-800/80">
           <div className="flex items-center space-x-2 min-w-0">
@@ -404,9 +404,10 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
             onChange={(val) => setYearLevel(val)}
             options={[
               { value: '', label: 'All Years' },
-              { value: 'II', label: 'II Year' },
-              { value: 'III', label: 'III Year' },
-              { value: 'IV', label: 'IV Year' }
+              { value: 'I', label: '1st Year' },
+              { value: 'II', label: '2nd Year' },
+              { value: 'III', label: '3rd Year' },
+              { value: 'IV', label: '4th Year' }
             ]}
             placeholder="All Years"
             triggerClassName="w-full h-11 px-3.5 bg-slate-50 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs hover:border-brand-500/60 transition-all"
@@ -417,7 +418,7 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
 
       {/* Main Solvers Table (Desktop) & Cards (Mobile) */}
       <div className="glass-card rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-xl max-w-full">
-        
+
         {/* MOBILE CARDS VIEW (md:hidden) — 2026 SaaS Bento Solvers */}
         <div className="block md:hidden p-2.5 sm:p-5 flex flex-col gap-3 sm:gap-5">
           {loading ? (

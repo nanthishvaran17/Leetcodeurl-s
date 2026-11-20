@@ -339,10 +339,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
   const yearFilterOptions = useMemo<GlobalFilterOption[]>(() => [
     { value: 'ALL', label: 'All Years', pillText: 'ALL' },
-    { value: '1st Year', label: '1st Year (I)', pillText: 'Y1' },
-    { value: '2nd Year', label: '2nd Year (II)', pillText: 'Y2' },
-    { value: '3rd Year', label: '3rd Year (III)', pillText: 'Y3' },
-    { value: '4th Year', label: '4th Year (IV)', pillText: 'Y4' },
+    { value: '1st Year', label: '1st Year', pillText: 'Y1' },
+    { value: '2nd Year', label: '2nd Year', pillText: 'Y2' },
+    { value: '3rd Year', label: '3rd Year', pillText: 'Y3' },
+    { value: '4th Year', label: '4th Year', pillText: 'Y4' },
   ], []);
 
   const quickDepts = useMemo(() => {
@@ -1100,10 +1100,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                         onChange={(val) => setYearLevel(val)}
                         dropdownWidth="w-full"
                         options={[
-                          { value: "1", label: "I Year", pillText: "1ST" },
-                          { value: "2", label: "II Year", pillText: "2ND" },
-                          { value: "3", label: "III Year", pillText: "3RD" },
-                          { value: "4", label: "IV Year", pillText: "4TH" }
+                          { value: "1", label: "1st Year", pillText: "1ST" },
+                          { value: "2", label: "2nd Year", pillText: "2ND" },
+                          { value: "3", label: "3rd Year", pillText: "3RD" },
+                          { value: "4", label: "4th Year", pillText: "4TH" }
                         ]}
                         icon={<Calendar className="w-4 h-4 text-amber-400" />}
                         placeholder="Select Academic Year"

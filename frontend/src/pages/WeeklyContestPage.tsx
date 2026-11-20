@@ -3087,36 +3087,96 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className={`relative ${showExportMenu ? 'z-50' : 'z-20'} mt-2 sm:mt-4 p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3 sm:space-y-5 no-print mb-3 sm:mb-5`}>
+          <div className={`relative ${showExportMenu ? 'z-50' : 'z-20'} mt-2 sm:mt-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/[0.09] shadow-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.12)] space-y-3.5 sm:space-y-5 no-print mb-3 sm:mb-5`}>
             {/* Row 1: Consolidated Action Toolbar & Mobile Filter Toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Mobile Filter Scope Bar */}
-              <div className="flex items-center justify-between sm:hidden pb-1 border-b border-slate-100 dark:border-navy-900">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
-                    <Filter className="w-3.5 h-3.5" />
+              <div className="flex items-center justify-between gap-3 sm:hidden pb-3 mb-1 border-b border-slate-100 dark:border-white/[0.08]">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Filter className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white truncate">
-                    Contest Filter Scope
-                  </span>
+                  <div className="min-w-0">
+                    <span className="text-xs font-black uppercase tracking-wide text-slate-900 dark:text-white truncate block">
+                      Contest Filters
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block truncate">
+                      {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0)
+                        ? `${[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length} filter active`
+                        : 'Filter by Dept, Year, Status'}
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowMobileContestFilters(prev => !prev)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all shadow-2xs touch-manipulation active:scale-95"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowMobileContestFilters(prev => !prev);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[38px] rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-bold transition-all shadow-2xs touch-manipulation active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
                 >
-                  <span>{showMobileContestFilters ? 'Hide Filters' : 'Filter Options'}</span>
+                  <span className="font-extrabold">{showMobileContestFilters ? 'Hide Filters' : 'Filter Options'}</span>
                   {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length > 0) && (
-                    <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center shrink-0">
                       {[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length}
                     </span>
                   )}
-                  <ChevronDown size={13} className={`transition-transform duration-200 ${showMobileContestFilters ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`transition-transform duration-200 shrink-0 ${showMobileContestFilters ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
+              {/* Mobile Active Filter Chips */}
+              {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
+                <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-white/[0.08] sm:hidden">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Active:</span>
+                  {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                      College: {selectedCollegeFilter}
+                      <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
+                    </span>
+                  )}
+                  {selectedDeptFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
+                      Dept: {selectedDeptFilter}
+                      <button onClick={() => setSelectedDeptFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
+                    </span>
+                  )}
+                  {selectedYearFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      Year: {selectedYearFilter}
+                      <button onClick={() => setSelectedYearFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
+                    </span>
+                  )}
+                  {selectedAttendanceFilter !== 'ALL' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      Status: {selectedAttendanceFilter}
+                      <button onClick={() => setSelectedAttendanceFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
+                    </span>
+                  )}
+                  {searchTerm && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                      Query: {searchTerm}
+                      <button onClick={() => setSearchTerm('')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCollegeFilter('ALL');
+                      setSelectedDeptFilter('ALL');
+                      setSelectedYearFilter('ALL');
+                      setSelectedAttendanceFilter('ALL');
+                      setSearchTerm('');
+                    }}
+                    className="text-[10px] font-bold text-rose-500 hover:text-rose-600 underline ml-1 cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+
               {/* Consolidated Action Toolbar */}
-              <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2 ml-auto relative z-30">
+              <div className="w-full sm:w-auto grid grid-cols-1 sm:flex sm:flex-row items-stretch sm:items-center gap-2.5 ml-auto relative z-30 pt-0.5 sm:pt-0">
 
                 {/* Unified Actions & Export Dropdown */}
                 <div className={`relative w-full sm:w-auto ${showExportMenu ? 'z-50' : 'z-40'}`} ref={exportMenuRef}>
@@ -3807,10 +3867,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 {(() => {
                   const yearOptions: GlobalFilterOption[] = [
                     { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' },
-                    { value: 'I', label: 'I Year (2026–2030)', pillText: 'I' },
-                    { value: 'II', label: 'II Year (2025–2029)', pillText: 'II' },
-                    { value: 'III', label: 'III Year (2024–2028)', pillText: 'III' },
-                    { value: 'IV', label: 'IV Year (2023–2027)', pillText: 'IV' },
+                    { value: 'I', label: '1st Year (2026–2030)', pillText: '1st' },
+                    { value: 'II', label: '2nd Year (2025–2029)', pillText: '2nd' },
+                    { value: 'III', label: '3rd Year (2024–2028)', pillText: '3rd' },
+                    { value: 'IV', label: '4th Year (2023–2027)', pillText: '4th' },
                   ];
 
                   const normalizedYear = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
@@ -3888,37 +3948,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </button>
                 </div>
               </div>
-
-              {/* Mobile Active Filter Chips */}
-              {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
-                <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-navy-900/80 flex flex-wrap items-center gap-1.5 sm:hidden">
-                  <span className="text-[10px] font-extrabold uppercase text-slate-400">Active:</span>
-                  {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
-                      College: {selectedCollegeFilter}
-                      <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-                    </span>
-                  )}
-                  {selectedDeptFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
-                      Dept: {selectedDeptFilter}
-                      <button onClick={() => setSelectedDeptFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-                    </span>
-                  )}
-                  {selectedYearFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                      Year: {selectedYearFilter}
-                      <button onClick={() => setSelectedYearFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-                    </span>
-                  )}
-                  {selectedAttendanceFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                      Status: {selectedAttendanceFilter}
-                      <button onClick={() => setSelectedAttendanceFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90">×</button>
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Mobile Swipe-Up Bottom Sheet Drawer for Contest Filter Scope */}
@@ -3988,23 +4017,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-2 shrink-0 ml-2">
-                          {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL')) && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                triggerHaptic('light');
-                                setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
-                                setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
-                                setSelectedYearFilter('ALL');
-                                setSelectedAttendanceFilter('ALL');
-                              }}
-                              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all active:scale-95 cursor-pointer"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>Reset</span>
-                            </button>
-                          )}
+                        <div className="flex items-center shrink-0 ml-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -4094,11 +4107,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         {filterDrawerTab === 'year' && (
                           <div className="space-y-1.5">
                             {[
-                              { value: 'ALL', label: 'All Academic Years', desc: 'All batches and cohorts', code: 'ALL', color: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800' },
-                              { value: 'I', label: 'I Year (First Year)', desc: 'Batch 2026 – 2030', code: 'I', color: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800' },
-                              { value: 'II', label: 'II Year (Second Year)', desc: 'Batch 2025 – 2029', code: 'II', color: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800' },
-                              { value: 'III', label: 'III Year (Third Year)', desc: 'Batch 2024 – 2028', code: 'III', color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800' },
-                              { value: 'IV', label: 'IV Year (Final Year)', desc: 'Batch 2023 – 2027', code: 'IV', color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800' },
+                              { value: 'ALL', label: 'All Academic Years', desc: 'All batches and cohorts' },
+                              { value: 'I', label: '1st Year', desc: 'Batch 2026 – 2030' },
+                              { value: 'II', label: '2nd Year', desc: 'Batch 2025 – 2029' },
+                              { value: 'III', label: '3rd Year', desc: 'Batch 2024 – 2028' },
+                              { value: 'IV', label: '4th Year', desc: 'Batch 2023 – 2027' },
                             ].map((opt) => {
                               const normalizedSelected = selectedYearFilter === '1' ? 'I' : selectedYearFilter === '2' ? 'II' : selectedYearFilter === '3' ? 'III' : selectedYearFilter === '4' ? 'IV' : selectedYearFilter;
                               const isSelected = normalizedSelected === opt.value;
@@ -4126,20 +4139,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                       <div className="flex items-center gap-2">
-                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${opt.color}`}>
-                                          {opt.code}
+                                        <span className={`text-xs font-bold leading-snug ${
+                                          isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                        }`}>
+                                          {opt.label}
                                         </span>
                                         {isSelected && (
-                                          <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400">
                                             Active
                                           </span>
                                         )}
                                       </div>
-                                      <span className={`text-xs mt-0.5 font-bold leading-snug ${
-                                        isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
-                                      }`}>
-                                        {opt.label}
-                                      </span>
                                       {opt.desc && (
                                         <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                                           {opt.desc}
@@ -4572,7 +4582,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     {selectedYearFilter !== 'ALL' && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/90 dark:bg-slate-900/90 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold shadow-2xs">
                         <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">Year:</span>
-                        <span>{selectedYearFilter === '1' ? 'I Year' : selectedYearFilter === '2' ? 'II Year' : selectedYearFilter === '3' ? 'III Year' : selectedYearFilter === '4' ? 'IV Year' : `${selectedYearFilter} Year`}</span>
+                        <span>{selectedYearFilter === '1' || selectedYearFilter === 'I' ? '1st Year' : selectedYearFilter === '2' || selectedYearFilter === 'II' ? '2nd Year' : selectedYearFilter === '3' || selectedYearFilter === 'III' ? '3rd Year' : selectedYearFilter === '4' || selectedYearFilter === 'IV' ? '4th Year' : `${selectedYearFilter} Year`}</span>
                         <button
                           type="button"
                           onClick={() => setSelectedYearFilter('ALL')}
@@ -5881,7 +5891,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                               <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
                                 <div className="flex items-center gap-2">
                                   <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
-                                  <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
+                                  <span>Academic Year: {yr === 'I' || yr === '1' ? '1st' : yr === 'II' || yr === '2' ? '2nd' : yr === 'III' || yr === '3' ? '3rd' : yr === 'IV' || yr === '4' ? '4th' : yr} Year ({yr === 'I' || yr === '1' ? '2026–2030' : (yr === 'II' || yr === '2' ? '2025–2029' : (yr === 'III' || yr === '3' ? '2024–2028' : '2023–2027'))})</span>
                                 </div>
                               </td>
                               <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
@@ -6019,7 +6029,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           <div key={yr} className="p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-900/50 bg-purple-50/30 dark:bg-purple-950/20 shadow-xs space-y-2.5">
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-xs font-black text-purple-900 dark:text-purple-200 truncate">
-                                Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})
+                                Academic Year: {yr === 'I' || yr === '1' ? '1st' : yr === 'II' || yr === '2' ? '2nd' : yr === 'III' || yr === '3' ? '3rd' : yr === 'IV' || yr === '4' ? '4th' : yr} Year ({yr === 'I' || yr === '1' ? '2026–2030' : (yr === 'II' || yr === '2' ? '2025–2029' : (yr === 'III' || yr === '3' ? '2024–2028' : '2023–2027'))})
                               </span>
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shrink-0">
                                 {pct}%

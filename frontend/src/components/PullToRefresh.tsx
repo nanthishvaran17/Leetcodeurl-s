@@ -30,7 +30,7 @@ function isScrolledDown(target: EventTarget | null): boolean {
       if (el.scrollTop > 2) {
         return true;
       }
-    } catch (_) {}
+    } catch (_) { }
     el = el.parentElement;
   }
   return false;
@@ -57,7 +57,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
     if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
       try {
         navigator.vibrate(pattern);
-      } catch {}
+      } catch { }
     }
   };
 
@@ -269,15 +269,14 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
             opacity: Math.min(pullDistance / 14, 1)
           }}
         >
-          <div className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-2xl border backdrop-blur-2xl transition-all duration-200 ${
-            isSuccess
+          <div className={`flex items-center gap-2.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-2xl border backdrop-blur-2xl transition-all duration-200 ${isSuccess
               ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/50 ring-4 ring-emerald-400/30 scale-105'
               : isRefreshing
-              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-indigo-300 shadow-indigo-500/50 ring-4 ring-brand-400/30 scale-105'
-              : isThresholdReached
-              ? 'bg-brand-600 text-white border-brand-400 shadow-brand-500/50 scale-105 ring-4 ring-brand-400/40'
-              : 'bg-white/95 dark:bg-navy-900/95 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-white/10 shadow-slate-900/20'
-          }`}>
+                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white border-indigo-300 shadow-indigo-500/50 ring-4 ring-brand-400/30 scale-105'
+                : isThresholdReached
+                  ? 'bg-brand-600 text-white border-brand-400 shadow-brand-500/50 scale-105 ring-4 ring-brand-400/40'
+                  : 'bg-white/95 dark:bg-navy-900/95 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-white/10 shadow-slate-900/20'
+            }`}>
             {isSuccess ? (
               <Check className="w-4 h-4 text-white stroke-[3] animate-bounce" />
             ) : isRefreshing ? (
@@ -307,10 +306,10 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
               {isSuccess
                 ? 'All Data Updated!'
                 : isRefreshing
-                ? 'Syncing Fresh Intelligence...'
-                : isThresholdReached
-                ? 'Release to Refresh'
-                : 'Pull down to refresh'}
+                  ? 'Syncing Fresh Intelligence...'
+                  : isThresholdReached
+                    ? 'Release to Refresh'
+                    : 'Pull down to refresh'}
             </span>
           </div>
         </div>
@@ -318,7 +317,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
 
       {/* Page Content with Native Elastic Pull Feedback on Touch */}
       <div
-        className="w-full max-w-full min-w-0 min-h-full flex-1 flex flex-col will-change-transform overflow-x-clip box-border"
+        className={`w-full max-w-full min-w-0 min-h-full flex-1 flex flex-col ${(pullDistance > 0 || isRefreshing) ? 'will-change-transform' : ''} overflow-x-clip box-border`}
         style={{
           transform: (pullDistance > 0 || isRefreshing)
             ? `translate3d(0, ${isRefreshing ? 44 : Math.round(pullDistance * 0.42)}px, 0)`

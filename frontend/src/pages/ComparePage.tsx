@@ -237,10 +237,11 @@ export const ComparePage: React.FC = () => {
       });
       return list;
     } else if (groupDimension === 'YEAR') {
-      const yearDefs: { key: 'II' | 'III' | 'IV'; label: string; pillText: string; cleanLabel: string }[] = [
-        { key: 'II', label: 'II Year (Batch 2025 – 2029)', pillText: '2ND YR', cleanLabel: 'II Year (Batch 2025 – 2029)' },
-        { key: 'III', label: 'III Year (Batch 2024 – 2028)', pillText: '3RD YR', cleanLabel: 'III Year (Batch 2024 – 2028)' },
-        { key: 'IV', label: 'IV Year (Batch 2023 – 2027)', pillText: '4TH YR', cleanLabel: 'IV Year (Batch 2023 – 2027)' },
+      const yearDefs: { key: 'I' | 'II' | 'III' | 'IV'; label: string; pillText: string; cleanLabel: string }[] = [
+        { key: 'I', label: '1st Year (Batch 2026 – 2030)', pillText: '1ST YR', cleanLabel: '1st Year (Batch 2026 – 2030)' },
+        { key: 'II', label: '2nd Year (Batch 2025 – 2029)', pillText: '2ND YR', cleanLabel: '2nd Year (Batch 2025 – 2029)' },
+        { key: 'III', label: '3rd Year (Batch 2024 – 2028)', pillText: '3RD YR', cleanLabel: '3rd Year (Batch 2024 – 2028)' },
+        { key: 'IV', label: '4th Year (Batch 2023 – 2027)', pillText: '4TH YR', cleanLabel: '4th Year (Batch 2023 – 2027)' },
       ];
       return yearDefs.map(y => {
         const count = cohort.filter(s => getStudentYear(s) === y.key).length;
@@ -541,9 +542,10 @@ export const ComparePage: React.FC = () => {
                   onChange={setSelectedYear}
                   options={[
                     { value: 'ALL', pillText: 'ALL', label: 'All Academic Years' },
-                    { value: '2',  pillText: 'II',  label: 'II Year (Batch 2025 - 2029)' },
-                    { value: '3', pillText: 'III', label: 'III Year (Batch 2024 - 2028)' },
-                    { value: '4',  pillText: 'IV',  label: 'IV Year (Batch 2023 - 2027)' },
+                    { value: '1',  pillText: '1ST',  label: '1st Year (Batch 2026 - 2030)' },
+                    { value: '2',  pillText: '2ND',  label: '2nd Year (Batch 2025 - 2029)' },
+                    { value: '3', pillText: '3RD', label: '3rd Year (Batch 2024 - 2028)' },
+                    { value: '4',  pillText: '4TH',  label: '4th Year (Batch 2023 - 2027)' },
                   ]}
                   icon={<GraduationCap className="w-4 h-4 text-brand-500" />}
                   dropdownWidth="w-full sm:w-80"

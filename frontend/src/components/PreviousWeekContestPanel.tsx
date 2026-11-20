@@ -1255,10 +1255,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
   const yearOptions = useMemo(() => [
     { value: 'ALL', label: 'All Academic Years', shortLabel: 'All Years', code: 'ALL', color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800', desc: 'All batches and cohorts' },
-    { value: 'I',   label: 'I Year (First Year)',  shortLabel: '1st Year',   code: 'I',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800', desc: 'Batch 2026 – 2030' },
-    { value: 'II',  label: 'II Year (Second Year)', shortLabel: '2nd Year',  code: 'II',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', desc: 'Batch 2025 – 2029' },
-    { value: 'III', label: 'III Year (Third Year)', shortLabel: '3rd Year',  code: 'III', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', desc: 'Batch 2024 – 2028' },
-    { value: 'IV',  label: 'IV Year (Final Year)', shortLabel: 'Final Year', code: 'IV',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800', desc: 'Batch 2023 – 2027' },
+    { value: 'I',   label: '1st Year',  shortLabel: '1st Year',   code: '1st',   color: 'text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800', desc: 'Batch 2026 – 2030' },
+    { value: 'II',  label: '2nd Year', shortLabel: '2nd Year',  code: '2nd',  color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', desc: 'Batch 2025 – 2029' },
+    { value: 'III', label: '3rd Year', shortLabel: '3rd Year',  code: '3rd', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', desc: 'Batch 2024 – 2028' },
+    { value: 'IV',  label: '4th Year', shortLabel: '4th Year', code: '4th',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800', desc: 'Batch 2023 – 2027' },
   ], []);
 
   const filteredDeptOptions = useMemo(() => {
@@ -2330,20 +2330,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                               </div>
                               <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 ${opt.color}`}>
-                                    {opt.code}
+                                  <span className={`text-xs font-bold leading-snug ${
+                                    isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
+                                  }`}>
+                                    {opt.label}
                                   </span>
                                   {isSelected && (
-                                    <span className="text-[9px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400">
                                       Active
                                     </span>
                                   )}
                                 </div>
-                                <span className={`text-xs mt-0.5 font-bold leading-snug ${
-                                  isSelected ? 'text-purple-950 dark:text-purple-100 font-extrabold' : 'text-slate-800 dark:text-slate-200'
-                                }`}>
-                                  {opt.label}
-                                </span>
                                 {opt.desc && (
                                   <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">
                                     {opt.desc}
@@ -2993,10 +2990,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
                       >
                         <option value="ALL">All Academic Years</option>
-                        <option value="II">II Year (Batch 2025–29)</option>
-                        <option value="III">III Year (Batch 2024–28)</option>
-                        <option value="IV">IV Year (Batch 2023–27)</option>
-                        <option value="I">I Year (Batch 2026–30)</option>
+                        <option value="I">1st Year (Batch 2026–30)</option>
+                        <option value="II">2nd Year (Batch 2025–29)</option>
+                        <option value="III">3rd Year (Batch 2024–28)</option>
+                        <option value="IV">4th Year (Batch 2023–27)</option>
                       </select>
                     </div>
                   </div>

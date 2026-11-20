@@ -37,7 +37,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     const str = y.trim();
     if (str.includes('2023') || str.includes('2027') || /\b(4|iv)\b/i.test(str)) {
       return {
-        badge: 'IV Year',
+        badge: '4th Year',
         label: str,
         sublabel: 'Final Year Mentorship Roster',
         badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
@@ -45,7 +45,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     }
     if (str.includes('2024') || str.includes('2028') || /\b(3|iii)\b/i.test(str)) {
       return {
-        badge: 'III Year',
+        badge: '3rd Year',
         label: str,
         sublabel: 'Pre-Final Year Mentorship Roster',
         badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30'
@@ -53,7 +53,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     }
     if (str.includes('2025') || str.includes('2029') || /\b(2|ii)\b/i.test(str)) {
       return {
-        badge: 'II Year',
+        badge: '2nd Year',
         label: str,
         sublabel: 'Second Year Mentorship Roster',
         badgeColor: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30'
@@ -61,7 +61,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     }
     if (str.includes('2026') || str.includes('2030') || /\b(1|i)\b/i.test(str)) {
       return {
-        badge: 'I Year',
+        badge: '1st Year',
         label: str,
         sublabel: 'First Year Mentorship Roster',
         badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'

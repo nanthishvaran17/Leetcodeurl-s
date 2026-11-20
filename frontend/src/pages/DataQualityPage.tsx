@@ -317,7 +317,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
             )}
             {selectedYear !== 'ALL' && (
               <span className="px-2 py-0.5 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 text-[10px] font-black">
-                {selectedYear === '1' || selectedYear === 'I' ? 'I Year' : selectedYear === '2' || selectedYear === 'II' ? 'II Year' : selectedYear === '3' || selectedYear === 'III' ? 'III Year' : 'IV Year'}
+                {selectedYear === '1' || selectedYear === 'I' ? '1st Year' : selectedYear === '2' || selectedYear === 'II' ? '2nd Year' : selectedYear === '3' || selectedYear === 'III' ? '3rd Year' : '4th Year'}
               </span>
             )}
           </div>
@@ -383,10 +383,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
               searchPlaceholder="Search academic year..."
               options={[
                 { value: "ALL", label: "All Academic Years", pillText: "ALL" },
-                { value: "1", label: "I Year", pillText: "1ST" },
-                { value: "2", label: "II Year", pillText: "2ND" },
-                { value: "3", label: "III Year", pillText: "3RD" },
-                { value: "4", label: "IV Year", pillText: "4TH" }
+                { value: "1", label: "1st Year", pillText: "1ST" },
+                { value: "2", label: "2nd Year", pillText: "2ND" },
+                { value: "3", label: "3rd Year", pillText: "3RD" },
+                { value: "4", label: "4th Year", pillText: "4TH" }
               ]}
             />
           </div>

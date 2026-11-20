@@ -263,13 +263,12 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                 <div
                   key={`podium-mob-${s.id}`}
                   onClick={() => onSelectStudent?.(s)}
-                  className={`p-3.5 rounded-2xl bg-white dark:bg-navy-900 border ${
-                    rankNum === 1
-                      ? 'border-amber-400/80 shadow-md shadow-amber-500/10 ring-1 ring-amber-400/30'
-                      : rankNum === 2
+                  className={`p-3.5 rounded-2xl bg-white dark:bg-navy-900 border ${rankNum === 1
+                    ? 'border-amber-400/80 shadow-md shadow-amber-500/10 ring-1 ring-amber-400/30'
+                    : rankNum === 2
                       ? 'border-slate-300 dark:border-slate-700 shadow-xs'
                       : 'border-orange-300/80 dark:border-orange-800 shadow-xs'
-                  } transition-all active:scale-[0.98] touch-manipulation cursor-pointer flex items-center justify-between gap-3`}
+                    } transition-all active:scale-[0.98] touch-manipulation cursor-pointer flex items-center justify-between gap-3`}
                 >
                   {/* Left: Rank Badge + Avatar */}
                   <div className="flex items-center space-x-3 min-w-0">
@@ -343,10 +342,10 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               dropdownWidth="w-56"
               options={[
                 { value: 'ALL', label: 'All Years', pillText: 'ALL' },
-                { value: '1', label: 'I Year', pillText: '1ST' },
-                { value: '2', label: 'II Year', pillText: '2ND' },
-                { value: '3', label: 'III Year', pillText: '3RD' },
-                { value: '4', label: 'IV Year', pillText: '4TH' }
+                { value: '1', label: '1st Year', pillText: '1ST' },
+                { value: '2', label: '2nd Year', pillText: '2ND' },
+                { value: '3', label: '3rd Year', pillText: '3RD' },
+                { value: '4', label: '4th Year', pillText: '4TH' }
               ]}
             />
 
@@ -358,8 +357,8 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               dropdownWidth="w-72"
               options={[
                 { value: 'ALL', label: 'All Departments', pillText: 'ALL' },
-                ...departments.map(d => ({ 
-                  value: d.code, 
+                ...departments.map(d => ({
+                  value: d.code,
                   label: d.name,
                   pillText: d.pillText || (d.code === 'CSE(CS)' ? 'CSE(CS)' : d.code === 'CSE(IOT)' ? 'CSE(IOT)' : d.code)
                 }))
@@ -377,11 +376,10 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                   key={s}
                   type="button"
                   onClick={() => setSortBy(s)}
-                  className={`relative px-4 py-2 min-h-[40px] rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer whitespace-nowrap outline-none flex items-center justify-center ${
-                    isActive
-                      ? 'text-white'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300'
-                  }`}
+                  className={`relative px-4 py-2 min-h-[40px] rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer whitespace-nowrap outline-none flex items-center justify-center ${isActive
+                    ? 'text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300'
+                    }`}
                 >
                   {isActive && (
                     <motion.div

@@ -155,33 +155,33 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
     },
     {
       value: '1st Year',
-      label: '1st Year (I Year)',
+      label: '1st Year',
       sublabel: 'Academic Batch 2026-2030',
-      badge: 'I Year',
+      badge: '1st Year',
       badgeColor: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/25',
       icon: Calendar
     },
     {
       value: '2nd Year',
-      label: '2nd Year (II Year)',
+      label: '2nd Year',
       sublabel: 'Academic Batch 2025-2029',
-      badge: 'II Year',
+      badge: '2nd Year',
       badgeColor: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/25',
       icon: Calendar
     },
     {
       value: '3rd Year',
-      label: '3rd Year (III Year)',
+      label: '3rd Year',
       sublabel: 'Academic Batch 2024-2028',
-      badge: 'III Year',
+      badge: '3rd Year',
       badgeColor: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/25',
       icon: Calendar
     },
     {
       value: '4th Year',
-      label: '4th Year (Final Year / IV)',
+      label: '4th Year',
       sublabel: 'Academic Batch 2023-2027',
-      badge: 'IV Year',
+      badge: '4th Year',
       badgeColor: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/25',
       icon: Calendar
     },

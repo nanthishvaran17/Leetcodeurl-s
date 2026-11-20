@@ -102,13 +102,13 @@ interface SavedView {
 }
 
 const DEFAULT_SAVED_VIEWS: SavedView[] = [
-  { id: 'all_critical',    name: 'All Critical Issues',         dept: 'all',      year: 'all', issue: 'CRITICAL',        search: '' },
-  { id: 'duplicate_user',  name: 'Duplicate Username Conflicts',dept: 'all',      year: 'all', issue: 'DUPLICATE_USERNAME', search: '' },
-  { id: 'sync_failures',  name: 'Sync Failures Only',          dept: 'all',      year: 'all', issue: 'SYNC_FAILED',     search: '' },
-  { id: 'missing_user',   name: 'Missing Username Profiles',   dept: 'all',      year: 'all', issue: 'MISSING_USERNAME', search: '' },
-  { id: 'never_synced',  name: 'Never Synced Roster',         dept: 'all',      year: 'all', issue: 'NEVER_SYNCED',    search: '' },
-  { id: 'not_started_only', name: 'Not Started (0 Solved)',    dept: 'all',      year: 'all', issue: 'NOT_STARTED',     search: '' },
-  { id: 'stale_records',  name: 'Stale Data (>7 Days)',        dept: 'all',      year: 'all', issue: 'STALE_DATA',      search: '' }
+  { id: 'all_critical', name: 'All Critical Issues', dept: 'all', year: 'all', issue: 'CRITICAL', search: '' },
+  { id: 'duplicate_user', name: 'Duplicate Username Conflicts', dept: 'all', year: 'all', issue: 'DUPLICATE_USERNAME', search: '' },
+  { id: 'sync_failures', name: 'Sync Failures Only', dept: 'all', year: 'all', issue: 'SYNC_FAILED', search: '' },
+  { id: 'missing_user', name: 'Missing Username Profiles', dept: 'all', year: 'all', issue: 'MISSING_USERNAME', search: '' },
+  { id: 'never_synced', name: 'Never Synced Roster', dept: 'all', year: 'all', issue: 'NEVER_SYNCED', search: '' },
+  { id: 'not_started_only', name: 'Not Started (0 Solved)', dept: 'all', year: 'all', issue: 'NOT_STARTED', search: '' },
+  { id: 'stale_records', name: 'Stale Data (>7 Days)', dept: 'all', year: 'all', issue: 'STALE_DATA', search: '' }
 ];
 
 export const StudentDataIssuesPage: React.FC = () => {
@@ -201,10 +201,10 @@ export const StudentDataIssuesPage: React.FC = () => {
 
   const yearFilterOptions = useMemo(() => [
     { value: 'all', label: 'All Academic Years', pillText: 'ALL' },
-    { value: '1', label: 'I Year (1st Year)', pillText: '1ST' },
-    { value: '2', label: 'II Year (2nd Year)', pillText: '2ND' },
-    { value: '3', label: 'III Year (3rd Year)', pillText: '3RD' },
-    { value: '4', label: 'IV Year (Final Year)', pillText: '4TH' },
+    { value: '1', label: '1st Year', pillText: '1ST' },
+    { value: '2', label: '2nd Year', pillText: '2ND' },
+    { value: '3', label: '3rd Year', pillText: '3RD' },
+    { value: '4', label: '4th Year', pillText: '4TH' },
   ], []);
 
   const issueFilterOptions = useMemo(() => [
@@ -424,7 +424,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         admin_name: "Admin Officer"
       });
       notify.success('Profile Repaired', `Updated ${repairStudent.name} (${repairStudent.reg_no}) with @${verifyResult.username}.`, { category: 'REPAIR ENGINE' });
-      
+
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
       window.dispatchEvent(new CustomEvent('student_updated', { detail: { id: repairStudent.id, reg_no: repairStudent.reg_no, username: verifyResult.username } }));
 
@@ -520,10 +520,10 @@ export const StudentDataIssuesPage: React.FC = () => {
     notify.info('Downloading Excel', countMsg, { category: 'EXPORT CENTER' });
     try {
       const dateTag = new Date().toISOString().split('T')[0];
-      const filename = isSelectedMode 
+      const filename = isSelectedMode
         ? `NANDHA_Selected_${selectedStudentIds.length}_Students_Report_${dateTag}.xlsx`
         : `NANDHA_Data_Issues_Report_${dateTag}.xlsx`;
-      
+
       const res = await downloadManager.download({
         endpoint: '/data-issues/export-excel',
         filename,
@@ -560,10 +560,10 @@ export const StudentDataIssuesPage: React.FC = () => {
     notify.info('Downloading CSV', countMsg, { category: 'EXPORT CENTER' });
     try {
       const dateTag = new Date().toISOString().split('T')[0];
-      const filename = isSelectedMode 
+      const filename = isSelectedMode
         ? `NANDHA_Selected_${selectedStudentIds.length}_Students_Report_${dateTag}.csv`
         : `NANDHA_Data_Issues_Report_${dateTag}.csv`;
-      
+
       const res = await downloadManager.download({
         endpoint: '/data-issues/export-csv',
         filename,
@@ -742,15 +742,14 @@ export const StudentDataIssuesPage: React.FC = () => {
                     key={c.id}
                     type="button"
                     onClick={() => setSelectedCollege(c.id)}
-                    className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
-                      isSelected
-                        ? c.id === 'NCT'
-                          ? 'bg-teal-600 text-white shadow-xs'
-                          : c.id === 'NEC'
+                    className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${isSelected
+                      ? c.id === 'NCT'
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : c.id === 'NEC'
                           ? 'bg-indigo-600 text-white shadow-xs'
                           : 'bg-brand-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
-                    }`}
+                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                      }`}
                   >
                     {c.label}
                   </button>
@@ -772,11 +771,10 @@ export const StudentDataIssuesPage: React.FC = () => {
                   key={d.id}
                   type="button"
                   onClick={() => setSelectedDept(d.id)}
-                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-brand-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
-                  }`}
+                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${isSelected
+                    ? 'bg-brand-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                    }`}
                 >
                   {d.label}
                 </button>
@@ -789,10 +787,10 @@ export const StudentDataIssuesPage: React.FC = () => {
             <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-0.5">Year:</span>
             {[
               { value: 'all', label: 'All Years' },
-              { value: '1', label: 'I Year' },
-              { value: '2', label: 'II Year' },
-              { value: '3', label: 'III Year' },
-              { value: '4', label: 'IV Year' }
+              { value: '1', label: '1st Year' },
+              { value: '2', label: '2nd Year' },
+              { value: '3', label: '3rd Year' },
+              { value: '4', label: '4th Year' }
             ].map(y => {
               const isSelected = normalizeAcademicYear(selectedYear) === y.value || (y.value === 'all' && normalizeAcademicYear(selectedYear) === 'all');
               return (
@@ -800,11 +798,10 @@ export const StudentDataIssuesPage: React.FC = () => {
                   key={y.value}
                   type="button"
                   onClick={() => setSelectedYear(y.value)}
-                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
-                  }`}
+                  className={`px-3 py-1 rounded-full font-extrabold text-[11px] uppercase tracking-wide whitespace-nowrap transition-all cursor-pointer active:scale-95 ${isSelected
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-navy-700 hover:bg-slate-200 dark:hover:bg-navy-700'
+                    }`}
                 >
                   {y.label}
                 </button>
@@ -871,11 +868,10 @@ export const StudentDataIssuesPage: React.FC = () => {
             <button
               key={view.id}
               onClick={() => handleApplySavedView(view)}
-              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all border cursor-pointer whitespace-nowrap shrink-0 sm:whitespace-normal sm:h-full flex items-center justify-center text-center active:scale-95 shadow-2xs ${
-                selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
-                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm font-black'
-                  : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
-              }`}
+              className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all border cursor-pointer whitespace-nowrap shrink-0 sm:whitespace-normal sm:h-full flex items-center justify-center text-center active:scale-95 shadow-2xs ${selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
+                ? 'bg-amber-500 text-white border-amber-600 shadow-sm font-black'
+                : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+                }`}
             >
               <span>{view.name}</span>
             </button>
@@ -1069,7 +1065,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
       {/* 6. STUDENT ISSUE TABLE (ENTERPRISE GRADE) */}
       <div className="rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm overflow-hidden space-y-0">
-        
+
         {/* Table Header & Download Controls */}
         <div className="px-3.5 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2.5 sm:gap-4">
           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -1125,15 +1121,14 @@ export const StudentDataIssuesPage: React.FC = () => {
                 return (
                   <div
                     key={student.id}
-                    className={`relative overflow-hidden rounded-2xl border transition-all duration-200 p-3 sm:p-3.5 space-y-2.5 shadow-sm ${
-                      isSelected
-                        ? 'bg-gradient-to-br from-brand-500/10 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25'
-                        : isCritical
+                    className={`relative overflow-hidden rounded-2xl border transition-all duration-200 p-3 sm:p-3.5 space-y-2.5 shadow-sm ${isSelected
+                      ? 'bg-gradient-to-br from-brand-500/10 to-transparent border-brand-500 dark:border-brand-400 ring-2 ring-brand-500/25'
+                      : isCritical
                         ? 'bg-white dark:bg-slate-900/90 border-rose-200/80 dark:border-rose-500/25'
                         : isWarning
-                        ? 'bg-white dark:bg-slate-900/90 border-amber-200/80 dark:border-amber-500/25'
-                        : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-white/10'
-                    }`}
+                          ? 'bg-white dark:bg-slate-900/90 border-amber-200/80 dark:border-amber-500/25'
+                          : 'bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-white/10'
+                      }`}
                   >
                     {/* Header Row: Checkbox, Avatar, Student Name & Reg No, Severity Badge */}
                     <div className="flex items-start justify-between gap-2.5">
@@ -1146,13 +1141,12 @@ export const StudentDataIssuesPage: React.FC = () => {
                         />
 
                         {/* Initial Avatar */}
-                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-display font-black text-xs text-white shrink-0 shadow-xs ${
-                          isCritical
-                            ? 'bg-gradient-to-br from-rose-500 to-red-600'
-                            : isWarning
+                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-display font-black text-xs text-white shrink-0 shadow-xs ${isCritical
+                          ? 'bg-gradient-to-br from-rose-500 to-red-600'
+                          : isWarning
                             ? 'bg-gradient-to-br from-amber-500 to-orange-600'
                             : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                        }`}>
+                          }`}>
                           {(student.name || 'S').charAt(0).toUpperCase()}
                         </div>
 
@@ -1173,19 +1167,17 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       {/* Severity / Status Badge */}
                       <span
-                        className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-black uppercase tracking-wider shrink-0 flex items-center gap-1 border shadow-xs ${
-                          isCritical
-                            ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-400/30'
-                            : isWarning
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-mono font-black uppercase tracking-wider shrink-0 flex items-center gap-1 border shadow-xs ${isCritical
+                          ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-400/30'
+                          : isWarning
                             ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-400/30'
                             : isInfo
-                            ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-400/30'
-                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
-                        }`}
+                              ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-400/30'
+                              : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
+                          }`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
-                        } animate-pulse`}></span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-rose-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
+                          } animate-pulse`}></span>
                         {student.issue_label}
                       </span>
                     </div>
@@ -1206,20 +1198,19 @@ export const StudentDataIssuesPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 shrink-0">
                         {student.leetcode_url ? (
                           <span
-                            className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-black uppercase tracking-wider flex items-center gap-1 border ${
-                              student.url_status === 'VERIFIED'
-                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
-                                : student.url_status === 'INVALID'
+                            className={`px-1.5 py-0.5 rounded-md text-[9px] font-mono font-black uppercase tracking-wider flex items-center gap-1 border ${student.url_status === 'VERIFIED'
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-400/30'
+                              : student.url_status === 'INVALID'
                                 ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-400/30'
                                 : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-400/30'
-                            }`}
+                              }`}
                           >
                             <ShieldCheck className="w-2.5 h-2.5" />
                             {student.url_status === 'VERIFIED'
                               ? 'VERIFIED'
                               : student.url_status === 'INVALID'
-                              ? 'INVALID'
-                              : 'CHECK'}
+                                ? 'INVALID'
+                                : 'CHECK'}
                           </span>
                         ) : (
                           <span className="text-[9px] font-mono text-slate-400">— No URL —</span>
@@ -1238,7 +1229,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                       <p className="text-slate-800 dark:text-slate-200 font-semibold text-[11px] leading-tight">
                         {student.error_description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between gap-2 flex-wrap text-[10px] pt-0.5">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 font-mono font-black text-[9px] uppercase tracking-wider border border-amber-400/25 shrink-0 flex items-center gap-0.5">
@@ -1369,9 +1360,8 @@ export const StudentDataIssuesPage: React.FC = () => {
                   return (
                     <tr
                       key={student.id}
-                      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${
-                        isSelected ? 'bg-indigo-50/60 dark:bg-indigo-950/30' : ''
-                      }`}
+                      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${isSelected ? 'bg-indigo-50/60 dark:bg-indigo-950/30' : ''
+                        }`}
                     >
                       {/* Checkbox */}
                       <td className="py-3.5 px-4 text-center">
@@ -1408,13 +1398,12 @@ export const StudentDataIssuesPage: React.FC = () => {
                         {/* Canonical URL status chip */}
                         {student.leetcode_url ? (
                           <div className="flex items-center space-x-1.5">
-                            <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider ${
-                              student.url_status === 'VERIFIED'
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
-                                : student.url_status === 'INVALID'
+                            <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider ${student.url_status === 'VERIFIED'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
+                              : student.url_status === 'INVALID'
                                 ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
-                            }`}>
+                              }`}>
                               {student.url_status === 'VERIFIED' ? 'Verified URL' : student.url_status === 'INVALID' ? 'Invalid URL' : 'Needs Check'}
                             </span>
 
@@ -1433,15 +1422,14 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       {/* Issue Category Badge */}
                       <td className="py-3.5 px-3">
-                        <span className={`px-2.5 py-1 rounded-xl text-[10.5px] font-black uppercase tracking-wider block text-center ${
-                          student.severity === 'CRITICAL'
-                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40 shadow-sm'
-                            : student.severity === 'WARNING'
+                        <span className={`px-2.5 py-1 rounded-xl text-[10.5px] font-black uppercase tracking-wider block text-center ${student.severity === 'CRITICAL'
+                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40 shadow-sm'
+                          : student.severity === 'WARNING'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/40 shadow-sm'
                             : student.severity === 'INFO'
-                            ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-500/40 shadow-sm'
-                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40 shadow-sm'
-                        }`}>
+                              ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-500/40 shadow-sm'
+                              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40 shadow-sm'
+                          }`}>
                           {student.issue_label}
                         </span>
                       </td>
@@ -1465,7 +1453,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                       {/* Row Action Buttons */}
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex items-center justify-center space-x-1.5">
-                          
+
                           {/* Open Profile */}
                           {student.leetcode_url && (
                             <a
@@ -1539,11 +1527,10 @@ export const StudentDataIssuesPage: React.FC = () => {
                         setPageSize(sz);
                         setCurrentPage(1);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                        pageSize === sz
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-white dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${pageSize === sz
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-700 hover:bg-slate-100 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                     >
                       {sz}
                     </button>
@@ -1655,11 +1642,10 @@ export const StudentDataIssuesPage: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className={`p-3.5 rounded-2xl border text-xs space-y-1.5 overflow-hidden ${
-                      verifyResult.valid
-                        ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300'
-                    }`}
+                    className={`p-3.5 rounded-2xl border text-xs space-y-1.5 overflow-hidden ${verifyResult.valid
+                      ? 'bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300'
+                      }`}
                   >
                     <div className="flex items-center space-x-1.5 font-black text-sm">
                       {verifyResult.valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> : <XCircle className="w-4 h-4 text-rose-500 dark:text-rose-400" />}
@@ -1784,9 +1770,9 @@ export const StudentDataIssuesPage: React.FC = () => {
       </AnimatePresence>
 
       {downloadState && (
-        <ExportStatus 
-          state={downloadState} 
-          onClose={() => setDownloadState(null)} 
+        <ExportStatus
+          state={downloadState}
+          onClose={() => setDownloadState(null)}
         />
       )}
     </div>

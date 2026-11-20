@@ -692,10 +692,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   // Academic Year Dropdown Options (Batches: 2030, 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
     { value: 'all', label: 'All Academic Years', badge: 'ALL' },
-    { value: '1', label: '1st Year (Batch 2030)', badge: 'I Year' },
-    { value: '2', label: '2nd Year (Batch 2029)', badge: 'II Year' },
-    { value: '3', label: '3rd Year (Batch 2028)', badge: 'III Year' },
-    { value: '4', label: 'Final Year (Batch 2027)', badge: 'IV Year' },
+    { value: '1', label: '1st Year (Batch 2030)', badge: '1st Year' },
+    { value: '2', label: '2nd Year (Batch 2029)', badge: '2nd Year' },
+    { value: '3', label: '3rd Year (Batch 2028)', badge: '3rd Year' },
+    { value: '4', label: '4th Year (Batch 2027)', badge: '4th Year' },
   ];
 
   // Performance Range Dropdown Options

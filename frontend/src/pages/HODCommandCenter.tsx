@@ -920,10 +920,10 @@ const ReportHubModal: React.FC<{
  searchPlaceholder="Search academic year..."
  options={[
  { value: "ALL", label: "All Academic Years", pillText: "ALL" },
- { value: "1", label: "I Year", pillText: "1ST" },
- { value: "2", label: "II Year", pillText: "2ND" },
- { value: "3", label: "III Year", pillText: "3RD" },
- { value: "4", label: "IV Year", pillText: "4TH" }
+ { value: "1", label: "1st Year", pillText: "1ST" },
+ { value: "2", label: "2nd Year", pillText: "2ND" },
+ { value: "3", label: "3rd Year", pillText: "3RD" },
+ { value: "4", label: "4th Year", pillText: "4TH" }
  ]}
  icon={<Calendar className="w-4 h-4 text-amber-500" />}
  />
@@ -1791,9 +1791,10 @@ export const HODCommandCenter: React.FC = () => {
 
   const yearOptions = [
     { value: 'ALL', label: 'All Cohorts', pillText: 'ALL' },
-    { value: '2', label: 'II Year', pillText: '2ND' },
-    { value: '3', label: 'III Year', pillText: '3RD' },
-    { value: '4', label: 'IV Year', pillText: '4TH' }
+    { value: '1', label: '1st Year', pillText: '1ST' },
+    { value: '2', label: '2nd Year', pillText: '2ND' },
+    { value: '3', label: '3rd Year', pillText: '3RD' },
+    { value: '4', label: '4th Year', pillText: '4TH' }
   ];
 
   const isSingleIntakeDeptSelected = false;
@@ -2176,7 +2177,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-display text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate">
-            Your Student Cohort ({scopeStaffName} / {scopeDeptCode}{selectedYear !== 'ALL' ? ` / ${selectedYear === '2' ? 'II Year' : selectedYear === '3' ? 'III Year' : selectedYear === '4' ? 'IV Year' : `Year ${selectedYear}`}` : ''}{selectedSection !== 'ALL' ? ` / Sec ${selectedSection}` : ''})
+            Your Student Cohort ({scopeStaffName} / {scopeDeptCode}{selectedYear !== 'ALL' ? ` / ${selectedYear === '1' ? '1st Year' : selectedYear === '2' ? '2nd Year' : selectedYear === '3' ? '3rd Year' : selectedYear === '4' ? '4th Year' : `Year ${selectedYear}`}` : ''}{selectedSection !== 'ALL' ? ` / Sec ${selectedSection}` : ''})
           </div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs font-mono mt-0.5">
             <span className="text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">{activeInScope} Active</span>
