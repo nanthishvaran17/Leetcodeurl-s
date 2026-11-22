@@ -28,6 +28,7 @@ import {
   QrCode
 } from 'lucide-react';
 import { useKeyboardContext } from '../context/KeyboardContext';
+import { SwipeHandle } from './SwipeHandle';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNotification } from '../context/NotificationContext';
@@ -495,7 +496,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       >
         {/* Mobile Swipe / Dismiss Pill & Top Bar */}
         <div className="sm:hidden pt-2.5 pb-1 px-4 flex flex-col items-center border-b border-slate-100 dark:border-navy-800/80 bg-slate-50 dark:bg-navy-900">
-          <div className="w-10 h-1 bg-slate-300 dark:bg-navy-700 rounded-full mb-2" />
+          <SwipeHandle
+            onClose={onClose}
+            className="py-1 mb-1 shrink-0"
+            pillClassName="bg-slate-300 dark:bg-navy-700"
+          />
           <div className="w-full flex items-center justify-between">
             <span className="text-[11px] font-black tracking-wider uppercase text-slate-500 dark:text-slate-400">
               Quick Search & Commands

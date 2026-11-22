@@ -6,6 +6,7 @@ import {
   ShieldCheck, AlertCircle, ChevronRight, X, Activity,
   ExternalLink, CheckCircle, TrendingUp
 } from 'lucide-react';
+import { SwipeHandle } from '../SwipeHandle';
 
 interface FacultyMentorMatrixCardProps {
   staffList: any[];
@@ -708,7 +709,11 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
         >
           <div className="w-full sm:max-w-3xl bg-white dark:bg-navy-950 rounded-t-3xl sm:rounded-3xl p-5 sm:p-7 border-t sm:border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 max-h-[92vh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar animate-modal-content">
             {/* Mobile Drag Indicator */}
-            <div className="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto sm:hidden mb-1 shrink-0" />
+            <SwipeHandle
+              onClose={() => setShowActiveMenteesModal(false)}
+              className="sm:hidden py-1 mb-1 shrink-0"
+              pillClassName="bg-slate-300 dark:bg-slate-700"
+            />
 
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100 dark:border-navy-800">

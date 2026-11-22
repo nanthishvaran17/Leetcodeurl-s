@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { triggerHaptic } from '../utils/haptics';
 import { WHATSAPP_TEMPLATES } from './StudentWhatsAppModal';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { SwipeHandle } from './SwipeHandle';
 
 interface BulkWhatsAppModalProps {
   isOpen: boolean;
@@ -330,7 +331,11 @@ Portal: https://leetcode.nandhaengg.org`;
       <div className="relative w-full max-w-lg sm:max-w-2xl max-h-[88vh] sm:max-h-[90vh] bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl border-t sm:border border-slate-200/90 dark:border-navy-800 shadow-2xl overflow-hidden flex flex-col animate-slide-up sm:animate-scale-in">
 
         {/* Mobile Pull Handle */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
+        <SwipeHandle
+          onClose={onClose}
+          className="sm:hidden py-1.5 shrink-0"
+          pillClassName="bg-slate-300 dark:bg-navy-700 hover:bg-slate-400"
+        />
 
         {/* Modal Top Header */}
         <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between shrink-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent">

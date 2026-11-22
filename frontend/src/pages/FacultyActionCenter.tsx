@@ -889,7 +889,11 @@ const StudentViewModal: React.FC<{
       <div className="w-full max-w-4xl max-h-[92dvh] sm:max-h-[92vh] flex flex-col rounded-t-[28px] sm:rounded-3xl bg-white dark:bg-navy-900 border-t sm:border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden text-slate-900 dark:text-white">
 
         {/* Mobile Pull Indicator */}
-        <div className="w-10 h-1 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+        <SwipeHandle
+          onClose={onClose}
+          className="sm:hidden py-1.5 my-1 shrink-0"
+          pillClassName="bg-slate-300 dark:bg-navy-700"
+        />
 
         {/* Header */}
         <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-navy-950/60 shrink-0">

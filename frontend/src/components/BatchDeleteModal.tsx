@@ -9,6 +9,7 @@ import { useNotification } from '../context/NotificationContext';
 import { Department } from '../context/DepartmentContext';
 import { CustomDropdown, DropdownOption } from './CustomDropdown';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
+import { SwipeHandle } from './SwipeHandle';
 
 export interface BatchDeleteModalProps {
   isOpen: boolean;
@@ -458,7 +459,11 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         {/* Header - Fixed at top so Grabber, Title & Close button are always visible */}
         <div className="px-5 pt-3 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50 shrink-0">
           {/* Grabber Handle */}
-          <div className="w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2.5 shrink-0" />
+          <SwipeHandle
+            onClose={() => { if (!isDeleting) onClose(); }}
+            className="mb-1 py-1"
+            pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+          />
 
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0 pr-2">

@@ -23,6 +23,7 @@ import { useScrollLock } from '../../hooks/useScrollLock';
 import { DropdownOption } from '../CustomDropdown';
 import { normalizeDepartment, normalizeAcademicYear } from '../../utils/filterUtils';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { SwipeHandle } from '../SwipeHandle';
 
 export interface MobileStudentShowcaseFiltersProps {
   isOpen: boolean;
@@ -164,9 +165,11 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
             className="relative z-10 w-full sm:max-w-xl md:max-w-2xl max-h-[88vh] bg-white dark:bg-navy-950 rounded-t-[32px] sm:rounded-[32px] border-t sm:border border-slate-200 dark:border-white/[0.1] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
           >
             {/* Grab Handle */}
-            <div className="pt-3 pb-1 flex justify-center cursor-pointer sm:hidden" onClick={onClose}>
-              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors" />
-            </div>
+            <SwipeHandle
+              onClose={onClose}
+              className="sm:hidden pt-3 pb-1 shrink-0"
+              pillClassName="bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+            />
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-white/[0.08]">

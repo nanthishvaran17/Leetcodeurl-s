@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { SwipeHandle } from './SwipeHandle';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -129,7 +130,11 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
         <div className={`absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-36 rounded-full bg-gradient-to-b ${config.topAura} to-transparent blur-3xl pointer-events-none`} />
 
         {/* Mobile Drag Indicator Handle */}
-        <div className="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2" />
+        <SwipeHandle
+          onClose={handleCancelClick}
+          className="sm:hidden py-1 -mt-2 mb-1 shrink-0"
+          pillClassName="bg-slate-200 dark:bg-slate-700"
+        />
 
         {/* Subtle Top Close Icon */}
         <button

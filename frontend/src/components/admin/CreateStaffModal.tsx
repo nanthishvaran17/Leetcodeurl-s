@@ -14,6 +14,7 @@ import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
 import { copyToClipboard } from '../../utils/clipboard';
+import { SwipeHandle } from '../SwipeHandle';
 
 interface CreateStaffModalProps {
   onClose: () => void;
@@ -598,9 +599,11 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
       <div className="bg-white dark:bg-navy-950 rounded-t-[2.25rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up select-text" onClick={(e) => e.stopPropagation()}>
 
         {/* MOBILE DRAG PULL HANDLE */}
-        <div className="sm:hidden pt-2.5 pb-1 flex justify-center bg-slate-900 cursor-pointer" onClick={onClose}>
-          <div className="w-12 h-1.5 rounded-full bg-slate-600/70 hover:bg-slate-500 transition-colors" />
-        </div>
+        <SwipeHandle
+          onClose={onClose}
+          className="sm:hidden pt-2.5 pb-1 bg-slate-900 shrink-0"
+          pillClassName="bg-slate-600/70 hover:bg-slate-500"
+        />
 
         {/* RICH HEADER BANNER */}
         <div className="px-4 sm:px-6 py-3 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-center justify-between shrink-0 z-20 shadow-md relative overflow-hidden">

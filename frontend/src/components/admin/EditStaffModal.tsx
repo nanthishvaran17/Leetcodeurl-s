@@ -14,6 +14,7 @@ import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLiveStore';
 import { StaffActivityLogsModal } from './StaffActivityLogsModal';
+import { SwipeHandle } from '../SwipeHandle';
 
 interface EditStaffModalProps {
   staff: any;
@@ -525,9 +526,11 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       <div className="bg-white dark:bg-navy-950 rounded-t-[2rem] sm:rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[94dvh] sm:h-[92vh] sm:max-h-[880px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
         {/* MOBILE SEAMLESS DRAG PULL HANDLE */}
-        <div className="sm:hidden pt-2.5 pb-1.5 flex justify-center bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 cursor-pointer" onClick={handleAttemptClose}>
-          <div className="w-11 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
-        </div>
+        <SwipeHandle
+          onClose={handleAttemptClose}
+          className="sm:hidden pt-2.5 pb-1.5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 shrink-0"
+          pillClassName="bg-white/40 hover:bg-white/60"
+        />
 
         {/* RICH HEADER BANNER */}
         <div className="px-3.5 sm:px-8 py-3 sm:py-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/30 flex items-center justify-between shrink-0 z-20 gap-2.5 shadow-md relative overflow-hidden">

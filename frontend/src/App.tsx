@@ -1578,7 +1578,11 @@ const MainAppContent: React.FC = () => {
               className="bg-white dark:bg-navy-950 border-t sm:border border-slate-200 dark:border-navy-800 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-9 sm:p-7 w-full sm:max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5 animate-modal-content"
             >
               {/* Mobile Drag Indicator Handle */}
-              <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto -mt-2 mb-2" />
+              <SwipeHandle
+                onClose={() => setShowExitConfirmModal(false)}
+                className="sm:hidden -mt-2 mb-2 py-1 shrink-0"
+                pillClassName="bg-slate-300 dark:bg-navy-700"
+              />
 
               <div className="flex items-center gap-3.5">
                 <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">

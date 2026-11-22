@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ExternalLink, RefreshCw, FileText, Award, Target, Brain, ArrowLeft, Activity, Edit3, ShieldCheck, CheckCircle, Database, CheckCircle2, Calendar } from 'lucide-react';
 import { StudentEditOverlay } from './StudentEditOverlay';
+import { SwipeHandle } from './SwipeHandle';
 import {
   ResponsiveContainer,
   PieChart,
@@ -522,9 +523,11 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             onClick={(e) => e.stopPropagation()}
           >
             {/* Native iOS-style Drag Pill Handle for Mobile */}
-            <div className="sm:hidden w-full flex items-center justify-center pt-2.5 pb-1 bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950">
-              <div className="w-12 h-1.5 rounded-full bg-white/35" />
-            </div>
+            <SwipeHandle
+              onClose={onClose}
+              className="sm:hidden pt-2.5 pb-1 bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 shrink-0"
+              pillClassName="bg-white/40 hover:bg-white/60"
+            />
 
             {/* 1. TOP HERO HEADER & IDENTITY - ELEGANT PERFECTLY ALIGNED HEADER */}
             <div className="bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white px-3.5 sm:px-6 py-3 sm:py-4 border-b border-indigo-500/20 shrink-0 relative z-10 shadow-lg">

@@ -222,7 +222,11 @@ const DeleteSessionControl: React.FC<DeleteSessionControlProps> = memo(({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Drag Handle */}
-            <div className="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2" />
+            <SwipeHandle
+              onClose={() => { if (!isDeleting) handleClose(); }}
+              className="sm:hidden -mt-2 mb-2 py-1 shrink-0"
+              pillClassName="bg-slate-200 dark:bg-slate-700"
+            />
 
             {/* Top Close Button */}
             <button
@@ -7019,7 +7023,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 aria-modal="true"
                 aria-labelledby="single-delete-modal-title"
               >
-                <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto -mt-1 mb-1" />
+                <SwipeHandle
+                  onClose={() => { if (!isDeletingStudent) setDeletingStudent(null); }}
+                  className="sm:hidden -mt-1 mb-1 py-1 shrink-0"
+                  pillClassName="bg-slate-300 dark:bg-slate-700"
+                />
 
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
@@ -7093,7 +7101,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               aria-modal="true"
               aria-labelledby="bulk-delete-modal-title"
             >
-              <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto -mt-1 mb-1" />
+              <SwipeHandle
+                onClose={() => { if (!isBulkDeleting) setShowBulkDeleteModal(false); }}
+                className="sm:hidden -mt-1 mb-1 py-1 shrink-0"
+                pillClassName="bg-slate-300 dark:bg-slate-700"
+              />
 
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">

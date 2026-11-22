@@ -8,6 +8,7 @@ import { studentLiveStore } from '../stores/studentLiveStore';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { SwipeHandle } from './SwipeHandle';
 
 export interface StudentEditOverlayProps {
   isOpen: boolean;
@@ -956,7 +957,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         {/* iOS-Style Fixed Header with Pull Handle & Top Gap */}
         <div className="px-4 sm:px-6 pt-2.5 pb-3.5 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col border-b border-slate-800 shrink-0 z-20 shadow-md">
           {/* iOS Pull Handle / Grabber Pill */}
-          <div className="w-11 h-1.5 bg-white/35 rounded-full mx-auto mb-2.5 shrink-0" />
+          <SwipeHandle
+            onClose={handleAttemptClose}
+            className="mb-1 py-1"
+            pillClassName="bg-white/40 hover:bg-white/60"
+          />
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">

@@ -6,6 +6,7 @@ import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
+import { SwipeHandle } from '../components/SwipeHandle';
 
 const formatYear = (yr: any) => {
   if (!yr) return 'II Year';
@@ -658,7 +659,11 @@ export const Post930SolversView: React.FC<Post930SolversViewProps> = ({ onSelect
         >
           <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-navy-950 border-t sm:border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 space-y-4 p-5 sm:p-6 max-h-[90vh] overflow-y-auto animate-modal-content">
             {/* Mobile drag handle */}
-            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto sm:hidden mb-1 shrink-0" />
+            <SwipeHandle
+              onClose={() => setSelectedStudent(null)}
+              className="sm:hidden py-1 mb-1 shrink-0"
+              pillClassName="bg-slate-300 dark:bg-slate-700"
+            />
 
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
               <div>

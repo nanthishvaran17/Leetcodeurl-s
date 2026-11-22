@@ -10,6 +10,7 @@ import {
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
+import { SwipeHandle } from '../SwipeHandle';
 
 interface ContestRecord {
   id: number;
@@ -64,7 +65,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
   const [dropdownSearch, setDropdownSearch] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
-  const touchStartY = useRef<number | null>(null);
+
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -82,21 +83,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
     }
   }, [isMobile, isDropdownOpen]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current !== null) {
-      const diffY = e.touches[0].clientY - touchStartY.current;
-      if (diffY > 60) {
-        setIsDropdownOpen(false);
-        touchStartY.current = null;
-      }
-    }
-  };
-  const handleTouchEnd = () => {
-    touchStartY.current = null;
-  };
+
 
   // Close custom dropdown on outside click for desktop
   useEffect(() => {
@@ -478,14 +465,11 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
                 className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
                 style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
               >
-                <div 
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
-                >
-                  <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-                </div>
+                <SwipeHandle
+                  onClose={() => setIsDropdownOpen(false)}
+                  className="pt-3 pb-1 shrink-0"
+                  pillClassName="bg-slate-300 dark:bg-navy-700 hover:bg-slate-400"
+                />
 
                 <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
                   <div className="flex items-center gap-3 min-w-0">

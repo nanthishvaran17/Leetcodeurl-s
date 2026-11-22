@@ -739,16 +739,73 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
               className="relative w-full sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-navy-950 rounded-t-[32px] sm:rounded-3xl shadow-[0_-12px_40px_rgba(0,0,0,0.2)] sm:shadow-2xl border-t sm:border border-slate-200/90 dark:border-white/10 flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden z-10"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Top Swipe Drag Pill (Mobile Native Experience) */}
+              {/* Mobile Top Navigation & Drag Bar */}
+              <div
+                onPointerDown={(e) => {
+                  if ((e.target as HTMLElement).closest('button, a')) return;
+                  dragControls.start(e);
+                }}
+                className="sm:hidden px-3.5 pt-2 pb-1.5 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-navy-950 dark:via-navy-900/60 dark:to-navy-950 border-b border-slate-100 dark:border-white/5 flex items-center justify-between select-none shrink-0"
+              >
+                {/* Next / Previous Student Arrow Navigation on Mobile */}
+                {(onPrevStudent || onNextStudent) ? (
+                  <div className="flex items-center bg-slate-100 dark:bg-navy-800 p-0.5 rounded-xl border border-slate-200/70 dark:border-navy-700/80 shadow-2xs">
+                    <button
+                      type="button"
+                      disabled={!hasPrevStudent}
+                      onClick={onPrevStudent}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-navy-700 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer active:scale-95 shadow-2xs"
+                      title="Previous Student"
+                      aria-label="Previous Student"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {currentIndex !== undefined && totalCount !== undefined && (
+                      <span className="text-[10.5px] font-mono font-bold px-1.5 text-slate-700 dark:text-slate-200 select-none whitespace-nowrap">
+                        {currentIndex} <span className="opacity-40">/</span> {totalCount}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      disabled={!hasNextStudent}
+                      onClick={onNextStudent}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-navy-700 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer active:scale-95 shadow-2xs"
+                      title="Next Student"
+                      aria-label="Next Student"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div />
+                )}
+
+                {/* Centered Drag Pill */}
+                <div className="flex flex-col items-center">
+                  <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-0.5">
+                    Swipe Down
+                  </span>
+                </div>
+
+                {/* Mobile Close Button */}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition active:scale-90 flex items-center justify-center cursor-pointer border border-slate-200/70 dark:border-navy-700/80 shadow-2xs"
+                  title="Close Sheet (Esc)"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Desktop-only Top Drag Pill */}
               <div
                 onPointerDown={(e) => dragControls.start(e)}
-                className="w-full pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none select-none flex flex-col items-center justify-center shrink-0 group"
+                className="hidden sm:flex w-full pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none select-none flex-col items-center justify-center shrink-0 group"
                 title="Swipe down to close"
               >
                 <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-600 transition-colors" />
-                <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 mt-1 opacity-75 sm:hidden">
-                  Swipe down to close
-                </span>
               </div>
 
               {/* Header Banner - Apple / OneUI Glass Card Header */}
@@ -757,17 +814,17 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                   if ((e.target as HTMLElement).closest('button, a')) return;
                   dragControls.start(e);
                 }}
-                className="px-5 py-3.5 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-navy-950 dark:via-navy-900/60 dark:to-navy-950 border-b border-slate-200/80 dark:border-white/5 flex items-start justify-between gap-3 shrink-0 select-none"
+                className="px-4 sm:px-5 py-2.5 sm:py-3.5 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-navy-950 dark:via-navy-900/60 dark:to-navy-950 border-b border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-3 shrink-0 select-none"
               >
-                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
                   {/* Student Initials Avatar with Gradient Ring */}
                   <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-brand-500/25 ring-2 ring-white dark:ring-navy-800">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-sm sm:text-base flex items-center justify-center shadow-md shadow-brand-500/25 ring-2 ring-white dark:ring-navy-800">
                       {getInitials(record.student_name, record.reg_no)}
                     </div>
                     {/* Live status dot */}
                     <span
-                      className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ring-2 ring-white dark:ring-navy-950 ${
+                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full ring-2 ring-white dark:ring-navy-950 ${
                         isPublic
                           ? 'bg-emerald-500 animate-pulse'
                           : isVirtual
@@ -778,14 +835,14 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                   </div>
 
                   {/* Student Info & Badges */}
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                  <div className="min-w-0 flex-1 space-y-1 sm:space-y-1.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate max-w-[190px] sm:max-w-none">
                         {record.student_name || record.reg_no || 'Student Profile'}
                       </h3>
                       {/* Participation Badge */}
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border shadow-2xs ${
+                        className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider border shadow-2xs whitespace-nowrap ${
                           isPublic
                             ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25'
                             : isVirtual
@@ -801,12 +858,12 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                     </div>
 
                     {/* Metadata Tags: Roll No, Dept, Year, Contest - Unified neat compact styling */}
-                    <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                    <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap text-xs">
                       {/* Roll Number with tap to copy */}
                       <button
                         type="button"
                         onClick={() => handleCopy(record.reg_no, 'reg_no')}
-                        className="inline-flex items-center gap-1 font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] transition active:scale-95 cursor-pointer shadow-2xs"
+                        className="inline-flex items-center gap-1 font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[10.5px] sm:text-[11px] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] transition active:scale-95 cursor-pointer shadow-2xs whitespace-nowrap"
                         title="Click to copy register number"
                       >
                         <span>{record.reg_no}</span>
@@ -818,19 +875,19 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                       </button>
 
                       {/* Department */}
-                      <span className="inline-flex items-center font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
+                      <span className="inline-flex items-center font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[10.5px] sm:text-[11px] shadow-2xs whitespace-nowrap">
                         {record.department_name || record.department || 'CSE'}
                       </span>
 
                       {/* Academic Year */}
                       {yearLabel && (
-                        <span className="inline-flex items-center font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
+                        <span className="inline-flex items-center font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[10.5px] sm:text-[11px] shadow-2xs whitespace-nowrap">
                           {yearLabel}
                         </span>
                       )}
 
                       {/* Contest */}
-                      <span className="inline-flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
+                      <span className="inline-flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-1.5 sm:px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[10.5px] sm:text-[11px] shadow-2xs whitespace-nowrap">
                         <Award className="w-3 h-3 text-brand-500 opacity-80" />
                         <span>{record.contest_title || summary?.contest_title || 'Weekly Contest'}</span>
                       </span>
@@ -838,8 +895,8 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                   </div>
                 </div>
 
-                {/* Sleek Action Controls & Navigation */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Desktop-Only Action Controls & Navigation */}
+                <div className="hidden sm:flex items-center gap-2 shrink-0">
                   {/* Next / Previous Student Arrow Navigation */}
                   {(onPrevStudent || onNextStudent) && (
                     <div className="flex items-center bg-slate-100/90 dark:bg-navy-800/90 p-0.5 sm:p-1 rounded-xl border border-slate-200/70 dark:border-navy-700/80 shadow-2xs">

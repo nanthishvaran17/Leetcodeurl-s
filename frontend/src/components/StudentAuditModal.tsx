@@ -4,6 +4,7 @@ import { X, ShieldCheck, RefreshCw, FileText, AlertTriangle, CheckCircle, Clock,
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { SwipeHandle } from './SwipeHandle';
 
 export interface StudentAuditModalProps {
   isOpen: boolean;
@@ -101,9 +102,11 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
       <div className="bg-white dark:bg-navy-950 border-t sm:border border-slate-200 dark:border-slate-800 rounded-t-[28px] sm:rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] animate-slide-up sm:animate-scale-in">
         
         {/* Mobile Swipe / Dismiss Drag Indicator */}
-        <div className="sm:hidden flex justify-center pt-2.5 pb-1 bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950">
-          <div className="w-12 h-1.5 rounded-full bg-white/25" />
-        </div>
+        <SwipeHandle
+          onClose={onClose}
+          className="sm:hidden pt-2.5 pb-1 bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 shrink-0"
+          pillClassName="bg-white/40 hover:bg-white/60"
+        />
 
         {/* Modal Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
