@@ -784,8 +784,7 @@ def generate_weekly_performance_data(
         })
 
     # Batch Summaries (Across College or filtered Department)
-    # Strictly the 3 institutional cohorts: IV (2023-2027), III (2024-2028), II (2025-2029)
-    REQUIRED_BATCH_KEYS = ["2023_2027", "2024_2028", "2025_2029"]
+    REQUIRED_BATCH_KEYS = ["2026_2030", "2025_2029", "2024_2028", "2023_2027"]
     batch_summaries = []
     for b_cfg in BATCH_CONFIG:
         if b_cfg["key"] not in REQUIRED_BATCH_KEYS:
