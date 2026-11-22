@@ -1479,7 +1479,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                       <div className="help-list-desc">OTP codes are sent to your registered institutional email. If not received, verify your spam folder, use password reset, or contact support desk.</div>
                     </div>
                     <div
-                      className="help-list-item highlight cursor-pointer group hover:border-blue-400 dark:hover:border-blue-400 transition-all active:scale-[0.99] select-none text-left"
+                      className="help-list-item highlight cursor-pointer group hover:border-blue-400 dark:hover:border-blue-400 transition-all active:scale-[0.99] select-none text-left p-3.5 sm:p-4 rounded-xl border border-blue-200/80 dark:border-blue-800/60"
                       onClick={() => {
                         setSupportModalCategory('otp');
                         setIsSupportModalOpen(true);
@@ -1494,20 +1494,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                         }
                       }}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="help-list-title flex items-center gap-2 mb-0">
-                          <span className="text-blue-900 dark:text-blue-200">Institution Support Desk</span>
-                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-200/80 dark:bg-blue-800/80 text-blue-800 dark:text-blue-100">
-                            Tap to compose
-                          </span>
-                        </div>
-                        <ChevronRight size={16} className="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform shrink-0" />
+                      {/* Top Header Row: Title & Action Pill */}
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="font-bold text-[13px] sm:text-[14px] text-blue-950 dark:text-blue-100 tracking-tight leading-snug">
+                          Institution Support Desk
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-200/90 dark:bg-blue-800/80 text-blue-900 dark:text-blue-100 text-[10px] font-black uppercase tracking-wider shrink-0 whitespace-nowrap shadow-2xs group-hover:bg-blue-300/90 dark:group-hover:bg-blue-700/90 transition-colors">
+                          <span>Tap to compose</span>
+                          <ChevronRight size={12} className="text-blue-700 dark:text-blue-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        </span>
                       </div>
-                      <div className="help-list-desc text-blue-950/80 dark:text-blue-100/90 font-medium">
-                        Email: <strong>nanthishvaran17@gmail.com</strong> · Nandha Engineering College (Autonomous)
+
+                      <div className="text-xs text-blue-950/85 dark:text-blue-100/90 leading-relaxed font-medium">
+                        Email: <strong className="font-bold text-blue-900 dark:text-blue-200">nanthishvaran17@gmail.com</strong>
+                        <span className="text-blue-900/70 dark:text-blue-300/70"> · Nandha Engineering College (Autonomous)</span>
                       </div>
-                      <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-2 flex items-center gap-1.5">
-                        <Mail size={13} />
+
+                      <div className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 mt-2 flex items-center gap-1.5">
+                        <Mail size={13} className="shrink-0 text-blue-600 dark:text-blue-400" />
                         <span>Click to open editable email draft for OTP or login issues</span>
                       </div>
                     </div>

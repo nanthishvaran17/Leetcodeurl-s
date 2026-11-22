@@ -267,7 +267,6 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
   const lastCoordsRef = useRef<string | null>(null);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');
-  const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -386,57 +385,35 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
 
   const filteredOptions = searchQuery.trim()
     ? options.filter(opt => {
-        const q = searchQuery.toLowerCase();
-        return (
-          opt.label.toLowerCase().includes(q) ||
-          (opt.badge && opt.badge.toLowerCase().includes(q))
-        );
-      })
+      const q = searchQuery.toLowerCase();
+      return (
+        opt.label.toLowerCase().includes(q) ||
+        (opt.badge && opt.badge.toLowerCase().includes(q))
+      );
+    })
     : options;
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current !== null) {
-      const diffY = e.touches[0].clientY - touchStartY.current;
-      if (diffY > 60) {
-        setOpen(false);
-        touchStartY.current = null;
-      }
-    }
-  };
-  const handleTouchEnd = () => {
-    touchStartY.current = null;
-  };
 
   const popoverMenu = open && typeof document !== 'undefined' ? (
     isMobile ? (
       createPortal(
         <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
 
           {/* Mobile Bottom Sheet Drawer */}
-          <div 
+          <div
             className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
             style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
             role="dialog"
             aria-modal="true"
+            data-bottom-sheet="true"
           >
             {/* Grab Handle */}
-            <div 
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
-            >
-              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-            </div>
+            <SwipeHandle onClose={() => setOpen(false)} className="pt-3 pb-1" pillClassName="bg-slate-300 dark:bg-navy-700" />
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
@@ -453,7 +430,7 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
@@ -476,7 +453,7 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                     className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500 transition-colors"
                   />
                   {searchQuery && (
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setSearchQuery('')}
                       className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
@@ -500,11 +477,10 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                       onChange(opt.value);
                       setOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
-                      isSelected 
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30' 
+                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${isSelected
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30'
                         : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {opt.icon && (
@@ -513,11 +489,10 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                         </span>
                       )}
                       {opt.badge && (
-                        <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
-                          isSelected
+                        <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${isSelected
                             ? "bg-white/20 text-white border border-white/20"
                             : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
-                        }`}>
+                          }`}>
                           {opt.badge}
                         </span>
                       )}
@@ -565,8 +540,8 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                   setOpen(false);
                 }}
                 className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${isSelected
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                    : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                  : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
                   }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -577,8 +552,8 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                   )}
                   {opt.badge && (
                     <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${isSelected
-                        ? "bg-white/20 text-white border border-white/20"
-                        : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
+                      ? "bg-white/20 text-white border border-white/20"
+                      : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
                       }`}>
                       {opt.badge}
                     </span>
@@ -2223,11 +2198,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                     onClick={() => {
                       setFilters(prev => ({ ...prev, department: active && d !== 'all' ? 'all' : d }));
                     }}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
-                      active
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${active
                         ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                         : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                    }`}
+                      }`}
                   >
                     {d === 'all' ? 'All Depts' : d}
                   </button>
@@ -2267,11 +2241,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                         }
                       }));
                     }}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
-                      (r.min === 0 && !filters.contest_rating.active) || active
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${(r.min === 0 && !filters.contest_rating.active) || active
                         ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
                         : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                    }`}
+                      }`}
                   >
                     {r.label}
                   </button>
@@ -2311,11 +2284,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                         }
                       }));
                     }}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${
-                      (s.min === 0 && !filters.total_solved.active) || active
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] whitespace-nowrap transition-all shrink-0 active:scale-95 cursor-pointer border ${(s.min === 0 && !filters.total_solved.active) || active
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                         : 'bg-slate-50 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                    }`}
+                      }`}
                   >
                     {s.label}
                   </button>
@@ -2351,9 +2323,9 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} />
 
           {/* Drawer Panel */}
-          <div className="relative z-10 w-full max-h-[90vh] bg-white dark:bg-navy-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-navy-700 flex flex-col min-h-0 overflow-hidden">
+          <div className="relative z-10 w-full max-h-[90vh] bg-white dark:bg-navy-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-navy-700 flex flex-col min-h-0 overflow-hidden" role="dialog" aria-modal="true" data-bottom-sheet="true">
             {/* Top Swipe Drag Handle */}
-            <SwipeHandle onClose={() => setIsMobileFilterOpen(false)} className="pt-2 pb-0" pillClassName="bg-slate-300 dark:bg-navy-700" />
+            <SwipeHandle onClose={() => setIsMobileFilterOpen(false)} className="pt-3 pb-1" pillClassName="bg-slate-300 dark:bg-navy-700" />
 
             {/* Header */}
             <div className="pt-2 pb-3 px-5 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 shrink-0">
@@ -2499,11 +2471,10 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 1: ACADEMIC FILTERS */}
-        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-          desktopAccordions.academic
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${desktopAccordions.academic
             ? "bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-slate-50/50 dark:from-navy-950/90 dark:via-blue-950/40 dark:to-navy-900/80 border-blue-400/80 dark:border-blue-500/60 shadow-lg shadow-blue-500/5 ring-1 ring-blue-500/20"
             : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-blue-300/80 dark:hover:border-blue-700/60 shadow-2xs"
-        }`}>
+          }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('academic')}
@@ -2537,11 +2508,10 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 2: STUDENT IDENTITY */}
-        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-          desktopAccordions.identity
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${desktopAccordions.identity
             ? "bg-gradient-to-br from-purple-50/80 via-fuchsia-50/40 to-slate-50/50 dark:from-purple-950/60 dark:via-navy-950/90 dark:to-purple-900/40 border-purple-400/80 dark:border-purple-500/60 shadow-lg shadow-purple-500/5 ring-1 ring-purple-500/20"
             : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-purple-300/80 dark:hover:border-purple-700/60 shadow-2xs"
-        }`}>
+          }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('identity')}
@@ -2575,11 +2545,10 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 3: CODING PERFORMANCE */}
-        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-          desktopAccordions.coding
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${desktopAccordions.coding
             ? "bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-slate-50/50 dark:from-emerald-950/60 dark:via-navy-950/90 dark:to-teal-900/40 border-emerald-400/80 dark:border-emerald-500/60 shadow-lg shadow-emerald-500/5 ring-1 ring-emerald-500/20"
             : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-emerald-300/80 dark:hover:border-emerald-700/60 shadow-2xs"
-        }`}>
+          }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('coding')}
@@ -2613,11 +2582,10 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 4: CONTEST PERFORMANCE */}
-        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-          desktopAccordions.contest
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${desktopAccordions.contest
             ? "bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-slate-50/50 dark:from-amber-950/60 dark:via-navy-950/90 dark:to-orange-900/40 border-amber-400/80 dark:border-amber-500/60 shadow-lg shadow-amber-500/5 ring-1 ring-amber-500/20"
             : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-amber-300/80 dark:hover:border-amber-700/60 shadow-2xs"
-        }`}>
+          }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('contest')}
@@ -2646,11 +2614,10 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 5: RESULTS OPTIONS */}
-        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
-          desktopAccordions.results
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${desktopAccordions.results
             ? "bg-gradient-to-br from-cyan-50/80 via-slate-50/40 to-blue-50/50 dark:from-cyan-950/60 dark:via-navy-950/90 dark:to-slate-900/80 border-cyan-400/80 dark:border-cyan-500/60 shadow-lg shadow-cyan-500/5 ring-1 ring-cyan-500/20"
             : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-cyan-300/80 dark:hover:border-cyan-700/60 shadow-2xs"
-        }`}>
+          }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('results')}
@@ -2746,16 +2713,16 @@ export const HRCandidateFinderPage: React.FC = () => {
 
           {/* Export Actions — Stacked One-by-One on Mobile, Flex Row on Desktop */}
           <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-2 shrink-0">
-            <button 
-              onClick={openManagementReportPreview} 
+            <button
+              onClick={openManagementReportPreview}
               disabled={isLoadingReport}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 sm:h-7 px-4 rounded-xl sm:rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-98 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50"
             >
               <Eye className={`w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0 ${isLoadingReport ? 'animate-spin' : ''}`} />
               <span>{isLoadingReport ? 'Opening Report...' : 'Open Management Report'}</span>
             </button>
-            <button 
-              onClick={exportToExcel} 
+            <button
+              onClick={exportToExcel}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-11 sm:h-7 px-4 rounded-xl sm:rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-98 text-white font-bold sm:font-semibold text-xs sm:text-[11px] tracking-tight shadow-xs shadow-emerald-600/20 transition-all cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" />
@@ -2829,11 +2796,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                           setSortAsc(s.field === 'global_rank');
                         }
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 cursor-pointer border active:scale-95 ${
-                        isActive
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 cursor-pointer border active:scale-95 ${isActive
                           ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                           : 'bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-navy-800'
-                      }`}
+                        }`}
                     >
                       <span>{s.label}</span>
                       {isActive && (
@@ -2849,11 +2815,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setMobileViewMode('cards')}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                    mobileViewMode === 'cards'
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${mobileViewMode === 'cards'
                       ? 'bg-white dark:bg-navy-800 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
                       : 'text-slate-400 hover:text-slate-600'
-                  }`}
+                    }`}
                   title="Card View"
                 >
                   <LayoutGrid className="w-3.5 h-3.5" />
@@ -2861,11 +2826,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setMobileViewMode('compact')}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                    mobileViewMode === 'compact'
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${mobileViewMode === 'compact'
                       ? 'bg-white dark:bg-navy-800 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
                       : 'text-slate-400 hover:text-slate-600'
-                  }`}
+                    }`}
                   title="Compact List View"
                 >
                   <List className="w-3.5 h-3.5" />
@@ -2911,7 +2875,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                       <tr key={c.id} onClick={() => setSelectedCandidate(c)} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group">
                         <td className="py-3.5 px-4 text-left font-bold text-slate-900 dark:text-white w-[17%]">
                           <div className="flex items-center gap-2.5">
-                            <div 
+                            <div
                               className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0 group-hover:scale-110 transition-transform print:bg-blue-600 print:text-white print:border print:border-blue-700"
                               style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' } as React.CSSProperties}
                             >
@@ -2959,7 +2923,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                         <td className="py-3.5 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[5%]">{c.easy_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[5%]">{c.medium_solved}</td>
                         <td className="py-3.5 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[5%]">{c.hard_solved}</td>
-                        <td 
+                        <td
                           className="py-3.5 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%] cursor-pointer"
                           title={c.contest_rating > 0 ? `Exact Rating: ${Number(c.contest_rating).toFixed(3)}` : undefined}
                         >
@@ -3009,11 +2973,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                         >
                           {/* Avatar & Core Student Identity */}
                           <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-2xs mt-0.5 ${
-                              isHighRated
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-2xs mt-0.5 ${isHighRated
                                 ? 'bg-gradient-to-br from-amber-500 via-purple-600 to-indigo-600 ring-2 ring-purple-400/40'
                                 : 'bg-gradient-to-br from-blue-600 to-indigo-600 ring-1 ring-blue-400/30'
-                            }`}>
+                              }`}>
                               {c.name.charAt(0)}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -3057,11 +3020,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                             {/* Contest Rating Pill */}
                             <div className="shrink-0 min-w-[56px] text-right">
                               {ratingVal > 0 ? (
-                                <span className={`px-2 py-1 rounded-lg font-mono font-black text-[11px] inline-flex items-center gap-0.5 border ${
-                                  isHighRated
+                                <span className={`px-2 py-1 rounded-lg font-mono font-black text-[11px] inline-flex items-center gap-0.5 border ${isHighRated
                                     ? 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
                                     : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900'
-                                }`}>
+                                  }`}>
                                   <Activity className="w-2.5 h-2.5 text-purple-600 fill-purple-500/30" />
                                   <span>{ratingVal.toLocaleString()}</span>
                                 </span>
@@ -3099,11 +3061,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                           <div className="flex items-start justify-between gap-2.5 sm:gap-3">
                             <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                               {/* Avatar with Refined Gradient */}
-                              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs mt-0.5 ${
-                                isHighRated
+                              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-2xs mt-0.5 ${isHighRated
                                   ? 'bg-gradient-to-br from-amber-500 to-orange-600 ring-2 ring-amber-400/30 shadow-amber-500/10'
                                   : 'bg-gradient-to-br from-indigo-600 to-blue-600 ring-1 ring-indigo-500/20 shadow-indigo-500/10'
-                              }`}>
+                                }`}>
                                 {c.name.charAt(0)}
                               </div>
 
@@ -3137,11 +3098,10 @@ export const HRCandidateFinderPage: React.FC = () => {
                             <div className="flex items-center gap-1.5 shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
                               {ratingVal > 0 ? (
                                 <div
-                                  className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1.5 border shadow-2xs ${
-                                    isHighRated
+                                  className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs flex items-center gap-1.5 border shadow-2xs ${isHighRated
                                       ? 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/50'
                                       : 'bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900/40'
-                                  }`}
+                                    }`}
                                   title={`Exact Rating: ${Number(c.contest_rating).toFixed(2)}`}
                                 >
                                   <Activity className={`w-3.5 h-3.5 ${isHighRated ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'}`} />

@@ -91,14 +91,40 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
   const isStaffUser = isStaffRole(user);
   const isHodUser = isHodRole(user);
   const isDeptScopedUser = isStaffUser || isHodUser;
-  const userDeptCode = ((user as any)?.department_code || user?.department || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || 'ALL').toUpperCase();
-  const [selectedDept, setSelectedDept] = useState<string>(() => isDeptScopedUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL');
+
+  // Extract all authorized department codes
+  const authCodes: string[] = useMemo(() => {
+    if (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes.length > 0) {
+      return user.authorized_department_codes.map((c: string) => String(c).trim().toUpperCase()).filter(Boolean);
+    }
+    const single = (user as any)?.department_code || user?.department;
+    const code = typeof single === 'string' ? single : single?.code;
+    return code ? [String(code).trim().toUpperCase()] : [];
+  }, [user]);
+
+  // If HOD or staff has multiple allocated departments (via authCodes or departments context)
+  const isMultiDeptScoped = useMemo(() => {
+    if (!isDeptScopedUser) return false;
+    if (authCodes.length > 1) return true;
+    if (departments && departments.length > 1) return true;
+    return false;
+  }, [isDeptScopedUser, authCodes, departments]);
+
+  const isSingleDeptScoped = isDeptScopedUser && !isMultiDeptScoped;
+  const singleDeptCode = (authCodes[0] || departments?.[0]?.code || 'ALL').toUpperCase();
+
+  const [selectedDept, setSelectedDept] = useState<string>(() => {
+    if (isSingleDeptScoped && singleDeptCode !== 'ALL') {
+      return singleDeptCode;
+    }
+    return 'ALL';
+  });
 
   useEffect(() => {
-    if (isDeptScopedUser && userDeptCode !== 'ALL' && selectedDept !== userDeptCode) {
-      setSelectedDept(userDeptCode);
+    if (isSingleDeptScoped && singleDeptCode !== 'ALL' && selectedDept !== singleDeptCode) {
+      setSelectedDept(singleDeptCode);
     }
-  }, [isDeptScopedUser, userDeptCode, selectedDept]);
+  }, [isSingleDeptScoped, singleDeptCode, selectedDept]);
 
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<any | null>(null);
@@ -109,10 +135,10 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (isGlobalAccess && selectedCollege !== 'ALL') count++;
-    if (!isDeptScopedUser && selectedDept !== 'ALL') count++;
+    if (!isSingleDeptScoped && selectedDept !== 'ALL') count++;
     if (selectedYear !== 'ALL') count++;
     return count;
-  }, [isGlobalAccess, selectedCollege, isDeptScopedUser, selectedDept, selectedYear]);
+  }, [isGlobalAccess, selectedCollege, isSingleDeptScoped, selectedDept, selectedYear]);
 
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [page, setPage] = useState<number>(1);
@@ -310,7 +336,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                 {selectedCollege}
               </span>
             )}
-            {!isDeptScopedUser && selectedDept !== 'ALL' && (
+            {!isSingleDeptScoped && selectedDept !== 'ALL' && (
               <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 text-[10px] font-black">
                 {selectedDept}
               </span>
@@ -350,17 +376,17 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
               />
             )}
 
-            {/* Department Filter - Locked for HOD & Staff */}
-            {isDeptScopedUser && userDeptCode !== 'ALL' ? (
+            {/* Department Filter - Locked only if user has single department scope */}
+            {isSingleDeptScoped && singleDeptCode !== 'ALL' ? (
               <div className="flex flex-col space-y-1.5 min-w-0">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   Department (Locked)
                 </span>
                 <div className="flex items-center space-x-2 px-3.5 py-2.5 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-200 min-h-[44px]">
                   <Building2 className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span className="truncate">{userDeptCode}</span>
+                  <span className="truncate">{singleDeptCode}</span>
                   <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 font-black ml-auto shrink-0">
-                    HOD Scope
+                    {isHodUser ? 'HOD Scope' : 'Staff Scope'}
                   </span>
                 </div>
               </div>
@@ -369,7 +395,7 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
                 selectedDept={selectedDept}
                 onChange={(val) => setSelectedDept(val)}
                 useIdAsValue={false}
-                label="Department Scope"
+                label={isMultiDeptScoped ? "Department (Allocated Scope)" : "Department Scope"}
                 dropdownWidth="w-full max-w-xs sm:max-w-md min-w-0"
               />
             )}
@@ -391,12 +417,12 @@ export const DataQualityPage: React.FC<DataQualityPageProps> = ({ onNavigateTab,
             />
           </div>
 
-          {((isGlobalAccess ? selectedCollege !== 'ALL' : false) || (!isDeptScopedUser && selectedDept !== 'ALL') || selectedYear !== 'ALL') && (
+          {((isGlobalAccess ? selectedCollege !== 'ALL' : false) || (!isSingleDeptScoped && selectedDept !== 'ALL') || selectedYear !== 'ALL') && (
             <button
               type="button"
               onClick={() => {
                 setSelectedCollege(isGlobalAccess ? 'ALL' : userCollege);
-                setSelectedDept(isDeptScopedUser && userDeptCode !== 'ALL' ? userDeptCode : 'ALL');
+                setSelectedDept(isSingleDeptScoped && singleDeptCode !== 'ALL' ? singleDeptCode : 'ALL');
                 setSelectedYear('ALL');
               }}
               className="text-[11px] sm:text-xs font-black text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center justify-center space-x-1.5 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-2 min-h-[38px] sm:min-h-[44px] rounded-xl sm:rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all shrink-0 self-stretch sm:self-end touch-manipulation active:scale-95"

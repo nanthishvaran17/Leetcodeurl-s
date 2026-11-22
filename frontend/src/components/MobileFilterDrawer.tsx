@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Filter, RotateCcw, Check, Search, Building2, GraduationCap, Calendar, ShieldCheck } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
 import { useDepartments } from '../context/DepartmentContext';
-import { isGlobalAccessRole } from '../services/auth/authTypes';
+import { isGlobalAccessRole, isCollegeFilterAllowed, getUserCollege } from '../services/auth/authTypes';
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { SwipeHandle } from './SwipeHandle';
 import { triggerHaptic } from '../utils/haptics';
@@ -27,14 +27,38 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   const { departments: ctxDepartments = [] } = useDepartments();
   const rawDepartments = (propDepartments && propDepartments.length > 0) ? propDepartments : ctxDepartments;
 
-  const isGlobalUser = React.useMemo(() => {
+  const user = React.useMemo(() => {
     try {
       const raw = localStorage.getItem('user');
-      return raw ? isGlobalAccessRole(JSON.parse(raw)) : false;
+      return raw ? JSON.parse(raw) : null;
     } catch {
-      return false;
+      return null;
     }
   }, []);
+
+  const isGlobalUser = React.useMemo(() => {
+    return user ? isGlobalAccessRole(user) : false;
+  }, [user]);
+
+  const canFilterCollege = React.useMemo(() => {
+    return user ? isCollegeFilterAllowed(user) : false;
+  }, [user]);
+
+  const authorizedDeptSet = React.useMemo(() => {
+    if (isGlobalUser || !user) return null;
+    const keys = new Set<string>();
+    const authCodes: string[] = Array.isArray(user.authorized_department_codes) ? user.authorized_department_codes : [];
+    const authIds: number[] = Array.isArray(user.authorized_department_ids) ? user.authorized_department_ids.map(Number) : [];
+    const uDeptCode = user.department_code || (typeof user.department === 'string' ? user.department : user.department?.code);
+    const uDeptId = user.department_id || (typeof user.department === 'object' ? user.department?.id : undefined);
+
+    if (uDeptCode) keys.add(normalizeDepartment(uDeptCode));
+    if (uDeptId) keys.add(normalizeDepartment(uDeptId));
+    authCodes.forEach((c) => keys.add(normalizeDepartment(c)));
+    authIds.forEach((id) => keys.add(normalizeDepartment(id)));
+
+    return keys.size > 0 ? keys : null;
+  }, [user, isGlobalUser]);
 
   const departments = React.useMemo(() => {
     const list: Array<{ code: string; name: string }> = [];
@@ -50,8 +74,29 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         const c = (d.code || d.department_code || '').trim();
         const n = (d.name || d.department_name || c).trim();
         if (!c || seen.has(c.toUpperCase())) return;
+
+        // Strictly enforce allocated department boundaries for scoped roles (HOD, Staff, Mentor)
+        if (authorizedDeptSet) {
+          const normCode = normalizeDepartment(c);
+          const normId = d.id ? normalizeDepartment(d.id) : null;
+          const isAllowed = authorizedDeptSet.has(normCode) || (normId && authorizedDeptSet.has(normId));
+          if (!isAllowed) return;
+        }
+
         seen.add(c.toUpperCase());
         list.push({ code: c, name: n });
+      });
+    }
+
+    // Fallback: If scoped user but list is empty, inject explicitly from authorized_department_codes
+    if (!isGlobalUser && list.length === 0 && user) {
+      const authCodes: string[] = Array.isArray(user.authorized_department_codes) ? user.authorized_department_codes : [];
+      authCodes.forEach((c) => {
+        const norm = (c || '').trim();
+        if (norm && !seen.has(norm.toUpperCase())) {
+          seen.add(norm.toUpperCase());
+          list.push({ code: norm, name: norm });
+        }
       });
     }
 
@@ -69,7 +114,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
       }
     }
     return list;
-  }, [rawDepartments, isGlobalUser]);
+  }, [rawDepartments, isGlobalUser, authorizedDeptSet, user]);
 
   const {
     department,
@@ -258,39 +303,52 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           </div>
 
           {/* College Campus Filter */}
-          <div>
-            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-indigo-500" />
-              <span>College Campus</span>
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
-                const isSelected = (college || 'ALL') === col;
-                return (
-                  <button
-                    key={col}
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('selection');
-                      setCollege(col);
-                    }}
-                    className={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer border ${
-                      isSelected
-                        ? col === 'NCT'
-                          ? 'bg-teal-600 text-white border-teal-600 shadow-md font-black ring-2 ring-teal-500/30'
-                          : col === 'NEC'
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md font-black ring-2 ring-indigo-500/30'
-                          : 'bg-brand-600 text-white border-brand-600 shadow-md font-black ring-2 ring-brand-500/30'
-                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border-transparent dark:border-white/5'
-                    }`}
-                  >
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
-                    <span>{col === 'ALL' ? 'All' : col}</span>
-                  </button>
-                );
-              })}
+          {canFilterCollege ? (
+            <div>
+              <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                <span>College Campus</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['ALL', 'NEC', 'NCT'] as const).map((col) => {
+                  const isSelected = (college || 'ALL') === col;
+                  return (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('selection');
+                        setCollege(col);
+                      }}
+                      className={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer border ${
+                        isSelected
+                          ? col === 'NCT'
+                            ? 'bg-teal-600 text-white border-teal-600 shadow-md font-black ring-2 ring-teal-500/30'
+                            : col === 'NEC'
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-md font-black ring-2 ring-indigo-500/30'
+                            : 'bg-brand-600 text-white border-brand-600 shadow-md font-black ring-2 ring-brand-500/30'
+                          : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border-transparent dark:border-white/5'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                      <span>{col === 'ALL' ? 'All' : col}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                <span>College Campus</span>
+              </label>
+              <div className="w-full h-10 px-3.5 flex items-center justify-between rounded-xl border border-indigo-200/80 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                <span>{getUserCollege(user) || college || 'NEC'} Campus (Locked)</span>
+                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-indigo-200/60 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300">Authorized Campus</span>
+              </div>
+            </div>
+          )}
 
           {/* Department Filter Chips */}
           <div>

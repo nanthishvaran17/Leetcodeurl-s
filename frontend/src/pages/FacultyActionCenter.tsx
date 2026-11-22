@@ -17,6 +17,7 @@ const StudentWhatsAppModal = React.lazy(() => import('../components/StudentWhats
 const IDCardGenerator = React.lazy(() => import('../components/IDCardGenerator').then(m => ({ default: m.IDCardGenerator })));
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 import { GlobalFilter } from '../components/GlobalFilter';
+import { SwipeHandle } from '../components/SwipeHandle';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -26,20 +27,20 @@ import { useDebounce } from '../hooks/useDebounce';
 
 // Priority Config (Red=Critical, Orange=High, Amber=Medium, Green=Low)
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
-  Critical: { tw: 'bg-red-50/90 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/80 shadow-xs font-bold',   dot: 'bg-red-500 dark:bg-red-400',    icon: <ShieldAlert size={12} strokeWidth={3} /> },
-  High:     { tw: 'bg-orange-50/90 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/80 shadow-xs font-bold', dot: 'bg-orange-500 dark:bg-orange-400', icon: <AlertTriangle size={12} strokeWidth={2.5} /> },
-  Medium:   { tw: 'bg-amber-50/90 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 shadow-xs font-bold', dot: 'bg-amber-500 dark:bg-amber-400', icon: <Clock size={12} strokeWidth={2.5} /> },
-  Low:      { tw: 'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 shadow-xs font-bold', dot: 'bg-emerald-500 dark:bg-emerald-400', icon: <Activity size={12} strokeWidth={2.5} /> },
+  Critical: { tw: 'bg-red-50/90 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/80 shadow-xs font-bold', dot: 'bg-red-500 dark:bg-red-400', icon: <ShieldAlert size={12} strokeWidth={3} /> },
+  High: { tw: 'bg-orange-50/90 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/80 shadow-xs font-bold', dot: 'bg-orange-500 dark:bg-orange-400', icon: <AlertTriangle size={12} strokeWidth={2.5} /> },
+  Medium: { tw: 'bg-amber-50/90 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 shadow-xs font-bold', dot: 'bg-amber-500 dark:bg-amber-400', icon: <Clock size={12} strokeWidth={2.5} /> },
+  Low: { tw: 'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 shadow-xs font-bold', dot: 'bg-emerald-500 dark:bg-emerald-400', icon: <Activity size={12} strokeWidth={2.5} /> },
 };
 
 const STATUS_CONFIG: Record<string, string> = {
-  Pending:       'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-bold',
+  Pending: 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-bold',
   'In Progress': 'bg-blue-50/90 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-bold',
-  Monitoring:    'bg-amber-50/90 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold',
-  Completed:     'bg-cyan-50/90 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 font-bold',
-  Resolved:      'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold',
-  Overdue:       'bg-rose-50/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold',
-  Escalated:     'bg-purple-50/90 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-bold',
+  Monitoring: 'bg-amber-50/90 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold',
+  Completed: 'bg-cyan-50/90 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 font-bold',
+  Resolved: 'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold',
+  Overdue: 'bg-rose-50/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold',
+  Escalated: 'bg-purple-50/90 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-bold',
 };
 
 const EVENT_COLOR: Record<string, string> = {
@@ -88,7 +89,7 @@ const CustomSelect: React.FC<{
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.value === value);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const touchStartY = React.useRef<number | null>(null);
+
   const [dropdownSide, setDropdownSide] = useState<'left' | 'right'>(alignRight ? 'right' : 'left');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');
@@ -169,46 +170,29 @@ const CustomSelect: React.FC<{
     }
   }, [open, isMobile]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY.current !== null) {
-      const diffY = e.touches[0].clientY - touchStartY.current;
-      if (diffY > 60) {
-        setOpen(false);
-        touchStartY.current = null;
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    touchStartY.current = null;
-  };
 
   const filteredOptions = searchQuery.trim()
     ? options.filter(opt => {
-        const q = searchQuery.toLowerCase();
-        return (
-          opt.label.toLowerCase().includes(q) ||
-          (opt.shortLabel && opt.shortLabel.toLowerCase().includes(q)) ||
-          (opt.badge && opt.badge.toLowerCase().includes(q))
-        );
-      })
+      const q = searchQuery.toLowerCase();
+      return (
+        opt.label.toLowerCase().includes(q) ||
+        (opt.shortLabel && opt.shortLabel.toLowerCase().includes(q)) ||
+        (opt.badge && opt.badge.toLowerCase().includes(q))
+      );
+    })
     : options;
 
   return (
     <div className="relative flex-1 w-full md:w-auto md:flex-initial min-w-0 md:min-w-[102px]" ref={containerRef}>
       <button
         onClick={toggleDropdown}
-        className={`flex items-center justify-between gap-1.5 sm:gap-2 w-full sm:w-auto md:min-w-[115px] lg:min-w-[125px] xl:min-w-[135px] px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs active:scale-95 ${
-          open 
-            ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
-            : value 
-              ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200' 
+        className={`flex items-center justify-between gap-1.5 sm:gap-2 w-full sm:w-auto md:min-w-[115px] lg:min-w-[125px] xl:min-w-[135px] px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs active:scale-95 ${open
+            ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10'
+            : value
+              ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200'
               : 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 hover:border-slate-400'
-        }`}
+          }`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className={value ? 'text-indigo-600 dark:text-indigo-400 shrink-0' : 'text-slate-400 shrink-0'}>{icon || selected?.icon}</span>
@@ -229,11 +213,10 @@ const CustomSelect: React.FC<{
         <div className={`absolute z-50 top-[110%] ${dropdownSide === 'right' ? 'right-0' : 'left-0'} w-[280px] sm:min-w-[320px] max-w-[calc(100vw-24px)] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up`}>
           <button
             onClick={() => { onChange(''); setOpen(false); }}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-              !value 
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${!value
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
                 : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
               <span className="opacity-70">{icon}</span>
@@ -241,7 +224,7 @@ const CustomSelect: React.FC<{
             </div>
             {!value && <Check size={16} strokeWidth={3} />}
           </button>
-          
+
           <div className="h-px bg-slate-100 dark:bg-navy-800 my-1.5 mx-2" />
 
           <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
@@ -251,18 +234,16 @@ const CustomSelect: React.FC<{
                 <button
                   key={opt.value}
                   onClick={() => { onChange(opt.value); setOpen(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer mb-1 last:mb-0 ${
-                    isSelected 
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer mb-1 last:mb-0 ${isSelected
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className={isSelected ? 'text-white opacity-90' : 'text-slate-400'}>{opt.icon}</span>
                     {opt.badge && (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
-                        isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-100 text-slate-600'
-                      }`}>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-100 text-slate-600'
+                        }`}>
                         {opt.badge}
                       </span>
                     )}
@@ -280,28 +261,22 @@ const CustomSelect: React.FC<{
       {open && isMobile && createPortal(
         <div className="fixed inset-0 z-[100000] flex flex-col justify-end isolate">
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
 
           {/* Bottom Sheet Drawer Container */}
-          <div 
+          <div
             className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
             style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
             role="dialog"
             aria-modal="true"
+            data-bottom-sheet="true"
           >
             {/* Grab Handle Header area with swipe down to dismiss */}
-            <div 
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
-            >
-              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-            </div>
+            <SwipeHandle onClose={() => setOpen(false)} className="pt-3 pb-1" pillClassName="bg-slate-300 dark:bg-navy-700" />
 
             {/* Title Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
@@ -318,7 +293,7 @@ const CustomSelect: React.FC<{
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setOpen(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 aria-label="Close"
@@ -340,7 +315,7 @@ const CustomSelect: React.FC<{
                     className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500 transition-colors"
                   />
                   {searchQuery && (
-                    <button 
+                    <button
                       onClick={() => setSearchQuery('')}
                       className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
                     >
@@ -357,11 +332,10 @@ const CustomSelect: React.FC<{
               {!searchQuery && (
                 <button
                   onClick={() => { onChange(''); setOpen(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
-                    !value 
-                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' 
+                  className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${!value
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className={!value ? 'text-white' : 'text-slate-400'}>{icon}</span>
@@ -378,18 +352,16 @@ const CustomSelect: React.FC<{
                   <button
                     key={opt.value}
                     onClick={() => { onChange(opt.value); setOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
-                      isSelected 
-                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' 
+                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${isSelected
+                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
                         : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-900 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className={isSelected ? 'text-white' : 'text-slate-400'}>{opt.icon}</span>
                       {opt.badge && (
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0 ${
-                          isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0 ${isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                          }`}>
                           {opt.badge}
                         </span>
                       )}
@@ -460,293 +432,284 @@ const FacultyMobileFilterDrawer: React.FC<{
   activeFilterCount,
   onResetAll,
 }) => {
-  useEffect(() => {
-    if (isOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = prev;
-      };
-    }
-  }, [isOpen]);
+    useEffect(() => {
+      if (isOpen) {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+          document.body.style.overflow = prev;
+        };
+      }
+    }, [isOpen]);
 
-  if (!isOpen) return null;
+    if (!isOpen) return null;
 
-  const priorities = [
-    { label: 'All', value: '' },
-    { label: 'Critical', value: 'Critical' },
-    { label: 'High', value: 'High' },
-    { label: 'Medium', value: 'Medium' },
-    { label: 'Low', value: 'Low' },
-  ];
+    const priorities = [
+      { label: 'All', value: '' },
+      { label: 'Critical', value: 'Critical' },
+      { label: 'High', value: 'High' },
+      { label: 'Medium', value: 'Medium' },
+      { label: 'Low', value: 'Low' },
+    ];
 
-  const statuses = [
-    { label: 'All', value: '' },
-    { label: 'Pending', value: 'Pending' },
-    { label: 'In Progress', value: 'In Progress' },
-    { label: 'Monitoring', value: 'Monitoring' },
-    { label: 'Completed', value: 'Completed' },
-    { label: 'Resolved', value: 'Resolved' },
-  ];
+    const statuses = [
+      { label: 'All', value: '' },
+      { label: 'Pending', value: 'Pending' },
+      { label: 'In Progress', value: 'In Progress' },
+      { label: 'Monitoring', value: 'Monitoring' },
+      { label: 'Completed', value: 'Completed' },
+      { label: 'Resolved', value: 'Resolved' },
+    ];
 
-  const years = [
-    { label: 'All Years', value: '' },
-    { label: 'I Year', value: 'I Year' },
-    { label: 'II Year', value: 'II Year' },
-    { label: 'III Year', value: 'III Year' },
-    { label: 'IV Year', value: 'IV Year' },
-  ];
+    const years = [
+      { label: 'All Years', value: '' },
+      { label: 'I Year', value: 'I Year' },
+      { label: 'II Year', value: 'II Year' },
+      { label: 'III Year', value: 'III Year' },
+      { label: 'IV Year', value: 'IV Year' },
+    ];
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/60 backdrop-blur-xs animate-fade-in touch-manipulation"
-      onClick={onClose}
-    >
+    return createPortal(
       <div
-        className="w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-navy-800 flex flex-col shadow-2xl overflow-hidden animate-slide-up"
-        onClick={e => e.stopPropagation()}
+        className="fixed inset-0 z-[999999] flex items-end justify-center bg-black/60 backdrop-blur-xs animate-fade-in touch-manipulation"
+        onClick={onClose}
       >
-        {/* Drag Handle Bar */}
-        <div className="pt-3 pb-1 flex flex-col items-center select-none shrink-0 cursor-grab">
-          <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-        </div>
-
-        {/* Drawer Header */}
-        <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 shrink-0">
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-brand-500" />
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">Filter Action Items</h3>
-            {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-brand-600 text-white text-[10px] font-black flex items-center justify-center font-mono">
-                {activeFilterCount}
-              </span>
-            )}
+        <div
+          className="w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-navy-800 flex flex-col shadow-2xl overflow-hidden animate-slide-up"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Drag Handle Bar */}
+          <div className="pt-3 pb-1 flex flex-col items-center select-none shrink-0 cursor-grab">
+            <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center cursor-pointer transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
 
-        {/* Scrollable Filter Options Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-sans">
-          {/* 1. Priority */}
-          <div>
-            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Priority
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {priorities.map(p => {
-                const isSelected = filterPriority === p.value;
-                return (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => setFilterPriority(p.value)}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                      isSelected
-                        ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
-                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
+          {/* Drawer Header */}
+          <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 shrink-0">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-brand-500" />
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Filter Action Items</h3>
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-brand-600 text-white text-[10px] font-black flex items-center justify-center font-mono">
+                  {activeFilterCount}
+                </span>
+              )}
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+            >
+              <X size={16} />
+            </button>
           </div>
 
-          {/* 2. Status */}
-          <div>
-            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Intervention Status
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {statuses.map(s => {
-                const isSelected = filterStatus === s.value;
-                return (
-                  <button
-                    key={s.label}
-                    type="button"
-                    onClick={() => setFilterStatus(s.value)}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                      isSelected
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 3. Department (if authorized) */}
-          {canFilterDepts && (
+          {/* Scrollable Filter Options Body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-sans">
+            {/* 1. Priority */}
             <div>
               <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                Department
+                Priority
               </label>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setFilterDept('')}
-                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                    !filterDept
-                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                      : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                  }`}
-                >
-                  All Departments
-                </button>
-                {deptOptions.map(d => {
-                  const isSelected = filterDept === d.value;
+              <div className="grid grid-cols-3 gap-1.5">
+                {priorities.map(p => {
+                  const isSelected = filterPriority === p.value;
                   return (
                     <button
-                      key={d.value}
+                      key={p.label}
                       type="button"
-                      onClick={() => setFilterDept(d.value)}
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ${
-                        isSelected
-                          ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                      onClick={() => setFilterPriority(p.value)}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${isSelected
+                          ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
                           : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                      }`}
-                      title={d.label}
+                        }`}
                     >
-                      {d.shortLabel || d.badge || d.label}
+                      {p.label}
                     </button>
                   );
                 })}
               </div>
             </div>
-          )}
 
-          {/* 4. Academic Year */}
-          <div>
-            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Academic Year
-            </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              {years.map(y => {
-                const isSelected = filterYear === y.value;
-                return (
-                  <button
-                    key={y.label}
-                    type="button"
-                    onClick={() => setFilterYear(y.value)}
-                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                      isSelected
-                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                    }`}
-                  >
-                    {y.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 5. Staff Mentor */}
-          {staffOptions.length > 0 && (
+            {/* 2. Status */}
             <div>
               <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                Faculty Mentor
+                Intervention Status
               </label>
-              <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
-                <button
-                  type="button"
-                  onClick={() => setFilterStaff('')}
-                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${
-                    !filterStaff
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                      : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                  }`}
-                >
-                  All Mentors
-                </button>
-                {staffOptions.map(st => {
-                  const isSelected = filterStaff === st.value;
+              <div className="grid grid-cols-3 gap-1.5">
+                {statuses.map(s => {
+                  const isSelected = filterStatus === s.value;
                   return (
                     <button
-                      key={st.value}
+                      key={s.label}
                       type="button"
-                      onClick={() => setFilterStaff(st.value)}
-                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ${
-                        isSelected
+                      onClick={() => setFilterStatus(s.value)}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${isSelected
                           ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
                           : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
-                      }`}
-                      title={st.label}
+                        }`}
                     >
-                      {st.label}
+                      {s.label}
                     </button>
                   );
                 })}
               </div>
             </div>
-          )}
 
-          {/* 6. Special Urgent Flags */}
-          <div>
-            <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Urgent Flags
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setFilterOverdue(!filterOverdue)}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
-                  filterOverdue
-                    ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
-                    : 'bg-rose-50/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/50'
-                }`}
-              >
-                <Clock size={14} />
-                <span>Overdue ({'>'}0d)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterEscalated(!filterEscalated)}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
-                  filterEscalated
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                    : 'bg-purple-50/60 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900/50'
-                }`}
-              >
-                <ShieldAlert size={14} />
-                <span>Escalated</span>
-              </button>
+            {/* 3. Department (if authorized) */}
+            {canFilterDepts && (
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  Department
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setFilterDept('')}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${!filterDept
+                        ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                      }`}
+                  >
+                    All Departments
+                  </button>
+                  {deptOptions.map(d => {
+                    const isSelected = filterDept === d.value;
+                    return (
+                      <button
+                        key={d.value}
+                        type="button"
+                        onClick={() => setFilterDept(d.value)}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ${isSelected
+                            ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                            : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                          }`}
+                        title={d.label}
+                      >
+                        {d.shortLabel || d.badge || d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 4. Academic Year */}
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Academic Year
+              </label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {years.map(y => {
+                  const isSelected = filterYear === y.value;
+                  return (
+                    <button
+                      key={y.label}
+                      type="button"
+                      onClick={() => setFilterYear(y.value)}
+                      className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${isSelected
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                        }`}
+                    >
+                      {y.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 5. Staff Mentor */}
+            {staffOptions.length > 0 && (
+              <div>
+                <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                  Faculty Mentor
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                  <button
+                    type="button"
+                    onClick={() => setFilterStaff('')}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center cursor-pointer ${!filterStaff
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                      }`}
+                  >
+                    All Mentors
+                  </button>
+                  {staffOptions.map(st => {
+                    const isSelected = filterStaff === st.value;
+                    return (
+                      <button
+                        key={st.value}
+                        type="button"
+                        onClick={() => setFilterStaff(st.value)}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ${isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                            : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-800 hover:border-slate-300'
+                          }`}
+                        title={st.label}
+                      >
+                        {st.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 6. Special Urgent Flags */}
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                Urgent Flags
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilterOverdue(!filterOverdue)}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${filterOverdue
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                      : 'bg-rose-50/60 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/50'
+                    }`}
+                >
+                  <Clock size={14} />
+                  <span>Overdue ({'>'}0d)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterEscalated(!filterEscalated)}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${filterEscalated
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                      : 'bg-purple-50/60 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900/50'
+                    }`}
+                >
+                  <ShieldAlert size={14} />
+                  <span>Escalated</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Drawer Action Bar */}
-        <div className="p-3.5 bg-slate-50 dark:bg-navy-900 border-t border-slate-100 dark:border-navy-800 flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={onResetAll}
-            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer transition-colors text-center"
-          >
-            Reset All
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-500/20 cursor-pointer transition-all text-center"
-          >
-            Apply Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
-          </button>
+          {/* Drawer Action Bar */}
+          <div className="p-3.5 bg-slate-50 dark:bg-navy-900 border-t border-slate-100 dark:border-navy-800 flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={onResetAll}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer transition-colors text-center"
+            >
+              Reset All
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-500/20 cursor-pointer transition-all text-center"
+            >
+              Apply Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+            </button>
+          </div>
         </div>
-      </div>
-    </div>,
-    document.body
-  );
-};
+      </div>,
+      document.body
+    );
+  };
 
 // Animated KPI Card with Soft Semantic Tints
 const KPICard: React.FC<{
@@ -859,15 +822,13 @@ const KPICard: React.FC<{
   return (
     <button
       onClick={onClick}
-      className={`text-left rounded-2xl p-2.5 sm:p-3.5 md:p-4 glass-panel border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-glass cursor-pointer relative overflow-hidden group active:scale-95 ${
-        isGrid
+      className={`text-left rounded-2xl p-2.5 sm:p-3.5 md:p-4 glass-panel border transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-glass cursor-pointer relative overflow-hidden group active:scale-95 ${isGrid
           ? 'w-full'
           : 'flex-none w-[calc(50%-5px)] min-w-[136px] md:flex-1 md:w-auto snap-start'
-      } ${
-        active
+        } ${active
           ? `${theme.activeRing}`
           : `${theme.cardBorder} ${theme.hoverBorder}`
-      }`}
+        }`}
     >
       <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -926,7 +887,7 @@ const StudentViewModal: React.FC<{
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-4xl max-h-[92dvh] sm:max-h-[92vh] flex flex-col rounded-t-[28px] sm:rounded-3xl bg-white dark:bg-navy-900 border-t sm:border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden text-slate-900 dark:text-white">
-        
+
         {/* Mobile Pull Indicator */}
         <div className="w-10 h-1 bg-slate-300 dark:bg-navy-700 rounded-full mx-auto my-2 sm:hidden shrink-0" />
 
@@ -977,11 +938,10 @@ const StudentViewModal: React.FC<{
         <div className="flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-navy-950/40 border-b border-slate-100 dark:border-navy-800/80 shrink-0 overflow-x-auto no-scrollbar scroll-smooth">
           <button
             onClick={() => setActiveViewTab('pass')}
-            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-              activeViewTab === 'pass'
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${activeViewTab === 'pass'
                 ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
-            }`}
+              }`}
           >
             <Award size={13} className="shrink-0" />
             <span className="whitespace-nowrap">Digital Performance Pass</span>
@@ -989,11 +949,10 @@ const StudentViewModal: React.FC<{
 
           <button
             onClick={() => setActiveViewTab('profile')}
-            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-              activeViewTab === 'profile'
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${activeViewTab === 'profile'
                 ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
-            }`}
+              }`}
           >
             <Activity size={13} className="shrink-0" />
             <span className="whitespace-nowrap">AI Coding Profile</span>
@@ -1001,11 +960,10 @@ const StudentViewModal: React.FC<{
 
           <button
             onClick={() => setActiveViewTab('timeline')}
-            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-              activeViewTab === 'timeline'
+            className={`flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${activeViewTab === 'timeline'
                 ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25'
                 : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800/60 font-bold'
-            }`}
+              }`}
           >
             <Clock size={13} className="shrink-0" />
             <span className="whitespace-nowrap">Intervention Timeline ({(Array.isArray(events) ? events.length : 0)})</span>
@@ -1173,7 +1131,7 @@ const UpdateModal: React.FC<{
           {/* Premium Executive Header */}
           <div className="relative overflow-hidden p-5 sm:p-6 bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white border-b border-slate-800/80">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            
+
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div className="flex items-start gap-3.5 min-w-0 flex-1">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/30 border border-white/20 shrink-0">
@@ -1257,190 +1215,190 @@ const UpdateModal: React.FC<{
 
           {/* Form Body Content */}
           <div className="p-5 sm:p-6 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>
-                <Activity size={13} className="text-indigo-500" />
-                Intervention Status
-              </label>
-              <GlobalFilter
-                value={form.status}
-                onChange={val => setForm(f => ({ ...f, status: val }))}
-                dropdownWidth="w-full"
-                options={['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => ({ value: s, label: s }))}
-                icon={<Activity className="w-4 h-4 text-indigo-500" />}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>
-                <User size={13} className="text-indigo-500" />
-                Assigned Faculty / Mentor
-              </label>
-              <input
-                value={form.assigned_faculty_name}
-                onChange={e => setForm(f => ({ ...f, assigned_faculty_name: e.target.value }))}
-                className={inputCls}
-                placeholder="Dr. / Prof. Name"
-              />
-            </div>
-          </div>
-
-          {/* Quick Mentoring Action (1-Click Fill) */}
-          <div>
-            <label className={labelCls}>
-              <Target size={13} className="text-brand-500" />
-              Quick Mentoring Action (1-Click Fill)
-            </label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {[
-                { label: 'Contacted & Reminded', action: 'Spoke directly with student. Encouraged to resume LeetCode practice and attend Sunday contest.', status: 'In Progress' },
-                { label: 'Assigned 2 Easy Problems', action: 'Assigned 2 beginner problems on Arrays/Strings to build confidence.', status: 'In Progress' },
-                { label: '1-on-1 Mentoring Conducted', action: 'Conducted 1-on-1 session to resolve coding doubts and debug setup issues.', status: 'In Progress' },
-                { label: 'Doubts Cleared & On-Track', action: 'Student confirmed setup is working and completed initial assigned tasks.', status: 'Resolved' },
-              ].map((tmpl, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setForm(f => ({
-                    ...f,
-                    action_taken: tmpl.action,
-                    status: tmpl.status
-                  }))}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-navy-700 text-[11px] font-bold transition active:scale-95 cursor-pointer"
-                >
-                  {tmpl.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>
-              <FileText size={13} className="text-emerald-500" />
-              Action Taken (Intervention Details)
-            </label>
-            <textarea
-              value={form.action_taken}
-              onChange={e => setForm(f => ({ ...f, action_taken: e.target.value }))}
-              className={`${inputCls} h-20 resize-y leading-relaxed`}
-              placeholder="Describe the mentoring session or task assigned to the student..."
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>
-              <ShieldAlert size={13} className="text-amber-500" />
-              Faculty Notes (Confidential)
-            </label>
-            <textarea
-              value={form.faculty_notes}
-              onChange={e => setForm(f => ({ ...f, faculty_notes: e.target.value }))}
-              className={`${inputCls} h-20 resize-y leading-relaxed`}
-              placeholder="Private faculty reference notes, observations, or student feedback..."
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>
-              <Award size={13} className="text-purple-500" />
-              Evidence / Audit Remarks
-            </label>
-            <input
-              value={form.evidence_remarks}
-              onChange={e => setForm(f => ({ ...f, evidence_remarks: e.target.value }))}
-              className={inputCls}
-              placeholder="e.g. Missed WC#516, no LeetCode submission since Aug 10"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className={labelCls}>Updated By</label>
-              <input
-                value={form.updated_by_name}
-                onChange={e => setForm(f => ({ ...f, updated_by_name: e.target.value }))}
-                className={inputCls}
-                placeholder="Your name"
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Follow-up Date</label>
-              <input
-                type="date"
-                value={form.follow_up_date || ''}
-                onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Next Review Date</label>
-              <input
-                type="date"
-                value={form.next_review_date || ''}
-                onChange={e => setForm(f => ({ ...f, next_review_date: e.target.value }))}
-                className={inputCls}
-              />
-            </div>
-          </div>
-
-          {/* Escalation Control Section */}
-          <div className="rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ArrowUpRight className="w-4 h-4 text-rose-500" />
-                <span className="text-xs font-black uppercase text-rose-700 dark:text-rose-300">
-                  Escalation Management
-                </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>
+                  <Activity size={13} className="text-indigo-500" />
+                  Intervention Status
+                </label>
+                <GlobalFilter
+                  value={form.status}
+                  onChange={val => setForm(f => ({ ...f, status: val }))}
+                  dropdownWidth="w-full"
+                  options={['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => ({ value: s, label: s }))}
+                  icon={<Activity className="w-4 h-4 text-indigo-500" />}
+                />
               </div>
-              <button
-                type="button"
-                onClick={() => setShowEscalate(!showEscalate)}
-                className="px-3 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition cursor-pointer"
-              >
-                {showEscalate ? 'Hide Escalation' : 'Escalate to HOD'}
-              </button>
+              <div>
+                <label className={labelCls}>
+                  <User size={13} className="text-indigo-500" />
+                  Assigned Faculty / Mentor
+                </label>
+                <input
+                  value={form.assigned_faculty_name}
+                  onChange={e => setForm(f => ({ ...f, assigned_faculty_name: e.target.value }))}
+                  className={inputCls}
+                  placeholder="Dr. / Prof. Name"
+                />
+              </div>
             </div>
 
-            {showEscalate && (
-              <div className="pt-2 flex flex-col gap-3 border-t border-rose-200/60 dark:border-rose-900/40">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className={labelCls}>Escalate Target</label>
-                    <input
-                      value={escalateTo}
-                      onChange={e => setEscalateTo(e.target.value)}
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Reason for Escalation</label>
-                    <input
-                      value={escalateReason}
-                      onChange={e => setEscalateReason(e.target.value)}
-                      className={inputCls}
-                      placeholder="No progress after multiple reminders..."
-                    />
-                  </div>
+            {/* Quick Mentoring Action (1-Click Fill) */}
+            <div>
+              <label className={labelCls}>
+                <Target size={13} className="text-brand-500" />
+                Quick Mentoring Action (1-Click Fill)
+              </label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {[
+                  { label: 'Contacted & Reminded', action: 'Spoke directly with student. Encouraged to resume LeetCode practice and attend Sunday contest.', status: 'In Progress' },
+                  { label: 'Assigned 2 Easy Problems', action: 'Assigned 2 beginner problems on Arrays/Strings to build confidence.', status: 'In Progress' },
+                  { label: '1-on-1 Mentoring Conducted', action: 'Conducted 1-on-1 session to resolve coding doubts and debug setup issues.', status: 'In Progress' },
+                  { label: 'Doubts Cleared & On-Track', action: 'Student confirmed setup is working and completed initial assigned tasks.', status: 'Resolved' },
+                ].map((tmpl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setForm(f => ({
+                      ...f,
+                      action_taken: tmpl.action,
+                      status: tmpl.status
+                    }))}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-navy-700 text-[11px] font-bold transition active:scale-95 cursor-pointer"
+                  >
+                    {tmpl.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>
+                <FileText size={13} className="text-emerald-500" />
+                Action Taken (Intervention Details)
+              </label>
+              <textarea
+                value={form.action_taken}
+                onChange={e => setForm(f => ({ ...f, action_taken: e.target.value }))}
+                className={`${inputCls} h-20 resize-y leading-relaxed`}
+                placeholder="Describe the mentoring session or task assigned to the student..."
+              />
+            </div>
+
+            <div>
+              <label className={labelCls}>
+                <ShieldAlert size={13} className="text-amber-500" />
+                Faculty Notes (Confidential)
+              </label>
+              <textarea
+                value={form.faculty_notes}
+                onChange={e => setForm(f => ({ ...f, faculty_notes: e.target.value }))}
+                className={`${inputCls} h-20 resize-y leading-relaxed`}
+                placeholder="Private faculty reference notes, observations, or student feedback..."
+              />
+            </div>
+
+            <div>
+              <label className={labelCls}>
+                <Award size={13} className="text-purple-500" />
+                Evidence / Audit Remarks
+              </label>
+              <input
+                value={form.evidence_remarks}
+                onChange={e => setForm(f => ({ ...f, evidence_remarks: e.target.value }))}
+                className={inputCls}
+                placeholder="e.g. Missed WC#516, no LeetCode submission since Aug 10"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className={labelCls}>Updated By</label>
+                <input
+                  value={form.updated_by_name}
+                  onChange={e => setForm(f => ({ ...f, updated_by_name: e.target.value }))}
+                  className={inputCls}
+                  placeholder="Your name"
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Follow-up Date</label>
+                <input
+                  type="date"
+                  value={form.follow_up_date || ''}
+                  onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Next Review Date</label>
+                <input
+                  type="date"
+                  value={form.next_review_date || ''}
+                  onChange={e => setForm(f => ({ ...f, next_review_date: e.target.value }))}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            {/* Escalation Control Section */}
+            <div className="rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ArrowUpRight className="w-4 h-4 text-rose-500" />
+                  <span className="text-xs font-black uppercase text-rose-700 dark:text-rose-300">
+                    Escalation Management
+                  </span>
                 </div>
                 <button
                   type="button"
-                  onClick={handleEscalate}
-                  disabled={escalating}
-                  className="self-end px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-600/30 transition cursor-pointer disabled:opacity-50"
+                  onClick={() => setShowEscalate(!showEscalate)}
+                  className="px-3 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition cursor-pointer"
                 >
-                  {escalating ? 'Escalating...' : 'Confirm Escalation to HOD'}
+                  {showEscalate ? 'Hide Escalation' : 'Escalate to HOD'}
                 </button>
+              </div>
+
+              {showEscalate && (
+                <div className="pt-2 flex flex-col gap-3 border-t border-rose-200/60 dark:border-rose-900/40">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>Escalate Target</label>
+                      <input
+                        value={escalateTo}
+                        onChange={e => setEscalateTo(e.target.value)}
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Reason for Escalation</label>
+                      <input
+                        value={escalateReason}
+                        onChange={e => setEscalateReason(e.target.value)}
+                        className={inputCls}
+                        placeholder="No progress after multiple reminders..."
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleEscalate}
+                    disabled={escalating}
+                    className="self-end px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-600/30 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {escalating ? 'Escalating...' : 'Confirm Escalation to HOD'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {msg && (
+              <div className={`p-3 rounded-2xl text-xs font-black flex items-center gap-2 ${msg.includes('failed') ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'}`}>
+                <CheckCircle2 size={14} />
+                {msg}
               </div>
             )}
           </div>
-
-          {msg && (
-            <div className={`p-3 rounded-2xl text-xs font-black flex items-center gap-2 ${msg.includes('failed') ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'}`}>
-              <CheckCircle2 size={14} />
-              {msg}
-            </div>
-          )}
-        </div>
         </div>
 
         {/* Modal Footer */}
@@ -1743,7 +1701,7 @@ export const FacultyActionCenter: React.FC = () => {
   const applyKPIFilter = (key: string, type: 'priority' | 'status' | 'overdue' | 'escalated') => {
     const next = kpiFilter === key ? '' : key;
     setKpiFilter(next);
-    
+
     // Reset all mutual exclusive toggles first
     setFilterPriority('');
     setFilterStatus('');
@@ -1842,11 +1800,10 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 1. Critical Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'Critical' ? '' : 'Critical', 'priority')}
-            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
-              kpiFilter === 'Critical'
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${kpiFilter === 'Critical'
                 ? 'bg-rose-100/90 dark:bg-rose-950/70 border-rose-500 dark:border-rose-500 ring-2 ring-rose-500/25 shadow-rose-500/10'
                 : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 hover:border-rose-400 dark:hover:border-rose-700 hover:bg-rose-100/60'
-            }`}
+              }`}
           >
             {kpiFilter === 'Critical' && (
               <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-rose-600 dark:bg-rose-500 rounded-r-full" />
@@ -1866,11 +1823,10 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 2. High Priority Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'High' ? '' : 'High', 'priority')}
-            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
-              kpiFilter === 'High'
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${kpiFilter === 'High'
                 ? 'bg-amber-100/90 dark:bg-amber-950/70 border-amber-500 dark:border-amber-500 ring-2 ring-amber-500/25 shadow-amber-500/10'
                 : 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 dark:hover:border-amber-700 hover:bg-amber-100/60'
-            }`}
+              }`}
           >
             {kpiFilter === 'High' && (
               <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-amber-600 dark:bg-amber-500 rounded-r-full" />
@@ -1890,11 +1846,10 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 3. Active Mentoring Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'In Progress' ? '' : 'In Progress', 'status')}
-            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
-              kpiFilter === 'In Progress'
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${kpiFilter === 'In Progress'
                 ? 'bg-blue-100/90 dark:bg-blue-950/70 border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/25 shadow-blue-500/10'
                 : 'bg-blue-50/80 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/60 hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-100/60'
-            }`}
+              }`}
           >
             {kpiFilter === 'In Progress' && (
               <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
@@ -1914,11 +1869,10 @@ export const FacultyActionCenter: React.FC = () => {
           {/* 4. Target Achieved Box */}
           <button
             onClick={() => applyKPIFilter(kpiFilter === 'Resolved' ? '' : 'Resolved', 'status')}
-            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${
-              kpiFilter === 'Resolved'
+            className={`relative flex flex-col justify-between p-2.5 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer active:scale-[0.98] shadow-xs hover:shadow-md overflow-hidden ${kpiFilter === 'Resolved'
                 ? 'bg-emerald-100/90 dark:bg-emerald-950/70 border-emerald-500 dark:border-emerald-500 ring-2 ring-emerald-500/25 shadow-emerald-500/10'
                 : 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60 hover:border-emerald-400 dark:hover:border-emerald-700 hover:bg-emerald-100/60'
-            }`}
+              }`}
           >
             {kpiFilter === 'Resolved' && (
               <div className="absolute left-0 top-1.5 bottom-1.5 w-1.5 bg-emerald-600 dark:bg-emerald-500 rounded-r-full" />
@@ -1973,13 +1927,13 @@ export const FacultyActionCenter: React.FC = () => {
           <div className="hidden md:flex md:flex-wrap items-center gap-2 shrink-0">
             <CustomSelect
               value={filterPriority}
-              onChange={v => { 
-                setFilterPriority(v); 
+              onChange={v => {
+                setFilterPriority(v);
                 setFilterStatus('');
                 setFilterOverdue(false);
                 setFilterEscalated(false);
-                setKpiFilter(v); 
-                setPage(1); 
+                setKpiFilter(v);
+                setPage(1);
               }}
               placeholder="All Priorities"
               icon={<ShieldAlert size={15} />}
@@ -1993,13 +1947,13 @@ export const FacultyActionCenter: React.FC = () => {
 
             <CustomSelect
               value={filterStatus}
-              onChange={v => { 
-                setFilterStatus(v); 
+              onChange={v => {
+                setFilterStatus(v);
                 setFilterPriority('');
                 setFilterOverdue(false);
                 setFilterEscalated(false);
                 setKpiFilter(v);
-                setPage(1); 
+                setPage(1);
               }}
               placeholder="All Statuses"
               icon={<Activity size={15} />}
@@ -2153,11 +2107,10 @@ export const FacultyActionCenter: React.FC = () => {
               <button
                 key={sz}
                 onClick={() => { setPageSize(sz); setPage(1); }}
-                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  pageSize === sz
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${pageSize === sz
                     ? 'bg-indigo-600 text-white shadow-xs font-black'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 {sz}
               </button>
@@ -2254,11 +2207,11 @@ export const FacultyActionCenter: React.FC = () => {
             {/* Static status icon */}
             <div className="relative mb-6">
               <div className="relative w-24 h-24 rounded-3xl bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 flex items-center justify-center overflow-hidden">
-                 {hasFilters || kpiFilter ? (
-                    <Search className="w-10 h-10 text-slate-400 dark:text-slate-300 relative z-10" />
-                  ) : (
-                    <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 relative z-10" />
-                  )}
+                {hasFilters || kpiFilter ? (
+                  <Search className="w-10 h-10 text-slate-400 dark:text-slate-300 relative z-10" />
+                ) : (
+                  <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 relative z-10" />
+                )}
               </div>
             </div>
 
@@ -2357,11 +2310,10 @@ export const FacultyActionCenter: React.FC = () => {
                   }
                   setShowBulkWhatsAppModal(true);
                 }}
-                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation ${
-                  selectedStudentIds.size > 0
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm active:scale-95 touch-manipulation ${selectedStudentIds.size > 0
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-500/30 shadow-emerald-600/20'
                     : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                }`}
+                  }`}
               >
                 <MessageCircle size={16} className="stroke-[2.5]" />
                 <span>
@@ -2389,11 +2341,10 @@ export const FacultyActionCenter: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className={`rounded-2xl transition-all duration-200 p-3.5 space-y-3 border touch-manipulation ${
-                    isSelected
+                  className={`rounded-2xl transition-all duration-200 p-3.5 space-y-3 border touch-manipulation ${isSelected
                       ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
                       : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 shadow-2xs hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   {/* Card Header: Checkbox + Avatar + Name & RegNo + Priority & Status */}
                   <div className="flex items-start justify-between gap-2.5">
@@ -2402,11 +2353,10 @@ export const FacultyActionCenter: React.FC = () => {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); toggleSelectStudent(item.id); }}
-                        className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 mt-0.5 touch-manipulation active:scale-90 ${
-                          isSelected
+                        className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer shrink-0 mt-0.5 touch-manipulation active:scale-90 ${isSelected
                             ? 'bg-emerald-500 text-white border-emerald-600 shadow-xs'
                             : 'bg-slate-50 dark:bg-navy-800 text-slate-400 border-slate-300 dark:border-navy-700 hover:text-slate-600'
-                        }`}
+                          }`}
                         aria-label={isSelected ? "Deselect student" : "Select student for bulk outreach"}
                       >
                         {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
@@ -2581,11 +2531,10 @@ export const FacultyActionCenter: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => toggleSelectStudent(item.id)}
-                            className={`p-1 rounded-lg border transition cursor-pointer ${
-                              selectedStudentIds.has(item.id)
+                            className={`p-1 rounded-lg border transition cursor-pointer ${selectedStudentIds.has(item.id)
                                 ? 'bg-emerald-500 text-white border-emerald-600'
                                 : 'bg-slate-100 dark:bg-navy-800 text-slate-400 border-slate-200 dark:border-navy-700 hover:text-slate-600'
-                            }`}
+                              }`}
                           >
                             {selectedStudentIds.has(item.id) ? <CheckSquare size={15} /> : <Square size={15} />}
                           </button>

@@ -28,6 +28,16 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   useEscapeKey(onClose, Boolean(staff));
   useScrollLock(Boolean(staff));
 
+  // Auto-hide MobileBottomNav while StaffDetailDrawer is active to avoid overlapping or clipping
+  useEffect(() => {
+    document.body.classList.add('hide-mobile-bottom-nav');
+    window.dispatchEvent(new CustomEvent('hide_mobile_bottom_nav'));
+    return () => {
+      document.body.classList.remove('hide-mobile-bottom-nav');
+      window.dispatchEvent(new CustomEvent('show_mobile_bottom_nav'));
+    };
+  }, []);
+
   const isMenteeEligible = Boolean(staff && isRoleEligibleForMentees(staff.role, (staff as any).mentoring_role));
   const [mentees, setMentees] = useState<StudentRecord[]>([]);
   const [loadingMentees, setLoadingMentees] = useState<boolean>(isMenteeEligible);
@@ -105,8 +115,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
     >
       <div
         role="document"
-        className="w-full max-w-xl max-w-full h-[92vh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden overflow-x-hidden flex flex-col rounded-t-3xl sm:rounded-none no-drawer-swipe touch-pan-y overscroll-x-none"
-        style={{ touchAction: 'pan-y', overscrollBehaviorX: 'none' }}
+        className="w-full max-w-xl max-w-full h-[92dvh] sm:h-[100dvh] bg-white dark:bg-navy-950 sm:border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden overflow-x-hidden flex flex-col rounded-t-3xl sm:rounded-none no-drawer-swipe touch-pan-y overscroll-x-none"
+        style={{ touchAction: 'pan-y', overscrollBehaviorX: 'none', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
 
         {/* Hero Header Profile Section */}
@@ -128,7 +138,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
           </div>
 
           {/* Avatar + Info */}
-          <div className="flex items-center gap-3.5 sm:gap-4 px-4 sm:px-6 pt-4 sm:pt-6 pb-5 relative z-10 pr-14 sm:pr-16">
+          <div className="flex items-center gap-3.5 sm:gap-4 px-4 sm:px-6 pt-3.5 sm:pt-6 pb-5 relative z-10 pr-14 sm:pr-16">
             <div
               className={`relative shrink-0 ${staff.profile_photo ? 'cursor-pointer active:scale-95 hover:scale-105 transition-transform' : ''}`}
               onClick={() => { if (staff.profile_photo) setShowPhotoZoom(true); }}
@@ -138,10 +148,10 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 <img
                   src={staff.profile_photo}
                   alt={staff.full_name || staff.username}
-                  className="w-20 h-20 rounded-2xl object-cover border-2 border-white/40 shadow-2xl"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white/40 shadow-2xl"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-md text-white font-black flex items-center justify-center text-3xl shadow-2xl border border-white/20">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/15 backdrop-blur-md text-white font-black flex items-center justify-center text-2xl sm:text-3xl shadow-2xl border border-white/20">
                   {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
                 </div>
               )}
@@ -151,15 +161,15 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             </div>
 
             <div className="min-w-0 flex-1 pb-1">
-              {/* Full name (large) with Copy button */}
-              <div className="flex items-center gap-2">
-                <div className="text-xl font-black text-white leading-tight truncate select-text" title={staff.full_name || staff.username}>
+              {/* Full name (large) with Copy button - Never truncated */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-base sm:text-xl font-black text-white leading-snug break-words select-text" title={staff.full_name || staff.username}>
                   {staff.full_name || staff.username}
                 </div>
                 <button
                   type="button"
                   onClick={() => handleCopyStaffName(staff.full_name || staff.username)}
-                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer inline-flex items-center shrink-0 active:scale-95"
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer inline-flex items-center shrink-0 active:scale-95"
                   title="Copy Staff Name"
                 >
                   {copiedStaffName === (staff.full_name || staff.username) ? (
@@ -174,9 +184,9 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 @{staff.username}
               </div>
               {/* Email */}
-              <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-1 truncate" title={staff.email}>
+              <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-1 break-all" title={staff.email}>
                 <Mail size={11} className="text-brand-400 shrink-0" />
-                <span className="truncate">{staff.email}</span>
+                <span className="break-all">{staff.email}</span>
               </p>
               {/* Badges row */}
               <div className="flex items-center gap-2 mt-2.5 flex-wrap">
@@ -228,8 +238,8 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                   Scope: {staff.department_code || 'Dept'}
                 </span>
               </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-              {/* Assigned Mentees */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* 1. Assigned Mentees */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
                 <Gauge className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Mentees</div>
@@ -249,36 +259,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Active Solvers */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
-                <CheckCircle className="absolute -right-2 -top-2 text-emerald-50 dark:text-navy-800" size={58} />
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Active Solvers</div>
-                <div className="flex items-baseline gap-1">
-                  <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-                    {activeCount}
-                  </div>
-                  <div className="text-[11px] text-slate-500">/ {assignedCount} mentees</div>
-                </div>
-                <div className="mt-2 w-full h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700">
-                  <div className={`h-full rounded-full transition-all duration-500 ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${completionRate}%` }} />
-                </div>
-                <div className="text-[10px] text-slate-700 dark:text-slate-300 mt-1 font-bold text-right">{completionRate}% active conversion</div>
-              </div>
-
-              {/* Problems Solved */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
-                <Activity className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Total Solved</div>
-                <div className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <Activity size={16} className="text-brand-500" />
-                  <span>{totalProblemsSolved}</span>
-                </div>
-                <div className="mt-2 text-[10px] text-slate-600 dark:text-slate-400 font-bold">
-                  {targetCompletedCount} mentees with 10+ solves
-                </div>
-              </div>
-
-              {/* Recent Contest Attendance */}
+              {/* 2. Recent Contest Attendance */}
               <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
                 <Trophy className="absolute -right-2 -top-2 text-amber-50 dark:text-navy-800" size={58} />
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center justify-between">
@@ -300,6 +281,19 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                   />
                 </div>
                 <div className="text-[10px] text-slate-700 dark:text-slate-300 mt-1 font-bold text-right">{contestAttendanceRate}% turnout</div>
+              </div>
+
+              {/* 3. Problems Solved */}
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm shadow-slate-200/50 dark:shadow-black/10 relative overflow-hidden">
+                <Activity className="absolute -right-2 -top-2 text-blue-50 dark:text-navy-800" size={58} />
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Total Solved</div>
+                <div className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Activity size={16} className="text-brand-500" />
+                  <span>{totalProblemsSolved}</span>
+                </div>
+                <div className="mt-2 text-[10px] text-slate-600 dark:text-slate-400 font-bold">
+                  {targetCompletedCount} mentees with 10+ solves
+                </div>
               </div>
             </div>
             </div>

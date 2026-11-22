@@ -619,20 +619,20 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
       {selectedContest ? (
         /* SINGLE WEEK VIEW (8 Detailed Metric Cards) */
         <div className="space-y-3.5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-3.5">
             {/* 1. Contest Rating */}
-            <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-500 rounded-xl mr-3 shrink-0">
-                <Zap className="w-5 h-5" />
+            <div className="bg-white dark:bg-navy-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+              <div className="p-2 sm:p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-500 rounded-xl mr-2.5 sm:mr-3 shrink-0">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Rating</p>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white truncate">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Rating</p>
+                <div className="flex items-baseline flex-wrap gap-x-1.5 gap-y-0.5 mt-0.5">
+                  <span className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white whitespace-nowrap shrink-0">
                     {selectedContest.rating_after ? Math.round(selectedContest.rating_after).toLocaleString('en-US') : 'Unrated'}
                   </span>
                   {selectedContest.rating_change !== null && selectedContest.rating_change !== undefined && (
-                    <span className={`text-[11px] font-black ${selectedContest.rating_change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    <span className={`text-[10px] sm:text-[11px] font-black whitespace-nowrap shrink-0 ${selectedContest.rating_change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                       {selectedContest.rating_change >= 0 ? `+${selectedContest.rating_change}` : selectedContest.rating_change}
                     </span>
                   )}
@@ -641,40 +641,40 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
             </div>
 
             {/* 2. Contest Rank */}
-            <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl mr-3 shrink-0">
-                <Target className="w-5 h-5" />
+            <div className="bg-white dark:bg-navy-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+              <div className="p-2 sm:p-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl mr-2.5 sm:mr-3 shrink-0">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Global Rank</p>
-                <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Global Rank</p>
+                <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
                   {selectedContest.contest_rank && selectedContest.contest_rank > 0 ? `#${selectedContest.contest_rank.toLocaleString('en-US')}` : '—'}
                 </p>
               </div>
             </div>
 
             {/* 3. Contest Score */}
-            <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl mr-3 shrink-0">
-                <Flame className="w-5 h-5" />
+            <div className="bg-white dark:bg-navy-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+              <div className="p-2 sm:p-2.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl mr-2.5 sm:mr-3 shrink-0">
+                <Flame className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Contest Score</p>
-                <p className="text-xl sm:text-2xl font-display font-bold text-purple-600 dark:text-purple-400 mt-0.5 truncate">
-                  {selectedContest.score ?? (selectedContest.problems_solved * 4)} <span className="text-xs text-slate-400 font-medium">/ 18 pts</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Contest Score</p>
+                <p className="text-lg sm:text-2xl font-display font-bold text-purple-600 dark:text-purple-400 mt-0.5 whitespace-nowrap">
+                  {selectedContest.score ?? (selectedContest.problems_solved * 4)} <span className="text-[11px] sm:text-xs text-slate-400 font-medium">/ 18 pts</span>
                 </p>
               </div>
             </div>
 
             {/* 4. Solved Total */}
-            <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl mr-3 shrink-0">
-                <CheckCircle2 className="w-5 h-5" />
+            <div className="bg-white dark:bg-navy-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+              <div className="p-2 sm:p-2.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-xl mr-2.5 sm:mr-3 shrink-0">
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Solved</p>
-                <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
-                  {selectedContest.problems_solved || 0} <span className="text-xs text-slate-400 font-medium">/ {selectedContest.total_problems || 4}</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Solved</p>
+                <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
+                  {selectedContest.problems_solved || 0} <span className="text-[11px] sm:text-xs text-slate-400 font-medium">/ {selectedContest.total_problems || 4}</span>
                 </p>
               </div>
             </div>
@@ -785,81 +785,81 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
         </div>
       ) : (
         /* ALL CONTESTS (TOTAL WEEKS OVERVIEW - 6 Focused KPI Cards) */
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           {/* 1. Rating */}
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-500 rounded-xl mr-3.5 shrink-0">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="bg-white dark:bg-navy-900 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+            <div className="p-2 sm:p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-500 rounded-xl mr-2.5 sm:mr-3.5 shrink-0">
+              <Zap className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Rating</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Rating</p>
+              <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
                 {currentRating && Number(currentRating) > 0 ? Math.round(Number(currentRating)).toLocaleString('en-US') : 'Unrated'}
               </p>
             </div>
           </div>
 
           {/* 2. Total Contests */}
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-            <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-xl mr-3.5 shrink-0">
-              <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="bg-white dark:bg-navy-900 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+            <div className="p-2 sm:p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-xl mr-2.5 sm:mr-3.5 shrink-0">
+              <Trophy className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Total Contests</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Total Contests</p>
+              <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
                 {summary.total_contests ? Number(summary.total_contests).toLocaleString('en-US') : '0'}
               </p>
             </div>
           </div>
 
           {/* 3. Avg Score */}
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl mr-3.5 shrink-0">
-              <Flame className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="bg-white dark:bg-navy-900 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+            <div className="p-2 sm:p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl mr-2.5 sm:mr-3.5 shrink-0">
+              <Flame className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Avg Score</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-purple-600 dark:text-purple-400 mt-0.5 truncate">
-                {summary.avg_score != null ? Number(summary.avg_score).toFixed(1) : (Number(summary.avg_solved || 0) * 4).toFixed(1)} <span className="text-xs text-slate-400 font-medium">/ 18</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Avg Score</p>
+              <p className="text-lg sm:text-2xl font-display font-bold text-purple-600 dark:text-purple-400 mt-0.5 whitespace-nowrap">
+                {summary.avg_score != null ? Number(summary.avg_score).toFixed(1) : (Number(summary.avg_solved || 0) * 4).toFixed(1)} <span className="text-[11px] sm:text-xs text-slate-400 font-medium">/ 18</span>
               </p>
             </div>
           </div>
 
           {/* 4. Easy Solved Breakdown */}
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl mr-3.5 shrink-0">
-              <Check className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="bg-white dark:bg-navy-900 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+            <div className="p-2 sm:p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl mr-2.5 sm:mr-3.5 shrink-0">
+              <Check className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider truncate">Easy Solved</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
-                {summary.total_easy ?? 0} <span className="text-xs text-slate-400 font-medium">({summary.avg_easy != null ? Number(summary.avg_easy).toFixed(1) : 0}/c)</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider truncate">Easy Solved</p>
+              <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
+                {summary.total_easy ?? 0} <span className="text-[11px] sm:text-xs text-slate-400 font-medium">({summary.avg_easy != null ? Number(summary.avg_easy).toFixed(1) : 0}/c)</span>
               </p>
             </div>
           </div>
 
           {/* 5. Medium Solved Breakdown */}
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl mr-3.5 shrink-0">
-              <Layers className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="bg-white dark:bg-navy-900 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+            <div className="p-2 sm:p-3 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl mr-2.5 sm:mr-3.5 shrink-0">
+              <Layers className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate">Medium Solved</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
-                {summary.total_medium ?? 0} <span className="text-xs text-slate-400 font-medium">({summary.avg_medium != null ? Number(summary.avg_medium).toFixed(1) : 0}/c)</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate">Medium Solved</p>
+              <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
+                {summary.total_medium ?? 0} <span className="text-[11px] sm:text-xs text-slate-400 font-medium">({summary.avg_medium != null ? Number(summary.avg_medium).toFixed(1) : 0}/c)</span>
               </p>
             </div>
           </div>
 
           {/* 6. Hard Solved Breakdown */}
-          <div className="bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl mr-3.5 shrink-0">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+          <div className="bg-white dark:bg-navy-900 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
+            <div className="p-2 sm:p-3 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl mr-2.5 sm:mr-3.5 shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider truncate">Hard Solved</p>
-              <p className="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 truncate">
-                {summary.total_hard ?? 0} <span className="text-xs text-slate-400 font-medium">({summary.avg_hard != null ? Number(summary.avg_hard).toFixed(1) : 0}/c)</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider truncate">Hard Solved</p>
+              <p className="text-lg sm:text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5 whitespace-nowrap">
+                {summary.total_hard ?? 0} <span className="text-[11px] sm:text-xs text-slate-400 font-medium">({summary.avg_hard != null ? Number(summary.avg_hard).toFixed(1) : 0}/c)</span>
               </p>
             </div>
           </div>

@@ -325,13 +325,44 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   useEffect(() => {
     const list = ctxDepts.length > 0 ? ctxDepts : globalDepts;
     if (list && list.length > 0) {
-      const mapped = list.map((d: any) => ({
+      let mapped = list.map((d: any) => ({
         id: d.id || d.department_id,
         name: d.name || d.department_name,
         code: d.code || d.department_code
       }));
+
+      // Strictly restrict scoped users (HOD / Staff) to their authorized departments only
+      if (!isGlobalUser) {
+        try {
+          const raw = localStorage.getItem('user');
+          if (raw) {
+            const u = JSON.parse(raw);
+            const authCodes: string[] = Array.isArray(u.authorized_department_codes) ? u.authorized_department_codes : [];
+            const authIds: number[] = Array.isArray(u.authorized_department_ids) ? u.authorized_department_ids.map(Number) : [];
+            const uDeptCode = u.department_code || (typeof u.department === 'string' ? u.department : u.department?.code);
+            const uDeptId = u.department_id || (typeof u.department === 'object' ? u.department?.id : undefined);
+
+            const authKeys = new Set<string>();
+            if (uDeptCode) authKeys.add(normalizeDepartment(uDeptCode));
+            if (uDeptId) authKeys.add(normalizeDepartment(uDeptId));
+            authCodes.forEach((c) => authKeys.add(normalizeDepartment(c)));
+            authIds.forEach((id) => authKeys.add(normalizeDepartment(id)));
+
+            if (authKeys.size > 0) {
+              const scopedList = mapped.filter((d: any) => 
+                authKeys.has(normalizeDepartment(d.code)) || 
+                (d.id && authKeys.has(normalizeDepartment(d.id)))
+              );
+              if (scopedList.length > 0) {
+                mapped = scopedList;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       setDepartments(mapped);
-      if (!deptId) setDeptId(mapped[0].id);
+      if (!deptId && mapped.length > 0) setDeptId(mapped[0].id);
       if (!isGlobalUser && mapped.length > 0 && filters.department === 'ALL') {
         filters.setDepartment(mapped[0].code);
       }

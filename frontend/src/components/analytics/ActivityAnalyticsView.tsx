@@ -6044,7 +6044,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsProps> = ({
 
 
 
-              <span className="text-xs px-2.5 py-1 bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 font-semibold rounded-lg">
+              <span className="text-xs px-2.5 py-1 bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 font-semibold rounded-lg shrink-0 whitespace-nowrap">
 
 
 
@@ -6548,7 +6548,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsProps> = ({
 
 
 
-                  <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                  <div className="p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0">
 
 
 
@@ -6644,7 +6644,7 @@ export const ActivityAnalyticsView: React.FC<ActivityAnalyticsProps> = ({
 
 
 
-                <span className="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold rounded-lg">
+                <span className="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold rounded-lg shrink-0 whitespace-nowrap">
 
 
 

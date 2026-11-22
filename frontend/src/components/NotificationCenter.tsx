@@ -264,18 +264,18 @@ export const NotificationCenter: React.FC = () => {
           aria-labelledby="confirm-dialog-title"
         >
           <div
-            className="relative max-w-md w-full mx-auto bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/[0.12] rounded-2xl shadow-2xl shadow-slate-950/50 overflow-hidden p-5 sm:p-6 space-y-4 animate-modal-content select-none"
+            className="relative max-w-sm sm:max-w-md w-full mx-auto bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/[0.12] rounded-2xl sm:rounded-3xl shadow-2xl shadow-slate-950/50 overflow-hidden p-5 sm:p-6 space-y-4 animate-modal-content select-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header Icon & Category */}
-            <div className="flex items-center justify-between pb-0.5">
+            <div className="flex items-center justify-between">
               <div
-                className={`p-2.5 rounded-xl border ${
+                className={`w-10 h-10 rounded-xl flex items-center justify-center border shadow-xs ${
                   confirmOptions.variant === 'danger'
-                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-sm shadow-rose-500/10'
+                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-rose-500/10'
                     : confirmOptions.variant === 'warning'
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-sm shadow-amber-500/10'
-                    : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20 shadow-sm shadow-brand-500/10'
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-amber-500/10'
+                    : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20 shadow-brand-500/10'
                 }`}
               >
                 {confirmOptions.variant === 'danger' ? (
@@ -289,7 +289,7 @@ export const NotificationCenter: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 {confirmOptions.category && (
-                  <span className="text-[11px] font-bold tracking-wide px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-white/[0.06] flex items-center gap-1.5">
+                  <span className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-white/[0.08] flex items-center gap-1.5">
                     <span className={`w-1.5 h-1.5 rounded-full ${
                       confirmOptions.variant === 'danger' ? 'bg-rose-500' : confirmOptions.variant === 'warning' ? 'bg-amber-500' : 'bg-brand-500'
                     }`} />
@@ -299,7 +299,7 @@ export const NotificationCenter: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => dismissConfirm(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
                   aria-label="Close"
                 >
                   <X size={16} />
@@ -316,9 +316,11 @@ export const NotificationCenter: React.FC = () => {
                 {confirmOptions.message}
               </p>
               {confirmOptions.detail && (
-                <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border-l-3 border-rose-500 border-t border-r border-b border-slate-200/70 dark:border-white/[0.08] text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed break-words max-h-24 overflow-y-auto flex items-start gap-2.5">
-                  <Bell className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                  <span className="min-w-0 flex-1 truncate sm:whitespace-normal">
+                <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/[0.08] flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                    <Bell className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="min-w-0 flex-1 text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                     {confirmOptions.detail}
                   </span>
                 </div>
@@ -326,11 +328,11 @@ export const NotificationCenter: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-slate-100 dark:border-white/[0.08]">
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => dismissConfirm(false)}
-                className="px-4 py-2 rounded-xl text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] border border-slate-200/60 dark:border-white/[0.08] transition-all cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] border border-slate-200/60 dark:border-white/[0.08] transition-all active:scale-95 cursor-pointer flex items-center justify-center"
               >
                 {confirmOptions.cancelLabel || 'Cancel'}
               </button>
@@ -339,12 +341,12 @@ export const NotificationCenter: React.FC = () => {
                 type="button"
                 onClick={() => dismissConfirm(true)}
                 autoFocus
-                className={`px-4.5 py-2 rounded-xl text-xs sm:text-[13px] font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                className={`w-full py-2.5 px-4 rounded-xl text-xs sm:text-[13px] font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   confirmOptions.variant === 'danger'
-                    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/25'
+                    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/25 active:bg-rose-700'
                     : confirmOptions.variant === 'warning'
-                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25'
-                    : 'bg-brand-600 hover:bg-brand-500 shadow-brand-600/25'
+                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25 active:bg-amber-700'
+                    : 'bg-brand-600 hover:bg-brand-500 shadow-brand-600/25 active:bg-brand-700'
                 }`}
               >
                 {confirmOptions.variant === 'danger' && <Trash2 size={13} className="shrink-0" />}

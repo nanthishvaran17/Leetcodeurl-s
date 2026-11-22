@@ -966,6 +966,18 @@
   background: var(--field-bg);
   border: 1px solid var(--field-border);
   border-radius: 12px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .help-list {
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+  .help-list-item {
+    padding: 0.75rem 0.85rem;
+  }
 }
 
 .help-list-item.highlight {
@@ -989,6 +1001,7 @@
   font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.45;
+  word-break: break-word;
 }
 
 /* Security Stamp (Audited message) */

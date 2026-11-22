@@ -17,6 +17,7 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
   const currentDeltaYRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false);
   const [isPressed, setIsPressed] = useState<boolean>(false);
@@ -27,7 +28,7 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
     if (!containerRef.current) return null;
     return (
       containerRef.current.closest<HTMLElement>(
-        '.modal-container-responsive, [role="dialog"], .h-\\[92vh\\], .h-\\[100dvh\\], .shadow-2xl'
+        '.modal-container-responsive, [role="dialog"], [data-bottom-sheet], .animate-slide-up-drawer, .h-\\[92vh\\], .h-\\[100dvh\\], .shadow-2xl, .max-h-\\[90vh\\], .max-h-\\[85dvh\\]'
       ) || containerRef.current.parentElement
     );
   };
@@ -39,6 +40,11 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
       drawer.style.transform = 'translateY(100%)';
       drawer.style.opacity = '0';
       setTimeout(() => {
+        if (drawer) {
+          drawer.style.transform = '';
+          drawer.style.opacity = '';
+          drawer.style.transition = '';
+        }
         onClose();
       }, 200);
     } else {
@@ -49,6 +55,7 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
   // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     startYRef.current = e.touches[0].clientY;
+    startTimeRef.current = Date.now();
     currentDeltaYRef.current = 0;
     isDraggingRef.current = true;
     setIsPressed(true);
@@ -62,12 +69,12 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDraggingRef.current || startYRef.current === null) return;
     const deltaY = e.touches[0].clientY - startYRef.current;
-    
+
     // Only allow downward drag
     if (deltaY > 0) {
       if (e.cancelable) e.preventDefault();
       currentDeltaYRef.current = deltaY;
-      
+
       const drawer = getDrawerElement();
       if (drawer) {
         const translateY = deltaY < 80 ? deltaY : 80 + (deltaY - 80) * 0.7;
@@ -86,9 +93,11 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
     setIsPressed(false);
 
     const deltaY = currentDeltaYRef.current;
+    const elapsed = Date.now() - startTimeRef.current;
+    const isQuickFlick = elapsed < 260 && deltaY > 18;
     const drawer = getDrawerElement();
 
-    if (deltaY > 40) {
+    if (deltaY > 35 || isQuickFlick) {
       smoothClose();
     } else {
       if (drawer) {
@@ -105,6 +114,7 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     startYRef.current = e.clientY;
+    startTimeRef.current = Date.now();
     currentDeltaYRef.current = 0;
     isDraggingRef.current = true;
     setIsPressed(true);
@@ -135,7 +145,10 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
       setIsPressed(false);
 
       const deltaY = currentDeltaYRef.current;
-      if (deltaY > 40) {
+      const elapsed = Date.now() - startTimeRef.current;
+      const isQuickFlick = elapsed < 260 && deltaY > 18;
+
+      if (deltaY > 35 || isQuickFlick) {
         smoothClose();
       } else {
         const d = getDrawerElement();
@@ -145,6 +158,7 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
         }
       }
       startYRef.current = null;
+      currentDeltaYRef.current = 0;
     };
 
     window.addEventListener('mousemove', onMouseMove);
@@ -169,15 +183,15 @@ export const SwipeHandle: React.FC<SwipeHandleProps> = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       onMouseDown={handleMouseDown}
       className={`group w-full py-2.5 sm:py-3 flex justify-center items-center cursor-pointer select-none active:opacity-75 transition-opacity touch-none shrink-0 z-30 ${className}`}
     >
       <div
-        className={`w-12 h-1.5 sm:w-14 sm:h-1.5 rounded-full shadow-2xs group-hover:scale-110 active:scale-95 transition-all duration-150 ${
-          pillClassName
+        className={`w-12 h-1.5 sm:w-14 sm:h-1.5 rounded-full shadow-2xs group-hover:scale-110 active:scale-95 transition-all duration-150 ${pillClassName
             ? pillClassName
             : 'bg-slate-300 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-500'
-        } ${isPressed ? 'scale-95 opacity-80' : ''}`}
+          } ${isPressed ? 'scale-95 opacity-80' : ''}`}
       />
     </div>
   );

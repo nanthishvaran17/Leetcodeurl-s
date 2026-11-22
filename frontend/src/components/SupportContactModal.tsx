@@ -132,16 +132,6 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
     }
   };
 
-  const handleOpenGmailWeb = () => {
-    // Auto-copy draft and launch Gmail Web compose with pre-filled fields
-    handleCopyDraft();
-    const cleanTo = encodeURIComponent(supportEmail.trim());
-    const cleanSubject = encodeURIComponent(subject.trim());
-    const cleanBody = encodeURIComponent(message.trim());
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${cleanTo}&su=${cleanSubject}&body=${cleanBody}`;
-    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
-  };
-
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -231,30 +221,19 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                 <div className="flex items-center gap-2 min-w-0">
                   <ShieldCheck size={15} className="text-blue-600 dark:text-blue-400 shrink-0" />
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">To:</span>
-                  <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-300 truncate">
+                  <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-300 truncate" title={supportEmail}>
                     {supportEmail}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleOpenGmailWeb}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer"
-                    title="Open directly in Gmail Web compose with To, Subject & Body pre-filled"
-                  >
-                    <span>Gmail Web</span>
-                    <ExternalLink size={10} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCopyEmail}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer"
-                    title="Copy support email address"
-                  >
-                    {copiedEmail ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                    <span>{copiedEmail ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                  title="Copy support email address"
+                >
+                  {copiedEmail ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                  <span>{copiedEmail ? 'Copied' : 'Copy'}</span>
+                </button>
               </div>
 
               {/* Template Category Selector Tabs */}
@@ -330,49 +309,65 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                 </div>
                 <textarea
                   id="supportMessage"
-                  rows={6}
+                  rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your message to support..."
-                  className="w-full px-3 py-2 text-xs font-mono font-medium leading-relaxed rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100 resize-y"
+                  className="w-full px-3 py-2 text-xs font-mono font-medium leading-relaxed rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100 resize-y min-h-[90px] sm:min-h-[110px]"
                 />
               </div>
             </div>
 
-            {/* Modal Actions Footer - Balanced layout with mobile bottom space */}
-            <div className="pt-3.5 pb-2 sm:pb-0 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 mt-auto shrink-0">
-              <button
-                type="button"
-                onClick={handleCopyDraft}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-800/80 text-xs font-bold text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer shadow-2xs shrink-0"
-              >
-                {copiedDraft ? (
-                  <>
-                    <Check size={13} className="text-emerald-500" />
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={13} className="text-slate-400" />
-                    <span>Copy Full Message</span>
-                  </>
-                )}
-              </button>
+            {/* Modal Actions Footer - Fully responsive for all screen sizes */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mt-auto shrink-0">
+              {/* Row 1 on mobile: Copy Draft & Cancel side-by-side in balanced boxed cards */}
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleCopyDraft}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-800/80 text-xs font-bold text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  {copiedDraft ? (
+                    <>
+                      <Check size={13} className="text-emerald-500" />
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={13} className="text-slate-400" />
+                      <span className="truncate">Copy Message</span>
+                    </>
+                  )}
+                </button>
 
-              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer"
+                  className="sm:hidden inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200/70 bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-xs font-bold text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer shadow-2xs"
                 >
-                  Cancel
+                  <X size={13} className="text-slate-400" />
+                  <span>Cancel</span>
                 </button>
+              </div>
+
+              {/* Primary action & Desktop Cancel */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200/70 bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-xs font-bold text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer shadow-2xs"
+                >
+                  <X size={13} className="text-slate-400" />
+                  <span>Cancel</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleOpenEmailClient}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm shadow-blue-500/25 active:scale-95 transition cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm shadow-blue-500/25 active:scale-95 transition cursor-pointer w-full sm:w-auto"
+                  title="Open default email app"
                 >
-                  <ExternalLink size={13} />
+                  <Mail size={14} />
                   <span>Open in Email App</span>
                 </button>
               </div>

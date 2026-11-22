@@ -58,6 +58,10 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
   const allocatedStaff = staffList.filter(s => (s.assigned_count || 0) > 0).length;
   const unallocatedStaff = totalStaff - allocatedStaff;
   const totalAssignedMentees = staffList.reduce((acc, s) => acc + (s.assigned_count || 0), 0);
+  const totalSundayAttended = staffList.reduce((acc, s) => acc + (s.sunday_contest_attended || 0), 0);
+  const overallSundayRate = totalAssignedMentees > 0
+    ? Math.round((totalSundayAttended / totalAssignedMentees) * 100)
+    : 0;
   const totalActiveSolvers = staffList.reduce((acc, s) => acc + ((s as any).active_count || 0), 0);
   const overallActiveRate = totalAssignedMentees > 0
     ? Math.round((totalActiveSolvers / totalAssignedMentees) * 100)
@@ -106,7 +110,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                   </span>
                 </h3>
                 <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-semibold line-clamp-1 sm:line-clamp-none">
-                  Track mentorship workload, active solver rates, Sunday contest engagement, and completion across staff members
+                  Track mentorship workload, Sunday contest engagement, and completion across staff members
                 </p>
               </div>
             </div>
@@ -198,25 +202,22 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
             </div>
           </div>
 
-          {/* Mentees Active Card */}
+          {/* Sunday Turnout Summary Card */}
           <div
-            onClick={() => setShowActiveMenteesModal(true)}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 hover:border-indigo-500/50 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer group active:scale-[0.98] shadow-xs"
-            title="Click to open Active Mentees & Solver Participation Telemetry"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-white/5 shadow-xs"
+            title="Overall Sunday Contest Attendance Rate"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                Mentees Active
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-500">
+                Sunday Turnout
               </span>
-              <span className="text-[8px] sm:text-[9px] font-bold text-indigo-600 dark:text-indigo-400 opacity-80 group-hover:opacity-100 flex items-center gap-0.5 transition-all">
-                Inspect <ChevronRight size={9} className="group-hover:translate-x-0.5 transition-transform" />
-              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             </div>
             <div className="mt-0.5 flex items-baseline gap-1">
-              <span className="text-sm sm:text-base font-black font-mono text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500 transition-colors">
-                {totalActiveSolvers}/{totalAssignedMentees}
+              <span className="text-sm sm:text-base font-black font-mono text-indigo-600 dark:text-indigo-400">
+                {totalSundayAttended}/{totalAssignedMentees}
               </span>
-              <span className="text-[8px] sm:text-[9px] font-mono font-bold text-indigo-500">({overallActiveRate}%)</span>
+              <span className="text-[8px] sm:text-[9px] font-mono font-bold text-indigo-500">({overallSundayRate}%)</span>
             </div>
           </div>
         </div>
@@ -305,22 +306,14 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                   </div>
                 </div>
 
-                {/* 3-Cell Inset Metric Grid */}
-                <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 text-center">
+                {/* 2-Cell Inset Metric Grid */}
+                <div className="grid grid-cols-2 gap-2 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 text-center">
                   <div>
                     <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
                       Mentees
                     </span>
                     <span className="text-xs font-mono font-black text-slate-800 dark:text-white">
                       {assigned}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
-                      Active Solvers
-                    </span>
-                    <span className="text-xs font-mono font-black text-teal-600 dark:text-teal-400">
-                      {active}/{assigned}
                     </span>
                   </div>
                   <div>
@@ -443,7 +436,6 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
               <th className="py-3.5 px-4 min-w-[240px]">Faculty Mentor</th>
               <th className="py-3.5 px-3 min-w-[130px]">Dept / Role</th>
               <th className="py-3.5 px-3 text-center min-w-[95px]">Mentees</th>
-              <th className="py-3.5 px-3 text-center min-w-[135px]">Active Solvers</th>
               <th className="py-3.5 px-3 text-center min-w-[130px]">Sunday Contest</th>
               <th className="py-3.5 px-3 text-center min-w-[140px]">Contest Rate</th>
               <th className="py-3.5 px-3 text-center min-w-[130px]">Status</th>
@@ -453,7 +445,7 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
           <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-sans">
             {filteredStaff.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-slate-500 dark:text-slate-400 font-bold font-sans">
+                <td colSpan={7} className="py-12 text-center text-slate-500 dark:text-slate-400 font-bold font-sans">
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <UserX className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                     <span>No faculty mentors match the selected criteria.</span>
@@ -535,26 +527,6 @@ export const FacultyMentorMatrixCard: React.FC<FacultyMentorMatrixCardProps> = (
                         </span>
                       ) : (
                         <span className="text-slate-400 dark:text-slate-500 font-medium text-xs whitespace-nowrap">0 Mentees</span>
-                      )}
-                    </td>
-
-                    {/* Active Solvers */}
-                    <td className="py-3.5 px-3 align-middle text-center whitespace-nowrap">
-                      {assigned > 0 ? (
-                        <span className={`px-2.5 py-1 rounded-xl font-extrabold text-xs inline-flex items-center gap-1.5 border whitespace-nowrap ${active === assigned
-                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                            : active > 0
-                              ? 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                          }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${active > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                          <span className="font-mono font-black">{active}/{assigned}</span>
-                          <span className="font-mono text-[10.5px] font-bold opacity-80">({activeRate}%)</span>
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-mono font-bold text-xs inline-flex items-center border border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                          0/0
-                        </span>
                       )}
                     </td>
 

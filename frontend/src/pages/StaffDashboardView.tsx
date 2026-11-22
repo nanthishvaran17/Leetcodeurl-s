@@ -8,6 +8,7 @@ import api, { clearApiCache } from '../services/api';
 import { StaffMentoringDetailModal } from '../components/StaffMentoringDetailModal';
 import { useNotification } from '../context/NotificationContext';
 import { LiveContestPanel } from '../components/contest/LiveContestPanel';
+import { SwipeHandle } from '../components/SwipeHandle';
 
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
@@ -147,7 +148,7 @@ export const StaffDashboardView: React.FC = () => {
               rawList = parsed;
             }
           }
-        } catch (_) {}
+        } catch (_) { }
       }
 
       const studentList = rawList.map((s: any) => {
@@ -155,7 +156,7 @@ export const StaffDashboardView: React.FC = () => {
         const streak = Number(s.stats?.max_streak ?? s.max_streak ?? s.streak_count ?? 0);
         const rating = Number(s.stats?.contest_rating ?? s.contest_rating ?? s.rating ?? 0);
         const days = Number(s.days_inactive ?? s.daysInactive ?? 0);
-        
+
         let statusCode = s.status_code;
         let statusLabel = s.status_label;
         let badgeColor = s.badge_color;
@@ -194,7 +195,7 @@ export const StaffDashboardView: React.FC = () => {
 
       if (sumRes.status === 'fulfilled' && sumRes.value?.data) {
         setSummary(sumRes.value.data);
-        try { sessionStorage.setItem(`nec_my_mentoring_summary_${userScope}`, JSON.stringify(sumRes.value.data)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_mentoring_summary_${userScope}`, JSON.stringify(sumRes.value.data)); } catch (_) { }
       } else if (studentList.length > 0) {
         const activeCnt = studentList.filter((s: any) => s.total_solved > 0).length;
         const atRiskCnt = studentList.filter((s: any) => s.status_code === 'AT_RISK').length;
@@ -210,30 +211,30 @@ export const StaffDashboardView: React.FC = () => {
           workload_status: studentList.length > 20 ? 'OVERLOAD' : 'NORMAL'
         };
         setSummary(computedSummary);
-        try { sessionStorage.setItem(`nec_my_mentoring_summary_${userScope}`, JSON.stringify(computedSummary)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_mentoring_summary_${userScope}`, JSON.stringify(computedSummary)); } catch (_) { }
       } else {
         setSummary(null);
-        try { sessionStorage.removeItem(`nec_my_mentoring_summary_${userScope}`); } catch (_) {}
+        try { sessionStorage.removeItem(`nec_my_mentoring_summary_${userScope}`); } catch (_) { }
       }
 
       setMyStudents(studentList);
       if (studentList && studentList.length > 0) {
         try {
           sessionStorage.setItem(`nec_my_assigned_students_${userScope}`, JSON.stringify(studentList));
-        } catch (_) {}
+        } catch (_) { }
       } else {
         try {
           sessionStorage.removeItem(`nec_my_assigned_students_${userScope}`);
-        } catch (_) {}
+        } catch (_) { }
       }
 
       if (prioRes.status === 'fulfilled' && prioRes.value?.data) {
         setPriorityStudents(prioRes.value.data);
-        try { sessionStorage.setItem(`nec_my_priority_students_${userScope}`, JSON.stringify(prioRes.value.data)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_priority_students_${userScope}`, JSON.stringify(prioRes.value.data)); } catch (_) { }
       } else {
         const fallbackPrio = studentList.filter((s: any) => s.status_code === 'AT_RISK' || s.status_code === 'NEEDS_IMPROVEMENT');
         setPriorityStudents(fallbackPrio);
-        try { sessionStorage.setItem(`nec_my_priority_students_${userScope}`, JSON.stringify(fallbackPrio)); } catch (_) {}
+        try { sessionStorage.setItem(`nec_my_priority_students_${userScope}`, JSON.stringify(fallbackPrio)); } catch (_) { }
       }
 
       if (alertRes.status === 'fulfilled' && alertRes.value?.data) {
@@ -365,12 +366,12 @@ export const StaffDashboardView: React.FC = () => {
   const attentionCount = isSingleStudentView ? (isAttentionStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isAttentionStudent).length : (summary?.needing_attention || 0));
   const atRiskCount = isSingleStudentView ? (isAtRiskStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isAtRiskStudent).length : (summary?.at_risk || 0));
   const unresponsiveCount = isSingleStudentView ? (isUnresponsiveStudent(selectedStudentObj) ? 1 : 0) : (myStudents.length > 0 ? myStudents.filter(isUnresponsiveStudent).length : (summary?.unresponsive_students || 0));
-  
+
   // Progress calculations based on 100 Target
   const totalSolvedSum = kpiCohort.reduce((acc: number, s: any) => acc + Number(s.stats?.total_solved ?? s.total_solved ?? 0), 0);
   const avgSolvedProblems = isSingleStudentView ? totalSolvedSum : (summary?.weekly_progress_avg ?? (myStudents.length > 0 ? (totalSolvedSum / myStudents.length).toFixed(1) : 0));
   const totalCappedSolvedSum = kpiCohort.reduce((acc: number, s: any) => acc + Math.min(Number(s.stats?.total_solved ?? s.total_solved ?? 0), 100), 0);
-  const targetProgressPct = isSingleStudentView 
+  const targetProgressPct = isSingleStudentView
     ? (totalCappedSolvedSum).toFixed(1)
     : (summary?.target_progress_pct ?? (myStudents.length > 0 ? (totalCappedSolvedSum / myStudents.length).toFixed(1) : '0'));
   const avgSolvedProgress = targetProgressPct;
@@ -429,7 +430,7 @@ export const StaffDashboardView: React.FC = () => {
     }
 
     const studentsToExport = filteredStudents.length > 0 ? filteredStudents : myStudents;
-    
+
     const headers = [
       'Register Number',
       'Student Name',
@@ -597,7 +598,7 @@ NEC LeetCode Intelligence Portal`;
               <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
               <span>{syncStatusMsg}</span>
             </div>
-            <button 
+            <button
               type="button"
               onClick={() => setSyncStatusMsg(null)}
               className="text-slate-400 hover:text-white text-[10px] ml-2 underline cursor-pointer"
@@ -612,14 +613,13 @@ NEC LeetCode Intelligence Portal`;
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-2.5 sm:gap-4 p-1">
 
         {/* 1. Assigned (All) */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('ALL')}
           title="Click to view all assigned students"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'ALL'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'ALL'
               ? 'bg-indigo-50/90 dark:bg-indigo-950/50 border-brand-500 ring-2 ring-inset ring-brand-500/30 shadow-indigo-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-brand-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -636,25 +636,23 @@ NEC LeetCode Intelligence Portal`;
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Students</span>
           </div>
           <div className="mt-2.5 flex items-center">
-            <span className={`text-[9.5px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${
-              totalAssignedCount === 0
+            <span className={`text-[9.5px] font-bold tracking-wide px-2 py-0.5 rounded-full border ${totalAssignedCount === 0
                 ? 'bg-slate-500/10 text-slate-500 border-slate-500/20'
                 : 'bg-brand-500/10 text-brand-600 border-brand-500/20 dark:text-brand-400'
-            }`}>
+              }`}>
               {totalAssignedCount === 0 ? 'NO ASSIGNMENTS' : `${totalAssignedCount} ACTIVE MENTEES`}
             </span>
           </div>
         </div>
 
         {/* 2. Active Solvers */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('ACTIVE')}
           title="Click to filter active solvers"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'ACTIVE'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'ACTIVE'
               ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-inset ring-emerald-500/30 shadow-emerald-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-emerald-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -676,14 +674,13 @@ NEC LeetCode Intelligence Portal`;
         </div>
 
         {/* 3. Completed (Target Achieved) */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('COMPLETED')}
           title="Click to filter students with 100+ solved"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'COMPLETED'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'COMPLETED'
               ? 'bg-purple-50/90 dark:bg-purple-950/50 border-purple-500 ring-2 ring-inset ring-purple-500/30 shadow-purple-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-purple-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -705,14 +702,13 @@ NEC LeetCode Intelligence Portal`;
         </div>
 
         {/* 4. Attention (Needs Action) */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('ATTENTION')}
           title="Click to filter students needing attention"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'ATTENTION'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'ATTENTION'
               ? 'bg-amber-50/90 dark:bg-amber-950/50 border-amber-500 ring-2 ring-inset ring-amber-500/30 shadow-amber-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-amber-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -734,14 +730,13 @@ NEC LeetCode Intelligence Portal`;
         </div>
 
         {/* 5. Unresponsive (Inactive 7+ Days) */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('UNRESPONSIVE')}
           title="Click to filter students who haven't solved anything in a week"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'UNRESPONSIVE'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'UNRESPONSIVE'
               ? 'bg-orange-50/90 dark:bg-orange-950/50 border-orange-500 ring-2 ring-inset ring-orange-500/30 shadow-orange-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-orange-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -763,14 +758,13 @@ NEC LeetCode Intelligence Portal`;
         </div>
 
         {/* 6. At Risk */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('AT_RISK')}
           title="Click to filter at-risk students"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'AT_RISK'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'AT_RISK'
               ? 'bg-rose-50/90 dark:bg-rose-950/50 border-rose-500 ring-2 ring-inset ring-rose-500/30 shadow-rose-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-rose-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -792,14 +786,13 @@ NEC LeetCode Intelligence Portal`;
         </div>
 
         {/* 7. Avg Progress */}
-        <div 
+        <div
           onClick={() => handleCardFilterClick('IN_PROGRESS')}
           title="Click to filter students in progress towards 100 target"
-          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${
-            filterStatus === 'IN_PROGRESS'
+          className={`p-2.5 sm:p-5 rounded-xl sm:rounded-3xl border-2 transition-all duration-200 cursor-pointer shadow-subtle hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${filterStatus === 'IN_PROGRESS'
               ? 'bg-sky-50/90 dark:bg-sky-950/50 border-sky-500 ring-2 ring-inset ring-sky-500/30 shadow-sky-500/10'
               : 'glass-panel border-slate-200/80 dark:border-white/10 hover:border-sky-500/40'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
@@ -879,8 +872,8 @@ NEC LeetCode Intelligence Portal`;
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
             {priorityStudents.slice(0, 3).map((st: any) => (
-              <div 
-                key={st.id} 
+              <div
+                key={st.id}
                 className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-navy-950 border border-amber-200/90 dark:border-amber-900/60 shadow-sm flex flex-col justify-between transition-all hover:border-amber-400 hover:shadow-md"
               >
                 <div className="space-y-2.5">
@@ -977,19 +970,18 @@ NEC LeetCode Intelligence Portal`;
                   <button
                     type="button"
                     onClick={() => setIsStudentSelectOpen((prev) => !prev)}
-                    className={`w-full h-10 flex items-center justify-between gap-2 bg-white dark:bg-navy-950 px-3.5 rounded-2xl border shadow-xs transition-all hover:border-brand-400 dark:hover:border-brand-500 focus:outline-none cursor-pointer ${
-                      isStudentSelectOpen
+                    className={`w-full h-10 flex items-center justify-between gap-2 bg-white dark:bg-navy-950 px-3.5 rounded-2xl border shadow-xs transition-all hover:border-brand-400 dark:hover:border-brand-500 focus:outline-none cursor-pointer ${isStudentSelectOpen
                         ? 'border-brand-500 ring-2 ring-brand-500/20 dark:border-brand-400'
                         : selectedStudentFilter !== 'ALL'
-                        ? 'border-brand-300 dark:border-brand-700 bg-brand-50/30 dark:bg-brand-950/30'
-                        : 'border-slate-300 dark:border-navy-700 hover:border-purple-400'
-                    }`}
+                          ? 'border-brand-300 dark:border-brand-700 bg-brand-50/30 dark:bg-brand-950/30'
+                          : 'border-slate-300 dark:border-navy-700 hover:border-purple-400'
+                      }`}
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <div className="p-1 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
                         <Users className="w-3.5 h-3.5" />
                       </div>
-                      
+
                       {selectedStudentObj ? (
                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <span className="text-xs font-black text-slate-900 dark:text-white truncate">
@@ -1023,13 +1015,12 @@ NEC LeetCode Intelligence Portal`;
                           className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition cursor-pointer"
                           title="Clear Student Filter"
                         >
-                          
+
                         </span>
                       )}
                       <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                          isStudentSelectOpen ? 'rotate-180' : ''
-                        }`}
+                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isStudentSelectOpen ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
@@ -1075,11 +1066,10 @@ NEC LeetCode Intelligence Portal`;
                             setIsStudentSelectOpen(false);
                             setStudentSelectSearch('');
                           }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                            selectedStudentFilter === 'ALL'
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${selectedStudentFilter === 'ALL'
                               ? 'bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 font-black'
                               : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-brand-500 shrink-0" />
@@ -1126,21 +1116,19 @@ NEC LeetCode Intelligence Portal`;
                                   setIsStudentSelectOpen(false);
                                   setStudentSelectSearch('');
                                 }}
-                                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                                  isSelected
+                                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${isSelected
                                     ? 'bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800'
                                     : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                   {/* Initials Avatar */}
-                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
-                                    st.badge_color === 'emerald' || solved >= 100
+                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${st.badge_color === 'emerald' || solved >= 100
                                       ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                                       : st.badge_color === 'red' || st.status_code === 'AT_RISK'
-                                      ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
-                                      : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
-                                  }`}>
+                                        ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+                                        : 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800'
+                                    }`}>
                                     {initials}
                                   </div>
 
@@ -1168,22 +1156,18 @@ NEC LeetCode Intelligence Portal`;
                   {/* Mobile Bottom Sheet Drawer for Student Selection */}
                   {isStudentSelectOpen && isMobile && createPortal(
                     <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
-                      <div 
+                      <div
                         className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
                         onClick={() => setIsStudentSelectOpen(false)}
                       />
-                      <div 
+                      <div
                         className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
                         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+                        role="dialog"
+                        aria-modal="true"
+                        data-bottom-sheet="true"
                       >
-                        <div 
-                          onTouchStart={handleTouchStart}
-                          onTouchMove={(e) => handleTouchMove(e, () => setIsStudentSelectOpen(false))}
-                          onTouchEnd={handleTouchEnd}
-                          className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
-                        >
-                          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-                        </div>
+                        <SwipeHandle onClose={() => setIsStudentSelectOpen(false)} className="pt-3 pb-1" pillClassName="bg-slate-300 dark:bg-navy-700" />
 
                         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
                           <div className="flex items-center gap-3 min-w-0">
@@ -1199,7 +1183,7 @@ NEC LeetCode Intelligence Portal`;
                               </p>
                             </div>
                           </div>
-                          <button 
+                          <button
                             type="button"
                             onClick={() => setIsStudentSelectOpen(false)}
                             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
@@ -1219,8 +1203,8 @@ NEC LeetCode Intelligence Portal`;
                               className="w-full pl-9 pr-8 py-2.5 text-xs font-semibold rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:border-indigo-500"
                             />
                             {studentSelectSearch && (
-                              <button 
-                                type="button" 
+                              <button
+                                type="button"
                                 onClick={() => setStudentSelectSearch('')}
                                 className="absolute right-3 text-slate-400 hover:text-slate-600 p-0.5"
                               >
@@ -1239,11 +1223,10 @@ NEC LeetCode Intelligence Portal`;
                                 setIsStudentSelectOpen(false);
                                 setStudentSelectSearch('');
                               }}
-                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
-                                selectedStudentFilter === 'ALL'
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${selectedStudentFilter === 'ALL'
                                   ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
                                   : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-2.5">
                                 <Users className="w-4 h-4" />
@@ -1272,16 +1255,14 @@ NEC LeetCode Intelligence Portal`;
                                   setIsStudentSelectOpen(false);
                                   setStudentSelectSearch('');
                                 }}
-                                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
-                                  isSelected
+                                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all cursor-pointer ${isSelected
                                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
                                     : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
-                                    isSelected ? 'bg-white/20 text-white' : 'bg-indigo-100 dark:bg-navy-800 text-indigo-700 dark:text-indigo-300'
-                                  }`}>
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-indigo-100 dark:bg-navy-800 text-indigo-700 dark:text-indigo-300'
+                                    }`}>
                                     {initials}
                                   </div>
                                   <div className="min-w-0 text-left">
@@ -1308,12 +1289,12 @@ NEC LeetCode Intelligence Portal`;
             {(() => {
               type FilterVal = 'ALL' | 'ACTIVE' | 'COMPLETED' | 'IN_PROGRESS' | 'ATTENTION' | 'AT_RISK';
               const filterOpts: { value: FilterVal; label: string; code: string; color: string }[] = [
-                { value: 'ALL',         label: 'All Statuses',              code: 'ALL',    color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-                { value: 'ACTIVE',      label: 'Active Solvers',            code: 'ACTIVE', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-                { value: 'COMPLETED',   label: 'Target Achieved (100+)',    code: 'DONE',   color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                { value: 'IN_PROGRESS', label: 'In Progress (<100 Target)', code: 'PROG',   color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                { value: 'ATTENTION',   label: 'Needs Attention',           code: 'ATTN',   color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
-                { value: 'AT_RISK',     label: 'At Risk',                   code: 'RISK',   color: 'text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-300' },
+                { value: 'ALL', label: 'All Statuses', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
+                { value: 'ACTIVE', label: 'Active Solvers', code: 'ACTIVE', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
+                { value: 'COMPLETED', label: 'Target Achieved (100+)', code: 'DONE', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
+                { value: 'IN_PROGRESS', label: 'In Progress (<100 Target)', code: 'PROG', color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                { value: 'ATTENTION', label: 'Needs Attention', code: 'ATTN', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                { value: 'AT_RISK', label: 'At Risk', code: 'RISK', color: 'text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-300' },
               ];
               const sel = filterOpts.find(o => o.value === filterStatus) || filterOpts[0];
               return (
@@ -1321,9 +1302,8 @@ NEC LeetCode Intelligence Portal`;
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen(p => !p)}
-                    className={`h-10 flex items-center gap-2 bg-white dark:bg-navy-950 px-3.5 rounded-2xl border shadow-xs text-left transition-all hover:border-indigo-400 dark:hover:border-indigo-500 focus:outline-none cursor-pointer ${
-                      isFilterOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20 dark:border-indigo-400' : 'border-slate-300 dark:border-navy-700 hover:border-purple-400'
-                    }`}
+                    className={`h-10 flex items-center gap-2 bg-white dark:bg-navy-950 px-3.5 rounded-2xl border shadow-xs text-left transition-all hover:border-indigo-400 dark:hover:border-indigo-500 focus:outline-none cursor-pointer ${isFilterOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20 dark:border-indigo-400' : 'border-slate-300 dark:border-navy-700 hover:border-purple-400'
+                      }`}
                   >
                     <Filter className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                     <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-navy-300">
@@ -1347,9 +1327,8 @@ NEC LeetCode Intelligence Portal`;
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setFilterStatus(opt.value); setIsFilterOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-navy-800 ${
-                            filterStatus === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''
-                          }`}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-navy-800 ${filterStatus === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''
+                            }`}
                         >
                           <ShieldCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
@@ -1363,22 +1342,18 @@ NEC LeetCode Intelligence Portal`;
                   {/* Mobile Bottom Sheet Drawer for Status Filter */}
                   {isFilterOpen && isMobile && createPortal(
                     <div className="fixed inset-0 z-[10000000] flex flex-col justify-end isolate">
-                      <div 
+                      <div
                         className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-xs transition-opacity animate-fade-in"
                         onClick={() => setIsFilterOpen(false)}
                       />
-                      <div 
+                      <div
                         className="relative z-10 w-full max-h-[85dvh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200/90 dark:border-navy-800 shadow-[0_-12px_45px_rgba(0,0,0,0.35)] flex flex-col animate-slide-up-drawer overflow-hidden"
                         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom, 20px))' }}
+                        role="dialog"
+                        aria-modal="true"
+                        data-bottom-sheet="true"
                       >
-                        <div 
-                          onTouchStart={handleTouchStart}
-                          onTouchMove={(e) => handleTouchMove(e, () => setIsFilterOpen(false))}
-                          onTouchEnd={handleTouchEnd}
-                          className="pt-3 pb-1 flex flex-col items-center cursor-grab active:cursor-grabbing select-none shrink-0"
-                        >
-                          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-navy-700" />
-                        </div>
+                        <SwipeHandle onClose={() => setIsFilterOpen(false)} className="pt-3 pb-1" pillClassName="bg-slate-300 dark:bg-navy-700" />
 
                         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-navy-800/80 shrink-0">
                           <div className="flex items-center gap-3 min-w-0">
@@ -1394,7 +1369,7 @@ NEC LeetCode Intelligence Portal`;
                               </p>
                             </div>
                           </div>
-                          <button 
+                          <button
                             type="button"
                             onClick={() => setIsFilterOpen(false)}
                             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
@@ -1414,17 +1389,15 @@ NEC LeetCode Intelligence Portal`;
                                   setFilterStatus(opt.value);
                                   setIsFilterOpen(false);
                                 }}
-                                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${
-                                  isSelected
+                                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${isSelected
                                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30'
                                     : 'text-slate-800 dark:text-slate-200 bg-slate-50/80 dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-800'
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center gap-3 min-w-0">
                                   <ShieldCheck className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
-                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
-                                    isSelected ? 'bg-white/20 text-white' : opt.color
-                                  }`}>
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${isSelected ? 'bg-white/20 text-white' : opt.color
+                                    }`}>
                                     {opt.code}
                                   </span>
                                   <span className="truncate text-left font-bold">{opt.label}</span>
@@ -1495,7 +1468,7 @@ NEC LeetCode Intelligence Portal`;
               }}
               className="px-2.5 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black transition-all cursor-pointer shadow-sm shrink-0"
             >
-              Clear All Filters 
+              Clear All Filters
             </button>
           </div>
         )}
@@ -1577,15 +1550,14 @@ NEC LeetCode Intelligence Portal`;
                           Inactive {st.days_inactive}d
                         </span>
                       )}
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border whitespace-nowrap ${
-                        badgeColor === 'emerald'
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border whitespace-nowrap ${badgeColor === 'emerald'
                           ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                           : badgeColor === 'red'
-                          ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                          : badgeColor === 'yellow'
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                          : 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
-                      }`}>
+                            ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                            : badgeColor === 'yellow'
+                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                              : 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
+                        }`}>
                         {statusLabel}
                       </span>
                     </div>
@@ -1621,15 +1593,14 @@ NEC LeetCode Intelligence Portal`;
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2.5 overflow-hidden border border-slate-200/60 dark:border-navy-700/60 p-0.5">
                       <div
-                        className={`h-1.5 rounded-full transition-all duration-500 ${
-                          (st.weekly_solved || 0) >= 10
+                        className={`h-1.5 rounded-full transition-all duration-500 ${(st.weekly_solved || 0) >= 10
                             ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
                             : (st.weekly_solved || 0) >= 5
-                            ? 'bg-gradient-to-r from-sky-500 to-indigo-500'
-                            : (st.weekly_solved || 0) > 0
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                            : 'bg-slate-300 dark:bg-slate-600'
-                        }`}
+                              ? 'bg-gradient-to-r from-sky-500 to-indigo-500'
+                              : (st.weekly_solved || 0) > 0
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                                : 'bg-slate-300 dark:bg-slate-600'
+                          }`}
                         style={{ width: `${Math.min(((st.weekly_solved || 0) / 10) * 100, 100)}%` }}
                       />
                     </div>
@@ -1817,15 +1788,14 @@ NEC LeetCode Intelligence Portal`;
                           </div>
                           <div className="w-full bg-slate-100 dark:bg-navy-800 rounded-full h-2.5 overflow-hidden border border-slate-200/60 dark:border-navy-700/60">
                             <div
-                              className={`h-2.5 rounded-full transition-all duration-500 ${
-                                (st.weekly_solved || 0) >= 10
+                              className={`h-2.5 rounded-full transition-all duration-500 ${(st.weekly_solved || 0) >= 10
                                   ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
                                   : (st.weekly_solved || 0) >= 5
-                                  ? 'bg-gradient-to-r from-sky-500 to-indigo-500'
-                                  : (st.weekly_solved || 0) > 0
-                                  ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                                  : 'bg-slate-300 dark:bg-slate-600'
-                              }`}
+                                    ? 'bg-gradient-to-r from-sky-500 to-indigo-500'
+                                    : (st.weekly_solved || 0) > 0
+                                      ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                                      : 'bg-slate-300 dark:bg-slate-600'
+                                }`}
                               style={{ width: `${Math.min(((st.weekly_solved || 0) / 10) * 100, 100)}%` }}
                             />
                           </div>
@@ -1849,15 +1819,14 @@ NEC LeetCode Intelligence Portal`;
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex flex-col items-start gap-1">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-black border ${
-                            badgeColor === 'emerald'
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black border ${badgeColor === 'emerald'
                               ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                               : badgeColor === 'red'
-                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                              : badgeColor === 'yellow'
-                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                              : 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
-                          }`}>
+                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                                : badgeColor === 'yellow'
+                                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                  : 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30'
+                            }`}>
                             {statusLabel}
                           </span>
                           {badgeColor === 'red' && st.days_inactive !== undefined && st.days_inactive > 0 && (

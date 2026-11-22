@@ -387,44 +387,53 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
     if (isDeleting) {
       return {
         disabled: true,
-        text: isSoftDelete ? 'Deactivating...' : 'Deleting...'
+        text: isSoftDelete ? 'Deactivating...' : 'Deleting...',
+        mobileText: isSoftDelete ? 'Deactivating...' : 'Deleting...'
       };
     }
     if (!hasSpecificFilter) {
       return {
         disabled: true,
-        text: 'Select Department or Year'
+        text: 'Select Department or Year',
+        mobileText: 'Select Filter'
       };
     }
     if (isLoadingPreview) {
       return {
         disabled: true,
-        text: 'Scanning Roster...'
+        text: 'Scanning Roster...',
+        mobileText: 'Scanning...'
       };
     }
     if (studentList.length === 0) {
       return {
         disabled: true,
-        text: 'No Students Found'
+        text: 'No Students Found',
+        mobileText: 'No Students'
       };
     }
     if (selectedStudentIds.size === 0) {
       return {
         disabled: true,
-        text: 'Select Students to Proceed'
+        text: 'Select Students to Proceed',
+        mobileText: 'Select Students'
       };
     }
     if (!confirmChecked) {
       return {
         disabled: true,
-        text: `Check Confirmation Below (${selectedStudentIds.size})`
+        text: `Check Confirmation Below (${selectedStudentIds.size})`,
+        mobileText: `Confirm Below (${selectedStudentIds.size})`
       };
     }
     return {
       disabled: false,
       text: isSoftDelete
         ? `Deactivate ${selectedStudentIds.size} Selected Students`
-        : `Permanently Delete ${selectedStudentIds.size} Selected Students`
+        : `Permanently Delete ${selectedStudentIds.size} Selected Students`,
+      mobileText: isSoftDelete
+        ? `Deactivate (${selectedStudentIds.size})`
+        : `Delete (${selectedStudentIds.size})`
     };
   };
 
@@ -446,47 +455,45 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
         aria-modal="true"
         aria-labelledby="batch-delete-modal-title"
       >
-        {/* Scrollable Container (Header + Body scroll together smoothly) */}
-        <div className="overflow-y-auto overscroll-contain flex-1 min-h-0 [touch-action:pan-y] [-webkit-overflow-scrolling:touch] custom-scrollbar">
-          {/* Header */}
-          <div className="px-5 pt-3 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50">
-            {/* Grabber Handle */}
-            <div className="w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2.5 shrink-0" />
+        {/* Header - Fixed at top so Grabber, Title & Close button are always visible */}
+        <div className="px-5 pt-3 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50 shrink-0">
+          {/* Grabber Handle */}
+          <div className="w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2.5 shrink-0" />
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
-                  <Trash2 className="w-5 h-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 id="batch-delete-modal-title" className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
-                      Delete Cohort by Department & Year
-                    </h3>
-                    <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[9px] font-black tracking-wider uppercase border border-rose-500/25">
-                      {isSoftDelete ? 'DEACTIVATE' : 'PURGE'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    Filter by department & year, select all or choose individual students.
-                  </p>
-                </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
+                <Trash2 className="w-5 h-5" />
               </div>
-
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center shrink-0 disabled:opacity-30"
-                title="Close dialog (Esc)"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 id="batch-delete-modal-title" className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
+                    Delete Cohort by Department & Year
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 text-[9px] font-black tracking-wider uppercase border border-rose-500/25">
+                    {isSoftDelete ? 'DEACTIVATE' : 'PURGE'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  Filter by department & year, select all or choose individual students.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Modal Scrollable Body */}
-          <div className="p-4 sm:p-5 space-y-4">
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center shrink-0 disabled:opacity-30"
+              title="Close dialog (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Scrollable Body */}
+        <div className="overflow-y-auto overscroll-contain flex-1 min-h-0 [touch-action:pan-y] [-webkit-overflow-scrolling:touch] custom-scrollbar p-4 sm:p-5 space-y-4">
 
             {/* Section 1: Compact Filter Bar (Department, Year, Campus, Mode) */}
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-800 space-y-3">
@@ -865,15 +872,14 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             )}
 
           </div>
-        </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3.5 border-t border-slate-200 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/90 backdrop-blur-md flex items-center justify-end gap-3 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-3.5">
+        <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-t border-slate-200 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/95 backdrop-blur-md flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-3.5">
           <button
             type="button"
             disabled={isDeleting}
             onClick={onClose}
-            className="flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 rounded-xl transition-all cursor-pointer min-h-[42px] text-center"
+            className="shrink-0 px-4 sm:px-5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 rounded-xl transition-all cursor-pointer min-h-[42px] text-center"
           >
             Cancel
           </button>
@@ -882,7 +888,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             type="button"
             disabled={buttonState.disabled}
             onClick={handleExecuteDelete}
-            className={`flex-1 sm:flex-initial px-6 py-2.5 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer min-h-[42px] whitespace-nowrap ${buttonState.disabled
+            className={`flex-1 sm:flex-initial min-w-0 px-3.5 sm:px-6 py-2.5 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer min-h-[42px] ${buttonState.disabled
                 ? 'bg-slate-200 dark:bg-navy-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-navy-700 shadow-none cursor-not-allowed'
                 : 'bg-gradient-to-r from-rose-600 via-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:from-rose-700 text-white shadow-rose-600/25 active:scale-95'
               }`}
@@ -890,12 +896,13 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             {isDeleting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                <span>{buttonState.text}</span>
+                <span className="truncate">{buttonState.text}</span>
               </>
             ) : (
               <>
                 <Trash2 className="w-4 h-4 shrink-0" />
-                <span>{buttonState.text}</span>
+                <span className="truncate hidden sm:inline">{buttonState.text}</span>
+                <span className="truncate sm:hidden">{buttonState.mobileText}</span>
               </>
             )}
           </button>

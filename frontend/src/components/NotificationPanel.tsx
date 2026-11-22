@@ -86,12 +86,12 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
 
     if (offset < -THRESHOLD || velocity < -500) {
       // Swiped LEFT -> Delete
-      setSwipeX(-100);
-      setTimeout(() => confirmDeleteNotification(n, () => setSwipeX(0)), 200);
+      setSwipeX(0);
+      setTimeout(() => confirmDeleteNotification(n), 120);
     } else if (offset > THRESHOLD || velocity > 500) {
       // Swiped RIGHT -> Archive (hide)
-      setSwipeX(100);
-      setTimeout(() => confirmArchiveNotification(n, () => setSwipeX(0)), 200);
+      setSwipeX(0);
+      setTimeout(() => confirmArchiveNotification(n), 120);
     } else {
       setSwipeX(0);
     }
