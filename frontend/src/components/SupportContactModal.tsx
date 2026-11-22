@@ -128,20 +128,20 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
 
           {/* Modal Card Surface */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-5 sm:p-6 text-slate-800 dark:text-slate-100 z-10 my-auto flex flex-col max-h-[90vh]"
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 z-10 my-auto flex flex-col max-h-[90vh]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="support-modal-title"
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 pb-3.5 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                  <Mail size={20} />
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Mail size={18} />
                 </div>
                 <div>
                   <h3 id="support-modal-title" className="text-base font-black text-slate-900 dark:text-white leading-tight">
@@ -155,7 +155,7 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 aria-label="Close dialog"
               >
                 <X size={18} />
@@ -163,11 +163,11 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
             </div>
 
             {/* Scrollable Form Body */}
-            <div className="overflow-y-auto space-y-4 py-3.5 pr-1 text-left custom-scrollbar">
+            <div className="overflow-y-auto space-y-3.5 py-3 pr-1 text-left custom-scrollbar">
               {/* Recipient Notice Box */}
-              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50">
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50">
                 <div className="flex items-center gap-2 min-w-0">
-                  <ShieldCheck size={16} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                  <ShieldCheck size={15} className="text-blue-600 dark:text-blue-400 shrink-0" />
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">To:</span>
                   <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-300 truncate">
                     {supportEmail}
@@ -176,7 +176,7 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                 <button
                   type="button"
                   onClick={handleCopyEmail}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer shrink-0"
                   title="Copy support email address"
                 >
                   {copiedEmail ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
@@ -189,11 +189,11 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Select Issue Template
                 </label>
-                <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+                <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
                   <button
                     type="button"
                     onClick={() => handleCategorySwitch('otp')}
-                    className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       category === 'otp'
                         ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -205,7 +205,7 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCategorySwitch('credentials')}
-                    className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       category === 'credentials'
                         ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -217,7 +217,7 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCategorySwitch('general')}
-                    className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       category === 'general'
                         ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -243,7 +243,7 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Subject of your inquiry..."
-                  className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100"
                 />
               </div>
 
@@ -257,49 +257,49 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                 </div>
                 <textarea
                   id="supportMessage"
-                  rows={7}
+                  rows={6}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your message to support..."
-                  className="w-full px-3.5 py-2.5 text-xs font-mono font-medium leading-relaxed rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100 resize-y"
+                  className="w-full px-3 py-2 text-xs font-mono font-medium leading-relaxed rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100 resize-y"
                 />
               </div>
             </div>
 
-            {/* Modal Actions Footer */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-center justify-between gap-2.5 mt-auto">
+            {/* Modal Actions Footer - Balanced, desktop-grade layout */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 mt-auto">
               <button
                 type="button"
                 onClick={handleCopyDraft}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-800/80 text-xs font-bold text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer shadow-2xs shrink-0"
               >
                 {copiedDraft ? (
                   <>
-                    <Check size={14} className="text-emerald-500" />
-                    <span className="text-emerald-600 dark:text-emerald-400">Copied to Clipboard</span>
+                    <Check size={13} className="text-emerald-500" />
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy size={14} />
+                    <Copy size={13} className="text-slate-400" />
                     <span>Copy Full Message</span>
                   </>
                 )}
               </button>
 
-              <div className="w-full sm:w-auto flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-1/3 sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleOpenEmailClient}
-                  className="w-2/3 sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm shadow-blue-500/25 active:scale-95 transition cursor-pointer"
                 >
-                  <ExternalLink size={14} />
+                  <ExternalLink size={13} />
                   <span>Open in Email App</span>
                 </button>
               </div>

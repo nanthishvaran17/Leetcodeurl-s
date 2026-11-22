@@ -6851,7 +6851,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                               Nandha LeetCode Tracker
                             </h3>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                              v4.5.6 • Live
+                              v4.6.3 • Live
                             </span>
                           </div>
                           <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
@@ -7408,7 +7408,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                         </span>
                       </div>
                       <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 font-bold">
-                        Platform v4.5.6 • Institutional Standard
+                        Platform v4.6.3 • Institutional Standard
                       </span>
                     </div>
                   </div>
