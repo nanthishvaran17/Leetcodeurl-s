@@ -36,6 +36,8 @@
 
 > [!IMPORTANT]
 > ### 📢 What's New in Version 4.6.3 (Production Release — Build 103 Milestone)
+> - **🎯 Unified Swipe-to-Dismiss Gesture & Drag Physics**: Upgraded `SwipeHandle` with fluid downward translation physics and haptic vibration, replacing static pills across all 17 modals and bottom sheet drawers for a native mobile experience.
+> - **🏛️ Updated Institutional Leadership & Governance Scope**: Accredited Dr. S. Prabhu as Head of Department — Computer Science and Engineering (Cyber Security & Internet of Things) [CSE(CS & IoT)], and standardized Lead Platform Architect name strictly to Mr. S. Nanthish.
 > - **🏛️ Interactive Institutional Help Desk & Support Modal**: Integrated instant editable email draft modal with dynamic Indian Standard Time (IST) timestamps for staff login assistance, OTP delivery recovery, and institutional credentials inquiry.
 > - **📱 Production Android Release v4.6.3 (VersionCode 103)**: Native Capacitor 7 Release APK signed with APK Signature Scheme v2 & v3 + 4-byte zipalign, verified across Android 11–16 with seamless responsive layouts.
 > - **🎯 Mobile Contest Drawer & Action Bar Polish**: Standardized bottom sheet modal drawers with ergonomic top gaps, aligned with `PreviousWeekContestPanel` card design system, and eliminated empty footer gaps using React Portals.

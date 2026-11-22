@@ -48,6 +48,8 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 ## Version 4.6.x — Multi-Department Governance & Mobile Polish (Current)
 
 ### [4.6.3] - 2026-11-22 (Production Release — Build 103 Milestone)
+- **Unified Swipe-to-Dismiss Gesture & Drag Physics (`SwipeHandle.tsx`)**: Re-engineered modal sliding container detection, fluid spring drag physics, haptic vibration, and replaced static dummy pills across all 17 modals/bottom sheets throughout the application.
+- **Accurate Institutional Governance Metadata**: Updated Dr. S. Prabhu's official designation to Head of Department — Computer Science and Engineering (Cyber Security & Internet of Things) [CSE(CS & IoT)] and standardized Lead Platform Architect name to Mr. S. Nanthish across all repository documentation, policy views, and citation registries.
 - **Interactive Institutional Help Desk (`SupportContactModal.tsx`)**: Added dynamic pre-composed support email draft with live IST timestamps, department staff authentication troubleshooting, and zero-student references for authorized staff/faculty clarity.
 - **📱 Production Android Release v4.6.3 (Build 103)**: Native Capacitor 7 Release APK compiled with updated assets and signed using official APK Signature Scheme v2 & v3 with 4-byte zipalign.
 - **Data Quality Excel/CSV Export Expansion**: Dynamic college prefix and filter-specific naming convention (`NANDHA_Data_Issues_Report_{college}_{dept}_{year}_{issue}_{date}.xlsx`) supporting direct download and background job workers.
