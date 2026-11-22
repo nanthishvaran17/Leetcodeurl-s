@@ -1,17 +1,36 @@
 # Android Release Archive
 
-Latest Release: **v4.5.8 (VersionCode 99)**  
-**Authoritative Live Sync:** November 20, 2026 (Fully Synchronized & Play Store Ready)  
+Latest Release: **v4.6.3 (VersionCode 103)**  
+**Authoritative Live Sync:** November 22, 2026 (Fully Synchronized & Play Store Ready)  
 
 ### Production Build Outputs:
 - **Play Store Bundle (AAB):** `Nandha-LeetCode-PlayStore-Release.aab`
 - **Signed Release APK:** `Nandha-LeetCode-Intelligence-release.apk`
 - **Direct Repository APKs:**
-  - [Nandha_LeetCode_Intelligence_v4.5.8_latest.apk](./Nandha_LeetCode_Intelligence_v4.5.8_latest.apk)
+  - [Nandha_LeetCode_Intelligence_v4.6.3_latest.apk](./Nandha_LeetCode_Intelligence_v4.6.3_latest.apk)
   - [Nandha-LeetCode-Tracker-Latest.apk](./Nandha-LeetCode-Tracker-Latest.apk)
   - [nandha-leetcode.apk](./nandha-leetcode.apk)
 
-### Changelog v4.5.8 (Latest Production)
+### Changelog v4.6.3 (Latest Production — Build 103 Milestone)
+- **Interactive Institutional Help Desk (`SupportContactModal.tsx`)**:
+  - Live pre-composed support draft modal with dynamic IST timestamps and direct contact with `nanthishvaran17@gmail.com`.
+  - Zero-student references in help desk documentation to maintain strict separation for authorized faculty and department staff.
+- **Production APK v4.6.3 Signing Verification**:
+  - Officially signed with `uber-apk-signer` and `nandha-release-key.jks` using APK Signature Scheme v2 & v3 + 4-byte zipalign, verified compatible across Android 11 through Android 16.
+
+### Changelog v4.6.2 (Build 102 Milestone)
+- **Mobile Action Bar Positioning**:
+  - Attached sticky mobile bottom action bar into document body portal to eliminate extra bottom padding gap on native web/Android.
+- **Mobile Contest Filters**:
+  - Added reset filters button and aligned contest report session headers.
+
+### Changelog v4.6.0 (Build 101 Milestone)
+- **Multi-Department HOD Access & Interactive Switcher**:
+  - Full support for multi-department scope switching across LandingPage, Department Dashboard, and HOD Command Center.
+- **Instant Allocation Scope Sync**:
+  - Real-time client scope synchronization from admin staff allocation updates.
+
+### Changelog v4.5.8 (Build 99)
 - **LeetCode Account Live Verification Card Polish & Collapsible Toggle**:
   - Redesigned `LcValidationChip` in `StudentEditOverlay` with responsive flexbox and text truncation to eliminate mobile wrapping bugs.
   - Added interactive Open / Hide (`[ Hide ∧ ]` / `[ Open ∨ ]`) collapse toggle so users can minimize stats to a compact single-line indicator to save mobile screen space or expand for full 4-metric breakdown and contest rating.

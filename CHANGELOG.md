@@ -11,8 +11,8 @@
 
 [![Keep a Changelog](https://img.shields.io/badge/Changelog-Keep%20a%20Changelog%20v1.1.0-orange.svg?style=flat-square)](https://keepachangelog.com/en/1.1.0/)
 [![Semantic Versioning](https://img.shields.io/badge/SemVer-2.0.0-blue.svg?style=flat-square)](https://semver.org/spec/v2.0.0.html)
-[![Current Production Release](https://img.shields.io/badge/Release-v4.6.0%20(Build%20101)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.6.0%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.6.0_latest.apk)
+[![Current Production Release](https://img.shields.io/badge/Release-v4.6.3%20(Build%20103)-success.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.6.3%20Signed-green.svg?style=flat-square)](releases/android/Nandha_LeetCode_Intelligence_v4.6.3_latest.apk)
 [![Windows Setup EXE](https://img.shields.io/badge/Windows%20Setup-v4.5.2%20EXE-blueviolet.svg?style=flat-square)](releases/desktop/Nandha_LeetCode_Intelligence_Setup_4.5.2.exe)
 [![CI/CD Autopilot Pipeline](https://img.shields.io/badge/Autopilot%20CI%2FCD-Active%205--Phase-blue.svg?style=flat-square)](.github/workflows/sunday_autopilot.yml)
 
@@ -40,12 +40,24 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 
 * **Formatting Standard:** Adheres strictly to [Keep a Changelog v1.1.0](https://keepachangelog.com/en/1.1.0/).
 * **Versioning Scheme:** Governed by [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) (`MAJOR.MINOR.PATCH`).
-* **Android Release Tracking:** Every minor/patch release maps to an immutable, sequentially incremented `versionCode` (Current: `versionCode 98`).
+* **Android Release Tracking:** Every minor/patch release maps to an immutable, sequentially incremented `versionCode` (Current: `versionCode 103`).
 * **Audit Trail:** Backed by cryptographically signed Git commits and automated continuous verification pipelines.
 
 ---
 
 ## Version 4.6.x — Multi-Department Governance & Mobile Polish (Current)
+
+### [4.6.3] - 2026-11-22 (Production Release — Build 103 Milestone)
+- **Interactive Institutional Help Desk (`SupportContactModal.tsx`)**: Added dynamic pre-composed support email draft with live IST timestamps, department staff authentication troubleshooting, and zero-student references for authorized staff/faculty clarity.
+- **📱 Production Android Release v4.6.3 (Build 103)**: Native Capacitor 7 Release APK compiled with updated assets and signed using official APK Signature Scheme v2 & v3 with 4-byte zipalign.
+- **Data Quality Excel/CSV Export Expansion**: Dynamic college prefix and filter-specific naming convention (`NANDHA_Data_Issues_Report_{college}_{dept}_{year}_{issue}_{date}.xlsx`) supporting direct download and background job workers.
+
+### [4.6.2] - 2026-11-22 (Production Release — Build 102 Milestone)
+- **Mobile Action Bar Fixed with React Portal**: Resolved Android and mobile web viewport gaps by mounting sticky action bar containers into document body portal.
+- **Contest Filter Enhancements**: Added mobile contest filters reset button and realigned contest report session headers.
+
+### [4.6.1] - 2026-11-22 (Production Release)
+- **Weekly Contest Drawer Card Design Alignment**: Aligned Weekly Contest bottom sheet drawers with the `PreviousWeekContestPanel` card design system, including responsive top gap padding and uniform border radii.
 
 ### [4.6.0] - 2026-11-20 (Production Release — Build 101 Milestone)
 - **Multi-Department HOD Access & Interactive Switcher**: Fully resolved multi-department scope resolution for Head of Department users assigned across multiple departments (e.g. CSE(CS) & CSE(IOT)). Fixed frontend `localStorage` stale filtering in `DepartmentContext`, role matching in backend auth routes and authorization service, and prevented single-department auto-lock across `LandingPage`, `DepartmentDashboard`, and `HODCommandCenter`.
