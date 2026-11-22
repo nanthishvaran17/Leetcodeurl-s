@@ -109,8 +109,37 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
   };
 
   const handleOpenEmailClient = () => {
-    const mailtoUrl = `mailto:${encodeURIComponent(supportEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-    window.open(mailtoUrl, '_blank') || (window.location.href = mailtoUrl);
+    // 1. Auto-copy draft text to clipboard so the user never loses the message
+    handleCopyDraft();
+
+    // 2. Construct RFC-compliant mailto URI with To, Subject and Body
+    const cleanTo = supportEmail.trim();
+    const cleanSubject = encodeURIComponent(subject.trim());
+    const cleanBody = encodeURIComponent(message.trim());
+    const mailtoUrl = `mailto:${cleanTo}?subject=${cleanSubject}&body=${cleanBody}`;
+
+    // 3. Clean dispatch via temporary link to avoid unwanted about:blank tabs
+    try {
+      const link = document.createElement('a');
+      link.href = mailtoUrl;
+      link.target = '_self';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      window.location.href = mailtoUrl;
+    }
+  };
+
+  const handleOpenGmailWeb = () => {
+    // Auto-copy draft and launch Gmail Web compose with pre-filled fields
+    handleCopyDraft();
+    const cleanTo = encodeURIComponent(supportEmail.trim());
+    const cleanSubject = encodeURIComponent(subject.trim());
+    const cleanBody = encodeURIComponent(message.trim());
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${cleanTo}&su=${cleanSubject}&body=${cleanBody}`;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
   };
 
   return createPortal(
@@ -206,15 +235,26 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
                     {supportEmail}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCopyEmail}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer shrink-0"
-                  title="Copy support email address"
-                >
-                  {copiedEmail ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                  <span>{copiedEmail ? 'Copied' : 'Copy Email'}</span>
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleOpenGmailWeb}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer"
+                    title="Open directly in Gmail Web compose with To, Subject & Body pre-filled"
+                  >
+                    <span>Gmail Web</span>
+                    <ExternalLink size={10} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors shadow-2xs cursor-pointer"
+                    title="Copy support email address"
+                  >
+                    {copiedEmail ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                    <span>{copiedEmail ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Template Category Selector Tabs */}
