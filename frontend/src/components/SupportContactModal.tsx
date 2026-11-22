@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { Mail, Copy, Check, X, ExternalLink, Sparkles, KeyRound, Lock, HelpCircle, ShieldCheck } from 'lucide-react';
 
 export interface SupportContactModalProps {
@@ -18,6 +18,7 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
   userIdentifier = '',
   supportEmail = 'nanthishvaran17@gmail.com'
 }) => {
+  const dragControls = useDragControls();
   const [category, setCategory] = useState<'otp' | 'credentials' | 'general'>(initialCategory);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -115,30 +116,62 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden"
+          role="dialog"
+          aria-modal="true"
+        >
           {/* Backdrop with frosted blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity"
+            className="fixed inset-0 bg-slate-950/75 dark:bg-black/85 backdrop-blur-md transition-opacity"
             aria-hidden="true"
           />
 
-          {/* Modal Card Surface */}
+          {/* Modal / Mobile Bottom Sheet Card Surface */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 text-slate-800 dark:text-slate-100 z-10 my-auto flex flex-col max-h-[90vh]"
-            role="dialog"
-            aria-modal="true"
+            drag="y"
+            dragListener={false}
+            dragControls={dragControls}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.65 }}
+            onDragEnd={(_e, info) => {
+              if (info.offset.y > 90 || info.velocity.y > 320) {
+                if (window.navigator?.vibrate) window.navigator.vibrate(15);
+                onClose();
+              }
+            }}
+            initial={{ y: '100%', opacity: 0.6 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            className="relative w-full sm:max-w-lg bg-white dark:bg-slate-900 border-t sm:border border-slate-200/90 dark:border-slate-800 rounded-t-[28px] sm:rounded-2xl shadow-[0_-12px_40px_rgba(0,0,0,0.2)] sm:shadow-2xl p-4 sm:p-5 pb-7 sm:pb-5 text-slate-800 dark:text-slate-100 z-10 flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden"
             aria-labelledby="support-modal-title"
+            onClick={(e) => e.stopPropagation()}
           >
+            {/* Top Swipe Drag Pill (Mobile Native Experience) */}
+            <div
+              onPointerDown={(e) => dragControls.start(e)}
+              className="w-full pt-1 pb-2 cursor-grab active:cursor-grabbing touch-none select-none flex flex-col items-center justify-center shrink-0 group sm:hidden"
+              title="Swipe down to close"
+            >
+              <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-slate-400 dark:group-hover:bg-slate-600 transition-colors" />
+              <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-1 opacity-80">
+                Swipe down to close
+              </span>
+            </div>
+
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div
+              onPointerDown={(e) => {
+                if ((e.target as HTMLElement).closest('button, a, input, textarea')) return;
+                dragControls.start(e);
+              }}
+              className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0 select-none"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                   <Mail size={18} />
@@ -266,8 +299,8 @@ export const SupportContactModal: React.FC<SupportContactModalProps> = ({
               </div>
             </div>
 
-            {/* Modal Actions Footer - Balanced, desktop-grade layout */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 mt-auto">
+            {/* Modal Actions Footer - Balanced layout with mobile bottom space */}
+            <div className="pt-3.5 pb-2 sm:pb-0 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 mt-auto shrink-0">
               <button
                 type="button"
                 onClick={handleCopyDraft}
