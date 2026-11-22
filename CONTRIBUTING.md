@@ -8,8 +8,8 @@
 **Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**  
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*
 
-[![Version](https://img.shields.io/badge/Production-v4.6.3-blue.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest)
-[![Android APK](https://img.shields.io/badge/Android%20APK-v4.6.3%20(VC%20103)-3DDC84.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android)
+[![Version](https://img.shields.io/badge/Production-v4.6.4-blue.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/releases/latest)
+[![Android APK](https://img.shields.io/badge/Android%20APK-v4.6.4%20(VC%20104)-3DDC84.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android)
 [![Windows EXE](https://img.shields.io/badge/Windows%20EXE-v4.5.2-0078D6.svg?style=flat-square)](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/windows)
 [![Code Style: Black](https://img.shields.io/badge/Code%20Style-Black-000000.svg?style=flat-square)](https://github.com/psf/black)
 [![TypeScript: Strict](https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6.svg?style=flat-square)](https://www.typescriptlang.org/)

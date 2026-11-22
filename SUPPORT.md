@@ -18,7 +18,7 @@ Welcome to the **Nandha LeetCode Intelligence (NLCI)** Support Resource Hub. We 
 ### 1. 🎓 Students & Contest Participants
 * **LeetCode Handle Verification:** Ensure your LeetCode profile handle is set to Public in LeetCode Account Settings so telemetry ingestion can read your solved submissions.
 * **Sunday Contest Attendance:** Sunday contest telemetry syncs autonomously every Sunday at **08:00 AM, 09:30 AM, and 10:00 PM IST**. Solve at least 1 problem during official contest windows to register verified attendance.
-* **Mobile APK Updates:** Download the latest signed Android APK (**v4.6.3, VersionCode 103**) directly from the [Releases Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android).
+* **Mobile APK Updates:** Download the latest signed Android APK (**v4.6.4, VersionCode 104**) directly from the [Releases Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android).
 * **Direct Campus Help:** Visit the CSE Department Computing Lab 4, Nandha Engineering College.
 
 ### 2. 👨‍🏫 Faculty Mentors & Department Coordinators (HOD / PLC / STC)
