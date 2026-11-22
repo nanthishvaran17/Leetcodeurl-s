@@ -2435,14 +2435,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               <button
                 type="button"
                 onClick={() => {
+                  triggerHaptic('warning');
                   setSelectedTypeFilter('ALL');
                   setSelectedDeptFilter('ALL');
                   setSelectedYearFilter('ALL');
                   setSearchTerm('');
                 }}
-                className="text-[10.5px] font-black text-rose-500 hover:text-rose-600 dark:text-rose-400 underline decoration-dotted ml-1 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200/90 dark:border-rose-800/80 text-[11px] font-black uppercase tracking-wider shadow-2xs hover:shadow-xs active:scale-95 transition-all touch-manipulation cursor-pointer ml-auto shrink-0"
+                title="Reset all active filters"
               >
-                Reset All
+                <RotateCcw className="w-3 h-3 text-rose-500 dark:text-rose-400 stroke-[2.5]" />
+                <span>Reset All</span>
               </button>
             )}
           </div>

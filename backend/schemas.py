@@ -373,23 +373,33 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class VerifyDobRequest(BaseModel):
-    email: str
+    identifier: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    institutional_id: Optional[str] = None
     date_of_birth: str
 
 class ForgotPasswordRequest(BaseModel):
-    institutional_id: str
-    email: str
+    identifier: Optional[str] = None
+    name: Optional[str] = None
+    institutional_id: Optional[str] = None
+    email: Optional[str] = None
     date_of_birth: str
 
 class ForgotPasswordVerifyRequest(BaseModel):
-    institutional_id: str
-    email: str
+    identifier: Optional[str] = None
+    name: Optional[str] = None
+    institutional_id: Optional[str] = None
+    email: Optional[str] = None
     otp: str
 
 class ResetPasswordSubmitRequest(BaseModel):
-    institutional_id: str
-    email: str
+    identifier: Optional[str] = None
+    name: Optional[str] = None
+    institutional_id: Optional[str] = None
+    email: Optional[str] = None
     otp: str
+    reset_token: Optional[str] = None
     new_password: str
 
 # Weekly Session Schemas

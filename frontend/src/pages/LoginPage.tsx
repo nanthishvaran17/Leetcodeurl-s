@@ -552,22 +552,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     setError('');
     setSuccessMsg('');
 
-    const cleanInstId = forgotInstId.trim();
-    const cleanEmail = forgotEmail.trim().toLowerCase();
+    const cleanId = forgotIdentifier.trim();
     const cleanDob = forgotDob.trim();
 
-    if (!cleanInstId) {
+    if (!cleanId) {
       triggerShake();
-      setError('Please enter your Institutional ID (Username).');
+      setError('Please enter your Name, Username, or Roll Number.');
       return;
     }
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      triggerShake();
-      setError('Please enter a valid registered institutional email.');
-      return;
-    }
+
     const dobParts = cleanDob.split('/');
-    if (dobParts.length !== 3 || dobParts[2].length !== 4) {
+    if (dobParts.length !== 3 || dobParts[0].length !== 2 || dobParts[1].length !== 2 || dobParts[2].length !== 4) {
       triggerShake();
       setError('Please enter a valid Date of Birth (DD/MM/YYYY).');
       return;
@@ -575,19 +570,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     const backendDob = `${dobParts[2]}-${dobParts[1]}-${dobParts[0]}`;
 
     setLoading(true);
-    setAuthStatusText('Verifying identity & dispatching OTP...');
+    setAuthStatusText('Verifying identity & Date of Birth...');
     try {
-      await api.post('/auth/forgot-password/request', {
-        institutional_id: cleanInstId,
-        email: cleanEmail,
+      const res = await api.post('/auth/forgot-password/verify-dob', {
+        identifier: cleanId,
+        name: cleanId,
         date_of_birth: backendDob
       });
-      setSuccessMsg(`Identity verified! Reset code sent to ${maskEmail(cleanEmail)}.`);
-      setForgotStep('verify_otp');
-      setForgotResetToken('');
+      if (res.data?.reset_token) {
+        setForgotResetToken(res.data.reset_token);
+      }
+      setForgotStep('reset_password');
+      setSuccessMsg('Identity verified! Please set your new password.');
     } catch (err: any) {
       triggerShake();
-      setError(extractCleanErrorMessage(err, 'Identity verification failed. Please check your Institutional ID, Email and Date of Birth.'));
+      setError(extractCleanErrorMessage(err, 'Identity verification failed. Please check your Name / Roll Number and Date of Birth.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -600,9 +597,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     setSuccessMsg('');
 
     const rawOtp = forgotResetToken.trim();
-    if (rawOtp.length !== 6) {
+    if (rawOtp.length < 6) {
       triggerShake();
-      setError('Please enter the 6-digit verification code sent to your email.');
+      setError('Please enter the 6-digit verification code.');
       return;
     }
 
@@ -610,8 +607,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     setAuthStatusText('Validating reset code...');
     try {
       const res = await api.post('/auth/forgot-password/verify', {
-        institutional_id: forgotInstId.trim(),
-        email: forgotEmail.trim().toLowerCase(),
+        identifier: forgotIdentifier.trim(),
         otp: rawOtp
       });
       if (res.data && res.data.reset_token) {
@@ -648,9 +644,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     setAuthStatusText('Updating password credentials...');
     try {
       await api.post('/auth/forgot-password/reset', {
-        institutional_id: forgotInstId.trim(),
-        email: forgotEmail.trim().toLowerCase(),
+        identifier: forgotIdentifier.trim(),
         otp: forgotResetToken.trim(),
+        reset_token: forgotResetToken.trim(),
         new_password: newPassword
       });
       setForgotStep('success');
@@ -1231,16 +1227,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 >
                   {/* Step Indicator */}
                   <div className="steps-indicator">
-                    {(['dob', 'verify_otp', 'reset_password', 'success'] as const).map((step, i) => {
-                      const stepIdx = ['dob', 'verify_otp', 'reset_password', 'success'].indexOf(forgotStep);
+                    {(['dob', 'reset_password', 'success'] as const).map((step, i) => {
+                      const stepIdx = ['dob', 'reset_password', 'success'].indexOf(forgotStep as any);
                       const done = i < stepIdx;
                       const active = step === forgotStep;
                       return (
                         <div key={step} className="step-item">
                           <div className={`step-dot ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
-                            {done ? '' : i + 1}
+                            {done ? '✓' : i + 1}
                           </div>
-                          {i < 3 && <div className={`step-line ${done ? 'done' : ''}`} />}
+                          {i < 2 && <div className={`step-line ${done ? 'done' : ''}`} />}
                         </div>
                       );
                     })}
@@ -1250,36 +1246,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   {forgotStep === 'dob' && (
                     <form onSubmit={handleForgotVerifyDob} noValidate>
                       <p className="step-desc">
-                        Enter your <strong>Institutional ID / Username</strong>, email, and Date of Birth to receive a password reset code.
+                        Enter your <strong>Name, Username, or Roll Number</strong> and <strong>Date of Birth</strong> to verify your account and set a new password.
                       </p>
                       <div className="field">
-                        <label htmlFor="forgotId">Username / Institutional ID</label>
+                        <label htmlFor="forgotIdentifier">Name, Username, or Roll Number</label>
                         <div className="input-wrap">
                           <User className="input-icon" size={19} />
                           <input
-                            id="forgotId"
+                            id="forgotIdentifier"
                             type="text"
-                            value={forgotInstId}
-                            onChange={(e) => setForgotInstId(e.target.value)}
-                            placeholder="staff username"
+                            value={forgotIdentifier}
+                            onChange={(e) => setForgotIdentifier(e.target.value)}
+                            placeholder="e.g. admin, 23CC001, or your name"
                             required
                             disabled={loading}
                             autoFocus
-                          />
-                        </div>
-                      </div>
-                      <div className="field">
-                        <label htmlFor="forgotEmail">Registered Email</label>
-                        <div className="input-wrap">
-                          <Mail className="input-icon" size={19} />
-                          <input
-                            id="forgotEmail"
-                            type="email"
-                            value={forgotEmail}
-                            onChange={(e) => setForgotEmail(e.target.value)}
-                            placeholder="faculty@nandhaengg.org"
-                            required
-                            disabled={loading}
                           />
                         </div>
                       </div>
@@ -1314,19 +1295,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                         </button>
                       </div>
                       <button className="submit-btn" type="submit" disabled={loading}>
-                        <span>{loading ? 'Verifying...' : 'Send OTP to Email'}</span>
+                        <span>{loading ? 'Verifying...' : 'Verify & Continue'}</span>
                         {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
                       </button>
                     </form>
                   )}
 
-                  {/* STEP 2: Enter OTP */}
+                  {/* STEP 2 (Optional Fallback): Enter OTP */}
                   {forgotStep === 'verify_otp' && (
                     <form onSubmit={handleForgotVerifyOtp} noValidate>
                       <div className="text-center" style={{ textAlign: 'center', marginBottom: '16px' }}>
                         <p className="step-desc">
-                          A 6-digit verification code was sent to<br />
-                          <strong>{forgotEmail}</strong>.
+                          Enter the 6-digit reset code to verify your identity.
                         </p>
                       </div>
                       <div className="field">
@@ -1353,14 +1333,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                           className="forgot"
                         >
                           ← Change Details
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleForgotVerifyDob}
-                          disabled={loading}
-                          className="forgot"
-                        >
-                          Resend Code
                         </button>
                       </div>
                       <button className="submit-btn" type="submit" disabled={loading || forgotResetToken.length !== 6}>
@@ -1446,12 +1418,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                         onClick={() => {
                           setCurrentView('login');
                           setAuthMode('password');
+                          if (forgotIdentifier) {
+                            setUsername(forgotIdentifier.trim());
+                          }
+                          setPassword('');
                           setError('');
-                          setSuccessMsg('');
-                          setForgotInstId('');
-                          setForgotEmail('');
+                          setSuccessMsg('Password updated! Please sign in with your new password.');
+                          setForgotIdentifier('');
                           setForgotDob('');
                           setForgotResetToken('');
+                          setForgotStep('dob');
                           setNewPassword('');
                           setConfirmPassword('');
                         }}

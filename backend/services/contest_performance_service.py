@@ -222,6 +222,36 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         if not session_obj:
             session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
+    # Enforce strict session alignment: Sunday/Weekly reports must NEVER bind to Saturday Biweekly sessions
+    rpt_key_raw = (config.report_type or "").upper().strip()
+    is_sunday_req = rpt_key_raw in ("SUNDAY_LIVE_CONTEST", "SUNDAY_LIVE", "SUNDAY_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE")
+    is_biweekly_req = "BIWEEKLY" in rpt_key_raw
+
+    if is_sunday_req and session_obj:
+        s_cname = str(session_obj.contest_name or "").lower()
+        s_cid = str(getattr(session_obj, "contest_id", "") or "").lower()
+        s_code = str(getattr(session_obj, "session_code", "") or "").lower()
+        if "biweekly" in s_cname or "biweekly" in s_cid or "biweek" in s_code:
+            # Resolved session is a Saturday Biweekly contest; auto-correct to Sunday Weekly Contest session
+            sunday_candidate = db.query(WeeklySession).filter(
+                ~WeeklySession.contest_name.ilike("%biweekly%"),
+                ~WeeklySession.contest_id.ilike("%biweekly%"),
+                ~WeeklySession.session_code.ilike("%biweek%")
+            ).order_by(WeeklySession.id.desc()).first()
+            if sunday_candidate:
+                session_obj = sunday_candidate
+    elif is_biweekly_req and session_obj:
+        s_cname = str(session_obj.contest_name or "").lower()
+        s_cid = str(getattr(session_obj, "contest_id", "") or "").lower()
+        if "biweekly" not in s_cname and "biweekly" not in s_cid:
+            biweek_candidate = db.query(WeeklySession).filter(
+                (WeeklySession.contest_name.ilike("%biweekly%")) |
+                (WeeklySession.contest_id.ilike("%biweekly%")) |
+                (WeeklySession.session_code.ilike("%biweek%"))
+            ).order_by(WeeklySession.id.desc()).first()
+            if biweek_candidate:
+                session_obj = biweek_candidate
+
     if session_obj:
         session_id = session_obj.id
         contest_name = session_obj.contest_name or f"Weekly Contest {session_obj.id}"
@@ -929,9 +959,10 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         report_prefix = "RPT-BIWEEKLY"
         c_window = "08:00 PM – 09:30 PM IST"
     elif is_sunday:
-        display_contest_name = contest_name if "weekly" in contest_name.lower() else "Sunday Live Contest"
+        is_true_weekly = "weekly" in contest_name.lower() and "biweekly" not in contest_name.lower()
+        display_contest_name = contest_name if is_true_weekly else "Sunday Live Contest"
         display_contest_date = contest_date
-        base_title = f"{display_contest_name.upper()} — STUDENT PERFORMANCE REPORT" if "weekly" in contest_name.lower() else "SUNDAY LIVE CONTEST — STUDENT PERFORMANCE REPORT"
+        base_title = f"{display_contest_name.upper()} — STUDENT PERFORMANCE REPORT" if is_true_weekly else "SUNDAY LIVE CONTEST — STUDENT PERFORMANCE REPORT"
         report_prefix = "RPT-SUNDAY"
         c_window = "08:00 AM – 09:30 AM IST"
     elif is_weekly_intel:
