@@ -433,7 +433,7 @@ Leetcodeurl-s/
 ## Institutional Leadership & Engineering Credits
 
 ### Chief Systems Architecture & Lead Engineering
-* **Nanthish S** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
+* **Mr. S. Nanthish** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
   *Platform Conception, Full-Stack Architecture, FastAPI Core, Level 4 Forensic Pipeline, Mobile GPU Acceleration & Release Engineering.*
 
 ### Open-Source & Engineering Contributors
@@ -496,6 +496,6 @@ Yes! The platform is licensed under the permissive **MIT License**. It features 
 <div align="center">
 
 <sub>**Keywords & Semantic Topics for Search Engines:**  
-*LeetCode Tracker • College LeetCode Tracker • Institutional Contest Intelligence • Autonomous LeetCode Leaderboard • Nandha Engineering College LeetCode • Student Coding Analytics • Level 4 Forensic Verification • Sunday Contest Autopilot • FastAPI LeetCode GraphQL • React LeetCode Dashboard • Capacitor 7 Android APK • NAAC A+ Accreditation Coding Matrix • Placement Coordinator Matrix • Nanthish S • Leetcodeurl-s*</sub>
+*LeetCode Tracker • College LeetCode Tracker • Institutional Contest Intelligence • Autonomous LeetCode Leaderboard • Nandha Engineering College LeetCode • Student Coding Analytics • Level 4 Forensic Verification • Sunday Contest Autopilot • FastAPI LeetCode GraphQL • React LeetCode Dashboard • Capacitor 7 Android APK • NAAC A+ Accreditation Coding Matrix • Placement Coordinator Matrix • Mr. S. Nanthish • Leetcodeurl-s*</sub>
 
 </div>

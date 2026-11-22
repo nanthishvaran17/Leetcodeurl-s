@@ -37,7 +37,7 @@ Welcome to the **Nandha LeetCode Intelligence (NLCI)** Support Resource Hub. We 
 
 | Channel | Purpose | Contact Details |
 | :--- | :--- | :--- |
-| **Lead Maintainer** | Technical queries, core engine, architecture | **Nanthish S** — `nanthishvaran17@gmail.com` |
+| **Lead Maintainer** | Technical queries, core engine, architecture | **Mr. S. Nanthish** — `nanthishvaran17@gmail.com` |
 | **HOD - CSE(CS & IoT)** | Institutional approvals, academic marks, NAAC data | **Dr. S. Prabhu** — Head of Department, CSE (Cyber Security & Internet of Things), NEC |
 | **Placement Directorate** | Corporate placement rosters & candidate finder | **Prof. M. Santhosh Kumar** — Assistant Professor / CSE(CS) |
 | **GitHub Discussions** | Community Q&A, feature discussions, tips | [GitHub Community Discussions](https://github.com/nanthishvaran17/Leetcodeurl-s/discussions) |

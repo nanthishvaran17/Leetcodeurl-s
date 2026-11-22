@@ -612,7 +612,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
-              {/* Member 1: Lead Developer (Nanthish S) - First! */}
+              {/* Member 1: Lead Developer (Mr. S. Nanthish) - First! */}
               <div className="p-5 rounded-2xl bg-white dark:bg-navy-900/90 border-2 border-indigo-500/50 dark:border-indigo-400/40 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between gap-4 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all pointer-events-none" />
 
@@ -777,7 +777,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
                   <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                     <div className="text-slate-400">Lead Platform Engineer:</div>
-                    <div className="font-bold text-white">Nanthish S (Lead Platform Architect)</div>
+                    <div className="font-bold text-white">Mr. S. Nanthish (Lead Platform Architect)</div>
                     <div className="text-[11px] text-emerald-400">SLA Response Window: Within 24 Hours</div>
                   </div>
                 </div>
@@ -849,7 +849,7 @@ export const PrivacyPolicyPage: React.FC = () => {
                 <span>Digitally Sealed & Active for Academic Session 2026</span>
               </div>
               <div className="font-semibold text-slate-300">
-                Signed: Dr. S. Prabhu (HOD) & Nanthish S (Lead Platform Architect)
+                Signed: Dr. S. Prabhu (HOD) & Mr. S. Nanthish (Lead Platform Architect)
               </div>
             </div>
           </div>
@@ -1273,7 +1273,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-600 dark:text-slate-400">
             <span>Faculty Advisor: <strong>Dr. S. Prabhu</strong></span>
             <span>•</span>
-            <span>Lead Architect: <strong>Nanthish S</strong></span>
+            <span>Lead Architect: <strong>Mr. S. Nanthish</strong></span>
             <span>•</span>
             <span>Security Lead: <strong>Mr. Mohammed Affan J A</strong></span>
             <span>•</span>

@@ -248,7 +248,7 @@ All notable institutional updates, architectural milestones, bug fixes, and secu
 <div align="center">
 
 **Lead Platform Architect & Maintainer:**  
-**Nanthish S** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
+**Mr. S. Nanthish** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
 Department of Computer Science & Engineering  
 **Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**  
 *Accredited by NAAC with 'A+' Grade • Approved by AICTE • Autonomous Institution Affiliated to Anna University*

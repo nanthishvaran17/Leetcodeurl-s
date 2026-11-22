@@ -251,7 +251,7 @@ Every meaningful contribution is recognized! Contributors are acknowledged in:
 <div align="center">
 
 **Lead Platform Architect & Maintainer:**  
-**Nanthish S** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
+**Mr. S. Nanthish** ([@nanthishvaran17](https://github.com/nanthishvaran17))  
 Department of Computer Science & Engineering  
 **Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India**
 

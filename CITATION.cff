@@ -1,8 +1,9 @@
 cff-version: 1.2.0
 message: "If you use, inspect, or reference the Nandha LeetCode Intelligence platform in your scientific research, institutional benchmarking, or academic work, please cite it as below."
 authors:
-  - family-names: "S"
-    given-names: "Nanthish"
+  - family-names: "Nanthish"
+    given-names: "S"
+    name-particle: "Mr."
     affiliation: "Department of Computer Science & Engineering, Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India"
     orcid: "https://orcid.org/0009-0002-3642-1875"
   - family-names: "Prabhu"
