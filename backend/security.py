@@ -799,24 +799,21 @@ def get_authenticated_user_scope(db: Session, user: User) -> dict:
         
     role = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
-    if role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "placement coordinator", "placement_coordinator", "placement officer", "placement_officer"]:
+    from backend.services.authorization_service import is_user_global_admin, get_hod_authorized_department_ids, _STAFF_ROLES
+    if is_user_global_admin(user):
         return {"type": "GLOBAL"}
         
-    elif role in ["hod", "department hod", "department_hod"] or "hod" in role or "head of department" in role:
-        from backend.services.authorization_service import get_hod_authorized_department_ids
-        dept_ids = get_hod_authorized_department_ids(db, user)
-        return {"type": "DEPARTMENT", "dept_ids": dept_ids, "dept_id": dept_ids[0] if dept_ids else None}
+    if role in _STAFF_ROLES and hasattr(user, "id"):
+        from backend.services.faculty_assignment_service import faculty_assignment_service
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(getattr(user, "id")))
+        if assigned_ids:
+            return {"type": "FACULTY", "student_ids": assigned_ids}
+
+    dept_ids = get_hod_authorized_department_ids(db, user)
+    if dept_ids:
+        return {"type": "DEPARTMENT", "dept_ids": dept_ids, "dept_id": dept_ids[0]}
         
-    elif role in [
-        "faculty", "staff", "professor", "faculty mentor", "staff mentor",
-        "faculty_mentor", "staff_mentor", "student coordinator", "student_coordinator",
-        "coordinator", "academic coordinator"
-    ]:
-        from backend.services.faculty_assignment_service import FacultyAssignmentService
-        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(getattr(user, "id")))
-        return {"type": "FACULTY", "student_ids": assigned_ids}
-        
-    elif role == "student":
+    if role == "student":
         return {"type": "STUDENT", "student_id": getattr(user, 'id', None)}
         
     return {"type": "RESTRICTED"}

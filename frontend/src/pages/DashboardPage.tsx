@@ -30,6 +30,8 @@ import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useFilteredStudents, useFilters } from '../context/FilterContext';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { isGlobalAccessRole } from '../services/auth/authTypes';
+import { normalizeDepartment } from '../utils/filterUtils';
 
 interface DashboardPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -99,22 +101,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     else if (Array.isArray((rawDepartments as any)?.departments)) list = (rawDepartments as any).departments;
     else if (Array.isArray((rawDepartments as any)?.data)) list = (rawDepartments as any).data;
 
-    const roleClean = (user?.role || '').trim().toLowerCase();
-    const isHod = ['hod', 'department hod', 'department_hod', 'placement coordinator'].includes(roleClean);
-    const isStaff = ['staff', 'faculty', 'professor', 'mentor', 'staff mentor', 'faculty mentor'].includes(roleClean);
-    const isGlobalRole = ['admin', 'super admin', 'super_admin', 'administrator', 'principal', 'management', 'director', 'placement coordinator', 'placement_coordinator', 'student coordinator', 'student_coordinator', 'coordinator'].includes(roleClean);
+    const isGlobal = isGlobalAccessRole(user);
 
-    if ((isHod || isStaff) && !isGlobalRole) {
-      const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => String(c).toUpperCase());
-      const uDeptCode = String(user?.department || (user as any)?.department_code || '').toUpperCase();
+    if (!isGlobal && user) {
+      const authCodes = (Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : []).map(c => normalizeDepartment(c) || String(c).toUpperCase());
+      const uDeptCode = normalizeDepartment(user?.department || (user as any)?.department_code || '') || String(user?.department || (user as any)?.department_code || '').toUpperCase();
       const uDeptId = user?.department_id ? Number(user.department_id) : null;
 
       list = list.filter(dept => {
-        const dCode = String(dept.code || dept.department_code || '').toUpperCase();
-        const dName = String(dept.name || dept.department_name || '').toUpperCase();
+        const dNorm = normalizeDepartment(dept.code || dept.department_code || dept.name || dept.department_name);
         const dId = Number(dept.id || dept.department_id);
-        if (authCodes.length > 0 && authCodes.includes(dCode)) return true;
-        if (uDeptCode && (dCode === uDeptCode || dName === uDeptCode || uDeptCode.includes(dCode))) return true;
+        if (authCodes.length > 0 && dNorm && authCodes.includes(dNorm)) return true;
+        if (uDeptCode && dNorm && (dNorm === uDeptCode || uDeptCode.includes(dNorm))) return true;
         if (uDeptId && dId === uDeptId) return true;
         return false;
       });

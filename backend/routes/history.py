@@ -815,22 +815,13 @@ def get_growth_options(db: Session = Depends(get_db), current_user: Optional[Use
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
     
-    from backend.services.authorization_service import _STAFF_ROLES, _HOD_ROLES, _normalize_role
-    role_clean = _normalize_role(current_user)
-    if current_user and role_clean in _STAFF_ROLES:
-        from backend.services.faculty_assignment_service import FacultyAssignmentService
-        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(cast(Any, current_user).id))
-        if assigned_ids:
-            departments_query = departments_query.filter(Student.id.in_(assigned_ids))
-        else:
-            departments_query = departments_query.filter(Student.id == -1)
-    elif current_user and role_clean in _HOD_ROLES:
-        from backend.services.authorization_service import get_hod_authorized_department_ids
+    from backend.services.authorization_service import is_user_global_admin, get_hod_authorized_department_ids
+    if current_user and not is_user_global_admin(current_user):
         dept_ids = get_hod_authorized_department_ids(db, current_user)
         if dept_ids:
             departments_query = departments_query.filter(Department.id.in_(dept_ids))
-        elif current_user.department_id:
-            departments_query = departments_query.filter(Department.id == current_user.department_id)
+        else:
+            departments_query = departments_query.filter(Student.id == -1)
         
     departments = departments_query.distinct().order_by(Department.name.asc()).all()
     

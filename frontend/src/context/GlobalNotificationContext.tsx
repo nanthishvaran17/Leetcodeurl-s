@@ -88,6 +88,47 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const { registerCallback, unregisterCallback } = useGlobalWebSocket();
   const { notify } = useToastNotification();
   const seenNotificationIdsRef = React.useRef(new Set<string>());
+  const seenIdentifiersRef = React.useRef(new Map<string, number>());
+  const lastChimeTimeRef = React.useRef<number>(0);
+  const lastFetchTimeRef = React.useRef<number>(0);
+
+  // Unified deduplication helper across WebSocket and FCM
+  const isDuplicateAndRecord = useCallback((ids: (string | number | undefined | null)[], title?: string, body?: string): boolean => {
+    const now = Date.now();
+    // Evict entries older than 60s
+    for (const [k, ts] of seenIdentifiersRef.current.entries()) {
+      if (now - ts > 60000) {
+        seenIdentifiersRef.current.delete(k);
+      }
+    }
+
+    const cleanIds = ids.filter(Boolean).map(x => String(x).trim().toLowerCase());
+    const contentKey = (title || body)
+      ? `${(title || '').trim().toLowerCase()}::${(body || '').trim().toLowerCase().slice(0, 50)}`
+      : null;
+
+    // Check if any ID has been seen recently
+    for (const id of cleanIds) {
+      if (id && seenIdentifiersRef.current.has(id)) {
+        return true;
+      }
+    }
+
+    // Check if identical content signature has been seen recently
+    if (contentKey && seenIdentifiersRef.current.has(contentKey)) {
+      return true;
+    }
+
+    // Mark all cleanIds and contentKey as seen
+    for (const id of cleanIds) {
+      if (id) seenIdentifiersRef.current.set(id, now);
+    }
+    if (contentKey) {
+      seenIdentifiersRef.current.set(contentKey, now);
+    }
+
+    return false;
+  }, []);
 
   // Live OS / Mobile App Icon Badge & Dynamic Tab Title (like WhatsApp, Twitter, Instagram)
   useEffect(() => {
@@ -270,8 +311,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       }
 
       const msgId = String(msg.messageId || msg.id || `msg_${Date.now()}`);
-      if (seenNotificationIdsRef.current.has(msgId)) return;
-      seenNotificationIdsRef.current.add(msgId);
+      if (isDuplicateAndRecord([msgId], `Message from ${msg.senderName || msg.sender_name}`, msg.content)) return;
 
       const senderRealName = msg.senderName || msg.sender_name || 'Faculty / Staff';
       const senderRole = msg.senderRole ? ` · ${msg.senderRole}` : '';
@@ -313,15 +353,25 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     const notifId = notif.id || notif.notification_id || notif.eventId || notif.event_id;
     if (!notifId) return;
 
-    const alreadySeen = seenNotificationIdsRef.current.has(String(notifId));
-    console.log(`[NOTIF-DEBUG] DEDUPLICATION_CHECK notifId=${notifId} already_seen=${alreadySeen} set_size=${seenNotificationIdsRef.current.size}`);
-    if (alreadySeen) {
-      return;
-    }
-    seenNotificationIdsRef.current.add(String(notifId));
-
     const title = notif.title || 'New Notification';
     const message = notif.message || notif.body || '';
+
+    // Unified deduplication across WebSocket and FCM
+    const candidateIds = [
+      notif.id,
+      notif.notification_id,
+      notif.eventId,
+      notif.event_id,
+      notif.data?.notificationId,
+      notif.data?.eventId,
+      notif.data?.event_id
+    ];
+
+    if (isDuplicateAndRecord(candidateIds, title, message)) {
+      console.log(`[NOTIF-DEBUG] DEDUPLICATION_SUPPRESSED title="${title}"`);
+      return;
+    }
+
     const rawCat = notif.category || notif.event_type || notif.type || 'announcements';
     const category = normalizeCategory(rawCat);
     const priority = notif.priority || 'normal';
@@ -354,23 +404,28 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       return prev + 1;
     });
 
-    // Immediate Foreground Crisp Audio Chime & Confetti Celebration
-    try {
-      const isCelebratory = category === 'contests' || 
-        rawCat.toLowerCase().includes('milestone') || 
-        rawCat.toLowerCase().includes('achievement') || 
-        rawCat.toLowerCase().includes('finalized') ||
-        title.toLowerCase().includes('congrat') || 
-        title.toLowerCase().includes('live') ||
-        title.toLowerCase().includes('solved');
+    // Rate-limited Crisp Audio Chime & Confetti Celebration (at least 3.5s cooldown)
+    const now = Date.now();
+    const shouldPlayChime = now - lastChimeTimeRef.current > 3500;
+    if (shouldPlayChime) {
+      lastChimeTimeRef.current = now;
+      try {
+        const isCelebratory = category === 'contests' || 
+          rawCat.toLowerCase().includes('milestone') || 
+          rawCat.toLowerCase().includes('achievement') || 
+          rawCat.toLowerCase().includes('finalized') ||
+          title.toLowerCase().includes('congrat') || 
+          title.toLowerCase().includes('live') ||
+          title.toLowerCase().includes('solved');
 
-      if (isCelebratory) {
-        triggerConfetti({ playSound: true });
-      } else {
-        playNotificationChime();
+        if (isCelebratory) {
+          triggerConfetti({ playSound: true });
+        } else {
+          playNotificationChime();
+        }
+      } catch {
+        // Audio/confetti safety
       }
-    } catch {
-      // Audio/confetti safety
     }
 
     // Immediate Foreground Popup / Toast
@@ -386,7 +441,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       }
     });
 
-    // Dispatch official system status-bar notification with sound & vibration
+    // Dispatch official system status-bar notification (handled cleanly without duplicate sounds)
     notifySystem({
       title,
       body: message,
@@ -395,26 +450,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       notifId,
       playSound: false // already chimed above
     });
-
-    if (document.hidden) {
-      // Browser background tab notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-          const bNotif = new window.Notification(title, {
-            body: message,
-            icon: '/logo.png',
-            tag: String(notifId)
-          });
-          bNotif.onclick = () => {
-            window.focus();
-            if (actionRoute) window.location.href = actionRoute;
-          };
-        } catch (e) {
-          console.warn('[Browser Notification] Error showing notification:', e);
-        }
-      }
-    }
-  }, [user?.email, user?.username, (user as any)?.reg_no, user?.id, notify]);
+  }, [user?.email, user?.username, (user as any)?.reg_no, user?.id, notify, isDuplicateAndRecord]);
 
   // Register WebSocket listener
   useEffect(() => {
@@ -435,17 +471,32 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       const detail = event.detail;
       if (!detail) return;
       const notifData = detail.notification || detail;
-      const notifId = notifData.data?.notificationId || notifData.id || `fcm_${Date.now()}`;
+      const data = detail.data || notifData.data || {};
 
-      if (seenNotificationIdsRef.current.has(String(notifId))) return;
-      seenNotificationIdsRef.current.add(String(notifId));
+      const title = notifData.title || data.title || 'New Notification';
+      const message = notifData.body || data.body || data.message || '';
+      const actionRoute = data.actionRoute || data.route || '/dashboard';
+      const rawCat = data.category || notifData.category || data.type || 'announcements';
+      const category = normalizeCategory(rawCat);
 
-      const title = notifData.title || notifData.data?.title || 'New Notification';
-      const message = notifData.body || notifData.data?.message || '';
-      const actionRoute = notifData.data?.actionRoute || notifData.data?.route || '/dashboard';
-      const category = notifData.data?.category || 'announcements';
+      const candidateIds = [
+        data.notificationId,
+        data.notification_id,
+        data.eventId,
+        data.event_id,
+        notifData.id,
+        notifData.notification_id
+      ];
+
+      // Strict Deduplication: skip if already handled via WebSocket or previous FCM dispatch
+      if (isDuplicateAndRecord(candidateIds, title, message)) {
+        console.log(`[NOTIF-DEBUG] FCM_DEDUPLICATION_SUPPRESSED title="${title}"`);
+        return;
+      }
 
       setUnreadCount(prev => prev + 1);
+
+      // In-App Toast
       notify.info(title, message, {
         category: category.toUpperCase(),
         duration: 5000,
@@ -455,16 +506,28 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         }
       });
 
+      const now = Date.now();
+      const shouldPlaySound = now - lastChimeTimeRef.current > 3500;
+      if (shouldPlaySound) {
+        lastChimeTimeRef.current = now;
+      }
+
+      // Delegate to system notification
+      const notifId = data.notificationId || data.eventId || notifData.id || `fcm_${now}`;
       notifySystem({
         title,
         body: message,
         actionRoute,
         category,
         notifId,
-        playSound: true
+        playSound: shouldPlaySound
       });
 
-      fetchFromBackendAPI();
+      // Rate-limit background REST API synchronization to once per 6 seconds
+      if (now - lastFetchTimeRef.current > 6000) {
+        lastFetchTimeRef.current = now;
+        fetchFromBackendAPI();
+      }
     };
 
     const handlePortalNotification = (event: any) => {

@@ -86,6 +86,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
@@ -412,7 +413,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const startSyncPolling = startPollingProgress;
 
-  const isFiltered = (selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all' || Boolean(nameSearch && nameSearch.trim()));
+  const isFiltered = (selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all' || statusFilter !== 'all' || Boolean(nameSearch && nameSearch.trim()));
 
   const handleRefreshAll = async () => {
     if (refreshing || syncProgress?.is_running) return;
@@ -580,7 +581,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     };
   }, [user?.id, user?.role, isFacultyRole]);
 
-  // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
+  // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Status + Sort ---
   const { filteredAndSorted: sortedList, counts: performanceCounts } = useMemo(() => {
     const { filteredAndSorted, counts } = filterAndSortStudents(students, {
       college: selectedCollege,
@@ -588,13 +589,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       academicYear: yearLevel,
       nameSearch,
       performanceRange: solvedFilter,
+      verificationStatus: statusFilter,
       sortBy
     });
 
     // Pre-calculate stable objects for React.memo to prevent DOM thrashing
     const stableList = filteredAndSorted.map((st, idx) => {
       const isSolver = (st.stats?.total_solved || st.total_solved || 0) > 0;
-      const computedRank = (isSolver && (sortBy === 'top_solved' || sortBy === 'rating' || sortBy === 'streak') && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
+      const computedRank = (isSolver && (sortBy === 'top_solved' || sortBy === 'rating' || sortBy === 'streak') && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all') && (statusFilter === 'all')) ? idx + 1 : st.college_rank;
       return {
         ...st,
         college_rank: isSolver ? (computedRank ?? (idx + 1)) : undefined
@@ -602,7 +604,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     });
 
     return { filteredAndSorted: stableList, counts };
-  }, [students, selectedCollege, selectedDept, yearLevel, nameSearch, solvedFilter, sortBy]);
+  }, [students, selectedCollege, selectedDept, yearLevel, nameSearch, solvedFilter, statusFilter, sortBy]);
 
   const handleResetFilters = () => {
     setSelectedCollege('all');
@@ -610,6 +612,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setYearLevel('all');
     setNameSearch('');
     setSolvedFilter('all');
+    setStatusFilter('all');
     setSortBy('top_solved');
     setDisplayCount(32);
   };
@@ -724,9 +727,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (selectedDept !== 'all') count++;
     if (yearLevel !== 'all') count++;
     if (solvedFilter !== 'all') count++;
+    if (statusFilter !== 'all') count++;
     if (sortBy !== 'top_solved') count++;
     return count;
-  }, [selectedDept, yearLevel, solvedFilter, sortBy]);
+  }, [selectedDept, yearLevel, solvedFilter, statusFilter, sortBy]);
 
   // Active filter label helpers for mobile quick pills
   const activeCollegeLabel = useMemo(() => {
@@ -1086,15 +1090,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5 px-1 sm:px-2 py-0.5 sm:py-1">
           <div className="flex items-center space-x-2.5">
-            <div className={`w-2.5 h-2.5 rounded-full ${summaryData?.is_session_live ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-brand-500'} animate-pulse shrink-0`} />
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] animate-pulse shrink-0" />
             <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
               {summaryData?.is_session_live ? 'Live Sunday Monitoring Session' : 'Next Sunday Session Timer'}
             </span>
           </div>
-          <span className={`text-[11px] sm:text-xs font-extrabold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors ${summaryData?.is_session_live
-              ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/90 dark:border-emerald-500/40 shadow-xs'
-              : 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 border-brand-200/80 dark:border-brand-500/40 shadow-xs'
-            }`}>
+          <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full border shadow-xs whitespace-nowrap self-start sm:self-auto transition-colors text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 border-brand-200/80 dark:border-brand-500/40">
             Official Window: 08:00 AM – 09:30 AM IST
           </span>
         </div>
@@ -1141,7 +1142,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -3, scale: 1.01 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-default relative group"
+                onClick={() => setStatusFilter('all')}
+                className={`glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-pointer relative group transition-all ${statusFilter === 'all' ? 'ring-2 ring-brand-500/30' : 'hover:border-brand-500/30'}`}
+                title="Click to view all enrolled students"
               >
                 <div className="flex items-center justify-between">
                   <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
@@ -1155,8 +1158,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <h4 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none font-display">
                     <AnimatedNumber value={totalStudents} />
                   </h4>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1">
-                    {isFacultyRole ? 'Allocated Mentees' : (selectedDept !== 'all' ? 'Dept Enrolled Students' : 'Total Enrolled Students')}
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1 flex items-center justify-between">
+                    <span>{isFacultyRole ? 'Allocated Mentees' : (selectedDept !== 'all' ? 'Dept Enrolled Students' : 'Total Enrolled Students')}</span>
+                    {statusFilter !== 'all' && (
+                      <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold">Show All</span>
+                    )}
                   </p>
                 </div>
               </motion.div>
@@ -1165,29 +1171,89 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -3, scale: 1.01 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 cursor-default relative group"
+                className={`glass-panel-elevated bento-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 relative group transition-all ${statusFilter === 'verified' || statusFilter === 'unverified' ? 'ring-2 ring-emerald-500/50' : ''}`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                <div
+                  className="cursor-pointer space-y-3"
+                  onClick={() => setStatusFilter(prev => {
+                    if (prev === 'verified' || prev === 'unverified') return 'all';
+                    return verified > 0 ? 'verified' : 'unverified';
+                  })}
+                  title={verified > 0 ? "Click to filter verified profiles" : "Click to view all not verified profiles"}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                      <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                      Live
+                    </span>
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                    Live
-                  </span>
-                </div>
-                <div>
-                  <h4 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none font-display">
-                    <AnimatedNumber value={verified} />
-                  </h4>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1">
-                    Verified Profiles
-                  </p>
+                  <div>
+                    <h4 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-none font-display">
+                      <AnimatedNumber value={verified} />
+                    </h4>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 mt-1 flex items-center justify-between">
+                      <span>Verified Profiles</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold opacity-80 group-hover:opacity-100 transition-opacity">
+                        {statusFilter === 'verified' ? '● Verified' : statusFilter === 'unverified' ? '● Unverified' : 'Filter ↗'}
+                      </span>
+                    </p>
+                  </div>
                 </div>
                 {(pending > 0 || failed > 0 || noUsername > 0) && (
                   <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1.5 pt-0.5">
-                    {pending > 0 && <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pending} Pending</span>}
-                    {noUsername > 0 && <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">{noUsername} No ID</span>}
-                    {failed > 0 && <span className="px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">{failed} Failed</span>}
+                    {pending > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStatusFilter(prev => prev === 'pending' ? 'all' : 'pending');
+                        }}
+                        className={`px-2 py-0.5 rounded-md border transition-all cursor-pointer font-bold ${
+                          statusFilter === 'pending'
+                            ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+                        }`}
+                        title="Click to view only Pending (Not Verified) profiles"
+                      >
+                        {pending} Pending
+                      </button>
+                    )}
+                    {noUsername > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStatusFilter(prev => prev === 'no_id' ? 'all' : 'no_id');
+                        }}
+                        className={`px-2 py-0.5 rounded-md border transition-all cursor-pointer font-bold ${
+                          statusFilter === 'no_id'
+                            ? 'bg-slate-700 text-white dark:bg-white dark:text-slate-900 border-slate-800 shadow-xs'
+                            : 'bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10'
+                        }`}
+                        title="Click to view only students with Missing LeetCode IDs"
+                      >
+                        {noUsername} No ID
+                      </button>
+                    )}
+                    {failed > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStatusFilter(prev => prev === 'failed' ? 'all' : 'failed');
+                        }}
+                        className={`px-2 py-0.5 rounded-md border transition-all cursor-pointer font-bold ${
+                          statusFilter === 'failed'
+                            ? 'bg-rose-500 text-white border-rose-600 shadow-xs'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
+                        }`}
+                        title="Click to view only Failed / Mismatch sync profiles"
+                      >
+                        {failed} Failed
+                      </button>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -1581,18 +1647,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   ? `Showing ${displayCount} of ${sortedList.length} Students`
                   : `Showing ${sortedList.length} Students`}
               </span>
-              {(selectedCollege !== 'all' || selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 break-words [overflow-wrap:anywhere]">
-                  Filtered by: {[
-                    selectedCollege !== 'all' ? `College: ${selectedCollege}` : null,
-                    selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
-                    yearLevel !== 'all' ? `${yearLevel} Year` : null,
-                    solvedFilter !== 'all' ? `${{
-                      '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
-                      '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
-                    }[solvedFilter] ?? ''} Solved` : null
-                  ].filter(Boolean).join(' • ')}
-                </span>
+              {(selectedCollege !== 'all' || selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all' || statusFilter !== 'all') && (
+                <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Filtered by:</span>
+                  {[
+                    selectedCollege !== 'all' ? { label: `College: ${selectedCollege}`, onClear: () => setSelectedCollege('all') } : null,
+                    selectedDept !== 'all' ? { label: (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept), onClear: () => setSelectedDept('all') } : null,
+                    yearLevel !== 'all' ? { label: `${yearLevel} Year`, onClear: () => setYearLevel('all') } : null,
+                    solvedFilter !== 'all' ? {
+                      label: `${{
+                        '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
+                        '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
+                      }[solvedFilter] ?? ''} Solved`,
+                      onClear: () => setSolvedFilter('all')
+                    } : null,
+                    statusFilter !== 'all' ? {
+                      label: statusFilter === 'verified'
+                        ? 'Status: Verified'
+                        : statusFilter === 'pending'
+                          ? 'Status: Pending Verification'
+                          : statusFilter === 'no_id'
+                            ? 'Status: Missing LeetCode ID'
+                            : statusFilter === 'failed'
+                              ? 'Status: Sync Failed'
+                              : 'Status: Not Verified',
+                      onClear: () => setStatusFilter('all')
+                    } : null
+                  ].filter(Boolean).map((f, idx) => (
+                    <span
+                      key={idx}
+                      onClick={f!.onClear}
+                      className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/25 cursor-pointer hover:bg-brand-500/20 active:scale-95 transition-all shadow-2xs"
+                      title="Click to remove this filter"
+                    >
+                      <span>{f!.label}</span>
+                      <span className="text-[10px] font-black ml-1 text-slate-400 hover:text-slate-700 dark:hover:text-white">✕</span>
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </h3>

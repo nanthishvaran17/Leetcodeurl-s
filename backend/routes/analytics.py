@@ -613,19 +613,11 @@ def get_department_comparison(
         ).all()
 
         if current_user:
-            from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, get_hod_authorized_department_ids, _normalize_role
-            role_clean = _normalize_role(current_user)
-            if role_clean in _HOD_ROLES:
+            from backend.services.authorization_service import is_user_global_admin, get_hod_authorized_department_ids
+            if not is_user_global_admin(current_user):
                 auth_ids = get_hod_authorized_department_ids(db, current_user)
                 if auth_ids:
                     departments = [d for d in departments if d.id in auth_ids]
-                elif current_user.department_id:
-                    departments = [d for d in departments if d.id == current_user.department_id]
-                else:
-                    departments = []
-            elif role_clean in _STAFF_ROLES:
-                if current_user.department_id:
-                    departments = [d for d in departments if d.id == current_user.department_id]
                 else:
                     departments = []
 

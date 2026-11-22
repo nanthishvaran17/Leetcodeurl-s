@@ -5,6 +5,7 @@ import sys
 import json
 import time
 import re
+import datetime
 from typing import Dict, Any, Optional, List, Tuple
 from sqlalchemy.orm import Session
 
@@ -468,6 +469,11 @@ class OfficialContestRankingService:
             start_dt = datetime.datetime.combine(upcoming_sun, datetime.time(8, 0, 0), tzinfo=IST_TZ)
             contest_start_ts = int(start_dt.timestamp())
             contest_end_ts = contest_start_ts + 5400
+
+        now_ts = int(time.time())
+        if contest_start_ts and now_ts < contest_start_ts:
+            logger.info(f"[GRAPHQL_SCAN] Contest {contest_slug} is scheduled in the future (starts at {contest_start_ts}, current={now_ts}). Cleanly returning 0 solvers.")
+            return {}
 
         students = db.query(Student).filter(
             Student.is_active == True,

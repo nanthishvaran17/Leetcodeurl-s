@@ -939,7 +939,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden bg-slate-950/85 sm:backdrop-blur-md modal-overlay-responsive"
+      className="fixed inset-0 z-[9999999] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden bg-slate-950/80 sm:backdrop-blur-sm"
       style={{ zIndex: 99999999 }}
       onClick={(e) => {
         e.stopPropagation();
@@ -950,14 +950,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-student-dialog-title"
-        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl m-0 sm:my-auto bg-white dark:bg-navy-950 rounded-t-[28px] sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden animate-modal-content"
+        className="w-full max-w-full sm:max-w-2xl h-auto max-h-[88dvh] sm:max-h-[88vh] bg-white dark:bg-navy-950 rounded-t-[32px] sm:rounded-3xl shadow-2xl border-t sm:border border-slate-700/40 dark:border-navy-700/60 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Fixed Header with integrated pull handle */}
-        <div className="px-4 pt-2.5 pb-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col border-b border-slate-800 shrink-0 z-20 shadow-md">
-          {/* Mobile Pull Handle inside dark header (eliminates top white gap) */}
-          <div className="sm:hidden w-12 h-1 bg-white/25 rounded-full mx-auto mb-2.5 shrink-0" />
-          
+        {/* iOS-Style Fixed Header with Pull Handle & Top Gap */}
+        <div className="px-4 sm:px-6 pt-2.5 pb-3.5 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col border-b border-slate-800 shrink-0 z-20 shadow-md">
+          {/* iOS Pull Handle / Grabber Pill */}
+          <div className="w-11 h-1.5 bg-white/35 rounded-full mx-auto mb-2.5 shrink-0" />
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
               <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
@@ -1002,7 +1002,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
                   Student Full Name <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1011,13 +1011,13 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="e.g. NANTHISHVARAN M"
-                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
+                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-600 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-xs"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  <label className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
                     Register Number <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1038,26 +1038,26 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     }}
                     required
                     placeholder="e.g. 732223CS101"
-                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-600 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-xs"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Personal Email</label>
+                  <label className="text-xs font-extrabold text-slate-800 dark:text-slate-100">Personal Email</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. student@gmail.com"
-                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-600 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-xs"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between">
                   <span>Institutional Email <span className="text-rose-500">*</span></span>
-                  {emailStatus === 'generated' && <span className="text-[10px] text-emerald-500 font-bold">ASSIGNED</span>}
-                  {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-500 font-bold">NEEDS VERIFICATION</span>}
+                  {emailStatus === 'generated' && <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700">ASSIGNED</span>}
+                  {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700">NEEDS VERIFICATION</span>}
                 </label>
                 <div className="relative flex items-center">
                   <input
@@ -1065,14 +1065,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     value={institutionalEmail}
                     readOnly
                     placeholder="Auto-generated from Register Number"
-                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-700 dark:text-slate-300 font-bold outline-none shadow-xs cursor-not-allowed"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-slate-100 dark:bg-navy-900 border border-slate-300 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-800 dark:text-slate-200 font-bold outline-none shadow-xs cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* College Campus Selection */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
+                <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-100 mb-1.5">
                   College Campus <span className="text-rose-500 font-black">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1081,8 +1081,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     onClick={() => { setCollege('NEC'); hasUserEditedRef.current = true; }}
                     className={`h-11 sm:h-10 px-3 rounded-xl sm:rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       college === 'NEC'
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                        : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-50'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-500/20'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800'
                     }`}
                   >
                     <School className="w-3.5 h-3.5" />
@@ -1093,8 +1093,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     onClick={() => { setCollege('NCT'); hasUserEditedRef.current = true; }}
                     className={`h-11 sm:h-10 px-3 rounded-xl sm:rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       college === 'NCT'
-                        ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
-                        : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-navy-700 hover:bg-slate-50'
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-md ring-2 ring-teal-500/20'
+                        : 'bg-slate-50 dark:bg-navy-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-navy-700 hover:bg-slate-100 dark:hover:bg-navy-800'
                     }`}
                   >
                     <School className="w-3.5 h-3.5" />
@@ -1107,9 +1107,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 <CustomDropdown
                   id="edit-student-dept-select"
                   label="Department *"
-                  labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
+                  labelClassName="block text-xs font-extrabold text-slate-800 dark:text-slate-100 mb-1"
                   menuWidthClass="w-full min-w-full"
-                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-900 text-slate-900 dark:text-white text-sm sm:text-xs font-bold hover:border-slate-400 dark:hover:border-navy-500 shadow-xs cursor-pointer"
                   options={departments.map((d: any, index: number) => {
                     const badgeColors = [
                       'bg-purple-500/10 text-purple-600 border-purple-500/20',
@@ -1133,9 +1133,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 <CustomDropdown
                   id="edit-student-year-select"
                   label="Year Level *"
-                  labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
+                  labelClassName="block text-xs font-extrabold text-slate-800 dark:text-slate-100 mb-1"
                   menuWidthClass="w-full min-w-full"
-                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-900 text-slate-900 dark:text-white text-sm sm:text-xs font-bold hover:border-slate-400 dark:hover:border-navy-500 shadow-xs cursor-pointer"
                   options={[
                     { value: "1", label: "1st Year", badge: "I YEAR", icon: Calendar },
                     { value: "2", label: "2nd Year", badge: "II YEAR", icon: Calendar },
@@ -1150,7 +1150,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3.5">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  <label className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
                     12th Cut-off Score
                   </label>
                   <input
@@ -1161,15 +1161,15 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     value={twelfthCutoff}
                     onChange={(e) => setTwelfthCutoff(e.target.value)}
                     placeholder="e.g. 185.50"
-                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-900 border border-slate-300 dark:border-navy-600 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                   />
                 </div>
                 <CustomDropdown
                   id="edit-student-gender-select"
                   label="Gender"
-                  labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
+                  labelClassName="block text-xs font-extrabold text-slate-800 dark:text-slate-100 mb-1"
                   menuWidthClass="w-full min-w-full"
-                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-900 text-slate-900 dark:text-white text-sm sm:text-xs font-bold hover:border-slate-400 dark:hover:border-navy-500 shadow-xs cursor-pointer"
                   options={[
                     { value: "Male", label: "Male", badge: "MALE", badgeColor: "bg-blue-500/10 text-blue-600 border border-blue-500/20" },
                     { value: "Female", label: "Female", badge: "FEMALE", badgeColor: "bg-pink-500/10 text-pink-600 border border-pink-500/20" }
@@ -1180,9 +1180,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 <CustomDropdown
                   id="edit-student-accommodation-select"
                   label="Accommodation Type"
-                  labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
+                  labelClassName="block text-xs font-extrabold text-slate-800 dark:text-slate-100 mb-1"
                   menuWidthClass="w-full min-w-full"
-                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-600 bg-white dark:bg-navy-900 text-slate-900 dark:text-white text-sm sm:text-xs font-bold hover:border-slate-400 dark:hover:border-navy-500 shadow-xs cursor-pointer"
                   options={[
                     { value: "Day Scholar", label: "Day Scholar", badge: "DAY SCHOLAR" },
                     { value: "Hostel", label: "Hostel", badge: "HOSTEL" }
@@ -1329,22 +1329,22 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
             <div className="h-32 sm:h-8"></div>
           </div>
 
-          {/* Dedicated Fixed Bottom Action Bar: Sits flush at bottom with safe-area support */}
+          {/* Dedicated Fixed Bottom Action Bar: Solid Opaque (No light blur bleed) */}
           <div
-            className="shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-2xl gap-3 w-full pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3.5"
+            className="shrink-0 px-4 py-3 sm:px-6 sm:py-3.5 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] gap-3 w-full pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3.5"
           >
             <button
               type="button"
               onClick={handleAttemptClose}
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[48px] flex items-center justify-center shadow-xs touch-manipulation"
+              className="flex-1 sm:flex-initial px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-100 dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[48px] flex items-center justify-center shadow-xs touch-manipulation"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-5 py-3 sm:px-7 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[48px] touch-manipulation"
+              className="flex-1 sm:flex-initial px-5 py-3 sm:px-7 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[48px] touch-manipulation"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>

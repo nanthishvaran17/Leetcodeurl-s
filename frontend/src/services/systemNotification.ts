@@ -77,30 +77,47 @@ export interface SystemNotificationOptions {
   playSound?: boolean;
 }
 
+const seenSystemNotifs = new Map<string, number>();
+let lastSystemChimeTime = 0;
+
 /**
  * Dispatches an official status-bar & lock-screen push notification on mobile (and desktop web).
- * Emits sound and vibration, replicating native WhatsApp/messaging behaviour.
+ * Emits sound and vibration, replicating native WhatsApp/messaging behaviour with strict deduplication.
  */
 export const triggerSystemNotification = async (options: SystemNotificationOptions): Promise<void> => {
   const { title, body, actionRoute = '/dashboard', category = 'messages', notifId, playSound = true } = options;
 
   if (!title && !body) return;
 
-  // 1. Audio Chime & Haptic Vibration (instant feedback)
-  if (playSound) {
+  // Deduplication check: prevent duplicate notifications within 30 seconds
+  const dedupKey = notifId ? String(notifId) : `${(title || '').trim().toLowerCase()}::${(body || '').trim().toLowerCase().slice(0, 50)}`;
+  const now = Date.now();
+  
+  // Evict entries older than 60s
+  for (const [k, ts] of seenSystemNotifs.entries()) {
+    if (now - ts > 60000) seenSystemNotifs.delete(k);
+  }
+
+  if (seenSystemNotifs.has(dedupKey)) {
+    return;
+  }
+  seenSystemNotifs.set(dedupKey, now);
+
+  // 1. Audio Chime & Haptic Vibration (instant feedback, rate-limited to avoid audio spam)
+  if (playSound && now - lastSystemChimeTime > 3500) {
+    lastSystemChimeTime = now;
     try {
       playNotificationChime();
     } catch {
       // Audio safety
     }
-  }
-
-  try {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate([250, 100, 250]);
+    try {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([250, 100, 250]);
+      }
+    } catch {
+      // Vibrate safety
     }
-  } catch {
-    // Vibrate safety
   }
 
   // 2. Native Mobile (Capacitor Android / iOS) — Official Heads-Up Push Notification
@@ -152,8 +169,9 @@ export const triggerSystemNotification = async (options: SystemNotificationOptio
     }
   }
 
-  // 3. Web / PWA / Desktop Browser Notification
-  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+  // 3. Web / PWA / Desktop Browser Notification — ONLY show if tab is in background
+  // When the user is active in foreground, in-app toast handles presentation cleanly without OS popup spam
+  if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.hidden && 'Notification' in window && Notification.permission === 'granted') {
     try {
       const n = new Notification(title || 'Nandha LeetCode Intelligence', {
         body,
@@ -200,7 +218,7 @@ export const initSystemNotificationListeners = () => {
     });
   }
 
-  // Bridge custom events from GlobalNotificationContext or FCM
+  // Bridge custom events from GlobalNotificationContext
   window.addEventListener('trigger_native_push_notification', (event: any) => {
     const detail = event?.detail;
     if (detail) {
@@ -210,36 +228,6 @@ export const initSystemNotificationListeners = () => {
         actionRoute: detail.actionRoute || detail.route || '/dashboard',
         category: detail.category || 'announcements',
         notifId: detail.notifId || detail.id,
-      });
-    }
-  });
-
-  window.addEventListener('fcm_foreground_message', (event: any) => {
-    const detail = event?.detail;
-    if (detail) {
-      const notif = detail.notification || detail;
-      const data = detail.data || {};
-      triggerSystemNotification({
-        title: notif.title || data.title,
-        body: notif.body || data.message || data.body,
-        actionRoute: data.actionRoute || data.route || '/dashboard',
-        category: data.category || 'announcements',
-        notifId: data.notificationId || data.id,
-      });
-    }
-  });
-
-  window.addEventListener('fcm_notification_received', (event: any) => {
-    const detail = event?.detail;
-    if (detail) {
-      const notif = detail.notification || detail;
-      const data = detail.data || {};
-      triggerSystemNotification({
-        title: notif.title || data.title,
-        body: notif.body || data.message || data.body,
-        actionRoute: data.actionRoute || data.route || '/dashboard',
-        category: data.category || 'announcements',
-        notifId: data.notificationId || data.id,
       });
     }
   });

@@ -1,6 +1,7 @@
 import { normalizeDepartment } from '../utils/filterUtils';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import { isGlobalAccessRole } from '../services/auth/authTypes';
 
 export interface Department {
   id?: number;
@@ -47,29 +48,31 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const raw = localStorage.getItem('user');
       if (!raw) return [];
       const u = JSON.parse(raw);
-      const role = ((u?.role) || '').trim().toLowerCase();
-      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator', 'director', 'executive'];
-      if (globalRoles.includes(role)) {
+      if (isGlobalAccessRole(u)) {
         return ALL_DEPARTMENTS_FALLBACK;
       }
       const authCodes: string[] = Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : [];
       const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids : [];
       if (authCodes.length > 0) {
-        return authCodes.map((c, i) => ({
-          id: authIds[i] || i + 1,
-          code: c,
-          name: c,
-          pillText: c,
-          student_count: 0
-        }));
+        return authCodes.map((c, i) => {
+          const norm = normalizeDepartment(c) || c;
+          return {
+            id: authIds[i] || i + 1,
+            code: norm,
+            name: c,
+            pillText: norm,
+            student_count: 0
+          };
+        });
       }
       if (u?.department || u?.department_code) {
-        const code = u.department_code || u.department;
+        const rawCode = u.department_code || u.department;
+        const norm = normalizeDepartment(rawCode) || rawCode;
         return [{
           id: u.department_id || 1,
-          code: code,
-          name: u.department_name || code,
-          pillText: code,
+          code: norm,
+          name: u.department_name || rawCode,
+          pillText: norm,
           student_count: 0
         }];
       }
@@ -176,20 +179,14 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
       setDepartments(scopedDeptsList);
 
-      // Determine scope flags from user role
+      // Determine scope flags from user role and departmental allocation
       const u = getUserSnapshot();
-      const role = ((u?.role) || '').trim().toLowerCase();
-      const hodRoles = ['hod', 'department hod', 'department_hod', 'head of department', 'placement coordinator', 'placement officer'];
-      const staffRoles = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor'];
-      const globalRoles = ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'coordinator', 'academic coordinator', 'director', 'executive'];
-      
-      const isHod = hodRoles.some(r => role === r || role.includes(r)) || role.includes('hod') || role.includes('head of department') || role.includes('head_of_department');
-      const isStaff = staffRoles.some(r => role === r || role.includes(r)) || role.includes('staff') || role.includes('faculty') || role.includes('mentor');
-      const isGlobal = globalRoles.some(r => role === r);
-      setIsHodScope(isHod || isStaff);
+      const isGlobal = isGlobalAccessRole(u);
+      const isScoped = !isGlobal;
+      setIsHodScope(isScoped);
       setIsGlobalAccess(isGlobal);
 
-      if ((isHod || isStaff) && !isGlobal) {
+      if (isScoped && u) {
         const authIds: number[] = Array.isArray(u?.authorized_department_ids) ? u.authorized_department_ids.map(Number) : [];
         const authCodes: string[] = (Array.isArray(u?.authorized_department_codes) ? u.authorized_department_codes : []).map((c: string) => String(c).trim());
         const uDeptId = u?.department_id ? Number(u.department_id) : null;

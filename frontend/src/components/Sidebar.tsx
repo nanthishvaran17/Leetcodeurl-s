@@ -405,14 +405,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
 
             {/* Region 3: Static Sunday Session Window Card (Pinned at bottom, never scrolls) */}
             <div className="shrink-0 relative z-10 border-t border-slate-200/80 dark:border-white/[0.08] pt-2 mt-auto">
-              <div className="p-2.5 rounded-xl bg-slate-900/90 dark:bg-navy-900/90 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+              <div className="p-2.5 rounded-xl bg-slate-900/90 dark:bg-navy-900/90 text-white border border-brand-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-brand-500/10 rounded-full blur-xl pointer-events-none" />
                 <div className="flex items-center space-x-2 relative z-10">
-                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <Calendar className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                   <span className="text-white text-[11px] font-bold tracking-wide">Sunday Session Window</span>
                 </div>
                 <p className="text-[10px] text-slate-300 leading-snug font-medium relative z-10">
-                  Official Window: <b className="text-emerald-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
+                  Official Window: <b className="text-brand-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
                   Continuous tracking & live sync.
                 </p>
                 <div className="pt-1 border-t border-slate-800/80 relative z-10">

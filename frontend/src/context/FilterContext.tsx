@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useMemo, useCallback, React
 import { useDebounce } from '../hooks/useDebounce';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
 import { StudentEntity } from '../types/student';
-import { matchesNameSearch, matchesAcademicYear, matchesDepartment, deriveStudentCollege } from '../utils/filterUtils';
+import { matchesNameSearch, matchesAcademicYear, matchesDepartment, deriveStudentCollege, normalizeDepartment } from '../utils/filterUtils';
 
 type FilterState = {
   department: string;
@@ -42,31 +42,29 @@ function getDefaultCollege(): 'ALL' | 'NEC' | 'NCT' {
 }
 
 /** Returns the scoped default department filter for current user.
- *  Staff: their assigned department. HOD: authorized codes / MY_DEPARTMENTS. Admin/Management: 'ALL'. */
+ *  Staff/HOD/STC/PLC: their assigned department. Admin/Management: 'ALL'. */
 function getDefaultDepartment(): string {
   try {
     const raw = localStorage.getItem('user');
     if (!raw) return 'ALL';
     const user = JSON.parse(raw);
     if (isGlobalAccessRole(user)) return 'ALL';
-    if (isStaffRole(user)) {
-      const code = user?.department_code || user?.department;
-      if (code && code !== 'ALL') return code.trim();
-      if (user?.department_id) return String(user.department_id);
-      if (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes.length > 0) {
-        return user.authorized_department_codes[0];
-      }
-      if (Array.isArray(user?.authorized_department_ids) && user.authorized_department_ids.length > 0) {
-        return String(user.authorized_department_ids[0]);
-      }
+
+    const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
+    if (authCodes.length === 1) {
+      const norm = normalizeDepartment(authCodes[0]);
+      return norm || authCodes[0].trim();
     }
-    if (isHodRole(user)) {
-      const codes: string[] = user?.authorized_department_codes || [];
-      if (codes.length === 1) return codes[0];
-      if (codes.length > 1) return 'MY_DEPARTMENTS';
-      if (user?.department) return user.department;
-      if (user?.department_code) return user.department_code;
+    if (authCodes.length > 1) {
+      return 'MY_DEPARTMENTS';
     }
+
+    const rawDept = user?.department_code || user?.department;
+    if (rawDept && rawDept !== 'ALL') {
+      const norm = normalizeDepartment(rawDept);
+      return norm || String(rawDept).trim();
+    }
+    if (user?.department_id) return String(user.department_id);
     return 'ALL';
   } catch {
     return 'ALL';
@@ -97,7 +95,7 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setCollegeState(defaultCollege);
         return;
       }
-    } catch {}
+    } catch { }
     setCollegeState(newCol);
   }, [defaultCollege]);
 
@@ -105,11 +103,19 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       const raw = localStorage.getItem('user');
       const user = raw ? JSON.parse(raw) : null;
-      if (isStaffRole(user)) {
+      if (!isGlobalAccessRole(user)) {
+        const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
+        const normNew = normalizeDepartment(newDept);
+        const normDefault = normalizeDepartment(defaultDept);
+        const authNorms = authCodes.map(c => normalizeDepartment(c));
+        if (normNew && (normNew === normDefault || authNorms.includes(normNew))) {
+          setDepartmentState(newDept);
+          return;
+        }
         setDepartmentState(defaultDept);
         return;
       }
-    } catch {}
+    } catch { }
     setDepartmentState(newDept);
   }, [defaultDept]);
 

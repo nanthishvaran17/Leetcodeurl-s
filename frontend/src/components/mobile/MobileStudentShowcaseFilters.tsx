@@ -108,10 +108,12 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
   const deptList = useMemo(() => {
     const list: Array<{ value: string; label: string; code: string; campus?: string; student_count?: number }> = [];
 
-    if (isFacultyRole) {
-      list.push({ value: 'all', label: 'My Allocated Mentees', code: 'ALL', student_count: totalResults });
-    } else {
-      list.push({ value: 'all', label: 'All Departments', code: 'ALL', student_count: totalResults });
+    if (departments.length > 1) {
+      if (isFacultyRole) {
+        list.push({ value: 'all', label: 'My Allocated Mentees', code: 'ALL', student_count: totalResults });
+      } else {
+        list.push({ value: 'all', label: 'All Departments', code: 'ALL', student_count: totalResults });
+      }
     }
 
     departments.forEach((d: any) => {

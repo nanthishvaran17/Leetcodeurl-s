@@ -2003,25 +2003,11 @@ def delete_student(reg_no: str, db: Session = Depends(get_db)):
 
 @router.get("/departments")
 def get_departments(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-    is_hod = "hod" in role_clean or "head of department" in role_clean or role_clean in ["department hod", "department_hod", "placement coordinator"]
-    
-    if is_hod:
-        from backend.services.authorization_service import get_hod_authorized_department_ids
+    from backend.services.authorization_service import is_user_global_admin, get_hod_authorized_department_ids
+    if not is_user_global_admin(current_user):
         auth_dept_ids = get_hod_authorized_department_ids(db, current_user)
         if auth_dept_ids:
             depts = db.query(Department).filter(Department.id.in_(auth_dept_ids)).all()
-        elif current_user.department_id:
-            depts = db.query(Department).filter(Department.id == current_user.department_id).all()
-        else:
-            depts = []
-    elif role_clean in ["staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"] or "staff" in role_clean or "faculty" in role_clean:
-        from backend.services.authorization_service import get_hod_authorized_department_ids
-        staff_alloc_ids = get_hod_authorized_department_ids(db, current_user)
-        if staff_alloc_ids:
-            depts = db.query(Department).filter(Department.id.in_(staff_alloc_ids)).all()
-        elif current_user.department_id:
-            depts = db.query(Department).filter(Department.id == current_user.department_id).all()
         else:
             depts = []
     else:

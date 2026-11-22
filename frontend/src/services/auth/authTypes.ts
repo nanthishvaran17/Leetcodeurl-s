@@ -72,19 +72,30 @@ export function isStaffRole(user: AuthUser | null): boolean {
   if (!user) return false;
   const r = (user.role || '').trim().toLowerCase();
   return [
-    'staff', 'faculty', 'professor', 'mentor', 'faculty mentor', 'staff mentor',
-    'faculty_mentor', 'staff_mentor', 'class mentor', 'class_mentor',
-    'student coordinator', 'student_coordinator', 'coordinator', 'academic coordinator'
-  ].includes(r);
+    'staff', 'faculty', 'professor', 'assistant professor', 'associate professor',
+    'mentor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor',
+    'class mentor', 'class_mentor', 'advisor', 'class advisor',
+    'student coordinator', 'student_coordinator', 'stc',
+    'placement coordinator', 'placement_coordinator', 'plc', 'placement officer', 'placement_officer',
+    'coordinator', 'academic coordinator'
+  ].includes(r) || r.includes('staff') || r.includes('faculty') || r.includes('mentor');
 }
 
 export function isGlobalAccessRole(user: AuthUser | null): boolean {
   if (!user) return false;
+  // If the user has a department assigned or authorized codes, they are strictly DEPARTMENT-SCOPED, NOT global!
+  const hasDeptScope = Boolean(
+    user.department_id ||
+    user.department ||
+    user.department_code ||
+    (Array.isArray(user.authorized_department_codes) && user.authorized_department_codes.length > 0) ||
+    (Array.isArray(user.authorized_department_ids) && user.authorized_department_ids.length > 0)
+  );
+  if (hasDeptScope) return false;
+
   const r = (user.role || '').trim().toLowerCase();
   return [
-    'admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive',
-    'placement coordinator', 'placement_coordinator', 'placement officer', 'placement_officer',
-    'student coordinator', 'student_coordinator', 'coordinator', 'academic coordinator'
+    'admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management', 'director', 'executive'
   ].includes(r);
 }
 

@@ -588,7 +588,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 </div>
 
                 {/* Header Action Buttons */}
-                <div className="flex items-center gap-1 sm:gap-2 shrink-0 self-start sm:self-center">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-start sm:self-center">
                   {st.leetcode_url && (
                     <a
                       href={st.leetcode_url}
@@ -1611,31 +1611,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               )}
             </div>
 
-            {/* 3. ELEGANT MODAL FOOTER */}
-            <div className="px-4 sm:px-6 pt-3.5 pb-[max(1rem,env(safe-area-inset-bottom,16px))] bg-white dark:bg-[#070A14] border-t border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0 text-xs flex-wrap gap-2.5 rounded-b-[28px] sm:rounded-b-[32px]">
-              <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
-                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-800 dark:text-slate-200 font-bold">
-                  Student ID: <strong className="text-slate-950 dark:text-white font-black">{st.id || studentId}</strong>
-                </span>
-                <span className="text-slate-400">•</span>
-                <span className="font-extrabold text-slate-700 dark:text-slate-300">Institutional Intelligence Ledger</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowEditOverlay(true)}
-                  className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 flex items-center gap-1.5"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Edit Details</span>
-                </button>
-                <button
-                  onClick={onClose}
-                  className="px-5 py-2 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-black text-xs transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 border border-transparent dark:border-white/10"
-                >
-                  Close Profile
-                </button>
-              </div>
-            </div>
+
           </div>
 
           {showEditOverlay && (

@@ -22,6 +22,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 const MobileFilterDrawer = React.lazy(() => import('../components/MobileFilterDrawer').then(m => ({ default: m.MobileFilterDrawer })));
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
+import { isGlobalAccessRole } from '../services/auth/authTypes';
 import { ModernSearchInput } from '../components/ui/ModernSearchInput';
 import { BatchDeleteModal } from '../components/BatchDeleteModal';
 
@@ -311,6 +312,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
 
 
+  const isGlobalUser = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? isGlobalAccessRole(JSON.parse(raw)) : false;
+    } catch {
+      return false;
+    }
+  }, []);
+
   // Load departments via context / global data
   useEffect(() => {
     const list = ctxDepts.length > 0 ? ctxDepts : globalDepts;
@@ -322,11 +332,17 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       }));
       setDepartments(mapped);
       if (!deptId) setDeptId(mapped[0].id);
+      if (!isGlobalUser && mapped.length > 0 && filters.department === 'ALL') {
+        filters.setDepartment(mapped[0].code);
+      }
     }
-  }, [ctxDepts, globalDepts, deptId]);
+  }, [ctxDepts, globalDepts, deptId, isGlobalUser, filters]);
 
   const deptFilterOptions = useMemo<GlobalFilterOption[]>(() => {
-    const opts: GlobalFilterOption[] = [{ value: 'ALL', label: 'All Depts', pillText: 'ALL' }];
+    const opts: GlobalFilterOption[] = [];
+    if (isGlobalUser) {
+      opts.push({ value: 'ALL', label: 'All Depts', pillText: 'ALL' });
+    }
     departments.forEach((d: any) => {
       opts.push({
         value: d.code,
@@ -335,7 +351,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       });
     });
     return opts;
-  }, [departments]);
+  }, [departments, isGlobalUser]);
 
   const yearFilterOptions = useMemo<GlobalFilterOption[]>(() => [
     { value: 'ALL', label: 'All Years', pillText: 'ALL' },
@@ -346,12 +362,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   ], []);
 
   const quickDepts = useMemo(() => {
-    const defaultDepts = ['ALL', 'CSE(CS)', 'CSE(IOT)', 'IT', 'EEE'];
+    if (!isGlobalUser) {
+      return departments.map((d: any) => d.code).filter(Boolean);
+    }
+    const defaultDepts = ['ALL', 'CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE', 'EEE'];
     if (!departments || departments.length === 0) return defaultDepts;
     const dbCodes = departments.map((d: any) => d.code).filter(Boolean);
     const combined = Array.from(new Set([...defaultDepts, ...dbCodes]));
     return combined;
-  }, [departments]);
+  }, [departments, isGlobalUser]);
 
   const quickYears = useMemo(() => [
     { value: 'ALL', label: 'All Years', short: 'All' },

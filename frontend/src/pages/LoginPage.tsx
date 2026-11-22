@@ -159,6 +159,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
   // Forgot Password Real Flow States
   const [forgotStep, setForgotStep] = useState<'dob' | 'send_otp' | 'verify_otp' | 'reset_password' | 'success'>('dob');
+  const [forgotRole, setForgotRole] = useState<'student' | 'staff'>('student');
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
   const [forgotInstId, setForgotInstId] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotDob, setForgotDob] = useState('');
@@ -557,7 +559,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     if (!cleanId) {
       triggerShake();
-      setError('Please enter your Name, Username, or Roll Number.');
+      setError(forgotRole === 'student' ? 'Please enter your Register Number.' : 'Please enter your Staff ID or registered institutional email.');
       return;
     }
 
@@ -584,7 +586,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setSuccessMsg('Identity verified! Please set your new password.');
     } catch (err: any) {
       triggerShake();
-      setError(extractCleanErrorMessage(err, 'Identity verification failed. Please check your Name / Roll Number and Date of Birth.'));
+      setError(extractCleanErrorMessage(err, forgotRole === 'student'
+        ? 'Identity verification failed. Please check your Register Number and Date of Birth.'
+        : 'Identity verification failed. Please check your Staff ID / Email and Date of Birth.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -846,15 +850,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 <h2>
                   {currentView === 'help'
                     ? 'Institutional Help Desk'
-                    : (currentView === 'forgot_password' ? 'Reset Workspace Password' : 'Sign in to your workspace')}
+                    : (currentView === 'forgot_password' ? 'Reset Account Password' : 'Sign in to your workspace')}
                 </h2>
               </div>
               <p>
                 {currentView === 'help'
                   ? 'Support for authorized personnel, faculty, and enrolled students.'
                   : (currentView === 'forgot_password'
-                    ? 'Verify your identity to reset your institutional credentials.'
-                    : 'Use your institutional email to authenticate.')}
+                    ? (forgotRole === 'student'
+                        ? 'Verify your identity with your Register Number and Date of Birth.'
+                        : 'Verify your identity with your Staff ID / Email and Date of Birth.')
+                    : 'Use your institutional credentials to authenticate.')}
               </p>
             </div>
 
@@ -1245,19 +1251,51 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                   {/* STEP 1: Identity Verification */}
                   {forgotStep === 'dob' && (
                     <form onSubmit={handleForgotVerifyDob} noValidate>
+                      {/* Role Switcher Tabs */}
+                      <div className="tabs" role="tablist" style={{ marginBottom: '16px' }}>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={forgotRole === 'student'}
+                          className={forgotRole === 'student' ? 'active' : ''}
+                          onClick={() => { setForgotRole('student'); setError(''); }}
+                        >
+                          Student
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={forgotRole === 'staff'}
+                          className={forgotRole === 'staff' ? 'active' : ''}
+                          onClick={() => { setForgotRole('staff'); setError(''); }}
+                        >
+                          Staff / Faculty
+                        </button>
+                      </div>
+
                       <p className="step-desc">
-                        Enter your <strong>Name, Username, or Roll Number</strong> and <strong>Date of Birth</strong> to verify your account and set a new password.
+                        {forgotRole === 'student' ? (
+                          <>Enter your <strong>Register Number</strong> and <strong>Date of Birth</strong> to verify your account and set a new password.</>
+                        ) : (
+                          <>Enter your <strong>Staff ID or Institutional Email</strong> and <strong>Date of Birth</strong> to verify your account and set a new password.</>
+                        )}
                       </p>
                       <div className="field">
-                        <label htmlFor="forgotIdentifier">Name, Username, or Roll Number</label>
+                        <label htmlFor="forgotIdentifier">
+                          {forgotRole === 'student' ? 'Register Number' : 'Staff ID or Email'}
+                        </label>
                         <div className="input-wrap">
-                          <User className="input-icon" size={19} />
+                          {forgotRole === 'student' ? (
+                            <KeyRound className="input-icon" size={19} />
+                          ) : (
+                            <User className="input-icon" size={19} />
+                          )}
                           <input
                             id="forgotIdentifier"
                             type="text"
                             value={forgotIdentifier}
                             onChange={(e) => setForgotIdentifier(e.target.value)}
-                            placeholder="e.g. admin, 23CC001, or your name"
+                            placeholder={forgotRole === 'student' ? 'e.g. 23CC001 or 732224TEST01' : 'e.g. staff username or faculty@nandhaengg.org'}
                             required
                             disabled={loading}
                             autoFocus

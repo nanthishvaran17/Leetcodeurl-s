@@ -300,18 +300,6 @@ export const listenForForegroundMessages = () => {
           },
         });
         window.dispatchEvent(event);
-
-        // Instantly trigger native status bar / heads-up notification with sound & vibration
-        import('./systemNotification').then(({ triggerSystemNotification }) => {
-          triggerSystemNotification({
-            title: notification.title || 'Nandha LeetCode Intelligence',
-            body: notification.body || '',
-            actionRoute: notification.data?.actionRoute || notification.data?.route || '/dashboard',
-            category: notification.data?.category || 'announcements',
-            notifId: notification.data?.notificationId || notification.id,
-            playSound: true,
-          });
-        }).catch(() => {});
       });
 
       // User TAPS on Notification (Background, Lock screen, or Foreground)
@@ -344,24 +332,6 @@ export const listenForForegroundMessages = () => {
           console.log('[Push] FCM Web Message received in foreground:', payload);
           const event = new CustomEvent('fcm_foreground_message', { detail: payload });
           window.dispatchEvent(event);
-
-          // Pop native OS / Mobile notification banner even in foreground
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && payload.notification) {
-            try {
-              playNotificationChime();
-              if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                navigator.vibrate([200, 100, 200]);
-              }
-              new Notification(payload.notification.title || 'LeetCode Intelligence Alert', {
-                body: payload.notification.body,
-                icon: '/android-chrome-192x192.png',
-                badge: '/favicon-32x32.png',
-                data: payload.data
-              });
-            } catch (bannerErr) {
-              console.warn('[Push] Foreground banner alert note:', bannerErr);
-            }
-          }
         });
       } catch (err) {
         console.warn('[Push] Web FCM listener note:', err);

@@ -581,6 +581,25 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
   const [selectedForensicRecord, setSelectedForensicRecord] = useState<ParticipationRecord | null>(null);
+  const pollTimersRef = useRef<NodeJS.Timeout[]>([]);
+  const lastWsSyncCompletedRef = useRef<number>(0);
+
+  // Safety timer: ensure syncing button never stays stuck on "Syncing..."
+  useEffect(() => {
+    if (syncing) {
+      const timer = setTimeout(() => {
+        setSyncing(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [syncing]);
+
+  useEffect(() => {
+    return () => {
+      pollTimersRef.current.forEach(t => clearTimeout(t));
+      pollTimersRef.current = [];
+    };
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -670,8 +689,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       });
     },
     onSyncCompleted: () => {
-      // Background silent refresh when a full sync cycle finishes
-      fetchPreviousWeekData(false, true);
+      // Debounced background silent refresh when a full sync cycle finishes
+      const now = Date.now();
+      if (now - lastWsSyncCompletedRef.current > 5000) {
+        lastWsSyncCompletedRef.current = now;
+        fetchPreviousWeekData(false, true);
+      }
     }
   });
 
@@ -785,11 +808,15 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         await api.post(`/contests/sessions/${latestSessionId}/sync`, null, { params: syncParams });
         // Trigger automated real code and solve timing sync for this filtered slice
         api.post(`/contests/sessions/${latestSessionId}/sync-codes`, null, { params: syncParams }).catch(() => {});
-        // Fast targeted polling for filtered slice (3-12s) or progressive polling for all
+
+        // Clear existing poll timers and schedule streamlined re-fetch
+        pollTimersRef.current.forEach(t => clearTimeout(t));
+        pollTimersRef.current = [];
         const isTargeted = Boolean(syncParams.dept || syncParams.year);
-        const pollDelays = isTargeted ? [1500, 3500, 7000, 12000] : [2000, 5000, 10000, 20000, 35000, 48000];
+        const pollDelays = isTargeted ? [2000, 4500] : [2500, 6000];
         pollDelays.forEach(delay => {
-          setTimeout(() => fetchPreviousWeekData(false, true), delay);
+          const t = setTimeout(() => fetchPreviousWeekData(false, true), delay);
+          pollTimersRef.current.push(t);
         });
       }
 
@@ -1055,6 +1082,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     } finally {
       if (!silent) {
         setLoading(false);
+      }
+      if (forceSync) {
         setSyncing(false);
       }
     }

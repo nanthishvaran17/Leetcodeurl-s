@@ -19,14 +19,16 @@ def get_departments(
     request: Request,
     all_depts: bool = False,
     active_only: bool = True,
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """
     Returns the list of departments.
-    - active_only=True & all_depts=False (default for student filters): Returns ONLY departments with actual enrolled active students.
-    - all_depts=True: Returns full department list for admin management.
-    - HOD users: Returns ONLY their authorized departments (from HODDepartmentAllocation).
+    - active_only=True & all_depts=False: Returns departments with active enrolled students.
+    - Department-scoped users (HOD, Staff, STC, PLC): Strictly returns ONLY their allocated department(s).
     """
+    if not current_user and hasattr(request, "state") and hasattr(request.state, "user"):
+        current_user = getattr(request.state, "user", None)
     all_d = db.query(Department).order_by(Department.id).all()
 
     # Calculate active student counts per department
@@ -52,9 +54,8 @@ def get_departments(
         except Exception:
             db.rollback()
 
-    # Attempt to get current user (optional — public access still works for leaderboard)
-    current_user: Optional[User] = None
-    if request:
+    # Attempt to get current user if not already injected
+    if not current_user and request:
         try:
             current_user = get_current_user_optional(request, db)
         except Exception:
@@ -91,37 +92,20 @@ def get_departments(
             except Exception:
                 db.rollback()
 
-    # Scope restrictions by role (HOD & Staff/Faculty Mentors):
-    # HOD and Staff can NEVER see departments outside their authorized scope.
+    # Scope restrictions by role:
+    # Any user with departmental assignment (HOD, Staff, Faculty, STC, PLC, Mentor) can NEVER see other departments.
     if current_user:
-        from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES, _GLOBAL_ACCESS_ROLES, get_hod_authorized_department_ids
-        role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        is_hod_user = role in _HOD_ROLES or "hod" in role or "head of department" in role
-        is_staff_user = role in _STAFF_ROLES or "staff" in role or "faculty" in role or "mentor" in role
-
-        if is_hod_user:
-            if hod_authorized_ids:
-                all_d = [d for d in all_d if d.id in hod_authorized_ids]
-            elif current_user.department_id:
-                all_d = [d for d in all_d if d.id == current_user.department_id]
+        from backend.services.authorization_service import is_user_global_admin, get_hod_authorized_department_ids
+        if not is_user_global_admin(current_user):
+            auth_ids = get_hod_authorized_department_ids(db, current_user)
+            if auth_ids:
+                all_d = [d for d in all_d if d.id in auth_ids]
             else:
-                # HOD with no allocations — return empty list (fail closed)
-                all_d = []
-        elif is_staff_user:
-            staff_alloc_ids = get_hod_authorized_department_ids(db, current_user)
-            if staff_alloc_ids:
-                all_d = [d for d in all_d if d.id in staff_alloc_ids]
-            else:
-                from backend.services.faculty_assignment_service import FacultyAssignmentService
-                assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id))
+                from backend.services.faculty_assignment_service import faculty_assignment_service
+                assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id)) if hasattr(current_user, "id") and current_user.id else []
                 if assigned_ids:
                     dept_ids = [s[0] for s in db.query(Student.department_id).filter(Student.id.in_(assigned_ids)).distinct().all() if s[0]]
-                    if dept_ids:
-                        all_d = [d for d in all_d if d.id in dept_ids]
-                    elif current_user.department_id:
-                        all_d = [d for d in all_d if d.id == current_user.department_id]
-                elif current_user.department_id:
-                    all_d = [d for d in all_d if d.id == current_user.department_id]
+                    all_d = [d for d in all_d if d.id in dept_ids]
                 else:
                     all_d = []
 

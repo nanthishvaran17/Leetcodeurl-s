@@ -128,6 +128,177 @@ const LiveCountdownClock = memo(({ endSec, label, className }: { endSec: number;
   return <span className={className}>{fmt(h)}:{fmt(m)}:{fmt(s)}</span>;
 });
 
+// Ultra-Responsive Isolated Session Delete Control with Instant Portal Dialog (0ms lag, no page re-render)
+interface DeleteSessionControlProps {
+  session: any;
+  onDeleted: (sessionId: number, sessionLabel: string) => Promise<void>;
+  onWarning: (title: string, message: string) => void;
+  disabled?: boolean;
+}
+
+const DeleteSessionControl: React.FC<DeleteSessionControlProps> = memo(({
+  session,
+  onDeleted,
+  onWarning,
+  disabled = false
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleOpen = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (disabled || isDeleting) return;
+
+    if (session?.status === 'LIVE') {
+      onWarning('Cannot Delete Live Session', 'Cannot delete a LIVE session. Finalize the contest first.');
+      return;
+    }
+    setError(null);
+    setIsOpen(true);
+  }, [disabled, isDeleting, session?.status, onWarning]);
+
+  const handleClose = useCallback(() => {
+    if (isDeleting) return;
+    setIsOpen(false);
+    setError(null);
+  }, [isDeleting]);
+
+  // Keyboard shortcut Esc to close dialog
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isDeleting) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, isDeleting, handleClose]);
+
+  const handleConfirm = useCallback(async () => {
+    const sId = session?.sessionId || session?.id;
+    const sName = session?.contestName || `Session #${sId}`;
+    if (!sId || isDeleting) return;
+
+    setIsDeleting(true);
+    setError(null);
+    try {
+      await api.delete(`/contests/sessions/${sId}`);
+      setIsOpen(false);
+      await onDeleted(Number(sId), sName);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err?.message || 'Failed to delete contest session.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [session, isDeleting, onDeleted]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        disabled={disabled || isDeleting}
+        className="p-2 sm:p-2 bg-rose-500/15 hover:bg-rose-500/25 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-200 transition-colors shadow-xs cursor-pointer shrink-0 disabled:opacity-40"
+        title="Delete this Weekly Contest Session"
+      >
+        <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+      </button>
+
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-session-modal-title"
+          className="fixed inset-0 z-[100050] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 dark:bg-black/85 backdrop-blur-xs select-none animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) handleClose();
+          }}
+        >
+          <div
+            className="relative w-full max-w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-[28px] sm:rounded-[28px] border-t sm:border border-slate-200 dark:border-slate-800 p-6 sm:p-7 text-center space-y-4 text-slate-900 dark:text-white shadow-2xl animate-fade-in-up transition-all overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Mobile Drag Handle */}
+            <div className="sm:hidden w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-2 mb-2" />
+
+            {/* Top Close Button */}
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isDeleting}
+              className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors disabled:opacity-40 cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Warning Icon Badge */}
+            <div className="flex flex-col items-center justify-center space-y-2 pt-1">
+              <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shadow-xs">
+                <Trash2 className="w-7 h-7" />
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-400">
+                DESTRUCTIVE ACTION • ADMIN
+              </span>
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-1.5">
+              <h3 id="delete-session-modal-title" className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                Delete Contest Session?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed max-w-sm mx-auto">
+                Permanently delete <strong className="text-rose-600 dark:text-rose-400 font-bold">{session?.contestName || `Session #${session?.sessionId}`}</strong>? All contest results, snapshots, and email logs for this session will be permanently removed.
+              </p>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold text-left">
+                {error}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                disabled={isDeleting}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black transition-all cursor-pointer active:scale-[0.98] disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                autoFocus
+                onClick={handleConfirm}
+                disabled={isDeleting}
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-black transition-all shadow-lg shadow-rose-600/25 active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Session</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+});
+
 // Isolated Next-Update Ticker (ticks down without page re-render) 
 const NextUpdateTicker = memo(({ initialSec }: { initialSec: number }) => {
   const [sec, setSec] = useState(initialSec > 0 ? initialSec : 120);
@@ -2386,14 +2557,26 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && activeSessionObj && (
-                <button
-                  type="button"
-                  onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-2 sm:p-2 bg-rose-500/15 hover:bg-rose-500/25 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-200 transition-colors shadow-xs cursor-pointer shrink-0"
-                  title="Delete this Weekly Contest Session"
-                >
-                  <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                </button>
+                <DeleteSessionControl
+                  session={activeSessionObj}
+                  onDeleted={async (deletedId, label) => {
+                    await fetchInitialContestData();
+                    setNotification({
+                      isOpen: true,
+                      type: 'success',
+                      title: 'Session Deleted',
+                      message: `Successfully deleted contest session ${label}.`
+                    });
+                  }}
+                  onWarning={(title, message) => {
+                    setNotification({
+                      isOpen: true,
+                      type: 'warning',
+                      title,
+                      message
+                    });
+                  }}
+                />
               )}
             </div>
 
@@ -2466,31 +2649,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       )}
 
 
-      {/* 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) */}
-      {isScheduled && (
-        <div className="mt-6 sm:mt-8 p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-black">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span> NEXT UPCOMING WEEKLY CONTEST</span>
-            </div>
-            <span className="text-xs font-mono font-bold text-slate-300">
-              Official Window: 08:00 AM – 09:30 AM IST (Asia/Kolkata)
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between flex-wrap gap-6">
-            <div className="space-y-1">
-              <h2 className="text-2xl sm:text-3xl font-black text-white">{activeSessionObj.contestName}</h2>
-              <p className="text-sm font-bold text-amber-200">{activeSessionObj.sessionDate} • Nandha Engineering College Cohorts</p>
-              <p className="text-xs text-slate-400 mt-1">Automatic live activation starts Sunday at 08:00 AM IST without manual refresh.</p>
-            </div>
-
-            {/* Dynamic Countdown Clock — isolated memo, won't re-render the page */}
-            <ContestCountdown initialSec={countdownSec} />
-          </div>
-        </div>
-      )}
 
       {/* 1C. LIVE MODE TELEMETRY, QUESTION PROGRESS & LIVE ACTIVITY FEED */}
       {isLive && (
@@ -3445,7 +3603,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-                            className="relative z-10 w-full max-h-[85vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.75rem,env(safe-area-inset-bottom,1.75rem))]"
+                            className="relative z-10 w-full max-h-[94vh] sm:max-h-[90vh] bg-white dark:bg-navy-950 rounded-t-[28px] border-t border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {/* Pull Handle */}
@@ -3487,240 +3645,246 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                               </button>
                             </div>
 
-                            {/* Cards List */}
-                            <div className="overflow-y-auto px-3.5 py-3 space-y-2 flex-1 min-h-0 custom-scrollbar">
+                            {/* Cards List with Responsive Multi-Column Architecture */}
+                            <div className="overflow-y-auto px-3.5 sm:px-5 py-3 space-y-3.5 flex-1 min-h-0 custom-scrollbar">
                               {/* Primary Actions Group */}
-                              <div className="px-1 pt-1 pb-1 flex items-center space-x-2">
-                                <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
-                                <span className="text-[10px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
-                                  Primary Actions
-                                </span>
+                              <div>
+                                <div className="px-1 pt-0.5 pb-1.5 flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                                  <span className="text-[10px] font-black tracking-wider uppercase text-purple-700 dark:text-purple-400">
+                                    Primary Actions
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 min-[440px]:grid-cols-2 gap-2">
+                                  {/* Live Preview Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('light');
+                                      setShowPreviewModal(true);
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-purple-50/80 dark:hover:bg-purple-950/40 hover:border-purple-300 dark:hover:border-purple-800"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                                        <Eye className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
+                                            PREVIEW
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          Live Preview
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          Review dataset &amp; questions
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                                  </button>
+
+                                  {/* Send Email Report Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('light');
+                                      setShowEmailModal(true);
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-800"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                                        <Mail className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
+                                            EMAIL
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          Send Email Report
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          Distribute securely to faculty
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <ArrowUpRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                  </button>
+                                </div>
                               </div>
-
-                              {/* Live Preview Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('light');
-                                  setShowPreviewModal(true);
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-purple-50/80 dark:hover:bg-purple-950/40 hover:border-purple-300 dark:hover:border-purple-800"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
-                                    <Eye className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
-                                        PREVIEW
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      Live Preview
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      Review dataset &amp; questions before export
-                                    </span>
-                                  </div>
-                                </div>
-                                <ArrowUpRight className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                              </button>
-
-                              {/* Send Email Report Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('light');
-                                  setShowEmailModal(true);
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-800"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                                    <Mail className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
-                                        EMAIL
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      Send Email Report
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      Distribute summary report securely to faculty
-                                    </span>
-                                  </div>
-                                </div>
-                                <ArrowUpRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                              </button>
 
                               {/* Export Formats Group */}
-                              <div className="px-1 pt-2 pb-1 flex items-center space-x-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                                <span className="text-[10px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
-                                  Export Formats
-                                </span>
+                              <div>
+                                <div className="px-1 pt-1 pb-1.5 flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                                  <span className="text-[10px] font-black tracking-wider uppercase text-emerald-700 dark:text-emerald-400">
+                                    Export Formats
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 min-[440px]:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {/* Excel Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('selection');
+                                      downloadReportFile('excel');
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-emerald-50/80 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-800"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                        <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                                            XLSX
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          Excel Workbook
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          Raw data &amp; roster matrix
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                  </button>
+
+                                  {/* PDF Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('selection');
+                                      downloadReportFile('pdf');
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-rose-50/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-800"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0">
+                                        <FileText className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
+                                            PDF
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          PDF Document
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          Formatted print layout
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Download className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                                  </button>
+
+                                  {/* Word Document Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('selection');
+                                      downloadReportFile('word');
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-800"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
+                                        <FileText className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                                            DOCX
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          Word Document
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          Editable report with tables
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Download className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                                  </button>
+
+                                  {/* ZIP Archive Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('selection');
+                                      downloadReportFile('zip');
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-amber-50/80 dark:hover:bg-amber-950/40 hover:border-amber-300 dark:hover:border-amber-800"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+                                        <FileArchive className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                                            ZIP
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          ZIP Archive
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          All formats in one archive
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Download className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                  </button>
+
+                                  {/* Print View Card */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      triggerHaptic('light');
+                                      window.print();
+                                      setShowExportMenu(false);
+                                    }}
+                                    className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+                                      <div className="w-8 h-8 rounded-xl bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
+                                        <Printer className="w-4 h-4 stroke-[2.5]" />
+                                      </div>
+                                      <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+                                            PRINT
+                                          </span>
+                                        </div>
+                                        <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
+                                          Print View
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                          Quick browser print layout
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <Printer className="w-4 h-4 text-slate-400 shrink-0" />
+                                  </button>
+                                </div>
                               </div>
-
-                              {/* Excel Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('selection');
-                                  downloadReportFile('excel');
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-emerald-50/80 dark:hover:bg-emerald-950/40 hover:border-emerald-300 dark:hover:border-emerald-800"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                                    <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                                        XLSX
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      Excel Workbook
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      Raw structured data &amp; roster matrix
-                                    </span>
-                                  </div>
-                                </div>
-                                <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                              </button>
-
-                              {/* PDF Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('selection');
-                                  downloadReportFile('pdf');
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-rose-50/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-800"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0">
-                                    <FileText className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
-                                        PDF
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      PDF Document
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      Formatted print layout &amp; analytics
-                                    </span>
-                                  </div>
-                                </div>
-                                <Download className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                              </button>
-
-                              {/* Word Document Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('selection');
-                                  downloadReportFile('word');
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-blue-50/80 dark:hover:bg-blue-950/40 hover:border-blue-300 dark:hover:border-blue-800"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
-                                    <FileText className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                                        DOCX
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      Word Document
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      Editable text report with tables
-                                    </span>
-                                  </div>
-                                </div>
-                                <Download className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                              </button>
-
-                              {/* ZIP Archive Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('selection');
-                                  downloadReportFile('zip');
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-amber-50/80 dark:hover:bg-amber-950/40 hover:border-amber-300 dark:hover:border-amber-800"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
-                                    <FileArchive className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                                        ZIP
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      ZIP Archive
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      All formats bundled in one archive
-                                    </span>
-                                  </div>
-                                </div>
-                                <Download className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                              </button>
-
-                              {/* Print View Card */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  triggerHaptic('light');
-                                  window.print();
-                                  setShowExportMenu(false);
-                                }}
-                                className="w-full min-h-[52px] px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] cursor-pointer bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100 dark:hover:bg-white/[0.06]"
-                              >
-                                <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
-                                  <div className="w-8 h-8 rounded-xl bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
-                                    <Printer className="w-4 h-4 stroke-[2.5]" />
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md border shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700">
-                                        PRINT
-                                      </span>
-                                    </div>
-                                    <span className="text-xs mt-0.5 font-bold leading-snug text-slate-800 dark:text-slate-200">
-                                      Print View
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                                      Quick browser print layout
-                                    </span>
-                                  </div>
-                                </div>
-                                <Printer className="w-4 h-4 text-slate-400 shrink-0" />
-                              </button>
                             </div>
                           </motion.div>
                         </div>
@@ -4397,7 +4561,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             setDebouncedSearchTerm('');
                             setDeptSearchQuery('');
                           }}
-                          className="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 dark:border-navy-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                          className="shrink-0 py-2 px-3 rounded-xl border border-slate-300/80 dark:border-navy-700 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+                          title="Reset all filters"
                         >
                           <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
                           <span>Reset</span>
@@ -4408,7 +4573,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             triggerHaptic('success');
                             setShowMobileContestFilters(false);
                           }}
-                          className="flex-2 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                          className="flex-1 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                           <Check className="w-4 h-4 stroke-[2.5]" />
                           <span>Apply Filters</span>
@@ -5184,44 +5349,51 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 </div>
               ) : (
-                /* VIEW MODE 2: INSTITUTIONAL 2-TIER TABLE VIEW */
+                /* VIEW MODE 2: INSTITUTIONAL 2-TIER TABLE VIEW (RESPONSIVE NO-SCROLL) */
                 <div className="w-full relative z-10 animate-fade-in">
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md">
-                    <table className="w-full min-w-[780px] text-center border-collapse text-xs">
+                  <div className="w-full rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-sm bg-white/70 dark:bg-slate-950/60 backdrop-blur-md overflow-hidden">
+                    <table className="w-full table-fixed text-center border-collapse text-xs">
                       <thead>
                         {/* Header Row 1 */}
-                        <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
-                          <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 font-black min-w-[190px]">
-                            <span className="text-[11px] tracking-wide uppercase font-black block">last_contest_name</span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 inline-block">
+                        <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                          <th className="w-[20%] sm:w-[22%] py-2 sm:py-3 px-1 sm:px-4 border-r border-slate-200 dark:border-slate-700 font-black">
+                            <span className="hidden sm:block text-[11px] tracking-wide uppercase font-black">last_contest_name</span>
+                            <span className="sm:hidden text-[9px] tracking-tight uppercase font-black block truncate">Contest</span>
+                            <span className="text-[7.5px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono mt-0.5 block truncate">
                               ({activeSessionObj?.contestNumber || activeSessionObj?.contestName?.match(/\d+/)?.[0] || 'Contest'} - {activeSessionObj?.sessionDate || 'Session'})
                             </span>
                           </th>
-                          <th colSpan={5} className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
-                            Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})
+                          <th colSpan={5} className="w-[45%] sm:w-[40%] py-2 sm:py-3 px-1 sm:px-4 border-r border-slate-200 dark:border-slate-700 text-brand-700 dark:text-brand-300 font-black tracking-wide uppercase bg-brand-500/10 dark:bg-brand-500/15">
+                            <span className="hidden sm:inline">Last Contest No of Ques Solved ({activeSessionObj?.contestName || `Weekly Contest ${activeSessionObj?.contestNumber || ''}`.trim()})</span>
+                            <span className="sm:hidden text-[9px] tracking-tight uppercase font-black block truncate">Questions Solved</span>
                           </th>
-                          <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15 min-w-[130px]">
-                            Below 20000
+                          <th className="w-[17%] sm:w-[19%] py-2 sm:py-3 px-1 sm:px-4 border-r border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-black tracking-wide uppercase bg-sky-500/10 dark:bg-sky-500/15">
+                            <span className="hidden sm:inline">Below 20000</span>
+                            <span className="sm:hidden text-[9px] tracking-tight font-black uppercase block">&lt; 20k</span>
                           </th>
-                          <th className="py-3 px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15 min-w-[130px]">
-                            Below 5000
+                          <th className="w-[18%] sm:w-[19%] py-2 sm:py-3 px-1 sm:px-4 text-teal-700 dark:text-teal-300 font-black tracking-wide uppercase bg-teal-500/10 dark:bg-teal-500/15">
+                            <span className="hidden sm:inline">Below 5000</span>
+                            <span className="sm:hidden text-[9px] tracking-tight font-black uppercase block">&lt; 5k</span>
                           </th>
                         </tr>
                         {/* Header Row 2 */}
-                        <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                          <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
-                            Taken Count
+                        <tr className="bg-slate-50/90 dark:bg-slate-900/90 text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                          <th className="py-1.5 sm:py-2.5 px-1 sm:px-4 border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">
+                            <span className="hidden sm:inline">Taken Count</span>
+                            <span className="sm:hidden text-[9px] font-black uppercase">Taken</span>
                           </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black min-w-[55px] bg-emerald-500/5">4</th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black min-w-[55px] bg-purple-500/5">3</th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black min-w-[55px] bg-indigo-500/5">2</th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black min-w-[55px] bg-amber-500/5">1</th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black min-w-[55px] bg-rose-500/5">0</th>
-                          <th className="py-2.5 px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
-                            global_ranking
+                          <th className="w-[9%] sm:w-[8%] py-1.5 sm:py-2.5 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-400 font-black text-[10px] sm:text-xs bg-emerald-500/5">4</th>
+                          <th className="w-[9%] sm:w-[8%] py-1.5 sm:py-2.5 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-400 font-black text-[10px] sm:text-xs bg-purple-500/5">3</th>
+                          <th className="w-[9%] sm:w-[8%] py-1.5 sm:py-2.5 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700 text-indigo-700 dark:text-indigo-400 font-black text-[10px] sm:text-xs bg-indigo-500/5">2</th>
+                          <th className="w-[9%] sm:w-[8%] py-1.5 sm:py-2.5 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700 text-amber-700 dark:text-amber-400 font-black text-[10px] sm:text-xs bg-amber-500/5">1</th>
+                          <th className="w-[9%] sm:w-[8%] py-1.5 sm:py-2.5 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-400 font-black text-[10px] sm:text-xs bg-rose-500/5">0</th>
+                          <th className="py-1.5 sm:py-2.5 px-0.5 sm:px-4 border-r border-slate-200 dark:border-slate-700 font-mono font-black text-sky-700 dark:text-sky-400 bg-sky-500/5">
+                            <span className="hidden sm:inline font-mono">global_ranking</span>
+                            <span className="sm:hidden text-[8px] font-mono font-bold block truncate">Global</span>
                           </th>
-                          <th className="py-2.5 px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
-                            last_contest_rank
+                          <th className="py-1.5 sm:py-2.5 px-0.5 sm:px-4 font-mono font-black text-teal-700 dark:text-teal-400 bg-teal-500/5">
+                            <span className="hidden sm:inline font-mono">last_contest_rank</span>
+                            <span className="sm:hidden text-[8px] font-mono font-bold block truncate">Contest</span>
                           </th>
                         </tr>
                       </thead>
@@ -5231,43 +5403,43 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         className="font-mono divide-y divide-slate-100 dark:divide-slate-800 cursor-pointer"
                       >
                         <tr className="bg-white/80 dark:bg-slate-950/80 hover:bg-brand-50/50 dark:hover:bg-slate-900/60 transition-colors">
-                          <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-1 sm:px-4 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-xs sm:text-base border border-slate-200 dark:border-slate-700 shadow-2xs">
                               {stats.attendedRows + stats.virtualRows}
                             </span>
                           </td>
-                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-base border border-emerald-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center w-5 h-5 xs:w-6 xs:h-6 sm:w-auto sm:h-auto sm:px-3.5 sm:py-1.5 rounded-md sm:rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-mono font-black text-[11px] sm:text-base border border-emerald-500/25 shadow-2xs">
                               {stats.q4Solved}
                             </span>
                           </td>
-                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-base border border-purple-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center w-5 h-5 xs:w-6 xs:h-6 sm:w-auto sm:h-auto sm:px-3.5 sm:py-1.5 rounded-md sm:rounded-xl bg-purple-500/10 text-purple-700 dark:text-purple-400 font-mono font-black text-[11px] sm:text-base border border-purple-500/25 shadow-2xs">
                               {stats.q3Solved}
                             </span>
                           </td>
-                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-base border border-indigo-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center w-5 h-5 xs:w-6 xs:h-6 sm:w-auto sm:h-auto sm:px-3.5 sm:py-1.5 rounded-md sm:rounded-xl bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-mono font-black text-[11px] sm:text-base border border-indigo-500/25 shadow-2xs">
                               {stats.q2Solved}
                             </span>
                           </td>
-                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-base border border-amber-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center w-5 h-5 xs:w-6 xs:h-6 sm:w-auto sm:h-auto sm:px-3.5 sm:py-1.5 rounded-md sm:rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono font-black text-[11px] sm:text-base border border-amber-500/25 shadow-2xs">
                               {stats.q1Solved}
                             </span>
                           </td>
-                          <td className="py-4 px-3 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-base border border-rose-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-0.5 sm:px-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex items-center justify-center w-5 h-5 xs:w-6 xs:h-6 sm:w-auto sm:h-auto sm:px-3.5 sm:py-1.5 rounded-md sm:rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-400 font-mono font-black text-[11px] sm:text-base border border-rose-500/25 shadow-2xs">
                               {stats.q0Solved}
                             </span>
                           </td>
-                          <td className="py-4 px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
-                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-base border border-sky-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-1 sm:px-4 border-r border-slate-200 dark:border-slate-700 bg-sky-500/[0.03]">
+                            <span className="inline-flex items-center justify-center px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-sky-500/10 text-sky-700 dark:text-sky-400 font-mono font-black text-xs sm:text-base border border-sky-500/25 shadow-2xs">
                               {stats.rankBelow20k}
                             </span>
                           </td>
-                          <td className="py-4 px-4 bg-teal-500/[0.03]">
-                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-base border border-teal-500/25 shadow-2xs">
+                          <td className="py-2.5 sm:py-4 px-1 sm:px-4 bg-teal-500/[0.03]">
+                            <span className="inline-flex items-center justify-center px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 font-mono font-black text-xs sm:text-base border border-teal-500/25 shadow-2xs">
                               {stats.rankBelow5k}
                             </span>
                           </td>

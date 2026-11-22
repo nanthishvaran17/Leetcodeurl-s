@@ -690,6 +690,42 @@ export function matchesCollege(student: StudentData, selectedCollege?: string): 
   return studentCollege === target;
 }
 
+export function isStudentVerified(s: StudentData | any): boolean {
+  if (!s) return false;
+  const syncStatus = String(s.stats?.sync_status || s.sync_status || '').toLowerCase().trim();
+  const rawStatus = String(s.stats?.status || s.status || '').toLowerCase().trim();
+  const solved = Number(s.stats?.total_solved ?? s.total_solved ?? 0);
+  return syncStatus === 'success' || syncStatus === 'ok' || syncStatus === 'verified' || rawStatus === 'verified' || solved > 0;
+}
+
+export function isStudentNoUsername(s: StudentData | any): boolean {
+  if (!s) return true;
+  const raw = s.username || (s as any).canonical_username || (s as any).leetcode_username;
+  if (raw && String(raw).trim() && String(raw).trim().toUpperCase() !== 'N/A') return false;
+  return !s.leetcode_url || s.leetcode_url.includes('/problemset/');
+}
+
+export function isStudentFailed(s: StudentData | any): boolean {
+  if (!s) return false;
+  const syncStatus = String(s.stats?.sync_status || s.sync_status || '').toLowerCase().trim();
+  return syncStatus === 'failed' || syncStatus === 'mismatch' || syncStatus === 'invalid_username' || syncStatus === 'error' || syncStatus === 'invalid_profile';
+}
+
+export function isStudentPending(s: StudentData | any): boolean {
+  return !isStudentVerified(s) && !isStudentNoUsername(s) && !isStudentFailed(s);
+}
+
+export function matchesVerificationStatus(student: StudentData, status?: string): boolean {
+  if (!status || status === 'all' || status === 'ALL') return true;
+  const s = status.toLowerCase().trim();
+  if (s === 'verified') return isStudentVerified(student);
+  if (s === 'unverified' || s === 'not_verified') return !isStudentVerified(student);
+  if (s === 'pending') return isStudentPending(student);
+  if (s === 'no_id' || s === 'no_username') return isStudentNoUsername(student);
+  if (s === 'failed') return isStudentFailed(student);
+  return true;
+}
+
 export interface FilterAndSortOptions {
   college?: string;
   department?: string;
@@ -697,6 +733,7 @@ export interface FilterAndSortOptions {
   nameSearch?: string;
   performanceRange?: string;
   sortBy?: string;
+  verificationStatus?: string;
 }
 
 export interface PerformanceCounts {
@@ -753,14 +790,16 @@ export function filterAndSortStudents(
   const search = options.nameSearch || '';
   const range = options.performanceRange || 'all';
   const sort = options.sortBy || 'top_solved';
+  const verification = options.verificationStatus || 'all';
 
-  // Step 1: Base filter by College + Department + Academic Year + Search
+  // Step 1: Base filter by College + Department + Academic Year + Search + Verification
   const baseFiltered = students.filter(s => {
     return (
       matchesCollege(s, college) &&
       matchesDepartment(s, dept) &&
       matchesAcademicYear(s, year) &&
-      matchesNameSearch(s, search)
+      matchesNameSearch(s, search) &&
+      matchesVerificationStatus(s, verification)
     );
   });
 

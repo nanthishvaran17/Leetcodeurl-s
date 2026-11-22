@@ -398,7 +398,7 @@ class ResetPasswordSubmitRequest(BaseModel):
     name: Optional[str] = None
     institutional_id: Optional[str] = None
     email: Optional[str] = None
-    otp: str
+    otp: Optional[str] = None
     reset_token: Optional[str] = None
     new_password: str
 

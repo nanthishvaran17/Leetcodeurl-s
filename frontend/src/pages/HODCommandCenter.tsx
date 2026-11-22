@@ -1823,11 +1823,11 @@ export const HODCommandCenter: React.FC = () => {
     <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
       
       {/* Title & Metadata */}
-      <div className="space-y-1.5 sm:space-y-2.5 min-w-0">
+      <div className="space-y-1.5 sm:space-y-2.5 min-w-0 flex-1">
         {/* Mobile Top Row: Pill Badge */}
         <div className="flex items-center gap-2">
           <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black">
-            <span className="uppercase tracking-wide truncate max-w-[220px] xs:max-w-none">
+            <span className="uppercase tracking-wide truncate max-w-[220px] sm:max-w-none">
               {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
                 ? 'Executive Overview • All Departments'
                 : user?.role?.toLowerCase() === 'hod'
@@ -1839,7 +1839,7 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         </div>
 
-        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase max-w-xl leading-snug">
+        <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white uppercase max-w-full sm:max-w-3xl lg:max-w-4xl leading-snug">
           {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase()) ? (
             <>
               Campus Executive <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Overview</span>
@@ -1859,7 +1859,7 @@ export const HODCommandCenter: React.FC = () => {
           )}
         </h1>
 
-        <p className="hidden sm:block text-xs sm:text-sm text-slate-300 max-w-2xl font-normal leading-relaxed pt-0.5">
+        <p className="hidden sm:block text-xs sm:text-sm text-slate-300 max-w-full sm:max-w-3xl lg:max-w-4xl font-normal leading-relaxed pt-0.5">
           {['principal', 'management', 'director'].includes((user?.role || '').trim().toLowerCase())
             ? 'Campus-wide departmental oversight: Inspect any department HOD process, staff mentoring allocations, student progress, and real-time operational health.'
             : user?.role?.toLowerCase() === 'hod'

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Filter, RotateCcw, Check, Search, Building2, GraduationCap, Calendar, ShieldCheck } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
 import { useDepartments } from '../context/DepartmentContext';
+import { isGlobalAccessRole } from '../services/auth/authTypes';
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { SwipeHandle } from './SwipeHandle';
 import { triggerHaptic } from '../utils/haptics';
@@ -26,9 +27,23 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   const { departments: ctxDepartments = [] } = useDepartments();
   const rawDepartments = (propDepartments && propDepartments.length > 0) ? propDepartments : ctxDepartments;
 
+  const isGlobalUser = React.useMemo(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? isGlobalAccessRole(JSON.parse(raw)) : false;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const departments = React.useMemo(() => {
-    const list: Array<{ code: string; name: string }> = [{ code: 'ALL', name: 'All Departments' }];
-    const seen = new Set<string>(['ALL']);
+    const list: Array<{ code: string; name: string }> = [];
+    const seen = new Set<string>();
+
+    if (isGlobalUser) {
+      list.push({ code: 'ALL', name: 'All Departments' });
+      seen.add('ALL');
+    }
 
     if (rawDepartments && rawDepartments.length > 0) {
       rawDepartments.forEach((d: any) => {
@@ -40,19 +55,21 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
       });
     }
 
-    const core = [
-      { code: 'CSE(CS)', name: 'Computer Science & Engineering (Cyber Security)' },
-      { code: 'CSE(IOT)', name: 'Computer Science & Engineering (IoT)' },
-      { code: 'IT', name: 'Information Technology' }
-    ];
-    for (const c of core) {
-      if (!seen.has(c.code.toUpperCase())) {
-        seen.add(c.code.toUpperCase());
-        list.push(c);
+    if (isGlobalUser) {
+      const core = [
+        { code: 'CSE(CS)', name: 'Computer Science & Engineering (Cyber Security)' },
+        { code: 'CSE(IOT)', name: 'Computer Science & Engineering (IoT)' },
+        { code: 'IT', name: 'Information Technology' }
+      ];
+      for (const c of core) {
+        if (!seen.has(c.code.toUpperCase())) {
+          seen.add(c.code.toUpperCase());
+          list.push(c);
+        }
       }
     }
     return list;
-  }, [rawDepartments]);
+  }, [rawDepartments, isGlobalUser]);
 
   const {
     department,
