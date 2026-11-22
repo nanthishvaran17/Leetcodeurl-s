@@ -2,6 +2,41 @@ import os
 import zipfile
 import shutil
 import subprocess
+import struct
+
+def patch_manifest(manifest_bytes, new_version_code=103, new_version_name="4.6.3"):
+    b = bytearray(manifest_bytes)
+    
+    # 1. Locate versionCode pattern:
+    # ans=114 (android ns), aname=20 (versionCode), raw_val=0xFFFFFFFF, tv_size=8, res0=0, dtype=16 (int)
+    pattern = struct.pack('<IIIHBB', 114, 20, 0xFFFFFFFF, 8, 0, 16)
+    idx = b.find(pattern)
+    if idx == -1:
+        # Fallback search without fixed namespace index
+        for i in range(len(b) - 20):
+            ans, aname, raw_val, tv_size, res0, dtype, dval = struct.unpack('<IIIHBBI', b[i:i+20])
+            if aname == 20 and dtype == 16 and tv_size == 8:
+                idx = i
+                break
+
+    if idx == -1:
+        raise RuntimeError("Could not find versionCode attribute in AndroidManifest.xml!")
+
+    old_vc, = struct.unpack('<I', b[idx+16:idx+20])
+    struct.pack_into('<I', b, idx+16, new_version_code)
+    print(f"Patched AndroidManifest.xml versionCode: {old_vc} -> {new_version_code} (offset {idx+16})")
+
+    # 2. Patch versionName:
+    # "4.5.7" is stored in UTF-16LE in string pool (10 bytes)
+    old_vn_u16 = "4.5.7".encode("utf-16le")
+    new_vn_u16 = new_version_name.encode("utf-16le")
+    if len(old_vn_u16) == len(new_vn_u16):
+        pos16 = b.find(old_vn_u16)
+        if pos16 != -1:
+            b[pos16:pos16+len(new_vn_u16)] = new_vn_u16
+            print(f"Patched AndroidManifest.xml UTF-16LE versionName: '4.5.7' -> '{new_version_name}' (offset {pos16})")
+
+    return bytes(b)
 
 def main():
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -26,7 +61,7 @@ def main():
     if os.path.exists(temp_apk):
         os.remove(temp_apk)
 
-    with zipfile.ZipFile(base_apk, 'r') as zin, zipfile.ZipFile(temp_apk, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
+    with zipfile.ZipFile(base_apk, 'r') as zin, zipfile.ZipFile(temp_apk, 'w') as zout:
         for item in zin.infolist():
             # Skip old signatures and old bundled web assets
             if item.filename.startswith("META-INF/") and (
@@ -35,7 +70,16 @@ def main():
                 continue
             if item.filename.startswith("assets/public/"):
                 continue
-            zout.writestr(item, zin.read(item.filename))
+
+            content = zin.read(item.filename)
+
+            # Patch AndroidManifest.xml with authentic versionCode (103) & versionName ("4.6.3")
+            if item.filename == "AndroidManifest.xml":
+                print("  Updating AndroidManifest.xml binary structure with versionCode 103 and versionName 4.6.3...")
+                content = patch_manifest(content, new_version_code=103, new_version_name="4.6.3")
+
+            # Preserve exact compression mode and permissions
+            zout.writestr(item, content)
 
         # Add updated assets from frontend/dist
         print("Step 2: Injecting compiled production web assets from:", dist_dir)
@@ -47,7 +91,7 @@ def main():
                 fpath = os.path.join(dirpath, fname)
                 rel_path = os.path.relpath(fpath, dist_dir).replace("\\", "/")
                 arcname = "assets/public/" + rel_path
-                zout.write(fpath, arcname)
+                zout.write(fpath, arcname, compress_type=zipfile.ZIP_DEFLATED)
                 count += 1
         print(f"  Injected {count} production assets into assets/public/")
 
@@ -98,7 +142,7 @@ def main():
         size_mb = os.path.getsize(dest) / (1024 * 1024)
         print(f"  Copied to: {dest} ({size_mb:.2f} MB)")
 
-    print("\nSUCCESS: Nandha LeetCode Intelligence v4.6.3 APK built, signed, verified, and deployed successfully!")
+    print("\nSUCCESS: Nandha LeetCode Intelligence v4.6.3 (Build 103) APK built, signed, verified, and deployed successfully!")
 
 if __name__ == "__main__":
     main()
