@@ -573,11 +573,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const handleSummaryRefresh = () => {
       fetchFilteredStudents(false);
     };
+    const handleAuthChange = () => {
+      clearApiCache();
+      fetchDepartments();
+      fetchFilteredStudents(true);
+    };
     window.addEventListener('pull_to_refresh', handlePull);
     window.addEventListener('refresh_dashboard_summary', handleSummaryRefresh);
+    window.addEventListener('nec_auth_changed', handleAuthChange);
     return () => {
       window.removeEventListener('pull_to_refresh', handlePull);
       window.removeEventListener('refresh_dashboard_summary', handleSummaryRefresh);
+      window.removeEventListener('nec_auth_changed', handleAuthChange);
     };
   }, [user?.id, user?.role, isFacultyRole]);
 
