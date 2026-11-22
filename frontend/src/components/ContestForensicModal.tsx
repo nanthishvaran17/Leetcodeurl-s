@@ -205,6 +205,10 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
 
   const [fullscreenCodeId, setFullscreenCodeId] = useState<string | null>(null);
 
+  // Normalize student academic year label (e.g. "II Year", "III Year")
+  const studentYear = record ? normalizeYear(record.year_level, record.reg_no) : '';
+  const yearLabel = studentYear ? `${studentYear} Year` : '';
+
   // ArrowLeft & ArrowRight navigation keyboard listener
   useEffect(() => {
     const handleKeyNav = (e: KeyboardEvent) => {
@@ -796,30 +800,37 @@ export const ContestForensicModal: React.FC<ContestForensicModalProps> = ({
                       </span>
                     </div>
 
-                    {/* Metadata Tags: Roll No, Dept, Contest - Unified consistent styling */}
+                    {/* Metadata Tags: Roll No, Dept, Year, Contest - Unified neat compact styling */}
                     <div className="flex items-center gap-1.5 flex-wrap text-xs">
                       {/* Roll Number with tap to copy */}
                       <button
                         type="button"
                         onClick={() => handleCopy(record.reg_no, 'reg_no')}
-                        className="inline-flex items-center gap-1.5 font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/[0.08] text-[11px] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] transition active:scale-95 cursor-pointer shadow-2xs"
+                        className="inline-flex items-center gap-1 font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] transition active:scale-95 cursor-pointer shadow-2xs"
                         title="Click to copy register number"
                       >
                         <span>{record.reg_no}</span>
                         {copiedField === 'reg_no' ? (
-                          <Check className="w-3 h-3 text-emerald-500" />
+                          <Check className="w-2.5 h-2.5 text-emerald-500" />
                         ) : (
                           <Copy className="w-2.5 h-2.5 text-slate-400 opacity-70" />
                         )}
                       </button>
 
                       {/* Department */}
-                      <span className="inline-flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
-                        {record.department_name || 'CSE'}
+                      <span className="inline-flex items-center font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
+                        {record.department_name || record.department || 'CSE'}
                       </span>
 
+                      {/* Academic Year */}
+                      {yearLabel && (
+                        <span className="inline-flex items-center font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
+                          {yearLabel}
+                        </span>
+                      )}
+
                       {/* Contest */}
-                      <span className="inline-flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
+                      <span className="inline-flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-white/[0.06] px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-white/[0.08] text-[11px] shadow-2xs">
                         <Award className="w-3 h-3 text-brand-500 opacity-80" />
                         <span>{record.contest_title || summary?.contest_title || 'Weekly Contest'}</span>
                       </span>

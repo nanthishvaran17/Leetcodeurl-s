@@ -1731,7 +1731,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       setDeptDropdownOpen(false);
                       setYearDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                    className={`w-full sm:w-44 sm:min-w-[170px] h-10 min-h-[40px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 py-1.5 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       collegeDropdownOpen
                         ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/70 dark:bg-brand-950/50'
                         : isCollegeActive
@@ -1815,7 +1815,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       setYearDropdownOpen(false);
                       setCollegeDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                    className={`w-full sm:w-44 sm:min-w-[170px] h-10 min-h-[40px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 py-1.5 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       deptDropdownOpen
                         ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/70 dark:bg-indigo-950/50'
                         : isDeptActive
@@ -1896,7 +1896,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       setDeptDropdownOpen(false);
                       setCollegeDropdownOpen(false);
                     }}
-                    className={`w-full sm:w-auto min-h-[42px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
+                    className={`w-full sm:w-44 sm:min-w-[170px] h-10 min-h-[40px] flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 px-2.5 py-1.5 rounded-xl border shadow-xs text-left transition-all active:scale-[0.97] focus:outline-none cursor-pointer ${
                       yearDropdownOpen
                         ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/70 dark:bg-purple-950/50'
                         : isYearActive
