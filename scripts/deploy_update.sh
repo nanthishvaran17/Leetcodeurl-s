@@ -49,12 +49,15 @@ except Exception as e:
 echo "Applying Growth Intelligence & Time Machine fix..."
 python3 backend/scripts/apply_aws_growth_and_time_machine_fix.py || python backend/scripts/apply_aws_growth_and_time_machine_fix.py || true
 
-echo "3. Installing frontend dependencies & building bundle..."
+echo "3. Checking frontend production bundle..."
 cd frontend
-if [ -f "package-lock.json" ]; then
-    npm install --no-audit --no-fund --quiet
+if [ -f "dist/index.html" ]; then
+    echo "✓ Production bundle already pre-built and synced from repository. Skipping local build to avoid EC2 OOM."
+else
+    echo "Building frontend bundle..."
+    npm install --no-audit --no-fund --quiet || true
+    NODE_OPTIONS="--max-old-space-size=1536" npm run build || true
 fi
-npm run build
 cd ..
 
 echo "4. Restarting services..."
