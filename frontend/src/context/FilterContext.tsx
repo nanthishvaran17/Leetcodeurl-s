@@ -153,9 +153,6 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setAttendanceStatus('ALL');
     setSearchQuery('');
   }, []);
-    setSearchQuery('');
-    setCollegeState(defaultCollege);
-  }, [defaultDept, defaultCollege]);
 
   const clearOneFilter = useCallback((key: keyof FilterState) => {
     switch (key) {

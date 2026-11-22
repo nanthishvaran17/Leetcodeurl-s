@@ -8,6 +8,8 @@ import datetime
 import json
 import hashlib
 import uuid
+import copy
+import time
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
 from sqlalchemy import or_, and_, desc, func
@@ -256,6 +258,16 @@ def _aggregate_cohort_metrics(student_list: List[Dict[str, Any]]) -> Dict[str, A
     }
 
 
+_WEEKLY_PERF_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+_WEEKLY_PERF_CACHE_TTL = 30.0  # 30-second high-speed RAM memoization
+
+
+def clear_weekly_perf_cache():
+    """Flushes cached weekly performance datasets across all scopes."""
+    global _WEEKLY_PERF_CACHE
+    _WEEKLY_PERF_CACHE.clear()
+
+
 def generate_weekly_performance_data(
     db: Session,
     last_week_contest: Optional[int] = None,
@@ -271,6 +283,13 @@ def generate_weekly_performance_data(
     """
     CANONICAL WEEKLY PERFORMANCE DATASET GENERATOR
     """
+    # High-speed RAM cache check for read queries
+    cache_key = None
+    if not save_snapshot:
+        cache_key = f"{last_week_contest}:{current_week_contest}:{report_date}:{dept_filter}:{year_filter}:{batch_filter}:{session_id}:{getattr(current_user, 'id', None)}"
+        cached_entry = _WEEKLY_PERF_CACHE.get(cache_key)
+        if cached_entry and (time.time() - cached_entry[0] < _WEEKLY_PERF_CACHE_TTL):
+            return copy.deepcopy(cached_entry[1])
     if dept_filter and str(dept_filter).upper() not in ("ALL", "", "NONE", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED"):
         try:
             from backend.services.authorization_service import normalize_department_to_code
@@ -442,23 +461,43 @@ def generate_weekly_performance_data(
 
     # Step 5: Load Historical Snapshots if Available
     last_snapshots_by_pid: Dict[str, WeeklyStudentSnapshot] = {}
+    last_snap_cdata_by_pid: Dict[str, Dict[str, Any]] = {}
     db_snaps_last = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == prev_period_id).all()
     for snap in db_snaps_last:
-        last_snapshots_by_pid[str(snap.people_id)] = snap
+        pid_k = str(snap.people_id)
+        last_snapshots_by_pid[pid_k] = snap
+        if snap.contest_data:
+            try:
+                last_snap_cdata_by_pid[pid_k] = json.loads(str(snap.contest_data))
+            except Exception:
+                pass
 
     curr_snapshots_by_pid: Dict[str, WeeklyStudentSnapshot] = {}
+    curr_snap_cdata_by_pid: Dict[str, Dict[str, Any]] = {}
     db_snaps_curr = db.query(WeeklyStudentSnapshot).filter(WeeklyStudentSnapshot.reporting_period_id == curr_period_id).all()
     for snap in db_snaps_curr:
-        curr_snapshots_by_pid[str(snap.people_id)] = snap
+        pid_k = str(snap.people_id)
+        curr_snapshots_by_pid[pid_k] = snap
+        if snap.contest_data:
+            try:
+                curr_snap_cdata_by_pid[pid_k] = json.loads(str(snap.contest_data))
+            except Exception:
+                pass
 
     curr_contest_history_map = {}
     last_contest_history_map = {}
     from backend.models import LeetCodeContestRatingHistory
-    if curr_contest_num:
-        for r in db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {curr_contest_num}").all():
+    if curr_contest_num and student_ids:
+        for r in db.query(LeetCodeContestRatingHistory).filter(
+            LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {curr_contest_num}",
+            LeetCodeContestRatingHistory.student_id.in_(student_ids)
+        ).all():
             curr_contest_history_map[r.student_id] = r
-    if last_contest_num:
-        for r in db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {last_contest_num}").all():
+    if last_contest_num and student_ids:
+        for r in db.query(LeetCodeContestRatingHistory).filter(
+            LeetCodeContestRatingHistory.contest_name == f"Weekly Contest {last_contest_num}",
+            LeetCodeContestRatingHistory.student_id.in_(student_ids)
+        ).all():
             last_contest_history_map[r.student_id] = r
 
     # Step 6: Process Students & Deduplicate by People ID
@@ -532,25 +571,19 @@ def generate_weekly_performance_data(
         hist_snap = last_snapshots_by_pid.get(str(pid))
         curr_snap = curr_snapshots_by_pid.get(str(pid))
 
-        if curr_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and curr_snap and curr_snap.contest_data:
-            try:
-                cdata = json.loads(str(curr_snap.contest_data))
-                if isinstance(cdata, dict) and cdata.get("public"):
-                    curr_pub_outcome = cdata.get("public")
-                if isinstance(cdata, dict) and cdata.get("virtual"):
-                    curr_vir_outcome = cdata.get("virtual")
-            except Exception:
-                pass
+        curr_cdata = curr_snap_cdata_by_pid.get(str(pid))
+        if curr_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and curr_cdata:
+            if isinstance(curr_cdata, dict) and curr_cdata.get("public"):
+                curr_pub_outcome = curr_cdata.get("public")
+            if isinstance(curr_cdata, dict) and curr_cdata.get("virtual"):
+                curr_vir_outcome = curr_cdata.get("virtual")
 
-        if last_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and hist_snap and hist_snap.contest_data:
-            try:
-                cdata = json.loads(str(hist_snap.contest_data))
-                if isinstance(cdata, dict) and cdata.get("public"):
-                    last_pub_outcome = cdata.get("public")
-                if isinstance(cdata, dict) and cdata.get("virtual"):
-                    last_vir_outcome = cdata.get("virtual")
-            except Exception:
-                pass
+        last_cdata = last_snap_cdata_by_pid.get(str(pid))
+        if last_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and last_cdata:
+            if isinstance(last_cdata, dict) and last_cdata.get("public"):
+                last_pub_outcome = last_cdata.get("public")
+            if isinstance(last_cdata, dict) and last_cdata.get("virtual"):
+                last_vir_outcome = last_cdata.get("virtual")
 
         curr_tot = curr_snap.primary_solved_count if (curr_snap and target_ws) else tot
         curr_category_name = curr_snap.solved_bucket if (curr_snap and target_ws) else category_name
