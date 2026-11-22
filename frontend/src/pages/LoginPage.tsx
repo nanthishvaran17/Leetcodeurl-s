@@ -207,7 +207,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         const parsed = JSON.parse(stored);
         if (parsed && Number(parsed.totalStudents) > 0) return parsed;
       }
-    } catch (e) {}
+    } catch (e) { }
     return {
       totalStudents: 0,
       verifiedStudents: 0,
@@ -272,7 +272,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
             setLiveStats(newStats);
             try {
               sessionStorage.setItem('nec_live_stats', JSON.stringify(newStats));
-            } catch (e) {}
+            } catch (e) { }
           }
         }
       } catch {
@@ -317,7 +317,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       const savedPass = localStorage.getItem('nec_remembered_password');
       if (savedUser) setUsername(savedUser);
       if (savedPass) setPassword(savedPass);
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
 
@@ -378,7 +378,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
         // Silently enroll device biometric key for 1-tap subsequent unlock
         api.post('/auth/biometric/device-enroll').then(r => {
           if (r.data?.device_key) localStorage.setItem('nec_device_biometric_key', r.data.device_key);
-        }).catch(() => {});
+        }).catch(() => { });
         onSuccess();
       }
     } catch (err: any) {
@@ -1116,87 +1116,87 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                         </div>
                       </form>
                     ) : (
-                    <form onSubmit={handlePasswordLogin} noValidate>
-                      <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                        <label htmlFor="userId">Institutional Email or User ID</label>
-                        <div className="input-wrap">
-                          <Mail className="input-icon" size={19} aria-hidden="true" />
-                          <input
-                            id="userId"
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="username or email"
-                            autoComplete="username"
-                            autoCapitalize="none"
-                            spellCheck={false}
-                            required
-                            disabled={loading}
-                          />
-                        </div>
-                      </motion.div>
+                      <form onSubmit={handlePasswordLogin} noValidate>
+                        <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                          <label htmlFor="userId">Institutional Email or User ID</label>
+                          <div className="input-wrap">
+                            <Mail className="input-icon" size={19} aria-hidden="true" />
+                            <input
+                              id="userId"
+                              type="text"
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              placeholder="username or email"
+                              autoComplete="username"
+                              autoCapitalize="none"
+                              spellCheck={false}
+                              required
+                              disabled={loading}
+                            />
+                          </div>
+                        </motion.div>
 
-                      <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                        <label htmlFor="password">Password</label>
-                        <div className="input-wrap">
-                          <Lock className="input-icon" size={19} aria-hidden="true" />
-                          <input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            autoComplete="current-password"
-                            required
-                            disabled={loading}
-                          />
+                        <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                          <label htmlFor="password">Password</label>
+                          <div className="input-wrap">
+                            <Lock className="input-icon" size={19} aria-hidden="true" />
+                            <input
+                              id="password"
+                              type={showPassword ? "text" : "password"}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="••••••••"
+                              autoComplete="current-password"
+                              required
+                              disabled={loading}
+                            />
+                            <button
+                              type="button"
+                              className="toggle-visibility cursor-pointer z-10"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setShowPassword(prev => !prev);
+                              }}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                            </button>
+                          </div>
+                        </motion.div>
+
+                        <motion.div className="row-between" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                          <label className="remember">
+                            <input
+                              type="checkbox"
+                              checked={rememberMe}
+                              onChange={(e) => setRememberMe(e.target.checked)}
+                            />
+                            <span>Remember me</span>
+                          </label>
                           <button
                             type="button"
-                            className="toggle-visibility cursor-pointer z-10"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setShowPassword(prev => !prev);
-                            }}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            onClick={() => { setCurrentView('forgot_password'); setForgotStep('dob'); setError(''); setSuccessMsg(''); }}
+                            className="forgot"
                           >
-                            {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                            Forgot password?
                           </button>
-                        </div>
-                      </motion.div>
+                        </motion.div>
 
-                      <motion.div className="row-between" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                        <label className="remember">
-                          <input
-                            type="checkbox"
-                            checked={rememberMe}
-                            onChange={(e) => setRememberMe(e.target.checked)}
-                          />
-                          <span>Remember me</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => { setCurrentView('forgot_password'); setForgotStep('dob'); setError(''); setSuccessMsg(''); }}
-                          className="forgot"
-                        >
-                          Forgot password?
-                        </button>
-                      </motion.div>
-
-                      <motion.button className="submit-btn" type="submit" disabled={loading} variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                        {loading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin shrink-0" size={18} />
-                            <span>{authStatusText || 'Signing in...'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Sign In</span>
-                            <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
-                          </>
-                        )}
-                      </motion.button>
-                    </form>
+                        <motion.button className="submit-btn" type="submit" disabled={loading} variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                          {loading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin shrink-0" size={18} />
+                              <span>{authStatusText || 'Signing in...'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Sign In</span>
+                              <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
+                            </>
+                          )}
+                        </motion.button>
+                      </form>
                     )
                   ) : (
                     /* OTP Form */

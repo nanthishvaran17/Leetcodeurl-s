@@ -42,7 +42,9 @@ def patch_manifest(manifest_bytes, new_version_code=104, new_version_name="4.6.4
 def main():
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     dist_dir = os.path.join(root, "frontend", "dist")
-    base_apk = os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.3_latest.apk")
+    base_apk = os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.4_latest.apk")
+    if not os.path.exists(base_apk):
+        base_apk = os.path.join(root, "releases", "android", "Nandha-LeetCode-Tracker-Latest.apk")
     temp_apk = os.path.join(root, "releases", "android", "temp_unsigned_v464.apk")
     v464_apk = os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.4_latest.apk")
     keystore = os.path.join(root, "frontend", "android", "nandha-release-key.jks")
