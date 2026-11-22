@@ -753,15 +753,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
         {/* Results Counter & Active Filter Pills */}
         <div className="pt-2 border-t border-slate-100 dark:border-navy-800/80 space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-          {/* Top Line: Showing count & Quick Reset */}
+          {/* Top Line: Showing count & Polished Quick Reset Pill */}
           <div className="flex items-center justify-between gap-2 px-0.5">
             <div className="min-w-0 text-xs">
               {filters.isFilteringActive ? (
-                <span>
+                <span className="text-slate-600 dark:text-slate-300">
                   Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
                 </span>
               ) : (
-                <span>Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
+                <span className="text-slate-600 dark:text-slate-300">Showing all <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students</span>
               )}
             </div>
 
@@ -772,16 +772,16 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   setLocalSearch('');
                   filters.resetFilters();
                 }}
-                className="shrink-0 text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer inline-flex items-center gap-1 active:scale-95 transition-all"
+                className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50/90 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 border border-rose-200/80 dark:border-rose-900/60 shadow-xs transition-all active:scale-95 cursor-pointer"
                 title="Reset all filters and search"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3 h-3 text-rose-500" />
                 <span>Reset Filters</span>
               </button>
             )}
           </div>
 
-          {/* Active Filter Tags & Delete Filtered Action */}
+          {/* Active Filter Tags */}
           {((filters.college !== 'ALL') || (filters.department !== 'ALL') || (filters.academicYear !== 'ALL')) && (
             <div className="flex flex-wrap items-center gap-1.5 px-0.5 pt-0.5">
               {/* Active College Tag */}
@@ -809,19 +809,6 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   Year: {filters.academicYear}
                   <button type="button" onClick={() => filters.setAcademicYear('ALL')} className="hover:text-rose-500 ml-0.5 cursor-pointer">✕</button>
                 </span>
-              )}
-
-              {/* Delete Filtered Dept/Year Button */}
-              {filters.isFilteringActive && (filters.department !== 'ALL' || filters.academicYear !== 'ALL') && (
-                <button
-                  type="button"
-                  onClick={() => setShowBatchDeleteModal(true)}
-                  className="inline-flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 font-bold hover:bg-rose-100 dark:hover:bg-rose-900/40 cursor-pointer border border-rose-200 dark:border-rose-900/60 bg-rose-50/80 dark:bg-rose-950/50 px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-xs"
-                  title="Batch delete students matching current department and year filters"
-                >
-                  <Trash2 className="w-3 h-3 text-rose-500 shrink-0" />
-                  <span>Delete by Department & Year</span>
-                </button>
               )}
             </div>
           )}

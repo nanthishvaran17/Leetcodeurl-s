@@ -65,6 +65,7 @@ interface GlobalNotificationContextType {
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
   archiveNotification: (id: string) => Promise<void>;
+  unarchiveNotification: (id: string) => Promise<void>;
   clearAllNotifications: () => Promise<void>;
   registerFCMDeviceToken: (token: string, platform?: string) => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
@@ -669,6 +670,26 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     }
   }, [allNotifications, token]);
 
+  const unarchiveNotification = useCallback(async (notificationId: string) => {
+    setAllNotifications(prev => prev.map(n => {
+      if (n.id === notificationId || n.eventId === notificationId) {
+        return { ...n, isArchived: false };
+      }
+      return n;
+    }));
+
+    if (token) {
+      try {
+        await fetch(getApiUrl(`/notifications/${notificationId}/unarchive`), {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (err) {
+        console.warn("REST API unarchive notice:", err);
+      }
+    }
+  }, [token]);
+
   const clearAllNotifications = useCallback(async () => {
     // Preserve archived notifications, clear all active ones
     setAllNotifications(prev => prev.filter(n => n.isArchived));
@@ -716,11 +737,12 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     markAllAsRead,
     deleteNotification,
     archiveNotification,
+    unarchiveNotification,
     clearAllNotifications,
     registerFCMDeviceToken,
     refreshNotifications: fetchFromBackendAPI
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [notifications, allNotifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, archiveNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
+  }), [notifications, allNotifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, archiveNotification, unarchiveNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
 
   return (
     <GlobalNotificationContext.Provider value={ctxValue}>

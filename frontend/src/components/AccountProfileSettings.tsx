@@ -9529,32 +9529,34 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
         </GlobalModalBackdrop>
       )}
 
-      {/* MODAL: LOGOUT CONFIRMATION */}
+      {/* MODAL: LOGOUT CONFIRMATION (Apple iOS Alert / Cupertino Style) */}
       {showLogoutConfirmModal && (
         <GlobalModalBackdrop isOpen={showLogoutConfirmModal} onClose={() => setShowLogoutConfirmModal(false)} className="flex items-center justify-center p-4">
-          <div className="relative max-w-sm w-full bg-white dark:bg-navy-900 rounded-3xl p-6 border-2 border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 animate-scale-up text-slate-900 dark:text-slate-100 text-center">
-            <div className="w-14 h-14 rounded-3xl bg-rose-50 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800 shadow-sm">
-              <LogOut className="w-7 h-7" />
+          <div className="relative max-w-[340px] w-full bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl backdrop-saturate-180 rounded-[28px] p-6 border border-black/[0.08] dark:border-white/[0.12] shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_65px_rgba(0,0,0,0.6)] space-y-4 animate-scale-up text-slate-900 dark:text-slate-100 text-center select-none">
+            <div className="w-14 h-14 rounded-full bg-rose-500/10 dark:bg-rose-500/20 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto ring-8 ring-rose-500/[0.05] dark:ring-rose-400/[0.08] shadow-inner transition-transform">
+              <LogOut className="w-6 h-6 ml-0.5" strokeWidth={2.2} />
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-base font-black text-slate-950 dark:text-white">
+            <div className="space-y-1.5">
+              <h3 className="text-[19px] font-bold text-slate-900 dark:text-white tracking-tight">
                 Sign Out of Portal?
               </h3>
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Signed in as <span className="font-black text-slate-900 dark:text-white">{fullName || user?.username || 'Nanthishvaran S'}</span>
+              <p className="text-[13px] text-slate-500 dark:text-slate-400 font-normal">
+                Signed in as <span className="font-semibold text-slate-900 dark:text-slate-100">{fullName || user?.username || 'Nanthishvaran S'}</span>
               </p>
-              <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800/90 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/90 dark:border-navy-700 shadow-2xs">
-                <Mail className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                <span className="font-mono font-semibold tracking-tight">{user?.email || 'nanthishvaran17@gmail.com'}</span>
+              <div className="pt-1">
+                <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-black/[0.04] dark:bg-white/[0.08] border border-black/[0.04] dark:border-white/[0.08] text-[12px] font-medium text-slate-700 dark:text-slate-300 shadow-2xs">
+                  <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
+                  <span className="font-mono text-[11.5px] tracking-tight">{user?.email || 'nanthishvaran17@gmail.com'}</span>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 pt-2">
+            <div className="flex items-center gap-2.5 pt-1.5">
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirmModal(false)}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-300 dark:border-navy-700 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 text-xs font-black transition-all cursor-pointer active:scale-95"
+                className="flex-1 py-3 px-4 rounded-[18px] bg-slate-200/80 hover:bg-slate-200 active:bg-slate-300/80 dark:bg-white/[0.12] dark:hover:bg-white/[0.18] dark:active:bg-white/[0.22] text-slate-800 dark:text-white text-[14px] font-semibold transition-all duration-150 cursor-pointer active:scale-[0.97]"
               >
                 Cancel
               </button>
@@ -9564,7 +9566,7 @@ Security Verification Hash: SHA256-${institutionalId.toLowerCase()}-verified
                   setShowLogoutConfirmModal(false);
                   logout();
                 }}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-600/30 transition-all cursor-pointer active:scale-95"
+                className="flex-1 py-3 px-4 rounded-[18px] bg-[#ff3b30] hover:bg-[#e0342a] active:bg-[#c92820] text-white text-[14px] font-semibold shadow-md shadow-rose-500/25 transition-all duration-150 cursor-pointer active:scale-[0.97]"
               >
                 Sign Out
               </button>

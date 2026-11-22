@@ -425,9 +425,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         filename,
         mimeType: 'application/pdf',
       });
-      if (res.success) {
-        notify.success('Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
-      } else {
+      if (!res.success) {
         notify.error('Unable to generate report', res.error || 'Please try again later.', { category: 'REPORTS' });
       }
     } catch (err: any) {
@@ -451,9 +449,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         filename,
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
-      if (res.success) {
-        notify.success('Master 10-Sheet Excel Workbook Downloaded', 'Weekly LeetCode Master Workbook downloaded successfully.', { category: 'REPORTS' });
-      } else {
+      if (!res.success) {
         notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
       }
     } catch (err: any) {

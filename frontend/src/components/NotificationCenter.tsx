@@ -11,7 +11,9 @@ import {
   X,
   ShieldAlert,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Trash2,
+  Bell
 } from 'lucide-react';
 import { useNotification, ToastNotification } from '../context/NotificationContext';
 
@@ -49,75 +51,75 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
     switch (toast.type) {
       case 'success':
         return {
-          bg: 'bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-xl border-emerald-500/40 dark:border-emerald-500/30',
-          badgeBg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
+          bg: 'bg-white dark:bg-[#0c1322] border-emerald-500/40 dark:border-emerald-500/35',
+          badgeBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/25',
           icon: CheckCircle2,
           iconColor: 'text-emerald-600 dark:text-emerald-400',
           progressBg: 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400',
           categoryColor: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/80 dark:border-emerald-800/60',
-          ambientGlow: 'from-emerald-500/20 via-teal-500/10',
-          ringGlow: 'shadow-[0_10px_35px_-8px_rgba(16,185,129,0.3)]',
+          ambientGlow: 'from-emerald-500/15 via-teal-500/5',
+          ringGlow: 'shadow-[0_12px_36px_-6px_rgba(0,0,0,0.16),0_4px_16px_-4px_rgba(16,185,129,0.2)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]',
           defaultCategory: 'SUCCESS',
         };
       case 'error':
         return {
-          bg: 'bg-white/95 dark:bg-[#1A0B14]/95 backdrop-blur-xl border-rose-500/40 dark:border-rose-500/30',
-          badgeBg: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25',
+          bg: 'bg-white dark:bg-[#1a0b14] border-rose-500/40 dark:border-rose-500/35',
+          badgeBg: 'bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400 border-rose-200 dark:border-rose-500/25',
           icon: XCircle,
           iconColor: 'text-rose-600 dark:text-rose-400',
           progressBg: 'bg-gradient-to-r from-rose-500 via-red-500 to-pink-500',
           categoryColor: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200/80 dark:border-rose-800/60',
-          ambientGlow: 'from-rose-500/25 via-pink-500/10',
-          ringGlow: 'shadow-[0_10px_35px_-8px_rgba(244,63,94,0.3)]',
+          ambientGlow: 'from-rose-500/15 via-pink-500/5',
+          ringGlow: 'shadow-[0_12px_36px_-6px_rgba(0,0,0,0.16),0_4px_16px_-4px_rgba(244,63,94,0.2)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]',
           defaultCategory: 'SYSTEM NOTICE',
         };
       case 'warning':
         return {
-          bg: 'bg-white/95 dark:bg-[#191408]/95 backdrop-blur-xl border-amber-500/40 dark:border-amber-500/30',
-          badgeBg: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25',
+          bg: 'bg-white dark:bg-[#191408] border-amber-500/40 dark:border-amber-500/35',
+          badgeBg: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 border-amber-200 dark:border-amber-500/25',
           icon: AlertTriangle,
           iconColor: 'text-amber-600 dark:text-amber-400',
           progressBg: 'bg-gradient-to-r from-amber-500 via-orange-400 to-yellow-400',
           categoryColor: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200/80 dark:border-amber-800/60',
-          ambientGlow: 'from-amber-500/25 via-yellow-500/10',
-          ringGlow: 'shadow-[0_10px_35px_-8px_rgba(245,158,11,0.3)]',
+          ambientGlow: 'from-amber-500/15 via-yellow-500/5',
+          ringGlow: 'shadow-[0_12px_36px_-6px_rgba(0,0,0,0.16),0_4px_16px_-4px_rgba(245,158,11,0.2)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]',
           defaultCategory: 'ATTENTION',
         };
       case 'ai':
         return {
-          bg: 'bg-slate-900/95 dark:bg-[#080B16]/95 backdrop-blur-xl border-indigo-500/40 text-white',
+          bg: 'bg-slate-900 dark:bg-[#080b16] border-indigo-500/40 text-white',
           badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30',
           icon: Bot,
           iconColor: 'text-indigo-400 animate-pulse',
           progressBg: 'bg-gradient-to-r from-indigo-500 via-purple-400 to-brand-400',
           categoryColor: 'text-indigo-300 bg-indigo-500/20 border-indigo-400/30',
-          ambientGlow: 'from-indigo-500/25 via-purple-500/15',
-          ringGlow: 'shadow-[0_10px_35px_-8px_rgba(99,102,241,0.35)]',
+          ambientGlow: 'from-indigo-500/20 via-purple-500/10',
+          ringGlow: 'shadow-[0_12px_36px_-6px_rgba(0,0,0,0.2),0_4px_16px_-4px_rgba(99,102,241,0.3)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.8)]',
           defaultCategory: 'INTELLIGENCE AI',
         };
       case 'loading':
         return {
-          bg: 'bg-white/95 dark:bg-[#0A1024]/95 backdrop-blur-xl border-indigo-500/40 dark:border-indigo-500/30',
-          badgeBg: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25',
+          bg: 'bg-white dark:bg-[#0a1024] border-indigo-500/40 dark:border-indigo-500/35',
+          badgeBg: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/25',
           icon: Loader2,
           iconColor: 'text-indigo-600 dark:text-indigo-400 animate-spin',
           progressBg: 'bg-gradient-to-r from-indigo-500 to-sky-400',
           categoryColor: 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200/80 dark:border-indigo-800/60',
-          ambientGlow: 'from-indigo-500/20 via-sky-500/10',
-          ringGlow: 'shadow-[0_10px_35px_-8px_rgba(99,102,241,0.25)]',
+          ambientGlow: 'from-indigo-500/15 via-sky-500/5',
+          ringGlow: 'shadow-[0_12px_36px_-6px_rgba(0,0,0,0.16),0_4px_16px_-4px_rgba(99,102,241,0.2)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]',
           defaultCategory: 'PROCESSING',
         };
       case 'info':
       default:
         return {
-          bg: 'bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl border-slate-200/90 dark:border-white/[0.12]',
-          badgeBg: 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/25',
+          bg: 'bg-white dark:bg-[#0b0f19] border-slate-300 dark:border-white/[0.15]',
+          badgeBg: 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400 border-brand-200 dark:border-brand-500/25',
           icon: Info,
           iconColor: 'text-brand-600 dark:text-brand-400',
           progressBg: 'bg-gradient-to-r from-brand-500 via-indigo-500 to-blue-400',
           categoryColor: 'text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border-brand-200/80 dark:border-brand-800/60',
-          ambientGlow: 'from-brand-500/20 via-indigo-500/10',
-          ringGlow: 'shadow-[0_10px_35px_-8px_rgba(99,102,241,0.25)]',
+          ambientGlow: 'from-brand-500/15 via-indigo-500/5',
+          ringGlow: 'shadow-[0_12px_36px_-6px_rgba(0,0,0,0.16),0_4px_16px_-4px_rgba(99,102,241,0.2)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]',
           defaultCategory: 'NOTIFICATION',
         };
     }
@@ -262,57 +264,73 @@ export const NotificationCenter: React.FC = () => {
           aria-labelledby="confirm-dialog-title"
         >
           <div
-            className="relative max-w-md w-full mx-auto bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/[0.12] rounded-3xl shadow-2xl shadow-slate-950/50 overflow-hidden p-6 sm:p-7 space-y-5 sm:space-y-6 animate-modal-content select-none"
+            className="relative max-w-md w-full mx-auto bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-white/[0.12] rounded-2xl shadow-2xl shadow-slate-950/50 overflow-hidden p-5 sm:p-6 space-y-4 animate-modal-content select-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header Icon & Category */}
-            <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center justify-between pb-0.5">
               <div
-                className={`p-3 rounded-2xl border ${
+                className={`p-2.5 rounded-xl border ${
                   confirmOptions.variant === 'danger'
-                    ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/25 shadow-sm shadow-rose-500/10'
+                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-sm shadow-rose-500/10'
                     : confirmOptions.variant === 'warning'
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25 shadow-sm shadow-amber-500/10'
-                    : 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/25 shadow-sm shadow-brand-500/10'
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-sm shadow-amber-500/10'
+                    : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20 shadow-sm shadow-brand-500/10'
                 }`}
               >
                 {confirmOptions.variant === 'danger' ? (
-                  <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <ShieldAlert className="w-5 h-5" />
                 ) : confirmOptions.variant === 'warning' ? (
-                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <AlertTriangle className="w-5 h-5" />
                 ) : (
-                  <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <HelpCircle className="w-5 h-5" />
                 )}
               </div>
 
-              {confirmOptions.category && (
-                <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-white/[0.06]">
-                  {confirmOptions.category}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {confirmOptions.category && (
+                  <span className="text-[11px] font-bold tracking-wide px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-white/[0.06] flex items-center gap-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      confirmOptions.variant === 'danger' ? 'bg-rose-500' : confirmOptions.variant === 'warning' ? 'bg-amber-500' : 'bg-brand-500'
+                    }`} />
+                    {confirmOptions.category}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => dismissConfirm(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Content Body */}
-            <div className="space-y-2.5">
-              <h3 id="confirm-dialog-title" className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
+            <div className="space-y-2">
+              <h3 id="confirm-dialog-title" className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
                 {confirmOptions.title}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                 {confirmOptions.message}
               </p>
               {confirmOptions.detail && (
-                <div className="mt-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-200 leading-relaxed break-words max-h-28 overflow-y-auto">
-                  {confirmOptions.detail}
+                <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border-l-3 border-rose-500 border-t border-r border-b border-slate-200/70 dark:border-white/[0.08] text-xs font-semibold text-slate-800 dark:text-slate-200 leading-relaxed break-words max-h-24 overflow-y-auto flex items-start gap-2.5">
+                  <Bell className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                  <span className="min-w-0 flex-1 truncate sm:whitespace-normal">
+                    {confirmOptions.detail}
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4 sm:pt-5 border-t border-slate-100 dark:border-white/[0.08]">
+            <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-slate-100 dark:border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => dismissConfirm(false)}
-                className="px-4.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs sm:text-[13px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] border border-slate-200/60 dark:border-white/[0.08] transition-all cursor-pointer"
               >
                 {confirmOptions.cancelLabel || 'Cancel'}
               </button>
@@ -321,14 +339,15 @@ export const NotificationCenter: React.FC = () => {
                 type="button"
                 onClick={() => dismissConfirm(true)}
                 autoFocus
-                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-lg transition-all active:scale-95 cursor-pointer ${
+                className={`px-4.5 py-2 rounded-xl text-xs sm:text-[13px] font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 ${
                   confirmOptions.variant === 'danger'
-                    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
+                    ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/25'
                     : confirmOptions.variant === 'warning'
-                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
-                    : 'bg-brand-600 hover:bg-brand-500 shadow-brand-600/30'
+                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/25'
+                    : 'bg-brand-600 hover:bg-brand-500 shadow-brand-600/25'
                 }`}
               >
+                {confirmOptions.variant === 'danger' && <Trash2 size={13} className="shrink-0" />}
                 {confirmOptions.confirmLabel || 'Confirm'}
               </button>
             </div>

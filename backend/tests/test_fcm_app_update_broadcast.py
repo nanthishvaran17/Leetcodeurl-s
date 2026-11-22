@@ -22,6 +22,7 @@ def test_publish_app_update_notification_endpoint():
     """Verify that publishing an APP_UPDATE notification dispatches FCM push message via HTTP v1 direct token delivery."""
     with patch("firebase_admin.messaging.send") as mock_send, \
          patch("firebase_admin.firestore.client") as mock_firestore, \
+         patch.dict("firebase_admin._apps", {"[DEFAULT]": MagicMock()}), \
          patch("backend.services.email_service.dispatch_notification_email") as mock_email:
 
         mock_send.return_value = "projects/leetcode-student-data/messages/test-msg-12345"
@@ -36,7 +37,7 @@ def test_publish_app_update_notification_endpoint():
         mock_firestore.return_value = mock_db
 
         from backend.database import SessionLocal
-        from backend.models import User
+        from backend.models import User, FCMDevice, NotificationRecord
         from backend.services.notification_service import NotificationService
 
         db = SessionLocal()
@@ -64,27 +65,37 @@ def test_publish_app_update_notification_endpoint():
         finally:
             db.close()
 
-        results = NotificationService.send_app_update_broadcast(
-            title="LeetCode Performance Update v2.0",
-            message="Real-time leaderboard sync & growth delta engine activated!",
-            feature_version="2.0.0",
-            action_route="/dashboard",
-            created_by="fcm_test_broadcast_user (Admin)"
-        )
+        try:
+            results = NotificationService.send_app_update_broadcast(
+                title="LeetCode Performance Update v2.0",
+                message="Real-time leaderboard sync & growth delta engine activated!",
+                feature_version="2.0.0",
+                action_route="/dashboard",
+                created_by="fcm_test_broadcast_user (Admin)"
+            )
 
-        assert results["success"] is True
-        assert "event_id" in results
-        
-        # Verify FCM messaging.send was called with direct token delivery for test device
-        assert mock_send.call_count >= 1
-        target_call = None
-        for call in mock_send.call_args_list:
-            msg = call[0][0]
-            if getattr(msg, "token", None) == "test_broadcast_token_123":
-                target_call = msg
-                break
-        assert target_call is not None, "Push notification was not sent to test_broadcast_token_123"
-        assert target_call.notification.title == "LeetCode Performance Update v2.0"
-        assert target_call.data["type"] == "APP_UPDATE_AVAILABLE"
-        assert target_call.data["actionRoute"] == "/dashboard"
-        assert target_call.data["version"] == "2.0.0"
+            assert results["success"] is True
+            assert "event_id" in results
+            
+            # Verify FCM messaging.send was called with direct token delivery for test device
+            assert mock_send.call_count >= 1
+            target_call = None
+            for call in mock_send.call_args_list:
+                msg = call[0][0]
+                if getattr(msg, "token", None) == "test_broadcast_token_123":
+                    target_call = msg
+                    break
+            assert target_call is not None, "Push notification was not sent to test_broadcast_token_123"
+            assert target_call.notification.title == "LeetCode Performance Update v2.0"
+            assert target_call.data["type"] == "APP_UPDATE_AVAILABLE"
+            assert target_call.data["actionRoute"] == "/dashboard"
+            assert target_call.data["version"] == "2.0.0"
+        finally:
+            cleanup_db = SessionLocal()
+            try:
+                cleanup_db.query(NotificationRecord).filter(NotificationRecord.title.like("%LeetCode Performance Update%")).delete(synchronize_session=False)
+                cleanup_db.query(FCMDevice).filter(FCMDevice.device_token == "test_broadcast_token_123").delete(synchronize_session=False)
+                cleanup_db.query(User).filter(User.username == "fcm_test_broadcast_user").delete(synchronize_session=False)
+                cleanup_db.commit()
+            finally:
+                cleanup_db.close()

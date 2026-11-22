@@ -1332,6 +1332,20 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   }, [isSessionLiveNow]);
 
+  // Auto-fetch full session roster for live preview & report verification
+  useEffect(() => {
+    if (showPreviewModal && selectedSessionId && allSessionRows.length < 10) {
+      api.get(`/contests/sessions/${selectedSessionId}/matrix?dept=ALL&year=ALL&attendance=ALL&paginated=false`)
+        .then(res => {
+          const items = res.data?.items || [];
+          if (items.length > 0) {
+            setAllSessionRows(items);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [showPreviewModal, selectedSessionId, allSessionRows.length]);
+
 
   async function fetchInitialContestData() {
     try {
@@ -1352,6 +1366,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         const latestSyncedCached = sortedCached.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
         const targetId = cachedCurr?.sessionId || liveSessionCached?.sessionId || latestSyncedCached?.sessionId || sortedCached[0]?.sessionId || null;
         if (targetId) {
+          selectedSessionIdRef.current = targetId;
           setSelectedSessionId(targetId);
         }
       }
@@ -1371,6 +1386,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const latestSynced = sortedList.find((s: any) => !(s.status || '').toUpperCase().includes('SCHEDULE'));
       const targetId = currRes?.sessionId || liveSession?.sessionId || latestSynced?.sessionId || sortedList[0]?.sessionId || null;
       if (targetId) {
+        selectedSessionIdRef.current = targetId;
         setSelectedSessionId(targetId);
       }
     } catch (err) {
@@ -1438,11 +1454,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     abortControllerRef.current = controller;
 
     const requestedSessionId = sessionId;
+    selectedSessionIdRef.current = sessionId;
     const reqId = ++latestReqIdRef.current;
     const t0 = performance.now();
     let summaryApiTime = 0;
     let questionsApiTime = 0;
     let rosterApiTime = 0;
+
+    const isCurrentSessionMatch = () => (selectedSessionIdRef.current === null || Number(selectedSessionIdRef.current) === Number(requestedSessionId));
 
     try {
       const searchParam = debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : '';
@@ -1456,7 +1475,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         { signal: controller.signal, ttlMs: 5000 }
       ).then((sData) => {
         summaryApiTime = performance.now() - t0;
-        if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+        if (reqId === latestReqIdRef.current && isCurrentSessionMatch()) {
           setFastSummary(sData);
           if (sData?.departmentStats) {
             setDepartmentStats(sData.departmentStats);
@@ -1475,7 +1494,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         { signal: controller.signal, ttlMs: 5000 }
       ).then((qData) => {
         questionsApiTime = performance.now() - t0;
-        if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+        if (reqId === latestReqIdRef.current && isCurrentSessionMatch()) {
           setQuestionStats(qData);
         }
         return qData;
@@ -1484,7 +1503,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       // TIER 3: Priority 3 Paginated Student Roster Matrix
       const matrixPromise = api.get(matrixUrl, { signal: controller.signal }).then((matRes) => {
         rosterApiTime = performance.now() - t0;
-        if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+        if (reqId === latestReqIdRef.current && isCurrentSessionMatch()) {
           const fetchedItems = matRes.data?.items || [];
           setMatrixRows(fetchedItems);
           if (fetchedItems.length >= 10 || dept === 'ALL') {
@@ -1590,6 +1609,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [syncStatusStage, setSyncStatusStage] = useState<string>('');
   const [showAuthRequiredModal, setShowAuthRequiredModal] = useState<boolean>(false);
   const [syncSummary, setSyncSummary] = useState<any>(null);
+
+  // Safety timer: ensure contest sync button never stays stuck on "Syncing..."
+  useEffect(() => {
+    if (isSyncing) {
+      const timer = setTimeout(() => {
+        setIsSyncing(false);
+        setSyncStatusStage('');
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSyncing]);
 
   const handleFetchSelectedContest = async () => {
     if (!selectedSessionId || isSyncing) return;
@@ -2275,14 +2305,40 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     });
   }, [matrixRows]);
 
-  // Memoized Debounced Filtered Rows with Instant Client-Side Fallback
-  const filteredMatrixRows = useMemo(() => {
-    if (matrixRows && matrixRows.length > 0) return matrixRows;
-
-    const pool = allSessionRows.length > 0 ? allSessionRows : (cachedStudents || []);
+  // Dynamic Full Dataset for Live Preview & Reports (Falls back to full student roster so never empty)
+  const previewDataset = useMemo(() => {
+    const pool = (allSessionRows && allSessionRows.length > 0)
+      ? allSessionRows
+      : (matrixRows && matrixRows.length > 0)
+        ? matrixRows
+        : (cachedStudents && cachedStudents.length > 0)
+          ? cachedStudents
+          : (globalStudents && globalStudents.length > 0)
+            ? globalStudents
+            : [];
     if (pool.length === 0) return [];
 
-    return pool.filter((r: any) => {
+    const normalizedPool = pool.map((r: any) => ({
+      ...r,
+      reg_no: r.reg_no || r.register_number || '—',
+      name: r.name || '—',
+      dept: r.dept || r.department || r.department_code || r.department_id || '—',
+      year: r.year || r.year_level || '—',
+      participation_status: r.participation_status || (r.status === 'PUBLIC' ? 'PUBLIC_ATTENDED' : r.status === 'VIRTUAL' ? 'VIRTUAL_ATTENDED' : 'PUBLIC_NOT_ATTENDED'),
+      status: r.status || (r.username ? 'NOT_ATTENDED' : 'USERNAME_NOT_FOUND'),
+      total_solved: r.total_solved ?? r.total_contest_solved ?? 0,
+      score: r.score ?? 0,
+      rank: r.rank || r.contest_rank || '—',
+      contest_rank: r.contest_rank || r.rank || '—',
+      contest_rating: r.contest_rating || r.rating || 'Unrated',
+      global_rank: r.contest_global_rank || r.global_rank || 'Unrated',
+      q1: r.q1 ?? 0,
+      q2: r.q2 ?? 0,
+      q3: r.q3 ?? 0,
+      q4: r.q4 ?? 0,
+    }));
+
+    return normalizedPool.filter((r: any) => {
       const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
       const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
       const isAttended = isPublicAttended || isVirtualAttended;
@@ -2311,7 +2367,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       return true;
     });
-  }, [matrixRows, allSessionRows, cachedStudents, selectedAttendanceFilter, selectedCollegeFilter, selectedDeptFilter, selectedYearFilter]);
+  }, [allSessionRows, matrixRows, cachedStudents, globalStudents, selectedAttendanceFilter, selectedCollegeFilter, selectedDeptFilter, selectedYearFilter]);
+
+  // Memoized Debounced Filtered Rows with Instant Client-Side Fallback
+  const filteredMatrixRows = useMemo(() => {
+    if (matrixRows && matrixRows.length > 0) return matrixRows;
+    return previewDataset;
+  }, [matrixRows, previewDataset]);
 
   // Handle Sort Click
   const handleSort = (key: string) => {
@@ -2330,14 +2392,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, [totalRows, pageSize]);
 
   const previewPaginatedRows = useMemo(() => {
-    if (previewPageSize >= filteredMatrixRows.length) return filteredMatrixRows;
+    if (previewPageSize >= previewDataset.length) return previewDataset;
     const start = (previewPage - 1) * previewPageSize;
-    return filteredMatrixRows.slice(start, start + previewPageSize);
-  }, [filteredMatrixRows, previewPage, previewPageSize]);
+    return previewDataset.slice(start, start + previewPageSize);
+  }, [previewDataset, previewPage, previewPageSize]);
 
   const previewTotalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(totalRows / (previewPageSize || 50)));
-  }, [totalRows, previewPageSize]);
+    return Math.max(1, Math.ceil(previewDataset.length / (previewPageSize || 50)));
+  }, [previewDataset.length, previewPageSize]);
 
   // Stable memoized callback so ContestMatrixRow's memo comparator can skip re-renders
   const handleRowCheckbox = useCallback((regNo: string, checked: boolean) => {
@@ -6523,7 +6585,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         </span>
                       </div>
                       <p className="text-xs text-brand-200/80 font-medium truncate mt-0.5">
-                        Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {filteredMatrixRows.length} Students
+                        Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {previewDataset.length} Students
                       </p>
                     </div>
                   </div>
@@ -6544,7 +6606,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   {/* Quick Metrics Badges */}
                   <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                     <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/50 font-black text-[11px]">
-                      Roster: {filteredMatrixRows.length}
+                      Roster: {previewDataset.length}
                     </span>
                     <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
                       Public: {stats.attendedRows}
@@ -6672,9 +6734,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
 
                   {/* Preview Pagination Toolbar */}
-                  {filteredMatrixRows.length > previewPageSize && (
+                  {previewDataset.length > previewPageSize && (
                     <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-slate-500">
-                      <span>Page {previewPage} of {previewTotalPages} ({totalRows} total)</span>
+                      <span>Page {previewPage} of {previewTotalPages} ({previewDataset.length} total)</span>
                       <div className="flex items-center space-x-1.5">
                         <button
                           type="button"
@@ -6697,45 +6759,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   )}
                 </div>
 
-                {/* D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) */}
-                <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                {/* D. CLEAN COMPACT ACTION FOOTER */}
+                <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
                   <span className="text-[11px] text-slate-500 font-bold font-mono">
                     Nandha Engineering College • LeetCode Tracker
                   </span>
-                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                    <button
-                      onClick={() => downloadReportFile('excel')}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
-                    >
-                      <FileSpreadsheet className="w-3.5 h-3.5" />
-                      <span>Excel (.xlsx)</span>
-                    </button>
-                    <button
-                      onClick={() => downloadReportFile('pdf')}
-                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>PDF (.pdf)</span>
-                    </button>
-                    <button
-                      onClick={() => downloadReportFile('word')}
-                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
-                    >
-                      <span>Word (.docx)</span>
-                    </button>
-                    <button
-                      onClick={() => downloadReportFile('zip')}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
-                    >
-                      <span>All (.zip)</span>
-                    </button>
-                    <button
-                      onClick={() => setShowPreviewModal(false)}
-                      className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer"
-                    >
-                      Done
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreviewModal(false)}
+                    className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             </div>,

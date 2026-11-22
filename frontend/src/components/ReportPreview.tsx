@@ -963,9 +963,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
         filename,
       });
 
-      if (res.success) {
-        notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'DOWNLOAD COMPLETED' });
-      } else {
+      if (!res.success) {
         notify.error('Download Failed', res.error || 'Failed to download report.', { category: 'REPORTS' });
       }
     } catch (err: any) {

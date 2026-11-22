@@ -40,23 +40,47 @@ if (!firebase.apps.length) {
 }
 
 // Initialize Firebase Messaging
-const messaging = firebase.messaging();
+let messaging = null;
+try {
+  messaging = firebase.messaging();
+} catch (mErr) {
+  console.warn('[firebase-messaging-sw.js] Could not initialize firebase.messaging():', mErr);
+}
 
-// Handle Background Push Messages
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+// In-memory set to prevent duplicate notification pops for the same event ID
+const recentlyShownNotifIds = new Set();
 
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'LeetCode Intelligence Alert';
-  const notificationBody = payload.notification?.body || payload.data?.body || payload.data?.message || 'New update received.';
-  const actionRoute = payload.data?.actionRoute || payload.data?.action_route || payload.data?.route || payload.fcmOptions?.link || '/dashboard';
-  const notificationId = payload.data?.notificationId || payload.data?.tag || ('notif_' + Date.now());
+/**
+ * Universal Background Notification Renderer
+ * Works seamlessly whether invoked by Firebase SDK, Native Web Push event, or Background Sync.
+ */
+function displayBackgroundNotification(payload) {
+  if (!payload) return Promise.resolve();
+  console.log('[firebase-messaging-sw.js] Rendering background notification with payload:', payload);
+
+  const rawData = payload.data || payload;
+  const notificationTitle = payload.notification?.title || rawData?.title || 'LeetCode Intelligence Alert';
+  const notificationBody = payload.notification?.body || rawData?.body || rawData?.message || 'New update received.';
+  const actionRoute = rawData?.actionRoute || rawData?.action_route || rawData?.route || payload.fcmOptions?.link || '/dashboard';
+  const notificationId = String(rawData?.notificationId || rawData?.eventId || rawData?.tag || ('notif_' + Date.now()));
+
+  // Deduplication check
+  if (recentlyShownNotifIds.has(notificationId)) {
+    console.log('[firebase-messaging-sw.js] Notification already rendered, skipping duplicate:', notificationId);
+    return Promise.resolve();
+  }
+  recentlyShownNotifIds.add(notificationId);
+  if (recentlyShownNotifIds.size > 200) {
+    const firstItem = recentlyShownNotifIds.values().next().value;
+    if (firstItem) recentlyShownNotifIds.delete(firstItem);
+  }
 
   const notificationOptions = {
     body: notificationBody,
     icon: '/round_logo.png',
     badge: '/favicon-32x32.png',
     vibrate: [200, 100, 200, 100, 200], // Phone vibration pattern
-    requireInteraction: true,           // Keeps notification visible on lock screen/desktop
+    requireInteraction: true,           // Keeps notification visible on lock screen / desktop until user interacts
     silent: false,                      // Ensures audio chime & vibration trigger
     actions: [
       { action: 'open', title: '👉 Open Details' },
@@ -66,7 +90,7 @@ messaging.onBackgroundMessage((payload) => {
       url: actionRoute,
       actionRoute: actionRoute,
       notificationId: notificationId,
-      ...payload.data
+      ...rawData
     },
     tag: notificationId,
     renotify: true,
@@ -76,7 +100,34 @@ messaging.onBackgroundMessage((payload) => {
     self.navigator.setAppBadge().catch(() => { });
   }
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+}
+
+// 1. Firebase Background Message Handler (when app is closed / background)
+if (messaging && typeof messaging.onBackgroundMessage === 'function') {
+  messaging.onBackgroundMessage((payload) => {
+    return displayBackgroundNotification(payload);
+  });
+}
+
+// 2. Direct Web Push Event Listener (Guaranteed delivery even when app is closed)
+self.addEventListener('push', (event) => {
+  let payload = {};
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (_e) {
+      try {
+        const textData = event.data.text();
+        payload = { notification: { title: 'LeetCode Intelligence', body: textData }, data: {} };
+      } catch (_e2) {
+        payload = { notification: { title: 'LeetCode Intelligence Alert', body: 'New alert received.' } };
+      }
+    }
+  } else {
+    payload = { notification: { title: 'LeetCode Intelligence Alert', body: 'New alert received.' } };
+  }
+  event.waitUntil(displayBackgroundNotification(payload));
 });
 
 // Handle notification click (Deep linking & client window focus)

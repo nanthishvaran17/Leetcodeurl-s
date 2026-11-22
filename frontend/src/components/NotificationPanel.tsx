@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Archive, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, TrendingUp, Users, Award, Activity, Volume2, Play, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { Bell, Check, Archive, ArchiveRestore, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, RefreshCw, TrendingUp, Users, Award, Activity, Volume2, Play, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
@@ -114,14 +114,16 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
         </div>
       </div>
 
-      {/* LEFT bg: Archive (revealed ONLY on right-swipe) */}
+      {/* LEFT bg: Archive / Unarchive (revealed ONLY on right-swipe) */}
       <div
-        className={`absolute inset-y-0 left-0 w-1/2 flex items-center justify-start bg-blue-600 px-5 rounded-l-2xl transition-opacity duration-150 ${swipeX > 0 ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+        className={`absolute inset-y-0 left-0 w-1/2 flex items-center justify-start ${n.isArchived ? 'bg-emerald-600' : 'bg-blue-600'} px-5 rounded-l-2xl transition-opacity duration-150 ${swipeX > 0 ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
           }`}
       >
         <div className="flex flex-col items-center gap-1 text-white">
-          <Archive size={18} />
-          <span className="text-[10px] font-black tracking-wide">Archive</span>
+          {n.isArchived ? <ArchiveRestore size={18} /> : <Archive size={18} />}
+          <span className="text-[10px] font-black tracking-wide">
+            {n.isArchived ? 'Unarchive' : 'Archive'}
+          </span>
         </div>
       </div>
 
@@ -165,6 +167,22 @@ const NotificationItem = ({ n, handleNotificationClick, confirmDeleteNotificatio
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">
                 {timeAgo(n.createdAt)}
               </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  confirmArchiveNotification(n);
+                }}
+                className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                  n.isArchived
+                    ? 'text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                    : 'text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40'
+                }`}
+                title={n.isArchived ? "Unarchive notification" : "Archive notification"}
+                aria-label={n.isArchived ? "Unarchive notification" : "Archive notification"}
+              >
+                {n.isArchived ? <ArchiveRestore size={12} /> : <Archive size={12} />}
+              </button>
               <button
                 type="button"
                 onClick={(e) => {
@@ -269,6 +287,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     markAllAsRead,
     deleteNotification,
     archiveNotification,
+    unarchiveNotification,
     clearAllNotifications,
     registerFCMDeviceToken,
     refreshNotifications
@@ -315,11 +334,14 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
 
   const confirmArchiveNotification = async (notification: Notification, onFinish?: () => void) => {
     try {
-      await archiveNotification(notification.id);
-      notify.info('Archived', 'Moved to Archived tab', { duration: 2200 });
+      if (notification.isArchived) {
+        await unarchiveNotification(notification.id);
+      } else {
+        await archiveNotification(notification.id);
+      }
       if (onFinish) onFinish();
     } catch (err: any) {
-      notify.error('Archive Failed', err.message || 'Unable to archive notification.', { category: 'NOTIFICATION' });
+      notify.error(notification.isArchived ? 'Unarchive Failed' : 'Archive Failed', err.message || 'Operation failed.', { category: 'NOTIFICATION' });
     }
   };
 

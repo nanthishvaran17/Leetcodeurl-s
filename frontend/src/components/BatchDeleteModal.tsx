@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { 
-  Trash2, AlertTriangle, X, Loader2, Building2, Calendar, School, 
+import {
+  Trash2, AlertTriangle, X, Loader2, Building2, Calendar, School,
   Check, Users, ShieldAlert, AlertCircle, ShieldCheck, Search, CheckSquare, Square, MinusSquare,
   ChevronLeft, ChevronRight, ChevronDown
 } from 'lucide-react';
@@ -14,7 +14,7 @@ export interface BatchDeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  departments: Department[] | Array<{ id?: number; name: string; code: string; [key: string]: any }>;
+  departments: Department[] | Array<{ id?: number; name: string; code: string;[key: string]: any }>;
   initialDepartment?: string;
   initialAcademicYear?: string;
   initialCollege?: string;
@@ -53,7 +53,7 @@ function normalizeInputYear(yr?: string): string {
   return yr;
 }
 
-function normalizeInputDept(dept?: string, depts?: Array<{ id?: number; code: string; name: string; [key: string]: any }>): string {
+function normalizeInputDept(dept?: string, depts?: Array<{ id?: number; code: string; name: string;[key: string]: any }>): string {
   if (!dept) return 'ALL';
   const u = dept.trim().toUpperCase();
   if (u === 'ALL' || u === 'ALL DEPARTMENTS' || u === 'ALL_DEPARTMENTS') return 'ALL';
@@ -76,7 +76,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
   initialCollege = 'ALL'
 }) => {
   const { notify } = useNotification();
-  
+
   const [selectedDept, setSelectedDept] = useState<string>(() => normalizeInputDept(initialDepartment, departments as any));
   const [selectedYear, setSelectedYear] = useState<string>(() => normalizeInputYear(initialAcademicYear));
   const [selectedCollege, setSelectedCollege] = useState<'ALL' | 'NEC' | 'NCT'>(
@@ -84,7 +84,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
   );
   const [isSoftDelete, setIsSoftDelete] = useState<boolean>(false);
   const [confirmChecked, setConfirmChecked] = useState<boolean>(false);
-  
+
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -268,7 +268,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
   const filteredStudents = useMemo(() => {
     if (!searchFilter.trim()) return studentList;
     const q = searchFilter.trim().toLowerCase();
-    return studentList.filter(s => 
+    return studentList.filter(s =>
       (s.name && s.name.toLowerCase().includes(q)) ||
       (s.reg_no && s.reg_no.toLowerCase().includes(q))
     );
@@ -439,7 +439,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
       zIndex={100000}
       className="flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 dark:bg-black/80 backdrop-blur-md overflow-hidden"
     >
-      <div 
+      <div
         className="bg-white dark:bg-[#0c1424] rounded-t-[32px] sm:rounded-3xl w-full max-w-full sm:max-w-2xl shadow-2xl flex flex-col h-auto max-h-[88dvh] sm:max-h-[88vh] overflow-hidden border-t sm:border border-slate-200 dark:border-white/10 animate-fade-in-up select-text m-0 sm:my-auto"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -452,7 +452,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
           <div className="px-5 pt-3 pb-3.5 bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-500/15 dark:via-rose-950/20 dark:to-transparent border-b border-rose-100 dark:border-rose-950/50">
             {/* Grabber Handle */}
             <div className="w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2.5 shrink-0" />
-            
+
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 flex items-center justify-center shrink-0 shadow-xs">
@@ -472,7 +472,7 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
                   </p>
                 </div>
               </div>
-              
+
               <button
                 type="button"
                 disabled={isDeleting}
@@ -488,390 +488,384 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
           {/* Modal Scrollable Body */}
           <div className="p-4 sm:p-5 space-y-4">
 
-          {/* Section 1: Compact Filter Bar (Department, Year, Campus, Mode) */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-800 space-y-3">
-            
-            {/* Top row: Dept & Year Dropdowns */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <CustomDropdown
-                id="batch-delete-department"
-                label="Department"
-                icon={Building2}
-                value={selectedDept}
-                onChange={(val) => setSelectedDept(val)}
-                options={deptOptions}
-                placeholder="Select Department"
-              />
-              <CustomDropdown
-                id="batch-delete-year"
-                label="Academic Year"
-                icon={Calendar}
-                value={selectedYear}
-                onChange={(val) => setSelectedYear(val)}
-                options={yearOptions}
-                placeholder="Select Academic Year"
-              />
-            </div>
+            {/* Section 1: Compact Filter Bar (Department, Year, Campus, Mode) */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-900/60 border border-slate-200/80 dark:border-navy-800 space-y-3">
 
-            {/* Bottom row: Campus Scope & Execution Mode */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1 border-t border-slate-200/60 dark:border-navy-800/80">
-              
-              {/* Campus Selector */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                  Campus:
-                </span>
-                <div className="inline-flex rounded-lg bg-white dark:bg-navy-950 p-0.5 border border-slate-200 dark:border-navy-800 text-xs">
-                  {(['ALL', 'NEC', 'NCT'] as const).map((campus) => {
-                    const isSel = selectedCollege === campus;
-                    return (
-                      <button
-                        key={campus}
-                        type="button"
-                        onClick={() => setSelectedCollege(campus)}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                          isSel
-                            ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 font-extrabold'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                        }`}
-                      >
-                        {campus === 'ALL' ? 'All' : campus}
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Top row: Dept & Year Dropdowns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <CustomDropdown
+                  id="batch-delete-department"
+                  label="Department"
+                  icon={Building2}
+                  value={selectedDept}
+                  onChange={(val) => setSelectedDept(val)}
+                  options={deptOptions}
+                  placeholder="Select Department"
+                />
+                <CustomDropdown
+                  id="batch-delete-year"
+                  label="Academic Year"
+                  icon={Calendar}
+                  value={selectedYear}
+                  onChange={(val) => setSelectedYear(val)}
+                  options={yearOptions}
+                  placeholder="Select Academic Year"
+                />
               </div>
 
-              {/* Mode Toggle */}
-              <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
-                  Mode:
-                </span>
-                <div className="inline-flex rounded-lg bg-white dark:bg-navy-950 p-0.5 border border-slate-200 dark:border-navy-800 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setIsSoftDelete(false)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                      !isSoftDelete
-                        ? 'bg-rose-600 text-white font-extrabold shadow-2xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    Permanent Delete
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsSoftDelete(true)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                      isSoftDelete
-                        ? 'bg-amber-600 text-white font-extrabold shadow-2xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    Deactivate Only
-                  </button>
-                </div>
-              </div>
+              {/* Bottom row: Campus Scope & Execution Mode */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1 border-t border-slate-200/60 dark:border-navy-800/80">
 
-            </div>
-
-          </div>
-
-          {/* Section 2: When NO specific filter is chosen -> Quick Select Prompt */}
-          {!hasSpecificFilter && (
-            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-center space-y-3">
-              <Users className="w-8 h-8 text-rose-500/60 mx-auto" />
-              <div>
-                <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200">
-                  Choose a Department or Academic Year
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-0.5">
-                  Select a specific branch or academic batch above to audit and select students.
-                </p>
-              </div>
-
-              {/* Quick Select Chips */}
-              <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5">
-                {departments.slice(0, 4).map(d => (
-                  <button
-                    key={d.code}
-                    type="button"
-                    onClick={() => setSelectedDept(d.code)}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-navy-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 transition-all cursor-pointer shadow-2xs"
-                  >
-                    {d.code}
-                  </button>
-                ))}
-                {(['1st Year', '2nd Year', '3rd Year', '4th Year'] as const).map(yr => (
-                  <button
-                    key={yr}
-                    type="button"
-                    onClick={() => setSelectedYear(yr)}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 hover:bg-slate-100 transition-all cursor-pointer shadow-2xs"
-                  >
-                    {yr}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Section 3: Interactive Student Selection Ledger (Select All / Row Select) */}
-          {hasSpecificFilter && (
-            <div className="space-y-3">
-              
-              {/* Header Info & Toolbar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                
-                {/* Left: Select All Checkbox + Count Pill */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleToggleSelectAll}
-                    disabled={isLoadingPreview || studentList.length === 0}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-40"
-                  >
-                    {isAllSelected ? (
-                      <CheckSquare className="w-4 h-4 text-rose-600" />
-                    ) : isPartiallySelected ? (
-                      <MinusSquare className="w-4 h-4 text-rose-600" />
-                    ) : (
-                      <Square className="w-4 h-4 text-slate-400" />
-                    )}
-                    <span>Select All ({studentList.length})</span>
-                  </button>
-
-                  <span className={`px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border ${
-                    selectedStudentIds.size > 0
-                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60'
-                      : 'bg-slate-100 dark:bg-navy-900 text-slate-500 border-slate-200 dark:border-navy-800'
-                  }`}>
-                    {selectedStudentIds.size} of {studentList.length} Selected
+                {/* Campus Selector */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                    Campus:
                   </span>
-                </div>
-
-                {/* Right: Quick Search Filter */}
-                {studentList.length > 5 && (
-                  <div className="relative w-full sm:w-56">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Filter by name / roll..."
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                      className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
-                    />
-                  </div>
-                )}
-
-              </div>
-
-              {/* Student Rows Container */}
-              {isLoadingPreview ? (
-                <div className="p-8 text-center bg-slate-50 dark:bg-navy-900/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-rose-500 mx-auto" />
-                  <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
-                    Scanning student records for matching cohort...
-                  </p>
-                </div>
-              ) : studentList.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-center space-y-1">
-                  <Users className="w-7 h-7 opacity-30 mx-auto text-slate-400" />
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Matching Students Found</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    No active student records match Department ({selectedDept}) and Year ({selectedYear}).
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-950 shadow-xs">
-                  
-                  {/* Cohort Summary Bar */}
-                  <div className="px-3.5 py-2 bg-slate-100/90 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between text-xs">
-                    <span className="font-extrabold text-slate-700 dark:text-slate-300 text-[11px]">
-                      Student Roster ({filteredStudents.length} {filteredStudents.length !== studentList.length ? `matching "${searchFilter}"` : 'records'})
-                    </span>
-                    {preview?.protected_count ? (
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>{preview.protected_count} Admin Protected</span>
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {/* Scrollable Rows */}
-                  <div className="max-h-64 sm:max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-navy-800/80 custom-scrollbar overscroll-contain">
-                    {paginatedStudents.map((st) => {
-                      const isSelected = selectedStudentIds.has(st.id);
+                  <div className="inline-flex rounded-lg bg-white dark:bg-navy-950 p-0.5 border border-slate-200 dark:border-navy-800 text-xs">
+                    {(['ALL', 'NEC', 'NCT'] as const).map((campus) => {
+                      const isSel = selectedCollege === campus;
                       return (
-                        <div
-                          key={st.id}
-                          onClick={() => handleToggleStudent(st.id)}
-                          className={`px-3.5 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none ${
-                            isSelected
-                              ? 'bg-rose-50/70 dark:bg-rose-950/30'
-                              : 'hover:bg-slate-50 dark:hover:bg-navy-900/50'
-                          }`}
+                        <button
+                          key={campus}
+                          type="button"
+                          onClick={() => setSelectedCollege(campus)}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${isSel
+                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 font-extrabold'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
                         >
-                          {/* Checkbox + Name & RegNo */}
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleToggleStudent(st.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-4 h-4 rounded text-rose-600 border-slate-300 dark:border-navy-700 focus:ring-rose-500 cursor-pointer shrink-0"
-                            />
-                            <div className="min-w-0">
-                              <p className={`font-bold text-xs truncate ${isSelected ? 'text-rose-900 dark:text-rose-200' : 'text-slate-900 dark:text-white'}`}>
-                                {st.name}
-                              </p>
-                              <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
-                                {st.reg_no}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Dept / Year / Campus Badges */}
-                          <div className="text-right shrink-0 flex items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                              {st.department}
-                            </span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
-                              Yr {st.year_level}
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200/60 text-slate-600 dark:bg-navy-800/80 dark:text-slate-400">
-                              {st.college || 'NEC'}
-                            </span>
-                          </div>
-                        </div>
+                          {campus === 'ALL' ? 'All' : campus}
+                        </button>
                       );
                     })}
                   </div>
+                </div>
 
-                  {/* 3. Pagination Controls Bar */}
-                  {filteredStudents.length > 0 && (
-                    <div className="px-3.5 py-2.5 bg-slate-50/90 dark:bg-navy-900/90 border-t border-slate-200 dark:border-navy-800 flex flex-wrap items-center justify-between gap-2.5 text-xs select-none">
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[11px] font-medium">
-                        <span>
-                          Showing <span className="font-bold text-slate-700 dark:text-slate-200">{Math.min((safePage - 1) * pageSize + 1, filteredStudents.length)}</span> - <span className="font-bold text-slate-700 dark:text-slate-200">{Math.min(safePage * pageSize, filteredStudents.length)}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{filteredStudents.length}</span>
-                        </span>
-                        <span className="text-slate-300 dark:text-navy-700">|</span>
-                        
-                        {/* Custom Animated Per Page Dropdown */}
-                        <div className="relative flex items-center gap-1.5" ref={pageSizeDropdownRef}>
-                          <span className="text-slate-500 dark:text-slate-400">Per page:</span>
-                          <button
-                            type="button"
-                            onClick={() => setIsPageSizeOpen(!isPageSizeOpen)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700/80 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:shadow-xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 active:scale-95"
-                          >
-                            <span>{pageSize}</span>
-                            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isPageSizeOpen ? 'rotate-180 text-indigo-500' : ''}`} />
-                          </button>
+                {/* Mode Toggle */}
+                <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                    Mode:
+                  </span>
+                  <div className="inline-flex rounded-lg bg-white dark:bg-navy-950 p-0.5 border border-slate-200 dark:border-navy-800 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setIsSoftDelete(false)}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${!isSoftDelete
+                          ? 'bg-rose-600 text-white font-extrabold shadow-2xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                    >
+                      Permanent Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsSoftDelete(true)}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${isSoftDelete
+                          ? 'bg-amber-600 text-white font-extrabold shadow-2xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                    >
+                      Deactivate Only
+                    </button>
+                  </div>
+                </div>
 
-                          {/* Floating Custom Menu (Opens upwards to never overflow bottom frame) */}
-                          {isPageSizeOpen && (
-                            <div className="absolute bottom-full mb-1.5 left-0 z-50 min-w-[100px] py-1 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-xl shadow-xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
-                              <div className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-navy-800">
-                                Page Size
-                              </div>
-                              {[10, 20, 50, 100].map((size) => {
-                                const isSelected = pageSize === size;
-                                return (
-                                  <button
-                                    key={size}
-                                    type="button"
-                                    onClick={() => {
-                                      setPageSize(size);
-                                      setPage(1);
-                                      setIsPageSizeOpen(false);
-                                    }}
-                                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400'
-                                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800'
-                                    }`}
-                                  >
-                                    <span>{size}</span>
-                                    {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              </div>
 
-                      <div className="flex items-center gap-1.5 ml-auto">
-                        <button
-                          type="button"
-                          disabled={safePage <= 1}
-                          onClick={() => setPage(p => Math.max(1, p - 1))}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 hover:border-slate-300 dark:hover:border-navy-700 transition shadow-2xs cursor-pointer active:scale-95"
-                        >
-                          <ChevronLeft className="w-3.5 h-3.5" />
-                          <span>Prev</span>
-                        </button>
+            </div>
 
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-950/80 border border-slate-200/60 dark:border-navy-800 text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
-                          {safePage} / {totalPages}
-                        </span>
+            {/* Section 2: When NO specific filter is chosen -> Quick Select Prompt */}
+            {!hasSpecificFilter && (
+              <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-center space-y-3">
+                <Users className="w-8 h-8 text-rose-500/60 mx-auto" />
+                <div>
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                    Choose a Department or Academic Year
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-0.5">
+                    Select a specific branch or academic batch above to audit and select students.
+                  </p>
+                </div>
 
-                        <button
-                          type="button"
-                          disabled={safePage >= totalPages}
-                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 hover:border-slate-300 dark:hover:border-navy-700 transition shadow-2xs cursor-pointer active:scale-95"
-                        >
-                          <span>Next</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                {/* Quick Select Chips */}
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5">
+                  {departments.slice(0, 4).map(d => (
+                    <button
+                      key={d.code}
+                      type="button"
+                      onClick={() => setSelectedDept(d.code)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-navy-800 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 transition-all cursor-pointer shadow-2xs"
+                    >
+                      {d.code}
+                    </button>
+                  ))}
+                  {(['1st Year', '2nd Year', '3rd Year', '4th Year'] as const).map(yr => (
+                    <button
+                      key={yr}
+                      type="button"
+                      onClick={() => setSelectedYear(yr)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700 hover:bg-slate-100 transition-all cursor-pointer shadow-2xs"
+                    >
+                      {yr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Section 3: Interactive Student Selection Ledger (Select All / Row Select) */}
+            {hasSpecificFilter && (
+              <div className="space-y-3">
+
+                {/* Header Info & Toolbar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+
+                  {/* Left: Select All Checkbox + Count Pill */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleToggleSelectAll}
+                      disabled={isLoadingPreview || studentList.length === 0}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs font-extrabold text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-40"
+                    >
+                      {isAllSelected ? (
+                        <CheckSquare className="w-4 h-4 text-rose-600" />
+                      ) : isPartiallySelected ? (
+                        <MinusSquare className="w-4 h-4 text-rose-600" />
+                      ) : (
+                        <Square className="w-4 h-4 text-slate-400" />
+                      )}
+                      <span>Select All ({studentList.length})</span>
+                    </button>
+
+                    <span className={`px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border ${selectedStudentIds.size > 0
+                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60'
+                        : 'bg-slate-100 dark:bg-navy-900 text-slate-500 border-slate-200 dark:border-navy-800'
+                      }`}>
+                      {selectedStudentIds.size} of {studentList.length} Selected
+                    </span>
+                  </div>
+
+                  {/* Right: Quick Search Filter */}
+                  {studentList.length > 5 && (
+                    <div className="relative w-full sm:w-56">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Filter by name / roll..."
+                        value={searchFilter}
+                        onChange={(e) => setSearchFilter(e.target.value)}
+                        className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                      />
                     </div>
                   )}
 
                 </div>
-              )}
 
-              {/* Safety Confirmation Checkbox (Visible when at least 1 student is selected) */}
-              {selectedStudentIds.size > 0 && (
-                <div className="p-3.5 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/60 space-y-2">
-                  <div className="flex items-start gap-2.5 text-rose-800 dark:text-rose-200 text-xs">
-                    <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                    <p className="font-bold leading-tight">
-                      {isSoftDelete
-                        ? `You are targeting ${selectedStudentIds.size} student(s) for deactivation. They will be hidden from active leaderboards.`
-                        : `Permanent Purge: This will permanently delete ${selectedStudentIds.size} student record(s), contest history, and logs. This action cannot be reversed.`}
+                {/* Student Rows Container */}
+                {isLoadingPreview ? (
+                  <div className="p-8 text-center bg-slate-50 dark:bg-navy-900/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-rose-500 mx-auto" />
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                      Scanning student records for matching cohort...
                     </p>
                   </div>
+                ) : studentList.length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-center space-y-1">
+                    <Users className="w-7 h-7 opacity-30 mx-auto text-slate-400" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No Matching Students Found</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      No active student records match Department ({selectedDept}) and Year ({selectedYear}).
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-950 shadow-xs">
 
-                  <label className="flex items-center gap-2.5 text-xs font-black text-slate-900 dark:text-white cursor-pointer select-none pt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={confirmChecked}
-                      onChange={(e) => setConfirmChecked(e.target.checked)}
-                      className="w-4 h-4 rounded text-rose-600 border-rose-300 focus:ring-rose-500 cursor-pointer shrink-0"
-                    />
-                    <span>
-                      I confirm and authorize {isSoftDelete ? 'deactivating' : 'permanently deleting'} these {selectedStudentIds.size} students.
-                    </span>
-                  </label>
-                </div>
-              )}
+                    {/* Cohort Summary Bar */}
+                    <div className="px-3.5 py-2 bg-slate-100/90 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between text-xs">
+                      <span className="font-extrabold text-slate-700 dark:text-slate-300 text-[11px]">
+                        Student Roster ({filteredStudents.length} {filteredStudents.length !== studentList.length ? `matching "${searchFilter}"` : 'records'})
+                      </span>
+                      {preview?.protected_count ? (
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>{preview.protected_count} Admin Protected</span>
+                        </span>
+                      ) : null}
+                    </div>
 
-            </div>
-          )}
+                    {/* Scrollable Rows */}
+                    <div className="max-h-64 sm:max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-navy-800/80 custom-scrollbar overscroll-contain">
+                      {paginatedStudents.map((st) => {
+                        const isSelected = selectedStudentIds.has(st.id);
+                        return (
+                          <div
+                            key={st.id}
+                            onClick={() => handleToggleStudent(st.id)}
+                            className={`px-3.5 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition-colors select-none ${isSelected
+                                ? 'bg-rose-50/70 dark:bg-rose-950/30'
+                                : 'hover:bg-slate-50 dark:hover:bg-navy-900/50'
+                              }`}
+                          >
+                            {/* Checkbox + Name & RegNo */}
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleStudent(st.id)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-4 h-4 rounded text-rose-600 border-slate-300 dark:border-navy-700 focus:ring-rose-500 cursor-pointer shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <p className={`font-bold text-xs truncate ${isSelected ? 'text-rose-900 dark:text-rose-200' : 'text-slate-900 dark:text-white'}`}>
+                                  {st.name}
+                                </p>
+                                <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                                  {st.reg_no}
+                                </p>
+                              </div>
+                            </div>
 
-          {/* Error Banner */}
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2.5">
-              <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+                            {/* Dept / Year / Campus Badges */}
+                            <div className="text-right shrink-0 flex items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                {st.department}
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
+                                Yr {st.year_level}
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200/60 text-slate-600 dark:bg-navy-800/80 dark:text-slate-400">
+                                {st.college || 'NEC'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
 
+                    {/* 3. Pagination Controls Bar */}
+                    {filteredStudents.length > 0 && (
+                      <div className="px-3 py-1.5 bg-slate-50/90 dark:bg-navy-900/90 border-t border-slate-200 dark:border-navy-800 flex flex-wrap items-center justify-between gap-1.5 text-xs select-none">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] font-medium">
+                          <span>
+                            Showing <span className="font-bold text-slate-700 dark:text-slate-200">{Math.min((safePage - 1) * pageSize + 1, filteredStudents.length)}</span> - <span className="font-bold text-slate-700 dark:text-slate-200">{Math.min(safePage * pageSize, filteredStudents.length)}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{filteredStudents.length}</span>
+                          </span>
+                          <span className="text-slate-300 dark:text-navy-700">|</span>
+
+                          {/* Custom Animated Per Page Dropdown */}
+                          <div className="relative flex items-center gap-1" ref={pageSizeDropdownRef}>
+                            <span className="text-slate-500 dark:text-slate-400">Per page:</span>
+                            <button
+                              type="button"
+                              onClick={() => setIsPageSizeOpen(!isPageSizeOpen)}
+                              className="inline-flex items-center gap-1 h-6 px-2 py-0.5 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700/80 text-[11px] font-bold text-slate-800 dark:text-slate-200 shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all cursor-pointer focus:outline-none active:scale-95"
+                            >
+                              <span>{pageSize}</span>
+                              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isPageSizeOpen ? 'rotate-180 text-indigo-500' : ''}`} />
+                            </button>
+
+                            {/* Floating Custom Menu (Opens upwards to never overflow bottom frame) */}
+                            {isPageSizeOpen && (
+                              <div className="absolute bottom-full mb-1 left-0 z-50 min-w-[84px] py-0.5 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 rounded-lg shadow-xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
+                                <div className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-navy-800">
+                                  Page Size
+                                </div>
+                                {[10, 20, 50, 100].map((size) => {
+                                  const isSelected = pageSize === size;
+                                  return (
+                                    <button
+                                      key={size}
+                                      type="button"
+                                      onClick={() => {
+                                        setPageSize(size);
+                                        setPage(1);
+                                        setIsPageSizeOpen(false);
+                                      }}
+                                      className={`w-full flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer ${isSelected
+                                          ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400'
+                                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800'
+                                        }`}
+                                    >
+                                      <span>{size}</span>
+                                      {isSelected && <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400 stroke-[2.5]" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 ml-auto">
+                          <button
+                            type="button"
+                            disabled={safePage <= 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="inline-flex items-center gap-0.5 h-6 px-2 py-0.5 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 hover:border-slate-300 dark:hover:border-navy-700 transition shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <ChevronLeft className="w-3 h-3" />
+                            <span>Prev</span>
+                          </button>
+
+                          <span className="inline-flex items-center justify-center h-6 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-950/80 border border-slate-200/60 dark:border-navy-800 text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
+                            {safePage} / {totalPages}
+                          </span>
+
+                          <button
+                            type="button"
+                            disabled={safePage >= totalPages}
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            className="inline-flex items-center gap-0.5 h-6 px-2 py-0.5 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-navy-800 hover:border-slate-300 dark:hover:border-navy-700 transition shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <span>Next</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+
+                {/* Safety Confirmation Checkbox (Visible when at least 1 student is selected) */}
+                {selectedStudentIds.size > 0 && (
+                  <div className="p-3.5 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-900/60 space-y-2">
+                    <div className="flex items-start gap-2.5 text-rose-800 dark:text-rose-200 text-xs">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <p className="font-bold leading-tight">
+                        {isSoftDelete
+                          ? `You are targeting ${selectedStudentIds.size} student(s) for deactivation. They will be hidden from active leaderboards.`
+                          : `Permanent Purge: This will permanently delete ${selectedStudentIds.size} student record(s), contest history, and logs. This action cannot be reversed.`}
+                      </p>
+                    </div>
+
+                    <label className="flex items-center gap-2.5 text-xs font-black text-slate-900 dark:text-white cursor-pointer select-none pt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={confirmChecked}
+                        onChange={(e) => setConfirmChecked(e.target.checked)}
+                        className="w-4 h-4 rounded text-rose-600 border-rose-300 focus:ring-rose-500 cursor-pointer shrink-0"
+                      />
+                      <span>
+                        I confirm and authorize {isSoftDelete ? 'deactivating' : 'permanently deleting'} these {selectedStudentIds.size} students.
+                      </span>
+                    </label>
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* Error Banner */}
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-bold flex items-center gap-2.5">
+                <ShieldAlert className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+          </div>
         </div>
-      </div>
 
         {/* Modal Footer */}
         <div className="px-5 py-3.5 border-t border-slate-200 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/90 backdrop-blur-md flex items-center justify-end gap-3 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-3.5">
@@ -888,11 +882,10 @@ export const BatchDeleteModal: React.FC<BatchDeleteModalProps> = ({
             type="button"
             disabled={buttonState.disabled}
             onClick={handleExecuteDelete}
-            className={`flex-1 sm:flex-initial px-6 py-2.5 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer min-h-[42px] whitespace-nowrap ${
-              buttonState.disabled
+            className={`flex-1 sm:flex-initial px-6 py-2.5 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer min-h-[42px] whitespace-nowrap ${buttonState.disabled
                 ? 'bg-slate-200 dark:bg-navy-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-navy-700 shadow-none cursor-not-allowed'
                 : 'bg-gradient-to-r from-rose-600 via-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:from-rose-700 text-white shadow-rose-600/25 active:scale-95'
-            }`}
+              }`}
           >
             {isDeleting ? (
               <>

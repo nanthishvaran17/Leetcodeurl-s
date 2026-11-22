@@ -1823,7 +1823,7 @@ def test_admin_email_delivery(
 
 def _resolve_and_verify_dob(clean_ident: str, dob_clean: str, db: Session):
     if not clean_ident:
-        raise HTTPException(status_code=400, detail="Please enter your Register Number or Staff ID / Email.")
+        raise HTTPException(status_code=400, detail="Please enter your Staff ID or registered institutional email.")
     if not dob_clean:
         raise HTTPException(status_code=400, detail="Please enter your Date of Birth (DD/MM/YYYY).")
         
@@ -1885,7 +1885,7 @@ def _resolve_and_verify_dob(clean_ident: str, dob_clean: str, db: Session):
                         break
 
     if not user and not student:
-        raise HTTPException(status_code=400, detail="Account not found. Please verify your Register Number or Staff ID / Email.")
+        raise HTTPException(status_code=400, detail="Account not found. Please verify your Staff ID or registered institutional email.")
 
     entity = user if user else student
     if not getattr(entity, "is_active", True):

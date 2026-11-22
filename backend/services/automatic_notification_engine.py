@@ -709,13 +709,14 @@ class AutomaticNotificationEngine:
         dept_name = student.department.name if student.department else (student.dept or "N/A")
 
         assignments = db.query(FacultyStudentAssignment).filter_by(student_id=student_id).all()
-        fac_targets = []
+        fac_targets = set()
         for a in assignments:
             if a.faculty_id:
-                fac_targets.append(f"STAFF_{a.faculty_id}")
                 u = db.query(User).filter_by(id=a.faculty_id).first()
                 if u and u.email:
-                    fac_targets.append(u.email)
+                    fac_targets.add(str(u.email))
+                else:
+                    fac_targets.add(f"STAFF_{a.faculty_id}")
 
         staff_title = f"100 Solved in a Single Day: {student.name} ({student.reg_no})"
         staff_body = (
@@ -830,13 +831,14 @@ class AutomaticNotificationEngine:
         dept_name = student.department.name if student.department else (student.dept or "N/A")
 
         assignments = db.query(FacultyStudentAssignment).filter_by(student_id=student_id).all()
-        fac_targets = []
+        fac_targets = set()
         for a in assignments:
             if a.faculty_id:
-                fac_targets.append(f"STAFF_{a.faculty_id}")
                 u = db.query(User).filter_by(id=a.faculty_id).first()
                 if u and u.email:
-                    fac_targets.append(u.email)
+                    fac_targets.add(str(u.email))
+                else:
+                    fac_targets.add(f"STAFF_{a.faculty_id}")
 
         title = f"High Problem Surge Alert: {student.name} (+{delta} Solved)"
         body = (

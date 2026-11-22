@@ -509,13 +509,16 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     ? createPortal(
         <div
           id="modal-scroll-container"
-          className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-900 font-sans p-0 sm:p-4 md:p-6 flex flex-col items-center justify-end sm:justify-center overflow-y-auto print:static print:bg-white print:p-0"
+          role="dialog"
+          aria-modal="true"
+          data-modal-active="true"
+          className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-900 font-sans p-0 sm:p-4 md:p-6 flex flex-col items-center justify-end sm:justify-center overflow-y-auto overscroll-contain touch-pan-y print:static print:bg-white print:p-0"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
           <div
-            className="w-full max-w-4xl lg:max-w-5xl my-0 sm:my-auto mx-auto bg-white dark:bg-[#070A14] text-slate-900 dark:text-slate-100 shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.9)] border border-slate-200/80 dark:border-white/15 rounded-t-[28px] sm:rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] transition-all duration-300 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none animate-slide-up sm:animate-scale-in"
+            className="w-full max-w-4xl lg:max-w-5xl my-0 sm:my-auto mx-auto bg-white dark:bg-[#070A14] text-slate-900 dark:text-slate-100 shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.9)] border border-slate-200/80 dark:border-white/15 rounded-t-[28px] sm:rounded-3xl sm:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] transition-all duration-300 shrink-0 print:max-h-none print:overflow-visible print:border-none print:shadow-none print:rounded-none animate-slide-up sm:animate-scale-in overscroll-contain"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Native iOS-style Drag Pill Handle for Mobile */}
@@ -668,7 +671,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             {/* 2. MAIN CONTENT BODY (SEAMLESS LIGHT & DARK THEME) */}
             <div
               id="modal-content-body"
-              className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-slate-50/70 dark:bg-[#070A14] text-slate-900 dark:text-slate-100 flex flex-col gap-6 pb-[max(6rem,env(safe-area-inset-bottom,24px))] scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y p-4 sm:p-6 bg-slate-50/70 dark:bg-[#070A14] text-slate-900 dark:text-slate-100 flex flex-col gap-6 pb-[max(6rem,env(safe-area-inset-bottom,24px))] scroll-smooth custom-scrollbar print:max-h-none print:overflow-visible print:bg-white print:p-0 print:pb-0"
             >
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-3">

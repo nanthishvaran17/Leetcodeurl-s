@@ -104,6 +104,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const addToast = useCallback((type: NotificationType, title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>): string => {
     const now = Date.now();
     const category = options?.category;
+    const isDownloadRelated =
+      Boolean((title && title.toLowerCase().includes('download')) ||
+      (category && (category.toUpperCase().includes('DOWNLOAD') || category.toUpperCase() === 'REPORTS')));
+
+    // Deduplication guard for download toasts to prevent double-popups
+    if (isDownloadRelated) {
+      const lastDownloadTime = recentToastsRef.current.get('__GLOBAL_DOWNLOAD_TOAST__');
+      if (lastDownloadTime && now - lastDownloadTime < 2500) {
+        return '';
+      }
+      recentToastsRef.current.set('__GLOBAL_DOWNLOAD_TOAST__', now);
+    }
+
     const dedupKey = `${type}:${category || ''}:${title}:${description || ''}`;
     const lastTime = recentToastsRef.current.get(dedupKey);
 
@@ -136,8 +149,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     setToasts((prev) => {
-      // If category is specified (e.g. REPORTS), replace existing toast with same category to prevent duplicates
-      const base = category ? prev.filter((t) => t.category !== category) : prev;
+      // If this is a download toast, clear any other active download toasts so only ONE ever appears
+      let base = prev;
+      if (isDownloadRelated) {
+        base = base.filter((t) => {
+          const tIsDownload =
+            (t.title && t.title.toLowerCase().includes('download')) ||
+            (t.category && (t.category.toUpperCase().includes('DOWNLOAD') || t.category.toUpperCase() === 'REPORTS'));
+          return !tIsDownload;
+        });
+      } else if (category) {
+        base = base.filter((t) => t.category !== category);
+      }
       const filtered = base.length >= 4 ? base.slice(base.length - 3) : base;
       return [...filtered, newToast];
     });

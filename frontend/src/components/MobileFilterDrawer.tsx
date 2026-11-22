@@ -116,11 +116,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   if (!isOpen || typeof document === 'undefined') return null;
 
   const years = [
-    { id: 'ALL', label: 'All Years' },
-    { id: '1', label: '1st Year (I)' },
-    { id: '2', label: '2nd Year (II)' },
-    { id: '3', label: '3rd Year (III)' },
-    { id: '4', label: '4th Year (IV)' }
+    { id: 'ALL', label: 'All Years', shortLabel: 'All' },
+    { id: '1', label: '1st Year (I)', shortLabel: '1st (I)' },
+    { id: '2', label: '2nd Year (II)', shortLabel: '2nd (II)' },
+    { id: '3', label: '3rd Year (III)', shortLabel: '3rd (III)' },
+    { id: '4', label: '4th Year (IV)', shortLabel: '4th (IV)' }
   ];
 
   const syncStatuses = [
@@ -166,13 +166,13 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in p-0 sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div 
-        className="w-full max-w-md bg-white dark:bg-[#091122] rounded-t-[32px] sm:rounded-[32px] shadow-2xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col max-h-[90vh] animate-slide-up"
+        className="w-full sm:max-w-xl md:max-w-2xl bg-white dark:bg-[#091122] rounded-t-[28px] sm:rounded-[28px] shadow-2xl border border-slate-200/90 dark:border-white/10 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] animate-slide-up"
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
@@ -180,12 +180,12 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         {/* Top Mobile Swipe/Drag Pill */}
         <SwipeHandle
           onClose={handleClose}
-          className="pt-2.5 pb-1"
+          className="pt-2.5 pb-1 sm:hidden"
           pillClassName="bg-slate-300 dark:bg-white/20 hover:bg-slate-400 w-12 h-1.5"
         />
 
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.02]">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.02]">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-xs shrink-0">
               <Filter className="w-4 h-4 stroke-[2.5]" />
@@ -217,7 +217,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </div>
 
         {/* Drawer Scrollable Body */}
-        <div className="p-5 overflow-y-auto space-y-5 custom-scrollbar">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-4.5 custom-scrollbar">
           {/* Quick Search Bar */}
           <div>
             <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
@@ -239,7 +239,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   }
                 }}
                 placeholder={animatedPlaceholder || "Search by name, reg. no, LeetCode username..."}
-                className="w-full pl-10 pr-10 py-3 rounded-2xl bg-transparent text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none min-h-[44px]"
+                className="w-full pl-10 pr-10 py-2.5 rounded-2xl bg-transparent text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none min-h-[42px]"
               />
               {localSearch && (
                 <button 
@@ -249,7 +249,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                     setLocalSearch(''); 
                     setSearchQuery(''); 
                   }}
-                  className="min-h-[44px] min-w-[44px] flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 touch-manipulation cursor-pointer"
+                  className="min-h-[42px] min-w-[42px] flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 touch-manipulation cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -259,7 +259,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
           {/* College Campus Filter */}
           <div>
-            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
               <Building2 className="w-3.5 h-3.5 text-indigo-500" />
               <span>College Campus</span>
             </label>
@@ -274,7 +274,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                       triggerHaptic('selection');
                       setCollege(col);
                     }}
-                    className={`min-h-[42px] px-2.5 py-2 rounded-xl text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer border ${
+                    className={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer border ${
                       isSelected
                         ? col === 'NCT'
                           ? 'bg-teal-600 text-white border-teal-600 shadow-md font-black ring-2 ring-teal-500/30'
@@ -294,11 +294,11 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
           {/* Department Filter Chips */}
           <div>
-            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-brand-500" />
               <span>Department</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {departments.map((dept) => {
                 const isSelected = 
                   (dept.code === 'ALL' && (department === 'ALL' || !department || department === 'all')) ||
@@ -308,7 +308,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                     key={dept.code}
                     type="button"
                     onClick={() => handleDepartmentSelect(dept.code)}
-                    className={`min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 touch-manipulation cursor-pointer border ${
+                    className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 touch-manipulation cursor-pointer border ${
                       isSelected
                         ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
                         : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border-transparent dark:border-white/5'
@@ -322,13 +322,13 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             </div>
           </div>
 
-          {/* Academic Year Filter — Responsive Balanced Flex Wrap */}
+          {/* Academic Year Filter — Balanced 5-column grid on single line */}
           <div>
-            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-amber-500" />
               <span>Academic Year</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
               {years.map((y) => {
                 const isSelected = 
                   (y.id === 'ALL' && (academicYear === 'ALL' || !academicYear || academicYear === 'all')) ||
@@ -338,27 +338,28 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                     key={y.id}
                     type="button"
                     onClick={() => handleYearSelect(y.id)}
-                    className={`min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 touch-manipulation cursor-pointer border ${
+                    className={`min-h-[38px] px-1 sm:px-2 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1 touch-manipulation cursor-pointer border text-center ${
                       isSelected
                         ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
                         : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border-transparent dark:border-white/5'
                     }`}
+                    title={y.label}
                   >
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
-                    <span>{y.label}</span>
+                    {isSelected && <Check className="w-3 h-3 stroke-[2.5] shrink-0 hidden xs:inline" />}
+                    <span className="truncate">{y.shortLabel || y.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Profile Status Filter */}
+          {/* Profile Status Filter — Balanced 2x2 grid (or 4 columns on desktop) */}
           <div>
-            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1.5">
+            <label className="text-xs font-black text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
               <span>Profile Verification Status</span>
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {syncStatuses.map((s) => {
                 const isSelected = (attendanceStatus || 'ALL') === s.id;
                 return (
@@ -366,15 +367,15 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                     key={s.id}
                     type="button"
                     onClick={() => handleStatusSelect(s.id)}
-                    className={`min-h-[42px] px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 border touch-manipulation cursor-pointer flex items-center justify-between ${
+                    className={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 border touch-manipulation cursor-pointer flex items-center justify-between gap-1.5 ${
                       isSelected
                         ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 ring-2 ring-brand-500/30 shadow-xs'
                         : 'border-slate-200/90 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.06]'
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${s.dot}`} />
-                      <span>{s.label}</span>
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
+                      <span className="truncate">{s.label}</span>
                     </span>
                     {isSelected && <Check className="w-3.5 h-3.5 shrink-0 stroke-[2.5] text-brand-600 dark:text-brand-400" />}
                   </button>
@@ -385,12 +386,12 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </div>
 
         {/* Apply Footer - Single clean Reset button & Apply button */}
-        <div className="p-4 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] sm:pb-4 bg-slate-50/90 dark:bg-[#070d1a]/95 backdrop-blur-md border-t border-slate-100 dark:border-white/10 flex items-center gap-2.5">
+        <div className="px-4 sm:px-6 py-3 pb-[max(1rem,env(safe-area-inset-bottom,1rem))] sm:pb-3 bg-slate-50/90 dark:bg-[#070d1a]/95 backdrop-blur-md border-t border-slate-100 dark:border-white/10 flex items-center gap-2.5">
           {activeCount > 0 && (
             <button
               type="button"
               onClick={handleReset}
-              className="py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900/40 font-bold text-xs hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-all active:scale-95 touch-manipulation cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs"
+              className="py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900/40 font-bold text-xs hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-all active:scale-95 touch-manipulation cursor-pointer shrink-0 flex items-center gap-1.5 shadow-xs"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
               <span>Reset</span>
@@ -399,7 +400,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           <button
             type="button"
             onClick={handleApply}
-            className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-sm transition-all shadow-lg shadow-brand-500/25 active:scale-[0.98] touch-manipulation cursor-pointer flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-sm transition-all shadow-lg shadow-brand-500/25 active:scale-[0.98] touch-manipulation cursor-pointer flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4 stroke-[2.5]" />
             <span>Apply Filters {activeCount > 0 ? `(${activeCount})` : ''}</span>
@@ -410,3 +411,5 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
     document.body
   );
 };
+
+export default MobileFilterDrawer;

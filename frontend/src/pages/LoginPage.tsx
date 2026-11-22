@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
+import { SupportContactModal } from '../components/SupportContactModal';
 import api from '../services/api';
 import { isCapacitorNative } from '../config/apiConfig';
 
@@ -159,7 +160,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
   // Forgot Password Real Flow States
   const [forgotStep, setForgotStep] = useState<'dob' | 'send_otp' | 'verify_otp' | 'reset_password' | 'success'>('dob');
-  const [forgotRole, setForgotRole] = useState<'student' | 'staff'>('student');
   const [forgotIdentifier, setForgotIdentifier] = useState('');
   const [forgotInstId, setForgotInstId] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
@@ -175,6 +175,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+
+  // Institutional Support Contact Modal States
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportModalCategory, setSupportModalCategory] = useState<'otp' | 'credentials' | 'general'>('otp');
 
   // Sanitizes technical raw socket/proxy exceptions (e.g. ECONNREFUSED) into friendly actionable alerts
   const extractCleanErrorMessage = (err: any, fallback: string): string => {
@@ -559,7 +563,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
 
     if (!cleanId) {
       triggerShake();
-      setError(forgotRole === 'student' ? 'Please enter your Register Number.' : 'Please enter your Staff ID or registered institutional email.');
+      setError('Please enter your Staff ID or registered institutional email.');
       return;
     }
 
@@ -586,9 +590,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
       setSuccessMsg('Identity verified! Please set your new password.');
     } catch (err: any) {
       triggerShake();
-      setError(extractCleanErrorMessage(err, forgotRole === 'student'
-        ? 'Identity verification failed. Please check your Register Number and Date of Birth.'
-        : 'Identity verification failed. Please check your Staff ID / Email and Date of Birth.'));
+      setError(extractCleanErrorMessage(err, 'Identity verification failed. Please check your Staff ID / Email and Date of Birth.'));
     } finally {
       setLoading(false);
       setAuthStatusText('');
@@ -850,16 +852,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 <h2>
                   {currentView === 'help'
                     ? 'Institutional Help Desk'
-                    : (currentView === 'forgot_password' ? 'Reset Account Password' : 'Sign in to your workspace')}
+                    : (currentView === 'forgot_password' ? 'Reset Staff Password' : 'Sign in to your workspace')}
                 </h2>
               </div>
               <p>
                 {currentView === 'help'
-                  ? 'Support for authorized personnel, faculty, and enrolled students.'
+                  ? 'Support for authorized personnel, faculty, and department staff.'
                   : (currentView === 'forgot_password'
-                    ? (forgotRole === 'student'
-                        ? 'Verify your identity with your Register Number and Date of Birth.'
-                        : 'Verify your identity with your Staff ID / Email and Date of Birth.')
+                    ? 'Verify your identity with your Staff ID / Email and Date of Birth.'
                     : 'Use your institutional credentials to authenticate.')}
               </p>
             </div>
@@ -1184,6 +1184,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                               {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
                             </button>
                           </div>
+                          <div className="text-center pt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSupportModalCategory('otp');
+                                setIsSupportModalOpen(true);
+                              }}
+                              className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer inline-flex items-center gap-1.5"
+                            >
+                              <Mail size={12} />
+                              <span>Facing OTP delivery issues? Contact Support Desk</span>
+                            </button>
+                          </div>
                         </div>
                       )}
 
@@ -1248,54 +1261,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                     })}
                   </div>
 
-                  {/* STEP 1: Identity Verification */}
+                  {/* STEP 1: Staff Identity Verification */}
                   {forgotStep === 'dob' && (
                     <form onSubmit={handleForgotVerifyDob} noValidate>
-                      {/* Role Switcher Tabs */}
-                      <div className="tabs" role="tablist" style={{ marginBottom: '16px' }}>
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={forgotRole === 'student'}
-                          className={forgotRole === 'student' ? 'active' : ''}
-                          onClick={() => { setForgotRole('student'); setError(''); }}
-                        >
-                          Student
-                        </button>
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={forgotRole === 'staff'}
-                          className={forgotRole === 'staff' ? 'active' : ''}
-                          onClick={() => { setForgotRole('staff'); setError(''); }}
-                        >
-                          Staff / Faculty
-                        </button>
-                      </div>
-
                       <p className="step-desc">
-                        {forgotRole === 'student' ? (
-                          <>Enter your <strong>Register Number</strong> and <strong>Date of Birth</strong> to verify your account and set a new password.</>
-                        ) : (
-                          <>Enter your <strong>Staff ID or Institutional Email</strong> and <strong>Date of Birth</strong> to verify your account and set a new password.</>
-                        )}
+                        Enter your <strong>Staff ID or Institutional Email</strong> and <strong>Date of Birth</strong> to verify your credentials and set a new password.
                       </p>
                       <div className="field">
-                        <label htmlFor="forgotIdentifier">
-                          {forgotRole === 'student' ? 'Register Number' : 'Staff ID or Email'}
-                        </label>
+                        <label htmlFor="forgotIdentifier">Staff ID or Institutional Email</label>
                         <div className="input-wrap">
-                          {forgotRole === 'student' ? (
-                            <KeyRound className="input-icon" size={19} />
-                          ) : (
-                            <User className="input-icon" size={19} />
-                          )}
+                          <User className="input-icon" size={19} />
                           <input
                             id="forgotIdentifier"
                             type="text"
                             value={forgotIdentifier}
                             onChange={(e) => setForgotIdentifier(e.target.value)}
-                            placeholder={forgotRole === 'student' ? 'e.g. 23CC001 or 732224TEST01' : 'e.g. staff username or faculty@nandhaengg.org'}
+                            placeholder="e.g. staff username or faculty@nandhaengg.org"
                             required
                             disabled={loading}
                             autoFocus
@@ -1490,16 +1471,45 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                 >
                   <div className="help-list">
                     <div className="help-list-item">
-                      <div className="help-list-title">Student & Faculty Login Inquiries</div>
-                      <div className="help-list-desc">Use your institutional register number or faculty ID to sign in. In case of handle changes, contact your department HOD.</div>
+                      <div className="help-list-title">Faculty & Staff Login Inquiries</div>
+                      <div className="help-list-desc">Use your institutional faculty ID or staff username to sign in. In case of handle changes, contact your department HOD or system admin.</div>
                     </div>
                     <div className="help-list-item">
                       <div className="help-list-title">OTP Delivery & Account Recovery</div>
-                      <div className="help-list-desc">OTP codes are sent to your registered college email. If not received, verify your spam folder or use password reset.</div>
+                      <div className="help-list-desc">OTP codes are sent to your registered institutional email. If not received, verify your spam folder, use password reset, or contact support desk.</div>
                     </div>
-                    <div className="help-list-item highlight">
-                      <div className="help-list-title">Institution Support Desk</div>
-                      <div className="help-list-desc">Email: nanthishvaran17@gmail.com · Nandha Engineering College (Autonomous)</div>
+                    <div
+                      className="help-list-item highlight cursor-pointer group hover:border-blue-400 dark:hover:border-blue-400 transition-all active:scale-[0.99] select-none text-left"
+                      onClick={() => {
+                        setSupportModalCategory('otp');
+                        setIsSupportModalOpen(true);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSupportModalCategory('otp');
+                          setIsSupportModalOpen(true);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="help-list-title flex items-center gap-2 mb-0">
+                          <span className="text-blue-900 dark:text-blue-200">Institution Support Desk</span>
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-200/80 dark:bg-blue-800/80 text-blue-800 dark:text-blue-100">
+                            Tap to compose
+                          </span>
+                        </div>
+                        <ChevronRight size={16} className="text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+                      <div className="help-list-desc text-blue-950/80 dark:text-blue-100/90 font-medium">
+                        Email: <strong>nanthishvaran17@gmail.com</strong> · Nandha Engineering College (Autonomous)
+                      </div>
+                      <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-2 flex items-center gap-1.5">
+                        <Mail size={13} />
+                        <span>Click to open editable email draft for OTP or login issues</span>
+                      </div>
                     </div>
                   </div>
                   <button
@@ -1597,6 +1607,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
           LEARN | SERVE | SUCCEED
         </p>
       </footer>
+
+      {/* Institutional Support Contact Modal */}
+      <SupportContactModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+        initialCategory={supportModalCategory}
+        userIdentifier={otpEmail || username || forgotIdentifier}
+        supportEmail="nanthishvaran17@gmail.com"
+      />
 
 
 

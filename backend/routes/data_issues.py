@@ -196,6 +196,7 @@ def classify_student_issue(student: Student, duplicate_usernames: Optional[set] 
         "id": student.id,
         "name": student.name,
         "reg_no": student.reg_no,
+        "college": getattr(student, "college", None) or "NEC",
         "department_code": dept_code,
         "department_name": canonical_dept,
         "department_short": short_dept,
@@ -363,6 +364,7 @@ def get_data_issues_students(
     search: Optional[str] = Query(None, description="Search term across name, reg_no, username, issue"),
     student_ids: Optional[str] = Query(None, description="Comma-separated student IDs for selected bulk operations"),
     limit: int = Query(500, ge=1, le=10000),
+    college: Optional[str] = Query("all", description="College filter e.g. NEC, NCT, all"),
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Data Issues Students", dept_scoped=True))
 ):
@@ -393,6 +395,13 @@ def get_data_issues_students(
         if raw_ids:
             id_set = set(raw_ids)
             classified = [c for c in classified if c["id"] in id_set]
+
+    # Filter by College
+    if college and college.lower() != "all":
+        classified = [
+            c for c in classified
+            if (c.get("college") or "NEC").strip().upper() == college.strip().upper()
+        ]
 
     # 1. Filter by Department (Strict canonical & boundary matching to prevent false positives)
     if department and department.lower() != "all":

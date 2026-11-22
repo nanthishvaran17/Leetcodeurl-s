@@ -48,63 +48,65 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
-          {/* Subtle backdrop */}
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 select-none">
+          {/* iOS Frosted backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 bg-slate-950/60 dark:bg-black/70 backdrop-blur-md cursor-pointer"
           />
 
-          {/* Clean, Simple Dialog Card / Mobile Bottom Sheet */}
+          {/* iOS Cupertino Dialog Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.98, y: 30 }}
+            initial={{ opacity: 0, scale: 0.94, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: 30 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 380 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 400 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full sm:max-w-[360px] rounded-t-3xl sm:rounded-2xl bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl p-6 pb-9 sm:pb-6 text-center z-10"
+            className="relative w-full max-w-[340px] rounded-[28px] bg-white/85 dark:bg-[#1c1c1e]/85 backdrop-blur-2xl backdrop-saturate-180 border border-black/[0.08] dark:border-white/[0.12] shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_25px_65px_rgba(0,0,0,0.6)] p-6 text-center z-10 space-y-4"
           >
-            {/* Mobile Drag Indicator Handle */}
-            <div className="sm:hidden w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4" />
-            {/* Top Close Button */}
+            {/* Top Close Button (iOS Minimal) */}
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-3.5 right-3.5 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-3.5 right-3.5 w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
               title="Close (Esc)"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Clean Icon Container */}
-            <div className="mx-auto w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center mb-3.5 text-rose-600 dark:text-rose-400">
-              <LogOut className="w-5 h-5 ml-0.5" />
+            {/* Apple Icon Container */}
+            <div className="w-14 h-14 rounded-full bg-rose-500/10 dark:bg-rose-500/20 text-rose-500 dark:text-rose-400 flex items-center justify-center mx-auto ring-8 ring-rose-500/[0.05] dark:ring-rose-400/[0.08] shadow-inner">
+              <LogOut className="w-6 h-6 ml-0.5" strokeWidth={2.2} />
             </div>
 
-            {/* Title & Simple Confirmation Message */}
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight mb-1">
-              Sign Out?
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-              Are you sure you want to sign out of your account?
+            {/* Title & iOS Subtext */}
+            <div className="space-y-1.5">
+              <h3 className="text-[19px] font-bold text-slate-900 dark:text-white tracking-tight">
+                Sign Out?
+              </h3>
+              <p className="text-[13px] text-slate-500 dark:text-slate-400 font-normal leading-normal">
+                Are you sure you want to sign out of your account?
+              </p>
               {displayName && (
-                <span className="block mt-1 text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                  Signed in as <strong className="font-semibold text-slate-800 dark:text-slate-100">{displayName}</strong>
-                </span>
+                <div className="pt-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/[0.04] dark:bg-white/[0.08] border border-black/[0.04] dark:border-white/[0.08] text-[12px] font-medium text-slate-700 dark:text-slate-200 shadow-2xs">
+                    Signed in as <strong className="font-semibold text-slate-900 dark:text-white">{displayName}</strong>
+                  </span>
+                </div>
               )}
-            </p>
+            </div>
 
-            {/* Clean Action Buttons */}
-            <div className="flex items-center gap-2.5">
+            {/* iOS Action Buttons */}
+            <div className="flex items-center gap-2.5 pt-1.5">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-[18px] bg-slate-200/80 hover:bg-slate-200 active:bg-slate-300/80 dark:bg-white/[0.12] dark:hover:bg-white/[0.18] dark:active:bg-white/[0.22] text-slate-800 dark:text-white text-[14px] font-semibold transition-all duration-150 cursor-pointer active:scale-[0.97]"
               >
                 Cancel
               </button>
@@ -115,7 +117,7 @@ export const SignOutConfirmModal: React.FC<SignOutConfirmModalProps> = ({
                   onClose();
                   onConfirm();
                 }}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] shadow-sm shadow-rose-600/30 transition-all cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-[18px] bg-[#ff3b30] hover:bg-[#e0342a] active:bg-[#c92820] text-white text-[14px] font-semibold shadow-md shadow-rose-500/25 transition-all duration-150 cursor-pointer active:scale-[0.97]"
               >
                 Sign Out
               </button>

@@ -562,11 +562,15 @@ def delete_notification_endpoint(
     """Deletes notification record and all its duplicates for current user."""
     user_id_variants = get_user_id_variants(current_user)
 
+    or_filters = [
+        NotificationRecord.notification_id == notification_id,
+        NotificationRecord.event_id == notification_id
+    ]
+    if notification_id.isdigit():
+        or_filters.append(NotificationRecord.id == int(notification_id))
+
     target = db.query(NotificationRecord).filter(
-        or_(
-            NotificationRecord.notification_id == notification_id,
-            NotificationRecord.event_id == notification_id
-        )
+        or_(*or_filters)
     ).first()
 
     deleted_count = 0
@@ -579,6 +583,8 @@ def delete_notification_endpoint(
         or_clauses: list[Any] = [NotificationRecord.notification_id == notification_id]
         if event_id:
             or_clauses.append(NotificationRecord.event_id == event_id)
+        if notification_id.isdigit():
+            or_clauses.append(NotificationRecord.id == int(notification_id))
         or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
 
         records = db.query(NotificationRecord).filter(
@@ -645,6 +651,53 @@ def archive_notification_endpoint(
         db.commit()
 
     return {"success": True, "notification_id": notification_id, "archived_count": archived_count}
+
+
+@router.put("/{notification_id}/unarchive")
+def unarchive_notification_endpoint(
+    notification_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Marks a notification and its duplicates as active (unarchived) for the current user."""
+    user_id_variants = get_user_id_variants(current_user)
+
+    target = db.query(NotificationRecord).filter(
+        or_(
+            NotificationRecord.notification_id == notification_id,
+            NotificationRecord.event_id == notification_id
+        )
+    ).first()
+
+    unarchived_count = 0
+
+    if target:
+        event_id = target.event_id
+        title = target.title
+        body = target.body
+
+        or_clauses: list[Any] = [NotificationRecord.notification_id == notification_id]
+        if event_id:
+            or_clauses.append(NotificationRecord.event_id == event_id)
+        or_clauses.append(and_(NotificationRecord.title == title, NotificationRecord.body == body))
+
+        records = db.query(NotificationRecord).filter(
+            and_(
+                NotificationRecord.recipient_user_id.in_(list(user_id_variants)),
+                or_(*or_clauses)
+            )
+        ).all()
+
+        if not records:
+            records = [target]
+
+        for r in records:
+            cast(Any, r).is_archived = False
+            unarchived_count += 1
+
+        db.commit()
+
+    return {"success": True, "notification_id": notification_id, "unarchived_count": unarchived_count}
 
 
 

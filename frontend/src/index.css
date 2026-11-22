@@ -945,6 +945,7 @@ textarea[class*="bg-transparent"][class*="border-0"]:focus,
 body.global-scroll-lock,
 html.global-scroll-lock {
   overflow: hidden !important;
+  overscroll-behavior: none !important;
 }
 
 /* Viewport-Centered Auto-Fit Responsive Modal System (GPU Hardware Accelerated) */

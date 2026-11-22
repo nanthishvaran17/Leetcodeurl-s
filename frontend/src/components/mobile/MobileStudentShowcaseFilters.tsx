@@ -144,7 +144,7 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
   const content = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -161,10 +161,10 @@ export const MobileStudentShowcaseFilters: React.FC<MobileStudentShowcaseFilters
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative z-10 w-full max-h-[88vh] bg-white dark:bg-navy-950 rounded-t-[32px] border-t border-slate-200 dark:border-white/[0.1] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
+            className="relative z-10 w-full sm:max-w-xl md:max-w-2xl max-h-[88vh] bg-white dark:bg-navy-950 rounded-t-[32px] sm:rounded-[32px] border-t sm:border border-slate-200 dark:border-white/[0.1] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
           >
             {/* Grab Handle */}
-            <div className="pt-3 pb-1 flex justify-center cursor-pointer" onClick={onClose}>
+            <div className="pt-3 pb-1 flex justify-center cursor-pointer sm:hidden" onClick={onClose}>
               <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 transition-colors" />
             </div>
 

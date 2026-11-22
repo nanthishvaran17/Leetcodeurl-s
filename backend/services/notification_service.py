@@ -499,6 +499,10 @@ class NotificationService:
                     target_uids.add(clean_tg.upper())
                     if clean_tg.isdigit():
                         target_uids.add(f"STAFF_{clean_tg}")
+                        target_uids.add(f"staff_{clean_tg}")
+                    elif clean_tg.upper().startswith("STAFF_"):
+                        target_uids.add(clean_tg[6:])
+                        target_uids.add(clean_tg.lower())
 
                 if not is_global:
                     for r in recipients:
@@ -563,12 +567,24 @@ class NotificationService:
                 }
                 eff_channel_id = CHANNEL_MAP.get(str(category).lower(), "messages_channel" if "message" in str(category).lower() else "academic_announcements")  # type: ignore
 
+                from backend.models import FCMDeviceToken
                 if is_global:
-                    active_tokens_raw = db.query(FCMDevice).filter(FCMDevice.is_active == True).all()
+                    devices_raw = db.query(FCMDevice).filter(FCMDevice.is_active == True).all()
+                    tokens_raw = db.query(FCMDeviceToken).filter(FCMDeviceToken.is_active == True).all()
                 else:
-                    active_tokens_raw = db.query(FCMDevice).filter(
+                    devices_raw = db.query(FCMDevice).filter(
                         and_(FCMDevice.user_id.in_(list(target_uids)), FCMDevice.is_active == True)
                     ).all()
+                    tokens_raw = db.query(FCMDeviceToken).filter(
+                        and_(FCMDeviceToken.user_id.in_(list(target_uids)), FCMDeviceToken.is_active == True)
+                    ).all()
+
+                seen_tokens = set()
+                active_tokens_raw = []
+                for d_obj in (devices_raw + tokens_raw):
+                    if d_obj.device_token and d_obj.device_token not in seen_tokens:
+                        seen_tokens.add(d_obj.device_token)
+                        active_tokens_raw.append(d_obj)
 
                 # Filter out tokens where user opted out of non-critical notification categories
                 active_tokens = []
@@ -598,6 +614,8 @@ class NotificationService:
                             token=t_obj.device_token,
                             data={
                                 "notificationId": eff_event_id,
+                                "eventId": eff_event_id,
+                                "event_id": eff_event_id,
                                 "type": str(event_type),  # type: ignore
                                 "category": str(category),  # type: ignore
                                 "title": str(title),

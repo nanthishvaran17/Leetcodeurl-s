@@ -3147,11 +3147,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                   <Activity className={`w-3.5 h-3.5 ${isHighRated ? 'text-amber-600 dark:text-amber-400' : 'text-indigo-600 dark:text-indigo-400'}`} />
                                   <span>{ratingVal.toLocaleString()}</span>
                                 </div>
-                              ) : (
-                                <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-400 font-mono font-bold text-[11px]">
-                                  Unrated
-                                </span>
-                              )}
+                              ) : null}
 
                               <a
                                 href={c.leetcode_url}
