@@ -1389,7 +1389,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                           onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); }}
                           className="forgot"
                         >
-                          ← Back to Sign In
+                          <span className="inline-flex items-center gap-1.5">
+                            <ArrowLeft size={15} strokeWidth={2.4} className="shrink-0" />
+                            <span>Back to Sign In</span>
+                          </span>
                         </button>
                       </div>
                       <button className="submit-btn" type="submit" disabled={loading}>
@@ -1430,7 +1433,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                           onClick={() => { setForgotStep('dob'); setForgotResetToken(''); setError(''); setSuccessMsg(''); }}
                           className="forgot"
                         >
-                          ← Change Details
+                          <span className="inline-flex items-center gap-1.5">
+                            <ArrowLeft size={15} strokeWidth={2.4} className="shrink-0" />
+                            <span>Change Details</span>
+                          </span>
                         </button>
                       </div>
                       <button className="submit-btn" type="submit" disabled={loading || forgotResetToken.length !== 6}>
@@ -1495,7 +1501,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                           onClick={() => handleNavigateBack()}
                           className="forgot cursor-pointer"
                         >
-                          ← Change Details
+                          <span className="inline-flex items-center gap-1.5">
+                            <ArrowLeft size={15} strokeWidth={2.4} className="shrink-0" />
+                            <span>Change Details</span>
+                          </span>
                         </button>
                         <button
                           type="button"
