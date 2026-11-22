@@ -683,12 +683,27 @@ def _sanitize_val(val: Any) -> str:
     return s
 
 def generate_data_issues_excel_bytes(
-    db: Session, department: str, year_level: str, issue_type: str, search: str, student_ids: Optional[str] = None
+    db: Session,
+    department: str = "all",
+    year_level: str = "all",
+    issue_type: str = "all",
+    search: Optional[str] = None,
+    student_ids: Optional[str] = None,
+    college: Optional[str] = "all"
 ) -> bytes:
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-    res = get_data_issues_students(department, year_level, issue_type, search, student_ids=student_ids, limit=10000, db=db)
+    res = get_data_issues_students(
+        department=department,
+        year_level=year_level,
+        issue_type=issue_type,
+        search=search,
+        student_ids=student_ids,
+        limit=10000,
+        college=college,
+        db=db
+    )
     students_data = res["students"]
 
     wb = openpyxl.Workbook()
@@ -699,7 +714,11 @@ def generate_data_issues_excel_bytes(
     # Title Block (Row 1) - Nandha Institutional Blue
     ws.merge_cells("A1:O1")
     title_cell = ws["A1"]
-    title_cell.value = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
+    c_upper = (college or "all").strip().upper()
+    if c_upper == "NCT":
+        title_cell.value = "NANDHA COLLEGE OF TECHNOLOGY"
+    else:
+        title_cell.value = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
     title_cell.font = Font(name="Times New Roman", size=16, bold=True, color="FFFFFF")
     title_cell.fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
     title_cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -712,7 +731,11 @@ def generate_data_issues_excel_bytes(
     if student_ids and student_ids.strip():
         sub_cell.value = f"Selected Student Data Quality Audit Report • Generated: {date_str} • ({len(students_data)} Selected Records)"
     else:
-        sub_cell.value = f"Student Data Quality & LeetCode Telemetry Audit Report • Generated: {date_str} • Filter: Dept={department}, Year={year_level}, Issue={issue_type} ({len(students_data)} Records)"
+        dept_disp = department if department and department.lower() != "all" else "All Departments"
+        yr_disp = year_level if year_level and year_level.lower() != "all" else "All Academic Years"
+        issue_disp = issue_type if issue_type and issue_type.lower() != "all" else "All Categories"
+        coll_disp = c_upper if c_upper in ("NEC", "NCT") else "All Colleges"
+        sub_cell.value = f"Student Data Quality & LeetCode Telemetry Audit Report • Generated: {date_str} • {coll_disp} • Dept: {dept_disp} • Year: {yr_disp} • Issue: {issue_disp} ({len(students_data)} Records)"
     sub_cell.font = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
     sub_cell.fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
     sub_cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -848,10 +871,25 @@ def generate_data_issues_excel_bytes(
 
 
 def generate_data_issues_csv_bytes(
-    db: Session, department: str, year_level: str, issue_type: str, search: str, student_ids: Optional[str] = None
+    db: Session,
+    department: str = "all",
+    year_level: str = "all",
+    issue_type: str = "all",
+    search: Optional[str] = None,
+    student_ids: Optional[str] = None,
+    college: Optional[str] = "all"
 ) -> bytes:
     import csv
-    res = get_data_issues_students(department, year_level, issue_type, search, student_ids=student_ids, limit=10000, db=db)
+    res = get_data_issues_students(
+        department=department,
+        year_level=year_level,
+        issue_type=issue_type,
+        search=search,
+        student_ids=student_ids,
+        limit=10000,
+        college=college,
+        db=db
+    )
     students_data = res["students"]
 
     buf = io.StringIO()
@@ -885,50 +923,122 @@ def generate_data_issues_csv_bytes(
 
     return buf.getvalue().encode("utf-8-sig")
 
+
+def build_data_issues_filename(
+    department: Optional[str] = "all",
+    year_level: Optional[str] = "all",
+    issue_type: Optional[str] = "all",
+    college: Optional[str] = "all",
+    student_ids: Optional[str] = None,
+    ext: str = "xlsx"
+) -> str:
+    parts = []
+
+    # 1. College Prefix
+    c_upper = (college or "all").strip().upper()
+    if c_upper in ("NEC", "NCT"):
+        parts.append(c_upper)
+    else:
+        parts.append("NANDHA")
+
+    parts.append("Data_Issues")
+
+    # 2. Selected students mode
+    if student_ids and student_ids.strip():
+        ids = [x.strip() for x in student_ids.split(",") if x.strip()]
+        if ids:
+            parts.append(f"Selected_{len(ids)}_Students")
+
+    # 3. Department
+    d_clean = (department or "all").strip()
+    if d_clean.lower() != "all":
+        dept_tag = re.sub(r'[/\\?%*:|"<> ]', '_', d_clean.upper())
+        parts.append(dept_tag)
+
+    # 4. Academic Year
+    y_clean = (year_level or "all").strip()
+    if y_clean.lower() != "all":
+        canonical_yr = normalize_canonical_year(y_clean)
+        yr_map = {
+            "I Year": "1st_Year",
+            "II Year": "2nd_Year",
+            "III Year": "3rd_Year",
+            "IV Year": "4th_Year",
+        }
+        yr_tag = yr_map.get(canonical_yr, canonical_yr.replace(" ", "_"))
+        parts.append(yr_tag)
+
+    # 5. Issue Category
+    i_clean = (issue_type or "all").strip()
+    if i_clean.upper() != "ALL":
+        issue_tag = re.sub(r'[/\\?%*:|"<> ]', '_', i_clean.title())
+        parts.append(issue_tag)
+
+    # 6. Date
+    date_str = now_ist().strftime("%Y-%m-%d")
+    parts.append(date_str)
+
+    clean_ext = ext.lstrip(".").lower()
+    return f"{'_'.join(parts)}.{clean_ext}"
+
+
 @router.get("/export-excel")
 def export_issues_excel(
+    college: Optional[str] = Query("all"),
     department: Optional[str] = Query("all"),
     year_level: Optional[str] = Query("all"),
     issue_type: Optional[str] = Query("all"),
     search: Optional[str] = Query(None),
     student_ids: Optional[str] = Query(None),
+    filename: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
-    Direct ultra-fast (<1s) Excel streaming export supporting selected student IDs filter.
+    Direct ultra-fast (<1s) Excel streaming export supporting dynamic filter-specific filename and student selection.
     """
     excel_bytes = generate_data_issues_excel_bytes(
         db=db, department=department, year_level=year_level, 
-        issue_type=issue_type, search=search, student_ids=student_ids
+        issue_type=issue_type, search=search, student_ids=student_ids, college=college
     )
-    date_str = now_ist().strftime("%Y-%m-%d")
-    filename = f"NANDHA_Data_Issues_Report_{date_str}.xlsx"
+    resolved_filename = (filename.strip() if filename and filename.strip() else None) or build_data_issues_filename(
+        department=department, year_level=year_level, issue_type=issue_type, college=college, student_ids=student_ids, ext="xlsx"
+    )
+    safe_filename = re.sub(r'[/\\?%*:|"<> ]', '_', resolved_filename)
+    if not safe_filename.endswith(".xlsx"):
+        safe_filename += ".xlsx"
     return StreamingResponse(
         io.BytesIO(excel_bytes),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
     )
+
 
 @router.get("/export-csv")
 def export_issues_csv(
+    college: Optional[str] = Query("all"),
     department: Optional[str] = Query("all"),
     year_level: Optional[str] = Query("all"),
     issue_type: Optional[str] = Query("all"),
     search: Optional[str] = Query(None),
     student_ids: Optional[str] = Query(None),
+    filename: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
-    Direct ultra-fast (<1s) CSV streaming export supporting selected student IDs filter.
+    Direct ultra-fast (<1s) CSV streaming export supporting dynamic filter-specific filename and student selection.
     """
     csv_bytes = generate_data_issues_csv_bytes(
         db=db, department=department, year_level=year_level, 
-        issue_type=issue_type, search=search, student_ids=student_ids
+        issue_type=issue_type, search=search, student_ids=student_ids, college=college
     )
-    date_str = now_ist().strftime("%Y-%m-%d")
-    filename = f"NANDHA_Data_Issues_Report_{date_str}.csv"
+    resolved_filename = (filename.strip() if filename and filename.strip() else None) or build_data_issues_filename(
+        department=department, year_level=year_level, issue_type=issue_type, college=college, student_ids=student_ids, ext="csv"
+    )
+    safe_filename = re.sub(r'[/\\?%*:|"<> ]', '_', resolved_filename)
+    if not safe_filename.endswith(".csv"):
+        safe_filename += ".csv"
     return StreamingResponse(
         io.BytesIO(csv_bytes),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f'attachment; filename="{safe_filename}"'}
     )

@@ -420,10 +420,12 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
       <td className="px-3 py-3 font-bold text-slate-900 dark:text-white text-xs whitespace-nowrap max-w-[200px] truncate uppercase" title={r.name}>{(r.name || '').toUpperCase()}</td>
       <td className="px-3 py-3 text-center">
         <span className="px-2 py-0.5 rounded text-[10px] font-mono font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-          {r.dept}
+          {typeof r.dept === 'object' ? (r.dept?.code || r.dept?.name || '—') : (r.dept || '—')}
         </span>
       </td>
-      <td className="px-3 py-3 text-center text-xs font-mono font-bold text-slate-600 dark:text-slate-400">{r.year}</td>
+      <td className="px-3 py-3 text-center text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
+        {typeof r.year === 'object' ? (r.year?.year || r.year?.name || '—') : (r.year || '—')}
+      </td>
       <td className="px-3 py-3 text-center">
         <div className="flex flex-col items-center justify-center gap-0.5">
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full border whitespace-nowrap ${statusBadge.cls}`}>
@@ -596,10 +598,10 @@ const MobileContestMatrixCard = memo(({ r, actualIdx, isSelected, onEdit, onDele
 
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black uppercase bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-navy-700">
-            {r.dept}
+            {typeof r.dept === 'object' ? (r.dept?.code || r.dept?.name || '—') : (r.dept || '—')}
           </span>
           <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700">
-            Yr {r.year}
+            Yr {typeof r.year === 'object' ? (r.year?.year || r.year?.name || '—') : (r.year || '—')}
           </span>
         </div>
       </div>
@@ -2291,8 +2293,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // Pre-Indexed Matrix Rows for Ultra-Fast Instant Search & Filtering
   const indexedMatrixRows = useMemo(() => {
     return matrixRows.map(r => {
-      const d = (r.dept || r.department || '').toString().toUpperCase();
-      const y = (r.year || r.year_level || '').toString().toUpperCase();
+      const rawD = typeof r.dept === 'string' ? r.dept : (typeof r.department === 'string' ? r.department : (r.department?.code || r.department?.name || ''));
+      const d = rawD.toString().toUpperCase();
+      const rawY = typeof r.year === 'string' ? r.year : (typeof r.year_level === 'string' ? r.year_level : (r.year || r.year_level || ''));
+      const y = rawY.toString().toUpperCase();
       const st = (r.participation_status || r.status || r.attendance_status || '').toString().toUpperCase();
       const searchKey = `${r.name || ''} ${r.reg_no || ''} ${r.username || ''} ${r.leetcode_url || ''}`.toLowerCase();
       return {
@@ -2318,25 +2322,51 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             : [];
     if (pool.length === 0) return [];
 
-    const normalizedPool = pool.map((r: any) => ({
-      ...r,
-      reg_no: r.reg_no || r.register_number || '—',
-      name: r.name || '—',
-      dept: r.dept || r.department || r.department_code || r.department_id || '—',
-      year: r.year || r.year_level || '—',
-      participation_status: r.participation_status || (r.status === 'PUBLIC' ? 'PUBLIC_ATTENDED' : r.status === 'VIRTUAL' ? 'VIRTUAL_ATTENDED' : 'PUBLIC_NOT_ATTENDED'),
-      status: r.status || (r.username ? 'NOT_ATTENDED' : 'USERNAME_NOT_FOUND'),
-      total_solved: r.total_solved ?? r.total_contest_solved ?? 0,
-      score: r.score ?? 0,
-      rank: r.rank || r.contest_rank || '—',
-      contest_rank: r.contest_rank || r.rank || '—',
-      contest_rating: r.contest_rating || r.rating || 'Unrated',
-      global_rank: r.contest_global_rank || r.global_rank || 'Unrated',
-      q1: r.q1 ?? 0,
-      q2: r.q2 ?? 0,
-      q3: r.q3 ?? 0,
-      q4: r.q4 ?? 0,
-    }));
+    const normalizedPool = pool.map((r: any) => {
+      let deptStr = '—';
+      if (typeof r.dept === 'string' && r.dept.trim()) {
+        deptStr = r.dept.trim();
+      } else if (typeof r.department === 'string' && r.department.trim()) {
+        deptStr = r.department.trim();
+      } else if (r.department && typeof r.department === 'object') {
+        deptStr = r.department.code || r.department.name || '—';
+      } else if (typeof r.department_code === 'string' && r.department_code.trim()) {
+        deptStr = r.department_code.trim();
+      }
+
+      let yearStr = '—';
+      if (typeof r.year === 'string' && r.year.trim()) {
+        yearStr = r.year.trim();
+      } else if (typeof r.year_level === 'string' && r.year_level.trim()) {
+        yearStr = r.year_level.trim();
+      } else if (typeof r.year === 'number') {
+        yearStr = String(r.year);
+      } else if (typeof r.year_level === 'number') {
+        yearStr = String(r.year_level);
+      } else if (r.year && typeof r.year === 'object') {
+        yearStr = r.year.year || r.year.name || '—';
+      }
+
+      return {
+        ...r,
+        reg_no: r.reg_no || r.register_number || '—',
+        name: r.name || '—',
+        dept: deptStr,
+        year: yearStr,
+        participation_status: r.participation_status || (r.status === 'PUBLIC' ? 'PUBLIC_ATTENDED' : r.status === 'VIRTUAL' ? 'VIRTUAL_ATTENDED' : 'PUBLIC_NOT_ATTENDED'),
+        status: r.status || (r.username ? 'NOT_ATTENDED' : 'USERNAME_NOT_FOUND'),
+        total_solved: r.total_solved ?? r.total_contest_solved ?? 0,
+        score: r.score ?? 0,
+        rank: r.rank || r.contest_rank || '—',
+        contest_rank: r.contest_rank || r.rank || '—',
+        contest_rating: r.contest_rating || r.rating || 'Unrated',
+        global_rank: r.contest_global_rank || r.global_rank || 'Unrated',
+        q1: r.q1 ?? 0,
+        q2: r.q2 ?? 0,
+        q3: r.q3 ?? 0,
+        q4: r.q4 ?? 0,
+      };
+    });
 
     return normalizedPool.filter((r: any) => {
       const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
@@ -3347,56 +3377,77 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {/* Mobile Active Filter Chips */}
               {([selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].some(v => v !== 'ALL') || searchTerm) && (
-                <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-white/[0.08] sm:hidden">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">Active:</span>
-                  {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20">
-                      College: {selectedCollegeFilter}
-                      <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
-                    </span>
-                  )}
-                  {selectedDeptFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20">
-                      Dept: {selectedDeptFilter}
-                      <button onClick={() => setSelectedDeptFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
-                    </span>
-                  )}
-                  {selectedYearFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                      Year: {selectedYearFilter}
-                      <button onClick={() => setSelectedYearFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
-                    </span>
-                  )}
-                  {selectedAttendanceFilter !== 'ALL' && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                      Status: {selectedAttendanceFilter}
-                      <button onClick={() => setSelectedAttendanceFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
-                    </span>
-                  )}
-                  {searchTerm && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/20">
-                      Query: {searchTerm}
-                      <button onClick={() => setSearchTerm('')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer">×</button>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('warning');
-                      setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
-                      setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
-                      setSelectedYearFilter('ALL');
-                      setSelectedAttendanceFilter('ALL');
-                      setSearchTerm('');
-                      setDebouncedSearchTerm('');
-                      setDeptSearchQuery('');
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200/90 dark:border-rose-800/80 text-[11px] font-black uppercase tracking-wider shadow-2xs hover:shadow-xs active:scale-95 transition-all touch-manipulation cursor-pointer ml-auto shrink-0"
-                    title="Reset all active filters"
-                  >
-                    <RotateCcw className="w-3 h-3 text-rose-500 dark:text-rose-400 stroke-[2.5]" />
-                    <span>Reset</span>
-                  </button>
+                <div className="pt-2 pb-2.5 border-b border-slate-100 dark:border-white/[0.08] sm:hidden space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shrink-0" />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                        Active Filters ({[selectedCollegeFilter, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter].filter(v => v !== 'ALL').length + (searchTerm ? 1 : 0)})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('warning');
+                        setSelectedCollegeFilter(canFilterCollege ? 'ALL' : userCollege);
+                        setSelectedDeptFilter(isUserHod ? initialDeptFilter : 'ALL');
+                        setSelectedYearFilter('ALL');
+                        setSelectedAttendanceFilter('ALL');
+                        setSearchTerm('');
+                        setDebouncedSearchTerm('');
+                        setDeptSearchQuery('');
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-300 border border-rose-200/90 dark:border-rose-800/80 text-[10px] font-black uppercase tracking-wider shadow-2xs hover:shadow-xs active:scale-95 transition-all touch-manipulation cursor-pointer shrink-0"
+                      title="Reset all active filters"
+                    >
+                      <RotateCcw className="w-3 h-3 text-rose-500 dark:text-rose-400 stroke-[2.5]" />
+                      <span>Reset</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {canFilterCollege && selectedCollegeFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-500/20 shadow-2xs">
+                        <span className="text-[9.5px] uppercase font-black text-teal-500 dark:text-teal-400">College:</span>
+                        <span>{selectedCollegeFilter}</span>
+                        <button onClick={() => setSelectedCollegeFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer text-xs leading-none">×</button>
+                      </span>
+                    )}
+                    {selectedDeptFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 shadow-2xs">
+                        <span className="text-[9.5px] uppercase font-black text-indigo-500 dark:text-indigo-400">Dept:</span>
+                        <span>{selectedDeptFilter}</span>
+                        <button onClick={() => setSelectedDeptFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer text-xs leading-none">×</button>
+                      </span>
+                    )}
+                    {selectedYearFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-500/20 shadow-2xs">
+                        <span className="text-[9.5px] uppercase font-black text-amber-500 dark:text-amber-400">Year:</span>
+                        <span>{selectedYearFilter === '1' || selectedYearFilter === 'I' ? '1st Year' : selectedYearFilter === '2' || selectedYearFilter === 'II' ? '2nd Year' : selectedYearFilter === '3' || selectedYearFilter === 'III' ? '3rd Year' : selectedYearFilter === '4' || selectedYearFilter === 'IV' ? '4th Year' : `${selectedYearFilter} Year`}</span>
+                        <button onClick={() => setSelectedYearFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer text-xs leading-none">×</button>
+                      </span>
+                    )}
+                    {selectedAttendanceFilter !== 'ALL' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shadow-2xs">
+                        <span className="text-[9.5px] uppercase font-black text-emerald-500 dark:text-emerald-400">Status:</span>
+                        <span>{
+                          selectedAttendanceFilter === 'PUBLIC_ATTENDED' || selectedAttendanceFilter === 'PUBLIC' ? 'Public Attended' :
+                          selectedAttendanceFilter === 'VIRTUAL_ATTENDED' || selectedAttendanceFilter === 'VIRTUAL' ? 'Virtual' :
+                          selectedAttendanceFilter === 'PUBLIC_NOT_ATTENDED' || selectedAttendanceFilter === 'NOT_ATTENDED' ? 'Not Attended' :
+                          selectedAttendanceFilter === 'DATA_ERROR' ? 'Data Error' :
+                          selectedAttendanceFilter === 'ALL_ATTENDED' ? 'Participating' :
+                          selectedAttendanceFilter.replace(/_/g, ' ')
+                        }</span>
+                        <button onClick={() => setSelectedAttendanceFilter('ALL')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer text-xs leading-none">×</button>
+                      </span>
+                    )}
+                    {searchTerm && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/20 shadow-2xs">
+                        <span className="text-[9.5px] uppercase font-black text-purple-500 dark:text-purple-400">Query:</span>
+                        <span className="truncate max-w-[120px]">{searchTerm}</span>
+                        <button onClick={() => setSearchTerm('')} className="hover:text-rose-500 font-bold ml-1 p-0.5 touch-manipulation active:scale-90 cursor-pointer text-xs leading-none">×</button>
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -5196,7 +5247,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           </span>
                           <div>
                             <span className="font-extrabold text-slate-900 dark:text-white truncate max-w-[120px] block">{p.name}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{p.dept} • {p.year} Year</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{typeof p.dept === 'object' ? (p.dept?.code || p.dept?.name || '—') : (p.dept || '—')} • {typeof p.year === 'object' ? (p.year?.year || p.year?.name || '—') : (p.year || '—')} Year</span>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -6414,8 +6465,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                     <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs">{errStudent.reg_no}</span>
                                   </div>
                                   <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
-                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.dept}</span>
-                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.year}</span>
+                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{typeof errStudent.dept === 'object' ? (errStudent.dept?.code || errStudent.dept?.name || '—') : (errStudent.dept || '—')}</span>
+                                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{typeof errStudent.year === 'object' ? (errStudent.year?.year || errStudent.year?.name || '—') : (errStudent.year || '—')}</span>
                                   </div>
                                 </div>
 
@@ -6479,10 +6530,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                       {errStudent.name}
                                     </td>
                                     <td className="px-4 py-2.5 text-center font-bold">
-                                      {errStudent.dept}
+                                      {typeof errStudent.dept === 'object' ? (errStudent.dept?.code || errStudent.dept?.name || '—') : (errStudent.dept || '—')}
                                     </td>
                                     <td className="px-4 py-2.5 text-center text-slate-500">
-                                      {errStudent.year}
+                                      {typeof errStudent.year === 'object' ? (errStudent.year?.year || errStudent.year?.name || '—') : (errStudent.year || '—')}
                                     </td>
                                     <td className="px-4 py-2.5 text-slate-500">
                                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
@@ -6668,8 +6719,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                   <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
                                   <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
                                   <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200 uppercase">{(r.name || '').toUpperCase()}</td>
-                                  <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
-                                  <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
+                                  <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">
+                                    {typeof r.dept === 'object' ? (r.dept?.code || r.dept?.name || '—') : (r.dept || '—')}
+                                  </td>
+                                  <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">
+                                    {typeof r.year === 'object' ? (r.year?.year || r.year?.name || '—') : (r.year || '—')}
+                                  </td>
                                   <td className="px-3 py-1.5 text-center">
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
                                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
@@ -6723,7 +6778,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                               </div>
                               <p className="font-black text-slate-900 dark:text-white uppercase truncate">{r.name}</p>
                               <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-200/60 dark:border-navy-800">
-                                <span className="text-slate-600 dark:text-slate-400">{r.dept} • {r.year} Year</span>
+                                <span className="text-slate-600 dark:text-slate-400">{typeof r.dept === 'object' ? (r.dept?.code || r.dept?.name || '—') : (r.dept || '—')} • {typeof r.year === 'object' ? (r.year?.year || r.year?.name || '—') : (r.year || '—')} Year</span>
                                 <span className="font-black text-emerald-600 dark:text-emerald-400">{r.total_solved ?? 0}/4 Solved</span>
                               </div>
                             </div>
@@ -6757,20 +6812,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* D. CLEAN COMPACT ACTION FOOTER */}
-                <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
-                  <span className="text-[11px] text-slate-500 font-bold font-mono">
-                    Nandha Engineering College • LeetCode Tracker
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowPreviewModal(false)}
-                    className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm"
-                  >
-                    Done
-                  </button>
                 </div>
               </div>
             </div>,
@@ -7240,7 +7281,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white">{viewingProfileStudent.name}</h3>
-                  <p className="text-sm font-bold text-slate-500 font-mono mt-0.5">{viewingProfileStudent.reg_no} • {viewingProfileStudent.dept}</p>
+                  <p className="text-sm font-bold text-slate-500 font-mono mt-0.5">{viewingProfileStudent.reg_no} • {typeof viewingProfileStudent.dept === 'object' ? (viewingProfileStudent.dept?.code || viewingProfileStudent.dept?.name || '—') : (viewingProfileStudent.dept || '—')}</p>
                 </div>
               </div>
               <button onClick={() => setViewingProfileStudent(null)} className="p-2 hover:bg-slate-200 dark:hover:bg-navy-800 rounded-full transition-colors text-slate-400 hover:text-slate-900 dark:hover:text-white">

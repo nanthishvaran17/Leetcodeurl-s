@@ -511,6 +511,57 @@ export const StudentDataIssuesPage: React.FC = () => {
     }
   };
 
+  // Helper to generate dynamic, descriptive filename based on active filters
+  const generateExportFilename = (ext: 'xlsx' | 'csv') => {
+    const parts: string[] = [];
+
+    // 1. College Prefix
+    const cUpper = (selectedCollege || 'all').trim().toUpperCase();
+    if (cUpper === 'NEC' || cUpper === 'NCT') {
+      parts.push(cUpper);
+    } else {
+      parts.push('NANDHA');
+    }
+
+    parts.push('Data_Issues');
+
+    // 2. Selected students mode
+    if (selectedStudentIds.length > 0) {
+      parts.push(`Selected_${selectedStudentIds.length}_Students`);
+    }
+
+    // 3. Department
+    if (selectedDept && selectedDept.toLowerCase() !== 'all') {
+      const foundDept = departments.find(d => d.code.toLowerCase() === selectedDept.toLowerCase());
+      const rawDept = foundDept ? foundDept.code : selectedDept.toUpperCase();
+      const cleanDept = rawDept.replace(/[/\\?%*:|"<> ]/g, '_');
+      parts.push(cleanDept);
+    }
+
+    // 4. Academic Year
+    if (selectedYear && selectedYear.toLowerCase() !== 'all') {
+      let yrLabel = selectedYear;
+      if (yrLabel === '1' || yrLabel.toLowerCase().includes('1st') || yrLabel.toLowerCase().includes('i year')) yrLabel = '1st_Year';
+      else if (yrLabel === '2' || yrLabel.toLowerCase().includes('2nd') || yrLabel.toLowerCase().includes('ii year')) yrLabel = '2nd_Year';
+      else if (yrLabel === '3' || yrLabel.toLowerCase().includes('3rd') || yrLabel.toLowerCase().includes('iii year')) yrLabel = '3rd_Year';
+      else if (yrLabel === '4' || yrLabel.toLowerCase().includes('4th') || yrLabel.toLowerCase().includes('iv year')) yrLabel = '4th_Year';
+      else yrLabel = yrLabel.replace(/[/\\?%*:|"<> ]/g, '_');
+      parts.push(yrLabel);
+    }
+
+    // 5. Issue Category
+    if (selectedIssue && selectedIssue.toLowerCase() !== 'all') {
+      const issueLabel = selectedIssue.replace(/[/\\?%*:|"<> ]/g, '_').toUpperCase();
+      parts.push(issueLabel);
+    }
+
+    // 6. Date
+    const dateTag = new Date().toISOString().split('T')[0];
+    parts.push(dateTag);
+
+    return `${parts.join('_')}.${ext}`;
+  };
+
   // Download Excel (Instant Direct Download <1s, supports selected student filter)
   const handleDownloadExcel = async () => {
     setIsExporting(true);
@@ -519,20 +570,19 @@ export const StudentDataIssuesPage: React.FC = () => {
     const countMsg = isSelectedMode ? `Preparing report for ${selectedStudentIds.length} selected students...` : 'Preparing instant report download...';
     notify.info('Downloading Excel', countMsg, { category: 'EXPORT CENTER' });
     try {
-      const dateTag = new Date().toISOString().split('T')[0];
-      const filename = isSelectedMode
-        ? `NANDHA_Selected_${selectedStudentIds.length}_Students_Report_${dateTag}.xlsx`
-        : `NANDHA_Data_Issues_Report_${dateTag}.xlsx`;
+      const filename = generateExportFilename('xlsx');
 
       const res = await downloadManager.download({
         endpoint: '/data-issues/export-excel',
         filename,
         params: {
+          college: selectedCollege,
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
           search: searchQuery || undefined,
-          student_ids: isSelectedMode ? selectedStudentIds.join(',') : undefined
+          student_ids: isSelectedMode ? selectedStudentIds.join(',') : undefined,
+          filename
         },
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
@@ -559,20 +609,19 @@ export const StudentDataIssuesPage: React.FC = () => {
     const countMsg = isSelectedMode ? `Preparing CSV report for ${selectedStudentIds.length} selected students...` : 'Preparing instant report download...';
     notify.info('Downloading CSV', countMsg, { category: 'EXPORT CENTER' });
     try {
-      const dateTag = new Date().toISOString().split('T')[0];
-      const filename = isSelectedMode
-        ? `NANDHA_Selected_${selectedStudentIds.length}_Students_Report_${dateTag}.csv`
-        : `NANDHA_Data_Issues_Report_${dateTag}.csv`;
+      const filename = generateExportFilename('csv');
 
       const res = await downloadManager.download({
         endpoint: '/data-issues/export-csv',
         filename,
         params: {
+          college: selectedCollege,
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
           search: searchQuery || undefined,
-          student_ids: isSelectedMode ? selectedStudentIds.join(',') : undefined
+          student_ids: isSelectedMode ? selectedStudentIds.join(',') : undefined,
+          filename
         },
         mimeType: 'text/csv'
       });

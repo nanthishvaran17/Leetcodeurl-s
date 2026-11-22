@@ -153,10 +153,12 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
             year_level = filters.get("year_level", "all")
             issue_type = filters.get("issue_type", "all")
             search = filters.get("search", None)
+            college = filters.get("college", "all")
+            student_ids = filters.get("student_ids", None)
             
             file_bytes = generate_data_issues_excel_bytes(
                 db=db, department=department, year_level=year_level, 
-                issue_type=issue_type, search=search
+                issue_type=issue_type, search=search, student_ids=student_ids, college=college
             )
             cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports_cache")
             os.makedirs(cache_dir, exist_ok=True)
@@ -179,10 +181,12 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
             year_level = filters.get("year_level", "all")
             issue_type = filters.get("issue_type", "all")
             search = filters.get("search", None)
+            college = filters.get("college", "all")
+            student_ids = filters.get("student_ids", None)
             
             file_bytes = generate_data_issues_csv_bytes(
                 db=db, department=department, year_level=year_level, 
-                issue_type=issue_type, search=search
+                issue_type=issue_type, search=search, student_ids=student_ids, college=college
             )
             cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports_cache")
             os.makedirs(cache_dir, exist_ok=True)
