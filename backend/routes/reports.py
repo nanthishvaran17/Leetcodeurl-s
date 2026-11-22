@@ -3202,10 +3202,14 @@ class EmailDispatchPayload(BaseModel):
 @router.post("/send-weekly-email")
 def trigger_weekly_email_dispatch(
     payload: Optional[EmailDispatchPayload] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(resource_name="Send Weekly Email Dispatch", required_roles=["admin", "super admin", "principal"]))
 ):
-    # PRODUCTION LOCK: All automated reports ONLY go to nanthishvaran17@gmail.com
-    recipients = ["nanthishvaran17@gmail.com"]
+    if payload and payload.recipient_emails:
+        raw_recs = [r.strip() for r in payload.recipient_emails.split(",") if r.strip()]
+        recipients = raw_recs if raw_recs else ["nanthishvaran17@gmail.com"]
+    else:
+        recipients = ["nanthishvaran17@gmail.com"]
 
     import datetime
     subject = f"Weekly LeetCode Performance Report - {datetime.date.today().strftime('%d.%m.%Y')}"

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, Variants, useReducedMotion } from 'framer-motion';
 import '../styles/login.css';
 import '../styles/login-updates.css';
 import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
-  ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
+  ArrowRight, ArrowLeft, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Shield,
   Cpu, Layers, CheckCircle, ChevronRight, Loader2,
   Download, Smartphone, Monitor
@@ -666,6 +666,68 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
     }
   };
 
+  const handleNavigateBack = useCallback((): boolean => {
+    if (currentView === 'forgot_password') {
+      if (forgotStep === 'reset_password' || forgotStep === 'verify_otp') {
+        setForgotStep('dob');
+        setNewPassword('');
+        setConfirmPassword('');
+        setError('');
+        setSuccessMsg('');
+        return true;
+      } else {
+        setCurrentView('login');
+        setAuthMode('password');
+        setForgotStep('dob');
+        setForgotIdentifier('');
+        setForgotDob('');
+        setError('');
+        setSuccessMsg('');
+        return true;
+      }
+    } else if (currentView === 'help') {
+      setCurrentView('login');
+      setError('');
+      setSuccessMsg('');
+      return true;
+    } else if (authMode !== 'password' || twoFactorPending) {
+      setAuthMode('password');
+      setTwoFactorPending(false);
+      setTwoFactorDigits(['', '', '', '', '', '']);
+      setOtpDigits(['', '', '', '', '', '']);
+      setError('');
+      setSuccessMsg('');
+      return true;
+    }
+    return false;
+  }, [currentView, forgotStep, authMode, twoFactorPending]);
+
+  // Sync back button handler for Android Hardware Back & Capacitor
+  useEffect(() => {
+    (window as any).__login_page_go_back__ = handleNavigateBack;
+    return () => {
+      delete (window as any).__login_page_go_back__;
+    };
+  }, [handleNavigateBack]);
+
+  // Handle browser popstate / back gestures
+  useEffect(() => {
+    const handlePopState = () => {
+      handleNavigateBack();
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [handleNavigateBack]);
+
+  // Push history state when navigating sub-views so browser back works
+  useEffect(() => {
+    if (currentView !== 'login') {
+      window.history.pushState({ view: currentView, step: forgotStep }, '');
+    }
+  }, [currentView, forgotStep]);
+
   return (
     <div className={`login-page-container ${isCapacitorNative() ? 'is-capacitor' : ''}`}>
 
@@ -849,17 +911,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
           <div className="login-content-wrapper">
             <div className="form-head">
               <div className="form-head-title-row">
-                <h2>
-                  {currentView === 'help'
-                    ? 'Institutional Help Desk'
-                    : (currentView === 'forgot_password' ? 'Reset Staff Password' : 'Sign in to your workspace')}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flex: 1, minWidth: 0 }}>
+                  {(currentView !== 'login' || authMode !== 'password' || twoFactorPending) && (
+                    <button
+                      type="button"
+                      onClick={() => handleNavigateBack()}
+                      className="login-back-btn"
+                      aria-label="Back"
+                      title="Back"
+                    >
+                      <ArrowLeft size={18} strokeWidth={2.5} />
+                    </button>
+                  )}
+                  <h2>
+                    {currentView === 'help'
+                      ? 'Institutional Help Desk'
+                      : (currentView === 'forgot_password'
+                        ? (forgotStep === 'reset_password' ? 'Set New Password' : 'Reset Staff Password')
+                        : 'Sign in to your workspace')}
+                  </h2>
+                </div>
               </div>
               <p>
                 {currentView === 'help'
                   ? 'Support for authorized personnel, faculty, and department staff.'
                   : (currentView === 'forgot_password'
-                    ? 'Verify your identity with your Staff ID / Email and Date of Birth.'
+                    ? (forgotStep === 'reset_password'
+                      ? 'Identity verified. Enter and confirm your new secure password.'
+                      : 'Verify your identity with your Staff ID / Email and Date of Birth.')
                     : 'Use your institutional credentials to authenticate.')}
               </p>
             </div>
@@ -1409,6 +1488,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onClose }) => {
                             disabled={loading}
                           />
                         </div>
+                      </div>
+                      <div className="row-between" style={{ marginTop: '-8px', marginBottom: '16px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleNavigateBack()}
+                          className="forgot cursor-pointer"
+                        >
+                          ← Change Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentView('login');
+                            setAuthMode('password');
+                            setForgotStep('dob');
+                            setForgotIdentifier('');
+                            setForgotDob('');
+                            setNewPassword('');
+                            setConfirmPassword('');
+                            setError('');
+                            setSuccessMsg('');
+                          }}
+                          className="forgot cursor-pointer"
+                        >
+                          Cancel & Sign In
+                        </button>
                       </div>
                       <button
                         className="submit-btn"

@@ -457,6 +457,31 @@
   margin-bottom: 0.4rem;
 }
 
+.login-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.login-back-btn:hover {
+  background: var(--bg-hover);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.login-back-btn:active {
+  transform: scale(0.92);
+}
+
 .form-head-title-row h2 {
   font-size: clamp(1.75rem, 2.2vw, 2rem);
   font-weight: 700;

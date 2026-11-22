@@ -822,17 +822,28 @@ async def send_otp(req: SendOtpRequest, request: Request, db: Session = Depends(
     except Exception:
         pass
 
-    return {
+    is_fallback = str(msg_id).startswith("<fallback-")
+    if is_fallback:
+        logger.warning(f"[FALLBACK_ADMIN_OTP] Server fallback mode active. Direct OTP for {target_recipient}: >>> {plain_otp} <<<")
+
+    resp_data = {
         "success": True,
         "status": "success",
-        "message": f"Verification code accepted by email service. Check {masked_target}.",
+        "message": f"Verification code accepted by email service. Check {masked_target}." if not is_fallback else f"Verification code generated for {masked_target}.",
         "expires_in": 300,
         "expires_at": otp_rec.expires_at.isoformat() + "Z",
         "request_id": otp_rec.request_id,
         "masked_email": masked_target,
         "message_id": msg_id,
-        "email": target_recipient
+        "email": target_recipient,
+        "is_fallback": is_fallback
     }
+
+    # In non-production environments or local dev fallback, include debug OTP to prevent lockout
+    if is_fallback and getattr(settings, "ENVIRONMENT", "").lower() != "production":
+        resp_data["debug_otp"] = plain_otp
+
+    return resp_data
 
 
 @router.post("/verify-otp")
@@ -1892,14 +1903,26 @@ def _resolve_and_verify_dob(clean_ident: str, dob_clean: str, db: Session):
         raise HTTPException(status_code=400, detail="Account is inactive. Please contact the administrator.")
 
     # 3. Check or record Date of Birth
+    is_admin_or_privileged = (
+        (user and str(getattr(user, "role", "") or "").lower() in ("admin", "superadmin", "faculty", "staff", "hod", "principal"))
+        or clean_ident in ("admin", "nanthishvaran17", "nanthishvaran17@gmail.com")
+    )
+
     if hasattr(entity, "date_of_birth") and entity.date_of_birth:
         entity_dob = entity.date_of_birth
         if isinstance(entity_dob, _dt.datetime):
             entity_dob = entity_dob.date()
         if str(entity_dob)[:10] != str(dob_parsed)[:10]:
             raise HTTPException(status_code=400, detail="Date of Birth does not match our records for this account.")
+    elif is_admin_or_privileged:
+        # Security hardening: Administrative and privileged accounts cannot self-seed arbitrary DOB values.
+        # They must have a valid pre-recorded DOB in the database or be managed via server credentials.
+        raise HTTPException(
+            status_code=403,
+            detail="Self-service DOB reset is not available for this administrative account. Please contact system operations."
+        )
     else:
-        # Legacy/seeded account with no DOB recorded: populate it now with the verified DOB
+        # Legacy/seeded student account with no DOB recorded: populate it now with the verified DOB
         setattr(entity, "date_of_birth", dob_parsed)
         db.commit()
 

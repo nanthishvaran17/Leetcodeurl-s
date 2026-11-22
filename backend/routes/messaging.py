@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.responses import FileResponse, Response
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 import os
 import uuid

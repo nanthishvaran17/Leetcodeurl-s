@@ -10,11 +10,12 @@ import hashlib
 import uuid
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
+from sqlalchemy import or_, and_, desc, func
 from sqlalchemy.orm import Session, joinedload
 
 from backend.models import (
     Student, Department, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    WeeklyStudentSnapshot, WeeklyReportAudit, LeetCodeProfileStats
+    WeeklyStudentSnapshot, WeeklyReportAudit, LeetCodeProfileStats, User
 )
 from backend.config.report_config import (
     BATCH_CONFIG,
@@ -834,8 +835,10 @@ def generate_weekly_performance_data(
     dept_code = (dept_filter or "ALL").upper().strip()
     target_dept = None
     if dept_filter and dept_filter != "ALL":
+        dept_str = str(dept_filter).strip()
+        dept_id_val = int(dept_str) if dept_str.isdigit() else -1
         target_dept = db.query(Department).filter(
-            or_(Department.code == dept_filter, Department.name == dept_filter, Department.id == (int(dept_filter) if dept_filter.isdigit() else -1))
+            or_(Department.code == dept_str, Department.name == dept_str, Department.id == dept_id_val)
         ).first()
 
     if target_dept:

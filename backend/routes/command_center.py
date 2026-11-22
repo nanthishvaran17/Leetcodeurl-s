@@ -1871,8 +1871,23 @@ def get_report_data(
 
 # 5. ADD / UPDATE / DELETE / DEPARTMENTS 
 
+def _verify_student_management_access(user: User):
+    role = (getattr(user, "role", "") or "").strip().lower()
+    allowed = {
+        "admin", "administrator", "super admin", "super_admin", 
+        "principal", "hod", "department hod", "faculty", "staff"
+    }
+    if role not in allowed:
+        raise HTTPException(status_code=403, detail="Access denied: Administrative or Staff privileges required.")
+
 @router.post("/students/add")
-async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+async def add_student(
+    req: StudentAddRequest, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    _verify_student_management_access(current_user)
     dept = db.query(Department).filter(Department.id == req.department_id).first()
     if not dept:
         raise HTTPException(status_code=400, detail=f"Department ID {req.department_id} not found.")
@@ -1915,11 +1930,17 @@ async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks,
     db.add(blank_stats)
     db.commit()
 
-    _log_admin_action(db, "ADD_STUDENT", student.reg_no, f"Added student {student.name} ({student.reg_no})")  # type: ignore
+    _log_admin_action(db, "ADD_STUDENT", student.reg_no, f"Added student {student.name} ({student.reg_no}) by {current_user.username}")  # type: ignore
     return {"success": True, "student_id": student.id, "message": f"Student '{student.name}' added successfully."}
 
 @router.put("/students/{reg_no}")
-def update_student(reg_no: str, req: StudentUpdateRequest, db: Session = Depends(get_db)):
+def update_student(
+    reg_no: str, 
+    req: StudentUpdateRequest, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    _verify_student_management_access(current_user)
     student = db.query(Student).filter(Student.reg_no == req.name if False else Student.reg_no == reg_no.strip().upper()).first()
     if not student:
         student = db.query(Student).filter(Student.reg_no == reg_no.strip()).first()
@@ -1985,11 +2006,16 @@ def update_student(reg_no: str, req: StudentUpdateRequest, db: Session = Depends
             'twelfth_cutoff': student.twelfth_cutoff
         }
     })
-    _log_admin_action(db, "UPDATE_STUDENT", student.reg_no, f"Updated student {student.name} ({student.reg_no})")  # type: ignore
+    _log_admin_action(db, "UPDATE_STUDENT", student.reg_no, f"Updated student {student.name} ({student.reg_no}) by {current_user.username}")  # type: ignore
     return {"success": True, "message": f"Student '{student.name}' updated successfully."}
 
 @router.delete("/students/{reg_no}")
-def delete_student(reg_no: str, db: Session = Depends(get_db)):
+def delete_student(
+    reg_no: str, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    _verify_student_management_access(current_user)
     student = db.query(Student).filter(Student.reg_no == reg_no.strip().upper()).first()
     if not student:
         student = db.query(Student).filter(Student.reg_no == reg_no.strip()).first()
@@ -1998,7 +2024,7 @@ def delete_student(reg_no: str, db: Session = Depends(get_db)):
 
     student.is_active = False  # type: ignore
     db.commit()
-    _log_admin_action(db, "DEACTIVATE_STUDENT", student.reg_no, f"Deactivated student {student.name}")  # type: ignore
+    _log_admin_action(db, "DEACTIVATE_STUDENT", student.reg_no, f"Deactivated student {student.name} by {current_user.username}")  # type: ignore
     return {"success": True, "message": f"Student '{student.name}' deactivated."}
 
 @router.get("/departments")

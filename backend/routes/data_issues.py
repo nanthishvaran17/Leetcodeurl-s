@@ -532,7 +532,8 @@ class RepairProfileRequest(BaseModel):
 def repair_student_profile(
     student_id: int,
     req: RepairProfileRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Issues Repair", dept_scoped=True))
 ):
     """
     Repairs a student's LeetCode profile after live verification and logs an audit record.
@@ -624,7 +625,8 @@ class BulkSyncRequest(BaseModel):
 @router.post("/bulk-sync")
 def bulk_sync_issues(
     req: BulkSyncRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Issues Bulk Sync", dept_scoped=True))
 ):
     """
     Triggers on-demand sync for a selected batch of student IDs.

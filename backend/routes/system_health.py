@@ -982,9 +982,13 @@ def get_comprehensive_admin_system_health(db: Session = Depends(get_db)):
 
 @router.post("/sync-now")
 @router.post("/admin/sync-now")
-def trigger_sync_now(db: Session = Depends(get_db)):
+def trigger_sync_now(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Manual Sync", required_roles=["admin", "super admin", "principal"]))
+):
     """
     Triggers an immediate background synchronization job and updates DB statistics.
+    Requires administrator privileges.
     """
     now = datetime.datetime.now(datetime.timezone.utc)
     total_students = db.query(Student).count()
@@ -1004,8 +1008,8 @@ def trigger_sync_now(db: Session = Depends(get_db)):
     from backend.services.audit_service import log_admin_action
     log_admin_action(
         db, action="MANUAL_SYNC_TRIGGERED", action_type="DATA_SYNC",
-        description=f"Manual contest synchronization completed: {total_students} records scanned",
-        current_user=None
+        description=f"Manual contest synchronization completed: {total_students} records scanned by {current_user.username}",
+        current_user=current_user
     )
     db.commit()
     
@@ -1024,15 +1028,19 @@ def trigger_sync_now(db: Session = Depends(get_db)):
 
 @router.post("/run-scheduler-now")
 @router.post("/admin/run-scheduler-now")
-def trigger_scheduler_now(db: Session = Depends(get_db)):
+def trigger_scheduler_now(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Trigger Manual Scheduler", required_roles=["admin", "super admin", "principal"]))
+):
     """
     Triggers the Sunday automation pipeline manually for verification and admin management.
+    Requires administrator privileges.
     """
     from backend.services.audit_service import log_admin_action
     log_admin_action(
         db, action="MANUAL_SCHEDULER_TRIGGERED", action_type="AUTOMATION",
-        description="Manual Sunday automation pipeline executed by administrator",
-        current_user=None
+        description=f"Manual Sunday automation pipeline executed by {current_user.username}",
+        current_user=current_user
     )
     db.commit()
     

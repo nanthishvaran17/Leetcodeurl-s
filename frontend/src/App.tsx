@@ -615,6 +615,12 @@ const MainAppContent: React.FC = () => {
     const initBackButton = async () => {
       try {
         backListenerHandle = await CapacitorApp.addListener('backButton', () => {
+          // If login page is in a sub-view (e.g. forgot password steps, OTP, 2FA, PIN), step back within login first
+          if (typeof (window as any).__login_page_go_back__ === 'function') {
+            const handled = (window as any).__login_page_go_back__();
+            if (handled) return;
+          }
+
           if (showExitConfirmModal) {
             setShowExitConfirmModal(false);
           } else if (showShareModal) {

@@ -10,6 +10,7 @@ Enforces strict institutional capacity and ownership rules:
 
 import threading
 from typing import List, Dict, Any, Optional
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 import datetime

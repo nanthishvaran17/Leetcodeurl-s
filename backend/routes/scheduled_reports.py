@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from backend.database import get_db
+from backend.security import require_security_access
 from backend.services.schedule_service import (
     get_schedule_status,
     save_report_schedule,
@@ -13,7 +14,14 @@ from backend.services.schedule_service import (
 )
 from backend.logger import logger
 
-router = APIRouter(prefix="/api/system/schedule", tags=["Scheduled Report Automation"])
+router = APIRouter(
+    prefix="/api/system/schedule", 
+    tags=["Scheduled Report Automation"],
+    dependencies=[Depends(require_security_access(
+        resource_name="Schedule Configuration",
+        required_roles=["admin", "super admin", "principal", "management"]
+    ))]
+)
 
 
 class SaveScheduleSchema(BaseModel):

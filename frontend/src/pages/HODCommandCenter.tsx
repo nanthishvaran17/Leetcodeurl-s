@@ -1873,6 +1873,14 @@ export const HODCommandCenter: React.FC = () => {
       {/* MOBILE ACTION PILLS (Native App Horizontal Dock) */}
       <div className="flex sm:hidden items-center gap-2 overflow-x-auto no-scrollbar w-full pt-0.5 pb-0.5 -mx-0.5 px-0.5">
         <button
+          onClick={() => setShowReportHubModal(true)}
+          className="inline-flex shrink-0 items-center gap-1.5 h-8 px-3 rounded-full bg-emerald-500/20 active:bg-emerald-500/40 text-emerald-200 border border-emerald-400/30 text-xs font-bold transition-all active:scale-95 touch-manipulation shadow-xs cursor-pointer"
+        >
+          <FileSpreadsheet size={12} className="shrink-0 text-emerald-300" />
+          <span className="whitespace-nowrap">Reports &amp; Export</span>
+        </button>
+
+        <button
           onClick={() => {
             document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
@@ -1893,6 +1901,16 @@ export const HODCommandCenter: React.FC = () => {
 
       {/* DESKTOP ACTION BUTTONS (sm and up) */}
       <div className="hidden sm:flex sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto sm:justify-end pt-2 sm:pt-0">
+        {/* Reports & Export Hub Button */}
+        <button
+          onClick={() => setShowReportHubModal(true)}
+          className="inline-flex min-w-0 items-center justify-center gap-2 h-10 sm:h-11 px-3 sm:px-4 rounded-xl sm:rounded-2xl bg-emerald-900/40 hover:bg-emerald-900/60 text-emerald-200 sm:text-emerald-300 border border-emerald-700/50 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs active:scale-95 touch-manipulation"
+          title="Open Audit & Accreditation Reports Hub"
+        >
+          <FileSpreadsheet size={15} className="shrink-0 text-emerald-400" />
+          <span className="truncate">Reports &amp; Export</span>
+        </button>
+
         {/* Quick Faculty Mentors Button */}
         <button
           onClick={() => {

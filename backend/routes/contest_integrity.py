@@ -25,21 +25,22 @@ class AdminCorrectionRequest(BaseModel):
     reason: str
     staff_id: str
 
-def verify_staff_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
+def verify_staff_access(request: Request, db: Session = Depends(get_db)) -> User:
     """Helper to verify staff/admin security access on backend routes."""
     if not request:
-        return None
+        raise HTTPException(status_code=401, detail="Authentication required: Request context missing.")
     user = get_current_user_optional(request, db)
-    if user:
-        role = (user.role or "").strip().lower()
-        allowed_roles = [
-            "admin", "administrator", "super admin", "super_admin",
-            "hod", "department hod", "department_hod", "head of department", "head_of_department",
-            "faculty", "faculty mentor", "faculty_mentor",
-            "staff", "staff mentor", "staff_mentor", "professor"
-        ]
-        if role not in allowed_roles:
-            raise HTTPException(status_code=403, detail="Access denied: Staff or Admin role required")
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required: Please sign in with staff or administrative credentials.")
+    role = (user.role or "").strip().lower()
+    allowed_roles = [
+        "admin", "administrator", "super admin", "super_admin",
+        "hod", "department hod", "department_hod", "head of department", "head_of_department",
+        "faculty", "faculty mentor", "faculty_mentor",
+        "staff", "staff mentor", "staff_mentor", "professor"
+    ]
+    if role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Access denied: Staff or Admin role required.")
     return user
 
 @router.post("/evaluate/{contest_id}")

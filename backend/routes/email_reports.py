@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.models import ReportEmailRecipient, EmailDispatchLog
+from backend.security import require_security_access
 from backend.services.email_service import (
     queue_weekly_report_dispatches,
     send_manual_report_email,
@@ -13,7 +14,14 @@ from backend.services.email_service import (
 )
 from backend.services.email_templates import generate_professional_template
 
-router = APIRouter(prefix="/api/email", tags=["Automated Report Email Delivery"])
+router = APIRouter(
+    prefix="/api/email", 
+    tags=["Automated Report Email Delivery"],
+    dependencies=[Depends(require_security_access(
+        resource_name="Automated Email Operations",
+        required_roles=["admin", "super admin", "principal", "management", "hod"]
+    ))]
+)
 
 class RecipientCreateSchema(BaseModel):
     name: str

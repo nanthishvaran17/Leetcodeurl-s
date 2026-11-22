@@ -515,9 +515,10 @@ def get_email_deliveries(
     limit: int = Query(50, ge=1, le=500),
     status: Optional[str] = None,
     recipient: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
 ):
-    """Retrieves real email delivery logs from database."""
+    """Retrieves real email delivery logs from database. Requires administrator privileges."""
     query = db.query(EmailDelivery)
 
     if status:
@@ -546,8 +547,11 @@ def get_email_deliveries(
 
 
 @router.get("/email-deliveries/stats")
-def get_email_delivery_stats(db: Session = Depends(get_db)):
-    """Computes real-time email delivery KPI metrics directly from database."""
+def get_email_delivery_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Computes real-time email delivery KPI metrics directly from database. Requires administrator privileges."""
     total = db.query(EmailDelivery).count()
     sent = db.query(EmailDelivery).filter(EmailDelivery.status == "SENT").count()
     failed = db.query(EmailDelivery).filter(EmailDelivery.status == "FAILED").count()
@@ -565,8 +569,12 @@ def get_email_delivery_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/email-deliveries/{delivery_id}/attachments")
-def get_email_attachments(delivery_id: int, db: Session = Depends(get_db)):
-    """Retrieves tracked file attachments for a specific email delivery record."""
+def get_email_attachments(
+    delivery_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    """Retrieves tracked file attachments for a specific email delivery record. Requires administrator privileges."""
     deliv = db.query(EmailDelivery).filter(EmailDelivery.id == delivery_id).first()
     if not deliv:
         raise HTTPException(status_code=404, detail="Email delivery record not found")
@@ -784,8 +792,8 @@ def delete_recipient(
 
 
 @router.get("/scheduler-health")
-def get_scheduler_health_endpoint():
-    """Retrieves Asia/Kolkata timezone scheduler health status & next/last run timestamps."""
+def get_scheduler_health_endpoint(current_user: User = Depends(get_admin_user_or_default)):
+    """Retrieves Asia/Kolkata timezone scheduler health status & next/last run timestamps. Requires administrator privileges."""
     try:
         from backend.scheduler import get_scheduler_health
         return get_scheduler_health()
