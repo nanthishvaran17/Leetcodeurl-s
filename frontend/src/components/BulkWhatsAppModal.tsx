@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  X, MessageCircle, Copy, Check, ExternalLink, ArrowRight, ArrowLeft, 
+import {
+  X, MessageCircle, Copy, Check, ExternalLink, ArrowRight, ArrowLeft,
   Download, Users, Sparkles, Smartphone, CheckCircle2, RotateCcw, Edit3,
   Phone, Send, AlertTriangle, CheckCircle, Search, Mail
 } from 'lucide-react';
@@ -141,7 +141,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
   const filteredStudents = useMemo(() => {
     if (!searchTerm.trim()) return selectedStudents;
     const q = searchTerm.toLowerCase();
-    return selectedStudents.filter(s => 
+    return selectedStudents.filter(s =>
       (s.student_name || '').toLowerCase().includes(q) ||
       (s.reg_no || '').toLowerCase().includes(q) ||
       (s.department_code || '').toLowerCase().includes(q)
@@ -198,7 +198,7 @@ export const BulkWhatsAppModal: React.FC<BulkWhatsAppModalProps> = ({
     const tplTitle = lang === 'ta' && tpl.titleTa ? tpl.titleTa : tpl.title;
     const subject = encodeURIComponent(`[Nandha Engineering College] Placement & Mentoring Notice: ${currentStudent.student_name} (${currentStudent.reg_no}) - ${tplTitle}`);
     const finalMsg = isEditingMessage && editedCustomMessage ? editedCustomMessage : formatMessageForStudent(currentStudent);
-    
+
     const emailBodyText = lang === 'ta'
       ? `${finalMsg}
 
@@ -241,7 +241,7 @@ Portal: https://leetcode.nandhaengg.org`;
 
     const body = encodeURIComponent(emailBodyText);
     const email = (currentStudent as any).email || (currentStudent as any).student_email || (currentStudent.reg_no ? `${currentStudent.reg_no.toLowerCase().trim()}@nandhaengg.org` : '');
-    
+
     setSentStudentIds(prev => new Set(prev).add(currentStudent.id));
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
 
@@ -374,11 +374,10 @@ Portal: https://leetcode.nandhaengg.org`;
             <button
               type="button"
               onClick={() => { triggerHaptic('selection'); setActiveTab('queue'); }}
-              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation ${
-                activeTab === 'queue'
+              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation ${activeTab === 'queue'
                   ? 'bg-white dark:bg-navy-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               <Smartphone size={14} />
               <span>1-Tap Queue ({sentStudentIds.size}/{totalStudents})</span>
@@ -386,11 +385,10 @@ Portal: https://leetcode.nandhaengg.org`;
             <button
               type="button"
               onClick={() => { triggerHaptic('selection'); setActiveTab('broadcast'); }}
-              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation ${
-                activeTab === 'broadcast'
+              className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation ${activeTab === 'broadcast'
                   ? 'bg-white dark:bg-navy-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               <Users size={14} />
               <span>Broadcast ({allPhoneNumbersFormatted.length})</span>
@@ -402,22 +400,20 @@ Portal: https://leetcode.nandhaengg.org`;
             <button
               type="button"
               onClick={() => { triggerHaptic('selection'); setLang('en'); }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                lang === 'en'
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${lang === 'en'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               EN
             </button>
             <button
               type="button"
               onClick={() => { triggerHaptic('selection'); setLang('ta'); }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                lang === 'ta'
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${lang === 'ta'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               தமிழ் (T)
             </button>
@@ -433,7 +429,7 @@ Portal: https://leetcode.nandhaengg.org`;
               {currentStudent ? (
                 /* ACTIVE STUDENT CARD IS FIRST AND PROMINENT */
                 <div className="p-4 rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-50/60 via-white to-teal-50/30 dark:from-navy-900 dark:via-navy-950 dark:to-emerald-950/20 space-y-3.5 shadow-sm">
-                  
+
                   {/* Queue Counter & Progress Header */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -470,13 +466,12 @@ Portal: https://leetcode.nandhaengg.org`;
                             key={s.id || idx}
                             type="button"
                             onClick={() => { triggerHaptic('selection'); setCurrentIndex(idx); }}
-                            className={`min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-mono font-black transition-all flex items-center justify-center gap-0.5 cursor-pointer touch-manipulation ${
-                              isCurrent
+                            className={`min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-mono font-black transition-all flex items-center justify-center gap-0.5 cursor-pointer touch-manipulation ${isCurrent
                                 ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-500/40 scale-105'
                                 : isSent
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
-                                : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-                            }`}
+                                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                              }`}
                             title={`Jump to ${s.student_name || 'Student'}`}
                           >
                             {isSent ? <Check size={11} className="stroke-[3]" /> : idx + 1}
@@ -634,11 +629,10 @@ Portal: https://leetcode.nandhaengg.org`;
                         key={tpl.id}
                         type="button"
                         onClick={() => { triggerHaptic('selection'); setSelectedTemplateId(tpl.id); }}
-                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer text-xs flex flex-col justify-between touch-manipulation ${
-                          isSelected
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer text-xs flex flex-col justify-between touch-manipulation ${isSelected
                             ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 ring-2 ring-emerald-500/20 font-bold'
                             : 'border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 font-medium'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-1 gap-1">
                           <span className="font-black truncate">{title}</span>
@@ -677,7 +671,7 @@ Portal: https://leetcode.nandhaengg.org`;
           {activeTab === 'broadcast' && (
             <div className="space-y-4 animate-fade-in">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-3.5">
-                
+
                 {/* Broadcast Header */}
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
@@ -763,7 +757,7 @@ Portal: https://leetcode.nandhaengg.org`;
                     <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Selected Recipient Roster ({totalStudents})
                     </span>
-                    
+
                     {/* Quick Search */}
                     <div className="relative min-w-[180px] flex items-center rounded-xl bg-white dark:bg-navy-950 border border-purple-200/90 hover:border-purple-400 dark:border-purple-500/30 shadow-xs focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
                       <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-purple-600 dark:text-purple-400 stroke-[2.5] pointer-events-none" />

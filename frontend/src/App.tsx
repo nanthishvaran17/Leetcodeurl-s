@@ -44,7 +44,7 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
         if (!sessionStorage.getItem(reloadKey)) {
           sessionStorage.setItem(reloadKey, '1');
           window.location.reload();
-          return new Promise(() => {});
+          return new Promise(() => { });
         }
       }
       throw error;
@@ -157,7 +157,7 @@ const PageSkeleton = () => (
 
 const MainAppContent: React.FC = () => {
   const { user, isAuthenticated, login } = useAuth();
-  
+
   // Initialize System & Download Notification listeners early on app boot
   useEffect(() => {
     import('./services/systemNotification').then(({ initSystemNotificationListeners }) => {
@@ -180,11 +180,11 @@ const MainAppContent: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
       import('./services/pushNotifications').then(({ requestPushPermissionAndSync }) => {
         const primaryIdentifier = user ? String(
-          user.email || 
-          user.username || 
-          (user as any).reg_no || 
-          (user as any).registerNo || 
-          user.id || 
+          user.email ||
+          user.username ||
+          (user as any).reg_no ||
+          (user as any).registerNo ||
+          user.id ||
           user.uid
         ) : '';
         requestPushPermissionAndSync(primaryIdentifier);
@@ -193,11 +193,11 @@ const MainAppContent: React.FC = () => {
       // 3. For Web / PWA browser mode, prompt and register when authenticated
       import('./services/pushNotifications').then(({ requestPushPermissionAndSync }) => {
         const primaryIdentifier = String(
-          user.email || 
-          user.username || 
-          (user as any).reg_no || 
-          (user as any).registerNo || 
-          user.id || 
+          user.email ||
+          user.username ||
+          (user as any).reg_no ||
+          (user as any).registerNo ||
+          user.id ||
           user.uid
         );
         requestPushPermissionAndSync(primaryIdentifier);
@@ -333,53 +333,53 @@ const MainAppContent: React.FC = () => {
     userRole: user?.role,
   });
 
-    const handleOpenShareModal = useCallback((e?: any) => {
-      if (e?.detail?.student) {
-        setSelectedStudent(e.detail.student);
+  const handleOpenShareModal = useCallback((e?: any) => {
+    if (e?.detail?.student) {
+      setSelectedStudent(e.detail.student);
+    }
+    setShowShareModal(true);
+  }, []);
+
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      setIsSidebarOpen(prev => !prev);
+    };
+    window.addEventListener('toggle_sidebar', handleToggleSidebar);
+    const handleOpenAi = () => {
+      setShowAiWidget(true);
+      window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
+    };
+    window.addEventListener('open_ai_widget', handleOpenAi);
+
+    const handleOpenAiAssistant = (e: any) => {
+      setShowAiWidget(true);
+      if (e?.detail?.query) {
+        setAiInitialQuery(e.detail.query);
       }
-      setShowShareModal(true);
-    }, []);
+    };
+    window.addEventListener('open_ai_assistant', handleOpenAiAssistant);
 
-    useEffect(() => {
-      const handleToggleSidebar = () => {
-        setIsSidebarOpen(prev => !prev);
-      };
-      window.addEventListener('toggle_sidebar', handleToggleSidebar);
-      const handleOpenAi = () => {
-        setShowAiWidget(true);
-        window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
-      };
-      window.addEventListener('open_ai_widget', handleOpenAi);
+    const handleOpenFilterDrawer = () => {
+      setShowMobileFilterDrawer(true);
+    };
+    window.addEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
 
-      const handleOpenAiAssistant = (e: any) => {
-        setShowAiWidget(true);
-        if (e?.detail?.query) {
-          setAiInitialQuery(e.detail.query);
-        }
-      };
-      window.addEventListener('open_ai_assistant', handleOpenAiAssistant);
+    const handleOpenCommandPalette = () => {
+      setShowCommandPalette(true);
+    };
+    window.addEventListener('open_command_palette', handleOpenCommandPalette);
 
-      const handleOpenFilterDrawer = () => {
-        setShowMobileFilterDrawer(true);
-      };
-      window.addEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+    window.addEventListener('open_share_card', handleOpenShareModal);
 
-      const handleOpenCommandPalette = () => {
-        setShowCommandPalette(true);
-      };
-      window.addEventListener('open_command_palette', handleOpenCommandPalette);
-
-      window.addEventListener('open_share_card', handleOpenShareModal);
-
-      return () => {
-        window.removeEventListener('toggle_sidebar', handleToggleSidebar);
-        window.removeEventListener('open_ai_widget', handleOpenAi);
-        window.removeEventListener('open_ai_assistant', handleOpenAiAssistant);
-        window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
-        window.removeEventListener('open_command_palette', handleOpenCommandPalette);
-        window.removeEventListener('open_share_card', handleOpenShareModal);
-      };
-    }, [handleOpenShareModal]);
+    return () => {
+      window.removeEventListener('toggle_sidebar', handleToggleSidebar);
+      window.removeEventListener('open_ai_widget', handleOpenAi);
+      window.removeEventListener('open_ai_assistant', handleOpenAiAssistant);
+      window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+      window.removeEventListener('open_command_palette', handleOpenCommandPalette);
+      window.removeEventListener('open_share_card', handleOpenShareModal);
+    };
+  }, [handleOpenShareModal]);
 
 
 
@@ -403,7 +403,7 @@ const MainAppContent: React.FC = () => {
         document.body.classList.remove('presentation-shield-active');
         document.documentElement.removeAttribute('data-presentation-shield');
       }
-    } catch {}
+    } catch { }
 
     const handleStorageChange = () => {
       const isShield = localStorage.getItem('nec_presentation_shield') === 'true';
@@ -441,9 +441,9 @@ const MainAppContent: React.FC = () => {
           if (state && state.isActive) {
             handleVisibilityResume();
           }
-        }).then((h: any) => { capListenerHandle = h; }).catch(() => {});
-      }).catch(() => {});
-    } catch {}
+        }).then((h: any) => { capListenerHandle = h; }).catch(() => { });
+      }).catch(() => { });
+    } catch { }
 
     let timer: any = null;
     const isAdminUser = ['admin', 'super admin', 'super_admin', 'administrator'].includes((user?.role || '').trim().toLowerCase());
@@ -487,8 +487,8 @@ const MainAppContent: React.FC = () => {
             return;
           }
           startTransition(() => {
-      setActiveTab(tab);
-    });
+            setActiveTab(tab);
+          });
         }
       } else if (isAdminPortal) {
         setActiveTab('dev-studio');
@@ -511,7 +511,7 @@ const MainAppContent: React.FC = () => {
               sessionStorage.setItem('target_conversation_id', convId);
               window.dispatchEvent(new CustomEvent('open_conversation', { detail: { conversationId: convId } }));
             }
-          } catch (_e) {}
+          } catch (_e) { }
         }
         setActiveTab(cleanRoute);
       }
@@ -529,7 +529,7 @@ const MainAppContent: React.FC = () => {
       window.removeEventListener('navigate_to_route', handleDeepLinkNav);
       window.removeEventListener('nec_deep_link_navigate', handleDeepLinkNav);
       if (capListenerHandle && typeof capListenerHandle.remove === 'function') {
-        try { capListenerHandle.remove(); } catch {}
+        try { capListenerHandle.remove(); } catch { }
       }
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('navigate_to_route', handleDeepLinkNav);
@@ -547,7 +547,7 @@ const MainAppContent: React.FC = () => {
           if (window.history && window.history.replaceState) {
             window.history.replaceState(null, '', '#/dashboard');
           }
-        } catch (_e) {}
+        } catch (_e) { }
       }
     }
   }, [isAuthenticated]);
@@ -939,7 +939,7 @@ const MainAppContent: React.FC = () => {
       } else {
         window.location.hash = `#/${tab}`;
       }
-    } catch (_e) {}
+    } catch (_e) { }
     // Robust scroll-to-top: covers window, html, and any scrollable main container
     forceUnlockScroll();
     window.scrollTo(0, 0);
@@ -991,7 +991,7 @@ const MainAppContent: React.FC = () => {
   useEffect(() => {
     let unregister: (() => void) | null = null;
     let contextPushed = false;
-    
+
     if (selectedStudent || showLoginModal || showImportModal || showAlertCenterModal || showExitConfirmModal) {
       pushContext('MODAL');
       contextPushed = true;
@@ -1012,7 +1012,7 @@ const MainAppContent: React.FC = () => {
 
   const handleOpenImport = useCallback(() => setShowImportModal(true), []);
   const handleOpenLogin = useCallback(() => setShowLoginModal(true), []);
-  
+
   // Determine main dashboard component based on role
   const renderDashboardComponent = useCallback(() => {
     const roleClean = (user?.role || '').trim().toLowerCase();
@@ -1037,40 +1037,40 @@ const MainAppContent: React.FC = () => {
   // CENTRALIZED ROLE PERMISSION MATRIX 
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
-  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','account-settings','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder','post930','post-930'], []);
-  
+  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'reports', 'staff-dashboard', 'student-dashboard', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'], []);
+
   const ROLE_PERMISSIONS = useMemo<Record<string, string[]>>(() => ({
     // Super admin / admin: full system access
-    admin:            ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
-    administrator:    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
-    super_admin:      ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
-    'super admin':    ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'dev-studio', 'post930', 'post-930'],
+    admin: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'audit', 'settings', 'system-health', 'ai-control', 'staff-dashboard', 'student-dashboard', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'dev-studio', 'post930', 'post-930'],
+    administrator: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'audit', 'settings', 'system-health', 'ai-control', 'staff-dashboard', 'student-dashboard', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'dev-studio', 'post930', 'post-930'],
+    super_admin: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'audit', 'settings', 'system-health', 'ai-control', 'staff-dashboard', 'student-dashboard', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'dev-studio', 'post930', 'post-930'],
+    'super admin': ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'audit', 'settings', 'system-health', 'ai-control', 'staff-dashboard', 'student-dashboard', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'dev-studio', 'post930', 'post-930'],
     // HOD: command center + faculty tools + staff dashboard (for mentee monitoring)
-    hod:              ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    'department hod': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    'placement coordinator': ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    placement_coordinator:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    'placement officer':     ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    placement_officer:       ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    department_hod:   ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','messages','staff-dashboard','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    principal:        ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','system-health','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    management:       ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','system-health','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
-    director:         ['dashboard','landing','public','profile','account-settings','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','system-health','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder', 'post930', 'post-930'],
+    hod: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    'department hod': ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    'placement coordinator': ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    placement_coordinator: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    'placement officer': ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    placement_officer: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    department_hod: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'messages', 'staff-dashboard', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    principal: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'system-health', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    management: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'system-health', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
+    director: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'students', 'hod-command-center', 'faculty-action-center', 'departments', 'compare', 'growth', 'quality', 'data-issues', 'weekly-contest', 'integrity-monitor', 'reports', 'system-health', 'messages', 'hr-candidate-finder', 'candidate-requirements', 'placement-finder', 'hr-finder', 'post930', 'post-930'],
     // FACULTY / STAFF MENTOR: full academic & contest tools
-    faculty:          ALL_ACADEMIC_TABS,
+    faculty: ALL_ACADEMIC_TABS,
     'faculty mentor': ALL_ACADEMIC_TABS,
-    faculty_mentor:   ALL_ACADEMIC_TABS,
-    staff:            ALL_ACADEMIC_TABS,
-    'staff mentor':   ALL_ACADEMIC_TABS,
-    staff_mentor:     ALL_ACADEMIC_TABS,
-    professor:        ALL_ACADEMIC_TABS,
+    faculty_mentor: ALL_ACADEMIC_TABS,
+    staff: ALL_ACADEMIC_TABS,
+    'staff mentor': ALL_ACADEMIC_TABS,
+    staff_mentor: ALL_ACADEMIC_TABS,
+    professor: ALL_ACADEMIC_TABS,
     // COORDINATOR ROLES: Full multi-department & year analytics
     'student coordinator': ALL_ACADEMIC_TABS,
-    student_coordinator:   ALL_ACADEMIC_TABS,
-    coordinator:           ALL_ACADEMIC_TABS,
+    student_coordinator: ALL_ACADEMIC_TABS,
+    coordinator: ALL_ACADEMIC_TABS,
     'academic coordinator': ALL_ACADEMIC_TABS,
     // Student: minimal access
-    student:          ['dashboard','landing','public','profile','account-settings','post930','post-930'],
+    student: ['dashboard', 'landing', 'public', 'profile', 'account-settings', 'post930', 'post-930'],
   }), [ALL_ACADEMIC_TABS]);
 
   const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
@@ -1079,12 +1079,12 @@ const MainAppContent: React.FC = () => {
     if (!isAuthenticated) return ['landing', 'public', 'profile'].includes(tab);
     const normalized = tab === 'data-quality' ? 'quality'
       : (tab === 'account' || tab === 'profile-settings') ? 'account-settings'
-      : tab === 'department' ? 'departments'
-      : (tab === 'hod' || tab === 'command-center') ? 'hod-command-center'
-      : tab === 'faculty' ? 'faculty-action-center'
-      : (tab === 'hr' || tab === 'candidate-finder') ? 'hr-candidate-finder'
-      : (tab === 'issues' || tab === 'student-data-issues') ? 'data-issues'
-      : tab;
+        : tab === 'department' ? 'departments'
+          : (tab === 'hod' || tab === 'command-center') ? 'hod-command-center'
+            : tab === 'faculty' ? 'faculty-action-center'
+              : (tab === 'hr' || tab === 'candidate-finder') ? 'hr-candidate-finder'
+                : (tab === 'issues' || tab === 'student-data-issues') ? 'data-issues'
+                  : tab;
 
     if (tab === 'dev-studio' || normalized === 'dev-studio') {
       const isAdminRole = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
@@ -1184,7 +1184,7 @@ const MainAppContent: React.FC = () => {
                   const parsed = JSON.parse(stored);
                   localRoleClean = (parsed?.role || '').trim().toLowerCase();
                 }
-              } catch (_e) {}
+              } catch (_e) { }
               // Fallback to context if localStorage not yet written
               if (!localRoleClean) localRoleClean = (user?.role || '').trim().toLowerCase();
 
@@ -1206,15 +1206,14 @@ const MainAppContent: React.FC = () => {
                 if (window.location.hash.includes('dev-studio')) {
                   window.history.replaceState(null, '', window.location.pathname);
                 }
-              } catch {}
+              } catch { }
               handleTabChange(isAuthenticated ? 'dashboard' : 'landing');
             }} />
           </Suspense>
         </ErrorBoundary>
       ) : (
-        <div className={`overflow-x-clip max-w-full min-w-0 box-border bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${
-          activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
-        }`}>
+        <div className={`overflow-x-clip max-w-full min-w-0 box-border bg-[#F8FAFC] dark:bg-transparent text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 w-full relative ${activeTab === 'messages' ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
+          }`}>
           {/* Top Page Transition Progress Loader */}
           {isNavigating && (
             <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
@@ -1222,468 +1221,467 @@ const MainAppContent: React.FC = () => {
             </div>
           )}
 
-      <a 
-        href="#main-content" 
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-md shadow-lg"
-      >
-        Skip to main content
-      </a>
-      
-      {/* COMMAND PALETTE */}
-      <CommandPalette 
-        isOpen={showCommandPalette}
-        onClose={handleCloseCommandPalette}
-        onNavigate={handleTabChange}
-        onSelectStudent={handleSelectStudent}
-        onOpenAiWithQuery={handleOpenAiWithQuery}
-        onOpenShortcutsModal={handleOpenShortcutsModal}
-      />
-
-      {/* Native Offline & Cached Roster Indicator Banner */}
-      <OfflineIndicatorBanner />
-
-      {/* Mobile Left Edge Swipe Guard Removed to Prevent Vertical Scroll Lock */}
-
-      {/* Floating Presentation Shield Active Pill */}
-      {isPresentationShieldOn && (
-        <div className="fixed top-14 right-3.5 z-[100060] pointer-events-none animate-fade-in">
-          <div className="px-2.5 py-1 rounded-full bg-amber-500/95 text-navy-950 font-black text-[9.5px] tracking-wider uppercase shadow-md flex items-center gap-1.5 backdrop-blur-md border border-amber-300">
-            <span className="w-2 h-2 rounded-full bg-navy-950 animate-ping" />
-            <span>Shield Active: Projector Mode</span>
-          </div>
-        </div>
-      )}
-
-      {/* Top Navbar */}
-      <Navbar
-        currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
-        onOpenLogin={handleOpenLogin}
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-      />
-
-      <div className={`w-full max-w-full min-w-0 mx-auto relative flex flex-col overflow-x-clip box-border ${
-        activeTab === 'messages'
-          ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
-          : 'pt-2 sm:pt-4 pb-36 sm:pb-8 md:pb-16 lg:pb-20 px-3.5 sm:px-6 lg:px-8 w-full max-w-full mx-auto'
-      }`}>
-        
-        {/* Slide-out Sidebar Drawer */}
-        {(isAuthenticated || activeTab === 'public') && (
-          <Sidebar 
-            activeTab={activeTab} 
-            setActiveTab={(tab) => {
-              handleTabChange(tab);
-              setIsSidebarOpen(false);
-            }} 
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main Content View Container with Native Mobile Pull-to-Refresh */}
-        <PullToRefresh 
-          onRefresh={handleGlobalPullToRefresh}
-          disabled={
-            isSidebarOpen ||
-            (Boolean(selectedStudent) && activeTab !== 'profile') ||
-            showLoginModal ||
-            showImportModal ||
-            showAlertCenterModal ||
-            showCommandPalette ||
-            showShareModal ||
-            showMobileFilterDrawer
-          }
-        >
-          <main
-            id="main-content"
-            key={activeTab}
-            className={`min-w-0 w-full max-w-full overflow-x-clip box-border animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-md shadow-lg"
           >
+            Skip to main content
+          </a>
 
-            <ErrorBoundary>
-              <Suspense fallback={<PageSkeleton />}>
-                {activeTab === 'landing' && (
-                <LandingPage
-                  summaryData={summaryData}
-                  onViewDashboard={() => handleTabChange('dashboard')}
-                  onOpenLogin={handleOpenLogin}
-                  onSelectStudent={handleSelectStudent}
-                  onViewForColleges={() => handleTabChange('for-colleges')}
-                />
-              )}
-
-              {activeTab === 'dashboard' && renderDashboardComponent()}
-
-              {(activeTab === 'hod-command-center' || activeTab === 'hod' || activeTab === 'command-center') && (
-                isTabAllowed('hod-command-center')
-                  ? <HODCommandCenter />
-                  : renderAccessDenied('HOD Dashboard')
-              )}
-
-              {(activeTab === 'faculty-action-center' || activeTab === 'faculty') && (
-                isTabAllowed('faculty-action-center')
-                  ? <FacultyActionCenter />
-                  : renderAccessDenied('Faculty Action Center')
-              )}
-
-              {activeTab === 'integrity-monitor' && (
-                isTabAllowed('integrity-monitor')
-                  ? <ContestIntegrityMonitor />
-                  : renderAccessDenied('Contest Integrity Monitor')
-              )}
-
-              {activeTab === 'growth' && (
-                isTabAllowed('growth')
-                  ? <GrowthIntelligencePage />
-                  : renderAccessDenied('Growth Intelligence')
-              )}
-
-              {activeTab === 'student-dashboard' && (
-                isTabAllowed('student-dashboard')
-                  ? <StudentDashboardView />
-                  : renderAccessDenied('Student Dashboard')
-              )}
-
-              {activeTab === 'staff-dashboard' && (
-                isTabAllowed('staff-dashboard')
-                  ? <StaffDashboardView />
-                  : renderAccessDenied('Staff Dashboard')
-              )}
-
-              {(activeTab === 'departments' || activeTab === 'department') && (
-                isTabAllowed('departments')
-                  ? <DepartmentDashboard onSelectStudent={handleSelectStudent} />
-                  : renderAccessDenied('Department Analytics')
-              )}
-
-              {activeTab === 'weekly-contest' && (
-                isTabAllowed('weekly-contest')
-                  ? <WeeklyContestPage onSelectStudent={handleSelectStudent} />
-                  : renderAccessDenied('Weekly Contest Tracker')
-              )}
-
-              {(activeTab === 'post930' || activeTab === 'post-930') && (
-                <WeeklyContestPage onSelectStudent={handleSelectStudent} />
-              )}
-
-              {activeTab === 'students' && (
-                isTabAllowed('students')
-                  ? <StudentMasterPage onSelectStudent={handleSelectStudent} onOpenImport={handleOpenImport} />
-                  : renderAccessDenied('Student Master Management')
-              )}
-
-              {activeTab === 'profile' && selectedStudent && (
-                <ErrorBoundary>
-                  <StudentProfilePage
-                    student={selectedStudent}
-                    onBack={handleCloseProfile}
-                  />
-                </ErrorBoundary>
-              )}
-
-              {activeTab === 'compare' && (
-                isTabAllowed('compare')
-                  ? <ComparePage />
-                  : renderAccessDenied('Student Comparison')
-              )}
-
-              {(activeTab === 'quality' || activeTab === 'data-quality') && (
-                isTabAllowed('quality')
-                  ? <DataQualityPage onNavigateTab={handleTabChange} onSelectStudent={handleSelectStudent} />
-                  : renderAccessDenied('Data Quality Board')
-              )}
-
-              {(activeTab === 'data-issues' || activeTab === 'issues' || activeTab === 'student-data-issues' || activeTab === 'not-started-issues') && (
-                isTabAllowed('data-issues')
-                  ? <StudentDataIssuesPage />
-                  : renderAccessDenied('Student Data Issues & Recovery')
-              )}
-
-              {activeTab === 'system-health' && (
-                isTabAllowed('system-health')
-                  ? <SystemHealthPage onNavigateTab={setActiveTab} />
-                  : renderAccessDenied('System Operations — Admin Only')
-              )}
-
-              {activeTab === 'messages' && (
-                isTabAllowed('messages')
-                  ? <MessagesPage onNavigateTab={handleTabChange} />
-                  : renderAccessDenied('Messages')
-              )}
-
-              {activeTab === 'reports' && (
-                isTabAllowed('reports')
-                  ? <ReportsPage />
-                  : renderAccessDenied('Reports & Exports')
-              )}
-
-              {(activeTab === 'hr-candidate-finder' || activeTab === 'candidate-requirements' || activeTab === 'placement-finder' || activeTab === 'hr-finder' || activeTab === 'hr') && (
-                isTabAllowed('hr-candidate-finder') ? (
-                  <Suspense fallback={<PageSkeleton />}>
-                    <HRCandidateFinderPage />
-                  </Suspense>
-                ) : renderAccessDenied('Placement & Hiring Portal')
-              )}
-
-              {activeTab === 'public' && (
-                <PublicLeaderboardPage onSelectStudent={handleSelectStudent} />
-              )}
-
-              {(activeTab === 'for-colleges' || activeTab === 'colleges' || activeTab === 'partner' || activeTab === 'institutional-demo') && (
-                <Suspense fallback={<PageSkeleton />}>
-                  <ForCollegesPage />
-                </Suspense>
-              )}
-
-              {(activeTab === 'account-settings' || activeTab === 'account' || activeTab === 'profile-settings') && (
-                <AccountSettingsPage onBack={() => handleTabChange('dashboard')} />
-              )}
-
-              {activeTab === 'settings' && (
-                isTabAllowed('settings')
-                  ? <SettingsPage initialSection="staff" />
-                  : renderAccessDenied('Admin Settings — Admin Only')
-              )}
-
-              {activeTab === 'audit' && (
-                isTabAllowed('audit')
-                  ? <AuditLogPage />
-                  : renderAccessDenied('Audit Log — Admin Only')
-              )}
-
-              {activeTab === 'ai-control' && (
-                isTabAllowed('ai-control')
-                  ? <AIControlCenterPage />
-                  : renderAccessDenied('AI Control Center — Admin Only')
-              )}
-
-              {activeTab === 'dev-studio' && (
-                isTabAllowed('dev-studio')
-                  ? <DeveloperStudio onClose={() => handleTabChange('dashboard')} />
-                  : renderAccessDenied('Developer Studio — Restricted (Requires 2FA OTP Authentication via /admin portal)')
-              )}
-            </Suspense>
-          </ErrorBoundary>
-        </main>
-      </PullToRefresh>
-
-      </div>
-
-
-      {/* Keyboard Shortcuts Guide Modal */}
-      <KeyboardShortcutsModal
-        isOpen={showShortcutsModal}
-        onClose={() => setShowShortcutsModal(false)}
-        isTabAllowed={(tab) => isTabAllowed(tab)}
-      />
-
-      {/* Login Modal (used for re-authentication when already inside the app) */}
-      {showLoginModal && (
-        <Suspense fallback={null}>
-          <LoginPage
-            onClose={() => setShowLoginModal(false)}
-            onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
-          />
-        </Suspense>
-      )}
-
-
-      {/* Import Modal — only mount when open to avoid bundle weight on initial render */}
-      {showImportModal && (
-        <Suspense fallback={null}>
-          <ImportModal
-            isOpen={showImportModal}
-            onClose={() => setShowImportModal(false)}
-            onSuccess={() => { 
-              localStorage.removeItem('nec_leetcode_students_cache');
-              fetchSummary(); 
-              setActiveTab('students');
-              // No reload required, LiveEventRouter handles live cache updates
-            }}
-          />
-        </Suspense>
-      )}
-
-      {/* Automated Alert Center Modal — only mount when open */}
-      {showAlertCenterModal && (
-        <Suspense fallback={null}>
-          <AlertCenterModal
-            isOpen={showAlertCenterModal}
-            onClose={() => setShowAlertCenterModal(false)}
+          {/* COMMAND PALETTE */}
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={handleCloseCommandPalette}
             onNavigate={handleTabChange}
+            onSelectStudent={handleSelectStudent}
+            onOpenAiWithQuery={handleOpenAiWithQuery}
+            onOpenShortcutsModal={handleOpenShortcutsModal}
           />
-        </Suspense>
-      )}
 
-      {/* Global NEC Unified AI Assistant Drawer (Header-Triggered) */}
-      {showAiWidget && (
-        <Suspense fallback={null}>
-          <AIAssistantWidget
-            initialQuery={aiInitialQuery || undefined}
-            onClearInitialQuery={() => setAiInitialQuery(null)}
-            onNavigateTab={handleTabChange}
-            onClose={() => {
-              setShowAiWidget(false);
-              setAiInitialQuery(null);
-            }}
-          />
-        </Suspense>
-      )}
+          {/* Native Offline & Cached Roster Indicator Banner */}
+          <OfflineIndicatorBanner />
 
-      {/* Viewport-Centered Student Profile Modal */}
-      {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
-        <div
-          className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 sm:backdrop-blur-md animate-fade-in"
-          style={{ zIndex: 999999 }}
-          onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[96dvh] sm:h-[88vh] max-h-[96dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-[#0a0f1d] dark:bg-navy-950 border-t sm:border border-slate-800/80 dark:border-white/10"
-          >
-            <SwipeHandle onClose={() => setSelectedStudent(null)} className="pt-2.5 pb-1 block sm:hidden shrink-0 bg-[#0a0f1d]" pillClassName="bg-white/30 hover:bg-white/50" />
-            <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
-              <PullToRefresh
-                onRefresh={async () => {
-                  clearApiCache();
-                  window.dispatchEvent(new CustomEvent('pull_to_refresh'));
-                }}
-              >
-                <ErrorBoundary>
-                  <StudentProfilePage
-                    student={selectedStudent}
-                    onBack={handleCloseProfile}
-                  />
-                </ErrorBoundary>
-              </PullToRefresh>
-            </Suspense>
-          </div>
-        </div>
-      )}
+          {/* Mobile Left Edge Swipe Guard Removed to Prevent Vertical Scroll Lock */}
 
-      {/* EXIT CONFIRMATION DIALOG */}
-        {showExitConfirmModal && (
-          <div
-            className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setShowExitConfirmModal(false);
-            }}
-          >
-            <div
-              className="bg-white dark:bg-navy-950 border-t sm:border border-slate-200 dark:border-navy-800 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-9 sm:p-7 w-full sm:max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5 animate-modal-content"
-            >
-              {/* Mobile Drag Indicator Handle */}
-              <SwipeHandle
-                onClose={() => setShowExitConfirmModal(false)}
-                className="sm:hidden -mt-2 mb-2 py-1 shrink-0"
-                pillClassName="bg-slate-300 dark:bg-navy-700"
-              />
-
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">
-                  <LogOut size={22} className="stroke-[2.2]" />
-                </div>
-                <div>
-                  <h3 className="font-display text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    Exit App?
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    LeetCode Tracker
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-                Are you sure you want to exit LeetCode Tracker?
-              </p>
-
-              <div className="flex items-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowExitConfirmModal(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-900 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer active:scale-95"
-                >
-                  CANCEL
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowExitConfirmModal(false);
-                    try {
-                      CapacitorApp.exitApp();
-                    } catch (_e) {
-                      // Fallback for non-Capacitor environment
-                    }
-                  }}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs tracking-wider uppercase transition cursor-pointer shadow-md shadow-rose-600/20 active:scale-95"
-                >
-                  EXIT
-                </button>
+          {/* Floating Presentation Shield Active Pill */}
+          {isPresentationShieldOn && (
+            <div className="fixed top-14 right-3.5 z-[100060] pointer-events-none animate-fade-in">
+              <div className="px-2.5 py-1 rounded-full bg-amber-500/95 text-navy-950 font-black text-[9.5px] tracking-wider uppercase shadow-md flex items-center gap-1.5 backdrop-blur-md border border-amber-300">
+                <span className="w-2 h-2 rounded-full bg-navy-950 animate-ping" />
+                <span>Shield Active: Projector Mode</span>
               </div>
             </div>
+          )}
+
+          {/* Top Navbar */}
+          <Navbar
+            currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
+            onOpenLogin={handleOpenLogin}
+            activeTab={activeTab}
+            setActiveTab={handleTabChange}
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+          />
+
+          <div className={`w-full max-w-full min-w-0 mx-auto relative flex flex-col overflow-x-clip box-border ${activeTab === 'messages'
+              ? 'flex-1 min-h-0 pt-0 pb-0 px-0 max-w-full overflow-hidden h-full'
+              : 'pt-2 sm:pt-4 pb-36 sm:pb-8 md:pb-16 lg:pb-20 px-3.5 sm:px-6 lg:px-8 w-full max-w-full mx-auto'
+            }`}>
+
+            {/* Slide-out Sidebar Drawer */}
+            {(isAuthenticated || activeTab === 'public') && (
+              <Sidebar
+                activeTab={activeTab}
+                setActiveTab={(tab) => {
+                  handleTabChange(tab);
+                  setIsSidebarOpen(false);
+                }}
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+              />
+            )}
+
+            {/* Main Content View Container with Native Mobile Pull-to-Refresh */}
+            <PullToRefresh
+              onRefresh={handleGlobalPullToRefresh}
+              disabled={
+                isSidebarOpen ||
+                (Boolean(selectedStudent) && activeTab !== 'profile') ||
+                showLoginModal ||
+                showImportModal ||
+                showAlertCenterModal ||
+                showCommandPalette ||
+                showShareModal ||
+                showMobileFilterDrawer
+              }
+            >
+              <main
+                id="main-content"
+                key={activeTab}
+                className={`min-w-0 w-full max-w-full overflow-x-clip box-border animate-fade-in ${activeTab === 'messages' ? 'flex-1 min-h-0 h-full flex flex-col overflow-hidden' : ''}`}
+              >
+
+                <ErrorBoundary>
+                  <Suspense fallback={<PageSkeleton />}>
+                    {activeTab === 'landing' && (
+                      <LandingPage
+                        summaryData={summaryData}
+                        onViewDashboard={() => handleTabChange('dashboard')}
+                        onOpenLogin={handleOpenLogin}
+                        onSelectStudent={handleSelectStudent}
+                        onViewForColleges={() => handleTabChange('for-colleges')}
+                      />
+                    )}
+
+                    {activeTab === 'dashboard' && renderDashboardComponent()}
+
+                    {(activeTab === 'hod-command-center' || activeTab === 'hod' || activeTab === 'command-center') && (
+                      isTabAllowed('hod-command-center')
+                        ? <HODCommandCenter />
+                        : renderAccessDenied('HOD Dashboard')
+                    )}
+
+                    {(activeTab === 'faculty-action-center' || activeTab === 'faculty') && (
+                      isTabAllowed('faculty-action-center')
+                        ? <FacultyActionCenter />
+                        : renderAccessDenied('Faculty Action Center')
+                    )}
+
+                    {activeTab === 'integrity-monitor' && (
+                      isTabAllowed('integrity-monitor')
+                        ? <ContestIntegrityMonitor />
+                        : renderAccessDenied('Contest Integrity Monitor')
+                    )}
+
+                    {activeTab === 'growth' && (
+                      isTabAllowed('growth')
+                        ? <GrowthIntelligencePage />
+                        : renderAccessDenied('Growth Intelligence')
+                    )}
+
+                    {activeTab === 'student-dashboard' && (
+                      isTabAllowed('student-dashboard')
+                        ? <StudentDashboardView />
+                        : renderAccessDenied('Student Dashboard')
+                    )}
+
+                    {activeTab === 'staff-dashboard' && (
+                      isTabAllowed('staff-dashboard')
+                        ? <StaffDashboardView />
+                        : renderAccessDenied('Staff Dashboard')
+                    )}
+
+                    {(activeTab === 'departments' || activeTab === 'department') && (
+                      isTabAllowed('departments')
+                        ? <DepartmentDashboard onSelectStudent={handleSelectStudent} />
+                        : renderAccessDenied('Department Analytics')
+                    )}
+
+                    {activeTab === 'weekly-contest' && (
+                      isTabAllowed('weekly-contest')
+                        ? <WeeklyContestPage onSelectStudent={handleSelectStudent} />
+                        : renderAccessDenied('Weekly Contest Tracker')
+                    )}
+
+                    {(activeTab === 'post930' || activeTab === 'post-930') && (
+                      <WeeklyContestPage onSelectStudent={handleSelectStudent} />
+                    )}
+
+                    {activeTab === 'students' && (
+                      isTabAllowed('students')
+                        ? <StudentMasterPage onSelectStudent={handleSelectStudent} onOpenImport={handleOpenImport} />
+                        : renderAccessDenied('Student Master Management')
+                    )}
+
+                    {activeTab === 'profile' && selectedStudent && (
+                      <ErrorBoundary>
+                        <StudentProfilePage
+                          student={selectedStudent}
+                          onBack={handleCloseProfile}
+                        />
+                      </ErrorBoundary>
+                    )}
+
+                    {activeTab === 'compare' && (
+                      isTabAllowed('compare')
+                        ? <ComparePage />
+                        : renderAccessDenied('Student Comparison')
+                    )}
+
+                    {(activeTab === 'quality' || activeTab === 'data-quality') && (
+                      isTabAllowed('quality')
+                        ? <DataQualityPage onNavigateTab={handleTabChange} onSelectStudent={handleSelectStudent} />
+                        : renderAccessDenied('Data Quality Board')
+                    )}
+
+                    {(activeTab === 'data-issues' || activeTab === 'issues' || activeTab === 'student-data-issues' || activeTab === 'not-started-issues') && (
+                      isTabAllowed('data-issues')
+                        ? <StudentDataIssuesPage />
+                        : renderAccessDenied('Student Data Issues & Recovery')
+                    )}
+
+                    {activeTab === 'system-health' && (
+                      isTabAllowed('system-health')
+                        ? <SystemHealthPage onNavigateTab={setActiveTab} />
+                        : renderAccessDenied('System Operations — Admin Only')
+                    )}
+
+                    {activeTab === 'messages' && (
+                      isTabAllowed('messages')
+                        ? <MessagesPage onNavigateTab={handleTabChange} />
+                        : renderAccessDenied('Messages')
+                    )}
+
+                    {activeTab === 'reports' && (
+                      isTabAllowed('reports')
+                        ? <ReportsPage />
+                        : renderAccessDenied('Reports & Exports')
+                    )}
+
+                    {(activeTab === 'hr-candidate-finder' || activeTab === 'candidate-requirements' || activeTab === 'placement-finder' || activeTab === 'hr-finder' || activeTab === 'hr') && (
+                      isTabAllowed('hr-candidate-finder') ? (
+                        <Suspense fallback={<PageSkeleton />}>
+                          <HRCandidateFinderPage />
+                        </Suspense>
+                      ) : renderAccessDenied('Placement & Hiring Portal')
+                    )}
+
+                    {activeTab === 'public' && (
+                      <PublicLeaderboardPage onSelectStudent={handleSelectStudent} />
+                    )}
+
+                    {(activeTab === 'for-colleges' || activeTab === 'colleges' || activeTab === 'partner' || activeTab === 'institutional-demo') && (
+                      <Suspense fallback={<PageSkeleton />}>
+                        <ForCollegesPage />
+                      </Suspense>
+                    )}
+
+                    {(activeTab === 'account-settings' || activeTab === 'account' || activeTab === 'profile-settings') && (
+                      <AccountSettingsPage onBack={() => handleTabChange('dashboard')} />
+                    )}
+
+                    {activeTab === 'settings' && (
+                      isTabAllowed('settings')
+                        ? <SettingsPage initialSection="staff" />
+                        : renderAccessDenied('Admin Settings — Admin Only')
+                    )}
+
+                    {activeTab === 'audit' && (
+                      isTabAllowed('audit')
+                        ? <AuditLogPage />
+                        : renderAccessDenied('Audit Log — Admin Only')
+                    )}
+
+                    {activeTab === 'ai-control' && (
+                      isTabAllowed('ai-control')
+                        ? <AIControlCenterPage />
+                        : renderAccessDenied('AI Control Center — Admin Only')
+                    )}
+
+                    {activeTab === 'dev-studio' && (
+                      isTabAllowed('dev-studio')
+                        ? <DeveloperStudio onClose={() => handleTabChange('dashboard')} />
+                        : renderAccessDenied('Developer Studio — Restricted (Requires 2FA OTP Authentication via /admin portal)')
+                    )}
+                  </Suspense>
+                </ErrorBoundary>
+              </main>
+            </PullToRefresh>
+
           </div>
-        )}
 
-      {/* App Update & Notification Banners */}
-      <Suspense fallback={null}>
-        <AppUpdateNotifier />
-        {!Capacitor.isNativePlatform() && <InstallAppPrompt />}
-        {showShareModal && (
-          <StudentShareCardModal
-            isOpen={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            student={selectedStudent || summaryData?.top_student || (user ? {
-              id: (user as any).id,
-              reg_no: (user as any).reg_no || (user as any).username || '',
-              name: (user as any).full_name || user.name || '',
-              department: (user as any).department,
-              batch: (user as any).batch,
-              year_level: (user as any).year_level,
-              college_rank: (user as any).college_rank || (user as any).rank,
-              total_solved: (user as any).total_solved,
-              easy_solved: (user as any).easy_solved,
-              medium_solved: (user as any).medium_solved,
-              hard_solved: (user as any).hard_solved,
-              streak_count: (user as any).streak_count || (user as any).current_streak
-            } : null)}
+
+          {/* Keyboard Shortcuts Guide Modal */}
+          <KeyboardShortcutsModal
+            isOpen={showShortcutsModal}
+            onClose={() => setShowShortcutsModal(false)}
+            isTabAllowed={(tab) => isTabAllowed(tab)}
           />
-        )}
-      </Suspense>
 
-      {/* Touch-Friendly Mobile Filter Drawer */}
-      {showMobileFilterDrawer && (
-        <Suspense fallback={null}>
-          <MobileFilterDrawer
-            isOpen={true}
-            onClose={() => setShowMobileFilterDrawer(false)}
-          />
-        </Suspense>
-      )}
+          {/* Login Modal (used for re-authentication when already inside the app) */}
+          {showLoginModal && (
+            <Suspense fallback={null}>
+              <LoginPage
+                onClose={() => setShowLoginModal(false)}
+                onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
+              />
+            </Suspense>
+          )}
 
-      {/* Modern Floating Back to Top Button (hidden on messages tab to prevent overlapping chat composer) */}
-      {activeTab !== 'messages' && <BackToTopButton />}
 
-      {/* Sleek Floating Island Mobile Bottom Navigation */}
-      {isAuthenticated && activeTab !== 'messages' && (
-        <MobileBottomNav
-          activeTab={activeTab}
-          setActiveTab={handleTabChange}
-          onOpenShareCard={() => setShowShareModal(true)}
-          onOpenAiWidget={() => {
-            setShowAiWidget(true);
-            window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
-          }}
-          isAuthenticated={isAuthenticated}
-          userRole={(user as any)?.role || ''}
-        />
-      )}
+          {/* Import Modal — only mount when open to avoid bundle weight on initial render */}
+          {showImportModal && (
+            <Suspense fallback={null}>
+              <ImportModal
+                isOpen={showImportModal}
+                onClose={() => setShowImportModal(false)}
+                onSuccess={() => {
+                  localStorage.removeItem('nec_leetcode_students_cache');
+                  fetchSummary();
+                  setActiveTab('students');
+                  // No reload required, LiveEventRouter handles live cache updates
+                }}
+              />
+            </Suspense>
+          )}
 
-    </div>
+          {/* Automated Alert Center Modal — only mount when open */}
+          {showAlertCenterModal && (
+            <Suspense fallback={null}>
+              <AlertCenterModal
+                isOpen={showAlertCenterModal}
+                onClose={() => setShowAlertCenterModal(false)}
+                onNavigate={handleTabChange}
+              />
+            </Suspense>
+          )}
+
+          {/* Global NEC Unified AI Assistant Drawer (Header-Triggered) */}
+          {showAiWidget && (
+            <Suspense fallback={null}>
+              <AIAssistantWidget
+                initialQuery={aiInitialQuery || undefined}
+                onClearInitialQuery={() => setAiInitialQuery(null)}
+                onNavigateTab={handleTabChange}
+                onClose={() => {
+                  setShowAiWidget(false);
+                  setAiInitialQuery(null);
+                }}
+              />
+            </Suspense>
+          )}
+
+          {/* Viewport-Centered Student Profile Modal */}
+          {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
+            <div
+              className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 sm:backdrop-blur-md animate-fade-in"
+              style={{ zIndex: 999999 }}
+              onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Student profile for ${selectedStudent.name}`}
+                className="w-full max-w-6xl rounded-t-[28px] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden h-[96dvh] sm:h-[88vh] max-h-[96dvh] sm:max-h-[88vh] text-slate-900 dark:text-slate-100 animate-modal-content isolate bg-[#0a0f1d] dark:bg-navy-950 border-t sm:border border-slate-800/80 dark:border-white/10"
+              >
+                <SwipeHandle onClose={() => setSelectedStudent(null)} className="pt-2.5 pb-1 block sm:hidden shrink-0 bg-[#0a0f1d]" pillClassName="bg-white/30 hover:bg-white/50" />
+                <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
+                  <PullToRefresh
+                    onRefresh={async () => {
+                      clearApiCache();
+                      window.dispatchEvent(new CustomEvent('pull_to_refresh'));
+                    }}
+                  >
+                    <ErrorBoundary>
+                      <StudentProfilePage
+                        student={selectedStudent}
+                        onBack={handleCloseProfile}
+                      />
+                    </ErrorBoundary>
+                  </PullToRefresh>
+                </Suspense>
+              </div>
+            </div>
+          )}
+
+          {/* EXIT CONFIRMATION DIALOG */}
+          {showExitConfirmModal && (
+            <div
+              className="fixed inset-0 z-[999999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowExitConfirmModal(false);
+              }}
+            >
+              <div
+                className="bg-white dark:bg-navy-950 border-t sm:border border-slate-200 dark:border-navy-800 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-9 sm:p-7 w-full sm:max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5 animate-modal-content"
+              >
+                {/* Mobile Drag Indicator Handle */}
+                <SwipeHandle
+                  onClose={() => setShowExitConfirmModal(false)}
+                  className="sm:hidden -mt-2 mb-2 py-1 shrink-0"
+                  pillClassName="bg-slate-300 dark:bg-navy-700"
+                />
+
+                <div className="flex items-center gap-3.5">
+                  <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">
+                    <LogOut size={22} className="stroke-[2.2]" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+                      Exit App?
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      LeetCode Tracker
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                  Are you sure you want to exit LeetCode Tracker?
+                </p>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowExitConfirmModal(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-900 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer active:scale-95"
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowExitConfirmModal(false);
+                      try {
+                        CapacitorApp.exitApp();
+                      } catch (_e) {
+                        // Fallback for non-Capacitor environment
+                      }
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs tracking-wider uppercase transition cursor-pointer shadow-md shadow-rose-600/20 active:scale-95"
+                  >
+                    EXIT
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* App Update & Notification Banners */}
+          <Suspense fallback={null}>
+            <AppUpdateNotifier />
+            {!Capacitor.isNativePlatform() && <InstallAppPrompt />}
+            {showShareModal && (
+              <StudentShareCardModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                student={selectedStudent || summaryData?.top_student || (user ? {
+                  id: (user as any).id,
+                  reg_no: (user as any).reg_no || (user as any).username || '',
+                  name: (user as any).full_name || user.name || '',
+                  department: (user as any).department,
+                  batch: (user as any).batch,
+                  year_level: (user as any).year_level,
+                  college_rank: (user as any).college_rank || (user as any).rank,
+                  total_solved: (user as any).total_solved,
+                  easy_solved: (user as any).easy_solved,
+                  medium_solved: (user as any).medium_solved,
+                  hard_solved: (user as any).hard_solved,
+                  streak_count: (user as any).streak_count || (user as any).current_streak
+                } : null)}
+              />
+            )}
+          </Suspense>
+
+          {/* Touch-Friendly Mobile Filter Drawer */}
+          {showMobileFilterDrawer && (
+            <Suspense fallback={null}>
+              <MobileFilterDrawer
+                isOpen={true}
+                onClose={() => setShowMobileFilterDrawer(false)}
+              />
+            </Suspense>
+          )}
+
+          {/* Modern Floating Back to Top Button (hidden on messages tab to prevent overlapping chat composer) */}
+          {activeTab !== 'messages' && <BackToTopButton />}
+
+          {/* Sleek Floating Island Mobile Bottom Navigation */}
+          {isAuthenticated && activeTab !== 'messages' && (
+            <MobileBottomNav
+              activeTab={activeTab}
+              setActiveTab={handleTabChange}
+              onOpenShareCard={() => setShowShareModal(true)}
+              onOpenAiWidget={() => {
+                setShowAiWidget(true);
+                window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
+              }}
+              isAuthenticated={isAuthenticated}
+              userRole={(user as any)?.role || ''}
+            />
+          )}
+
+        </div>
       )}
     </>
   );
@@ -1728,7 +1726,7 @@ export const App: React.FC = () => {
             try {
               sessionStorage.removeItem('admin_login_portal');
               localStorage.removeItem('admin_login_portal');
-            } catch {}
+            } catch { }
             window.location.href = '/';
           }} />
         </Suspense>

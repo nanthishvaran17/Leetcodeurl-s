@@ -379,7 +379,7 @@ npm run build
 # Build signed Android Release APK (Capacitor 7)
 npm run build:apk
 ```
-The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.5.8_latest.apk).
+The compiled signed APK is automatically placed in [releases/android/Nandha_LeetCode_Intelligence_v4.6.3_latest.apk](releases/android/Nandha_LeetCode_Intelligence_v4.6.3_latest.apk).
 
 ---
 
@@ -442,7 +442,7 @@ Leetcodeurl-s/
 
 ### Institutional Governance & Academic Advisory
 * **Nandha Engineering College (Autonomous)**, Erode, Tamil Nadu, India.
-* **Dr. S. Prabhu**, Head of Department — Computer Science and Engineering & Cyber Security.
+* **Dr. S. Prabhu**, Head of Department — Computer Science and Engineering (Cyber Security & Internet of Things) [CSE(CS & IoT)].
 * **M. Santhosh Kumar**, Assistant Professor / CSE(CS) & Placement Coordinator.
 * Continuous Internal Evaluation (CIE) Cell & Placement Mentorship Directorate.
 
@@ -457,7 +457,7 @@ Leetcodeurl-s/
 | **Contributing** | Multi-Platform Development Guide & PR Rules | [CONTRIBUTING.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CONTRIBUTING.md) |
 | **Security Policy** | Zero-Trust SLAs, Disclosure & Hall of Fame | [SECURITY.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SECURITY.md) |
 | **Help & Support** | Help Desk, Mentorship & Contact Channels | [SUPPORT.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/SUPPORT.md) |
-| **Changelog** | Production Release Notes (v4.5.8) | [CHANGELOG.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CHANGELOG.md) |
+| **Changelog** | Production Release Notes (v4.6.3) | [CHANGELOG.md](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CHANGELOG.md) |
 | **Citation** | Academic & Institutional Citation Metadata | [CITATION.cff](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/CITATION.cff) |
 | **License** | Open-Source Permissive License | [MIT License](https://github.com/nanthishvaran17/Leetcodeurl-s/blob/main/LICENSE) |
 
@@ -486,7 +486,7 @@ Yes! The platform is licensed under the permissive **MIT License**. It features 
 <details>
 <summary><b>4. Where can I download the latest Android Mobile App (.APK) and Windows Desktop (.EXE)?</b></summary>
 
-* **Android Native App (v4.5.8, VersionCode 99):** [Releases Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android)
+* **Android Native App (v4.6.3, VersionCode 103):** [Releases Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/android)
 * **Windows Desktop App (v4.5.2):** [Windows Setup Archive](https://github.com/nanthishvaran17/Leetcodeurl-s/tree/main/releases/windows)
 * **Live Cloud Web Interface:** [https://nandha-leetcode.duckdns.org](https://nandha-leetcode.duckdns.org)
 </details>

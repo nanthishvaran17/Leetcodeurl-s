@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Mail, Code, Cpu, 
-  CheckCircle2, Key, ShieldAlert, ChevronRight, Globe, Layers, Activity, Scale, 
-  FileText, ArrowRight, ShieldCheck, Award, Sparkles, Trash2, ExternalLink, 
-  Server, ShieldPlus, UserX, Clock, HardDrive, ArrowLeft, Download, Building, 
-  Info, HelpCircle, AlertTriangle, FileLock2, Fingerprint, RefreshCw, FileSignature, 
+import {
+  Shield, Lock, Eye, Database, UserCheck, Search, Printer, Copy, Check, Mail, Code, Cpu,
+  CheckCircle2, Key, ShieldAlert, ChevronRight, Globe, Layers, Activity, Scale,
+  FileText, ArrowRight, ShieldCheck, Award, Sparkles, Trash2, ExternalLink,
+  Server, ShieldPlus, UserX, Clock, HardDrive, ArrowLeft, Download, Building,
+  Info, HelpCircle, AlertTriangle, FileLock2, Fingerprint, RefreshCw, FileSignature,
   BookOpen, Users, AlertCircle, Ban, Gavel, CheckCheck
 } from 'lucide-react';
 
@@ -64,7 +64,7 @@ export const teamMembers: TeamMember[] = [
     glowColor: "shadow-cyan-500/20"
   },
   {
-    name: "Mr. S. Nanthish",
+    name: "Mr .Nanthish S",
     role: "Lead Platform Engineer & Full-Stack Architect",
     badge: "Lead Developer",
     badgeGradient: "from-blue-600 via-indigo-600 to-purple-600 text-white shadow-indigo-500/40",
@@ -103,22 +103,21 @@ export const TeamAvatar: React.FC<{ member: TeamMember; size?: 'sm' | 'md' | 'lg
   return (
     <div className={`relative ${sizeClasses} rounded-2xl overflow-hidden shrink-0 border-2 ${member.borderColor} ${member.glowColor} shadow-md bg-slate-900 flex items-center justify-center font-black text-white group`}>
       {!imgError ? (
-        <img 
-          src={member.image} 
-          alt={member.name} 
+        <img
+          src={member.image}
+          alt={member.name}
           onError={() => setImgError(true)}
           className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
-        <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${
-          member.isAdvisor 
-            ? 'from-amber-600 to-yellow-800' 
-            : member.isLead 
-            ? 'from-blue-600 to-indigo-900' 
-            : member.badge.includes('Security')
-            ? 'from-cyan-700 to-slate-900'
-            : 'from-purple-700 to-slate-900'
-        } font-black text-white tracking-wider`}>
+        <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${member.isAdvisor
+            ? 'from-amber-600 to-yellow-800'
+            : member.isLead
+              ? 'from-blue-600 to-indigo-900'
+              : member.badge.includes('Security')
+                ? 'from-cyan-700 to-slate-900'
+                : 'from-purple-700 to-slate-900'
+          } font-black text-white tracking-wider`}>
           <span>{member.initials}</span>
         </div>
       )}
@@ -393,7 +392,7 @@ export const TermsOfServicePage: React.FC = () => {
       summary: 'Institutional ownership, faculty leadership, and core engineering authorship.',
       content: (
         <div className="space-y-8">
-          
+
           {/* Institutional Preamble */}
           <div className="p-5 sm:p-6 rounded-3xl bg-slate-100 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-800 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -415,7 +414,7 @@ export const TermsOfServicePage: React.FC = () => {
           </div>
 
           {/* Faculty Advisor Hero Executive Card (Dr. S. Prabhu) - Clean Enterprise Micro-Icons, NO Emojis */}
-          <motion.div 
+          <motion.div
             whileHover={{ y: -4, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
             className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-white dark:bg-navy-900/95 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl transition-all"
@@ -461,7 +460,7 @@ export const TermsOfServicePage: React.FC = () => {
                     <Building className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Institutional Governance</span>
                   </div>
-                  
+
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-800/80 border border-slate-200/80 dark:border-navy-700">
                     <Scale className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     <span>NAAC / NBA Accreditation</span>
@@ -491,8 +490,8 @@ export const TermsOfServicePage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
-              {/* Member 1: Lead Developer (Mr. S. Nanthish) - First! */}
+
+              {/* Member 1: Lead Developer (Nanthish S) - First! */}
               <div className="p-5 rounded-2xl bg-white dark:bg-navy-900/90 border-2 border-indigo-500/50 dark:border-indigo-400/40 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between gap-4 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all pointer-events-none" />
 
@@ -531,7 +530,7 @@ export const TermsOfServicePage: React.FC = () => {
 
                 <div className="pt-3 border-t border-slate-100 dark:border-navy-800 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 relative z-10">
                   <span>{teamMembers[2].department}</span>
-                  <a 
+                  <a
                     href="mailto:nanthishvaran17@gmail.com"
                     className="text-indigo-600 dark:text-indigo-400 font-black hover:underline inline-flex items-center gap-1"
                   >
@@ -646,7 +645,7 @@ export const TermsOfServicePage: React.FC = () => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
+
             {/* Technical Desk */}
             <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-navy-950 to-indigo-950 text-white border border-slate-800 shadow-xl flex flex-col justify-between gap-5">
               <div className="space-y-3">
@@ -668,12 +667,12 @@ export const TermsOfServicePage: React.FC = () => {
 
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                   <div className="text-slate-400">Lead Platform Engineer:</div>
-                  <div className="font-bold text-white">Mr. S. Nanthish (Lead Platform Architect)</div>
+                  <div className="font-bold text-white">Nanthish S (Lead Platform Architect)</div>
                   <div className="text-[11px] text-emerald-400">SLA Response Window: Within 24 Hours</div>
                 </div>
               </div>
 
-              <a 
+              <a
                 href="mailto:nanthishvaran17@gmail.com?subject=[Terms%20Operational%20Escalation]"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all border border-white/10"
               >
@@ -723,8 +722,8 @@ export const TermsOfServicePage: React.FC = () => {
   const filteredSections = useMemo(() => {
     if (!searchQuery.trim()) return sections;
     const q = searchQuery.toLowerCase();
-    return sections.filter(s => 
-      s.title.toLowerCase().includes(q) || 
+    return sections.filter(s =>
+      s.title.toLowerCase().includes(q) ||
       s.summary.toLowerCase().includes(q) ||
       s.shortTitle.toLowerCase().includes(q)
     );
@@ -742,9 +741,9 @@ export const TermsOfServicePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#070a12] text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 pb-20 relative overflow-hidden">
-      
+
       {/* Dynamic Cursor Ambient Glow */}
-      <div 
+      <div
         className="fixed w-[600px] h-[600px] rounded-full pointer-events-none z-0 blur-[140px] opacity-25 dark:opacity-20 bg-gradient-to-tr from-indigo-600 via-blue-500 to-purple-600 transition-transform duration-700 ease-out hidden lg:block"
         style={{
           transform: `translate(${mousePos.x - 300}px, ${mousePos.y - 300}px)`
@@ -753,7 +752,7 @@ export const TermsOfServicePage: React.FC = () => {
 
       {/* Reading Progress Top Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-slate-200/50 dark:bg-navy-900/60 z-50">
-        <div 
+        <div
           className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 transition-all duration-150"
           style={{ width: `${readingProgress}%` }}
         />
@@ -762,10 +761,10 @@ export const TermsOfServicePage: React.FC = () => {
       {/* Enterprise Executive Top Navigation Header */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-navy-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-navy-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          
+
           {/* Left: Brand Identity & Breadcrumb */}
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <button 
+            <button
               onClick={handleNavigateBack}
               className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 transition-colors shrink-0"
               title="Return to platform"
@@ -790,7 +789,7 @@ export const TermsOfServicePage: React.FC = () => {
 
           {/* Right: Quick Tools */}
           <div className="flex items-center gap-2 shrink-0">
-            <button 
+            <button
               onClick={handlePrint}
               className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors"
               title="Print official document"
@@ -799,7 +798,7 @@ export const TermsOfServicePage: React.FC = () => {
               <span>Print / PDF</span>
             </button>
 
-            <button 
+            <button
               onClick={handleCopyLink}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors border border-indigo-200/50 dark:border-indigo-800/50"
             >
@@ -814,7 +813,7 @@ export const TermsOfServicePage: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 relative z-10">
 
         {/* Hero Banner: Enterprise Trust Standard */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -825,10 +824,10 @@ export const TermsOfServicePage: React.FC = () => {
           <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-3xl space-y-4">
-            
+
             {/* Regulatory Status Badges with Subtle Floating Motion */}
             <div className="flex flex-wrap items-center gap-2">
-              <motion.span 
+              <motion.span
                 animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm"
@@ -879,8 +878,8 @@ export const TermsOfServicePage: React.FC = () => {
 
         {/* Executive Highlights Grid ("Terms at a Glance" with Hover Spring Elevation) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          
-          <motion.div 
+
+          <motion.div
             whileHover={{ y: -6, scale: 1.015 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="p-5 rounded-2xl bg-white dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl hover:border-blue-500/40 dark:hover:border-blue-500/40 transition-all space-y-2 group"
@@ -894,7 +893,7 @@ export const TermsOfServicePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -6, scale: 1.015 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="p-5 rounded-2xl bg-white dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all space-y-2 group"
@@ -908,7 +907,7 @@ export const TermsOfServicePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -6, scale: 1.015 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="p-5 rounded-2xl bg-white dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl hover:border-purple-500/40 dark:hover:border-purple-500/40 transition-all space-y-2 group"
@@ -922,7 +921,7 @@ export const TermsOfServicePage: React.FC = () => {
             </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -6, scale: 1.015 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="p-5 rounded-2xl bg-white dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl hover:border-amber-500/40 dark:hover:border-amber-500/40 transition-all space-y-2 group"
@@ -942,7 +941,7 @@ export const TermsOfServicePage: React.FC = () => {
         <div className="mb-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-lg">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input 
+            <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -950,7 +949,7 @@ export const TermsOfServicePage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
             />
             {searchQuery && (
-              <button 
+              <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold"
               >
@@ -970,7 +969,7 @@ export const TermsOfServicePage: React.FC = () => {
 
         {/* Layout Grid: Sidebar Index + Section Details */}
         <div className="grid lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Left Navigation Sidebar with Silky layoutId Slider */}
           <nav className="lg:col-span-4 space-y-4 lg:sticky lg:top-28">
             <div className="bg-white dark:bg-navy-900/90 rounded-3xl border border-slate-200 dark:border-navy-800 p-2 shadow-sm">
@@ -994,11 +993,10 @@ export const TermsOfServicePage: React.FC = () => {
                       onClick={() => setActiveSection(s.id)}
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
-                      className={`relative w-full text-left px-3.5 py-3 rounded-2xl transition-colors duration-200 flex items-center justify-between group overflow-hidden ${
-                        isActive
+                      className={`relative w-full text-left px-3.5 py-3 rounded-2xl transition-colors duration-200 flex items-center justify-between group overflow-hidden ${isActive
                           ? 'text-white'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-navy-800/60'
-                      }`}
+                        }`}
                     >
                       {isActive && (
                         <motion.div
@@ -1107,14 +1105,14 @@ export const TermsOfServicePage: React.FC = () => {
         </div>
 
         {/* Institutional Seal & Sign-off Footer Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
           className="mt-16 p-8 sm:p-10 rounded-3xl bg-slate-100 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-800 text-center space-y-4 hover:shadow-xl transition-all"
         >
-          <motion.div 
+          <motion.div
             whileHover={{ rotate: 8, scale: 1.1 }}
             transition={{ type: "spring", stiffness: 350, damping: 20 }}
             className="w-14 h-14 mx-auto rounded-2xl bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black shadow-inner cursor-pointer"
@@ -1133,7 +1131,7 @@ export const TermsOfServicePage: React.FC = () => {
           <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-600 dark:text-slate-400">
             <span>Faculty Advisor: <strong>Dr. S. Prabhu</strong></span>
             <span>•</span>
-            <span>Lead Architect: <strong>Mr. S. Nanthish</strong></span>
+            <span>Lead Architect: <strong>Nanthish S</strong></span>
             <span>•</span>
             <span>Security Lead: <strong>Mr. Mohammed Affan J A</strong></span>
             <span>•</span>

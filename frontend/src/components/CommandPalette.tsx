@@ -560,11 +560,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  activeCategory === cat
+                className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${activeCategory === cat
                     ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
                     : 'bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-navy-700'
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -592,13 +591,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               return (
                 <div
                   key={item.id}
-                  className={`flex items-center px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl cursor-pointer transition-all duration-150 group ${
-                    isSelected
+                  className={`flex items-center px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-xl cursor-pointer transition-all duration-150 group ${isSelected
                       ? item.exactMatch
                         ? 'bg-emerald-50 border border-emerald-300 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-500/40 dark:text-emerald-200'
                         : 'bg-brand-50 border border-brand-200 text-brand-900 dark:bg-brand-500/10 dark:border-brand-500/30 dark:text-brand-300'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-900/60 border border-transparent'
-                  }`}
+                    }`}
                   onClick={() => {
                     item.action();
                     onClose();
@@ -606,13 +604,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   onMouseEnter={() => setSelectedIndex(idx)}
                 >
                   <div
-                    className={`p-2 sm:p-2.5 rounded-xl shrink-0 mr-2.5 sm:mr-3 transition-colors ${
-                      isSelected
+                    className={`p-2 sm:p-2.5 rounded-xl shrink-0 mr-2.5 sm:mr-3 transition-colors ${isSelected
                         ? item.exactMatch
                           ? 'bg-emerald-600 text-white'
                           : 'bg-brand-600 text-white'
                         : 'bg-slate-100 text-slate-500 dark:bg-navy-800 dark:text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-navy-700'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
@@ -622,11 +619,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       <span className="font-semibold text-xs sm:text-sm truncate">{item.label}</span>
                       {item.badge && (
                         <span
-                          className={`px-1.5 py-0.5 sm:px-2 rounded-md text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${
-                            item.exactMatch
+                          className={`px-1.5 py-0.5 sm:px-2 rounded-md text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${item.exactMatch
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
                               : 'bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300'
-                          }`}
+                            }`}
                         >
                           {item.badge}
                         </span>
