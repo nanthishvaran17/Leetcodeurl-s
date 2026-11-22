@@ -7,6 +7,7 @@ import { AuthState, AuthUser } from '../services/auth/authTypes';
 import { isMobileBrowser } from '../utils/deviceDetect';
 import { AuthContext } from './authContextDef';
 import { clearAdminOtpVerification } from '../utils/adminOtpAuth';
+import { studentLiveStore } from '../stores/studentLiveStore';
 
 // AuthContext and useAuth are defined in authContextDef.ts — import from there.
 // This file only exports AuthProvider to satisfy Vite Fast Refresh (components-only exports).
@@ -130,12 +131,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setUser(formattedUser);
     localStorage.setItem('user', JSON.stringify(formattedUser));
+    studentLiveStore.clear();
     clearApiCache();
     clearContestCache();
     // Flush all React Query in-memory cache so role-scoped queries re-fetch fresh data
     queryClient.clear();
     clearAuthError();
     setAuthState('AUTHORIZED');
+
+    // Notify all app listeners that authentication identity/role changed
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nec_auth_changed', { detail: { user: formattedUser, action: 'login' } }));
+      window.dispatchEvent(new CustomEvent('departments_changed'));
+    }
 
     // Instantly sync mobile push notification device token to user account
     try {
@@ -164,12 +172,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
     localStorage.removeItem('admin_user');
     localStorage.removeItem(LAST_ACTIVITY_KEY);
+    studentLiveStore.clear();
     clearAdminOtpVerification();
     sessionStorage.clear();
     clearApiCache();
     clearContestCache();
     // Flush all React Query in-memory cache to prevent stale data leaking to next session
     queryClient.clear();
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('nec_auth_changed', { detail: { user: null, action: 'logout' } }));
+      window.dispatchEvent(new CustomEvent('departments_changed'));
+    }
 
     try {
       await api.post('/auth/logout');

@@ -271,11 +271,12 @@ def generate_weekly_performance_data(
     """
     CANONICAL WEEKLY PERFORMANCE DATASET GENERATOR
     """
-    if dept_filter and dept_filter.strip().isdigit():
+    if dept_filter and str(dept_filter).upper() not in ("ALL", "", "NONE", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED"):
         try:
-            d_rec = db.query(Department).filter(Department.id == int(dept_filter)).first()
-            if d_rec and d_rec.code:
-                dept_filter = str(d_rec.code)
+            from backend.services.authorization_service import normalize_department_to_code
+            norm_code = normalize_department_to_code(db, dept_filter)
+            if norm_code and norm_code != "ALL":
+                dept_filter = norm_code
         except Exception:
             pass
 
@@ -835,11 +836,16 @@ def generate_weekly_performance_data(
     dept_code = (dept_filter or "ALL").upper().strip()
     target_dept = None
     if dept_filter and dept_filter != "ALL":
-        dept_str = str(dept_filter).strip()
-        dept_id_val = int(dept_str) if dept_str.isdigit() else -1
-        target_dept = db.query(Department).filter(
-            or_(Department.code == dept_str, Department.name == dept_str, Department.id == dept_id_val)
-        ).first()
+        from backend.services.authorization_service import resolve_department_alias_to_id
+        resolved_id = resolve_department_alias_to_id(db, dept_filter)
+        if resolved_id:
+            target_dept = db.query(Department).filter(Department.id == resolved_id).first()
+        else:
+            dept_str = str(dept_filter).strip()
+            dept_id_val = int(dept_str) if dept_str.isdigit() else -1
+            target_dept = db.query(Department).filter(
+                or_(Department.code == dept_str, Department.name == dept_str, Department.id == dept_id_val)
+            ).first()
 
     if target_dept:
         dept_display = f"Department of {target_dept.name}"

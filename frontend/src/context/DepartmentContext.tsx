@@ -299,23 +299,35 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Re-fetch when user identity, role, or department creation events fire
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user' || e.key === 'department_update') {
-        fetchDepartments();
+    const handleImmediateSync = () => {
+      // 0ms instant local recalculation from fresh user state
+      const instantDepts = getInitialDepartments();
+      if (instantDepts && instantDepts.length > 0) {
+        setDepartments(instantDepts);
+        setAllDepartments(instantDepts);
       }
-    };
-    const handleCustomDeptUpdate = () => {
+      // Immediate network refresh for accurate server counts & scope
       fetchDepartments();
     };
 
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' || e.key === 'department_update') {
+        handleImmediateSync();
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('department_updated', handleCustomDeptUpdate);
-    window.addEventListener('departments_changed', handleCustomDeptUpdate);
+    window.addEventListener('nec_auth_changed', handleImmediateSync);
+    window.addEventListener('auth_logout', handleImmediateSync);
+    window.addEventListener('department_updated', handleImmediateSync);
+    window.addEventListener('departments_changed', handleImmediateSync);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('department_updated', handleCustomDeptUpdate);
-      window.removeEventListener('departments_changed', handleCustomDeptUpdate);
+      window.removeEventListener('nec_auth_changed', handleImmediateSync);
+      window.removeEventListener('auth_logout', handleImmediateSync);
+      window.removeEventListener('department_updated', handleImmediateSync);
+      window.removeEventListener('departments_changed', handleImmediateSync);
     };
   }, [fetchDepartments]);
 

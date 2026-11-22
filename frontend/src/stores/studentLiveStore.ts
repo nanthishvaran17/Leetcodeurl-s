@@ -200,6 +200,13 @@ export const studentLiveStore = {
     byId = newById;
     allIds = allIds.filter(i => i !== idStr);
     notifyGeneral();
+  },
+
+  clear() {
+    byId = {};
+    allIds = [];
+    storeVersion++;
+    notifyGeneral();
   }
 };
 

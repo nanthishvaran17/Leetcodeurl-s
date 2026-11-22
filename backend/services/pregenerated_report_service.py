@@ -142,20 +142,45 @@ def get_or_create_report(
             user_scope = f"faculty_mentees:user_{u_id}"
 
     if not has_assigned_mentees:
-        from backend.services.authorization_service import _STAFF_ROLES
+        from backend.services.authorization_service import _STAFF_ROLES, normalize_department_to_code
         if user_role in ("hod", "department hod", "department_hod"):
             from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
             h_ids = get_hod_authorized_department_ids(db, current_user)
             user_dept = ",".join(map(str, sorted(h_ids))) if h_ids else user_dept
             auth_codes = get_hod_authorized_department_codes(db, current_user)
-            if auth_codes and (clean_filters.get("department") in (None, "ALL", "") or clean_filters.get("dept") in (None, "ALL", "")):
-                clean_filters["department"] = auth_codes[0]
-                clean_filters["dept"] = auth_codes[0]
+            
+            raw_target_dept = clean_filters.get("department") or clean_filters.get("dept")
+            if raw_target_dept and str(raw_target_dept).upper() not in ("ALL", "", "NONE", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED"):
+                norm_target = normalize_department_to_code(db, raw_target_dept)
+                if norm_target and norm_target in auth_codes:
+                    clean_filters["department"] = norm_target
+                    clean_filters["dept"] = norm_target
+                elif auth_codes and norm_target not in auth_codes:
+                    clean_filters["department"] = auth_codes[0]
+                    clean_filters["dept"] = auth_codes[0]
+                else:
+                    clean_filters["department"] = norm_target or str(raw_target_dept)
+                    clean_filters["dept"] = norm_target or str(raw_target_dept)
+            elif auth_codes:
+                clean_filters["department"] = "ALL"
+                clean_filters["dept"] = "ALL"
             user_scope = f"hod:{user_dept}"
         elif user_role in _STAFF_ROLES or user_role in ("faculty", "staff", "faculty coordinator", "staff coordinator", "mentor"):
             user_scope = f"{user_role}:user_{getattr(current_user, 'id', '0')}"
+            raw_target_dept = clean_filters.get("department") or clean_filters.get("dept")
+            if raw_target_dept and str(raw_target_dept).upper() not in ("ALL", "", "NONE"):
+                norm_target = normalize_department_to_code(db, raw_target_dept)
+                if norm_target:
+                    clean_filters["department"] = norm_target
+                    clean_filters["dept"] = norm_target
         else:
             user_scope = f"{user_role}:{user_dept}" if current_user else "ALL"
+            raw_target_dept = clean_filters.get("department") or clean_filters.get("dept")
+            if raw_target_dept and str(raw_target_dept).upper() not in ("ALL", "", "NONE"):
+                norm_target = normalize_department_to_code(db, raw_target_dept)
+                if norm_target:
+                    clean_filters["department"] = norm_target
+                    clean_filters["dept"] = norm_target
 
     ext_info = EXT_MEDIA_TYPES.get(format.lower().strip(), ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
     ext, mime_type = ext_info

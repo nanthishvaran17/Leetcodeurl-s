@@ -687,17 +687,23 @@ def require_security_access(
             req_dept = request.query_params.get("dept") or request.query_params.get("department") or request.query_params.get("dept_id")
             if req_dept and effective_role == "hod":
                 # HOD: validate against HODDepartmentAllocation (multi-dept aware)
-                from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
+                from backend.services.authorization_service import (
+                    get_hod_authorized_department_ids, 
+                    get_hod_authorized_department_codes,
+                    resolve_department_alias_to_id
+                )
                 authorized_dept_ids = get_hod_authorized_department_ids(db, user)
                 authorized_dept_codes = get_hod_authorized_department_codes(db, user)
                 req_dept_str = req_dept.strip()
 
                 # Allow ALL or MY_DEPARTMENTS sentinel (means all assigned depts)
-                if req_dept_str.upper() in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS"):
+                if req_dept_str.upper() in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", "*"):
                     pass  # Allowed — backend will further filter by authorized_dept_ids
                 else:
-                    # Check if requested dept is within authorized set
+                    # Check if requested dept (as id, code, or alias e.g. Cyber, IOT) is within authorized set
+                    resolved_dept_id = resolve_department_alias_to_id(db, req_dept_str)
                     is_match = (
+                        (resolved_dept_id is not None and resolved_dept_id in authorized_dept_ids) or
                         any(req_dept_str.upper() == c.upper() for c in authorized_dept_codes) or
                         any(req_dept_str == str(did) for did in authorized_dept_ids)
                     )
@@ -714,19 +720,30 @@ def require_security_access(
                             status_code=status.HTTP_403_FORBIDDEN,
                             detail="Access restricted: You are only authorized to access data within your assigned department(s)."
                         )
-            elif req_dept and user.department_id:
-                # Faculty/Staff: original single-dept check
+            elif req_dept and (user.department_id or getattr(user, 'hod_department_allocations', None)):
+                # Faculty/Staff: department scope check
+                from backend.services.authorization_service import (
+                    get_hod_authorized_department_ids,
+                    resolve_department_alias_to_id
+                )
+                authorized_dept_ids = get_hod_authorized_department_ids(db, user)
+                if not authorized_dept_ids and user.department_id:
+                    authorized_dept_ids = [user.department_id]
                 user_dept_code = user.department.code if user.department else None
-                user_dept_id = str(user.department_id)
+                user_dept_id = str(user.department_id) if user.department_id else None
                 req_dept_str = req_dept.strip()
 
-                is_match = (
-                    req_dept_str.upper() == "ALL" or
-                    (user_dept_code and req_dept_str.upper() == user_dept_code.upper()) or
-                    (req_dept_str == user_dept_id)
-                )
+                if req_dept_str.upper() in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", "*"):
+                    is_match = True
+                else:
+                    resolved_dept_id = resolve_department_alias_to_id(db, req_dept_str)
+                    is_match = (
+                        (resolved_dept_id is not None and resolved_dept_id in authorized_dept_ids) or
+                        (user_dept_code and req_dept_str.upper() == user_dept_code.upper()) or
+                        (user_dept_id and req_dept_str == user_dept_id)
+                    )
 
-                if not is_match:
+                if not is_match and authorized_dept_ids:
                     log_security_access_event(
                         db, request, user, action="ACCESS_RESOURCE",
                         resource=target_resource, result="BLOCKED",

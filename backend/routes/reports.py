@@ -360,6 +360,11 @@ def download_official_college_summary_excel(
             d_obj = db.query(Department).filter(Department.id == dept_id).first()
             if d_obj:
                 eff_dept = d_obj.code or d_obj.name
+        elif eff_dept and eff_dept != "ALL":
+            from backend.services.authorization_service import normalize_department_to_code
+            norm_code = normalize_department_to_code(db, eff_dept)
+            if norm_code and norm_code != "ALL":
+                eff_dept = norm_code
 
         res = get_or_create_report(
             db=db,
@@ -798,8 +803,13 @@ def download_pdf_report(
                     .filter(Student.status == 'VERIFIED')
                 )
                 if eff_dept and eff_dept != "ALL":
+                    from backend.services.authorization_service import resolve_department_alias_to_id
+                    res_dept_id = resolve_department_alias_to_id(db, eff_dept)
                     top_stats = top_stats.join(Department, Student.department_id == Department.id)
-                    top_stats = top_stats.filter(Department.code.ilike(f"%{eff_dept}%"))
+                    if res_dept_id:
+                        top_stats = top_stats.filter(Department.id == res_dept_id)
+                    else:
+                        top_stats = top_stats.filter(Department.code.ilike(f"%{eff_dept}%"))
                 if eff_year and eff_year != "ALL":
                     top_stats = top_stats.filter(Student.year_level.ilike(f"%{eff_year}%"))
                 
@@ -1290,13 +1300,22 @@ def generate_universal_report(
             "12TH_TNEA_CUTOFF_ANALYSIS", "STUDENT_MASTER", "MASTER_EXCEL"
         )
         if not is_placement_role and user_role in ("hod", "department hod", "department_hod", "head of department"):
-            from backend.services.authorization_service import get_hod_authorized_department_codes
+            from backend.services.authorization_service import get_hod_authorized_department_codes, normalize_department_to_code
             auth_codes = get_hod_authorized_department_codes(db, current_user)
-            # Only restrict if user is a departmental HOD and requesting an out-of-scope department
-            if auth_codes and not is_inst_report and (dept in ("ALL", "", None) or dept not in auth_codes):
-                dept = auth_codes[0]
-                filters["department"] = auth_codes[0]
-                filters["dept"] = auth_codes[0]
+            req_norm = normalize_department_to_code(db, dept) if dept and str(dept).upper() not in ("ALL", "", "NONE", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED") else "ALL"
+            if req_norm != "ALL":
+                if auth_codes and req_norm in auth_codes:
+                    dept = req_norm
+                    filters["department"] = req_norm
+                    filters["dept"] = req_norm
+                elif auth_codes and req_norm not in auth_codes:
+                    dept = auth_codes[0]
+                    filters["department"] = auth_codes[0]
+                    filters["dept"] = auth_codes[0]
+            else:
+                dept = "ALL"
+                filters["department"] = "ALL"
+                filters["dept"] = "ALL"
 
         config = ReportConfig(
             report_type=payload.report_type,

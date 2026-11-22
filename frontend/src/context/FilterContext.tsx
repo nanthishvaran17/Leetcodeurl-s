@@ -87,17 +87,42 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const hodDefaultDepartment = defaultDept;
 
+  // Synchronize department & filters whenever user identity or role changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const freshDefault = getDefaultDepartment();
+      const freshCollege = getDefaultCollege();
+      setDepartmentState(freshDefault);
+      setCollegeState(freshCollege);
+      setAcademicYear('ALL');
+      setAttendanceStatus('ALL');
+      setSearchQuery('');
+    };
+
+    window.addEventListener('nec_auth_changed', handleAuthChange);
+    window.addEventListener('auth_logout', handleAuthChange);
+    window.addEventListener('departments_changed', handleAuthChange);
+    window.addEventListener('department_updated', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('nec_auth_changed', handleAuthChange);
+      window.removeEventListener('auth_logout', handleAuthChange);
+      window.removeEventListener('departments_changed', handleAuthChange);
+      window.removeEventListener('department_updated', handleAuthChange);
+    };
+  }, []);
+
   const setCollege = useCallback((newCol: 'ALL' | 'NEC' | 'NCT') => {
     try {
       const raw = localStorage.getItem('user');
       const user = raw ? JSON.parse(raw) : null;
       if (!isCollegeFilterAllowed(user)) {
-        setCollegeState(defaultCollege);
+        setCollegeState(getDefaultCollege());
         return;
       }
     } catch { }
     setCollegeState(newCol);
-  }, [defaultCollege]);
+  }, []);
 
   const setDepartment = useCallback((newDept: string) => {
     try {
@@ -106,23 +131,28 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       if (!isGlobalAccessRole(user)) {
         const authCodes: string[] = Array.isArray(user?.authorized_department_codes) ? user.authorized_department_codes : [];
         const normNew = normalizeDepartment(newDept);
-        const normDefault = normalizeDepartment(defaultDept);
+        const currentDefault = getDefaultDepartment();
+        const normDefault = normalizeDepartment(currentDefault);
         const authNorms = authCodes.map(c => normalizeDepartment(c));
-        if (normNew && (normNew === normDefault || authNorms.includes(normNew))) {
+        if (normNew && (normNew === normDefault || authNorms.includes(normNew) || newDept === 'MY_DEPARTMENTS')) {
           setDepartmentState(newDept);
           return;
         }
-        setDepartmentState(defaultDept);
+        setDepartmentState(currentDefault);
         return;
       }
     } catch { }
     setDepartmentState(newDept);
-  }, [defaultDept]);
+  }, []);
 
   const resetFilters = useCallback(() => {
-    setDepartmentState(defaultDept);
+    const currentDefault = getDefaultDepartment();
+    setDepartmentState(currentDefault);
+    setCollegeState(getDefaultCollege());
     setAcademicYear('ALL');
     setAttendanceStatus('ALL');
+    setSearchQuery('');
+  }, []);
     setSearchQuery('');
     setCollegeState(defaultCollege);
   }, [defaultDept, defaultCollege]);

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Filter, RotateCcw, Check, Search, Building2, GraduationCap, Calendar, ShieldCheck } from 'lucide-react';
 import { useFilters } from '../context/FilterContext';
 import { useDepartments } from '../context/DepartmentContext';
+import { useAuth } from '../context/AuthContext';
 import { isGlobalAccessRole, isCollegeFilterAllowed, getUserCollege } from '../services/auth/authTypes';
 import { normalizeDepartment, normalizeAcademicYear } from '../utils/filterUtils';
 import { SwipeHandle } from './SwipeHandle';
@@ -24,17 +25,19 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 }) => {
   useEscapeKey(onClose, isOpen);
   useScrollLock(isOpen);
+  const { user: authUser } = useAuth();
   const { departments: ctxDepartments = [] } = useDepartments();
   const rawDepartments = (propDepartments && propDepartments.length > 0) ? propDepartments : ctxDepartments;
 
   const user = React.useMemo(() => {
+    if (authUser) return authUser;
     try {
       const raw = localStorage.getItem('user');
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
-  }, []);
+  }, [authUser, isOpen]);
 
   const isGlobalUser = React.useMemo(() => {
     return user ? isGlobalAccessRole(user) : false;

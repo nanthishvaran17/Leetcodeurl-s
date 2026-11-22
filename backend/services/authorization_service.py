@@ -139,6 +139,161 @@ def get_hod_authorized_department_codes(db: Session, user: Optional[User]) -> Li
     return [row[0] for row in depts if row[0]]
 
 
+def resolve_department_alias_to_id(db: Session, dept_str: Optional[Any]) -> Optional[int]:
+    """
+    Resolves any department reference (numeric ID, code, name, or alias such as 'Cyber', 'IoT', 'IT')
+    to its canonical database Department.id.
+    Returns None if empty, 'ALL', or not resolvable.
+    """
+    if dept_str is None:
+        return None
+
+    clean = str(dept_str).strip()
+    if not clean:
+        return None
+
+    upper = clean.upper()
+    if upper in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", "*"):
+        return None
+
+    # 1. Numeric ID
+    if clean.isdigit():
+        d_id = int(clean)
+        exists = db.query(Department.id).filter(Department.id == d_id).first()
+        if exists:
+            return d_id
+
+    # 2. Exact match on Code or Name
+    from sqlalchemy import func
+    exact = db.query(Department.id).filter(
+        (func.upper(Department.code) == upper) |
+        (func.upper(Department.name) == upper)
+    ).first()
+    if exact:
+        return exact[0]
+
+    # 3. Known Aliases & Clusters
+    # Cyber Security -> CSE(CS) (Dept 1)
+    if any(k in upper for k in ("CYBER", "CSE(CS)", "CSE-CS", "CSE_CS", "CSE (CS)")) or upper == "CS":
+        dept = db.query(Department.id).filter(
+            (Department.code == "CSE(CS)") |
+            (Department.name.ilike("%Cyber%"))
+        ).first()
+        if dept:
+            return dept[0]
+
+    # Internet of Things -> CSE(IOT) (Dept 2)
+    if any(k in upper for k in ("IOT", "CSE(IOT)", "CSE-IOT", "CSE_IOT", "CSE (IOT)", "INTERNET")):
+        dept = db.query(Department.id).filter(
+            (Department.code == "CSE(IOT)") |
+            (Department.name.ilike("%IoT%")) |
+            (Department.name.ilike("%Internet of Things%"))
+        ).first()
+        if dept:
+            return dept[0]
+
+    # Information Technology -> IT
+    if upper in ("IT", "INFORMATION TECHNOLOGY", "INFO TECH", "B.TECH IT", "B.TECH (IT)"):
+        dept = db.query(Department.id).filter(
+            (Department.code == "IT") |
+            (Department.name.ilike("%Information Technology%"))
+        ).first()
+        if dept:
+            return dept[0]
+
+    # Artificial Intelligence & Data Science -> AIDS
+    if upper in ("AIDS", "AI&DS", "AI & DS") or ("ARTIFICIAL" in upper and "DATA" in upper):
+        dept = db.query(Department.id).filter(
+            (Department.code == "AIDS") |
+            (Department.name.ilike("%Data Science%"))
+        ).first()
+        if dept:
+            return dept[0]
+
+    # Artificial Intelligence & Machine Learning -> AIML
+    if upper in ("AIML", "AI&ML", "AI & ML") or ("ARTIFICIAL" in upper and "MACHINE" in upper):
+        dept = db.query(Department.id).filter(
+            (Department.code == "AIML") |
+            (Department.name.ilike("%Machine Learning%"))
+        ).first()
+        if dept:
+            return dept[0]
+
+    # Core CSE
+    if upper in ("CSE", "COMPUTER SCIENCE", "COMPUTER SCIENCE AND ENGINEERING"):
+        dept = db.query(Department.id).filter(Department.code == "CSE").first()
+        if dept:
+            return dept[0]
+
+    # ECE
+    if upper in ("ECE", "ELECTRONICS") or "ELECTRONICS AND COMM" in upper:
+        dept = db.query(Department.id).filter(Department.code == "ECE").first()
+        if dept:
+            return dept[0]
+
+    # EEE
+    if upper in ("EEE", "ELECTRICAL") or "ELECTRICAL AND ELEC" in upper:
+        dept = db.query(Department.id).filter(Department.code == "EEE").first()
+        if dept:
+            return dept[0]
+
+    # MECH
+    if upper in ("MECH", "MECHANICAL") or "MECHANICAL" in upper:
+        dept = db.query(Department.id).filter(Department.code == "MECH").first()
+        if dept:
+            return dept[0]
+
+    # CIVIL
+    if upper in ("CIVIL",) or "CIVIL" in upper:
+        dept = db.query(Department.id).filter(Department.code == "CIVIL").first()
+        if dept:
+            return dept[0]
+
+    # AGRI
+    if upper in ("AGRI", "AGRICULTURE", "AGRICULTURAL") or "AGRICULTUR" in upper:
+        dept = db.query(Department.id).filter(Department.code == "AGRI").first()
+        if dept:
+            return dept[0]
+
+    # BME
+    if upper in ("BME", "BIOMEDICAL") or "BIOMEDICAL" in upper:
+        dept = db.query(Department.id).filter(Department.code == "BME").first()
+        if dept:
+            return dept[0]
+
+    # 4. Partial Fallback Search
+    dept = db.query(Department.id).filter(
+        (Department.name.ilike(f"%{clean}%")) |
+        (Department.code.ilike(f"%{clean}%"))
+    ).first()
+    if dept:
+        return dept[0]
+
+    return None
+
+
+def normalize_department_to_code(db: Session, dept_val: Optional[Any]) -> Optional[str]:
+    """
+    Normalizes any department representation (ID, code, name, alias) to canonical Department.code (e.g., 'CSE(CS)', 'CSE(IOT)').
+    Returns 'ALL' for sentinel filters, or None if empty.
+    """
+    if dept_val is None:
+        return None
+    clean = str(dept_val).strip()
+    if not clean:
+        return None
+    if clean.upper() in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS", "COMBINED", "ALL DEPARTMENTS", "ALL_DEPARTMENTS", "*"):
+        return "ALL"
+
+    resolved_id = resolve_department_alias_to_id(db, clean)
+    if resolved_id is not None:
+        d = db.query(Department.code).filter(Department.id == resolved_id).first()
+        if d and d[0]:
+            return str(d[0])
+
+    return clean
+
+
 def get_authorized_department_scope(db: Session, user: Optional[User]) -> Dict[str, Any]:
     """
     Returns the authoritative department authorization scope for the given user.

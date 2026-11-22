@@ -76,7 +76,7 @@ export const ReportsPage: React.FC = () => {
   }, [isGlobalAccess, userCollege, selectedCollege]);
 
   useEffect(() => {
-    if ((isHodUser || isStaffUser) && hodDeptDefault !== 'ALL' && (!selectedDept || selectedDept === 'ALL')) {
+    if ((isHodUser || isStaffUser) && hodDeptDefault !== 'ALL' && !selectedDept) {
       setSelectedDept(hodDeptDefault);
     }
   }, [isHodUser, isStaffUser, hodDeptDefault, selectedDept]);
