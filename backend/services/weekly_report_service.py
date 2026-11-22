@@ -989,6 +989,12 @@ def generate_weekly_performance_data(
         }
     }
 
+    if cache_key and not save_snapshot:
+        _WEEKLY_PERF_CACHE[cache_key] = (time.time(), copy.deepcopy(canonical_dataset))
+        if len(_WEEKLY_PERF_CACHE) > 60:
+            oldest_k = min(_WEEKLY_PERF_CACHE.keys(), key=lambda k: _WEEKLY_PERF_CACHE[k][0])
+            _WEEKLY_PERF_CACHE.pop(oldest_k, None)
+
     return canonical_dataset
 
 
