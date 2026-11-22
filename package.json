@@ -1,6 +1,6 @@
 {
   "name": "nandha-leetcode-intelligence",
-  "version": "4.6.3",
+  "version": "4.6.4",
   "private": true,
   "scripts": {
     "build": "cd frontend && npm install && npm run build"
