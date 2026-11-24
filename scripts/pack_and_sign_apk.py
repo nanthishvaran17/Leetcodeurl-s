@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import struct
 
-def patch_manifest(manifest_bytes, new_version_code=104, new_version_name="4.6.4"):
+def patch_manifest(manifest_bytes, new_version_code=105, new_version_name="4.6.5"):
     b = bytearray(manifest_bytes)
     
     # 1. Locate versionCode pattern:
@@ -28,7 +28,7 @@ def patch_manifest(manifest_bytes, new_version_code=104, new_version_name="4.6.4
 
     # 2. Patch versionName in UTF-16LE string pool
     new_vn_u16 = new_version_name.encode("utf-16le")
-    for old_candidate in ["4.6.3", "4.6.2", "4.5.7"]:
+    for old_candidate in ["4.6.4", "4.6.3", "4.6.2", "4.5.7"]:
         old_vn_u16 = old_candidate.encode("utf-16le")
         if len(old_vn_u16) == len(new_vn_u16):
             pos16 = b.find(old_vn_u16)
@@ -45,8 +45,8 @@ def main():
     base_apk = os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.4_latest.apk")
     if not os.path.exists(base_apk):
         base_apk = os.path.join(root, "releases", "android", "Nandha-LeetCode-Tracker-Latest.apk")
-    temp_apk = os.path.join(root, "releases", "android", "temp_unsigned_v464.apk")
-    v464_apk = os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.4_latest.apk")
+    temp_apk = os.path.join(root, "releases", "android", "temp_unsigned_v465.apk")
+    v465_apk = os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.5_latest.apk")
     keystore = os.path.join(root, "frontend", "android", "nandha-release-key.jks")
     java_exe = r"C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2025.2.6.3\jbr\bin\java.exe"
     uber_jar = os.path.join(root, "tools", "uber-apk-signer.jar")
@@ -76,10 +76,10 @@ def main():
 
             content = zin.read(item.filename)
 
-            # Patch AndroidManifest.xml with authentic versionCode (104) & versionName ("4.6.4")
+            # Patch AndroidManifest.xml with authentic versionCode (105) & versionName ("4.6.5")
             if item.filename == "AndroidManifest.xml":
-                print("  Updating AndroidManifest.xml binary structure with versionCode 104 and versionName 4.6.4...")
-                content = patch_manifest(content, new_version_code=104, new_version_name="4.6.4")
+                print("  Updating AndroidManifest.xml binary structure with versionCode 105 and versionName 4.6.5...")
+                content = patch_manifest(content, new_version_code=105, new_version_name="4.6.5")
 
             # Preserve exact compression mode and permissions
             zout.writestr(item, content)
@@ -98,14 +98,14 @@ def main():
                 count += 1
         print(f"  Injected {count} production assets into assets/public/")
 
-    if os.path.exists(v464_apk):
-        os.remove(v464_apk)
-    shutil.move(temp_apk, v464_apk)
+    if os.path.exists(v465_apk):
+        os.remove(v465_apk)
+    shutil.move(temp_apk, v465_apk)
 
     print("Step 3: Signing and zip-aligning APK (v1, v2, v3 schemes) using uber-apk-signer...")
     sign_cmd = [
         java_exe, "-jar", uber_jar,
-        "-a", v464_apk,
+        "-a", v465_apk,
         "--ks", keystore,
         "--ksAlias", "nandha-key",
         "--ksPass", "NEC@2024secure",
@@ -121,31 +121,39 @@ def main():
         raise RuntimeError(f"Failed to sign APK (exit code {res.returncode})")
 
     print("Step 4: Verifying APK signature scheme...")
-    ver_cmd = [java_exe, "-jar", uber_jar, "-y", "-a", v464_apk]
+    ver_cmd = [java_exe, "-jar", uber_jar, "-y", "-a", v465_apk]
     ver_res = subprocess.run(ver_cmd, capture_output=True, text=True)
     print("Verification output:\n", ver_res.stdout)
     if "DOES NOT VERIFY" in ver_res.stdout or ("VERIFIES" not in ver_res.stdout and "verified" not in ver_res.stdout.lower()):
         raise RuntimeError("APK verification failed: " + ver_res.stdout)
 
-    print("Step 5: Deploying signed v4.6.4 APK to all distribution locations...")
+    print("Step 5: Deploying signed v4.6.5 APK to all distribution locations...")
     destinations = [
+        os.path.join(root, "releases", "android", "Nandha_LeetCode_Intelligence_v4.6.5_latest.apk"),
         os.path.join(root, "releases", "android", "Nandha-LeetCode-Tracker-Latest.apk"),
         os.path.join(root, "releases", "android", "nandha-leetcode.apk"),
-        os.path.join(root, "frontend", "dist", "Nandha_LeetCode_Intelligence_v4.6.4_latest.apk"),
+        os.path.join(root, "frontend", "dist", "Nandha_LeetCode_Intelligence_v4.6.5_latest.apk"),
         os.path.join(root, "frontend", "dist", "Nandha-LeetCode-Tracker-Latest.apk"),
         os.path.join(root, "frontend", "dist", "nandha-leetcode.apk"),
-        os.path.join(root, "frontend", "public", "Nandha_LeetCode_Intelligence_v4.6.4_latest.apk"),
+        os.path.join(root, "frontend", "public", "Nandha_LeetCode_Intelligence_v4.6.5_latest.apk"),
         os.path.join(root, "frontend", "public", "Nandha-LeetCode-Tracker-Latest.apk"),
         os.path.join(root, "frontend", "public", "nandha-leetcode.apk"),
     ]
 
     for dest in destinations:
+        if os.path.abspath(dest) == os.path.abspath(v465_apk):
+            size_mb = os.path.getsize(v465_apk) / (1024 * 1024)
+            print(f"  Primary APK: {v465_apk} ({size_mb:.2f} MB)")
+            continue
         os.makedirs(os.path.dirname(dest), exist_ok=True)
-        shutil.copy2(v464_apk, dest)
-        size_mb = os.path.getsize(dest) / (1024 * 1024)
-        print(f"  Copied to: {dest} ({size_mb:.2f} MB)")
+        try:
+            shutil.copy2(v465_apk, dest)
+            size_mb = os.path.getsize(dest) / (1024 * 1024)
+            print(f"  Copied to: {dest} ({size_mb:.2f} MB)")
+        except Exception as e:
+            print(f"  Warning copying to {dest}: {e}")
 
-    print("\nSUCCESS: Nandha LeetCode Intelligence v4.6.4 (Build 104) APK built, signed, verified, and deployed successfully!")
+    print("\nSUCCESS: Nandha LeetCode Intelligence v4.6.5 (Build 105) APK built, signed, verified, and deployed successfully!")
 
 if __name__ == "__main__":
     main()
