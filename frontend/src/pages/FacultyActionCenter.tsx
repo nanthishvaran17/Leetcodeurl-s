@@ -43,6 +43,53 @@ const STATUS_CONFIG: Record<string, string> = {
   Escalated: 'bg-purple-50/90 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-bold',
 };
 
+const HEADER_COLUMN_CONFIG: Record<string, {
+  color: string;
+  badgeBg: string;
+  icon?: React.ReactNode;
+}> = {
+  Student: {
+    color: 'text-slate-800 dark:text-slate-100',
+    badgeBg: 'bg-slate-200/70 dark:bg-navy-800 border-slate-300 dark:border-navy-700',
+    icon: <GraduationCap size={12} className="text-slate-600 dark:text-slate-400 shrink-0" />,
+  },
+  Priority: {
+    color: 'text-rose-700 dark:text-rose-300',
+    badgeBg: 'bg-rose-50 dark:bg-rose-950/50 border-rose-200/80 dark:border-rose-900/60',
+    icon: <ShieldAlert size={12} className="text-rose-500 shrink-0" />,
+  },
+  Stats: {
+    color: 'text-indigo-700 dark:text-indigo-300',
+    badgeBg: 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200/80 dark:border-indigo-900/60',
+    icon: <Target size={12} className="text-indigo-500 shrink-0" />,
+  },
+  Signal: {
+    color: 'text-sky-700 dark:text-sky-300',
+    badgeBg: 'bg-sky-50 dark:bg-sky-950/50 border-sky-200/80 dark:border-sky-900/60',
+    icon: <Activity size={12} className="text-sky-500 shrink-0" />,
+  },
+  Status: {
+    color: 'text-amber-700 dark:text-amber-300',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/50 border-amber-200/80 dark:border-amber-900/60',
+    icon: <Clock size={12} className="text-amber-500 shrink-0" />,
+  },
+  Faculty: {
+    color: 'text-purple-700 dark:text-purple-300',
+    badgeBg: 'bg-purple-50 dark:bg-purple-950/50 border-purple-200/80 dark:border-purple-900/60',
+    icon: <Users size={12} className="text-purple-500 shrink-0" />,
+  },
+  Breakdown: {
+    color: 'text-emerald-700 dark:text-emerald-300',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/80 dark:border-emerald-900/60',
+    icon: <Sparkles size={12} className="text-emerald-500 shrink-0" />,
+  },
+  Actions: {
+    color: 'text-brand-700 dark:text-brand-300',
+    badgeBg: 'bg-brand-50 dark:bg-brand-950/60 border-brand-200/80 dark:border-brand-900/60',
+    icon: <ArrowUpRight size={12} className="text-brand-600 dark:text-brand-400 shrink-0" />,
+  },
+};
+
 const EVENT_COLOR: Record<string, string> = {
   ACTION_CREATED: 'text-brand-400',
   STATUS_CHANGED: 'text-blue-400',
@@ -1748,7 +1795,7 @@ export const FacultyActionCenter: React.FC = () => {
   const totalPages = Math.ceil(filteredCount / pageSize);
   const hasFilters = !!(filterPriority || filterStatus || filterDept || filterYear || search);
 
-  const thCls = "text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-left py-3.5 px-3.5 first:pl-5";
+  const thCls = "py-3 px-3 first:pl-5 select-none";
   const tdCls = "py-3.5 px-3.5 text-sm first:pl-5";
   const filterSelectCls = "rounded-xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-brand-500 transition cursor-pointer";
 
@@ -2334,6 +2381,7 @@ export const FacultyActionCenter: React.FC = () => {
             {visibleItems.map((item) => {
               const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
               const isSelected = selectedStudentIds.has(item.id);
+              const isExpanded = expandedRow === item.id;
               const initials = (item.student_name || 'S')
                 .split(' ')
                 .map(w => w[0])
@@ -2345,8 +2393,11 @@ export const FacultyActionCenter: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className={`rounded-2xl transition-all duration-200 p-3.5 space-y-3 border touch-manipulation ${isSelected
+                  onClick={() => setExpandedRow(isExpanded ? null : item.id)}
+                  className={`rounded-2xl transition-all duration-200 p-3.5 space-y-3 border touch-manipulation cursor-pointer ${isSelected
                       ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
+                      : isExpanded
+                      ? 'bg-indigo-50/20 dark:bg-navy-800/80 border-indigo-300 dark:border-indigo-800 shadow-sm'
                       : 'bg-white dark:bg-navy-900 border-slate-200/90 dark:border-navy-800 shadow-2xs hover:border-slate-300'
                     }`}
                 >
@@ -2387,7 +2438,7 @@ export const FacultyActionCenter: React.FC = () => {
                     </div>
 
                     {/* Status & Priority Pills */}
-                    <div className="flex flex-col items-end gap-1 shrink-0">
+                    <div className="flex flex-col items-end gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                       <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
                       <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full ${statusCls}`}>
                         {item.status}
@@ -2425,11 +2476,11 @@ export const FacultyActionCenter: React.FC = () => {
                     <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800">
                       <div className="text-[9.5px] uppercase font-bold text-slate-400">Breakdown</div>
                       <div className="font-mono font-bold text-[10px] mt-0.5 truncate">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{item.easy_solved || 0}</span>
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">{item.medium_solved || 0}</span>
-                        <span className="text-slate-300 dark:text-slate-600">/</span>
-                        <span className="text-rose-600 dark:text-rose-400 font-bold">{item.hard_solved || 0}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">E:{item.easy_solved || 0}</span>
+                        <span className="text-slate-300 dark:text-slate-600 mx-0.5">·</span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold">M:{item.medium_solved || 0}</span>
+                        <span className="text-slate-300 dark:text-slate-600 mx-0.5">·</span>
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">H:{item.hard_solved || 0}</span>
                       </div>
                     </div>
                   </div>
@@ -2442,15 +2493,34 @@ export const FacultyActionCenter: React.FC = () => {
                         Mentor: {item.assigned_faculty_name || 'Unassigned'}
                       </span>
                     </div>
-                    {item.recommended_action && (
-                      <span className="text-[10.5px] font-medium text-slate-400 truncate max-w-[45%]">
-                        {item.recommended_action}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 text-[10.5px] text-slate-400">
+                      <span>{isExpanded ? 'Less' : 'Details'}</span>
+                      {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    </div>
                   </div>
 
+                  {/* Expanded Mobile Detail Drawer */}
+                  {isExpanded && (
+                    <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-navy-950/80 border border-slate-200/80 dark:border-navy-800 space-y-2.5 text-xs animate-fade-in" onClick={e => e.stopPropagation()}>
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Recommended Action</div>
+                        <div className="text-xs text-brand-600 dark:text-brand-400 font-bold">{item.recommended_action || '—'}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Action Taken</div>
+                        <div className="text-xs text-slate-700 dark:text-slate-300">{item.action_taken || 'No action recorded yet'}</div>
+                      </div>
+                      {item.faculty_notes && (
+                        <div>
+                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Faculty Notes</div>
+                          <div className="text-xs text-slate-700 dark:text-slate-300">{item.faculty_notes}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Action Buttons Row — 3 Touch-Friendly Actions */}
-                  <div className="grid grid-cols-12 gap-2 pt-1 border-t border-slate-100 dark:border-navy-800">
+                  <div className="grid grid-cols-12 gap-2 pt-1 border-t border-slate-100 dark:border-navy-800" onClick={e => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => handleWhatsApp(item)}
@@ -2464,10 +2534,10 @@ export const FacultyActionCenter: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setUpdateItem(item)}
-                      className="col-span-5 min-h-[42px] py-2 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs touch-manipulation transition-all"
+                      className="col-span-5 min-h-[42px] py-2 px-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs touch-manipulation transition-all"
                     >
                       <ArrowUpRight size={14} className="stroke-[2.5]" />
-                      <span>Action</span>
+                      <span>Take Action</span>
                     </button>
 
                     <button
@@ -2484,20 +2554,20 @@ export const FacultyActionCenter: React.FC = () => {
             })}
           </div>
 
-          <div className="hidden md:block table-responsive-container rounded-2xl glass-panel shadow-glass border-white/[0.08] overflow-x-auto mt-6">
-            <table className="w-full table-fixed min-w-[1150px]">
+          <div className="hidden md:block table-responsive-container rounded-2xl glass-panel shadow-glass border border-slate-200/90 dark:border-white/[0.08] overflow-x-auto mt-6">
+            <table className="w-full table-fixed min-w-[1240px]">
               <colgroup>
                 <col style={{ width: '4%' }} />
-                <col style={{ width: '23%' }} />
-                <col style={{ width: '11%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '10%' }} />
                 <col style={{ width: '9%' }} />
-                <col style={{ width: '15%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '9%' }} />
                 <col style={{ width: '10%' }} />
-                <col style={{ width: '11%' }} />
-                <col style={{ width: '7%' }} />
-                <col style={{ width: '10%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '18%' }} />
               </colgroup>
-              <thead className="table-header-group border-b border-white/[0.08] bg-white/[0.03]">
+              <thead className="table-header-group border-b-2 border-slate-200 dark:border-navy-700 bg-slate-100/90 dark:bg-navy-900/90">
                 <tr>
                   <th className={`${thCls} !w-10 !px-3 select-none text-center`}>
                     <button
@@ -2513,11 +2583,38 @@ export const FacultyActionCenter: React.FC = () => {
                       )}
                     </button>
                   </th>
-                  {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Breakdown', ''], ['Actions', '']].map(([label, col]) => (
-                    <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
-                      <span className="inline-flex items-center gap-1">{label} {col && <SortIcon col={col} />}</span>
-                    </th>
-                  ))}
+                  {[
+                    ['Student', 'student_name'],
+                    ['Priority', 'priority_score'],
+                    ['Stats', ''],
+                    ['Signal', ''],
+                    ['Status', 'status'],
+                    ['Faculty', ''],
+                    ['Breakdown', ''],
+                    ['Actions', '']
+                  ].map(([label, col]) => {
+                    const isActions = label === 'Actions';
+                    const cfg = HEADER_COLUMN_CONFIG[label];
+                    return (
+                      <th
+                        key={label}
+                        className={`${thCls} ${isActions ? '!text-center' : ''} ${
+                          col ? 'cursor-pointer hover:opacity-85 select-none' : ''
+                        }`}
+                        onClick={() => col && toggleSort(col)}
+                      >
+                        <div className={`flex items-center ${isActions ? 'justify-center' : 'justify-start'}`}>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-black uppercase tracking-wider shadow-2xs transition-all ${
+                            cfg?.badgeBg || 'bg-slate-100 border-slate-200'
+                          } ${cfg?.color || 'text-slate-800'}`}>
+                            {cfg?.icon}
+                            <span>{label}</span>
+                            {col && <SortIcon col={col} />}
+                          </span>
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-navy-700/60">
@@ -2596,9 +2693,9 @@ export const FacultyActionCenter: React.FC = () => {
                           </div>
                         </td>
 
-                        {/* Due Date */}
+                        {/* Breakdown */}
                         <td className={tdCls}>
-                          <div className="flex items-center gap-1 font-mono text-[11px] font-bold">
+                          <div className="flex items-center gap-1 font-mono text-[11px] font-bold whitespace-nowrap">
                             <span className="text-emerald-500">E:{item.easy_solved || 0}</span>
                             <span className="text-slate-400">·</span>
                             <span className="text-amber-500">M:{item.medium_solved || 0}</span>
@@ -2608,29 +2705,32 @@ export const FacultyActionCenter: React.FC = () => {
                         </td>
 
                         {/* Actions */}
-                        <td className={tdCls} onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center gap-1.5">
+                        <td className={`${tdCls} !text-center pr-5`} onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-center gap-2 whitespace-nowrap">
                             <button
+                              type="button"
                               onClick={() => setUpdateItem(item)}
                               title="Take Action on Student"
-                              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white transition-all cursor-pointer shadow-sm hover:shadow flex items-center gap-1.5 text-xs font-bold active:scale-95"
+                              className="shrink-0 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white transition-all cursor-pointer shadow-sm hover:shadow flex items-center gap-1.5 text-xs font-bold active:scale-95 whitespace-nowrap"
                             >
-                              <ArrowUpRight size={12} />
+                              <ArrowUpRight size={13} className="shrink-0" />
                               <span>Take Action</span>
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleWhatsApp(item)}
                               title="Send WhatsApp Nudge"
-                              className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 transition cursor-pointer"
+                              className="shrink-0 w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 transition cursor-pointer flex items-center justify-center active:scale-95"
                             >
-                              <MessageCircle size={14} />
+                              <MessageCircle size={15} />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setViewItem(item)}
                               title="View Student Coding Profile"
-                              className="p-1.5 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                              className="shrink-0 w-8 h-8 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition cursor-pointer flex items-center justify-center active:scale-95"
                             >
-                              <Eye size={14} />
+                              <Eye size={15} />
                             </button>
                           </div>
                         </td>
